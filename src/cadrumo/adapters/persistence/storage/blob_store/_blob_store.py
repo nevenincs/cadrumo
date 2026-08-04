@@ -49,7 +49,8 @@ from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.identity import ContentDigest
 from .....core.logging import get_logger
 from .....core.time import now
-from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION, STORAGE_NAMESPACE_REGISTRY
+from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from .._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ..crypto import (
     KEY_SIZE,
     EncryptedBlob,

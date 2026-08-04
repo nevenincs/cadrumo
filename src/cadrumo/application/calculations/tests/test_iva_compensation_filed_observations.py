@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.aeat.sede import ObservedCasillaValue
-from ....core import Period
+from ....core import CasillaValueKind, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import (
     IvaCompensationCasillaReferenceError,
@@ -166,6 +166,7 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
                 ObservedCasillaValue(
                     casilla_id=_M303_RESULTADO_CASILLA,
                     value="not-decimal",
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
                     source_locator="submitted-file:casilla-69",
                     confidence=1.0,
@@ -178,7 +179,48 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
         iva_compensation_state_from_filed_observation(observation)
 
     assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_decimal_parse"
-    assert excinfo.value.context == {"casilla_id": _M303_RESULTADO_CASILLA}
+    # Modelo 390 reaches this refusal too, so the context names which filing refused
+    # and not only the casilla. It must never carry the observed VALUE: the carrier
+    # holds the artefact's own token and this context is rendered to the operator.
+    assert excinfo.value.context == {
+        "casilla_id": _M303_RESULTADO_CASILLA,
+        "modelo": "303",
+        "filing_year": "2024",
+        "period": "4T",
+    }
+    assert "not-decimal" not in str(excinfo.value.context)
+
+
+def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric() -> None:
+    """A carry-forward balance is never read from a casilla that is not an amount.
+
+    Modelo 303 and Modelo 390 declare only money casillas today, so this cannot
+    arise from current registry data. It is asserted because these values carry
+    IVA balances between filings: the day a revision adds a text casilla, the
+    refusal must already exist rather than a wrong balance moving silently.
+    """
+    observation = _filed_observation(modelo="303").model_copy(
+        update={
+            "casillas": (
+                ObservedCasillaValue(
+                    casilla_id=_M303_RESULTADO_CASILLA,
+                    value="15",
+                    value_kind=CasillaValueKind.TEXT,
+                    source_artefact_kind="submitted_file",
+                    source_locator="submitted-file:casilla-69",
+                    confidence=1.0,
+                ),
+            ),
+        },
+    )
+
+    with pytest.raises(IvaCompensationDecimalParseError) as excinfo:
+        iva_compensation_state_from_filed_observation(observation)
+
+    # '15' converts cleanly, so nothing but the declared kind can refuse it.
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["casilla_id"] == _M303_RESULTADO_CASILLA
+    assert "15" not in str(excinfo.value.context["modelo"])
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:
@@ -215,6 +257,7 @@ def test_iva_compensation_state_from_filed_observation_refuses_printed_number_re
                 ObservedCasillaValue(
                     casilla_id=_M303_PRINTED_PERIOD_RESULT_REFERENCE_CASILLA,
                     value="-25.00",
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind=source_artefact_kind,
                     source_locator=source_locator,
                     confidence=1.0,
@@ -244,6 +287,7 @@ def test_iva_compensation_annual_summary_refuses_printed_number_references() -> 
                 ObservedCasillaValue(
                     casilla_id=_M390_PRINTED_LAST_PERIOD_COMPENSATION_REFERENCE_CASILLA,
                     value="100.00",
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
                     source_locator="submitted-file:390:97",
                     confidence=1.0,

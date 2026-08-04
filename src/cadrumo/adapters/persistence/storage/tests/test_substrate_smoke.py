@@ -43,7 +43,7 @@ _ENVELOPE_WRITTEN_AT = datetime(2026, 5, 25, 14, 0, 0, tzinfo=UTC)
 
 def _file_master_provider(tmp_path: Path) -> FileFallbackMasterKeyProvider:
     return FileFallbackMasterKeyProvider(
-        store_dir=tmp_path / "secrets",
+        store_dir=tmp_path / "fallback-store",
         passphrase_callback=dev_test_database_password,
     )
 
@@ -65,7 +65,7 @@ def test_full_chain_secret_round_trip(tmp_path: Path) -> None:
         master_key_provider=provider,
     )
     secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
+        store_dir=tmp_path / "fallback-store",
         blob_store=blob_store,
         master_key_provider=provider,
     )
@@ -90,7 +90,7 @@ def test_full_chain_secret_round_trip(tmp_path: Path) -> None:
             data = path.read_bytes()
             assert b"refresh-token-abc-xyz" not in data
             assert b"aeat:smoke:google-oauth-token" not in data
-    index_path = tmp_path / "secrets" / "index.json"
+    index_path = tmp_path / "fallback-store" / "index.json"
     contents = index_path.read_text(encoding="utf-8")
     assert "google-oauth-token" not in contents
     assert "refresh-token" not in contents

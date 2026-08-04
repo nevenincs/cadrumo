@@ -39,7 +39,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import UtcInstant
-from .._namespace_registry import LOGIN_THROTTLE_FILENAME
+from .._storage_path_definitions import LOGIN_THROTTLE_FILENAME
 from ._master_key_io import atomic_write_secure_bytes
 
 _log = get_logger(__name__)

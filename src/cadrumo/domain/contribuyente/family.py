@@ -80,6 +80,34 @@ def _coerce_iso_date_field(value: object) -> object:
     return value
 
 
+class MinimoDescendientesThresholds(BaseModel):
+    """The two Art. 58.1 / Art. 61 norma 2ª eligibility figures, per filing year.
+
+    Both are registry ``money`` parameters the caller resolves for the filing
+    year being computed; this domain layer performs no euro-figure lookup of
+    its own (`aeat-schema-central-config`). Carrying them as one required
+    argument rather than two optional ones is deliberate: an optional threshold
+    would let a caller silently skip half the law and inflate the mínimo, which
+    is the exact defect this record exists to close.
+
+    Fields
+    ------
+    rentas_anuales_limite
+        Art. 58.1 LIRPF ceiling on the descendant's own annual rentas excluding
+        exempt income. Registry parameter
+        ``renta-{year}-minimo-descendientes-rentas-anuales-limite-{year}``.
+    declaracion_propia_rentas_limite
+        Art. 61 norma 2ª LIRPF ceiling on the rentas in a descendant's OWN
+        return. Registry parameter
+        ``renta-{year}-minimo-descendientes-declaracion-propia-rentas-limite-{year}``.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    rentas_anuales_limite: Decimal = Field(ge=0)
+    declaracion_propia_rentas_limite: Decimal = Field(ge=0)
+
+
 class DescendantInfo(BaseModel):
     """Structured per-descendant data for Art. 58 mínimo-por-descendientes.
 
@@ -106,6 +134,27 @@ class DescendantInfo(BaseModel):
         them (Art. 61 prorrata). Default ``False`` (sole custody / not
         applicable). Setting this flag on a non-cohabiting descendant has no
         additional effect because eligibility already fails.
+    rentas_anuales_euros
+        The descendant's own annual rentas EXCLUDING exempt income, the figure
+        Art. 58.1 LIRPF caps ("no tenga rentas anuales, excluidas las exentas,
+        superiores a 8.000 euros"). ``None`` means the operator has not declared
+        a figure, which does NOT exclude the descendant — see
+        :meth:`is_eligible_ordinary` for why absence is read as "no rentas to
+        declare" rather than as a disqualification.
+    presenta_declaracion_propia
+        Whether the descendant files their own IRPF return. Art. 61 norma 2ª
+        LIRPF withdraws the mínimo entirely when a descendant who generates the
+        entitlement "presenten declaración por este Impuesto con rentas
+        superiores a 1.800 euros" — so this flag alone does not exclude; it
+        excludes only in combination with ``rentas_anuales_euros`` above the
+        norma 2ª threshold. Default ``False``.
+    prorrata_minimo
+        Explicit per-descendant answer to Art. 61 norma 1ª: does another
+        contribuyente also hold the right to this descendant's mínimo?
+        ``True`` prorates, ``False`` claims the full amount, and ``None``
+        (the default) leaves the question unanswered so the caller may derive
+        it from profile signals. An explicit value ALWAYS wins over both
+        ``custodia_compartida`` and any derivation.
     meses_madre_trabajo_2024
         Months the mother worked while this child was under 3 years old during
         the 2024 filing year.  Used by Art. 81 LIRPF deducción maternidad:
@@ -126,6 +175,9 @@ class DescendantInfo(BaseModel):
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool = True
     custodia_compartida: bool = False
+    rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
+    presenta_declaracion_propia: bool = False
+    prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     nif: str | None = None
@@ -173,13 +225,75 @@ class DescendantInfo(BaseModel):
         """The effective entry date used for prorrata: adoption or birth."""
         return self.adoption_date if self.adoption_date is not None else self.birth_date
 
-    def is_eligible_ordinary(self, filing_year: int) -> bool:
+    def exceeds_rentas_cap(self, thresholds: MinimoDescendientesThresholds) -> bool:
+        """True when a DECLARED rentas figure breaches the Art. 58.1 ceiling.
+
+        Art. 58.1 LIRPF conditions the mínimo on the descendant holding no
+        "rentas anuales, excluidas las exentas, superiores a" the ceiling, so
+        the test is strictly greater-than: a descendant exactly AT the ceiling
+        keeps the mínimo.
+
+        An undeclared figure (``rentas_anuales_euros is None``) returns
+        ``False`` — absence of data is not evidence of income. The alternative
+        default would zero the mínimo for every descendant nobody has yet
+        entered a figure for, which is the overwhelming majority (a young child
+        has no rentas to declare) and would be a large silent UNDER-claim
+        against the taxpayer. The residual over-claim risk — a descendant who
+        really does earn above the ceiling whose figure was never entered — is
+        the operator's to close by declaring the figure.
+        """
+        if self.rentas_anuales_euros is None:
+            return False
+        return self.rentas_anuales_euros > thresholds.rentas_anuales_limite
+
+    def excluded_by_declaracion_propia(self, thresholds: MinimoDescendientesThresholds) -> bool:
+        """True when Art. 61 norma 2ª withdraws the mínimo for this descendant.
+
+        Norma 2ª bars the mínimo when the descendant who generates the
+        entitlement "presenten declaración por este Impuesto con rentas
+        superiores a" the norma 2ª figure. Both halves are required: filing a
+        return is not disqualifying on its own (the AEAT manual is explicit
+        that a descendant filing with "rentas iguales o inferiores a 1.800
+        euros" leaves the mínimo intact), and rentas alone are governed by the
+        separate Art. 58.1 ceiling.
+
+        An undeclared rentas figure returns ``False`` for the same reason as
+        :meth:`exceeds_rentas_cap`.
+        """
+        if not self.presenta_declaracion_propia:
+            return False
+        if self.rentas_anuales_euros is None:
+            return False
+        return self.rentas_anuales_euros > thresholds.declaracion_propia_rentas_limite
+
+    def is_eligible_ordinary(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+    ) -> bool:
         """True when the descendant qualifies for the Art. 58.1 ordinary mínimo.
 
-        Eligibility: age < 25 at year-end OR any degree of discapacidad, AND
-        cohabiting with the taxpayer.
+        Eligibility requires ALL of:
+
+        * cohabiting with the taxpayer (Art. 58.1 "siempre que conviva con el
+          contribuyente"), for which economic dependency is NOT yet modelled as
+          an equivalent;
+        * age < 25 at year-end OR any degree of discapacidad;
+        * annual rentas excluding exempt income at or below the Art. 58.1
+          ceiling (:meth:`exceeds_rentas_cap`);
+        * not excluded by the Art. 61 norma 2ª own-return rule
+          (:meth:`excluded_by_declaracion_propia`).
+
+        *thresholds* is a required keyword argument rather than an optional
+        one so no caller can silently evaluate the age/cohabitation half of the
+        law while skipping the two income conditions.
         """
         if not self.convive_con_contribuyente:
+            return False
+        if self.exceeds_rentas_cap(thresholds):
+            return False
+        if self.excluded_by_declaracion_propia(thresholds):
             return False
         if self.discapacidad_grado and self.discapacidad_grado > 0:
             return True
@@ -360,30 +474,79 @@ class RentaFamilyProfile(BaseModel):
         """
         return sum(d.gastos_guarderia_euros for d in self.descendientes if d.is_eligible_menor_tres(2024))
 
-    def descendientes_eligible_minimum(self, filing_year: int) -> int:
+    def descendientes_eligible_minimum(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+    ) -> int:
         """Count of descendientes eligible for the ordinary Art. 58.1 mínimo.
 
-        A descendant is eligible when age < 25 at year-end OR discapacidad > 0,
-        and cohabiting with the taxpayer.
+        A descendant is eligible when cohabiting, under 25 at year-end or
+        carrying any discapacidad, within the Art. 58.1 rentas ceiling, and not
+        excluded by Art. 61 norma 2ª — see
+        :meth:`DescendantInfo.is_eligible_ordinary`.
         """
-        return sum(1 for d in self.descendientes if d.is_eligible_ordinary(filing_year))
+        return sum(1 for d in self.descendientes if d.is_eligible_ordinary(filing_year, thresholds=thresholds))
 
-    def custodia_compartida_count(self, filing_year: int) -> int:
+    def custodia_compartida_count(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+    ) -> int:
         """Count of eligible descendientes with custodia_compartida=True.
 
-        Only eligible (Art. 58.1) and cohabiting descendants are counted;
-        non-eligible ones carry no mínimo, so the prorrata has no effect.
+        Only eligible (Art. 58.1) descendants are counted; non-eligible ones
+        carry no mínimo, so the prorrata has no effect. This counts the
+        judicially-shared-custody trigger specifically, NOT every descendant
+        whose mínimo ends up prorated under Art. 61 norma 1ª — an explicit
+        ``prorrata_minimo`` answer or a derived second entitled filer prorates
+        without shared custody.
         """
-        return sum(1 for d in self.descendientes if d.custodia_compartida and d.is_eligible_ordinary(filing_year))
+        return sum(
+            1
+            for d in self.descendientes
+            if d.custodia_compartida and d.is_eligible_ordinary(filing_year, thresholds=thresholds)
+        )
 
-    def custodia_compartida_prorrata_factor(self, descendant: DescendantInfo, filing_year: int) -> Decimal:
-        """Return the Art. 61 LIRPF prorrata factor for one descendant.
+    def minimo_prorrata_factor(
+        self,
+        descendant: DescendantInfo,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        second_filer_indicated: bool = False,
+    ) -> Decimal:
+        """Return the Art. 61 norma 1ª prorrata factor for one descendant.
 
-        Returns :data:`CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` (``0.5``, Art. 61
-        LIRPF) when ``descendant.custodia_compartida`` is ``True`` and the
-        descendant is eligible for the mínimo, otherwise ``Decimal("1")``.
+        Norma 1ª keys proration to ENTITLEMENT, not to custody: "Cuando dos o
+        más contribuyentes tengan derecho a la aplicación del mínimo por
+        descendientes ... respecto de los mismos ... descendientes, su importe
+        se prorrateará entre ellos por partes iguales." Shared custody is one
+        way two contribuyentes come to be entitled, not the rule itself, so it
+        remains a trigger rather than the test.
+
+        Precedence, highest first:
+
+        1. ``descendant.prorrata_minimo`` — an explicit operator answer always
+           wins, in both directions.
+        2. ``descendant.custodia_compartida`` — the judicially shared-custody
+           case, preserved as a trigger.
+        3. *second_filer_indicated* — the caller's derivation from profile
+           signals, used only when nothing above answered the question.
+
+        Returns :data:`CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` (``0.5``) when the
+        descendant is mínimo-eligible and any of the above indicates a second
+        entitled contribuyente, otherwise ``Decimal("1")``. A non-eligible
+        descendant always returns ``Decimal("1")`` because there is no mínimo
+        to prorate.
         """
-        if descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year):
+        if not descendant.is_eligible_ordinary(filing_year, thresholds=thresholds):
+            return Decimal("1")
+        if descendant.prorrata_minimo is not None:
+            return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR if descendant.prorrata_minimo else Decimal("1")
+        if descendant.custodia_compartida or second_filer_indicated:
             return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
         return Decimal("1")
 
@@ -393,6 +556,8 @@ class RentaFamilyProfile(BaseModel):
         *,
         birth_order_amounts: Sequence[Decimal],
         menor_tres_supplement: Decimal,
+        thresholds: MinimoDescendientesThresholds,
+        second_filer_indicated: bool = False,
     ) -> Decimal:
         """Compute the Art. 58 mínimo por descendientes aggregate (casillas 0513/0514).
 
@@ -408,10 +573,11 @@ class RentaFamilyProfile(BaseModel):
           siguientes" wording);
         * plus *menor_tres_supplement* when the descendant is also
           Art. 58.2-eligible (age < 3 at year-end);
-        * the sum is then multiplied by the descendant's Art. 61.1ª LIRPF
-          custodia-compartida prorrata factor (0.5 when
-          ``custodia_compartida=True`` and eligible, else 1 —
-          :meth:`custodia_compartida_prorrata_factor`).
+        * the sum is then multiplied by the descendant's Art. 61 norma 1ª
+          prorrata factor (:meth:`minimo_prorrata_factor`), which is 0.5
+          whenever a second contribuyente is also entitled to this
+          descendant's mínimo — by explicit answer, by shared custody, or by
+          the caller's *second_filer_indicated* derivation.
 
         No within-year temporal prorrateo is applied: Art. 58 (in force since
         01/01/2015, BOE-A-2014-12327) declares only the two numbered
@@ -420,17 +586,20 @@ class RentaFamilyProfile(BaseModel):
         to ascendientes' half-period residency (norma 5ª), neither of which
         applies here.
 
-        *birth_order_amounts* and *menor_tres_supplement* are registry
-        ``money`` parameters the caller resolves per filing year; this domain
-        method performs no euro-figure lookup of its own
+        *birth_order_amounts*, *menor_tres_supplement* and *thresholds* are
+        registry ``money`` parameters the caller resolves per filing year; this
+        domain method performs no euro-figure lookup of its own
         (`aeat-schema-central-config`).
 
         Returns ``Decimal("0")`` when no descendant is Art. 58.1-eligible
         (including an empty ``descendientes`` tuple) — the legally correct
-        zero for a childless filer, not an under-declaration.
+        zero for a childless filer, not an under-declaration. A descendant
+        excluded by the rentas ceiling or the norma 2ª own-return rule
+        contributes exactly zero, including its menor-3 supplement, because it
+        never enters the birth-order ranking at all.
         """
         eligible = sorted(
-            (d for d in self.descendientes if d.is_eligible_ordinary(filing_year)),
+            (d for d in self.descendientes if d.is_eligible_ordinary(filing_year, thresholds=thresholds)),
             key=lambda d: d.birth_date,
         )
         if not eligible:
@@ -443,20 +612,30 @@ class RentaFamilyProfile(BaseModel):
             amount = birth_order_amounts[tranche_index]
             if descendant.is_eligible_menor_tres(filing_year):
                 amount += menor_tres_supplement
-            total += amount * self.custodia_compartida_prorrata_factor(descendant, filing_year)
+            total += amount * self.minimo_prorrata_factor(
+                descendant,
+                filing_year,
+                thresholds=thresholds,
+                second_filer_indicated=second_filer_indicated,
+            )
         return total
 
-    def custodia_compartida_advisory(self, filing_year: int) -> str | None:
+    def custodia_compartida_advisory(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+    ) -> str | None:
         """Return the translated Art. 61 prorrata advisory string, or ``None``.
 
-        When at least one eligible descendant has ``custodia_compartida=True``
-        the returned string reads "Se ha aplicado prorrata 50 % (Art. 61 LIRPF)
-        por custodia compartida en X descendientes."  Returns ``None`` when no
-        prorrata is in effect.
+        Scoped to the judicially-shared-custody trigger only. A mínimo prorated
+        because a second entitled filer was DERIVED from profile signals is
+        surfaced separately on the calculate path, because that inference is
+        the one the operator most needs to confirm.
         """
         from ...core.i18n import tr
 
-        count = self.custodia_compartida_count(filing_year)
+        count = self.custodia_compartida_count(filing_year, thresholds=thresholds)
         if count > 0:
             return tr(
                 "profile.descendiente.custodia_compartida_prorrata_applied",

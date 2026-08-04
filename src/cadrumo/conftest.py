@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import ast
 import os
-import shutil
 import sys
 import tempfile
 from collections.abc import Iterator, Mapping
@@ -236,36 +235,3 @@ def _release_settings_storage_directories() -> Iterator[None]:
     """
     yield
     release_settings_storage_directories()
-
-
-@pytest.fixture(scope="session", autouse=True)
-def _release_collection_storage_root() -> Iterator[None]:
-    """Remove the process-private collection root this conftest minted, at session end.
-
-    ``_COLLECTION_STORAGE_ROOT`` (module scope, above) is unconditionally
-    written to ``CADRUMO_LOCAL_STORAGE_ROOT`` before any Cadrumo import, so it
-    materialises on disk the moment anything in the process resolves the
-    storage root and writes beneath it (a log directory, a registry cache, a
-    bucket). ``register_collection_storage_root_cleanup`` already schedules an
-    ``atexit`` removal for the same root, but that hook only fires on a normal
-    interpreter shutdown -- measured directly: 1,319 of these roots
-    accumulated across the fleet (264 MB), with zero evidence of the atexit
-    path having ever fired for an xdist worker process, which pytest-xdist
-    tears down through its own controller rather than a plain process exit.
-    This fixture is the same class of fix as ``_release_settings_storage_directories``
-    above: bind removal to PYTEST'S OWN session-teardown machinery, which the
-    xdist controller reliably drives per worker, rather than relying solely on
-    the interpreter's atexit queue. Best-effort: a locked file or a directory
-    a test deliberately made unreadable must not fail a passing session.
-
-    Named-path removal only -- this fixture removes exactly the ONE directory
-    ``_COLLECTION_STORAGE_ROOT`` names, the directory this process's own
-    conftest minted and owns. It is not a sweep: the 1,319 pre-existing roots
-    from before this fixture existed are left untouched; only newly-minted
-    roots from a session that includes this fixture are cleaned up going
-    forward. Whether the pre-existing backlog is worth clearing is an
-    operator decision, not something this fixture (or any automated sweep)
-    should make.
-    """
-    yield
-    shutil.rmtree(_COLLECTION_STORAGE_ROOT, ignore_errors=True)

@@ -17,7 +17,7 @@ from ....adapters.outbound.aeat.sede import (
     IvaCompensationWalletRow,
     ObservedCasillaValue,
 )
-from ....core import Period
+from ....core import CasillaValueKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
 from ....domain.iva_compensation import IvaCompensationPeriodState
@@ -156,6 +156,7 @@ def _filed_303_compensation_observation(
                 ObservedCasillaValue(
                     casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
                     value=str(prior_pending),
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:110",
                     confidence=1.0,
@@ -163,6 +164,7 @@ def _filed_303_compensation_observation(
                 ObservedCasillaValue(
                     casilla_id=_M303_COMPENSACION_APLICADA_CASILLA,
                     value=str(applied),
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:78",
                     confidence=1.0,
@@ -170,6 +172,7 @@ def _filed_303_compensation_observation(
                 ObservedCasillaValue(
                     casilla_id=_M303_RESULTADO_CASILLA,
                     value=str(resultado),
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:69",
                     confidence=1.0,
@@ -177,6 +180,7 @@ def _filed_303_compensation_observation(
                 ObservedCasillaValue(
                     casilla_id=_M303_POSTERIOR_CASILLA,
                     value=str(posterior),
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:87",
                     confidence=1.0,
@@ -184,6 +188,7 @@ def _filed_303_compensation_observation(
                 ObservedCasillaValue(
                     casilla_id=_M303_RESULTADO_FINAL_CASILLA,
                     value=str(resolved_final_result),
+                    value_kind=CasillaValueKind.NUMERIC,
                     source_artefact_kind="submitted_file",
                     source_locator=f"submitted-file:303:{period}:71",
                     confidence=1.0,
@@ -220,6 +225,7 @@ def _filed_390_observation(
             ObservedCasillaValue(
                 casilla_id=_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,
                 value=str(last_period_compensation),
+                value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:390:97",
                 confidence=1.0,
@@ -227,6 +233,7 @@ def _filed_390_observation(
             ObservedCasillaValue(
                 casilla_id=_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
                 value=str(generated_not_in_last_period),
+                value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:390:662",
                 confidence=1.0,

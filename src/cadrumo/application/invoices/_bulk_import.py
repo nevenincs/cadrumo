@@ -40,6 +40,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -212,6 +213,10 @@ def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
 
 class _RowParseError(Exception):
     """Internal control-flow exception carrying one row's failure detail."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "private row parser control-flow carrier; converted to BulkInvoiceImportRowFailure before leaving the module"
+    )
 
     def __init__(self, *, row_number: int, field: str, reason: str) -> None:
         super().__init__(reason)

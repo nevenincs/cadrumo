@@ -23,6 +23,7 @@ from ....adapters.persistence.storage import SecretStore, get_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....core import AuthProviderKind, BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
+from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
@@ -52,7 +53,6 @@ from .. import (
 )
 from .._operator import _test_operator_auth_from_snapshot
 from .._operator import test_operator_auth as run_operator_auth_test
-from ._certificate_bundle_support import _SECRET, _build_pkcs12
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,7 +60,7 @@ _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _BUCKET_B = "44444444-4444-4444-8444-444444444444"
 _MISSING_BUCKET = "55555555-5555-4555-8555-555555555555"
 _PROFILE_LABEL = "gestor-cert-rotation"
-_SECRET_B = "bucket-b-correct-horse"  # noqa: S105 - synthetic test fixture, not a secret
+CERTIFICATE_BUNDLE_PASSPHRASE_B = "bucket-b-correct-horse"  # noqa: S105 - synthetic test fixture, not a secret
 _NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
 
 
@@ -124,7 +124,7 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(
 ) -> None:
     """A certificate with hundreds of days remaining is classified ``ok``."""
     workflow_state_repository().update(_register_operator_profile())
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=_NOW - timedelta(days=1),
         not_valid_after=_NOW + timedelta(days=200),
@@ -132,7 +132,7 @@ def test_check_reports_ok_for_a_certificate_far_from_expiry(
         subject_cn="gestor-personal",
     )
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="personal", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
 
     report = check_operator_certificate_sources()
 
@@ -158,7 +158,7 @@ def test_check_reports_expiring_within_the_warning_window(
     """
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=30),
@@ -166,7 +166,7 @@ def test_check_reports_expiring_within_the_warning_window(
         subject_cn="apoderado-acme",
     )
     register_operator_certificate_source(name="apoderado-acme", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
 
     report = check_operator_certificate_sources()
 
@@ -185,7 +185,7 @@ def test_check_reports_expired_for_a_lapsed_certificate(
     """A certificate whose validity has already elapsed is classified ``expired``."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=400),
         not_valid_after=now - timedelta(days=5),
@@ -193,7 +193,7 @@ def test_check_reports_expired_for_a_lapsed_certificate(
         subject_cn="expired-cert",
     )
     register_operator_certificate_source(name="expired-cert", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="expired-cert", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="expired-cert", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
 
     report = check_operator_certificate_sources()
 
@@ -217,14 +217,14 @@ def test_check_covers_every_registered_source_independently(
     """
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    valid_cert = _build_pkcs12(
+    valid_cert = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=300),
         name="personal",
         subject_cn="gestor-personal",
     )
-    expiring_cert = _build_pkcs12(
+    expiring_cert = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=10),
@@ -233,8 +233,8 @@ def test_check_covers_every_registered_source_independently(
     )
     register_operator_certificate_source(name="personal", certificate_path=valid_cert)
     register_operator_certificate_source(name="apoderado-acme", certificate_path=expiring_cert, friendly_name="ACME SL")
-    set_operator_certificate_source_secret(name="personal", secret=SecretStr(_SECRET))
-    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
+    set_operator_certificate_source_secret(name="apoderado-acme", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
 
     report = check_operator_certificate_sources()
 
@@ -296,13 +296,13 @@ def _isolated_secret_store() -> SecretStore:
 def _register_select_with_secret(tmp_path: Path) -> Path:
     """Register a real PKCS#12 source, bind its secure-storage passphrase, and select it.
 
-    Returns the certificate path. The bound secret is ``_SECRET`` — the same
+    Returns the certificate path. The bound secret is ``CERTIFICATE_BUNDLE_PASSPHRASE`` — the same
     passphrase the bundle is encrypted with — so a probe opening the bundle
     with the resolved per-source secret succeeds.
     """
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -310,7 +310,7 @@ def _register_select_with_secret(tmp_path: Path) -> Path:
         subject_cn="gestor-personal",
     )
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="personal", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="personal")
     return cert_path
 
@@ -327,7 +327,7 @@ def test_resolver_returns_selected_source_path_and_secure_storage_secret(
     assert credentials.source_name == "personal"
     assert credentials.certificate_path == cert_path
     assert credentials.password is not None
-    assert credentials.password.get_secret_value() == _SECRET
+    assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE
 
 
 def test_check_opens_the_bundle_with_the_secure_storage_secret_no_global_fallback(
@@ -380,7 +380,7 @@ def test_selected_source_without_secret_fails_closed_no_global_credential_leak(
     """A selected source with no bound secret resolves ``password=None`` and never leaks a global secret."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -409,7 +409,7 @@ def test_central_provider_and_explicit_or_omitted_probes_fail_closed_without_nam
     """A valid global password cannot satisfy a selected named source with no bound secret."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -420,7 +420,7 @@ def test_central_provider_and_explicit_or_omitted_probes_fail_closed_without_nam
     select_operator_certificate_source(name="personal")
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_path)
 
-    with override_settings(cadrumo_certificate_password_secret=SecretStr(_SECRET)):
+    with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
         provider_description = select_provider(
             AuthProviderKind.CERTIFICATE,
             settings=load_settings(),
@@ -473,14 +473,14 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
     """Renewing the selected source updates its path mirror and every consuming surface."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_v1 = _build_pkcs12(
+    cert_v1 = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=30),
         name="selected-v1",
         subject_cn="selected-v1",
     )
-    cert_v2 = _build_pkcs12(
+    cert_v2 = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=300),
@@ -488,7 +488,7 @@ def test_reregistering_active_source_keeps_resolver_provider_status_and_test_on_
         subject_cn="selected-v2",
     )
     register_operator_certificate_source(name="selected", certificate_path=cert_v1)
-    set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="selected")
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_v1)
     register_operator_certificate_source(name="selected", certificate_path=cert_v2)
@@ -548,7 +548,7 @@ def test_central_provider_preserves_unnamed_single_certificate_credential_withou
     """The unnamed Settings path and password remain valid when no source is selected."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    global_path = _build_pkcs12(
+    global_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -559,7 +559,7 @@ def test_central_provider_preserves_unnamed_single_certificate_credential_withou
 
     with override_settings(
         cadrumo_certificate_path=global_path,
-        cadrumo_certificate_password_secret=SecretStr(_SECRET),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
         cadrumo_certificate_friendly_name="legacy-global",
     ):
         provider_description = select_provider(
@@ -582,14 +582,14 @@ def test_explicit_global_settings_path_overrides_stale_workflow_mirror_for_statu
     """Legacy explicit Settings path is the same path emitted and probed by every surface."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    stale_path = _build_pkcs12(
+    stale_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=30),
         name="stale-workflow",
         subject_cn="stale-workflow",
     )
-    explicit_path = _build_pkcs12(
+    explicit_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=300),
@@ -601,7 +601,7 @@ def test_explicit_global_settings_path_overrides_stale_workflow_mirror_for_statu
 
     with override_settings(
         cadrumo_certificate_path=explicit_path,
-        cadrumo_certificate_password_secret=SecretStr(_SECRET),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
     ):
         provider_description = select_provider(
             AuthProviderKind.CERTIFICATE,
@@ -626,7 +626,7 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
     """``auth configure --file`` remains the path authority for central callers."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    configured_path = _build_pkcs12(
+    configured_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -637,7 +637,7 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
 
     with override_settings(
         cadrumo_certificate_path=None,
-        cadrumo_certificate_password_secret=SecretStr(_SECRET),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
     ):
         credentials = resolve_active_certificate_credentials()
         provider_description = select_provider(
@@ -647,7 +647,7 @@ def test_central_provider_uses_configured_workflow_path_when_global_path_is_abse
 
     assert credentials.certificate_path == configured_path
     assert credentials.password is not None
-    assert credentials.password.get_secret_value() == _SECRET
+    assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE
     assert provider_description.available is True
 
 
@@ -663,7 +663,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
     ):
         workflow_state_repository().update(_register_operator_profile())
         now = datetime.now(UTC)
-        cert_a = _build_pkcs12(
+        cert_a = build_pkcs12_bundle(
             tmp_path,
             not_valid_before=now - timedelta(days=1),
             not_valid_after=now + timedelta(days=200),
@@ -671,7 +671,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
             subject_cn="route-a",
         )
         register_operator_certificate_source(name="selected", certificate_path=cert_a)
-        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
         settings_a = load_settings()
@@ -689,17 +689,17 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
                 display_name="gestor-route-b",
             ),
         )
-        cert_b = _build_pkcs12(
+        cert_b = build_pkcs12_bundle(
             tmp_path,
             not_valid_before=now - timedelta(days=1),
             not_valid_after=now + timedelta(days=200),
             name="route-b",
             subject_cn="route-b",
-            password=_SECRET_B,
+            password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
         register_operator_certificate_source(name="selected", certificate_path=cert_b)
         with override_settings(cadrumo_blob_store_dir=tmp_path / "route-b-explicit-blobs") as settings_b:
-            set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
+            set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B))
             select_operator_certificate_source(name="selected")
             configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
             store_b = get_secret_store(settings=settings_b)
@@ -715,7 +715,7 @@ def test_explicit_settings_second_root_uses_its_own_cached_secret_store(
     assert store_b.store_dir == settings_b.cadrumo_secret_store_dir
     assert credentials_b.certificate_path == cert_b
     assert credentials_b.password is not None
-    assert credentials_b.password.get_secret_value() == _SECRET_B
+    assert credentials_b.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE_B
     assert provider_b.available is True
     assert operator_test_b.certificate_path == str(cert_b)
     assert operator_test_b.probe_result == ProviderProbeResult.OK
@@ -734,16 +734,16 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
         profile_create_storage_span(_BUCKET_ID),
     ):
         workflow_state_repository().update(_register_operator_profile())
-        cert_b = _build_pkcs12(
+        cert_b = build_pkcs12_bundle(
             tmp_path,
             not_valid_before=now - timedelta(days=1),
             not_valid_after=now + timedelta(days=200),
             name="same-id-route-b",
             subject_cn="same-id-route-b",
-            password=_SECRET_B,
+            password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
         register_operator_certificate_source(name="selected", certificate_path=cert_b)
-        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B))
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
         settings_b = load_settings()
@@ -755,7 +755,7 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
         profile_create_storage_span(_BUCKET_ID),
     ):
         workflow_state_repository().update(_register_operator_profile())
-        cert_a = _build_pkcs12(
+        cert_a = build_pkcs12_bundle(
             tmp_path,
             not_valid_before=now - timedelta(days=1),
             not_valid_after=now + timedelta(days=200),
@@ -763,7 +763,7 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
             subject_cn="same-id-route-a",
         )
         register_operator_certificate_source(name="selected", certificate_path=cert_a)
-        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
         configure_operator_auth(AuthProviderKind.CLAVE_MOVIL.value)
@@ -784,7 +784,7 @@ def test_explicit_settings_same_bucket_id_uses_target_root_and_restores_ambient_
         ambient_after = current_active_bucket_session()
         assert credentials_b.certificate_path == cert_b
         assert credentials_b.password is not None
-        assert credentials_b.password.get_secret_value() == _SECRET_B
+        assert credentials_b.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE_B
         assert provider_b.available is True
         assert len(check_b.entries) == 1
         assert check_b.entries[0].certificate_path == str(cert_b)
@@ -804,16 +804,16 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
     """A retained state snapshot has no authority to read a later bucket's secret."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_a = _build_pkcs12(
+    cert_a = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
         name="retained-state-a",
         subject_cn="retained-state-a",
-        password=_SECRET_B,
+        password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
     )
     register_operator_certificate_source(name="selected", certificate_path=cert_a)
-    set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="selected")
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
     workflow_state_repository().update(
@@ -834,16 +834,16 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
                 display_name="gestor-retained-state-b",
             ),
         )
-        cert_b = _build_pkcs12(
+        cert_b = build_pkcs12_bundle(
             tmp_path,
             not_valid_before=now - timedelta(days=1),
             not_valid_after=now + timedelta(days=200),
             name="retained-state-b",
             subject_cn="retained-state-b",
-            password=_SECRET_B,
+            password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
         register_operator_certificate_source(name="selected", certificate_path=cert_b)
-        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B))
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
 
@@ -874,30 +874,30 @@ def test_resolved_credential_snapshot_survives_an_intervening_source_selection(
 ) -> None:
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_a = _build_pkcs12(
+    cert_a = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
         name="snapshot-a",
         subject_cn="snapshot-a",
-        password=_SECRET,
+        password=CERTIFICATE_BUNDLE_PASSPHRASE,
     )
-    cert_b = _build_pkcs12(
+    cert_b = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
         name="snapshot-b",
         subject_cn="snapshot-b",
-        password=_SECRET_B,
+        password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
     )
     register_operator_certificate_source(name="source-a", certificate_path=cert_a)
-    set_operator_certificate_source_secret(name="source-a", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="source-a", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="source-a")
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
     snapshot_a = resolve_active_certificate_credentials()
 
     register_operator_certificate_source(name="source-b", certificate_path=cert_b)
-    set_operator_certificate_source_secret(name="source-b", secret=SecretStr(_SECRET_B))
+    set_operator_certificate_source_secret(name="source-b", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B))
     select_operator_certificate_source(name="source-b")
     snapshot_b = resolve_active_certificate_credentials()
 
@@ -928,16 +928,16 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
 ) -> None:
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_a = _build_pkcs12(
+    cert_a = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
         name="route-snapshot-a",
         subject_cn="route-snapshot-a",
-        password=_SECRET,
+        password=CERTIFICATE_BUNDLE_PASSPHRASE,
     )
     register_operator_certificate_source(name="selected", certificate_path=cert_a)
-    set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="selected")
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
     session_captured_at = _NOW
@@ -961,16 +961,16 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
                 display_name="gestor-route-snapshot-b",
             ),
         )
-        cert_b = _build_pkcs12(
+        cert_b = build_pkcs12_bundle(
             tmp_path,
             not_valid_before=now - timedelta(days=1),
             not_valid_after=now + timedelta(days=200),
             name="route-snapshot-b",
             subject_cn="route-snapshot-b",
-            password=_SECRET_B,
+            password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
         register_operator_certificate_source(name="selected", certificate_path=cert_b)
-        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B))
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
         session_b_path = storage_state_paths(AuthProviderKind.CERTIFICATE).storage_state
@@ -1022,7 +1022,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             assert state_after_pointer_change.auth.certificate_path == str(cert_a)
             assert credentials_after_pointer_change.certificate_path == cert_a
             assert credentials_after_pointer_change.password is not None
-            assert credentials_after_pointer_change.password.get_secret_value() == _SECRET
+            assert credentials_after_pointer_change.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE
             assert projection_after_pointer_change.active_profile.profile_id == _BUCKET_ID
             assert projection_after_pointer_change.auth.certificate_path == str(cert_a)
             assert projection_after_pointer_change.auth.available is True
@@ -1040,7 +1040,7 @@ def test_auth_projection_span_pins_state_and_credentials_when_pointer_changes(
             session_after_span = load_persisted_session(load_settings(), AuthProviderKind.CERTIFICATE)
         assert credentials_after_span.certificate_path == cert_b
         assert credentials_after_span.password is not None
-        assert credentials_after_span.password.get_secret_value() == _SECRET_B
+        assert credentials_after_span.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE_B
         assert session_after_span is not None
         assert session_after_span.identity_nif == "ROUTE-B"
 
@@ -1052,7 +1052,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
     """Direct provider construction resolves the bucket named by Settings, not ambient state."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_a = _build_pkcs12(
+    cert_a = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -1060,7 +1060,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
         subject_cn="bucket-a",
     )
     register_operator_certificate_source(name="selected", certificate_path=cert_a, friendly_name="bucket-a")
-    set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="selected")
     configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_a)
 
@@ -1072,16 +1072,16 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
                 display_name="gestor-cert-b",
             ),
         )
-        cert_b = _build_pkcs12(
+        cert_b = build_pkcs12_bundle(
             tmp_path,
             not_valid_before=now - timedelta(days=1),
             not_valid_after=now + timedelta(days=200),
             name="bucket-b",
             subject_cn="bucket-b",
-            password=_SECRET_B,
+            password=CERTIFICATE_BUNDLE_PASSPHRASE_B,
         )
         register_operator_certificate_source(name="selected", certificate_path=cert_b, friendly_name="bucket-b")
-        set_operator_certificate_source_secret(name="selected", secret=SecretStr(_SECRET_B))
+        set_operator_certificate_source_secret(name="selected", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE_B))
         select_operator_certificate_source(name="selected")
         configure_operator_auth(AuthProviderKind.CERTIFICATE.value, certificate_path=cert_b)
 
@@ -1102,7 +1102,7 @@ def test_explicit_settings_provider_resolution_uses_target_bucket_and_restores_a
     assert credentials.source_name == "selected"
     assert credentials.certificate_path == cert_b
     assert credentials.password is not None
-    assert credentials.password.get_secret_value() == _SECRET_B
+    assert credentials.password.get_secret_value() == CERTIFICATE_BUNDLE_PASSPHRASE_B
     assert credentials.friendly_name == "bucket-b"
     assert provider_description.available is True
     assert len(check_report.entries) == 1
@@ -1118,7 +1118,7 @@ def test_unreadable_explicit_settings_target_fails_closed_without_global_fallbac
     """An unreadable explicit bucket cannot inherit otherwise valid global credentials."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    global_path = _build_pkcs12(
+    global_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -1128,7 +1128,7 @@ def test_unreadable_explicit_settings_target_fails_closed_without_global_fallbac
     with override_settings(
         cadrumo_active_profile=_MISSING_BUCKET,
         cadrumo_certificate_path=global_path,
-        cadrumo_certificate_password_secret=SecretStr(_SECRET),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
     ) as missing_settings:
         pass
 
@@ -1153,14 +1153,14 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
     """Public login applies the selected source path before its local precondition."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    selected_path = _build_pkcs12(
+    selected_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
         name="selected-missing",
         subject_cn="selected-missing",
     )
-    global_path = _build_pkcs12(
+    global_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -1175,7 +1175,7 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
     with (
         override_settings(
             cadrumo_certificate_path=global_path,
-            cadrumo_certificate_password_secret=SecretStr(_SECRET),
+            cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
             cadrumo_live_tests_enabled="1",
         ),
         pytest.raises(AuthLoginPreconditionError) as raised,
@@ -1195,7 +1195,7 @@ def test_check_named_source_without_secret_never_inherits_a_valid_global_passwor
     """A named source without a bound secret fails closed even when the global password would open it."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -1205,7 +1205,7 @@ def test_check_named_source_without_secret_never_inherits_a_valid_global_passwor
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
     select_operator_certificate_source(name="personal")
 
-    with override_settings(cadrumo_certificate_password_secret=SecretStr(_SECRET)):
+    with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
         report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1
@@ -1220,7 +1220,7 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
     """A real corrupt secure-storage index cannot redirect a named source to the valid global password."""
     workflow_state_repository().update(_register_operator_profile())
     now = datetime.now(UTC)
-    cert_path = _build_pkcs12(
+    cert_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -1228,11 +1228,11 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
         subject_cn="gestor-personal",
     )
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
-    set_operator_certificate_source_secret(name="personal", secret=SecretStr(_SECRET))
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="personal")
     (_isolated_secret_store.store_dir / "index.json").write_text("{not-json", encoding="utf-8")
 
-    with override_settings(cadrumo_certificate_password_secret=SecretStr(_SECRET)):
+    with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
         report = check_operator_certificate_sources()
 
     assert len(report.entries) == 1

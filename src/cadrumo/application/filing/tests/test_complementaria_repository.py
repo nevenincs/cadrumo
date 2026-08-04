@@ -16,6 +16,7 @@ import pytest
 
 from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ....adapters.persistence.storage import Envelope, SensitivityClass
+from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core import Period
@@ -112,7 +113,7 @@ def repo() -> ModeloAmendmentRepository:
 def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "cadrumo.db")
+    return read_db_at_rest_bytes(bucket_paths(storage_root, "filing-test").database_file)
 
 
 class TestEmptyState:

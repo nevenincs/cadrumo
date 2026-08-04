@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.classification import SensitivityClass
+from ...core.i18n import tr
 
 # ``UserProfileStatus`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
@@ -135,6 +136,61 @@ show what a row would hold while an empty namespace shows nothing.
 """
 
 
+class ProfileFieldChoice(BaseModel):
+    """One value a field may be answered with: the token stored, the words shown.
+
+    The two halves are separate because they are decided by different
+    authorities. The token is the schema's -- it is what gets written and what
+    every reader matches on -- while the words are copy, resolved into the
+    output language. A surface offering the token as its own label is stating
+    that the schema's vocabulary is already readable, which is true of a
+    ``régimen`` name and false of ``true``.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    value: str
+    label: str
+
+
+def profile_field_choices(field: ProfileFieldDefinition) -> tuple[ProfileFieldChoice, ...]:
+    """The closed answer set for one field, or empty when it is free text.
+
+    THE authority on "may this field be answered by picking rather than by
+    typing", so the manager's edit dialog and the add-row form offer the same
+    editor for the same declaration instead of each deciding alone. They did
+    decide alone, and disagreed: the add-row form had always offered a boolean
+    as Yes/No, while the manager gave it a text box -- so the same field was a
+    two-item list on one surface and a guess-the-vocabulary prompt on the
+    other, and the manager stored whatever spelling of yes the operator
+    happened to reach for.
+
+    A BOOLEAN is a closed set of two, which is why it belongs here rather than
+    in a checkbox: a page of mixed fields reads better with two named options
+    than with a box whose meaning depends on which row the cursor is on, and
+    the same reasoning already governs
+    :class:`~cadrumo.adapters.inbound.tui.FormFieldKind`. The tokens are the
+    canonical ``true`` / ``false`` the fact carrier promotes to a real
+    :class:`bool`, so picking Yes stores a boolean rather than the word.
+
+    An ENUM's tokens are offered as themselves: they are stored keys the
+    schema declares, not prose this layer may rewrite. A surface that knows
+    better for a particular field -- the language chooser, whose tokens no
+    operator can be asked to recognise -- relabels them at the point of use.
+
+    Every other type is free text and returns empty, which is how a caller
+    tells "pick one of these" from "type a value".
+    """
+    if field.type is ProfileFieldType.BOOLEAN:
+        return (
+            ProfileFieldChoice(value="true", label=tr("flows.confirm.yes")),
+            ProfileFieldChoice(value="false", label=tr("flows.confirm.no")),
+        )
+    if field.type is ProfileFieldType.ENUM:
+        return tuple(ProfileFieldChoice(value=token, label=token) for token in field.enum_values)
+    return ()
+
+
 class ProfileFieldView(BaseModel):
     """One schema field paired with whatever the profile records for it."""
 
@@ -145,11 +201,22 @@ class ProfileFieldView(BaseModel):
     value: str | None
     masked: bool
     required: bool
-    enum_values: tuple[str, ...] = Field(default=())
-    """Closed tokens declared by the schema for an enum field.
+    field_type: ProfileFieldType = Field(default=ProfileFieldType.STRING)
+    """What the schema declares this field holds.
+
+    Carried so a surface can offer the editor the value deserves and say what
+    shape it accepts. A date, a percentage and a NIF are all "a string you
+    type" to a page that does not know the difference, and the operator finds
+    out which one they got wrong only after the write door refuses.
+    """
+    choices: tuple[ProfileFieldChoice, ...] = Field(default=())
+    """The closed answer set, or empty for a field that is typed into.
 
     The manager receives the declaration rather than guessing from the
     current value, so an unanswered enum is still presented as a choice.
+    Built by :func:`profile_field_choices`, which is also what the add-row
+    form reads, so the two surfaces cannot offer different editors for one
+    declaration.
     """
     row_index: str | None = Field(default=None)
     """Which instance of a repeated fact this row belongs to, if any.
@@ -312,7 +379,8 @@ def _field_view(
         value=MASKED_PLACEHOLDER if (masked and present) else raw,
         masked=masked,
         required=field.required,
-        enum_values=field.enum_values,
+        field_type=field.type,
+        choices=profile_field_choices(field),
         row_index=row_index,
     )
 
@@ -494,9 +562,11 @@ def build_profile_overview(
 
 __all__ = [
     "MASKED_PLACEHOLDER",
+    "ProfileFieldChoice",
     "ProfileFieldView",
     "ProfileOverview",
     "ProfileSectionView",
     "build_profile_overview",
     "mask_profile_field",
+    "profile_field_choices",
 ]

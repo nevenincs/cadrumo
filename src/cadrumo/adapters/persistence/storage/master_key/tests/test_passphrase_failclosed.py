@@ -71,7 +71,7 @@ def _provider(store_dir: Path, passphrase: str) -> FileFallbackMasterKeyProvider
 
 
 def test_passphrase_change_preserves_master_key_and_encrypted_data(tmp_path: Path) -> None:
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     old_passphrase = "correct horse battery staple"  # noqa: S105 - synthetic test fixture
     new_passphrase = "brand new operator passphrase"  # noqa: S105 - synthetic test fixture
 
@@ -93,7 +93,7 @@ def test_passphrase_change_preserves_master_key_and_encrypted_data(tmp_path: Pat
 
 
 def test_rejected_candidate_passphrase_leaves_store_openable_and_data_intact(tmp_path: Path) -> None:
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     established = "correct horse battery staple"
 
     provider = _provider(store_dir, established)

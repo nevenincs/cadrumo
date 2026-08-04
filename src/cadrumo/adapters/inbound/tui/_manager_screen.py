@@ -36,11 +36,11 @@ from typing import TYPE_CHECKING, ClassVar, override
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import ModalScreen
-from textual.widgets import Button, DataTable, Footer, Input, Label, LoadingIndicator, OptionList, Static
+from textual.widgets import Button, DataTable, Footer, LoadingIndicator, Static
 from textual.worker import Worker, WorkerState
 
 from ....core.i18n import tr
+from ._field_edit_screen import FieldEditScreen
 from ._form_screen import FormScreen, presenting_forms_through
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
@@ -85,6 +85,27 @@ class ManagerAction:
 
     ``label`` remains the fallback for a host-supplied action that does not
     have a catalogue key.
+    """
+    owns_paths: tuple[str, ...] = ()
+    """Profile paths this action is the sole writer of.
+
+    A row naming one of these opens the ACTION rather than the single-field
+    edit box. Some fields cannot be set one at a time and stay correct:
+    writing them means writing several together, or doing something beside
+    the write that the generic door knows nothing about.
+
+    The authentication rows are the worked case. Setting
+    ``auth.provider`` through the generic door recorded the choice on the
+    profile while leaving the workflow state unactivated, so the profile
+    claimed a provider no session had been established for; and setting
+    ``auth.dni_nie`` alone let it drift from ``identity.tax_id``, which
+    the fail-closed session guard then refused a login over. Both are the
+    compound work the owning action already does correctly, so the row
+    routes there instead of growing a second writer.
+
+    Declared by the action rather than by the schema or this screen: the
+    action is what knows why its fields are inseparable, and this module
+    stays ignorant of what any of them mean.
     """
 
 
@@ -146,198 +167,6 @@ other.
 """
 
 
-class FieldEditScreen(ModalScreen[str | None]):
-    """Edit one field's value. Dismisses with the new value, or ``None``."""
-
-    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
-
-    def __init__(
-        self,
-        field: ProfileFieldView,
-        *,
-        prompt: str | None = None,
-        choice_labels: Mapping[str, str] | None = None,
-    ) -> None:
-        super().__init__()
-        self._field = field
-        self._prompt = prompt if prompt is not None else field.label
-        """What to call the field here, when the schema's own name is not
-        the one the operator knows it by."""
-        self._choice_labels = dict(choice_labels or {})
-        """How to show each enum token, for a field whose stored tokens are
-        not words.
-
-        A language is stored as ``es`` and read as "Spanish", and an
-        operator picking their own language cannot be asked to recognise
-        the token — least of all in a language they do not read. The token
-        is still what gets dismissed and written; only its presentation
-        changes."""
-
-    def _label_for(self, value: str) -> str:
-        """Show one enum token the way the operator should read it."""
-        return self._choice_labels.get(value, value)
-
-    @property
-    def _box_hides_a_value(self) -> bool:
-        """Whether an empty box here is hiding a value rather than describing one.
-
-        The single authority for both halves of the withheld-value
-        reading: whether the dialog explains that an empty box keeps the
-        value, and whether saving on one actually keeps it. Those were
-        once decided separately, and the operator met the behaviour
-        without the explanation on a masked field holding nothing — where
-        the behaviour was also wrong. One predicate keeps a promise the
-        dialog makes and the rule it acts on from parting again.
-        """
-        return self._field.masked and self._field.present and not self._field.enum_values
-
-    @property
-    def _offers_clear(self) -> bool:
-        """Whether this dialog must carry its own way to delete the value.
-
-        Only a masked field needs one. Its box opens empty because the
-        value is withheld, so emptying the box cannot mean "delete this" —
-        the box was already empty, and the operator never saw what they
-        would be deleting. Every other field says it by being emptied,
-        which is a gesture they took deliberately against a value they
-        could read.
-
-        Offered only where the deletion would actually happen: a field
-        holding nothing has none to remove, and a required field's
-        deletion is refused downstream, so a button for either would
-        promise an outcome the dialog then has to take back.
-        """
-        return self._field.masked and self._field.present and not self._field.required
-
-    @override
-    def compose(self) -> ComposeResult:
-        """Lay out the dialog for one field.
-
-        A masked field's box starts EMPTY, and both halves of why are
-        worth stating because neither is visible from here. The overview
-        this dialog is handed never carries a masked value — the
-        projection substitutes the mask placeholder, deliberately, so
-        that a page held open on screen cannot leak a secret — which
-        means there is no real value available to pre-fill with. And the
-        placeholder itself must not be used in its place: it is an
-        ordinary string, so it would be submitted back as the literal new
-        value the moment the operator pressed save, overwriting the
-        secret with a row of dots.
-
-        The emptiness is therefore not the field's state, and the rest of
-        this screen exists to stop it being read as one.
-        """
-        with Vertical(id="edit-dialog"):
-            yield Label(self._prompt, id="edit-label")
-            yield Static(tr("flows.manager.edit.path", path=self._field.path), id="edit-path")
-            if self._field.enum_values:
-                yield OptionList(*[self._label_for(value) for value in self._field.enum_values], id="edit-options")
-            else:
-                yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
-            # An empty box that means "unset" needs no explaining. One that
-            # means "withheld" does, or the operator reads the emptiness as
-            # the field's state and saves it back.
-            if self._box_hides_a_value:
-                yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
-            with Horizontal(id="edit-actions"):
-                yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
-                if self._offers_clear:
-                    yield Button(tr("flows.manager.edit.clear"), id="btn-edit-clear")
-                yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
-
-    def on_mount(self) -> None:
-        if not self._field.enum_values:
-            self.query_one("#edit-input", Input).focus()
-            return
-        options = self.query_one("#edit-options", OptionList)
-        current = next(
-            (index for index, value in enumerate(self._field.enum_values) if value == self._field.value),
-            None,
-        )
-        options.focus()
-        # Taking focus highlights the first row on its own, and enter on an
-        # untouched list would then write whatever happens to be first — a
-        # choice the operator never made. So the highlight is assigned after
-        # focus and only where it is TRUE, which clears it when the field
-        # holds no token of this list. Masking is what makes that
-        # destructive rather than merely wrong: the lookup above compares
-        # against the mask placeholder, so it can never match, and the write
-        # would replace a value the dialog was not allowed to show. Nothing
-        # is lost in reach — the first arrow key highlights the first row,
-        # exactly where focus used to leave it.
-        options.highlighted = current
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "btn-edit-save":
-            if self._field.enum_values:
-                self._dismiss_highlighted_option()
-            else:
-                self._submit_typed(self.query_one("#edit-input", Input).value)
-        elif event.button.id == "btn-edit-clear":
-            # The one gesture that means "delete this". It dismisses the
-            # empty string rather than a marker of its own so the write
-            # door keeps a single reading of blank: blank is already a
-            # clear everywhere else, and this is how a field whose box
-            # cannot be emptied meaningfully still reaches it.
-            self.dismiss("")
-        else:
-            self.dismiss(None)
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        self._submit_typed(event.value)
-
-    def _submit_typed(self, value: str) -> None:
-        """Dismiss with what the operator typed, or with nothing to do.
-
-        An empty box that is HIDING a value is not a clear. The operator
-        was shown a mask instead of the value, so an empty box is what "I
-        typed nothing" looks like and saving on it reads as leaving the
-        field alone — they were never offered the chance to delete
-        something they could see. Writing the blank through would destroy
-        a value they cannot even watch go, so it dismisses as a
-        no-change, exactly as cancelling does, and deletion is left to
-        the button that says so.
-
-        The condition is that the box conceals something, not merely that
-        the field is masked, and the two part on a masked field holding
-        NOTHING. There the emptiness is the field's own state rather than
-        a withholding, the operator is looking at the truth, and the
-        reasoning above has nothing to bite on — so a blank means what it
-        means everywhere else. That matters on a required field: reading
-        it as a no-change answered an operator who opened an empty
-        required field to fill it in with silence, leaving them a field
-        still counted as missing and no account of why saving changed
-        nothing. Handing the blank on lets the write door refuse it and
-        say so.
-
-        This is deliberately the same predicate that decides whether the
-        dialog EXPLAINS the no-change reading. Behaviour the operator is
-        not told about is the failure being closed here, so the note and
-        the rule it describes are read from one place and cannot drift
-        apart again.
-
-        Every other field keeps the old reading, because there an empty
-        box is one the operator emptied.
-        """
-        if self._box_hides_a_value and not value.strip():
-            self.dismiss(None)
-            return
-        self.dismiss(value)
-
-    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
-        self._dismiss_highlighted_option()
-
-    def _dismiss_highlighted_option(self) -> None:
-        highlighted = self.query_one("#edit-options", OptionList).highlighted
-        if highlighted is None:
-            self.dismiss(None)
-            return
-        self.dismiss(self._field.enum_values[highlighted])
-
-    def action_cancel(self) -> None:
-        self.dismiss(None)
-
-
 class ProfileManagerApp(App[None]):
     """Full-screen profile overview with in-place editing."""
 
@@ -367,19 +196,6 @@ class ProfileManagerApp(App[None]):
     #manager-actions Button { margin: 0 2 0 0; }
     #manager-busy { display: none; height: 1; margin: 1 0 0 0; }
     #manager-busy.busy { display: block; }
-    #edit-dialog {
-        border: thick $accent;
-        background: $surface;
-        padding: 1 3;
-        width: 60%;
-        height: auto;
-    }
-    #edit-label { text-style: bold; }
-    #edit-path { color: $text-muted; margin: 0 0 1 0; }
-    #edit-masked-note { color: $text-muted; }
-    #edit-dialog Input { margin: 0 0 1 0; }
-    #edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-    #edit-actions Button { margin: 0 0 0 2; }
     """
     )
 
@@ -406,9 +222,17 @@ class ProfileManagerApp(App[None]):
         *,
         persist: Callable[[str, str], ProfileOverview],
         actions: Sequence[ManagerAction] = (),
+        validate: Callable[[str, str], str | None] | None = None,
     ) -> None:
         super().__init__()
         self.overview = overview
+        self._validate_field = validate
+        """Why the write door would refuse one path's value, or ``None``.
+
+        Injected beside the write door and from the same authority, so the
+        dialog refuses exactly what storage would refuse. A host that
+        supplies none leaves every box unchecked until the write — which is
+        where the refusal used to arrive, unhelpfully."""
         self._actions = tuple(actions)
         """Operations offered above the field table.
 
@@ -697,7 +521,7 @@ class ProfileManagerApp(App[None]):
     # ── editing ─────────────────────────────────────────────────────────
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Open the edit dialog for the selected field.
+        """Open the edit dialog for the selected field, or its owning action.
 
         Refused while a write is in flight: the door merges into the record
         as it loads it, so a second edit started before the first landed
@@ -707,6 +531,13 @@ class ProfileManagerApp(App[None]):
         an action rewrites the whole profile, so a field edited against the
         page as it looks now would be merged into a record the action is
         about to replace.
+
+        A field an action declares itself the sole writer of opens that
+        action instead of the edit box. The box writes exactly one fact and
+        does nothing else, which is right for almost every row and wrong
+        for a field that cannot be correct on its own — so rather than
+        teach the generic door about particular fields, the row is handed
+        to the writer that already knows.
         """
         if self._pending_write is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
@@ -720,7 +551,37 @@ class ProfileManagerApp(App[None]):
         field = self._field_by_key.get(str(key))
         if field is None:
             return
-        self.push_screen(FieldEditScreen(field), self._apply_edit_for(field))
+        owner = self._action_owning(field.path)
+        if owner is not None:
+            self._start_action(owner)
+            return
+        self.push_screen(
+            FieldEditScreen(field, validate=self._validator_for(field)),
+            self._apply_edit_for(field),
+        )
+
+    def _action_owning(self, path: str) -> ManagerAction | None:
+        """Return the action that is the sole writer of ``path``, or ``None``.
+
+        Only the declaring action decides this. The screen holds no list of
+        special paths of its own, so an action that stops owning a field
+        takes the routing with it and cannot leave a row pointing at a
+        writer that no longer wants it.
+        """
+        return next((action for action in self._actions if path in action.owns_paths), None)
+
+    def _validator_for(self, field: ProfileFieldView) -> Callable[[str], str | None] | None:
+        """Bind the injected judge to one field, or ``None`` when there is none.
+
+        The dialog asks about a value; the door asks about a value AT A
+        PATH, because what is acceptable is a property of the declaration
+        rather than of the string. Binding the path here is what lets the
+        dialog stay ignorant of which field it is showing.
+        """
+        if self._validate_field is None:
+            return None
+        path = field.path
+        return lambda value: self._validate_field(path, value) if self._validate_field is not None else None
 
     def _apply_edit_for(self, field: ProfileFieldView):
         """Build the dismissal callback that persists one field's new value."""
@@ -950,6 +811,17 @@ class ProfileManagerApp(App[None]):
         action = next((item for item in self._actions if f"action-{item.key}" == button_id), None)
         if action is None:
             return
+        self._start_action(action)
+
+    def _start_action(self, action: ManagerAction) -> None:
+        """Run one action on a worker thread, from a button or an owned row.
+
+        Extracted so a row that routes to its owning action reaches it by
+        the same path a button press does. A second launcher would be a
+        second place for the busy check, the context copy, the presenter
+        binding and the progress line to drift out of agreement, over an
+        operation whose whole purpose here is having one writer.
+        """
         if self._pending_action is not None or self._pending_write is not None:
             self._refuse(tr("flows.manager.action.busy"))
             return
@@ -1083,9 +955,10 @@ class ProfileManagerApp(App[None]):
                 field,
                 prompt=tr("wizard.setup.profile.output-language.prompt"),
                 choice_labels={
-                    value: tr(f"wizard.setup.profile.output-language.choices.{value}.label")
-                    for value in field.enum_values
+                    choice.value: tr(f"wizard.setup.profile.output-language.choices.{choice.value}.label")
+                    for choice in field.choices
                 },
+                validate=self._validator_for(field),
             ),
             self._apply_edit_for(field),
         )
@@ -1099,9 +972,10 @@ def run_profile_manager_tui(
     *,
     persist: Callable[[str, str], ProfileOverview],
     actions: Sequence[ManagerAction] = (),
+    validate: Callable[[str, str], str | None] | None = None,
 ) -> None:
     """Run the manager to completion against an already-built overview."""
-    ProfileManagerApp(overview, persist=persist, actions=actions).run()
+    ProfileManagerApp(overview, persist=persist, actions=actions, validate=validate).run()
 
 
 __all__ = [

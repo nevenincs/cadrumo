@@ -27,6 +27,7 @@ from .....adapters.persistence.storage import (
     get_master_key_provider,
     secure_object_repository_for_active_bucket,
 )
+from .....adapters.persistence.storage.bucket import bucket_paths
 from .....application.auth import resolve_certificate_source_secret
 from .....application.user_profile import profile_storage_session
 from .....application.workflow import workflow_state_repository
@@ -483,7 +484,7 @@ def test_certificate_secret_set_cli_resumes_failed_event_commit_as_set_once(
         bucket_id = _active_bucket_id()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
-        db_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
+        db_path = bucket_paths(storage_root, bucket_id).database_file
 
         with activate_master_key_provider(get_master_key_provider()):
             registered = invoke_typer_app(
@@ -593,7 +594,7 @@ def test_certificate_secret_rotate_cli_resumes_failed_event_commit_as_rotation_o
         bucket_id = _active_bucket_id()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
-        db_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
+        db_path = bucket_paths(storage_root, bucket_id).database_file
 
         with activate_master_key_provider(get_master_key_provider()):
             registered = invoke_typer_app(
@@ -685,7 +686,7 @@ def test_certificate_secret_remove_cli_resumes_failed_event_commit_truthfully_on
         bucket_id = _active_bucket_id()
         cert_path = tmp_path / "personal.p12"
         cert_path.write_bytes(b"placeholder cert")
-        db_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
+        db_path = bucket_paths(storage_root, bucket_id).database_file
 
         with activate_master_key_provider(get_master_key_provider()):
             registered = invoke_typer_app(

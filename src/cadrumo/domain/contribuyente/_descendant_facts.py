@@ -11,6 +11,9 @@ Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.discapacidad            "0" / "33" / "65" or absent
   renta_family.descendiente.{n}.convivencia             "true" / "false"
   renta_family.descendiente.{n}.custodia_compartida     "true" / "false" (absent means False)
+  renta_family.descendiente.{n}.rentas_anuales          decimal euros or absent (absent means undeclared)
+  renta_family.descendiente.{n}.declaracion_propia      "true" / "false" (absent means False)
+  renta_family.descendiente.{n}.prorrata_minimo         "true" / "false" or absent (absent means unanswered)
   renta_family.descendiente.{n}.meses_madre_trabajo     "0".."12" (absent means 0)
   renta_family.descendiente.{n}.gastos_guarderia        non-negative integer euros (absent means 0)
   renta_family.descendiente.{n}.nif                     NIF string or absent
@@ -25,6 +28,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from datetime import date
+from decimal import Decimal
 from typing import Literal
 
 from ...core.errors import ProfileAnswerTypeError
@@ -67,6 +71,12 @@ def descendant_facts_from_list(
         facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
         if d.custodia_compartida:
             facts.append((f"{prefix}.custodia_compartida", "true"))
+        if d.rentas_anuales_euros is not None:
+            facts.append((f"{prefix}.rentas_anuales", str(d.rentas_anuales_euros)))
+        if d.presenta_declaracion_propia:
+            facts.append((f"{prefix}.declaracion_propia", "true"))
+        if d.prorrata_minimo is not None:
+            facts.append((f"{prefix}.prorrata_minimo", "true" if d.prorrata_minimo else "false"))
         if d.meses_madre_trabajo_2024 > 0:
             facts.append((f"{prefix}.meses_madre_trabajo", str(d.meses_madre_trabajo_2024)))
         if d.gastos_guarderia_euros > 0:
@@ -83,6 +93,7 @@ def descendant_facts_from_list(
 _N_RE = re.compile(
     r"^renta_family\.descendiente\.(\d+)\."
     r"(birth_date|adoption_date|discapacidad|convivencia|custodia_compartida|"
+    r"rentas_anuales|declaracion_propia|prorrata_minimo|"
     r"meses_madre_trabajo|gastos_guarderia|nif)$",
 )
 
@@ -131,6 +142,19 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         convive = convivencia_raw.lower() not in ("false", "0")
         custodia_raw = row.get("custodia_compartida", "false")
         custodia = custodia_raw.lower() not in ("false", "0")
+        rentas_anuales = _stored_rentas_anuales(row.get("rentas_anuales"), index=idx)
+        declaracion_raw = row.get("declaracion_propia")
+        declaracion_propia = (
+            _flag_bool(declaracion_raw, key=f"renta_family.descendiente.{idx}.declaracion_propia")
+            if declaracion_raw is not None
+            else False
+        )
+        prorrata_raw = row.get("prorrata_minimo")
+        prorrata_minimo = (
+            _flag_bool(prorrata_raw, key=f"renta_family.descendiente.{idx}.prorrata_minimo")
+            if prorrata_raw is not None
+            else None
+        )
         meses_raw = row.get("meses_madre_trabajo")
         meses = int(meses_raw) if meses_raw is not None else 0
         if not (0 <= meses <= 12):
@@ -147,12 +171,48 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 discapacidad_grado=_discapacidad_grade(disc_val),
                 convive_con_contribuyente=convive,
                 custodia_compartida=custodia,
+                rentas_anuales_euros=rentas_anuales,
+                presenta_declaracion_propia=declaracion_propia,
+                prorrata_minimo=prorrata_minimo,
                 meses_madre_trabajo_2024=meses,
                 gastos_guarderia_euros=gastos,
                 nif=nif,
             ),
         )
     return tuple(result)
+
+
+def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
+    """Read one descendant's stored Art. 58.1 rentas figure, refusing a bad value.
+
+    Returns ``None`` for an absent fact, which the eligibility predicate reads
+    as "no figure declared" and therefore as non-excluding.
+
+    A PRESENT but unparseable value refuses instead of falling back to that
+    same ``None``, for the reason :func:`_flag_bool` documents: the silent
+    fallback points in the CLAIMING direction. ``None`` means the Art. 58.1
+    ceiling and the Art. 61 norma 2ª exclusion are both skipped, so a typo in a
+    figure that would have disqualified the descendant would instead restore
+    the full mínimo — the exact silent over-claim
+    :meth:`~domain.contribuyente.DescendantInfo.exceeds_rentas_cap` exists to
+    prevent. A negative figure refuses for the same reason rather than being
+    clamped to zero.
+    """
+    if raw is None:
+        return None
+    try:
+        value = Decimal(raw)
+    except (ArithmeticError, ValueError) as exc:
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.rentas_anuales must be a decimal number of euros; "
+            f"got {raw!r}. It is refused rather than ignored because an ignored figure restores the "
+            "full mínimo por descendientes, claiming a deduction the figure may disqualify.",
+        ) from exc
+    if not value.is_finite() or value < 0:
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.rentas_anuales must be a finite non-negative amount; got {raw!r}.",
+        )
+    return value
 
 
 def _flag_bool(raw: str, *, key: str) -> bool:
@@ -199,6 +259,13 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
       DISCAPACIDAD=0|33|65   (optional) discapacidad grade
       CONVIVENCIA=true|false (optional, default true) cohabitation flag
       CUSTODIA=true|false    (optional, default false) custodia compartida (Art. 61 LIRPF)
+      RENTAS=N               (optional) annual rentas excluding exempt income — Art. 58.1 ceiling
+      DECLARACION_PROPIA=true|false
+                             (optional, default false) descendant files their own IRPF return
+                             — combines with RENTAS for the Art. 61 norma 2ª exclusion
+      PRORRATA=true|false    (optional) explicit Art. 61 norma 1ª answer: is another
+                             contribuyente also entitled to this descendant's mínimo?
+                             Omit to let the engine derive it from profile signals.
       MESES_TRABAJO=0..12    (optional, default 0) months mother worked — Art. 81 deducción maternidad
       GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81 bis incremento 0613
       NIF=XXXXXXXXX          (optional) NIF/NIE
@@ -239,6 +306,18 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if custodia_raw is not None:
         custodia = _flag_bool(custodia_raw, key="CUSTODIA")
 
+    rentas_anuales_euros = _stored_rentas_anuales(parts.get("RENTAS") or None, index=0)
+
+    presenta_declaracion_propia = False
+    declaracion_raw = parts.get("DECLARACION_PROPIA")
+    if declaracion_raw is not None:
+        presenta_declaracion_propia = _flag_bool(declaracion_raw, key="DECLARACION_PROPIA")
+
+    prorrata_minimo: bool | None = None
+    prorrata_raw = parts.get("PRORRATA")
+    if prorrata_raw is not None:
+        prorrata_minimo = _flag_bool(prorrata_raw, key="PRORRATA")
+
     meses_madre_trabajo_2024 = 0
     meses_raw = parts.get("MESES_TRABAJO")
     if meses_raw is not None:
@@ -266,6 +345,9 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
         discapacidad_grado=_discapacidad_grade(discapacidad_grado),
         convive_con_contribuyente=convive,
         custodia_compartida=custodia,
+        rentas_anuales_euros=rentas_anuales_euros,
+        presenta_declaracion_propia=presenta_declaracion_propia,
+        prorrata_minimo=prorrata_minimo,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,
         gastos_guarderia_euros=gastos_guarderia_euros,
         nif=nif,

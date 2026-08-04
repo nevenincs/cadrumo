@@ -20,6 +20,7 @@ ISO string for a date field, so emit sites pass the typed value they already hol
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from typing import Annotated, Literal
 
 from pydantic import Field, StringConstraints, model_validator
@@ -48,6 +49,9 @@ class ProfileDescendientePayload(OutputSchema):
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool
     custodia_compartida: bool
+    rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
+    presenta_declaracion_propia: bool = False
+    prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     nif: DescendantNif | None = None

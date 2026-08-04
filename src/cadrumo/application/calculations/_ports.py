@@ -21,9 +21,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
+from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
-from ...core import Period
+from ...core import CasillaValueKind, Period
 from ...domain.calculations.registry import CasillaId
 
 
@@ -72,6 +73,20 @@ class ObservedCasillaValueProtocol(Protocol):
     @property
     def value(self) -> str:
         """Raw string value for the casilla observation."""
+        ...
+
+    @property
+    def value_kind(self) -> CasillaValueKind:
+        """How :attr:`value` is meant to be read."""
+        ...
+
+    def decimal_value(self) -> Decimal:
+        """Return the observed amount, refusing a casilla that is not numeric.
+
+        Read amounts through this rather than converting :attr:`value`: a
+        free-text casilla can hold a token that converts cleanly to a plausible
+        wrong number, so a conversion attempt is not a type test.
+        """
         ...
 
 

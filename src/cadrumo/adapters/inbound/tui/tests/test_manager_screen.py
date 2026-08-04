@@ -61,6 +61,22 @@ def _notice(app: ProfileManagerApp) -> str:
     return str(app.query_one("#manager-notice", Static).content)
 
 
+def _select_row(app: ProfileManagerApp, path: str) -> None:
+    """Select the row for ``path``, as the operator pressing enter on it does.
+
+    Addressed by path rather than by ordinal because the row under any
+    given index moves whenever the schema gains a field, and a case about
+    one particular row must not silently start testing another.
+    """
+    for table in app.query(DataTable):
+        for index, row_key in enumerate(table.rows):
+            if str(row_key.value) == path:
+                app.on_data_table_row_selected(DataTable.RowSelected(table, index, row_key))
+                return
+    message = f"no rendered row for {path!r}"
+    raise AssertionError(message)
+
+
 def _rows(app: ProfileManagerApp) -> dict[str, list[str]]:
     """Every rendered row across every section table, keyed by field path."""
     collected: dict[str, list[str]] = {}
@@ -476,4 +492,99 @@ async def test_a_page_with_no_actions_renders_no_action_bar(tmp_path) -> None:
             await pilot.pause()
             with pytest.raises(NoMatches):
                 app.query_one("#manager-actions")
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_row_an_action_owns_opens_that_action_not_the_edit_box(tmp_path) -> None:
+    """The second write door this closes.
+
+    Every schema section renders as editable rows, so a field belonging to
+    a compound operation was reachable through the generic single-fact
+    door as well as through the action that owns it. That door writes one
+    fact and does nothing else, which for the authentication rows meant
+    recording a provider the workflow state was never activated for, and
+    letting the Cl@ve identity drift from the fiscal one until a login
+    refused over it.
+    """
+    from .. import ManagerAction, ManagerActionOutcome
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        owned = "auth.provider"
+        ran: list[str] = []
+
+        def _run() -> ManagerActionOutcome:
+            ran.append(owned)
+            return ManagerActionOutcome(message="ACTION-OPENED")
+
+        action = ManagerAction(key="owner", label="Owner", run=_run, owns_paths=(owned,))
+        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[action])
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            assert owned in _rows(app), "the owned row must still be visible; routing is not hiding"
+            settled = len(app.screen_stack)
+
+            _select_row(app, owned)
+            await wait_until_settled(app, pilot)
+
+            assert ran == [owned], "selecting an owned row must run its owning action"
+            assert len(app.screen_stack) == settled, "no single-field edit box may open for an owned row"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_an_unowned_row_still_opens_the_edit_box(tmp_path) -> None:
+    """The control: routing must not swallow every row.
+
+    Were the owner lookup matching anything at all, the case above would
+    pass while the manager had stopped being editable, and nothing else
+    here would say so.
+    """
+    from .. import ManagerAction, ManagerActionOutcome
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        ran: list[str] = []
+
+        def _run() -> ManagerActionOutcome:
+            ran.append("owner")
+            return ManagerActionOutcome(message="ACTION-OPENED")
+
+        action = ManagerAction(key="owner", label="Owner", run=_run, owns_paths=("auth.provider",))
+        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[action])
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            settled = len(app.screen_stack)
+
+            _select_row(app, _EDITED_PATH)
+            await pilot.pause()
+
+            assert ran == [], "an unowned row must not run any action"
+            assert len(app.screen_stack) > settled, "an unowned row must still open its edit box"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_an_action_owning_nothing_leaves_every_row_editable(tmp_path) -> None:
+    """The default must stay "the table edits its own rows".
+
+    ``owns_paths`` defaults to empty, so an action that declares no
+    ownership — which is every action but one — cannot capture a row.
+    """
+    from .. import ManagerAction, ManagerActionOutcome
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+
+        action = ManagerAction(key="plain", label="Plain", run=lambda: ManagerActionOutcome(message="x"))
+        app = ProfileManagerApp(_live_overview(), persist=_persist, actions=[action])
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            settled = len(app.screen_stack)
+
+            _select_row(app, "auth.provider")
+            await pilot.pause()
+
+            assert len(app.screen_stack) > settled, "no ownership declared means the row edits as usual"
             app.exit(None)

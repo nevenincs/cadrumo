@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 import typer
 
 from ...application.live import (
+    FiledCasillaSkipRow,
     FiledDataCaptureFailureRow,
     FiledDataListingRow,
     IvaCompensationHistoryReport,
@@ -43,6 +44,7 @@ from ...application.live import (
 from ...application.operator_surface import FilingStatus
 from ...core import Period, PeriodError
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
 from ._app_live_expedientes_cli import expedientes_app, register_expedientes_commands
@@ -1181,7 +1183,61 @@ def filed_pull_cmd(
             for failure in report.failures
         ],
     )
-    _emit_envelope(ctx, command="app.live.filed.pull", result=result, lines=lines)
+    skipped = _skipped_casilla_notice(report.skipped_casillas)
+    # Rebuilt from the notice rather than written twice, so the text line and the
+    # JSON notice cannot drift apart.
+    if skipped is not None:
+        lines = (*lines, skipped.message)
+    _emit_envelope(
+        ctx,
+        command="app.live.filed.pull",
+        result=result,
+        lines=lines,
+        notices=[skipped] if skipped is not None else None,
+    )
+
+
+#: Casillas named individually in the not-enrolled notice; the count carries the rest.
+_MAX_NOTICED_CASILLAS = 8
+
+
+def _skipped_casilla_notice(skipped: Sequence[FiledCasillaSkipRow]) -> Notice | None:
+    """Tell the operator which casillas of their own return could not be read.
+
+    Returns ``None`` when nothing was skipped, so a clean capture stays quiet.
+
+    The notice names each casilla and its registry label and NEVER its value. On
+    Modelo 100 this set includes a referencia catastral and the taxpayer's street
+    address; the notice is written to the operator's terminal and into the JSON
+    envelope, so the value has no business here. The label says which field was
+    skipped, which is what the operator needs to judge whether it mattered.
+
+    The capture SUCCEEDED when this fires. These casillas are ones the filing
+    carries that the registry's Decimal-only channel does not accept -- not a
+    failure to read the artefact, which is what the failure rows report.
+    """
+    if not skipped:
+        return None
+    affected = ", ".join(f"{row.casilla_id} ({row.label})" for row in skipped[:_MAX_NOTICED_CASILLAS])
+    if len(skipped) > _MAX_NOTICED_CASILLAS:
+        affected += f", and {len(skipped) - _MAX_NOTICED_CASILLAS} more"
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="live.filed.pull.casillas_not_enrolled",
+        message=tr(
+            "cli.app.live.filed.casillas_not_enrolled",
+            default=(
+                "{count} casilla(s) in the captured filings hold values that are not amounts, "
+                "so they were not enrolled as calculation evidence: {affected}. "
+                "Everything numeric in those filings was enrolled normally."
+            ),
+        ).format(count=len(skipped), affected=affected),
+        context={
+            "skipped_casilla_count": str(len(skipped)),
+            "casilla_ids": ", ".join(sorted({row.casilla_id for row in skipped})),
+            "modelos": ", ".join(sorted({row.modelo for row in skipped})),
+        },
+    )
 
 
 @filed_app.command("pull-sources", help=tr("cli.app.live.filed.pull_sources_help"))

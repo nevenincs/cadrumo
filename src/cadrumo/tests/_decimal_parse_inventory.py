@@ -17,8 +17,10 @@ Why the argument's *type* is the discriminator
 involved, the result cannot be non-finite, and nothing can be misread. Only a
 *string* argument carries a grammar, so only a string argument can misparse.
 This module therefore reports a violation exactly when the single argument is
-provably string-typed by structure, which is decidable from the AST alone in a
-fully-annotated tree:
+provably string-typed by structure. That is decidable from the AST alone for a
+*name*, through the rules below. It is NOT decidable for an attribute, and the
+tree is not annotated densely enough at those sites for it to become so — see
+"What this detector does NOT see" for the measurement:
 
 * a ``str(...)`` call, an f-string, or a string literal concatenation;
 * a call to a string-only method (``.strip()``, ``.replace()``, …) — the receiver
@@ -31,6 +33,76 @@ fully-annotated tree:
 
 Integer widening is consequently never reported, so the gate needs no allowlist
 entry for the many legitimate ``Decimal(<int>)`` sites.
+
+What this detector does NOT see: attribute access
+-------------------------------------------------
+
+Every rule above resolves a *name*. ``Decimal(casilla.value)`` resolves nothing:
+:func:`_expression_is_str` has no ``ast.Attribute`` branch, so an attribute falls
+through to ``False`` however the field is declared. That is a real limitation, not
+an oversight, and the reason is measurable rather than rhetorical.
+
+Bucketing every ``Decimal(<Attribute>)`` site in the tree by whether the
+receiver's type is knowable from the scanned file alone gives **8 of 20**:
+five ``self.X`` where the class is in-file, three annotated locals whose type is
+also in-file — and twelve that are not, being eight unannotated locals (loop
+targets and plain bindings, which no in-file analysis reaches) and four annotated
+with an imported type. So an honest attribute branch could cover at most 40%,
+and the remaining 60% needs cross-file resolution, which is a type checker.
+
+The obvious alternative was measured and refused. Keying an ``ast.Attribute``
+branch on the attribute NAME fires on all twenty at an **~86% false-positive
+rate**: ``selected_amount`` is ``Decimal | None`` on one class and ``str | None``
+on an unrelated one, ``entry.value`` is a ``Decimal`` alias, and two more sites
+are already guarded by ``isinstance``. A gate that cries wolf at that rate
+accumulates exemptions until it means nothing, so **loud and wrong is worse than
+blind** — this detector stays narrow deliberately.
+
+The escape hatch, if a live instance ever recurs
+------------------------------------------------
+
+A type checker resolves what the AST cannot. Measured, not assumed:
+``reveal_type(casilla.value)`` reports ``str`` under ``ty``, on the exact site
+this module cannot see. The mechanism is to copy the tree outside the repo,
+insert ``reveal_type()`` at each ``Decimal(...)`` argument, run ``ty``, and read
+the revealed types — no mutation of the real tree, no name matching, and no false
+positives by construction.
+
+It is recorded rather than built because at the time of writing the blind spot has
+**zero live instances**: the three that existed were each closed at the call site.
+The true price is higher than the mechanism suggests, and is recorded here so
+whoever revives it inherits the estimate rather than repeating it. Nothing in the
+tree invokes ``ty`` or uses ``reveal_type``, so such a gate would be the first of
+its kind: no pattern to copy, no established way to pin checker-version drift (the
+revealed-type text is the checker's output format, not a contract), a checker run
+added to every invocation, and its own anti-tautology proof and exemption
+discipline to build from scratch. The nearest analogue,
+``dev/docs/sequence_build_gate.py``, invokes an external engine from a gate — but
+its own engine, not a checker's output, so it is precedent for the *shape* and not
+for the *dependency*. Permanent cost against a contingent benefit; build it when
+there is something to catch.
+
+Why ``adapters/`` is out of scope
+---------------------------------
+
+:data:`_STRING_PARSE_LAYERS` covers ``entrypoints`` and ``application`` only, and
+that follows from the rule rather than from inertia: operator-typed text belongs
+to :func:`~core.decimal.try_parse_canonical_decimal` and machine-produced text to
+:func:`~core.decimal.coerce_decimal`, and ``adapters/`` carries machine-produced
+AEAT artefact text. Widening the scope is therefore a change of intent needing its
+own justification, not a bug fix.
+
+None of this means the detector is weak where it does reach. It correctly reports
+a resolvable ``Decimal(str(...))`` — it has been red on exactly such a site while
+blind to an attribute one file away. The edge is precise: it resolves names, not
+attribute types.
+
+Stating a detector's blind spot in its own docstring is the house pattern, not an
+apology for this one: :mod:`~tests.test_storage_provenance_gate` opens by naming
+what its predecessor structurally could not reach (a literal census cannot see a
+path built by joining onto the storage root) and gives the structural reason. A
+reader who finds a limitation recorded here should expect to find the same
+discipline there.
 
 See Also:
     :func:`~core.decimal.try_parse_canonical_decimal`

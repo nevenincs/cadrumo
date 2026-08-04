@@ -143,6 +143,16 @@ class StorageReclaimReport(_StorageReport):
     removed_entries: int = Field(ge=0)
     retained_entries: int = Field(default=0, ge=0)
 
+    retained_paths: tuple[Path, ...] = ()
+    """The entries that survived, so a caller can say why rather than only how many.
+
+    Deliberately not on the wire payload. A count is what the operator needs in
+    the result; the paths exist so the boundary can identify a benign,
+    every-time retention -- an open log file -- and word its warning
+    accordingly, instead of raising the same alarm for a locked file and a
+    failed delete.
+    """
+
 
 __all__ = [
     "StorageInitReport",

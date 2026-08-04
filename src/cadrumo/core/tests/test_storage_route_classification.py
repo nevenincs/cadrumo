@@ -1,8 +1,42 @@
-"""Tests for primary SQL storage route classification."""
+"""Tests for primary SQL storage route classification.
+
+The ``cadrumo.db`` literals throughout are deliberate, not unmigrated -- and so
+are the ``buckets``/``db`` segments joined alongside them in the same chained
+expressions (e.g. ``tmp_path / "buckets" / "bucket-a" / "db" / "cadrumo.db"``):
+the whole on-disk shape is the defended literal, not only its trailing
+filename. Two distinct reasons hold across the file's cases, and neither is
+served by routing the expected side through ``bucket_paths(...).database_file``:
+
+- The ``route.database_path`` assertions confirm an end-to-end round trip --
+  ``Settings`` deriving ``cadrumo_database_url`` (itself pinned against a raw
+  literal in ``test_the_database_url_resolves_to_its_pre_migration_shape``)
+  and ``classify_storage_route`` echoing that URL back as a path -- against
+  the real on-disk shape, independent of the taxonomy accessor either step
+  internally consumes. Re-deriving the expected side from that same accessor
+  would make the assertion pass unconditionally on a Settings/classifier
+  defect that drifted the two in lockstep.
+- The ``not (... / "cadrumo.db").exists()`` refusals prove the former-product
+  guard creates nothing at the canonical path when it refuses to touch a
+  legacy ``aeat.db``. An accessor aimed at the wrong location would leave
+  that assertion trivially satisfied -- the exact silent-pass shape a refusal
+  test must not risk.
+
+The explicit-database-URL parametrize cases (one of which is the unrelated
+``explicit.db``) exercise arbitrary caller-supplied URLs, not the canonical
+filename, so they stay literal for the same reason.
+
+The ``"active-profile"`` write in
+``test_corrupt_pointer_refuses_root_fallback`` is the same shape as the
+round-trip cases above: it plants a malformed pointer file at the real
+location ``Settings`` reads to prove the corrupt-pointer refusal fires, so it
+must target where the accessor's own consumer actually reads, not the
+accessor re-applied.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -17,6 +51,9 @@ from ..config import (
 from ..errors import ActiveProfilePointerError, CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cadrumo.db", "buckets", "db", "active-profile"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None:

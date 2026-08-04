@@ -17,8 +17,8 @@ import pytest
 from ..import_hygiene_scan import (
     REPO_ROOT,
     FacadeInfo,
-    _dunder_all_assignment_value,
     discover_facades,
+    dunder_all_assignment_value,
     find_shim_modules,
     find_underscore_in_all_violations,
     is_underscore_named,
@@ -39,7 +39,7 @@ def test_dunder_all_assignment_value_recognises_plain_form() -> None:
     """The plain ``__all__ = [...]`` assignment must yield its list value."""
     node = _parse_single_statement('__all__ = ["Foo", "Bar"]')
 
-    value = _dunder_all_assignment_value(node)
+    value = dunder_all_assignment_value(node)
 
     assert isinstance(value, ast.List)
     assert [elt.value for elt in value.elts] == ["Foo", "Bar"]
@@ -49,7 +49,7 @@ def test_dunder_all_assignment_value_recognises_annotated_form() -> None:
     """The annotated ``__all__: list[str] = [...]`` form must also resolve."""
     node = _parse_single_statement('__all__: list[str] = ["Foo", "Bar"]')
 
-    value = _dunder_all_assignment_value(node)
+    value = dunder_all_assignment_value(node)
 
     assert isinstance(value, ast.List)
     assert [elt.value for elt in value.elts] == ["Foo", "Bar"]
@@ -59,14 +59,14 @@ def test_dunder_all_assignment_value_ignores_unrelated_annotated_assignment() ->
     """An annotated assignment to a name other than ``__all__`` is not matched."""
     node = _parse_single_statement('SOME_OTHER: list[str] = ["Foo"]')
 
-    assert _dunder_all_assignment_value(node) is None
+    assert dunder_all_assignment_value(node) is None
 
 
 def test_dunder_all_assignment_value_ignores_bare_annotation_with_no_value() -> None:
     """A bare annotation with no assigned value (``__all__: list[str]``) is not a binding."""
     node = _parse_single_statement("__all__: list[str]")
 
-    assert _dunder_all_assignment_value(node) is None
+    assert dunder_all_assignment_value(node) is None
 
 
 def test_discover_facades_registers_annotated_all_init_as_a_facade() -> None:

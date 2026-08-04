@@ -66,7 +66,7 @@ def language_from_argv(argv: list[str]) -> OutputLanguage | None:
     return _language_from_argv(argv)
 
 
-def apply_language_argv_to_environment(argv: list[str]) -> None:
+def apply_language_argv_to_environment(argv: list[str]) -> OutputLanguage | None:
     """Promote an explicit ``--language`` flag to the help-rendering env var.
 
     Sets ``CADRUMO_OUTPUT_LANGUAGE`` from ``argv`` so help strings rendered by
@@ -78,10 +78,19 @@ def apply_language_argv_to_environment(argv: list[str]) -> None:
     intent, so it wins over an ambient ``CADRUMO_OUTPUT_LANGUAGE`` for that run; the
     profile-owned precedence and the env override for sessions without
     ``--language`` are untouched.
+
+    Returns:
+        The promoted language, or ``None`` when ``argv`` carried no supported
+        ``--language``/``--lang``/``--output-language`` flag. The caller uses
+        this to decide whether a process-environment change actually happened
+        and needs the settings cache invalidated -- this module stays
+        dependency-free (see the module docstring) and does not invalidate
+        anything itself.
     """
     language = _language_from_argv(argv)
     if language is not None:
         os.environ[OUTPUT_LANGUAGE_ENV_VAR] = language.value
+    return language
 
 
 __all__ = ["apply_language_argv_to_environment", "language_from_argv"]

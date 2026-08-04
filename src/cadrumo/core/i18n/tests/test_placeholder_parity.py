@@ -53,9 +53,14 @@ _SRC_ROOT = Path(__file__).parent.parent.parent.parent  # src/cadrumo
 _LOCALES_DIR = _SRC_ROOT / "locales"
 _CANONICAL_LOCALE = _LOCALES_DIR / "es.yml"
 
-# Files whose tr() calls are scaffolding/test infrastructure rather than
-# operator-facing renders; skip them to avoid false positives.
-_SKIP_FILE_STEMS = frozenset({"manager", "_ast_scanner", "test_parity", "conftest"})
+# There is no skip list. The one that existed was keyed by bare file STEM, so
+# it matched by name anywhere in the tree: "conftest" silently exempted 23
+# modules, and "manager" would have pre-authorised any future manager.py in any
+# package -- the inheriting-exemption hole, in a list instead of a class
+# hierarchy. It was also entirely redundant: none of the modules it skipped
+# carried a literal tr() call at all, and one entry ("test_parity") duplicated
+# the startswith("test_") filter below. Removing it left the collected call-site
+# count identical.
 
 # (key, token) pairs whose ``{name}`` tokens are intentionally passed THROUGH
 # tr() to a downstream formatter rather than supplied by the tr() call site,
@@ -103,8 +108,6 @@ def _collect_tr_call_sites(src_root: Path) -> dict[str, list[frozenset[str]]]:
     """
     calls: dict[str, list[frozenset[str]]] = defaultdict(list)
     for module_path in src_root.rglob("*.py"):
-        if module_path.stem in _SKIP_FILE_STEMS:
-            continue
         if module_path.stem.startswith("test_"):
             continue
         try:

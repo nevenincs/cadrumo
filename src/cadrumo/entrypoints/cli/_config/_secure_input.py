@@ -137,6 +137,23 @@ def _stdin_is_a_real_console() -> bool:
         return False
 
 
+def terminal_can_prompt_for_secrets() -> bool:
+    """Whether a hardened no-echo secret prompt can actually be shown here.
+
+    The precondition :func:`prompt_secret_no_echo` enforces, exposed so a
+    caller can decide WHETHER to route through that prompt without having
+    to re-derive when it would refuse. A second derivation would drift
+    from the refusal it is supposed to predict, which is the whole reason
+    this is one predicate rather than a repeated pair of checks.
+
+    A caller that simply wants to prompt should call
+    :func:`prompt_secret_no_echo` directly and let it refuse; this exists
+    for the caller choosing between the hardened prompt and a different
+    channel entirely.
+    """
+    return sys.stdin.isatty() and _stdin_is_a_real_console()
+
+
 def write_to_controlling_terminal(text: str) -> None:
     """Write ``text`` directly to the controlling terminal, never a redirected stream.
 
@@ -152,7 +169,7 @@ def write_to_controlling_terminal(text: str) -> None:
     the verb reported success — and the words are shown exactly once and are
     unrecoverable afterwards.
     """
-    if not sys.stdin.isatty() or not _stdin_is_a_real_console():
+    if not terminal_can_prompt_for_secrets():
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
         )
@@ -191,7 +208,7 @@ def prompt_secret_no_echo(prompt: str) -> str:
     :func:`warnings.catch_warnings` is not thread-safe, which is sound here: this
     is a blocking interactive read on a single-threaded CLI process.
     """
-    if not sys.stdin.isatty() or not _stdin_is_a_real_console():
+    if not terminal_can_prompt_for_secrets():
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.custody.errors.non_interactive_secret_required",
         )
@@ -225,5 +242,6 @@ def prompt_secret_no_echo(prompt: str) -> str:
 __all__ = [
     "prompt_secret_no_echo",
     "read_secrets_stdin",
+    "terminal_can_prompt_for_secrets",
     "write_to_controlling_terminal",
 ]

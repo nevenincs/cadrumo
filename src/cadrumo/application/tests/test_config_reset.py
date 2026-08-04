@@ -186,7 +186,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
         )
 
         settings = load_settings()
-        secret_blob_root = settings.cadrumo_blob_store_dir / "blobs"
+        secret_blob_root = settings.cadrumo_blob_store_dir
         assert any(path.is_file() for path in secret_blob_root.rglob("*"))
         _write_active_pointer(root, _PROFILE_B_ID)
         lock_path = auth_acquisition_lock_path(

@@ -7,23 +7,18 @@ against a loaded schema definition and returns structured
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable
-from datetime import date
 from typing import Final
 
 from ...core.errors import BaseSeverity
-from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...domain.user_profile import (
-    NUMERIC_PROFILE_FIELD_TYPES,
     ProfileFieldDefinition,
-    ProfileFieldType,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
+    ProfileValueRefusalKind,
     UserProfileFact,
     UserProfileRecord,
-    boolean_value_refusal,
-    numeric_value_refusal,
+    profile_value_refusal,
     section_field_key,
 )
 from . import (
@@ -37,15 +32,6 @@ from ._completeness import (
     missing_required_field_paths,
 )
 from ._projections import in_window_order
-
-_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-"""The single accepted date layout: zero-padded ``YYYY-MM-DD``.
-
-``datetime.date.fromisoformat`` alone would also accept the compact
-basic form (``19780315``), which the rest of the profile stack does
-not canonicalise back to a :class:`datetime.date`. Anchoring the
-extended hyphenated layout keeps every persisted date fact in one
-shape."""
 
 REQUIRED_FIELD_MISSING_CODE: Final[str] = "required_field_missing"
 """Issue code for a schema-required field absent from the fact set."""
@@ -72,6 +58,36 @@ unreadable answer is a bad one rather than a missing one. A blank is refused
 here rather than deferred, because a boolean field's readers resolve an
 unreadable value to ``False`` -- so a value admitted unread does not stay
 undecided, it silently becomes "no".
+"""
+
+ENUM_VALUE_ISSUE_CODE: Final[str] = "invalid_enum_value"
+"""Issue code for an enum field carrying a token outside its declared set."""
+
+DATE_VALUE_ISSUE_CODE: Final[str] = "invalid_date_value"
+"""Issue code for a date field carrying something that is not a calendar day."""
+
+EMAIL_VALUE_ISSUE_CODE: Final[str] = "invalid_email_value"
+"""Issue code for an email field carrying something that is not an address.
+
+Not a completeness code, for the same reason as its siblings: an entry that
+is not an address is a bad answer rather than a missing one. The declaration
+was previously the only content-format type in the schema that nothing
+checked, so ``banana`` stored and stayed.
+"""
+
+_ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
+    ProfileValueRefusalKind.ENUM: ENUM_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.DATE: DATE_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.NUMERIC: NUMERIC_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.BOOLEAN: BOOLEAN_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.EMAIL: EMAIL_VALUE_ISSUE_CODE,
+}
+"""How a refusal kind is reported as an issue.
+
+Exhaustive over :class:`ProfileValueRefusalKind` by construction, and pinned
+as such by a test: a new kind added to the domain rule with no entry here
+would otherwise raise a :exc:`KeyError` at the moment a taxpayer's value
+tripped it, turning a refusal that should have been reported into a crash.
 """
 
 COMPLETENESS_ISSUE_CODES: Final[frozenset[str]] = frozenset(
@@ -156,155 +172,43 @@ class ProfileValidationService:
             *self._validate_effective_window(section, field, fact),
         )
 
+    @staticmethod
     def _validate_value_type(
-        self,
         field: ProfileFieldDefinition,
         fact: UserProfileFact,
     ) -> tuple[ProfileValidationIssue, ...]:
         """Reject a fact whose value does not satisfy its declared field type.
 
-        Enforces :attr:`ProfileFieldType.DATE`: a date field must carry a
-        real ISO-8601 calendar day in the zero-padded ``YYYY-MM-DD``
-        layout. A :class:`datetime.date` is already valid; a string is
-        accepted only when it matches that layout and
-        :meth:`datetime.date.fromisoformat` parses it — together that
-        rejects a non-ISO layout (``15/03/1978``), the compact basic form
-        (``19780315``), an impossible month or day (``1978-13-45``), a
-        non-calendar day (``1978-02-30``), and plain garbage
-        (``not-a-date``) without any hand-rolled calendar maths.
-
-        Enforces :attr:`ProfileFieldType.ENUM` against the field's own
-        declared ``enum_values``. Those declarations were previously
-        advisory: an enum field accepted any token at all and stored it
-        unchanged, so a closed set that every reader treated as
-        authoritative constrained nothing, and a value carrying the wrong
-        vocabulary could sit in a profile indefinitely without any check
-        able to fail.
-
-        The schema arrives here by injection, so a caller validating
-        against a synthetic schema is checked against ITS declarations
-        rather than the shipped ones — which is why enum enforcement
-        belongs at this boundary and not on the fact carrier.
-        """
-        if fact.value is None:
-            return ()
-        if field.type is ProfileFieldType.ENUM:
-            return self._validate_enum_value(field, fact)
-        if field.type in NUMERIC_PROFILE_FIELD_TYPES:
-            return self._validate_numeric_value(field, fact)
-        if field.type is ProfileFieldType.BOOLEAN:
-            return self._validate_boolean_value(field, fact)
-        if field.type is not ProfileFieldType.DATE:
-            return ()
-        if isinstance(fact.value, date):
-            return ()
-        if isinstance(fact.value, str) and _ISO_DATE_RE.match(fact.value):
-            try:
-                _parse_iso8601_date(fact.value)
-            except ValueError:
-                return (self._invalid_date_issue(field, fact),)
-            return ()
-        return (self._invalid_date_issue(field, fact),)
-
-    @staticmethod
-    def _validate_numeric_value(
-        field: ProfileFieldDefinition,
-        fact: UserProfileFact,
-    ) -> tuple[ProfileValidationIssue, ...]:
-        """Reject a numeric-typed value that is not a number, or is out of range.
-
-        The declared bounds were inert before this: ``minimum`` and
-        ``maximum`` were checked for their own coherence at schema build and
-        then compared to nothing, so a participation percentage declared
-        ``0..100`` accepted ``999`` here and carried it into the M184
-        attribution calculation with nothing raised -- a wrong number in a
-        filing a human submits, rather than a failure anybody could see.
-
         The verdict comes from
-        :func:`~cadrumo.domain.user_profile.numeric_value_refusal` rather
-        than being formed here, so the readers that consume these facts
-        judge a value by the same rule this door admits it under. A second
-        opinion living on the read side is exactly how the two drift.
+        :func:`~cadrumo.domain.user_profile.profile_value_refusal` rather
+        than being formed here, so this door admits a value under exactly the
+        rule the readers judge it by and the rule an operator surface refuses
+        it by. The per-type rules -- enum token, numeric range, yes/no
+        readability, ISO calendar day, address shape -- used to be split between that domain
+        authority and this method, which is how a screen wanting to refuse a
+        bad date where it was typed had nothing to ask and would have had to
+        restate the layout itself.
+
+        What stays here is the ISSUE VOCABULARY: a refusal kind is turned
+        into the code an issue report carries. That is this layer's, because
+        the codes are the report's contract rather than a property of the
+        value.
+
+        The schema arrives by injection, so a caller validating against a
+        synthetic schema is checked against ITS declarations rather than the
+        shipped ones -- which is why the declaration, not the fact carrier,
+        is what enforcement reads.
         """
-        refusal = numeric_value_refusal(field, fact.value)
+        refusal = profile_value_refusal(field, fact.value)
         if refusal is None:
             return ()
         return (
             ProfileValidationIssue(
                 severity=BaseSeverity.ERROR,
-                code=NUMERIC_VALUE_ISSUE_CODE,
+                code=_ISSUE_CODE_BY_REFUSAL_KIND[refusal.kind],
                 path=fact.path,
-                message=refusal,
+                message=refusal.message,
             ),
-        )
-
-    @staticmethod
-    def _validate_boolean_value(
-        field: ProfileFieldDefinition,
-        fact: UserProfileFact,
-    ) -> tuple[ProfileValidationIssue, ...]:
-        """Reject a boolean-typed value that is not a readable yes/no answer.
-
-        The declaration was inert before this: a field declared ``boolean``
-        accepted ``banana``, ``placeholder`` and ``''`` and stored them, so
-        every reader had to decide alone what an unreadable value meant.
-        Readers resolve one to ``False``, which is safe only when the door
-        guarantees a stored value can be read -- a guarantee the maritime
-        reader's fallback already documented as its justification before
-        anything provided it.
-
-        The verdict comes from
-        :func:`~cadrumo.domain.user_profile.boolean_value_refusal` rather
-        than being formed here, so the readers that consume these facts
-        judge a value by the same rule this door admits it under.
-        """
-        refusal = boolean_value_refusal(field, fact.value)
-        if refusal is None:
-            return ()
-        return (
-            ProfileValidationIssue(
-                severity=BaseSeverity.ERROR,
-                code=BOOLEAN_VALUE_ISSUE_CODE,
-                path=fact.path,
-                message=refusal,
-            ),
-        )
-
-    @staticmethod
-    def _validate_enum_value(
-        field: ProfileFieldDefinition,
-        fact: UserProfileFact,
-    ) -> tuple[ProfileValidationIssue, ...]:
-        """Reject an enum-typed value outside the field's declared set.
-
-        Comparison is exact rather than case-folded. The declared sets are
-        case-significant and inconsistent between fields by design — some
-        carry AEAT's own uppercase tokens, others the profile's lowercase
-        vocabulary — so folding would silently admit a spelling the
-        declaring authority does not use.
-        """
-        if str(fact.value) in field.enum_values:
-            return ()
-        return (
-            ProfileValidationIssue(
-                severity=BaseSeverity.ERROR,
-                code="invalid_enum_value",
-                path=fact.path,
-                message=(f"field {fact.path!r} must be one of {list(field.enum_values)}; got {fact.value!r}"),
-            ),
-        )
-
-    @staticmethod
-    def _invalid_date_issue(
-        field: ProfileFieldDefinition,
-        fact: UserProfileFact,
-    ) -> ProfileValidationIssue:
-        """Build the ERROR issue for a date field carrying a non-date value."""
-        return ProfileValidationIssue(
-            severity=BaseSeverity.ERROR,
-            code="invalid_date_value",
-            path=fact.path,
-            message=(f"field {fact.path!r} must be a valid ISO-8601 calendar date (YYYY-MM-DD); got {fact.value!r}"),
         )
 
     def _validate_effective_window(
@@ -431,8 +335,12 @@ class ProfileValidationService:
 
 
 __all__ = [
+    "BOOLEAN_VALUE_ISSUE_CODE",
     "COMPLETENESS_ISSUE_CODES",
     "CONDITIONAL_REQUIRED_FIELD_MISSING_CODE",
+    "DATE_VALUE_ISSUE_CODE",
+    "EMAIL_VALUE_ISSUE_CODE",
+    "ENUM_VALUE_ISSUE_CODE",
     "NUMERIC_VALUE_ISSUE_CODE",
     "REQUIRED_FIELD_MISSING_CODE",
     "ProfileValidationService",

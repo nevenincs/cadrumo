@@ -26,6 +26,7 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -33,6 +34,20 @@ from ....core.config import SecretStoreBackend, Settings
 from ....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``_workspace_secret_store_fingerprint`` targets the real, shared dev-workspace
+secret store (``REPO_ROOT / "var" / "secrets"``), never a taxonomy accessor --
+that is the point of the fingerprint, which exists to catch a cold-process
+test polluting the real workspace. The cold-process CLI assertions in
+``test_cold_process_profile_create_uses_local_storage_secret_store`` set no
+``CADRUMO_SECRET_STORE_DIR`` override, so they check production's real
+DEFAULT-derived location, not an injected value; migrating either to the
+accessor would make the assertion agree with the code path it exists to
+independently confirm.
+"""
 
 # The internal registration-guard messages that must never reach the operator
 # from the composition root. Each is raised by a core registry-slot accessor

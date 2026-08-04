@@ -174,7 +174,7 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
 def _settings_with_store(tmp_path: Path) -> Settings:
     with override_settings(
         cadrumo_local_storage_root=tmp_path / "state",
-        cadrumo_secret_store_dir=tmp_path / "secrets",
+        cadrumo_secret_store_dir=tmp_path / "fallback-store",
         cadrumo_secret_store_backend=SecretStoreBackend.FILE,
     ) as settings:
         return settings

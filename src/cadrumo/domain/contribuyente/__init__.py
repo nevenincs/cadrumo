@@ -42,6 +42,7 @@ from ._marriage_facts import (
 )
 from ._normalise import normalise_key
 from ._renta_codes import (
+    RENTA_MODELO100_CCAA_CODIGOS,
     UE_EEA_COUNTRY_CODES,
     FiscalResidency,
     RentaDeclaracionType,
@@ -50,10 +51,12 @@ from ._renta_codes import (
     RentaSexCode,
     SituacionFamiliar,
     SituacionFamiliarM145,
+    modelo100_ccaa_codigo,
     modelo100_ecivil_export_code,
 )
 from .family import (
     DescendantInfo,
+    MinimoDescendientesThresholds,
     RentaAscendantProfile,
     RentaDescendantProfile,
     RentaFamilyProfile,
@@ -182,10 +185,12 @@ def _normalize_region_token(raw: str) -> str:
 __all__ = [
     "CCAA",
     "PROFILE_KEYS",
+    "RENTA_MODELO100_CCAA_CODIGOS",
     "UE_EEA_COUNTRY_CODES",
     "DescendantInfo",
     "FiscalResidency",
     "ForalRegimeError",
+    "MinimoDescendientesThresholds",
     "ProfileKey",
     "ProfileKeyRequirement",
     "ProfileName",
@@ -211,6 +216,7 @@ __all__ = [
     "marriage_derived_facts",
     "marriage_full_year",
     "marriage_month_start",
+    "modelo100_ccaa_codigo",
     "modelo100_ecivil_export_code",
     "normalise_key",
     "optional_profile_keys",

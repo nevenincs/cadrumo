@@ -27,11 +27,11 @@ _SECRET_EXPIRES_AT = datetime(2099, 1, 1, tzinfo=UTC)
 def test_secret_store_factory_caches_each_explicit_route_independently(tmp_path: Path) -> None:
     """A second Settings route never inherits the first route's cached store."""
     settings_a = Settings(
-        cadrumo_secret_store_dir=tmp_path / "root-a" / "secrets",
+        cadrumo_secret_store_dir=tmp_path / "root-a" / "fallback-store",
         cadrumo_blob_store_dir=tmp_path / "root-a" / "blobs",
     )
     settings_b = Settings(
-        cadrumo_secret_store_dir=tmp_path / "root-b" / "secrets",
+        cadrumo_secret_store_dir=tmp_path / "root-b" / "fallback-store",
         cadrumo_blob_store_dir=tmp_path / "root-b" / "blobs",
     )
     settings_c = Settings(

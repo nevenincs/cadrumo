@@ -112,6 +112,9 @@ def test_xml_dictionary_layout_skips_record_encoding_check() -> None:
         source_refs=("aeat-dict-1",),
         legal_refs=("ley-37-1992:art-1",),
         records=(),
+        # Mandatory on this format: AEAT declares the Aux block first in every
+        # declaration and no dictionary describes it, so the layout must.
+        aux_idioma="E",
     )
     assert layout.format is ExportLayoutFormat.XML_DICTIONARY
 

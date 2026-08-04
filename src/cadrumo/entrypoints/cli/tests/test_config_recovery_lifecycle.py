@@ -48,7 +48,7 @@ _CLI_HARNESS = dedent(
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_secret_store_backend="file",
         cadrumo_secret_passphrase=passphrase,
         cadrumo_output_language="en",
@@ -85,7 +85,7 @@ _ENROLL_HARNESS = dedent(
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_secret_store_backend="file",
         cadrumo_secret_passphrase=base_settings.cadrumo_dev_test_database_password,
         cadrumo_output_language="en",
@@ -208,7 +208,7 @@ def test_recovery_lifecycle_round_trips_without_serialized_mnemonic(tmp_path: Pa
     """status/create/rotate/verify/recover round-trip a real vault; no surface leaks the words."""
 
     _create_profile(tmp_path)
-    recovery_path = tmp_path / "secrets" / "master.recovery.key"
+    recovery_path = tmp_path / "fallback-store" / "master.recovery.key"
 
     unenrolled = _run_cli(tmp_path, ("config", "recovery", "status"))
     assert unenrolled.returncode == 0, _combined(unenrolled)
@@ -316,7 +316,7 @@ def test_recovery_create_and_rotate_refuse_without_interactive_terminal(tmp_path
     """Captured-stdio create/rotate refuse cleanly and leave the envelope untouched."""
 
     _create_profile(tmp_path)
-    recovery_path = tmp_path / "secrets" / "master.recovery.key"
+    recovery_path = tmp_path / "fallback-store" / "master.recovery.key"
 
     refused_create = _run_cli(tmp_path, ("config", "recovery", "create"))
     assert refused_create.returncode == 2, _combined(refused_create)

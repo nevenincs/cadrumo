@@ -46,6 +46,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel
 
@@ -78,6 +79,12 @@ class FormerProductStateError(RuntimeError):
     Detection is refusal-only. The resolver does not open, read, move, re-key,
     delete, or adopt anything below the retired ``aeat`` application directory.
     """
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "raised from inside Settings/pydantic validation during bootstrap, before the CadrumoError "
+        "registry can be relied upon; the CLI boundary explicitly catches it ahead of the "
+        "CadrumoError arm and translates it into a registered CliRefusedBoundaryError"
+    )
 
 
 def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None = None) -> None:

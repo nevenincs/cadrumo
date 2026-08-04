@@ -26,7 +26,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -306,6 +306,12 @@ class SchemaResolutionError(RuntimeError):
     verb whose parameters vanished because of a Typer declaration bug; this error
     turns that silent degradation into a loud, verb-named build-time failure.
     """
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "MCP input-schema build-coverage error; intentionally a plain RuntimeError (a loud build-time "
+        "signal that a command's CLI subtree failed to materialise, which would otherwise ship a "
+        "silent argument-free schema), not an operator-facing registry-bound filing error"
+    )
 
 
 def assert_schema_coverage(resolution_errors: Mapping[str, str]) -> None:

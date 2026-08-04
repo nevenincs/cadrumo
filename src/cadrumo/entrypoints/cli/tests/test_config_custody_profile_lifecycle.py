@@ -35,7 +35,7 @@ _CLI_HARNESS = dedent(
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_secret_store_backend="file",
         cadrumo_secret_passphrase=passphrase,
         cadrumo_output_language="en",
@@ -122,7 +122,7 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
 
     assert created.returncode == 0, _combined_output(created)
     assert "Status\tcreated" in created.stdout
-    secret_dir = tmp_path / "secrets"
+    secret_dir = tmp_path / "fallback-store"
     assert (secret_dir / "master.key").is_file()
     assert (secret_dir / "master.kdf").is_file()
     # The per-store salt lives inside master.kdf (salt_b64); no standalone

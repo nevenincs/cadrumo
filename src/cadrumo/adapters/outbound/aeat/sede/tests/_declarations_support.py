@@ -23,7 +23,7 @@ from ......application.filing import (
     build_runtime_schema_provider,
     export_draft,
 )
-from ......core import Period
+from ......core import CasillaValueKind, Period
 from ......core.config import Settings
 from ......core.resources import bundled_path, resources
 from ......domain.calculations.registry import (
@@ -484,7 +484,23 @@ def _filed_observation(
     casilla_values: Mapping[CasillaId, Decimal | str],
     source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf"] = "submitted_file",
     extraction_coverage: dict[str, float] | None = None,
+    value_kind: CasillaValueKind | None = None,
 ) -> FiledDeclaracionObservation:
+    """Build a filed observation. A ``Decimal`` value is numeric, a ``str`` is text.
+
+    That default mirrors what the production parser stamps: it labels a value by
+    the type it parsed, so a caller handing this builder a bare string is handing
+    it an unparsed token. Pass ``value_kind`` explicitly to build the case a
+    parser could not produce -- a numeric casilla carrying an unreadable token.
+
+    ``ObservedCasillaValue.value_kind`` is required and has no default, which is
+    why introducing it touched every fixture that builds one: twenty-three sites
+    across nine files. That breadth is the point rather than churn. A default
+    would have to guess a kind for values a fixture never declared, and the guess
+    that reads most naturally -- numeric -- is the one that reproduces the defect
+    the field exists to prevent. Nothing has been released, so there is no old
+    shape to stay compatible with and no reason to soften the field.
+    """
     coverage = dict(extraction_coverage) if extraction_coverage is not None else {str(source_artefact_kind): 1.0}
     return FiledDeclaracionObservation(
         modelo=modelo,
@@ -508,6 +524,9 @@ def _filed_observation(
             ObservedCasillaValue(
                 casilla_id=casilla_id,
                 value=str(value),
+                value_kind=value_kind
+                if value_kind is not None
+                else (CasillaValueKind.NUMERIC if isinstance(value, Decimal) else CasillaValueKind.TEXT),
                 source_artefact_kind=source_artefact_kind,
                 source_locator=f"field:{casilla_id}",
                 confidence=1.0,

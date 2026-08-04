@@ -30,13 +30,16 @@ from __future__ import annotations
 import re as _re
 from collections.abc import Mapping
 
+from ....core.decimal import try_parse_canonical_decimal
 from ._ids import CasillaId
 from ._schema_scalars import registry_scalar_value_type
 from ._schema_surfaces import CasillaDefinition
 from ._schema_verification import KNOWN_PROFILE_FLAG_ADVISORY_FIELDS
 
 __all__ = [
+    "_ADVISORY_WHEN_RATIO_GE_PREDICATE",
     "_CASILLA_LIST_OPERATORS",
+    "_advisory_when_ratio_ge_predicate_failures",
     "_casilla_equals_implies_diverges_predicate_failures",
     "_casilla_equals_implies_nonzero_predicate_failures",
     "_casilla_equals_implies_profile_flag_predicate_failures",
@@ -410,6 +413,66 @@ def _deduccion_requires_adquisicion_before_predicate_failures(
         failures.append(
             f"{prefix}: {owner} deduccion_requires_adquisicion_before cutoff {cutoff!r} "
             "must be an ISO date literal (YYYY-MM-DD)",
+        )
+    return failures
+
+
+# advisory_when_ratio_ge(["num_casilla_id", "den_casilla_id", "threshold"]) —
+# ratio advisory whose third token is a NUMERIC LITERAL rather than a casilla
+# id, so it cannot route through the generic casilla-list validators. The
+# threshold is the reason this gate exists: the runtime evaluator builds it
+# with a bare ``Decimal`` and compares OUTSIDE its own ``except`` clause, so an
+# unvalidated literal either makes the advisory permanently silent (``Infinity``
+# compares False to every ratio) or escapes as an uncaught ``InvalidOperation``
+# (``NaN`` builds cleanly, then raises at ``>=``). Both defeat the advisory's
+# purpose, and a silent one defeats it invisibly.
+_ADVISORY_WHEN_RATIO_GE_PREDICATE = _re.compile(
+    r"^advisory_when_ratio_ge\(\[(?P<ids>[^\]]*)\]\)$",
+)
+
+
+def _advisory_when_ratio_ge_predicate_failures(
+    prefix: str,
+    owner: str,
+    expression: str,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Return failures for a malformed ``advisory_when_ratio_ge`` predicate."""
+    match = _ADVISORY_WHEN_RATIO_GE_PREDICATE.match(expression.strip())
+    if match is None:
+        return [
+            f"{prefix}: {owner} advisory_when_ratio_ge expression {expression!r} is malformed; "
+            'expected advisory_when_ratio_ge(["numerator_casilla_id", "denominator_casilla_id", "threshold"])',
+        ]
+    tokens = _parse_predicate_casilla_id_tokens(match.group("ids"))
+    failures: list[str] = []
+    if len(tokens) != 3:
+        failures.append(
+            f"{prefix}: {owner} advisory_when_ratio_ge must name exactly three tokens "
+            f"(numerator casilla id, denominator casilla id, threshold), got {len(tokens)}: {tokens!r}",
+        )
+        return failures
+    numerator_id, denominator_id, threshold = tokens
+    for role, casilla_id in (("numerator", numerator_id), ("denominator", denominator_id)):
+        if casilla_id not in casillas:
+            failures.append(
+                f"{prefix}: {owner} advisory_when_ratio_ge references unknown {role} casilla {casilla_id!r}",
+            )
+            continue
+        casilla = casilla_by_id.get(casilla_id)
+        if casilla is not None and registry_scalar_value_type(casilla.data_type) == "str":
+            failures.append(
+                f"{prefix}: {owner} advisory_when_ratio_ge {role} casilla {casilla_id!r} must be a numeric "
+                f"casilla, not a text-family one; declares data_type {casilla.data_type!r}",
+            )
+    if try_parse_canonical_decimal(threshold) is None:
+        failures.append(
+            f"{prefix}: {owner} advisory_when_ratio_ge threshold {threshold!r} is not a plain decimal number; "
+            "write it as digits with an optional '.' fraction (for example \"0.5\"). Scientific notation, a "
+            "leading '+', underscore separators, 'NaN' and 'Infinity' are refused: an advisory whose threshold "
+            "is not an ordinary number either never fires or fails at comparison, and neither is visible to "
+            "the operator it was written to warn.",
         )
     return failures
 

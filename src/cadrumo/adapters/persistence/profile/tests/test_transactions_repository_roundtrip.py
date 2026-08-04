@@ -46,6 +46,7 @@ from .....domain.transactions import (
     derive_transaction_id,
 )
 from .....tests.secure_sql import isolated_runtime_profile
+from ...storage.bucket import bucket_paths
 from ...storage import SecureObjectRepository, SensitivityClass
 from ...storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
 from ...storage.sql import SecureObjectRawRow
@@ -166,7 +167,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     # Provenance must survive ingest.
     assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
     assert loaded_mixed.raw.provenance.source_row_index == 7
-    assert (tmp_path / "cadrumo-storage" / "buckets" / _BUCKET_ID / "db" / "cadrumo.db").is_file()
+    assert (bucket_paths(tmp_path / "cadrumo-storage", _BUCKET_ID).database_file).is_file()
 
 
 def test_transaction_catalogue_refuses_foreign_payload_rekeyed_under_an_indexed_row(

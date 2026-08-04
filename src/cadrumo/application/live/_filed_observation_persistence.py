@@ -159,23 +159,6 @@ def select_latest_filed_observations_in_history_order(
     )
 
 
-def persist_latest_filed_calculation_observations(
-    observations: tuple[FiledDeclaracionObservation, ...],
-    *,
-    justificante_csvs_by_observation: Mapping[tuple[str, int, str, str], tuple[str, ...]] | None = None,
-) -> tuple[str, ...]:
-    """Persist only the latest captured observation per modelo/year/period."""
-    keys: list[str] = []
-    for observation in select_latest_filed_observations_in_history_order(observations):
-        keys.extend(
-            _persist_filed_calculation_observation_if_extractable(
-                observation,
-                justificante_csvs=_justificante_csvs_for_observation(observation, justificante_csvs_by_observation),
-            ),
-        )
-    return tuple(keys)
-
-
 def persist_filed_justificante_metadata(
     observation: FiledDeclaracionObservation,
     *,
@@ -414,17 +397,6 @@ def _filed_observation_history_period_sort_key(modelo: str, period: Period) -> t
     return (100, period.registry_token)
 
 
-def _persist_filed_calculation_observation_if_extractable(
-    observation: FiledDeclaracionObservation,
-    *,
-    justificante_csvs: tuple[str, ...] = (),
-) -> tuple[str, ...]:
-    try:
-        return (persist_filed_calculation_observation(observation, justificante_csvs=justificante_csvs),)
-    except (LiveApplicationInputError, SedeParseError):
-        return ()
-
-
 def _parse_matching_filed_justificante(
     observation: FiledDeclaracionObservation,
     artefact: FiledDeclaracionArtefact,
@@ -640,6 +612,5 @@ __all__ = [
     "persist_filed_calculation_observation",
     "persist_filed_justificante_metadata",
     "persist_iva_compensation_history_observations_strict",
-    "persist_latest_filed_calculation_observations",
     "select_latest_filed_observations_in_history_order",
 ]

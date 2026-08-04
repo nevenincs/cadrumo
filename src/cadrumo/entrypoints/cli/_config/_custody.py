@@ -138,7 +138,7 @@ def _login_notices(outcome: ProfileLoginOutcome) -> tuple[Notice, ...]:
     return tuple(notices)
 
 
-def _login_through_the_screen() -> ProfileLoginOutcome:
+def _login_through_the_screen(*, name: str | None) -> ProfileLoginOutcome:
     """Log in on the full-screen surface, refusing when the operator leaves.
 
     Leaving the screen without unlocking is an ordinary choice, but it is
@@ -146,11 +146,15 @@ def _login_through_the_screen() -> ProfileLoginOutcome:
     is gated on, so reporting success with no session minted would hand a
     caller an exit code that says the gate is open when it is shut. The
     refusal names the verb to run again, exactly as the session gate does.
+
+    A named target preselects its row; an unknown one is refused before
+    the screen opens, so a mistyped label can never quietly become a
+    login to whichever profile happened to sort first.
     """
     from .._errors import CliRefusedBoundaryError
-    from ._login_frontend import present_login
+    from ._login_frontend import preselected_profile_id, present_login
 
-    outcome = present_login()
+    outcome = present_login(preselected=preselected_profile_id(name))
     if outcome is None:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.login.refusal.abandoned",
@@ -167,14 +171,30 @@ def _login_through_the_prompt(
 ) -> ProfileLoginOutcome:
     """Log in through the line prompt, the stdin channel, or the env secret.
 
-    The path every scripted, piped, CI, and JSON caller takes, unchanged:
-    a named target, a bounded ``--secrets-stdin`` payload, a configured
-    ``CADRUMO_SECRET_PASSPHRASE``, or the interactive ``getpass`` prompt on
-    a host with no full-screen surface — and the same refusal when none of
-    those supplied a passphrase.
+    The path every scripted, piped, CI, and JSON caller takes: a named
+    target, a bounded ``--secrets-stdin`` payload, a configured
+    ``CADRUMO_SECRET_PASSPHRASE``, or a line prompt on a real console that
+    cannot go full-screen — and the same refusal when none of those
+    supplied a passphrase.
+
+    That line prompt is explicitly supplied rather than left to default.
+    Passing no callback hands the read to the storage substrate's own
+    resolver, which ends at a bare :func:`getpass.getpass`: an untranslated
+    English prompt that silently degrades to an *echoing* read whenever it
+    cannot control the terminal. ``login`` was the only custody path in
+    this package still reaching it; every other secret is read through
+    ``prompt_secret_no_echo``, which promotes that degradation to a
+    refusal.
+
+    The callback is supplied ONLY when it would change which channel is
+    used — a real console, with no configured passphrase to consume first.
+    A headless host keeps the substrate's env-var precedence, and a
+    console-less one keeps the substrate's own refusal and exit code
+    rather than acquiring this package's; neither behaviour moves.
     """
     from ....application.user_profile import login_profile
-    from ._secure_input import read_secrets_stdin
+    from .. import _headless_secret_channel_active
+    from ._secure_input import prompt_secret_no_echo, read_secrets_stdin, terminal_can_prompt_for_secrets
 
     passphrase_callback: Callable[[], str] | None = None
     if secrets_stdin:
@@ -183,6 +203,12 @@ def _login_through_the_prompt(
         def passphrase_callback() -> str:
             """Resolve the passphrase already read from the bounded stdin channel."""
             return secret
+
+    elif not _headless_secret_channel_active() and terminal_can_prompt_for_secrets():
+
+        def passphrase_callback() -> str:
+            """Read the profile passphrase on the hardened no-echo channel."""
+            return prompt_secret_no_echo(tr("cli.config.passphrase.current_passphrase_prompt"))
 
     try:
         return login_profile(name=name, passphrase_callback=passphrase_callback)
@@ -223,8 +249,8 @@ def _register_login_command(app: typer.Typer) -> None:
         _activate_subcommand_output_language(ctx, output_language)
         from ._login_frontend import login_screen_is_available
 
-        if login_screen_is_available(ctx, name=name, secrets_stdin=secrets_stdin):
-            outcome = _login_through_the_screen()
+        if login_screen_is_available(ctx, secrets_stdin=secrets_stdin):
+            outcome = _login_through_the_screen(name=name)
         else:
             outcome = _login_through_the_prompt(ctx, name=name, secrets_stdin=secrets_stdin)
 

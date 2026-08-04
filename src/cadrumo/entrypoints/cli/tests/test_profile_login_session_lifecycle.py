@@ -24,6 +24,7 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -31,10 +32,33 @@ from typing import Any
 import pytest
 
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ....tests.secure_sql import reap_profile_session_keys
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PASSPHRASE = "lifecycle-session-passphrase"  # noqa: S105
+
+#: Storage-root directory name every test below provisions under ``tmp_path``.
+_STORAGE_DIRNAME = "storage"
+
+
+@pytest.fixture(autouse=True)
+def _reap_session_keys(tmp_path: Path) -> Iterator[None]:
+    """Return the OS keychain to its pre-test state after every test.
+
+    These tests deliberately leave a logged-in profile behind (a login
+    whose persistence is the assertion, a repeat login proving
+    idempotence), and each run provisions a brand-new bucket uuid. Without
+    this teardown every run deposits another permanent
+    ``cadrumo:profile-session`` entry in the developer's real credential
+    store. The reap runs in a fixture teardown rather than at the end of a
+    test body so a FAILING test cleans up too.
+    """
+    try:
+        yield
+    finally:
+        reap_profile_session_keys(tmp_path / _STORAGE_DIRNAME)
+
 
 #: Harness that runs the production entrypoint against a scoped storage
 #: root. ``with_passphrase`` decides whether the sanctioned headless
@@ -177,7 +201,7 @@ class TestSessionLifecycle:
 
     def test_login_resume_and_logout_lifecycle(self, tmp_path: Path) -> None:
         """One full pass: gate, login, follow-on process, logout idempotence."""
-        storage_root = tmp_path / "storage"
+        storage_root = tmp_path / _STORAGE_DIRNAME
         storage_root.mkdir()
         bucket_id = _create_profile(storage_root)
 
@@ -250,7 +274,7 @@ class TestSessionLifecycle:
         not outlive the command, so its presence is bound to the same
         ``session_persisted`` flag the record on disk is bound to.
         """
-        storage_root = tmp_path / "storage"
+        storage_root = tmp_path / _STORAGE_DIRNAME
         storage_root.mkdir()
         bucket_id = _create_profile(storage_root)
         _run(storage_root, ("config", "logout"))
@@ -283,7 +307,7 @@ class TestSessionLifecycle:
         login is a genuine fresh authentication and the idempotence
         contract does not apply.
         """
-        storage_root = tmp_path / "storage"
+        storage_root = tmp_path / _STORAGE_DIRNAME
         storage_root.mkdir()
         bucket_id = _create_profile(storage_root)
         _run(storage_root, ("config", "logout"))

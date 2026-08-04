@@ -65,6 +65,10 @@ See Also:
         supplies an expected casilla value for independent reconciliation.
     :class:`ExportLayoutFormat`: Wire shape a registry export layout declares,
         closing the value set every export consumer used to re-spell.
+    :class:`DeclaracionIdioma`: Languages AEAT's declaration ``Aux/Idioma``
+        element accepts, which are not the application's own output languages.
+    :class:`CasillaValueKind`: How an observed casilla value is meant to be read,
+        so a reader asks what a value IS instead of attempting a conversion.
 """
 
 from __future__ import annotations
@@ -88,6 +92,7 @@ from ._amendment_kind_regime import (
 from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ._casilla_value_kind import CasillaValueKind
 from ._concept_lifecycle import ConceptLifecycle
 from ._config_state_root import (
     FormerProductStateError,
@@ -103,6 +108,7 @@ from ._credentials import (
     assess_passphrase_strength,
     character_class_count,
 )
+from ._declaracion_idioma import DeclaracionIdioma
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._fts_query import fts_or_group
@@ -314,10 +320,12 @@ __all__: list[str] = [
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
+    "CasillaValueKind",
     "CompatibilityRegime",
     "ConceptLifecycle",
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
+    "DeclaracionIdioma",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",

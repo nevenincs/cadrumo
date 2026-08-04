@@ -177,7 +177,7 @@ class TestWrappedMasterKeyPersistence:
         master_key = secrets.token_bytes(32)
         rk = generate_recovery_key()
         wrapped = wrap_master_key(master_key=master_key, recovery_key=rk)
-        target = tmp_path / "secrets" / "master.recovery.key"
+        target = tmp_path / "fallback-store" / "master.recovery.key"
         save_wrapped_master_key(wrapped, target)
         assert target.exists()
         loaded = load_wrapped_master_key(target)
@@ -191,7 +191,7 @@ class TestWrappedMasterKeyPersistence:
             master_key=master_key,
             recovery_key=generate_recovery_key(),
         )
-        target = tmp_path / "secrets" / "master.recovery.key"
+        target = tmp_path / "fallback-store" / "master.recovery.key"
         save_wrapped_master_key(wrapped, target)
         text = target.read_text(encoding=UTF_8_ENCODING)
         # The persisted file is a single-line JSON object with the
@@ -202,7 +202,7 @@ class TestWrappedMasterKeyPersistence:
         assert "ciphertext_b64" in text
 
     def test_load_rejects_malformed_json_as_localized_storage_validation(self, tmp_path: Path) -> None:
-        target = tmp_path / "secrets" / "master.recovery.key"
+        target = tmp_path / "fallback-store" / "master.recovery.key"
         target.parent.mkdir(parents=True)
         target.write_text("not-json", encoding=UTF_8_ENCODING)
 
@@ -225,7 +225,7 @@ class TestInstallAfterVerification:
     """The atomic install runs only after a full verification passes."""
 
     def test_installs_payload_when_verify_passes(self, tmp_path: Path) -> None:
-        path = tmp_path / "secrets" / "master.recovery.key"
+        path = tmp_path / "fallback-store" / "master.recovery.key"
         payload = b'{"installed":true}'
         calls: list[str] = []
 
@@ -238,7 +238,7 @@ class TestInstallAfterVerification:
         assert path.read_bytes() == payload
 
     def test_prior_file_survives_when_verify_raises(self, tmp_path: Path) -> None:
-        path = tmp_path / "secrets" / "master.recovery.key"
+        path = tmp_path / "fallback-store" / "master.recovery.key"
         path.parent.mkdir(parents=True)
         prior = b'{"prior":"envelope"}'
         path.write_bytes(prior)
@@ -252,7 +252,7 @@ class TestInstallAfterVerification:
         assert path.read_bytes() == prior
 
     def test_no_file_written_when_verify_raises_on_empty_store(self, tmp_path: Path) -> None:
-        path = tmp_path / "secrets" / "master.recovery.key"
+        path = tmp_path / "fallback-store" / "master.recovery.key"
 
         def _verify() -> None:
             raise RecoveryVerificationError("candidate rejected")
@@ -273,7 +273,7 @@ class TestNoSecretSerialization:
     """Mnemonic verification and recovery never serialize secret material."""
 
     def test_persisted_envelope_never_contains_plaintext_mnemonic_or_master_key(self, tmp_path: Path) -> None:
-        store_dir = tmp_path / "secrets"
+        store_dir = tmp_path / "fallback-store"
         provider = _provisioned_file_provider(store_dir)
         master_key_hex = provider.get_master_key().hex()
         path = store_dir / "master.recovery.key"
@@ -293,7 +293,7 @@ class TestNoSecretSerialization:
         assert master_key_hex not in envelope_text
 
     def test_verify_outcome_serialization_excludes_secret_material(self, tmp_path: Path) -> None:
-        store_dir = tmp_path / "secrets"
+        store_dir = tmp_path / "fallback-store"
         provider = _provisioned_file_provider(store_dir)
         master_key_hex = provider.get_master_key().hex()
         path = store_dir / "master.recovery.key"
@@ -313,7 +313,7 @@ class TestNoSecretSerialization:
         assert master_key_hex not in serialized
 
     def test_recover_outcome_serialization_excludes_secret_material(self, tmp_path: Path) -> None:
-        store_dir = tmp_path / "secrets"
+        store_dir = tmp_path / "fallback-store"
         provider = _provisioned_file_provider(store_dir)
         master_key_hex = provider.get_master_key().hex()
         path = store_dir / "master.recovery.key"
@@ -336,7 +336,7 @@ class TestNoSecretSerialization:
         assert master_key_hex not in serialized
 
     def test_failed_recover_error_envelope_excludes_secret_material(self, tmp_path: Path) -> None:
-        store_dir = tmp_path / "secrets"
+        store_dir = tmp_path / "fallback-store"
         provider = _provisioned_file_provider(store_dir)
         path = store_dir / "master.recovery.key"
         recovery_create(provider=provider, path=path, created_at=_NOW, confirm=lambda m: m)

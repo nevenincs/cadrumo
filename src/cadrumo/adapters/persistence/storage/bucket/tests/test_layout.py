@@ -1,9 +1,31 @@
-"""Tests for the per-bucket directory provisioning surface."""
+"""Tests for the per-bucket directory provisioning surface.
+
+This module uses the taxonomy accessor and bare on-disk literals side by side,
+and the split is deliberate.
+
+The **literals** (``"buckets"`` in the layout assertions and in the
+occupied-path setup) are the independent oracle. ``bucket_paths`` resolves
+through ``storage_location(StorageCategory.BUCKETS)``, so expressing the
+expected side through the same accessor would move both sides of the assertion
+together -- asserting the accessor equals itself, passing unconditionally, and
+defending nothing. The occupied-path case additionally needs the real name to
+collide with what production actually creates; a resolved value would still
+collide today, but the point of that test is the collision, not the lookup.
+
+The **accessor** calls feed the structural gate below the governed name set it
+must not find re-typed in the implementation module. That is a question about
+the source, answered from the declaration; the assertions above are a question
+about the filesystem, answered from a literal.
+
+A change to a declared subpath **should** red the literal assertions. Do not
+migrate them to the accessor.
+"""
 
 from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import Final
 
 import pytest
 from pydantic import ValidationError
@@ -18,6 +40,9 @@ from .._layout import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "db", "blobs", "audit"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _LAYOUT_MODULE = Path(__file__).resolve().parent.parent / "_layout.py"
 

@@ -110,7 +110,7 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_TOKEN_DIR": str(tmp_path / "tokens"),
             "CADRUMO_RUNS_DIR": str(tmp_path / "runs"),
-            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "storage" / "secrets"),
+            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "storage" / "fallback-store"),
             "CADRUMO_SECRET_STORE_BACKEND": "file",
         },
     )
@@ -157,7 +157,7 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
     created = _run(["config", "profile", "create", "control", *_PROFILE_ARGS], tmp_path, passphrase=passphrase)
     combined = f"{created.stdout}\n{created.stderr}"
     assert created.returncode == 0, combined
-    assert (tmp_path / "storage" / "secrets" / "master.key").is_file(), combined
+    assert (tmp_path / "storage" / "fallback-store" / "master.key").is_file(), combined
     assert passphrase not in combined
 
 
@@ -207,12 +207,19 @@ def test_unknown_command_renders_usage_error_without_passphrase(tmp_path: Path) 
 
 
 def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: Path) -> None:
-    """Bare `config profile` is discovery, not a profile-data read."""
+    """Bare `config profile` is discovery, not a profile-data read.
+
+    Like ``test_unknown_command_renders_usage_error_without_passphrase``, this
+    is Click's exit-2 usage-error path (missing subcommand), which writes its
+    rendered help to stderr -- unlike the exit-0 ``--help`` cases above, which
+    write to stdout. The content assertions therefore check ``combined``, not
+    ``result.stdout``.
+    """
     result = _run(["config", "profile"], tmp_path)
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 2, combined
-    assert "create" in result.stdout
-    assert "show" in result.stdout
+    assert "create" in combined, combined
+    assert "show" in combined, combined
     assert "CADRUMO_SECRET_PASSPHRASE" not in combined
 
 

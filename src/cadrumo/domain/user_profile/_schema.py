@@ -7,16 +7,20 @@ secure DB backend.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Annotated, Self
+from functools import lru_cache
+from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
 from ...core.decimal import coerce_decimal_strict
-from ...core.parsing import parse_bool
+from ...core.parsing import parse_bool, parse_iso8601_date
 from ._errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[
@@ -43,6 +47,19 @@ _FieldPath = Annotated[
 _Selector = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
+]
+#: A canonical dotted path carrying at least one ``{placeholder}`` segment.
+#: Shaped like ``_FieldPath`` plus braces, so a pattern that accidentally
+#: carries no placeholder -- or stray uppercase / whitespace -- is refused at
+#: schema load rather than silently declaring a single literal path.
+_DerivedSelectorPattern = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=3,
+        max_length=160,
+        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_{}]+)+$",
+    ),
 ]
 _Description = Annotated[
     str,
@@ -177,6 +194,88 @@ class ProfileSectionDefinition(BaseModel):
         return self
 
 
+#: Regex fragment each declared derived-selector placeholder expands to.
+#:
+#: ``filing_year`` is deliberately ``\d{4}`` rather than a wildcard. Two of the
+#: declared patterns are prefixes of one another
+#: (``descendientes_minimos_aggregate_{filing_year}`` and the ``_autonomico_``
+#: variant), so under a looser fragment the shorter pattern would swallow the
+#: longer one's paths -- every gate would stay green while the longer pattern's
+#: coverage silently vanished.
+_DERIVED_SELECTOR_PLACEHOLDERS: Final[Mapping[str, str]] = {"filing_year": r"\d{4}"}
+
+_DERIVED_SELECTOR_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(r"\{([^{}]+)\}")
+
+
+@lru_cache(maxsize=64)
+def _compiled_derived_selector_pattern(pattern: str) -> re.Pattern[str]:
+    r"""Compile a declared derived-selector pattern into an anchored regex.
+
+    Literal segments between placeholders are individually :func:`re.escape`-d
+    and the placeholder fragments spliced in raw. That ordering matters:
+    escaping the whole template first would mangle the fragments' own regex
+    metacharacters. The result carries a terminal ``\Z`` anchor so a pattern
+    can never match a longer sibling path.
+
+    An unrecognised placeholder raises rather than matching anything, so a
+    typo in the schema TOML fails the load instead of quietly widening or
+    narrowing the namespace.
+
+    Raises:
+        :class:`UserProfileValidationError`: If *pattern* names a placeholder
+            with no declared regex fragment.
+    """
+    parts: list[str] = []
+    position = 0
+    for match in _DERIVED_SELECTOR_PLACEHOLDER_RE.finditer(pattern):
+        parts.append(re.escape(pattern[position : match.start()]))
+        token = match.group(1)
+        fragment = _DERIVED_SELECTOR_PLACEHOLDERS.get(token)
+        if fragment is None:
+            raise UserProfileValidationError(
+                f"derived selector pattern {pattern!r} names placeholder {{{token}}}, "
+                f"which has no declared regex fragment; declared placeholders are "
+                f"{sorted(_DERIVED_SELECTOR_PLACEHOLDERS)}",
+            )
+        parts.append(fragment)
+        position = match.end()
+    parts.append(re.escape(pattern[position:]))
+    return re.compile("".join(parts) + r"\Z")
+
+
+class ProfileDerivedSelectorDefinition(BaseModel):
+    """A namespace of profile paths the calculation engine owns and computes.
+
+    A derived path is NOT taxpayer data. Its value is computed at calculate
+    time from the source facts named in :attr:`derived_from`, so the schema
+    declares the namespace as a pattern rather than one field per filing year.
+    The pattern exists so registry binding selectors targeting these paths
+    still resolve once the per-year field declarations are gone.
+
+    This is a DECLARATION of engine ownership, never a resolution route for
+    values: nothing here supplies a value to the binding resolver.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    pattern: _DerivedSelectorPattern
+    derived_from: tuple[_FieldPath, ...] = Field(min_length=1)
+    entry_surface: _Description
+    description: _Description
+    legal_refs: tuple[_Description, ...] = ()
+
+    @model_validator(mode="after")
+    def _validate_pattern_compiles(self) -> Self:
+        # Compile eagerly so an unknown placeholder is a schema-load failure
+        # rather than a silent non-match discovered at validation time.
+        _compiled_derived_selector_pattern(self.pattern)
+        return self
+
+    def matches(self, selector: str) -> bool:
+        """Return whether *selector* falls inside this derived namespace."""
+        return _compiled_derived_selector_pattern(self.pattern).match(selector) is not None
+
+
 class ProfileSchemaDefinition(BaseModel):
     """The committed centralized user-profile schema."""
 
@@ -188,6 +287,7 @@ class ProfileSchemaDefinition(BaseModel):
     snapshot_policy: ProfileSnapshotPolicy
     remove_policy: ProfileRemovePolicy
     sections: tuple[ProfileSectionDefinition, ...] = Field(min_length=1)
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...] = ()
 
     @field_validator("snapshot_policy", mode="before")
     @classmethod
@@ -338,6 +438,174 @@ def boolean_value_refusal(field: ProfileFieldDefinition, value: object) -> str |
     if isinstance(value, str) and parse_bool(value) is not None:
         return None
     return f"{field.key} must be a yes/no answer (true/false, sí/no, 1/0); got {value!r}"
+
+
+class ProfileValueRefusalKind(StrEnum):
+    """Which declaration a refused value failed.
+
+    A closed set, because it is the join between the one rule that judges a
+    value and the two surfaces that have to say something about the verdict:
+    the validation service turns a kind into its issue code, and an operator
+    surface turns the same kind into the sentence it shows and the editor it
+    offers. Both read the kind rather than matching on the message, so the
+    prose stays free to change without either one silently stopping working.
+    """
+
+    ENUM = "enum"
+    DATE = "date"
+    NUMERIC = "numeric"
+    BOOLEAN = "boolean"
+    EMAIL = "email"
+
+
+class ProfileValueRefusal(BaseModel):
+    """Why one value fails its field's declaration.
+
+    Carries the kind as well as the message so a caller can classify the
+    refusal without parsing the sentence: the codes an issue report uses and
+    the copy an operator reads are both decided from
+    :attr:`kind`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    kind: ProfileValueRefusalKind
+    message: str
+
+
+_ISO_DATE_LAYOUT = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+"""The single accepted date layout: zero-padded ``YYYY-MM-DD``.
+
+:meth:`datetime.date.fromisoformat` alone would also accept the compact
+basic form (``19780315``), which nothing downstream canonicalises back to a
+:class:`datetime.date`. Anchoring the extended hyphenated layout keeps every
+persisted date fact in one shape.
+"""
+
+
+def date_value_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
+    """Return why ``value`` fails ``field``'s date declaration, or ``None``.
+
+    The sibling of :func:`boolean_value_refusal` and
+    :func:`numeric_value_refusal`, and here for the same reason: the rule
+    lived only inside the validation service, so a surface wanting to refuse
+    a bad date at the box the operator typed it into had nowhere to ask and
+    would have had to restate the layout itself.
+
+    A real :class:`datetime.date` is admissible by construction. A string is
+    accepted only when it matches the zero-padded extended layout AND parses
+    as a calendar day, which together reject a non-ISO layout
+    (``15/03/1978``), the compact basic form (``19780315``), an impossible
+    month or day (``1978-13-45``), a non-calendar day (``1978-02-30``), and
+    plain garbage -- without any hand-rolled calendar maths.
+    """
+    if field.type is not ProfileFieldType.DATE or value is None:
+        return None
+    if isinstance(value, date):
+        return None
+    if isinstance(value, str) and _ISO_DATE_LAYOUT.match(value):
+        try:
+            parse_iso8601_date(value)
+        except ValueError:
+            return _invalid_date_message(field, value)
+        return None
+    return _invalid_date_message(field, value)
+
+
+def _invalid_date_message(field: ProfileFieldDefinition, value: object) -> str:
+    return f"{field.key} must be a valid ISO-8601 calendar date (YYYY-MM-DD); got {value!r}"
+
+
+_EMAIL_SHAPE = re.compile(r"^[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+$")
+"""Deliberately permissive: one ``@``, something either side, a dotted domain.
+
+Not an RFC 5322 grammar, and not an attempt at one. The addresses this field
+holds are the taxpayer's own contact details, and the cost of the two errors
+is asymmetric: refusing a legitimate address makes the field uneditable for
+whoever holds it, while admitting an odd-but-real one costs nothing here,
+because nothing in this application sends mail. A strict grammar buys
+accuracy on inputs nobody types and loses on the unusual ones people
+genuinely have.
+
+So this catches the entry that is plainly not an address — no ``@`` at all, a
+bare local part, whitespace in the middle, a domain with no dot — and admits
+everything else. Quoted local parts, plus-addressing, and internationalised
+labels all pass.
+"""
+
+
+def email_value_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
+    """Return why ``value`` fails ``field``'s email declaration, or ``None``.
+
+    The declaration was inert before this: a field declared ``email``
+    accepted ``banana`` and stored it, so the one type in the schema that
+    names its own content format was the one type nothing checked.
+
+    Only a string can be an address. A non-string reaching an ``email`` field
+    is a fact carrier that promoted the value to something else — a bare
+    numeral, a date-shaped token — and is refused as the same fault rather
+    than allowed through for want of a branch.
+    """
+    if field.type is not ProfileFieldType.EMAIL or value is None:
+        return None
+    if isinstance(value, str) and _EMAIL_SHAPE.match(value):
+        return None
+    return f"{field.key} must be an email address (name@example.com); got {value!r}"
+
+
+def enum_value_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
+    """Return why ``value`` is outside ``field``'s declared token set, or ``None``.
+
+    Comparison is exact rather than case-folded. The declared sets are
+    case-significant and inconsistent between fields by design -- some carry
+    AEAT's own uppercase tokens, others the profile's lowercase vocabulary --
+    so folding would silently admit a spelling the declaring authority does
+    not use.
+    """
+    if field.type is not ProfileFieldType.ENUM or value is None:
+        return None
+    if str(value) in field.enum_values:
+        return None
+    return f"{field.key} must be one of {list(field.enum_values)}; got {value!r}"
+
+
+def profile_value_refusal(field: ProfileFieldDefinition, value: object) -> ProfileValueRefusal | None:
+    """Return why ``value`` fails ``field``'s declaration, or ``None``.
+
+    THE authority on whether a value may be stored at a field, gathering the
+    four per-type rules behind one call so that every surface asks the same
+    question in the same words. The write door asks it to build its issue
+    report; an operator surface asks it to refuse a value at the box it was
+    typed into, before a round trip to storage. Two surfaces judging a value
+    apart is how one comes to accept what the other rejects, and the operator
+    meets that as a dialog that closes on a value the record then refuses.
+
+    Absence is not this rule's business. A ``None`` value is a cleared or
+    unanswered field, which the required-field check judges.
+
+    Args:
+        field: The declaration the value must satisfy.
+        value: The value carried by the fact, after the fact carrier has
+            restored its type. Passing a raw string a fact would have
+            promoted (``"true"``, ``"1978-03-15"``) asks a different question
+            from the one the write door asks.
+
+    Returns:
+        A :class:`ProfileValueRefusal` naming what failed and what the field
+        accepts, or ``None`` when the value is admissible.
+    """
+    if value is None:
+        return None
+    for kind, refusal in (
+        (ProfileValueRefusalKind.ENUM, enum_value_refusal(field, value)),
+        (ProfileValueRefusalKind.NUMERIC, numeric_value_refusal(field, value)),
+        (ProfileValueRefusalKind.BOOLEAN, boolean_value_refusal(field, value)),
+        (ProfileValueRefusalKind.DATE, date_value_refusal(field, value)),
+        (ProfileValueRefusalKind.EMAIL, email_value_refusal(field, value)),
+    ):
+        if refusal is not None:
+            return ProfileValueRefusal(kind=kind, message=refusal)
+    return None
 
 
 def _accepted_range_clause(field: ProfileFieldDefinition) -> str:

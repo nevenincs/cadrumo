@@ -37,6 +37,7 @@ import pytest
 from ....tests import module_name, production_ast_items, repo_relative
 from .. import ERROR_REGISTRY, CadrumoError, ErrorCategory, get_registered_error_code
 from ..registry import _ALL_DECLARED_ERROR_CODES
+from . import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -95,6 +96,37 @@ def _looks_like_cadrumo_error_reference(node: ast.expr, known_names: set[str]) -
     rendered = ast.unparse(node)
     last_token = rendered.rsplit(".", 1)[-1]
     return last_token in known_names
+
+
+#: Lowest plausible number of registered ``CadrumoError`` subclasses. Far below
+#: the measured figure so ordinary churn never trips it, far enough above zero
+#: that a collapsed import walk reds instead of greening vacuously.
+_MIN_ERROR_SUBCLASSES = 300
+
+
+def test_the_subclass_walk_reaches_a_plausible_population() -> None:
+    """A collapsed walk must red, not green by examining nothing.
+
+    Every assertion in this module is a "no violations found" or a same-length
+    equality, and all of them hold trivially over an empty population -- so
+    without this floor the gate is indistinguishable from one that works.
+
+    The subject set here is built from ``__subclasses__`` after a package-wide
+    import, which is doubly environment-shaped: it lists only classes whose
+    defining statement actually EXECUTED, so an importable-but-unimported class
+    is invisible, as is any class defined inside an optional-import fallback
+    whose extra is installed. The scope line is therefore reported, not merely
+    asserted: a green from this gate is a claim about one environment, and it
+    should say which.
+    """
+    _import_all_cadrumo_modules()
+    subclasses = _iter_error_subclasses(CadrumoError)
+    print(f"error-registry scope: {len(subclasses)} CadrumoError subclasses walked; {describe_optional_extras()}")
+    assert len(subclasses) >= _MIN_ERROR_SUBCLASSES, (
+        f"only {len(subclasses)} CadrumoError subclasses discovered (floor {_MIN_ERROR_SUBCLASSES}); "
+        f"the import walk collapsed, so every assertion in this module would pass by examining "
+        f"nothing. Scope: {describe_optional_extras()}"
+    )
 
 
 def test_every_cadrumo_error_subclass_has_a_registered_code() -> None:

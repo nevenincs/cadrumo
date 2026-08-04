@@ -14,6 +14,8 @@ from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
 from ..adapters.persistence.storage import (
+    BUCKETS_DIRNAME,
+    KEYSTORE_DIRNAME,
     STORAGE_NAMESPACE_REGISTRY,
     Base,
     MasterKeyMaterialMissingError,
@@ -37,11 +39,13 @@ from ..adapters.persistence.storage.master_key import (
     BucketSession,
     KdfParams,
     activate_session,
+    delete_profile_session_key,
     get_master_key_provider,
     load_or_mint_bucket_dek,
 )
 from ..core import StorageCategory
 from ..core.config import Settings, load_settings, override_settings
+from ..core.errors import CadrumoError
 from ..domain.user_profile import UserProfileStatus
 from .master_key import EphemeralMasterKeyProvider
 from .storage_scope import storage_overrides
@@ -49,6 +53,50 @@ from .storage_scope import storage_overrides
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 _DEFAULT_SECONDARY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
+
+
+def reap_profile_session_keys(storage_root: Path) -> None:
+    """Delete every OS-keychain profile-session key owned by ``storage_root``.
+
+    A login mints a random session key into the OS keychain under the
+    service ``cadrumo:profile-session``, keyed by bucket UUID; production
+    reaps it on logout and on bucket destruction. A test's storage root is
+    a temporary directory that is simply discarded, so nothing there ever
+    reaches a reap path — and because every run mints a FRESH bucket uuid,
+    each such test leaves one more permanent orphan behind in the
+    operator's real credential store. Enough of them saturate the store
+    and ``CredWrite`` starts failing host-wide, which breaks login for the
+    developer running the suite.
+
+    The bucket identities are recovered from the two durable directories a
+    provisioned bucket owns under the root, so buckets the test created
+    through the real product surfaces (with uuids the test never names)
+    are reaped alongside the ones the harness provisioned itself.
+
+    Best-effort by construction: a missing entry is already a no-op in
+    :func:`delete_profile_session_key`, a root that was never populated
+    enumerates to nothing, and a directory whose name is not a bucket
+    identity is skipped. Teardown must never fail a passing test nor mask
+    a failing one.
+
+    Args:
+        storage_root: The Cadrumo storage root whose buckets to reap.
+    """
+    bucket_ids: set[str] = set()
+    for parent in (storage_root / BUCKETS_DIRNAME, storage_root / KEYSTORE_DIRNAME):
+        try:
+            entries = list(parent.iterdir())
+        except OSError:
+            continue
+        bucket_ids.update(entry.name for entry in entries if entry.is_dir())
+    for bucket_id in bucket_ids:
+        try:
+            delete_profile_session_key(bucket_id=bucket_id)
+        except CadrumoError:
+            # A directory name that is not a canonical bucket identity can
+            # never have addressed a keychain entry, so there is nothing to
+            # reap and nothing to report.
+            continue
 
 
 def _provision_bucket_dek_v1_session(
@@ -261,6 +309,7 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Iterator[Path]:
         try:
             yield storage_root
         finally:
+            reap_profile_session_keys(storage_root)
             dispose_engine(settings)
 
 
@@ -291,6 +340,7 @@ def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
         try:
             yield
         finally:
+            reap_profile_session_keys(tmp_path)
             dispose_engine(settings)
 
 
@@ -326,6 +376,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
         try:
             yield storage_root
         finally:
+            reap_profile_session_keys(storage_root)
             dispose_engine(settings)
 
 
@@ -386,6 +437,7 @@ def isolated_runtime_profile(
                 )
             finally:
                 session.close()
+                reap_profile_session_keys(storage_root)
 
 
 @dataclass(frozen=True)
@@ -516,6 +568,7 @@ def isolated_two_bucket_runtime(
                 # unified lifecycle.
                 secondary_session.close()
                 primary_session.close()
+                reap_profile_session_keys(storage_root)
 
 
 @contextmanager
@@ -624,5 +677,6 @@ __all__ = [
     "isolated_sessionless_storage_root",
     "isolated_storage_root",
     "isolated_two_bucket_runtime",
+    "reap_profile_session_keys",
     "reset_secure_object_store",
 ]

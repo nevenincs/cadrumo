@@ -40,7 +40,7 @@ _PASSPHRASE = "test-passphrase"  # noqa: S105 - synthetic test fixture
 
 def _provision(tmp_path: Path) -> Path:
     """Provision a real file-backed store and return its directory."""
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     FileFallbackMasterKeyProvider(
         store_dir=store_dir,
         passphrase_callback=lambda: _PASSPHRASE,

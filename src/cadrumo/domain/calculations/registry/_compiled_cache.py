@@ -6,7 +6,7 @@ Persists the compiled ``(modelos, catalogues)`` set so a warm process skips the
 :class:`ModeloDefinition` set the loader produces -- never a second authority:
 
 * it is keyed by the complete registry-tree fingerprint tuples AND a content
-  hash of the loader/compiler/schema source (:data:`_LOADER_CODE_FINGERPRINT`),
+  hash of the loader/compiler/schema source (:func:`loader_code_fingerprint`),
   so a tree edit or a compiler change that alters compiled semantics yields a
   new key and the pre-change cache is simply never read;
 * on read the framed file is integrity-checked against an embedded SHA-256
@@ -44,6 +44,7 @@ import sys
 import time
 import typing
 from collections.abc import Iterable, Iterator
+from functools import cache
 from pathlib import Path
 from typing import Final, NamedTuple, TypeGuard
 
@@ -288,14 +289,33 @@ def _compute_loader_code_fingerprint(roots: Iterable[type[BaseModel]] | None = N
     return hasher.hexdigest()
 
 
-_LOADER_CODE_FINGERPRINT = _compute_loader_code_fingerprint()
+@cache
+def loader_code_fingerprint() -> str:
+    """Return the loader-source fingerprint, computed once on first use.
+
+    Deriving it walks every registry source file, reads its bytes, and
+    introspects the compiled models' annotations to read the defining file of
+    each embedded foreign type -- about 160 ms and 150 filesystem calls. It was
+    previously computed at IMPORT time, as the default argument of
+    :func:`_registry_disk_cache_key`, so every process that so much as imported
+    this module paid it: ``aeat app ledger --help`` hashed the whole registry
+    source tree to print a list of command names, and never went near the disk
+    cache it keys.
+
+    The value cannot change within a process -- it hashes source files, and this
+    interpreter has already imported them -- so memoising is not a staleness
+    trade. A developer editing a registry module mid-run is running the OLD code
+    for that module anyway; the fingerprint agrees with what is loaded, which is
+    exactly what the cache key must describe.
+    """
+    return _compute_loader_code_fingerprint()
 
 
 def _registry_disk_cache_key(
     root: str,
     fingerprints: FingerprintTuples,
     *,
-    loader_code_fingerprint: str = _LOADER_CODE_FINGERPRINT,
+    loader_code_fingerprint_override: str | None = None,
 ) -> str:
     """Compute the compiled-cache key.
 
@@ -303,13 +323,17 @@ def _registry_disk_cache_key(
     content hash of the loader/compiler/schema source (so a code change that
     alters compiled semantics invalidates the cache even without a manual version
     bump), (3) the registry root path, and (4) the per-TOML tree fingerprints
-    (path, size, mtime_ns, content_digest). ``loader_code_fingerprint`` is
-    injected for test isolation; production always uses
-    :data:`_LOADER_CODE_FINGERPRINT`.
+    (path, size, mtime_ns, content_digest). ``loader_code_fingerprint_override``
+    is injected for test isolation; production resolves
+    :func:`loader_code_fingerprint`, which is why that resolution happens HERE
+    rather than in the signature -- a default argument would be evaluated at
+    import time and reinstate the cost this indirection removes.
     """
+    override = loader_code_fingerprint_override
+    resolved = loader_code_fingerprint() if override is None else override
     hasher = hashlib.sha256()
     hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
-    hasher.update(loader_code_fingerprint.encode("utf-8"))
+    hasher.update(resolved.encode("utf-8"))
     hasher.update(root.encode("utf-8"))
     for item in fingerprints:
         for part in item:

@@ -36,7 +36,7 @@ import zipfile
 from collections.abc import Iterator
 from datetime import datetime
 from pathlib import Path, PurePosixPath
-from typing import TypedDict
+from typing import ClassVar, TypedDict
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -174,6 +174,14 @@ class CorpusManifest(BaseModel):
 
 class _ManifestPayloadValidationError(ValueError):
     """Base error for an invalid raw manifest payload before I/O translation."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "private manifest-payload validation carrier; raised only inside "
+        "_validate_raw_manifest_payload so the file loader and the bundle loader apply identical "
+        "schema/version/digest checks, and converted by every caller into the registry-bound "
+        "CorpusManifestError / CorpusBundleError / CorpusManifestTamperError before leaving the "
+        "module"
+    )
 
 
 class _MalformedManifestPayloadError(_ManifestPayloadValidationError):

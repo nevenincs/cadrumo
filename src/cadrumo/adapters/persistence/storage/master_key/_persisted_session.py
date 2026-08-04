@@ -70,7 +70,7 @@ from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.identity import BucketId
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
-from .._namespace_registry import PROFILE_SESSION_FILENAME
+from .._storage_path_definitions import PROFILE_SESSION_FILENAME
 from ..errors import (
     DecryptionError,
     EncryptionError,

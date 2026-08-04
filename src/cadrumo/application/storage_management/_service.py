@@ -306,7 +306,7 @@ def reclaim_storage_category(
         return StorageReclaimReport(category=category, path=target, removed_entries=1)
 
     removed = 0
-    retained = 0
+    retained: list[Path] = []
     for entry in sorted(target.iterdir()):
         try:
             if entry.is_dir() and not entry.is_symlink():
@@ -316,8 +316,9 @@ def reclaim_storage_category(
         except OSError:
             # A file held open by another process is a retained entry, not a
             # failed reclaim: the operator asked for space back and got what
-            # could be released. The count makes the shortfall visible.
-            retained += 1
+            # could be released. The path is kept alongside the count so the
+            # boundary can tell an expected retention from a real failure.
+            retained.append(entry)
             _LOGGER.debug("reclaim could not remove %s", entry, exc_info=True)
         else:
             removed += 1
@@ -326,7 +327,8 @@ def reclaim_storage_category(
         category=category,
         path=target,
         removed_entries=removed,
-        retained_entries=retained,
+        retained_entries=len(retained),
+        retained_paths=tuple(retained),
     )
 
 

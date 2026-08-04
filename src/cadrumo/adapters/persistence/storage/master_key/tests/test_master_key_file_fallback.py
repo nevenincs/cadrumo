@@ -9,6 +9,7 @@ import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from textwrap import dedent
+from typing import Final
 
 import pytest
 from sqlalchemy import text
@@ -42,6 +43,14 @@ from .._master_key_bucket_dek import bucket_dek_path as production_bucket_dek_pa
 from ._master_key_support import _settings_with_store, _write_registered_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.key", "master.kdf"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+The provider itself chooses these filenames inside whatever ``store_dir`` it
+is given -- see ``TestFileFallbackProvider``'s own docstring for the sibling
+directory-segment case these are NOT the same as.
+"""
 
 
 def _bucket_dek_path(settings: Settings, bucket_id: str) -> Path:
@@ -117,29 +126,43 @@ _PROVIDER_SESSION_HARNESS = dedent(
 
 
 class TestFileFallbackProvider:
-    """The file backend mints, persists, and unwraps the master key."""
+    """The file backend mints, persists, and unwraps the master key.
+
+    ``"fallback-store"`` is a fictional directory segment, deliberately not a
+    real ``StorageCategory`` subpath: ``store_dir`` is a constructor
+    parameter the caller supplies, and these tests ARE the caller. The value
+    is arbitrary -- these methods exercise `FileFallbackMasterKeyProvider`
+    against whatever directory it is given, never resolution of a real
+    taxonomy location, so naming the segment after a real one (it used to
+    read ``"secrets"``) would coincidentally look like an assertion about
+    where production stores its own secrets, which is not what these tests
+    check. ``master.key``/``master.kdf`` stay literal below -- those are not
+    caller-supplied; the provider itself chooses those filenames, so the
+    literal is a real assertion about its behaviour, unlike the directory
+    that holds them.
+    """
 
     def test_get_master_key_refuses_unprovisioned_store(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "correct horse battery staple",
         )
         with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
             provider.get_master_key()
-        assert not (tmp_path / "secrets" / "master.key").exists()
+        assert not (tmp_path / "fallback-store" / "master.key").exists()
 
     def test_explicit_provision_mints_and_persists(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "correct horse battery staple",
         )
         key = provider.provision_master_key()
         assert len(key) == KEY_SIZE
-        assert (tmp_path / "secrets" / "master.key").exists()
-        assert (tmp_path / "secrets" / "master.kdf").exists()
+        assert (tmp_path / "fallback-store" / "master.key").exists()
+        assert (tmp_path / "fallback-store" / "master.kdf").exists()
         # The salt is carried inside master.kdf (salt_b64); no standalone
         # salt artefact is written.
-        assert not (tmp_path / "secrets" / "salt").exists()
+        assert not (tmp_path / "fallback-store" / "salt").exists()
 
     def test_below_floor_kdf_cost_is_refused_on_read(self, tmp_path: Path) -> None:
         """A tampered master.kdf declaring a below-floor Argon2 cost fails closed.
@@ -149,7 +172,7 @@ class TestFileFallbackProvider:
         that lowers ``memory_cost`` below the floor is refused on read rather than
         silently deriving a weakened KEK.
         """
-        store_dir = tmp_path / "secrets"
+        store_dir = tmp_path / "fallback-store"
         provider = FileFallbackMasterKeyProvider(
             store_dir=store_dir,
             passphrase_callback=lambda: "correct horse battery staple",
@@ -607,13 +630,13 @@ class TestFileFallbackProvider:
     def test_round_trip_across_provider_instances(self, tmp_path: Path) -> None:
         """A second provider over the same dir + passphrase recovers the same key."""
         first = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "correct horse battery staple",
         )
         first_key = first.provision_master_key()
 
         second = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "correct horse battery staple",
         )
         second_key = second.get_master_key()
@@ -621,7 +644,7 @@ class TestFileFallbackProvider:
 
     def test_wrong_passphrase_raises_typed_subclass_of_master_key_unavailable(self, tmp_path: Path) -> None:
         FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "right-passphrase",
         ).provision_master_key()
 
@@ -631,7 +654,7 @@ class TestFileFallbackProvider:
         # class-specific actionable hint.
         with pytest.raises(MasterKeyUnavailableError) as excinfo:
             FileFallbackMasterKeyProvider(
-                store_dir=tmp_path / "secrets",
+                store_dir=tmp_path / "fallback-store",
                 passphrase_callback=lambda: "wrong-passphrase",
             ).get_master_key()
         assert isinstance(excinfo.value, MasterKeyPassphraseMismatchError)
@@ -639,24 +662,24 @@ class TestFileFallbackProvider:
 
     def test_passphrase_via_settings(self, tmp_path: Path) -> None:
         with override_settings(cadrumo_secret_passphrase="from-env-var"):
-            provider = FileFallbackMasterKeyProvider(store_dir=tmp_path / "secrets")
+            provider = FileFallbackMasterKeyProvider(store_dir=tmp_path / "fallback-store")
             key = provider.provision_master_key()
             assert len(key) == KEY_SIZE
 
     def test_empty_passphrase_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(SecretStoreError):
             FileFallbackMasterKeyProvider(
-                store_dir=tmp_path / "secrets",
+                store_dir=tmp_path / "fallback-store",
                 passphrase_callback=lambda: "",
             ).get_master_key()
 
     def test_kdf_params_are_human_readable(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "test-passphrase",
         )
         provider.provision_master_key()
-        params_text = (tmp_path / "secrets" / "master.kdf").read_text(encoding=UTF_8_ENCODING)
+        params_text = (tmp_path / "fallback-store" / "master.kdf").read_text(encoding=UTF_8_ENCODING)
         params = _KdfParameters.model_validate_json(params_text)
         assert params.version == 2
         assert params.algorithm == "argon2id"
@@ -668,30 +691,30 @@ class TestFileFallbackProvider:
     def test_master_key_file_is_ciphertext_not_plaintext(self, tmp_path: Path) -> None:
         """The persisted master.key MUST not contain the plaintext key bytes."""
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "test-passphrase",
         )
         plaintext_key = provider.provision_master_key()
         wrapped = base64.b64decode(
-            (tmp_path / "secrets" / "master.key").read_bytes(),
+            (tmp_path / "fallback-store" / "master.key").read_bytes(),
             validate=True,
         )
         assert plaintext_key not in wrapped
 
     def test_tampered_master_key_file_raises_localized_without_path(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "test-passphrase",
         )
         provider.provision_master_key()
-        master_key_path = tmp_path / "secrets" / "master.key"
+        master_key_path = tmp_path / "fallback-store" / "master.key"
         contents = base64.b64decode(master_key_path.read_bytes(), validate=True)
         tampered = bytes([contents[0] ^ 0x01]) + contents[1:]
         master_key_path.write_bytes(base64.b64encode(tampered))
 
         with pytest.raises(MasterKeyUnavailableError) as excinfo:
             FileFallbackMasterKeyProvider(
-                store_dir=tmp_path / "secrets",
+                store_dir=tmp_path / "fallback-store",
                 passphrase_callback=lambda: "test-passphrase",
             ).get_master_key()
 
@@ -702,15 +725,15 @@ class TestFileFallbackProvider:
 
     def test_malformed_kdf_file_raises_localized_without_path(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "test-passphrase",
         )
         provider.provision_master_key()
-        (tmp_path / "secrets" / "master.kdf").write_text("not-json", encoding=UTF_8_ENCODING)
+        (tmp_path / "fallback-store" / "master.kdf").write_text("not-json", encoding=UTF_8_ENCODING)
 
         with pytest.raises(MasterKeyUnavailableError) as excinfo:
             FileFallbackMasterKeyProvider(
-                store_dir=tmp_path / "secrets",
+                store_dir=tmp_path / "fallback-store",
                 passphrase_callback=lambda: "test-passphrase",
             ).get_master_key()
 
@@ -721,7 +744,7 @@ class TestFileFallbackProvider:
 
     def test_satisfies_protocol(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "test-passphrase",
         )
         assert isinstance(provider, MasterKeyProvider)

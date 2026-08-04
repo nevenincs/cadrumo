@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core import Period
+from ......core import CasillaValueKind, Period
 from ......core.config import Settings
 from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ......tests.secure_sql import isolated_runtime_profile
@@ -59,6 +59,7 @@ def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaraci
             ObservedCasillaValue(
                 casilla_id=_M100_BASE_LIQUIDABLE_CASILLA,
                 value="42500.00",
+                value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="declaration_pdf",
                 source_locator="page=3,row=Casilla 500",
                 confidence=0.87,

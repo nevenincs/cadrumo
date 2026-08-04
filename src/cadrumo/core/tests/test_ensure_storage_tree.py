@@ -131,3 +131,87 @@ def test_the_root_is_restricted_to_its_owner(tmp_path: Path) -> None:
         assert stat.S_IMODE(root.stat().st_mode) != 0o700, (
             "the platform accepted a mode change without applying it, so the assertion above proves nothing"
         )
+
+
+def test_a_directory_removed_after_materialisation_is_rebuilt(tmp_path: Path) -> None:
+    """A gap that opens after the first call is closed by the next one.
+
+    The materialiser skips a target it finds already present, which is what
+    makes the warm path cheap. That skip must key on what the filesystem says
+    NOW, not on having run before -- otherwise a directory removed between
+    invocations (a cleanup script, an operator tidying a cache, an
+    interrupted uninstall) would never come back, and the gap would surface
+    much later at a write.
+    """
+    with override_settings(cadrumo_local_storage_root=tmp_path / "state"):
+        settings = load_settings()
+        root = ensure_storage_tree(settings)
+
+        from .._storage_taxonomy import storage_tree_targets
+
+        removable = next(
+            target
+            for target in storage_tree_targets(settings)
+            if target.is_dir() and target != root and not any(target.iterdir())
+        )
+        removable.rmdir()
+        assert not removable.exists()
+
+        ensure_storage_tree(settings)
+        assert removable.is_dir(), "a directory removed after the first call must be rebuilt"
+
+
+def test_the_warm_tree_costs_no_mkdir(tmp_path: Path) -> None:
+    """Re-materialising an intact tree must not re-issue creation calls.
+
+    Every CLI invocation runs this over the whole taxonomy, so the
+    already-built case is the one that matters. It used to ask three
+    questions per target -- exists, then is_dir, then an unconditional mkdir
+    that re-walked the path -- which is why this pins the absence of the
+    third rather than a duration: a timing would measure the machine, while
+    a mkdir on a directory that is already there is the waste itself.
+    """
+    with override_settings(cadrumo_local_storage_root=tmp_path / "state"):
+        settings = load_settings()
+        ensure_storage_tree(settings)
+
+        created: list[Path] = []
+        real_mkdir = Path.mkdir
+
+        def counting_mkdir(self, *args, **kwargs):
+            created.append(self)
+            return real_mkdir(self, *args, **kwargs)
+
+        Path.mkdir = counting_mkdir  # type: ignore[method-assign]
+        try:
+            ensure_storage_tree(settings)
+        finally:
+            Path.mkdir = real_mkdir  # type: ignore[method-assign]
+
+        assert created == [], f"an intact tree issued {len(created)} mkdir call(s): {created[:3]}"
+
+
+def test_the_warm_probe_would_catch_a_regression(tmp_path: Path) -> None:
+    """Positive control for the test above.
+
+    The same counter, over a tree that does NOT yet exist, must record the
+    creations -- otherwise an empty list would prove only that the probe
+    never ran.
+    """
+    with override_settings(cadrumo_local_storage_root=tmp_path / "fresh"):
+        settings = load_settings()
+
+        created: list[Path] = []
+        real_mkdir = Path.mkdir
+
+        def counting_mkdir(self, *args, **kwargs):
+            created.append(self)
+            return real_mkdir(self, *args, **kwargs)
+
+        Path.mkdir = counting_mkdir  # type: ignore[method-assign]
+        try:
+            ensure_storage_tree(settings)
+        finally:
+            Path.mkdir = real_mkdir  # type: ignore[method-assign]
+
+        assert created, "the probe records nothing even on a fresh tree; it cannot catch a regression"

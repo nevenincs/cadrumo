@@ -507,7 +507,7 @@ class TestIvaRemoteStateCliSurface:
 
     def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels(self) -> None:
         report = IvaRemoteStateAcquisitionReport(
-            output_root="var/cadrumo/live/iva-read-evidence",
+            output_root="live/iva-read-evidence",
             year_from=2022,
             year_to=2024,
             target_year=2026,

@@ -759,7 +759,6 @@ class _ProfileSelector(BaseModel):
     dictionary_field: str | None = Field(default=None, min_length=1, max_length=128)
     # Rendering / formatting
     format: str | None = Field(default=None, min_length=1, max_length=64)
-    valid_at: str | None = Field(default=None, min_length=1, max_length=32)
     # Conditional applicability
     required_when_profile_key: str | None = Field(default=None, min_length=1, max_length=128)
     required_when_value: str | None = Field(default=None, min_length=1, max_length=256)

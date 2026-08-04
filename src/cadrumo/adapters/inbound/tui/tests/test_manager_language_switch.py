@@ -254,5 +254,5 @@ def _language_tokens(app: ProfileManagerApp) -> tuple[str, ...]:
     for section in app.overview.sections:
         for field in section.fields:
             if field.path == _OUTPUT_LANGUAGE_PATH:
-                return field.enum_values
+                return tuple(choice.value for choice in field.choices)
     return ()

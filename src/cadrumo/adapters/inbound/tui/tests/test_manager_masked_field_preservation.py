@@ -29,6 +29,7 @@ from textual.widgets import Button, Input, OptionList
 
 from .....application.user_profile import (
     MASKED_PLACEHOLDER,
+    ProfileFieldChoice,
     ProfileFieldView,
     ProfileRepository,
     build_profile_overview,
@@ -306,7 +307,7 @@ async def test_an_enum_dialog_pre_selects_nothing_it_cannot_confirm_is_current(t
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             field = app._field_by_key[_ENUM_PATH]
-            assert field.enum_values, f"{_ENUM_PATH} must be an enum field for this to test anything"
+            assert field.choices, f"{_ENUM_PATH} must offer a closed answer set for this to test anything"
             assert not field.present, "the field must start unanswered, or the dialog would rightly pre-select"
 
             _open(app, field)
@@ -341,7 +342,7 @@ async def test_an_enum_dialog_still_pre_selects_the_token_the_field_holds(tmp_pa
             await pilot.pause()
             highlighted = app.screen.query_one("#edit-options", OptionList).highlighted
             assert highlighted is not None, "an answered enum must show which answer it holds"
-            assert field.enum_values[highlighted] == "M"
+            assert field.choices[highlighted].value == "M"
             app.exit(None)
 
 
@@ -368,7 +369,10 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
         value=MASKED_PLACEHOLDER,
         masked=True,
         required=False,
-        enum_values=("casilla", "numero_soporte", "fecha_validez"),
+        choices=tuple(
+            ProfileFieldChoice(value=token, label=token)
+            for token in ("casilla", "numero_soporte", "fecha_validez")
+        ),
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label=_LABEL, passphrase=_PASSWORD)

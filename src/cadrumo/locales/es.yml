@@ -2171,6 +2171,7 @@ cli:
         pull_modelo_help: Limita esta descarga a este modelo.
         pull_sources_help: Descarga las observaciones presentadas que requieren las
           dependencias de una declaración objetivo.
+        casillas_not_enrolled: '{count} casilla(s) de las declaraciones capturadas contienen valores que no son importes, por lo que no se incorporaron como evidencia de cálculo: {affected}. Todo lo numérico de esas declaraciones se incorporó con normalidad.'
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -3941,6 +3942,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      edit_target_not_active: 'El perfil ''%{name}'' no es el perfil activo, y ''profile edit'' solo edita el activo. Inicia sesión en él primero y luego edítalo.'
     recover:
       errors:
         recovery_code_rejected: El código de recuperación no abrió el envoltorio de
@@ -6853,6 +6855,9 @@ flows:
         por ejemplo 1990-01-31.
       auth_numero_soporte: Número de soporte del documento
       auth_provider: Forma de identificación ante la AEAT
+      auth_tax_id: Su identidad fiscal (NIF o NIE)
+      auth_tax_id_invalid: Ese NIF o NIE no es válido. Compruebe la letra final e
+        introdúzcalo tal y como figura en su documento, por ejemplo 12345678Z.
       busy: Todavía hay otra operación en curso. Espera a que termine.
       censal_pull: Rellenar con los datos censales de la AEAT
       censal_pull_auth_incomplete: Su identificación está incompleta, así que aún
@@ -6892,9 +6897,24 @@ flows:
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
       path: 'Identificador interno: %{path}'
+      refused:
+        boolean: '''%{value}'' no es una respuesta de sí o no. Responde Sí o No.'
+        date: '''%{value}'' no es una fecha. Usa el formato AAAA-MM-DD - por ejemplo
+          1978-03-15.'
+        email: '''%{value}'' no es una dirección de correo electrónico. Introduce
+          una con la forma nombre@ejemplo.com.'
+        enum: '''%{value}'' no se acepta aquí. Elige uno de: %{accepted}.'
+        numeric: '''%{value}'' no es un número que este campo acepte%{accepted}. Introduce
+          un número, con punto para los decimales.'
       required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
         Introduce un valor o cancela para dejarlo sin cambios.'
       save: Guardar
+      shape:
+        date: 'Formato: AAAA-MM-DD - por ejemplo 1978-03-15.'
+        decimal: Un número, con punto para los decimales - por ejemplo 1234.56.
+        email: Una dirección de correo electrónico - por ejemplo nombre@ejemplo.es.
+        integer: Un número entero, sin separador de miles.
+        money: Un importe en euros, con punto para los decimales - por ejemplo 1234.56.
       write_failed: No se ha podido guardar el campo. Vuelve a intentarlo.
       write_in_flight: Se está guardando el campo anterior. Espera a que termine y
         vuelve a intentarlo.

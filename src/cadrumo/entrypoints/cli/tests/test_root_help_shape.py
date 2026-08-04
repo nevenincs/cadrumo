@@ -49,7 +49,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             setting_env("cadrumo_secret_passphrase"): (
                 base_settings.cadrumo_dev_test_database_password.get_secret_value()
             ),
-            setting_env("cadrumo_secret_store_dir"): str(tmp_path / "storage" / "secrets"),
+            setting_env("cadrumo_secret_store_dir"): str(tmp_path / "storage" / "fallback-store"),
             setting_env("cadrumo_local_storage_root"): str(tmp_path / "storage"),
             setting_env("cadrumo_token_dir"): str(tmp_path / "tokens"),
             setting_env("cadrumo_runs_dir"): str(tmp_path / "runs"),

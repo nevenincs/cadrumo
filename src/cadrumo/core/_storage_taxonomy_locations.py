@@ -44,6 +44,14 @@ this value back off the taxonomy -- can never drift from what these two
 members actually resolve.
 """
 
+_BUCKET_DATABASE_DIRNAME: Final[str] = "db"
+"""Directory name shared by ``BUCKET_DATABASE`` and ``BUCKET_DATABASE_FILE``.
+
+Named once rather than hand-typed a second time as the ``BUCKET_DATABASE_FILE``
+member's own subpath prefix, so a rename of the directory cannot silently
+orphan the file member nested inside it.
+"""
+
 
 _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     # ── State substrate and identity ────────────────────────────────────────
@@ -137,7 +145,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.AUDIT,
         "audit",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
+        # The named module must be one that reaches this location, not merely one
+        # containing the token. `_namespace_registry.py` was claimed here and
+        # satisfied the liveness gate on 14 references to `SensitivityClass.AUDIT`
+        # -- an unrelated encryption-sensitivity member that happens to share the
+        # name -- while referencing `StorageCategory.AUDIT` zero times. The real
+        # consumer joins `cadrumo_audit_dir` to reach the live IVA remote state.
+        consumer_module="application/live/_iva_remote_state.py",
         settings_field="cadrumo_audit_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -540,7 +554,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
 _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_DATABASE,
-        "db",
+        _BUCKET_DATABASE_DIRNAME,
         consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -554,7 +568,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # the taxonomy -- exactly the nested-path gap the taxonomy exists to
         # close.
         StorageCategory.BUCKET_DATABASE_FILE,
-        f"db/{_PRODUCT_DATABASE_FILENAME}",
+        f"{_BUCKET_DATABASE_DIRNAME}/{_PRODUCT_DATABASE_FILENAME}",
         consumer_module="core/config.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,

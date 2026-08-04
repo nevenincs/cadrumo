@@ -21,12 +21,12 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Literal
 from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import ExportLayoutFormat, Modelo, Period
+from .....core import CasillaValueKind, ExportLayoutFormat, Modelo, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -64,8 +64,13 @@ from .....domain.iva_compensation import (
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion
-from ._errors import SedeParseError
-from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+from ._errors import SedeParseError, SedeValidationError
+from ._schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    ObservedCasillaSkip,
+    ObservedCasillaValue,
+)
 
 if TYPE_CHECKING:
     from .....domain.calculations.registry import ModeloRevision, ValidatedRegistryAuthority
@@ -83,6 +88,7 @@ __all__ = [
     "_submitted_file_extraction_coverage",
     "_verify_submitted_file_context",
     "_with_derived_303_compensation_available_observation",
+    "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
     "registry_observation_from_filed_declaration",
     "resolve_previous_filing_bindings_from_filed_declarations",
@@ -188,6 +194,31 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     )
 
 
+def _observed_value_kind(value: object) -> CasillaValueKind:
+    """Classify an already-parsed casilla value by how a reader should treat it.
+
+    This is the same dispatch :func:`_observed_value_token` makes when it decides
+    whether to keep the artefact's spelling, and the two MUST agree: the token
+    rule and the kind are two answers to one question the parser already settled.
+    Splitting them would let a value be spelled as a boolean while being labelled
+    numeric, which is precisely the disagreement the kind exists to prevent.
+
+    The ``bool`` test comes first and must stay first, because ``bool`` is a
+    subclass of ``int``: testing for a number first would classify every yes/no
+    marker as an amount, which is the defect in its purest form.
+
+    Accepts ``object`` because it serves both artefact readers, whose parsed
+    types differ -- the export parser yields ``Decimal | str | bool``, while the
+    declaration-PDF extractor can also yield ``int`` and ``date``. A ``date`` is
+    text: it is a token that identifies a day, never a quantity.
+    """
+    if isinstance(value, bool):
+        return CasillaValueKind.BOOLEAN
+    if isinstance(value, Decimal | int):
+        return CasillaValueKind.NUMERIC
+    return CasillaValueKind.TEXT
+
+
 def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     """Return what the filed artefact said for ``casilla``, as a string.
 
@@ -209,7 +240,7 @@ def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     the faithful reading there, and the raw token is the faithful reading only
     where the parser's own conversion discards the artefact's spelling.
     """
-    if isinstance(casilla.value, bool):
+    if _observed_value_kind(casilla.value) is CasillaValueKind.BOOLEAN:
         return casilla.raw
     return str(casilla.value)
 
@@ -255,6 +286,7 @@ def _observed_casillas_from_submitted_file(
             ObservedCasillaValue(
                 casilla_id=casilla.casilla_id,
                 value=_observed_value_token(casilla),
+                value_kind=_observed_value_kind(casilla.value),
                 source_artefact_kind="submitted_file",
                 source_locator=casilla.source_locator,
                 confidence=1.0,
@@ -378,6 +410,7 @@ def _observed_modelo_303_casillas_from_submitted_file(
             ObservedCasillaValue(
                 casilla_id=canonical_ids_by_export_ref[export_ref],
                 value=str(value),
+                value_kind=_observed_value_kind(value),
                 source_artefact_kind="submitted_file",
                 source_locator=f"record:T30303:pos:{position}:width:{width}",
                 confidence=1.0,
@@ -479,6 +512,7 @@ def _observed_casillas_from_declaration_pdf(
             ObservedCasillaValue(
                 casilla_id=casilla.casilla_id,
                 value=str(casilla.printed_value),
+                value_kind=_observed_value_kind(casilla.printed_value),
                 source_artefact_kind="declaration_pdf",
                 source_locator=f"page:{casilla.source_page}:casilla:{casilla.casilla_id}",
                 confidence=casilla.extraction_confidence,
@@ -524,6 +558,60 @@ def _verify_submitted_file_context(
             raise SedeParseError(
                 f"submitted-file field {parsed.field_id!r} does not match declaration {declaration.expediente_id!r}",
             )
+
+
+def non_numeric_observed_casillas(
+    observation: FiledDeclaracionObservation,
+) -> tuple[ObservedCasillaSkip, ...]:
+    """Return every casilla the Decimal-only registry channel cannot carry.
+
+    Returns an empty tuple when every observed casilla is readable as an amount.
+    A non-empty tuple enumerates the casillas that are not: a declared kind that
+    is not numeric, or a numeric casilla whose token will not parse.
+
+    Caller-opt-in, in the shape of
+    :func:`~adapters.outbound.google.verify_pull_coverage`: this is a query, not
+    a step in enrolment. It performs no side effects and can be called before or
+    after
+    :func:`registry_observation_from_filed_declaration`, so a caller with an
+    operator surface can report the gap while a caller without one is unaffected
+    and unchanged.
+
+    Rows carry no value, deliberately -- see
+    :class:`~adapters.outbound.aeat.sede.ObservedCasillaSkip`.
+    """
+    period_token = observation.period.registry_token
+    snapshot = _registry_authority().snapshot(
+        observation.modelo,
+        filing_year=observation.ejercicio,
+        period=period_token,
+    )
+    revision_casillas_by_id = casillas_by_id(snapshot.revision)
+    skips: list[ObservedCasillaSkip] = []
+    for casilla in observation.casillas:
+        if casilla.source_artefact_kind == "justificante_pdf":
+            continue
+        registry_casilla = revision_casillas_by_id.get(casilla.casilla_id)
+        if registry_casilla is None:
+            continue
+        if casilla.value_kind is not CasillaValueKind.NUMERIC:
+            reason: Literal["not_numeric", "unreadable_numeric_token"] = "not_numeric"
+        else:
+            try:
+                casilla.decimal_value()
+            except InvalidOperation:
+                reason = "unreadable_numeric_token"
+            else:
+                continue
+        skips.append(
+            ObservedCasillaSkip(
+                casilla_id=casilla.casilla_id,
+                label=registry_casilla.label,
+                value_kind=casilla.value_kind,
+                reason=reason,
+            ),
+        )
+    return tuple(skips)
 
 
 def registry_observation_from_filed_declaration(
@@ -574,10 +662,23 @@ def registry_observation_from_filed_declaration(
                 f"observed casilla {casilla.casilla_id!r} in modelo {observation.modelo} "
                 f"revision {snapshot.revision.id} has incomplete registry legal_refs/source_refs",
             )
+        # Ask what the casilla IS, never what its token parses as. A free-text
+        # Modelo 100 casilla can hold a token that converts cleanly to a plausible
+        # wrong number -- `0065` (clave) reads as 15, `0167` (epígrafe IAE) as 22 --
+        # so a conversion attempt admits exactly the values it needed to reject.
+        #
+        # A casilla this channel cannot carry is skipped rather than fatal: a modelo
+        # whose schema declares free-text or boolean casillas has them on EVERY
+        # filing, so refusing here discarded a whole return's numeric evidence over
+        # fields that were never destined for a Decimal map. The skipped set is not
+        # lost -- non_numeric_observed_casillas enumerates it for the operator, and
+        # a return with no numeric casilla at all still refuses below.
+        if casilla.value_kind is not CasillaValueKind.NUMERIC:
+            continue
         try:
-            value = Decimal(casilla.value)
-        except InvalidOperation as exc:
-            raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
+            value = casilla.decimal_value()
+        except InvalidOperation:
+            continue
         previous = casilla_values.get(casilla.casilla_id)
         if previous is not None and previous != value:
             raise SedeParseError(f"observed casilla {casilla.casilla_id!r} has contradictory values")
@@ -623,8 +724,8 @@ def _with_derived_303_compensation_available_observation(
         ):
             continue
         try:
-            values[casilla.casilla_id] = Decimal(casilla.value)
-        except InvalidOperation as exc:
+            values[casilla.casilla_id] = casilla.decimal_value()
+        except (InvalidOperation, SedeValidationError) as exc:
             raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
     derivation = derive_m303_compensation_available_from_casillas(values)
     if derivation is None:
@@ -652,6 +753,7 @@ def _with_derived_303_compensation_available_observation(
     derived = ObservedCasillaValue(
         casilla_id=target_id,
         value=str(derivation.available),
+        value_kind=_observed_value_kind(derivation.available),
         source_artefact_kind=source_artefact_kind,
         source_locator=source_locator,
         confidence=1.0,

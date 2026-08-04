@@ -2161,6 +2161,7 @@ cli:
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
         pull_sources_help: Descàrrega les observacions presentades que requereixen
           les dependències d'una declaració objectiu.
+        casillas_not_enrolled: '{count} casella/es de les declaracions capturades contenen valors que no són imports, per la qual cosa no es van incorporar com a evidència de càlcul: {affected}. Tot el numèric d''aquestes declaracions es va incorporar amb normalitat.'
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
@@ -3911,6 +3912,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      edit_target_not_active: 'El perfil ''%{name}'' no és el perfil actiu, i ''profile edit'' només edita l''actiu. Inicia la sessió primer i després edita''l.'
     recover:
       errors:
         recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de
@@ -6812,6 +6814,9 @@ flows:
         per exemple 1990-01-31.
       auth_numero_soporte: Número de suport del document
       auth_provider: Forma d'identificació davant l'AEAT
+      auth_tax_id: La vostra identitat fiscal (NIF o NIE)
+      auth_tax_id_invalid: Aquest NIF o NIE no és vàlid. Comproveu la lletra final
+        i introduïu-lo tal com figura al vostre document, per exemple 12345678Z.
       busy: Encara hi ha una altra operació en curs. Espera que acabi.
       censal_pull: Emplenar amb les dades censals de l'AEAT
       censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
@@ -6850,9 +6855,24 @@ flows:
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
       path: 'Identificador intern: %{path}'
+      refused:
+        boolean: '''%{value}'' no és una resposta de sí o no. Respon Sí o No.'
+        date: '''%{value}'' no és una data. Fes servir el format AAAA-MM-DD - per
+          exemple 1978-03-15.'
+        email: '''%{value}'' no és una adreça de correu electrònic. Introdueix-ne
+          una amb la forma nom@exemple.com.'
+        enum: '''%{value}'' no s''accepta aquí. Tria''n un de: %{accepted}.'
+        numeric: '''%{value}'' no és un nombre que aquest camp accepti%{accepted}.
+          Introdueix un nombre, amb punt per als decimals.'
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
       save: Desa
+      shape:
+        date: 'Format: AAAA-MM-DD - per exemple 1978-03-15.'
+        decimal: Un nombre, amb punt per als decimals - per exemple 1234.56.
+        email: Una adreça de correu electrònic - per exemple nom@exemple.cat.
+        integer: Un nombre enter, sense separador de milers.
+        money: Un import en euros, amb punt per als decimals - per exemple 1234.56.
       write_failed: No s'ha pogut desar el camp. Torna-ho a provar.
       write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
         a provar.

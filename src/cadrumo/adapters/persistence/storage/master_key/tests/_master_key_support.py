@@ -18,7 +18,7 @@ from ...bucket import (
 def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Settings:
     return Settings(
         cadrumo_local_storage_root=tmp_path / "state",
-        cadrumo_secret_store_dir=tmp_path / "secrets",
+        cadrumo_secret_store_dir=tmp_path / "fallback-store",
         cadrumo_secret_store_backend=backend,
     )
 

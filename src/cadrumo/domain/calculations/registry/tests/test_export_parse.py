@@ -138,18 +138,34 @@ def test_parse_boolean_delegates_to_core_parse_bool() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_parse_xml_dictionary_value_dispatches_by_data_type_prefix() -> None:
-    """AEAT XML dictionaries encode numeric fields with data_type starting
-    with 'N' (e.g. 'N15.2') or 'P' (percentage)."""
+def test_parse_xml_dictionary_value_dispatches_by_declared_data_type() -> None:
+    """Each row is read as the type the official dictionary declares for it.
+
+    Every code here is one the bundled Modelo 100 dictionaries actually use, across
+    the revisions that ship: ``N102``/``P102``/``P030`` for amounts and counts,
+    ``LGC`` and ``S_N`` for the two boolean spellings, and ``X``/``FEC``/``AAA``/
+    ``TIT`` for rows carried as text. Asserting against invented codes would leave
+    the dispatch free to be wrong about every real one.
+    """
     cases: tuple[tuple[str, str, Decimal | str | bool], ...] = (
-        ("N15.2", "123,45", Decimal("123.45")),
-        ("P5.2", "0,21", Decimal("0.21")),
-        ("L1", "X", True),
-        ("L1", "0", False),
-        ("A60", "ESPAÑA", "ESPAÑA"),
-        ("D8", "20250101", "20250101"),
-        ("n15.2", "100", Decimal("100")),
-        ("l1", "X", True),
+        ("N102", "123,45", Decimal("123.45")),
+        ("P102", "12000.25", Decimal("12000.25")),
+        ("P030", "365", Decimal("365")),
+        # tipo_logico spells its two states 0 and 1; tipo_SINO_Exclusivo spells the
+        # same two states NO and SI. Both rows carry a boolean.
+        ("LGC", "1", True),
+        ("LGC", "0", False),
+        ("S_N", "SI", True),
+        ("S_N", "NO", False),
+        ("X", "ESPAÑA", "ESPAÑA"),
+        ("FEC", "1/2/1980", "1/2/1980"),
+        ("AAA", "2021", "2021"),
+        ("TIT", "2", "2"),
+        # The dictionary spells its codes uppercase; matching is case-insensitive
+        # so a lowercased code is not silently read as text.
+        ("n102", "100", Decimal("100")),
+        ("lgc", "1", True),
+        ("s_n", "SI", True),
     )
 
     for data_type, raw, expected in cases:

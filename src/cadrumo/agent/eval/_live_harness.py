@@ -33,7 +33,7 @@ import json
 import os
 import time
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, ClassVar, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -62,6 +62,11 @@ _ANTHROPIC_INSTALL_HINT = (
 
 class LiveHarnessError(RuntimeError):
     """Raised when the live harness cannot run (missing extra, dead server, driver fault)."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "agent-harness live-eval scaffolding runtime error; intentionally a plain RuntimeError (a "
+        "harness-boundary execution signal), not an operator-facing registry-bound filing error"
+    )
 
 
 class LiveToolSpec(BaseModel):

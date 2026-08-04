@@ -41,6 +41,7 @@ from .._export import (
     export_draft,
     verify_export,
 )
+from .._export_xml_dictionary import render_xml_dictionary_layout
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor
 from ._export_support import (
     _EXPORT_PATH,
@@ -469,20 +470,32 @@ def _xml_value(root: ElementTree.Element[str], absolute_path: str) -> str:
     return current.text
 
 
-def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
+def test_a_declared_modelo_100_layout_renders_the_official_casilla_values(tmp_path: Path) -> None:
+    """Every casilla lands at the dictionary path AEAT declares for it.
+
+    Previously written through :func:`~application.filing.export_draft` with an
+    assertion that a file was produced and verified as MATCH. That was asserting
+    the wrong property, not merely a different one: the artefact it certified was
+    schema-invalid at its very first element, because the mandatory ``Aux`` block
+    was absent. The export now refuses that layout, which
+    ``test_export_aux_declaration`` covers; what remains worth pinning here is the
+    casilla projection, so this renders through a layout that declares its ``Aux``.
+    """
     draft = _approved_modelo_100_xml_dictionary_draft()
     provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
     output = tmp_path / "modelo-100-2024.xml"
 
-    receipt = export_draft(
-        draft,
-        output_path=output,
-        headers={"surnames": "SURNAME BLANK", "name": "STATE"},
-        schema_provider=provider,
+    layout = _declared_aux_modelo_100_layout(provider)
+    output.write_bytes(
+        render_xml_dictionary_layout(
+            layout,
+            draft=draft,
+            headers={"surnames": "SURNAME BLANK", "name": "STATE"},
+            schema_provider=provider,
+        ),
     )
 
     payload = output.read_bytes()
-    layout = provider.get_subview("100").export_layouts[0]
     root = DefusedElementTree.fromstring(payload)
     official_paths = _official_modelo_100_2024_dictionary_paths()
     parsed = parse_export_payload(layout, payload, source_root=provider.source_root, sources=provider.sources)
@@ -493,9 +506,8 @@ def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
         if entry.casilla_id in {"0596", "0604", "0609", "0610", "0670"}
     }
 
-    assert receipt.format is DeclaracionExportFormat.XML_DICTIONARY
-    assert receipt.byte_size == len(payload)
     assert root.tag == "Declaracion"
+    assert next(child.tag for child in root) == "Aux", "the declared Aux block leads the sequence"
     assert root.attrib["modelo"] == "100"
     assert root.attrib["ejercicio"] == "2024"
     assert root.attrib["periodo"] == "0A"
@@ -526,15 +538,24 @@ def test_export_writes_modelo_100_xml_dictionary_layout(tmp_path: Path) -> None:
 
 
 def test_export_preserves_official_modelo_100_ecivil_xml_code(tmp_path: Path) -> None:
+    """The estado-civil header lands as AEAT's own code, not the profile's.
+
+    Renders through a layout declaring its ``Aux`` for the reason recorded on
+    :func:`_export_modelo_100_xml`: the shipped layouts cannot be written while
+    ``aux_version`` is undeclared, and the code projection under test is
+    independent of that gap.
+    """
     draft = _approved_modelo_100_xml_dictionary_draft()
     provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
     output = tmp_path / "modelo-100-2024-ecivil.xml"
 
-    export_draft(
-        draft,
-        output_path=output,
-        headers={"surnames": "SURNAME BLANK", "name": "STATE", "ecivil": "4"},
-        schema_provider=provider,
+    output.write_bytes(
+        render_xml_dictionary_layout(
+            _declared_aux_modelo_100_layout(provider),
+            draft=draft,
+            headers={"surnames": "SURNAME BLANK", "name": "STATE", "ecivil": "4"},
+            schema_provider=provider,
+        ),
     )
 
     root = DefusedElementTree.fromstring(output.read_bytes())
@@ -1063,17 +1084,43 @@ def test_export_payload_parser_rejects_layout_literal_drift(tmp_path: Path) -> N
 
 
 def _export_modelo_100_xml(tmp_path: Path) -> tuple[ModeloDraft, Path, RegistrySchemaAccessor]:
-    """Write a genuine M100 XML-dictionary export and return its inputs."""
+    """Write a genuine M100 XML-dictionary export and return its inputs.
+
+    Renders and writes directly rather than calling
+    :func:`~application.filing.export_draft`, because the shipped Modelo 100
+    layouts do not declare ``aux_version`` -- AEAT publishes no authoritative
+    value for the declaration's mandatory ``Aux/VERSION`` element anywhere in the
+    bundled corpus -- so the write door refuses them. The layout here declares one
+    through the registry's own model, which is what a real deployment will carry
+    once AEAT's value is known.
+
+    The tamper regressions below are about whether ``verify_export`` detects an
+    altered artefact. That question is independent of how the artefact was
+    written, and it would be lost rather than answered if these tests were retired
+    while the ``Aux`` gap stands.
+    """
     draft = _approved_modelo_100_xml_dictionary_draft()
     provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
     output = tmp_path / "modelo-100-2024.xml"
-    export_draft(
-        draft,
-        output_path=output,
-        headers={"surnames": "SURNAME BLANK", "name": "STATE"},
-        schema_provider=provider,
+    output.write_bytes(
+        render_xml_dictionary_layout(
+            _declared_aux_modelo_100_layout(provider),
+            draft=draft,
+            headers={"surnames": "SURNAME BLANK", "name": "STATE"},
+            schema_provider=provider,
+        ),
     )
     return draft, output, provider
+
+
+def _declared_aux_modelo_100_layout(provider: RegistrySchemaAccessor) -> ExportLayoutDefinition:
+    """Return the M100 layout with the ``Aux`` block fully declared.
+
+    Uses the registry model's own copy-with-update rather than patching the guard,
+    so the artefact these tests read is the one a declared layout produces.
+    """
+    layout = provider.get_subview("100").export_layouts[0]
+    return layout.model_copy(update={"aux_version": "1.00"})
 
 
 def test_verify_matches_the_untampered_xml_dictionary_export(tmp_path: Path) -> None:

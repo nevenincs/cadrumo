@@ -213,13 +213,19 @@ def test_parse_accepts_european_thousands_and_decimal_separators(tmp_path: Path)
     assert values == {"01": Decimal("1234.56")}
 
 
-@pytest.mark.parametrize("raw_value", ("NaN", "Infinity", "-Infinity"))
-def test_parse_rejects_non_finite_value(tmp_path: Path, raw_value: str) -> None:
-    """Decimal spellings that evade numeric parsing cannot enter a casilla observation."""
+@pytest.mark.parametrize("raw_value", ("NaN", "Infinity", "-Infinity", "1e5", "+1", "1_000", "abc"))
+def test_parse_rejects_what_no_one_writes_on_a_return(tmp_path: Path, raw_value: str) -> None:
+    """Spellings a bare Decimal accepts but a figure on a return never uses.
+
+    The non-finite pair is the dangerous half -- a NaN casilla value compares
+    False to every threshold, so a guard keyed on ``> 0`` never fires for it --
+    but ``1e5`` is the quiet one: it is legal input that silently becomes a
+    hundred thousand. The canonical grammar refuses all of them in one place.
+    """
     path = tmp_path / "sheet.csv"
     path.write_text(f"casilla_code,value\n01,{raw_value}\n", encoding="utf-8")
 
-    with pytest.raises(ModeloLocalObservationError, match="must be finite"):
+    with pytest.raises(ModeloLocalObservationError, match="is not a plain number"):
         parse_casilla_value_spreadsheet(path)
 
 

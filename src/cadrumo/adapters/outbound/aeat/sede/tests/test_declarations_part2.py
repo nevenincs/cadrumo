@@ -6,12 +6,16 @@ from collections.abc import Mapping
 
 import pytest
 
+from ......core import CasillaValueKind
 from ......domain.calculations.registry import (
     previous_filing_source_reference,
     validated_casilla_id,
     validated_casilla_id_map,
 )
-from .._declarations_observations import _submitted_file_coverage_for_casillas
+from .._declarations_observations import (
+    _submitted_file_coverage_for_casillas,
+    non_numeric_observed_casillas,
+)
 from ._declarations_support import (
     _COTEJO_DOCUMENT_URL,
     _DECLARATIONS_LISTING_BASE_PATH,
@@ -764,7 +768,14 @@ class TestFiledObservationBindings:
                 period="1T",
             )
 
-    def test_non_decimal_observed_value_rejected(self) -> None:
+    def test_observation_of_only_non_numeric_casillas_is_rejected(self) -> None:
+        """Skipping every casilla leaves no evidence, and that still refuses.
+
+        Non-numeric casillas are skipped rather than fatal, but a return whose
+        every casilla was skipped enrolled nothing -- so the existing
+        no-observations refusal is what stops an empty record being persisted as
+        if it were evidence.
+        """
         observation = _filed_observation(
             modelo="100",
             ejercicio=2025,
@@ -772,8 +783,32 @@ class TestFiledObservationBindings:
             casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: "no-decimal"},
         )
 
-        with pytest.raises(SedeParseError, match="not decimal-valued"):
+        with pytest.raises(SedeParseError, match="no registry casilla observations"):
             registry_observation_from_filed_declaration(observation)
+
+    def test_numeric_casillas_enrol_while_non_numeric_ones_are_skipped(self) -> None:
+        """A filing's readable amounts survive casillas this channel cannot carry.
+
+        Refusing the whole return over fields never destined for a Decimal map
+        discarded its numeric evidence too. The skipped set is not lost: it is
+        enumerated by ``non_numeric_observed_casillas`` for the operator.
+        """
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1234.56"),
+                _M100_CASILLA_0180: "CL SANITIZADA 0000 LOCALIDAD",
+            },
+        )
+
+        registry_observation = registry_observation_from_filed_declaration(observation)
+
+        values = registry_observation.casilla_values
+        assert values == {_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("1234.56")}
+        assert _M100_CASILLA_0180 not in values
+        assert {skip.casilla_id for skip in non_numeric_observed_casillas(observation)} == {_M100_CASILLA_0180}
 
     def test_contradictory_observed_values_rejected(self) -> None:
         observation = _filed_observation(
@@ -787,6 +822,7 @@ class TestFiledObservationBindings:
                     ObservedCasillaValue(
                         casilla_id=_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA,
                         value="1",
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="field:0224",
                         confidence=1.0,
@@ -794,6 +830,7 @@ class TestFiledObservationBindings:
                     ObservedCasillaValue(
                         casilla_id=_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA,
                         value="2",
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="field:0224",
                         confidence=1.0,

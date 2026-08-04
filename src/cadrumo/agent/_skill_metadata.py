@@ -33,6 +33,7 @@ import re
 import types
 import typing
 from collections.abc import Mapping
+from typing import ClassVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
@@ -42,6 +43,12 @@ from ..domain.deadlines import TaxpayerProfile
 
 class SkillMetadataError(ValueError):
     """Raised when a skill's frontmatter or ``applies_when`` predicate is invalid."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "agent-harness skill-frontmatter/applies_when validation error; intentionally a plain "
+        "ValueError (a malformed-input signal at the harness boundary), not an operator-facing "
+        "registry-bound filing/calculation error"
+    )
 
 
 class ProfileFactMatch(enum.StrEnum):

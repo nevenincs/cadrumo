@@ -215,6 +215,7 @@ if TYPE_CHECKING:
         ProfileLoginThrottledError,
         close_profile_session_artefacts,
         login_profile,
+        resolve_login_target,
         resume_active_profile_session,
     )
     from ._orchestration import (
@@ -246,11 +247,13 @@ if TYPE_CHECKING:
     )
     from ._overview import (
         MASKED_PLACEHOLDER,
+        ProfileFieldChoice,
         ProfileFieldView,
         ProfileOverview,
         ProfileSectionView,
         build_profile_overview,
         mask_profile_field,
+        profile_field_choices,
     )
     from ._preflight import ProfilePreflightService
     from ._profile_pointer_transaction import active_profile_pointer_transaction
@@ -447,6 +450,7 @@ _LAZY_EXPORTS: dict[str, str] = {
                 "ProfileLoginThrottledError",
                 "close_profile_session_artefacts",
                 "login_profile",
+                "resolve_login_target",
                 "resume_active_profile_session",
             ),
         ),
@@ -454,11 +458,13 @@ _LAZY_EXPORTS: dict[str, str] = {
             "._overview",
             (
                 "MASKED_PLACEHOLDER",
+                "ProfileFieldChoice",
                 "ProfileFieldView",
                 "ProfileOverview",
                 "ProfileSectionView",
                 "build_profile_overview",
                 "mask_profile_field",
+                "profile_field_choices",
             ),
         ),
         (
@@ -583,6 +589,7 @@ __all__ = [
     "ProfileBundleExportTarget",
     "ProfileBundleExportTransport",
     "ProfileFactsApplied",
+    "ProfileFieldChoice",
     "ProfileFieldView",
     "ProfileId",
     "ProfileImportResult",
@@ -654,6 +661,7 @@ __all__ = [
     "prepare_profile_export",
     "profile_create_storage_span",
     "profile_export_runtime",
+    "profile_field_choices",
     "profile_section_rows",
     "profile_storage_session",
     "projection_for_taxpayer",
@@ -677,6 +685,7 @@ __all__ = [
     "require_registered_label",
     "resolve_active_capability",
     "resolve_capability",
+    "resolve_login_target",
     "resolve_profile_output_language_hint",
     "restore_carried_objects",
     "resume_active_profile_session",

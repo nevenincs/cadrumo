@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage.bucket import bucket_paths
 from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
 from ....core.time import now
@@ -232,8 +233,8 @@ class TestBucketIsolation:
         assert a.granted_scopes == ("IVA",)
         assert b.represented_nif == "87654321X"
         assert b.granted_scopes == ("RENT",)
-        assert (runtime.primary.storage_root / "buckets" / runtime.primary.bucket_id / "db" / "cadrumo.db").is_file()
-        assert (runtime.primary.storage_root / "buckets" / runtime.secondary.bucket_id / "db" / "cadrumo.db").is_file()
+        assert (bucket_paths(runtime.primary.storage_root, runtime.primary.bucket_id).database_file).is_file()
+        assert (bucket_paths(runtime.primary.storage_root, runtime.secondary.bucket_id).database_file).is_file()
 
 
 class TestApoderadoFlowDoor:
@@ -317,7 +318,7 @@ class TestSettingsRouting:
 
         assert config.bucket_id == isolated_profile.bucket_id
         assert svc.status(bucket_id=isolated_profile.bucket_id).represented_nif == "12345678Z"
-        assert not (wrong_root / "buckets" / isolated_profile.bucket_id / "db" / "cadrumo.db").exists()
+        assert not (bucket_paths(wrong_root, isolated_profile.bucket_id).database_file).exists()
 
 
 class TestCanonicalBucketEquivalence:

@@ -29,6 +29,12 @@ from ._schema import (
 )
 
 _MONEY_SCALE = Decimal("100")
+# The dictionary's two boolean row types. ``LGC`` resolves to the XSD's
+# ``tipo_logico`` (``0``/``1``) and ``S_N`` to ``tipo_SINO_Exclusivo``
+# (``NO``/``SI``); the tokens differ but both rows carry a boolean. Named as a set
+# rather than matched by prefix so a future type code beginning with the same
+# letter is not silently read as a boolean.
+_BOOLEAN_DICTIONARY_TYPES = frozenset({"LGC", "S_N"})
 _DICTIONARY_LINE_RE = re.compile(
     r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$",
 )
@@ -179,6 +185,11 @@ def xml_dictionary_entries(
             f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
         )
     dictionary_path = source_root / Path(source.corpus_path)
+    # Applied here rather than at either consumer: the renderer and
+    # :func:`parse_export_payload` both resolve their rows from this call, so a
+    # correction reaching only one of them would make an exported artefact
+    # verify as drift against itself.
+    overrides = {override.field_id: override.path for override in layout.dictionary_path_overrides}
     entries: list[XmlDictionaryEntry] = []
     for line in _read_dictionary_text(dictionary_path).splitlines():
         stripped = line.strip()
@@ -188,17 +199,42 @@ def xml_dictionary_entries(
         if match is None:
             continue
         casilla_id = _parse_dictionary_casilla_id(match["casilla"])
+        field_id = match["field"].strip()
         entries.append(
             XmlDictionaryEntry(
-                field_id=match["field"].strip(),
-                path=match["path"].strip(),
+                field_id=field_id,
+                path=overrides.get(field_id, match["path"].strip()),
                 data_type=match["type"].strip(),
                 casilla_id=casilla_id,
             ),
         )
     if not entries:
         raise RegistryValidationError(f"XML export layout {layout.id!r} dictionary has no parseable entries")
+    _assert_every_override_was_applied(layout, entries)
     return tuple(entries)
+
+
+def _assert_every_override_was_applied(
+    layout: ExportLayoutDefinition,
+    entries: list[XmlDictionaryEntry],
+) -> None:
+    """Refuse an override naming a field this dictionary does not carry.
+
+    An override is a claim that a specific published row is wrong. If the row is
+    absent -- a typo, or a revision where AEAT never declared the field -- the
+    correction silently applies to nothing and the defect it was written for goes
+    on shipping, with a declaration in the registry that reads as if it were
+    fixed. Refusing at read time makes that impossible to leave in place.
+    """
+    declared = {entry.field_id for entry in entries}
+    unmatched = sorted(
+        override.field_id for override in layout.dictionary_path_overrides if override.field_id not in declared
+    )
+    if unmatched:
+        raise RegistryValidationError(
+            f"XML export layout {layout.id!r} declares dictionary path overrides for {unmatched!r}, "
+            "which the official dictionary does not declare, so the correction would apply to nothing",
+        )
 
 
 def _read_dictionary_text(path: Path) -> str:
@@ -247,10 +283,21 @@ def _local_name(tag: str) -> str:
 
 
 def _parse_xml_dictionary_value(data_type: str, raw: str) -> Decimal | str | bool | None:
+    """Read one dictionary value back as the type its row declares.
+
+    Both boolean row types are read as booleans. They differ only in the tokens
+    AEAT spells them with -- ``LGC`` rows carry ``0``/``1`` and ``S_N`` rows carry
+    ``NO``/``SI`` -- which is a spelling difference, not a difference in what the
+    row means. Reading one as a boolean and the other as text made the two halves
+    of this boundary disagree about an ``S_N`` row: the writer emitted a marker
+    for a boolean casilla and the reader handed back a string, so a comparison
+    against the draft saw ``True`` on one side and ``"SI"`` on the other and
+    reported drift on a file that matched.
+    """
     normalized = data_type.upper()
     if normalized.startswith(("N", "P")):
         return _parse_xml_decimal(raw)
-    if normalized.startswith("L"):
+    if normalized in _BOOLEAN_DICTIONARY_TYPES:
         return _parse_boolean(raw)
     return raw
 

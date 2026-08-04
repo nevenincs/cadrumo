@@ -21,7 +21,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import Period
+from ....core import CasillaValueKind, Period
 from ....core.external_constants import load_external_constants
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
@@ -318,6 +318,7 @@ def _prior_303_observation(
                     ObservedCasillaValue(
                         casilla_id=_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
                         value=str(prior_pending),
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:110",
                         confidence=1.0,
@@ -331,6 +332,7 @@ def _prior_303_observation(
                     ObservedCasillaValue(
                         casilla_id=_M303_APLICADA_CASILLA,
                         value=str(applied),
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:78",
                         confidence=1.0,
@@ -342,6 +344,7 @@ def _prior_303_observation(
             ObservedCasillaValue(
                 casilla_id=_M303_POSTERIOR_CASILLA,
                 value=str(pending_compensation),
+                value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:87",
                 confidence=1.0,
@@ -349,6 +352,7 @@ def _prior_303_observation(
             ObservedCasillaValue(
                 casilla_id=_M303_RESULTADO_CASILLA,
                 value=str(result),
+                value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:69",
                 confidence=1.0,
@@ -358,6 +362,7 @@ def _prior_303_observation(
                     ObservedCasillaValue(
                         casilla_id=_M303_GENERADA_CASILLA,
                         value=str(generated),
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:derived-generated",
                         confidence=1.0,
@@ -371,6 +376,7 @@ def _prior_303_observation(
                     ObservedCasillaValue(
                         casilla_id=_M303_RESULTADO_FINAL_CASILLA,
                         value=str(final_result),
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:71",
                         confidence=1.0,

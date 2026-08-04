@@ -120,18 +120,73 @@ def test_modelo_100_cadastral_construction_ratios_are_decimal_roles() -> None:
     )
 
 
-def test_modelo_100_business_lease_marker_is_boolean_flag() -> None:
+def _official_dictionary_type(year: int, *, field_id: str) -> str:
+    """Return the type code AEAT's bundled dictionary declares for ``field_id``.
+
+    Resolves the dictionary through the registry's own source catalogue rather
+    than a filename written here, so the reader follows AEAT's artefact wherever
+    the corpus places it.
+    """
+    _modelos_by_id, catalogues = _loaded_registry()
+    source = catalogues.sources[f"aeat-dr-100-{year}-dictionary"]
+    text = (_source_root() / source.corpus_path).read_text(encoding="latin-1")
+    for line in text.splitlines():
+        name, separator, remainder = line.partition("=[")
+        if not separator or name != field_id:
+            continue
+        return remainder.split("][", 1)[1].split("]", 1)[0]
+    pytest.fail(f"bundled Modelo 100 {year} dictionary declares no field {field_id!r}")
+    return ""
+
+
+def test_modelo_100_business_lease_casilla_counts_days_not_a_yes_or_no() -> None:
+    """Casilla 0082 holds a day count, which its official label does not say.
+
+    AEAT prints it as "Bien inmueble objeto de arrendamiento de negocio", with no
+    mention of days, and the registry once read that as a yes/no marker. The label
+    is a print instruction under a column header its sibling carries in full: the
+    adjacent 0080 reads "Número de días en que ha tenido este uso: Bien inmueble
+    afecto a actividades económicas", and every ``C_DIAS*`` row under Inmueble --
+    0076, 0079, 0080, 0082, 0085, 0088, 0101, 0122, 0137 -- is typed ``P030`` by
+    the dictionary and ``tipo_Integer1a366`` by the XSD.
+
+    The Manual de Renta states it outright for this box, identically in the 2024
+    and 2025 editions: "Sin embargo, si se trata de un bien inmueble objeto de
+    arrendamiento de negocio, se indicará el número de días en que ha tenido este
+    uso en la casilla [0082]."
+
+    Declared as a boolean it filed a one-day lease for any taxpayer who had one,
+    because the renderer resolves a Python ``bool`` to ``"1"`` before it consults
+    the declared type at all. The expectation below is read from the bundled
+    dictionary rather than written here, so this passes only while the registry
+    agrees with AEAT.
+    """
     modelos_by_id, _catalogues = _loaded_registry()
     modelo = modelos_by_id["100"]
 
     for year in range(2020, 2026):
         revision = modelo.revisions[str(year)]
         casilla = next(casilla for casilla in revision.casillas if casilla.id == "0082")
+        official_type = _official_dictionary_type(year, field_id="C_DIASAN")
 
+        assert official_type == "P030", f"{year}: AEAT no longer types C_DIASAN as an integer"
         assert tuple(casilla.section) == ("toma_datos_ampliada", "inmuebles", "inmueble")
-        assert casilla.data_type == "boolean"
-        assert casilla.semantic_role == "irpf_inmueble_arrendamiento_negocio_flag"
+        assert casilla.data_type == "integer"
+        assert casilla.semantic_role == "irpf_inmueble_dias_arrendamiento_negocio"
         assert casilla.label == "Bien inmueble objeto de arrendamiento de negocio"
+
+
+def test_the_day_count_oracle_rejects_a_type_code_that_is_not_an_integer() -> None:
+    """The dictionary reader discriminates, so the assertion above means something.
+
+    ``C_DIASAN`` shares its ``P030`` code with every other day count under
+    Inmueble, while a neighbouring euro amount carries a two-decimal code. If the
+    reader returned the same answer for both, the check above would be vacuous.
+    """
+    assert _official_dictionary_type(2024, field_id="C_DIASAN") == "P030"
+    assert _official_dictionary_type(2024, field_id="C_DIASAE") == "P030"
+    assert _official_dictionary_type(2024, field_id="USOAE") == "LGC"
+    assert _official_dictionary_type(2024, field_id="PC") != "P030"
 
 
 def test_modelo_100_immovable_gain_cadastral_reference_roles_match_source_blocks() -> None:

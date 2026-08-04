@@ -49,6 +49,19 @@ from .runtime import RegistrySchemaAccessor
 _XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
 ElementTree.register_namespace("xsi", _XML_SCHEMA_INSTANCE_NS)
 
+_XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
+
+# The declaration's identity block. Mandatory and first in the ``Declaracion``
+# sequence of every bundled AEAT Modelo 100 XSD, and absent from every bundled
+# dictionary, so it is written from the layout rather than from a dictionary row.
+_AUX_TAG = "Aux"
+
+# Model groups carry no sibling position of their own when reading declared
+# order: a declaration nested inside one sits at the position the group occupies
+# in its parent, so the walk descends through them rather than treating them as
+# elements.
+_XSD_MODEL_GROUP_TAGS = frozenset({"complexType", "complexContent", "sequence", "choice", "all"})
+
 # The one dictionary type whose boolean states are spelled out. Every other
 # boolean-bearing row is ``tipo_logico``, whose pattern is ``([0-1]){1}``.
 _SINO_DICTIONARY_TYPE = "S_N"
@@ -92,6 +105,11 @@ def render_xml_dictionary_layout(
         _XML_DICTIONARY_ROOT_TAG,
         expected_xml_dictionary_root_identity(layout, draft=draft, schema_provider=schema_provider),
     )
+    element_order = _xml_dictionary_element_order(
+        _xml_dictionary_xsd_source(layout, schema_provider.sources),
+        source_root=schema_provider.source_root,
+    )
+    _append_declaration_aux(root, layout)
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     for entry in entries:
@@ -103,7 +121,7 @@ def render_xml_dictionary_layout(
         )
         if rendered is None or rendered == "":
             continue
-        _set_xml_dictionary_path(root, entry.path, rendered)
+        _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
     return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
 
 
@@ -183,7 +201,8 @@ def _xml_dictionary_xsd_source(
     raise FilingExportError(f"XML dictionary export layout {layout.id!r} has no resolved XSD source")
 
 
-def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: Path | None) -> str:
+def _xml_dictionary_xsd_root(source: SourceReference, *, source_root: Path | None) -> ElementTree.Element[str]:
+    """Return the parsed root of the official XSD ``source`` names."""
     if source_root is None:
         raise FilingExportError(f"XML dictionary XSD source {source.id!r} requires source_root")
     try:
@@ -192,17 +211,137 @@ def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: 
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed") from exc
     if root is None:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} could not be parsed")
+    return root
+
+
+def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: Path | None) -> str:
+    root = _xml_dictionary_xsd_root(source, source_root=source_root)
     versions: list[str] = []
-    for simple_type in root.iter("{http://www.w3.org/2001/XMLSchema}simpleType"):
+    for simple_type in root.iter(f"{_XSD_NS}simpleType"):
         if simple_type.attrib.get("name") != "tipo_VersionXSD":
             continue
-        for enumeration in simple_type.iter("{http://www.w3.org/2001/XMLSchema}enumeration"):
+        for enumeration in simple_type.iter(f"{_XSD_NS}enumeration"):
             value = enumeration.attrib.get("value")
             if value:
                 versions.append(value)
     if not versions:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
     return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
+
+
+def _append_declaration_aux(root: ElementTree.Element[str], layout: ExportLayoutDefinition) -> None:
+    """Write the declaration's ``Aux`` identity block from the layout's declaration.
+
+    The block is mandatory and first in every AEAT Modelo 100 XSD, and no bundled
+    dictionary describes a single one of its rows, so it cannot be reached by the
+    dictionary-driven walk that writes everything else here.
+
+    Both children are ``minOccurs="1"``, so a block missing either is invalid and
+    is not worth writing: when ``aux_version`` is undeclared this writes nothing,
+    and :func:`~application.filing.assert_xml_declaration_aux_declared` refuses
+    the export at the write door rather than letting a partial block reach disk.
+    """
+    if layout.aux_idioma is None or layout.aux_version is None:
+        return
+    aux = ElementTree.SubElement(root, _AUX_TAG)
+    ElementTree.SubElement(aux, "Idioma").text = layout.aux_idioma.value
+    ElementTree.SubElement(aux, "VERSION").text = layout.aux_version
+
+
+def _xsd_declared_children(node: ElementTree.Element[str]) -> list[ElementTree.Element[str]]:
+    """Return ``node``'s child element declarations in the order the schema writes them.
+
+    Descends through the model-group wrappers (``sequence``, ``choice``, ``all``)
+    that carry no ordering meaning of their own here, so a declaration nested one
+    or more groups deep is still found at its true sibling position. Descent stops
+    at the first ``element`` on each branch: that element's own children belong to
+    its path, not to ``node``'s.
+    """
+    found: list[ElementTree.Element[str]] = []
+    pending = list(node)
+    while pending:
+        current = pending.pop(0)
+        # A comment or processing instruction carries a callable tag rather than
+        # a name; rendering it to text simply matches nothing below.
+        local_name = str(current.tag).rpartition("}")[2]
+        if local_name == "element" and current.get("name"):
+            found.append(current)
+        elif local_name in _XSD_MODEL_GROUP_TAGS:
+            pending = list(current) + pending
+    return found
+
+
+def _xml_dictionary_element_order(
+    source: SourceReference,
+    *,
+    source_root: Path | None,
+) -> dict[str, tuple[str, ...]]:
+    """Return each element path's declared child order, read from the official XSD.
+
+    AEAT declares the declaration body as ``xs:sequence``, so sibling order is
+    part of the schema rather than a presentation choice. The dictionary's row
+    order is NOT that order -- it lists ``CalculoImpuestoRes`` first under
+    ``Resultados`` where the schema puts it twenty-fifth, and ``SEXO_D`` before
+    ``ECIVIL`` under ``Declarante`` where the schema puts it after ``DPFNAC_D``.
+    Appending each element as its dictionary row is reached therefore emits a
+    document AEAT's own schema rejects, so the writer reads the order from the
+    schema instead.
+
+    The map is keyed by absolute path rather than by element name because a name
+    is not unique across the document: the same tag recurs under different
+    parents carrying different types, and a name-keyed map would silently apply
+    one parent's order to another's children.
+
+    Args:
+        source: The layout's resolved XSD :class:`SourceReference`.
+        source_root: Root the source's ``corpus_path`` resolves against.
+
+    Returns:
+        Absolute element path (``""`` for the root's own children) mapped to the
+        child element names the schema declares under it, in declared order. A
+        path the schema does not describe is absent, and the writer falls back to
+        first-encounter order for it.
+
+    Raises:
+        FilingExportError: ``source_root`` is absent.
+        FilingExportValidationError: The XSD could not be parsed, or declares no
+            root ``Declaracion`` element to walk from.
+    """
+    root = _xml_dictionary_xsd_root(source, source_root=source_root)
+    named_types = {
+        node.get("name"): node for node in root.iter(f"{_XSD_NS}complexType") if node.get("name") is not None
+    }
+    order: dict[str, tuple[str, ...]] = {}
+
+    def walk(path: str, type_node: ElementTree.Element[str] | None, seen: frozenset[str]) -> None:
+        if type_node is None or path in order:
+            return
+        children = _xsd_declared_children(type_node)
+        if not children:
+            return
+        order[path] = tuple(str(child.get("name")) for child in children)
+        for child in children:
+            child_path = f"{path}/{child.get('name')}"
+            declared_type = child.get("type")
+            if declared_type is not None and declared_type in named_types:
+                # A type that reaches itself would recurse without end; its
+                # order is already recorded at the shallower path.
+                if declared_type in seen:
+                    continue
+                walk(child_path, named_types[declared_type], seen | {declared_type})
+            else:
+                walk(child_path, child.find(f"{_XSD_NS}complexType"), seen)
+
+    declaration = next(
+        (node for node in root if node.tag == f"{_XSD_NS}element" and node.get("name") == _XML_DICTIONARY_ROOT_TAG),
+        None,
+    )
+    if declaration is None:
+        raise FilingExportValidationError(
+            f"XML dictionary XSD source {source.id!r} declares no {_XML_DICTIONARY_ROOT_TAG!r} root element",
+        )
+    walk("", declaration.find(f"{_XSD_NS}complexType"), frozenset())
+    return order
 
 
 def _xml_dictionary_rendered_value(
@@ -217,6 +356,8 @@ def _xml_dictionary_rendered_value(
         raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
     if raw is None:
         return None
+    if draft.modelo == Modelo.M100:
+        raw = _modelo_100_sign_branch_value(entry, raw)
     rendered = _format_xml_dictionary_value(entry.data_type, raw)
     if draft.modelo == Modelo.M100 and entry.field_id == "ECIVIL":
         try:
@@ -224,6 +365,47 @@ def _xml_dictionary_rendered_value(
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
+
+
+# Casilla 0695 is declared against two sibling fields that are opposite branches
+# of one quantity, not two copies of it:
+#
+#   TCPP112  "Resto a ingresar ... diferencia positiva o igual a cero"
+#   TCNN112  "Resto ... cuya devolucion se solicita: diferencia negativa o igual a cero"
+#
+# Writing the casilla's value into both declares an amount to pay AND an amount to
+# refund. Only the branch matching the value's sign carries it.
+#
+# Both fields are minOccurs=1 inside a minOccurs=0 parent, so the branch that does
+# not apply is written as zero rather than omitted -- omitting it would render a
+# CompensacionConyugesRes block the schema rejects. At zero the two rules coincide
+# and both branches carry zero, so no tie-break is needed.
+#
+# Keyed on the field id rather than on the P102/N102 type codes: those do not
+# encode a sign domain. Thirty-five P102 rows in the 2024 dictionary carry labels
+# reading "negativa" (the perdida-patrimonial rows among them), and the reader
+# parses both prefixes identically, so the codes agree with the branches here by
+# coincidence rather than by rule.
+_MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS: frozenset[str] = frozenset({"TCNN112"})
+_MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS: frozenset[str] = frozenset({"TCPP112"})
+
+
+def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> object:
+    """Return ``raw`` for the sign branch it belongs to, and zero for the other.
+
+    Args:
+        entry: Dictionary row being rendered.
+        raw: Value resolved for the row's casilla.
+
+    Returns:
+        ``raw`` when the row's branch matches its sign, ``Decimal("0")`` when the
+        row is the opposite branch, and ``raw`` unchanged for every other row.
+    """
+    negative_branch = entry.field_id in _MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS
+    if not negative_branch and entry.field_id not in _MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS:
+        return raw
+    amount = coerce_decimal(raw)
+    return raw if (amount < 0) is negative_branch else Decimal("0")
 
 
 def _xml_dictionary_header_value(
@@ -279,11 +461,26 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
     return str(value).strip()
 
 
-def _set_xml_dictionary_path(root: ElementTree.Element[str], absolute_path: str, value: str) -> None:
+def _set_xml_dictionary_path(
+    root: ElementTree.Element[str],
+    absolute_path: str,
+    value: str,
+    *,
+    element_order: dict[str, tuple[str, ...]],
+) -> None:
+    """Write ``value`` at ``absolute_path``, creating each element in schema order.
+
+    A newly created element is placed at the position ``element_order`` declares
+    for it rather than appended, because the schema's ``xs:sequence`` makes
+    sibling order significant and the dictionary rows that drive this walk do not
+    arrive in that order. Placement is the only thing the order decides: an
+    element's tag, text, and attributes are unaffected.
+    """
     parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
     if not parts:
         raise FilingExportValidationError("XML dictionary entry path must not be empty")
     current = root
+    current_path = ""
     for index, part in enumerate(parts):
         if index == 0 and part == root.tag:
             continue
@@ -294,9 +491,35 @@ def _set_xml_dictionary_path(root: ElementTree.Element[str], absolute_path: str,
             return
         child = next((candidate for candidate in current if candidate.tag == part), None)
         if child is None:
-            child = ElementTree.SubElement(current, part)
+            child = ElementTree.Element(part)
+            current.insert(_declared_child_position(current, part, element_order.get(current_path)), child)
         current = child
+        current_path = f"{current_path}/{part}"
     current.text = value
+
+
+def _declared_child_position(
+    parent: ElementTree.Element[str],
+    tag: str,
+    declared: tuple[str, ...] | None,
+) -> int:
+    """Return the index ``tag`` belongs at among ``parent``'s existing children.
+
+    Falls back to appending when the schema describes neither the parent nor the
+    new tag, which keeps a path the XSD does not cover rendering exactly as it did
+    before rather than dropping it or guessing a position for it.
+    """
+    if declared is None:
+        return len(parent)
+    ranks = {name: position for position, name in enumerate(declared)}
+    rank = ranks.get(tag)
+    if rank is None:
+        return len(parent)
+    for position, existing in enumerate(parent):
+        existing_rank = ranks.get(str(existing.tag))
+        if existing_rank is not None and existing_rank > rank:
+            return position
+    return len(parent)
 
 
 __all__ = ["render_xml_dictionary_layout"]

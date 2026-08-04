@@ -39,6 +39,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -98,6 +99,10 @@ class InvoiceWizardResult(BaseModel):
 @dataclass(frozen=True, slots=True)
 class _WizardFieldError(Exception):
     """Internal control-flow carrier for one field-validation failure."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "private wizard field-validation carrier; converted to InvoiceValidationError before leaving the module"
+    )
 
     field: str
     reason: str

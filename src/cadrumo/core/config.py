@@ -23,6 +23,7 @@ from contextlib import contextmanager
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
+from stat import S_ISDIR
 from typing import TYPE_CHECKING, Annotated, Any, Final, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
@@ -1389,11 +1390,24 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
     root = Path(resolved.cadrumo_local_storage_root)
 
     for target in (root, *storage_tree_targets(resolved)):
-        if target.exists() and not target.is_dir():
-            raise CoreValidationError(
-                f"Cadrumo state directory {target} is occupied by a file; "
-                "the storage tree cannot be materialised over it.",
-            )
+        # One stat answers both questions this loop used to ask with three
+        # syscalls (``exists``, then ``is_dir``, then an unconditional
+        # ``mkdir`` that re-walked the path). Every CLI invocation runs this
+        # over the whole taxonomy, and on a machine that has been used once
+        # the answer is always "already a directory" -- so the common case
+        # now costs one stat per target instead of three calls, and mkdir is
+        # issued only for a target that is genuinely absent.
+        try:
+            mode = target.stat().st_mode
+        except OSError:
+            mode = None
+        if mode is not None:
+            if not S_ISDIR(mode):
+                raise CoreValidationError(
+                    f"Cadrumo state directory {target} is occupied by a file; "
+                    "the storage tree cannot be materialised over it.",
+                )
+            continue
         try:
             target.mkdir(parents=True, exist_ok=True)
         except OSError as exc:

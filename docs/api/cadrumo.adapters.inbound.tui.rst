@@ -15,6 +15,7 @@ Submodules
 
    cadrumo.adapters.inbound.tui._app
    cadrumo.adapters.inbound.tui._credential_screen
+   cadrumo.adapters.inbound.tui._field_edit_screen
    cadrumo.adapters.inbound.tui._form_screen
    cadrumo.adapters.inbound.tui._login_screen
    cadrumo.adapters.inbound.tui._manager_screen

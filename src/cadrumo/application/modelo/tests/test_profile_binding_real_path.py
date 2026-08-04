@@ -62,7 +62,7 @@ _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
 _M100_2025_XSD = (
     REPO_ROOT
     / "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files"
-    / "03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd"
+    / "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"
 )
 
 
@@ -287,11 +287,9 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
     profile_key = getattr(selector, "profile_key", None)
     xsd_path = getattr(selector, "xsd_path", None)
     dictionary_field = getattr(selector, "dictionary_field", None)
-    valid_at = getattr(selector, "valid_at", None)
     assert profile_key == "renta_taxpayer.marital_status"
     assert xsd_path == "/DatosIdentificativos/Declarante/ECIVIL"
     assert dictionary_field == "ECIVIL"
-    assert valid_at == "2025-12-31"
     assert b'<xs:pattern value="([1-4]){1}"/>' in _M100_2025_XSD.read_bytes()
 
     record = UserProfileRecord(

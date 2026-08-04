@@ -2099,6 +2099,7 @@ cli:
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
         pull_sources_help: Letölti egy cél-nyilatkozat függőségeihez szükséges benyújtott
           megfigyeléseket.
+        casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett bevallások minden számszerű adata a szokásos módon bekerült.'
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:
@@ -3867,6 +3868,7 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+      edit_target_not_active: 'A(z) ''%{name}'' profil nem az aktív profil, és a ''profile edit'' csak az aktívat szerkeszti. Először jelentkezzen be rá, majd szerkessze.'
     recover:
       errors:
         recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási
@@ -6696,6 +6698,9 @@ flows:
         meg, például 1990-01-31.
       auth_numero_soporte: A dokumentumon szereplő támogatási szám
       auth_provider: Azonosítás módja az AEAT felé
+      auth_tax_id: Az Ön adóazonosítója (NIF vagy NIE)
+      auth_tax_id_invalid: Ez a NIF vagy NIE nem érvényes. Ellenőrizze a záró betűt,
+        és úgy adja meg, ahogy az okmányán szerepel, például 12345678Z.
       busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
       censal_pull: Kitöltés az AEAT censusadataiból
       censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
@@ -6734,9 +6739,24 @@ flows:
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
       path: 'Belső azonosító: %{path}'
+      refused:
+        boolean: A(z) '%{value}' nem igen vagy nem válasz. Válaszolj Igen vagy Nem
+          értékkel.
+        date: A(z) '%{value}' nem dátum. Használd az ÉÉÉÉ-HH-NN formátumot - például
+          1978-03-15.
+        email: A(z) '%{value}' nem e-mail-cím. Adj meg egyet nev@pelda.com formában.
+        enum: 'A(z) ''%{value}'' itt nem elfogadott. Válassz egyet: %{accepted}.'
+        numeric: A(z) '%{value}' nem olyan szám, amelyet ez a mező elfogad%{accepted}.
+          Adj meg egy számot, tizedesponttal.
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés
+      shape:
+        date: 'Formátum: ÉÉÉÉ-HH-NN - például 1978-03-15.'
+        decimal: Szám, tizedesponttal - például 1234.56.
+        email: Egy e-mail-cím - például nev@pelda.hu.
+        integer: Egész szám, ezreselválasztó nélkül.
+        money: Összeg euróban, tizedesponttal - például 1234.56.
       write_failed: A mezőt nem sikerült menteni. Próbáld újra.
       write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
         majd próbáld újra.

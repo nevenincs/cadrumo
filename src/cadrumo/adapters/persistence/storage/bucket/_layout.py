@@ -44,6 +44,21 @@ class BucketPaths(BaseModel):
     db_dir: Path
     blobs_dir: Path
     audit_dir: Path
+    database_file: Path
+    """The bucket's database file.
+
+    Resolved here rather than composed by callers. Seventeen test modules were
+    hand-building it as ``storage_root / "buckets" / id / "db" / "cadrumo.db"``
+    precisely because this record carried every sibling directory but not the
+    one file inside them.
+
+    The composition is easy to get wrong in a way that fails late:
+    ``BUCKET_DATABASE_FILE``'s subpath is ``db/cadrumo.db`` -- bucket-relative,
+    already carrying its own ``db/`` segment -- so it joins onto ``bucket_dir``.
+    Joining it onto ``db_dir`` yields ``<bucket>/db/db/cadrumo.db``, a path
+    nothing creates, surfacing as a missing file rather than a wrong join. That
+    is the ``blobs/blobs`` shape: the wrong anchor, not a wrong constant.
+    """
 
 
 def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
@@ -72,6 +87,9 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
         db_dir=bucket_dir / storage_location(StorageCategory.BUCKET_DATABASE).relative_path(),
         blobs_dir=bucket_dir / storage_location(StorageCategory.BUCKET_BLOBS).relative_path(),
         audit_dir=bucket_dir / storage_location(StorageCategory.BUCKET_AUDIT).relative_path(),
+        # Anchored on bucket_dir, not db_dir: this member's subpath already
+        # carries its own db/ segment. See the field's docstring.
+        database_file=bucket_dir / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path(),
     )
 
 

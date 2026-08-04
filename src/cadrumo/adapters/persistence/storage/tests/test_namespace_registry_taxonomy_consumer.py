@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 from .....core import STORAGE_TAXONOMY, StorageCategory, StorageScope, storage_location
-from .._namespace_registry import (
+from .._storage_path_definitions import (
     BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DATABASE_FILENAME,
@@ -36,6 +36,7 @@ from .._namespace_registry import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_DEFINITIONS_MODULE = Path(__file__).resolve().parent.parent / "_storage_path_definitions.py"
 _REGISTRY_MODULE = Path(__file__).resolve().parent.parent / "_namespace_registry.py"
 
 #: Each exported constant beside the taxonomy member that declares it.
@@ -81,7 +82,7 @@ def test_the_layout_names_are_resolved_not_re_typed() -> None:
     explaining why they must not appear as code. A text scanner would need a
     special case for that; this cannot produce the error at all.
     """
-    tree = ast.parse(_REGISTRY_MODULE.read_text(encoding="utf-8"))
+    tree = ast.parse(_DEFINITIONS_MODULE.read_text(encoding="utf-8"))
     docstrings = {
         node.body[0].value
         for node in ast.walk(tree)
@@ -100,7 +101,7 @@ def test_the_layout_names_are_resolved_not_re_typed() -> None:
 
     governed = {constant for constant, _category in _BOUND_CONSTANTS}
     assert not (governed & literals), (
-        f"_namespace_registry.py re-types governed layout names {sorted(governed & literals)}; "
+        f"_storage_path_definitions.py re-types governed layout names {sorted(governed & literals)}; "
         "read the taxonomy instead"
     )
 
@@ -128,7 +129,7 @@ def test_moving_the_declaration_inward_introduced_no_upward_import() -> None:
     that made the fix worse than the defect it removed -- and it would have
     looked, in a diff, almost exactly like the change that was made.
     """
-    declaration = _REGISTRY_MODULE.parents[3] / "core" / "_storage_taxonomy.py"
+    declaration = _DEFINITIONS_MODULE.parents[3] / "core" / "_storage_taxonomy.py"
     assert declaration.is_file(), f"the core declaration must be where this test looks: {declaration}"
 
     tree = ast.parse(declaration.read_text(encoding="utf-8"))

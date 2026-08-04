@@ -5,6 +5,14 @@ its verb. The `create` closure refuses a name that already has a manifest; the
 `edit` closure refuses a name that has none. The verb — not a runtime-detected
 pointer — is the authority for the create-vs-edit branch.
 
+Those refusals live in the WIZARD command, which the manager arm returns
+before ever calling, so this module re-states the `edit` one at the diversion
+(:func:`open_the_edit_target_or_refuse`) and settles what the manager brings
+with it: the manager edits whichever profile is ACTIVE, so a name for any
+other live profile opens the login screen for that profile rather than being
+silently redirected onto the active one. An operator who declines the screen
+gets a refusal; one who authenticates gets the profile they asked for.
+
 Both are registered as per-LEAF lazy subcommands rather than built at
 package-import time. :func:`~cadrumo.application.wizard.build_wizard_command`
 reaches ``application.wizard`` -> ``application.workflow`` ->
@@ -120,11 +128,65 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             emit_manager_closed(ctx, outcome.label, created=True)
             return None
 
+        open_the_edit_target_or_refuse(ctx, kwargs.get("profile_name"))
         present_profile_manager()
         emit_manager_closed(ctx, active_profile_label(), created=False)
         return None
 
     return _dispatch
+
+
+def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) -> None:
+    """Make ``edit NAME`` open NAME, authenticating to it if that is what it takes.
+
+    The manager edits the ACTIVE profile: ``build_active_profile_overview``
+    resolves its subject through ``require_active_bucket_id`` and never sees
+    this argument. Diverting here without checking it therefore honoured the
+    verb and dropped its subject — ``profile edit <someone-else>`` opened the
+    ACTIVE profile's page, and every field the operator went on to change
+    landed on the wrong taxpayer with nothing on screen naming the one they
+    had asked for. A mistyped label behaved identically, and neither case
+    left a trace.
+
+    The wizard arm validates the name in ``_resolve_profile_id_for_mode``,
+    but the manager arm returns before the wizard command is ever called, so
+    the check has to happen at the diversion rather than inside the command
+    it replaces. (The module docstring's claim that "the ``edit`` closure
+    refuses a name that has none" described only the wizard arm.)
+
+    Resolution goes through the same
+    :func:`~cadrumo.application.user_profile.resolve_login_target` that
+    ``login`` applies to its own ``NAME``, so an unknown target refuses
+    identically here and there rather than growing a second wording.
+
+    A live profile that is not the active one is OPENED, not refused. The
+    root callback's gate cannot help here — it runs before the verb is
+    parsed, so it preselects whoever was already selected and knows nothing
+    about this argument — so the offer is repeated with the target this verb
+    actually names. Authenticating to it performs the handover ``login NAME``
+    already owns, which is not a silent switch: the operator typed the name
+    and then entered that profile's secret. Declining leaves the previous
+    profile untouched and refuses, naming the verb that would have done it
+    on its own.
+    """
+    if not isinstance(supplied, str) or not supplied.strip():
+        return
+
+    from ....application.user_profile import resolve_login_target
+    from ....core import resolve_active_bucket_id
+    from .. import _authenticated_at_the_gate
+    from .._errors import CliRefusedBoundaryError
+
+    target = resolve_login_target(supplied)
+    if target.bucket_id == resolve_active_bucket_id():
+        return
+    if _authenticated_at_the_gate(cast("typer.Context", ctx), bucket_id=target.bucket_id):
+        return
+    raise CliRefusedBoundaryError(
+        translated_message="cli.config.profile.edit_target_not_active",
+        context={"name": target.label},
+        suggestion=f"aeat config login {target.label}",
+    )
 
 
 def active_profile_label() -> str:

@@ -75,7 +75,7 @@ class TestTornStateGate:
 
     @pytest.fixture
     def store_dir(self, tmp_path: Path):
-        store = tmp_path / "secrets"
+        store = tmp_path / "fallback-store"
         store.mkdir()
         with override_settings(cadrumo_secret_passphrase="torn-state-passphrase"):
             yield store
@@ -156,12 +156,12 @@ class TestSecurityHardening:
     def test_master_key_files_are_mode_0o600(self, tmp_path: Path) -> None:
         """The wrapped master key + KDF params land mode 0o600 on POSIX."""
         provider = FileFallbackMasterKeyProvider(
-            store_dir=tmp_path / "secrets",
+            store_dir=tmp_path / "fallback-store",
             passphrase_callback=lambda: "test-passphrase",
         )
         provider.provision_master_key()
         for name in ("master.key", "master.kdf"):
-            path = tmp_path / "secrets" / name
+            path = tmp_path / "fallback-store" / name
             assert path.is_file()
             if os.name != "posix":
                 continue
@@ -204,7 +204,7 @@ class TestUnsecuredProvider:
     def test_factory_unsecured_backend_requires_explicit_gate(self, tmp_path: Path) -> None:
         # CADRUMO_ALLOW_UNENCRYPTED=1 is the hostile-named opt-out gate.
         refused_settings = Settings(
-            cadrumo_secret_store_dir=tmp_path / "secrets",
+            cadrumo_secret_store_dir=tmp_path / "fallback-store",
             cadrumo_secret_store_backend=SecretStoreBackend.UNSECURED,
             cadrumo_allow_unencrypted="",  # not "1": kill-switch refuses
         )
@@ -212,7 +212,7 @@ class TestUnsecuredProvider:
             get_master_key_provider(settings_override=refused_settings)
 
         allowed_settings = Settings(
-            cadrumo_secret_store_dir=tmp_path / "secrets",
+            cadrumo_secret_store_dir=tmp_path / "fallback-store",
             cadrumo_secret_store_backend=SecretStoreBackend.UNSECURED,
             cadrumo_allow_unencrypted="1",  # literal "1" enables the unsecured backend
         )

@@ -11,7 +11,14 @@ from pydantic import ValidationError
 from ....core.identity import IdentityError
 from ...iva import EUMemberState, InvoiceKind, IvaRateKind, OssIossRegime, TransactionKind
 from .._enums import IvaRate, PaymentStatus, iva_rate_percentage, numeric_iva_rate_percentages
-from .._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from .._errors import InvoiceValidationError
+from .._models import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceLine,
+    _normalise_invoice_monetary_fields,
+    derive_invoice_id,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -517,3 +524,69 @@ def test_numeric_iva_rate_percentages_tracks_rate_members_only() -> None:
     assert len(result) == len(rate_members)
     assert len(result) < len(IvaRate)
     assert [m for m in IvaRate if not m.value.startswith("RATE_")] == [IvaRate.EXEMPT, IvaRate.NOT_SUBJECT]
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        pytest.param("retention_rate", id="retention-rate"),
+        pytest.param("retention_amount", id="retention-amount"),
+        pytest.param("fx_rate", id="fx-rate"),
+    ),
+)
+def test_optional_monetary_field_refuses_an_unreadable_value(field: str) -> None:
+    """A present-but-unparseable optional amount must refuse, not become absent.
+
+    These three are ``Decimal | None``, and that optionality is exactly what
+    made the failure silent: ``coerce_decimal`` returns ``None`` for an absent
+    value AND for an unreadable one, so writing its result back unchecked
+    recorded "the taxpayer did not have one" for a value that could not be read.
+    The required totals in the same function coerce to ``None`` identically and
+    were refused only because pydantic rejects ``None`` for a required field.
+    """
+    with pytest.raises(InvoiceValidationError) as caught:
+        _normalise_invoice_monetary_fields({field: "not-a-number"})
+
+    message = str(caught.value)
+    assert field in message, "the refusal must name the field"
+    assert "not-a-number" in message, "and echo what could not be read"
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    (
+        pytest.param(None, None, id="absent-stays-absent"),
+        pytest.param("0.15", Decimal("0.15"), id="plain-rate"),
+        pytest.param(Decimal("1.0925"), Decimal("1.0925"), id="already-decimal"),
+        pytest.param("0", Decimal("0"), id="zero"),
+    ),
+)
+def test_optional_monetary_field_still_accepts_what_it_should(raw: object, expected: object) -> None:
+    """The refusal is narrow: absent stays absent and every readable value parses.
+
+    ``None`` is the case that must keep working — a taxpayer with no retención
+    is not an error, and conflating that with an unreadable value in the other
+    direction would be just as wrong as the defect this replaces.
+    """
+    assert _normalise_invoice_monetary_fields({"retention_rate": raw}) == {"retention_rate": expected}
+
+
+def test_refusal_bounds_what_it_quotes_back() -> None:
+    """The echo is bounded, because a mis-mapped column can put anything here.
+
+    Echoing the value is what lets an operator find the offending cell, and these
+    fields are numeric by declared purpose, so what lands here is normally a short
+    malformed number. The bound covers the accident: an import that maps an address
+    column onto ``fx_rate`` would otherwise put the whole cell into an error
+    message, and nothing on the error path redacts a message body. A value long
+    enough to be truncated was never a number, so the operator loses nothing.
+    """
+    overlong = "x" * 500
+
+    with pytest.raises(InvoiceValidationError) as caught:
+        _normalise_invoice_monetary_fields({"fx_rate": overlong})
+
+    message = str(caught.value)
+    assert overlong not in message, "the full value must not reach the message"
+    assert "(502 chars)" in message, "and the operator is told how much was withheld"
+    assert len(message) < 250, f"the message stays readable; got {len(message)} chars"

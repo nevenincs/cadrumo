@@ -266,6 +266,38 @@ def _is_semantic_test_double_class_name(name: str) -> bool:
     return any(token in normalized for token in _FORBIDDEN_SEMANTIC_DOUBLE_DEFINITION_TOKENS)
 
 
+def test_every_allowed_real_boundary_name_is_still_live() -> None:
+    """Each allowed name must still be flaggable and must still name a real class.
+
+    Two failure modes, and an existence check would catch only one. A name that
+    no longer matches any forbidden token is redundant -- the detector would not
+    flag it anyway -- while a name matching no class in the corpus exempts
+    nothing today and silently pre-authorises whatever class later takes it.
+    Both leave the entry reading as live coverage, so both are checked.
+    """
+    defined: set[str] = set()
+    for path in all_test_control_modules():
+        tree = ast_for_path(path)
+        if tree is None:
+            continue
+        defined.update(node.name.strip("_").lower() for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
+
+    assert len(defined) > 50, (
+        f"only {len(defined)} class definitions found across the test-control corpus; the scan "
+        "collapsed, so the liveness check below would pass by examining nothing"
+    )
+
+    stale: list[str] = []
+    for allowed in sorted(_ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES):
+        if not any(token in allowed for token in _FORBIDDEN_SEMANTIC_DOUBLE_DEFINITION_TOKENS):
+            stale.append(f"{allowed} (matches no forbidden token; the exemption is redundant)")
+        if allowed not in defined:
+            stale.append(f"{allowed} (no class of this name is defined in the scanned corpus)")
+    assert not stale, "Stale _ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES entries; remove them:\n" + "\n".join(
+        f"  {entry}" for entry in stale
+    )
+
+
 def _test_control_inventory_for_module_trees(
     module_trees: Iterable[tuple[str, ast.AST]],
 ) -> _TestControlInventoryViolations:

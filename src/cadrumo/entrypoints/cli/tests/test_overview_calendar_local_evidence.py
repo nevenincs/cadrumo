@@ -21,6 +21,7 @@ from ....application.calculations import CalculationObservationRepository
 from ....application.user_profile import profile_create_storage_span, profile_storage_session
 from ....application.workflow import workflow_state_repository
 from ....core import Period
+from ....core.config import load_settings
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.modelos import upsert_filing_record
 from ....tests import FIXTURES_DIR
@@ -66,7 +67,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
             },
         )
         artefact_body = b"modelo-303-2025-1T-justificante"
-        store = FiledDeclaracionObservationStore(Path("var/cadrumo/filed-declarations"))
+        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
         artefact = store.persist_artefact(
             ("303", 2025, Period.from_year_and_code(2025, "1T"), "12345678901234567890"),
             FiledDeclaracionArtefact(
@@ -206,7 +207,7 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
 def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justificante() -> None:
     pdf_bytes = (FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf").read_bytes()
     with profile_storage_session(PRIMARY_PROFILE_ID):
-        store = FiledDeclaracionObservationStore(Path("var/cadrumo/filed-declarations"))
+        store = FiledDeclaracionObservationStore(load_settings().cadrumo_filed_declarations_dir)
         artefact = store.persist_artefact(
             ("130", 2026, Period.from_year_and_code(2026, "1T"), "202613000010001A"),
             FiledDeclaracionArtefact(

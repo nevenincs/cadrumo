@@ -1115,7 +1115,7 @@ def test_file_custody_supports_the_full_recovery_lifecycle(tmp_path: Path) -> No
         recovery_verify,
     )
 
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = FileFallbackMasterKeyProvider(store_dir=store_dir, passphrase_callback=lambda: _RECOVERY_PASSPHRASE)
     provider.provision_master_key()
     path = store_dir / "master.recovery.key"
@@ -1155,7 +1155,7 @@ def test_non_file_custody_refuses_every_recovery_operation(tmp_path: Path, backe
     )
 
     provider = KeyringMasterKeyProvider() if backend == "keyring" else UnsecuredMasterKeyProvider()
-    path = tmp_path / "secrets" / "master.recovery.key"
+    path = tmp_path / "fallback-store" / "master.recovery.key"
 
     def _echo(mnemonic: str) -> str:
         return mnemonic

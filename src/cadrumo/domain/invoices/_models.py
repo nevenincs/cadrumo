@@ -16,7 +16,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Self, override
+from typing import TYPE_CHECKING, Final, Self, override
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
@@ -201,13 +201,52 @@ def _normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]
     return payload
 
 
+_REJECTED_VALUE_ECHO_LIMIT: Final[int] = 40
+"""How much of an unreadable amount the refusal may quote back.
+
+Echoing the value is what lets an operator find the offending cell, and these
+fields are numeric by declared purpose, so what lands here is normally a
+malformed number and short. The bound exists for the case where it is not: a
+mis-mapped import column can put a name or an address into ``fx_rate``, and
+nothing on the error path redacts a message body -- ``redact_for_cli_output`` is
+applied at chosen call sites, not as a funnel over every error. A number long
+enough to exceed this was never a number, so truncating costs the operator
+nothing and bounds what an accident can disclose.
+"""
+
+
+def _bounded_rejected_value(value: object) -> str:
+    """Return *value* quoted for an error message, truncated to the echo limit."""
+    text = repr(value)
+    if len(text) <= _REJECTED_VALUE_ECHO_LIMIT:
+        return text
+    return f"{text[:_REJECTED_VALUE_ECHO_LIMIT]}... ({len(text)} chars)"
+
+
 def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
     for key in ("grand_total", "base_total", "iva_total"):
         if key in payload:
             payload[key] = coerce_decimal(payload[key])
     for key in ("retention_rate", "retention_amount", "fx_rate"):
         if key in payload and payload[key] is not None:
-            payload[key] = coerce_decimal(payload[key])
+            # These three are `Decimal | None`, and that optionality is what makes
+            # a silent failure possible here where the loop above is safe. The
+            # `is not None` test rules out ABSENT, not UNPARSEABLE, and
+            # `coerce_decimal` returns None for both -- so writing its result back
+            # unchecked turns an unreadable retención rate into "the taxpayer did
+            # not have one", which pydantic then accepts because None is a legal
+            # value for the field. The totals above coerce to None the same way and
+            # are refused only because they are required. Refusing here matches
+            # `_normalise_invoice_currency` directly above, which raises on a
+            # malformed currency rather than dropping it.
+            coerced = coerce_decimal(payload[key])
+            if coerced is None:
+                raise InvoiceValidationError(
+                    f"{key} could not be parsed as a decimal: {_bounded_rejected_value(payload[key])}. "
+                    "Leave it out to declare it absent; a value that cannot be read "
+                    "is not the same as no value.",
+                )
+            payload[key] = coerced
     return payload
 
 
