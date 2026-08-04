@@ -18,6 +18,7 @@ from ._credential_screen import (
     CredentialAttempt,
     run_credential_app,
 )
+from ._field_edit_screen import FieldEditScreen, accepted_shape_hint
 from ._form_screen import (
     ChoiceEditScreen,
     FormApp,
@@ -41,7 +42,6 @@ from ._login_screen import (
     run_login_tui,
 )
 from ._manager_screen import (
-    FieldEditScreen,
     ManagerAction,
     ManagerActionOutcome,
     ProfileManagerApp,
@@ -112,6 +112,7 @@ __all__ = [
     "StatusProfileRow",
     "StatusRecoveryView",
     "TextEditScreen",
+    "accepted_shape_hint",
     "active_form_presenter",
     "form_choices",
     "install_cadrumo_themes",

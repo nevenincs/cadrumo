@@ -22,6 +22,16 @@
         "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
       },
       {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_field_editors.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
+        "imported_names": [
+          "persist_active_profile_field",
+          "profile_field_value_refusal"
+        ],
+        "reason": "White-box test reach, for the same reason as the sibling manager-screen tests: the screen is driven with the REAL write and REAL value judge, so a boolean picked from the list travels the actual write path and a bad date is refused by the actual schema rule rather than by a double. A doubled judge would make these tests agree with themselves instead of with storage, which is precisely the divergence the dialog-side refusal exists to close. Both symbols are the CLI's composition of profile doors onto the TUI screen -- entrypoint-owned, consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries."
+      },
+      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",

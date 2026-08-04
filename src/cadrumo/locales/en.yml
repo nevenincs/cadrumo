@@ -263,6 +263,9 @@ adapters:
           movement_already_exists: That inventory movement already exists.
   sede:
     errors:
+      casillas_not_decimal_valued: This modelo declares casillas that are not decimal-valued,
+        so this filing cannot be enrolled as registry-grounded calculation evidence.
+        The limitation affects every filing of this modelo, not this return.
       censal_bad_landing: The AEAT censal page did not load correctly; re-authenticate
         and retry.
       censal_modification_surface: The AEAT censal read was refused because it landed
@@ -309,7 +312,6 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
-      casillas_not_decimal_valued: 'This modelo declares casillas that are not decimal-valued, so this filing cannot be enrolled as registry-grounded calculation evidence. The limitation affects every filing of this modelo, not this return.'
 aggregation:
   grouping:
     errors:
@@ -6354,6 +6356,13 @@ flows:
   manager:
     action:
       abandoned: No changes made.
+      add_row: Add a row
+      add_row_done: Added %{section} row %{index}.
+      add_row_empty: Nothing was filled in, so no row was added.
+      add_row_incomplete: The row is missing required data, so nothing was saved.
+      add_row_none: This profile schema declares no section that holds rows.
+      add_row_required: This is required; the row cannot be added without it.
+      add_row_section: Which section to add to
       auth_clave_incomplete: Cl@ve still needs %{missing}. Nothing was saved.
       auth_contraste_missing: 'Cl@ve Móvil without QR needs the contraste from your
         document: the support number for a NIE, or the validity date for a DNI. Nothing
@@ -6390,13 +6399,6 @@ flows:
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
       working: Running {action}...
-      add_row: 'Add a row'
-      add_row_section: 'Which section to add to'
-      add_row_required: 'This is required; the row cannot be added without it.'
-      add_row_done: 'Added %{section} row %{index}.'
-      add_row_empty: 'Nothing was filled in, so no row was added.'
-      add_row_incomplete: 'The row is missing required data, so nothing was saved.'
-      add_row_none: 'This profile schema declares no section that holds rows.'
     actions:
       section: Actions
     column:
@@ -6409,9 +6411,23 @@ flows:
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
       path: 'Internal identifier: %{path}'
+      refused:
+        boolean: '''%{value}'' is not a yes or no answer. Answer Yes or No.'
+        date: '''%{value}'' is not a date. Use the format YYYY-MM-DD - for example
+          1978-03-15.'
+        email: '''%{value}'' is not an email address. Enter one in the form name@example.com.'
+        enum: '''%{value}'' is not accepted here. Choose one of: %{accepted}.'
+        numeric: '''%{value}'' is not a number this field accepts%{accepted}. Enter
+          a number, using a point for decimals.'
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'
       save: Save
+      shape:
+        date: 'Format: YYYY-MM-DD - for example 1978-03-15.'
+        decimal: A number, using a point for decimals - for example 1234.56.
+        email: An email address - for example nombre@ejemplo.es.
+        integer: A whole number, with no thousands separator.
+        money: An amount in euros, using a point for decimals - for example 1234.56.
       write_failed: The field could not be saved. Try again.
       write_in_flight: Saving the previous field. Wait for it to finish, then try
         again.

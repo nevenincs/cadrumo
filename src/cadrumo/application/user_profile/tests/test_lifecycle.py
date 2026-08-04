@@ -90,8 +90,13 @@ def test_register_rejects_schema_violations(
     with pytest.raises(ProfileSchemaValidationError) as exc_info:
         svc.register(RegisterProfileCommand(profile_id=_PROFILE_BUCKET_ID, display_name="Op", facts=()))
     error = exc_info.value
-    assert str(error) == "profile facts failed schema validation"
-    assert _PROFILE_BUCKET_ID not in str(error)
+    assert str(error).startswith("profile facts failed schema validation")
+    # The reasons ride on the message, not only in the context. Every surface
+    # that renders an exception shows ``str(exc)``, and it used to carry the
+    # marker alone -- so an operator was told their profile did not match the
+    # schema without one field named or one thing to do about it.
+    assert "identity.tax_id" in str(error), "the message must name a field that was actually refused"
+    assert _PROFILE_BUCKET_ID not in str(error), "the identity stays on the context, out of operator-facing text"
     assert error.translated_message == "application.user_profile.errors.lifecycle_schema_validation_failed"
     assert tr(error.translated_message) != error.translated_message
     assert error.context is not None

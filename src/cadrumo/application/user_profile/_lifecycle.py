@@ -40,6 +40,7 @@ from . import (
     CompleteSetupCommand,
     EditProfileFieldCommand,
     ProfileLifecycleResult,
+    ProfileValidationIssue,
     ReactivateProfileCommand,
     RegisterProfileCommand,
     RemoveProfileCommand,
@@ -57,6 +58,37 @@ _PROFILE_NOT_TOMBSTONED_MESSAGE = "profile is not tombstoned; reactivate refuses
 _PROFILE_SCHEMA_VALIDATION_MESSAGE = "profile facts failed schema validation"
 _EMPTY_FIELD_BATCH_MESSAGE = "edit_fields requires at least one field command"
 _MIXED_PROFILE_FIELD_BATCH_MESSAGE = "edit_fields refuses commands naming more than one profile"
+
+
+_REPORTED_ISSUE_LIMIT = 3
+"""How many refused issues the raised message names before summarising.
+
+A batch commit can refuse on many fields at once, and a message that
+enumerated all of them would be unreadable wherever it is shown as a single
+line. Naming the first few and counting the rest keeps the sentence usable
+while still saying that more went wrong -- the full set is on the error's
+``context``, which is where a caller that wants to render all of them
+looks.
+"""
+
+
+def _schema_validation_message(issues: Sequence[ProfileValidationIssue]) -> str:
+    """Say WHICH facts were refused and why, not merely that some were.
+
+    The refused reasons were previously dropped here: the issues each
+    carried an instructive sentence naming the field and what it accepts,
+    and the raised error replaced all of them with "profile facts failed
+    schema validation". Every surface that renders an exception -- the
+    profile manager's notice line among them -- therefore told the operator
+    only that something about their profile did not match, with no field
+    named and nothing to act on. The judgement was already made and worded;
+    the only defect was throwing the wording away.
+    """
+    named = "; ".join(issue.message for issue in issues[:_REPORTED_ISSUE_LIMIT])
+    remaining = len(issues) - _REPORTED_ISSUE_LIMIT
+    if remaining > 0:
+        return f"{_PROFILE_SCHEMA_VALIDATION_MESSAGE}: {named}; and {remaining} more"
+    return f"{_PROFILE_SCHEMA_VALIDATION_MESSAGE}: {named}"
 
 
 def _last_fact_per_merge_key(facts: tuple[UserProfileFact, ...]) -> tuple[UserProfileFact, ...]:
@@ -451,7 +483,7 @@ class ProfileLifecycleService:
         ]
         if blocking:
             raise ProfileSchemaValidationError(
-                _PROFILE_SCHEMA_VALIDATION_MESSAGE,
+                _schema_validation_message(blocking),
                 context={
                     "profile_id": profile_id,
                     "issue_count": len(blocking),

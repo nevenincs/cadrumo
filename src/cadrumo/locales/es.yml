@@ -296,6 +296,10 @@ adapters:
           movement_already_exists: Ese movimiento de inventario ya existe.
   sede:
     errors:
+      casillas_not_decimal_valued: Este modelo declara casillas cuyo valor no es decimal,
+        por lo que esta declaración no puede incorporarse como evidencia de cálculo
+        fundamentada en el registro. La limitación afecta a todas las declaraciones
+        de este modelo, no solo a esta.
       censal_bad_landing: La página de datos censales de la AEAT no se cargó correctamente;
         vuelve a autenticarte e inténtalo de nuevo.
       censal_modification_surface: Se rechazó la lectura censal porque aterrizó en
@@ -349,7 +353,6 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
-      casillas_not_decimal_valued: 'Este modelo declara casillas cuyo valor no es decimal, por lo que esta declaración no puede incorporarse como evidencia de cálculo fundamentada en el registro. La limitación afecta a todas las declaraciones de este modelo, no solo a esta.'
 aggregation:
   grouping:
     errors:
@@ -6893,9 +6896,24 @@ flows:
       masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
         vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
       path: 'Identificador interno: %{path}'
+      refused:
+        boolean: '''%{value}'' no es una respuesta de sí o no. Responde Sí o No.'
+        date: '''%{value}'' no es una fecha. Usa el formato AAAA-MM-DD - por ejemplo
+          1978-03-15.'
+        email: '''%{value}'' no es una dirección de correo electrónico. Introduce
+          una con la forma nombre@ejemplo.com.'
+        enum: '''%{value}'' no se acepta aquí. Elige uno de: %{accepted}.'
+        numeric: '''%{value}'' no es un número que este campo acepte%{accepted}. Introduce
+          un número, con punto para los decimales.'
       required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
         Introduce un valor o cancela para dejarlo sin cambios.'
       save: Guardar
+      shape:
+        date: 'Formato: AAAA-MM-DD - por ejemplo 1978-03-15.'
+        decimal: Un número, con punto para los decimales - por ejemplo 1234.56.
+        email: Una dirección de correo electrónico - por ejemplo nombre@ejemplo.es.
+        integer: Un número entero, sin separador de miles.
+        money: Un importe en euros, con punto para los decimales - por ejemplo 1234.56.
       write_failed: No se ha podido guardar el campo. Vuelve a intentarlo.
       write_in_flight: Se está guardando el campo anterior. Espera a que termine y
         vuelve a intentarlo.

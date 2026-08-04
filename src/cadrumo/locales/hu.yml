@@ -279,6 +279,10 @@ adapters:
           movement_already_exists: Ez a készletmozgás már létezik.
   sede:
     errors:
+      casillas_not_decimal_valued: Ez a modelo olyan rovatokat tartalmaz, amelyek
+        értéke nem decimális, ezért ez a bevallás nem rögzíthető nyilvántartásra alapozott
+        számítási bizonyítékként. A korlátozás a modelo minden bevallását érinti,
+        nem csak ezt.
       censal_bad_landing: Az AEAT nyilvántartási adatlapja nem töltődött be megfelelően;
         jelentkezz be újra, és próbáld meg ismét.
       censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító
@@ -328,7 +332,6 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
-      casillas_not_decimal_valued: 'Ez a modelo olyan rovatokat tartalmaz, amelyek értéke nem decimális, ezért ez a bevallás nem rögzíthető nyilvántartásra alapozott számítási bizonyítékként. A korlátozás a modelo minden bevallását érinti, nem csak ezt.'
 aggregation:
   grouping:
     errors:
@@ -6735,9 +6738,24 @@ flows:
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
       path: 'Belső azonosító: %{path}'
+      refused:
+        boolean: A(z) '%{value}' nem igen vagy nem válasz. Válaszolj Igen vagy Nem
+          értékkel.
+        date: A(z) '%{value}' nem dátum. Használd az ÉÉÉÉ-HH-NN formátumot - például
+          1978-03-15.
+        email: A(z) '%{value}' nem e-mail-cím. Adj meg egyet nev@pelda.com formában.
+        enum: 'A(z) ''%{value}'' itt nem elfogadott. Válassz egyet: %{accepted}.'
+        numeric: A(z) '%{value}' nem olyan szám, amelyet ez a mező elfogad%{accepted}.
+          Adj meg egy számot, tizedesponttal.
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés
+      shape:
+        date: 'Formátum: ÉÉÉÉ-HH-NN - például 1978-03-15.'
+        decimal: Szám, tizedesponttal - például 1234.56.
+        email: Egy e-mail-cím - például nev@pelda.hu.
+        integer: Egész szám, ezreselválasztó nélkül.
+        money: Összeg euróban, tizedesponttal - például 1234.56.
       write_failed: A mezőt nem sikerült menteni. Próbáld újra.
       write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
         majd próbáld újra.

@@ -42,7 +42,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from ....adapters.inbound.tui import (
-        FormChoice,
         FormField,
         FormPage,
         ManagerAction,
@@ -862,37 +861,68 @@ def _row_page(
 def _row_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition) -> FormField:
     """Build one collected field from its schema declaration.
 
-    An enum is offered as its declared tokens rather than as free text, so a
-    value outside the closed set is not typeable; the tokens are shown as
-    themselves because they are stored keys, not prose the catalogue carries.
-    A required field refuses when blank, which is what makes the row complete
-    before it reaches the write door.
+    A field with a closed answer set is offered as that set rather than as
+    free text, so a value outside it is not typeable. Which fields have one,
+    and what the options are called, comes from
+    :func:`~cadrumo.application.user_profile.profile_field_choices` -- the
+    same answer the manager's edit dialog reads. It was decided twice before,
+    and the two disagreed: this form had always offered a boolean as Yes/No
+    while the manager gave the same field a text box, so one surface stored
+    ``true`` and the other stored whichever spelling of yes the operator
+    happened to type.
+
+    A typed field is checked against its declaration as it is left, so a bad
+    date is refused beside the box rather than by the batch commit, which
+    reports one field's fault as the whole row's.
     """
     from ....adapters.inbound.tui import FormField, FormFieldKind, form_choices
-    from ....domain.user_profile import ProfileFieldType
+    from ....application.user_profile import profile_field_choices
 
-    kind = FormFieldKind.TEXT
-    choices: tuple[FormChoice, ...] = ()
-    if field.type is ProfileFieldType.ENUM:
-        kind = FormFieldKind.SINGLE_CHOICE
-        choices = form_choices([(token, token) for token in field.enum_values])
-    elif field.type is ProfileFieldType.BOOLEAN:
-        kind = FormFieldKind.SINGLE_CHOICE
-        choices = form_choices([("true", tr("flows.confirm.yes")), ("false", tr("flows.confirm.no"))])
+    declared = profile_field_choices(field)
     return FormField(
         key=field.key,
         label=profile_field_label(section.key, field),
-        kind=kind,
-        choices=choices,
-        validate=_required_check(field) if field.required else None,
+        kind=FormFieldKind.SINGLE_CHOICE if declared else FormFieldKind.TEXT,
+        choices=form_choices([(choice.value, choice.label) for choice in declared]),
+        hint=_shape_hint(field),
+        validate=_row_value_check(section, field),
     )
 
 
-def _required_check(field: ProfileFieldDefinition) -> Callable[[str], str | None]:
-    """Refuse a blank answer for a field the schema declares required."""
+def _shape_hint(field: ProfileFieldDefinition) -> str:
+    """The accepted-shape line for a typed row, or empty when it needs none."""
+    from ....adapters.inbound.tui import accepted_shape_hint
+
+    return accepted_shape_hint(field.type)
+
+
+def _row_value_check(
+    section: ProfileSectionDefinition,
+    field: ProfileFieldDefinition,
+) -> Callable[[str], str | None]:
+    """Refuse a blank required answer, and any value the schema would reject.
+
+    Both halves are the same question asked of one box -- "may this row keep
+    what you typed" -- so they are answered together rather than by two
+    validators the form would have to compose. The value half delegates to
+    :func:`~._manager_frontend.profile_field_value_refusal`, the same judge
+    the manager's edit dialog uses, so a value one surface accepts is not
+    refused by the other.
+
+    The path handed to the judge is the UNINDEXED declaration path. A row's
+    real path carries an index the operator has not been allocated yet, and
+    the judge resolves the declaration by reducing the path to its
+    ``section.field`` form anyway, so the index would be discarded on
+    arrival.
+    """
+    from ._manager_frontend import profile_field_value_refusal
+
+    path = f"{section.key}.{field.key}"
 
     def _check(value: str) -> str | None:
-        return None if value.strip() else tr("flows.manager.action.add_row_required")
+        if not value.strip():
+            return tr("flows.manager.action.add_row_required") if field.required else None
+        return profile_field_value_refusal(path, value)
 
     return _check
 

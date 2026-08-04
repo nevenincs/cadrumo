@@ -295,6 +295,10 @@ adapters:
           movement_already_exists: Aquest moviment d'inventari ja existeix.
   sede:
     errors:
+      casillas_not_decimal_valued: Aquest model declara caselles el valor de les quals
+        no és decimal, per la qual cosa aquesta declaració no es pot incorporar com
+        a evidència de càlcul fonamentada en el registre. La limitació afecta totes
+        les declaracions d'aquest model, no només aquesta.
       censal_bad_landing: La pàgina de dades censals de l'AEAT no s'ha carregat correctament;
         torna a autenticar-te i prova-ho de nou.
       censal_modification_surface: S'ha rebutjat la lectura censal perquè ha aterrat
@@ -348,7 +352,6 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
-      casillas_not_decimal_valued: 'Aquest model declara caselles el valor de les quals no és decimal, per la qual cosa aquesta declaració no es pot incorporar com a evidència de càlcul fonamentada en el registre. La limitació afecta totes les declaracions d''aquest model, no només aquesta.'
 aggregation:
   grouping:
     errors:
@@ -6851,9 +6854,24 @@ flows:
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
       path: 'Identificador intern: %{path}'
+      refused:
+        boolean: '''%{value}'' no és una resposta de sí o no. Respon Sí o No.'
+        date: '''%{value}'' no és una data. Fes servir el format AAAA-MM-DD - per
+          exemple 1978-03-15.'
+        email: '''%{value}'' no és una adreça de correu electrònic. Introdueix-ne
+          una amb la forma nom@exemple.com.'
+        enum: '''%{value}'' no s''accepta aquí. Tria''n un de: %{accepted}.'
+        numeric: '''%{value}'' no és un nombre que aquest camp accepti%{accepted}.
+          Introdueix un nombre, amb punt per als decimals.'
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
       save: Desa
+      shape:
+        date: 'Format: AAAA-MM-DD - per exemple 1978-03-15.'
+        decimal: Un nombre, amb punt per als decimals - per exemple 1234.56.
+        email: Una adreça de correu electrònic - per exemple nom@exemple.cat.
+        integer: Un nombre enter, sense separador de milers.
+        money: Un import en euros, amb punt per als decimals - per exemple 1234.56.
       write_failed: No s'ha pogut desar el camp. Torna-ho a provar.
       write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
         a provar.

@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 
     from ....adapters.inbound.tui import FormPage, RegistrationAttempt
     from ....application.user_profile import ProfileOverview, ProfileRegistrationOutcome
+    from ....domain.user_profile import ProfileFieldDefinition, ProfileValueRefusalKind
 
 
 _ROUTING_META_KEYS = frozenset({"ctx", "profile_name", "quiet", "accept_defaults"})
@@ -135,6 +136,115 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     return build_active_profile_overview(label=label)
 
 
+def _refusal_sentence(kind: ProfileValueRefusalKind, *, value: str, accepted: str) -> str:
+    """Word one refusal verdict for an operator, in their output language.
+
+    The DECISION is the schema's and is never restated here — this turns a
+    verdict into copy. Two layers are involved because they answer different
+    questions: :func:`~cadrumo.domain.user_profile.profile_value_refusal`
+    says whether a value may be stored, in one sentence written once for the
+    issue reports a developer reads, while an operator needs that in the
+    language their page is written in. Keying on the KIND rather than on the
+    message text is what keeps the two independent — the domain may reword
+    its diagnostic without silently un-localising the dialog.
+
+    A match over literal keys rather than a kind-to-key table, so the locale
+    scaffold's ``tr()`` scan can see every key this can ask for. The match is
+    exhaustive over :class:`ProfileValueRefusalKind` and deliberately has no
+    fallback arm: a kind added to the domain rule must be given words here,
+    and a silent English fallback would let it ship unnoticed.
+    """
+    from ....core.i18n import tr
+    from ....domain.user_profile import ProfileValueRefusalKind
+
+    match kind:
+        case ProfileValueRefusalKind.ENUM:
+            return tr("flows.manager.edit.refused.enum", value=value, accepted=accepted)
+        case ProfileValueRefusalKind.DATE:
+            return tr("flows.manager.edit.refused.date", value=value)
+        case ProfileValueRefusalKind.NUMERIC:
+            return tr("flows.manager.edit.refused.numeric", value=value, accepted=accepted)
+        case ProfileValueRefusalKind.BOOLEAN:
+            return tr("flows.manager.edit.refused.boolean", value=value)
+        case ProfileValueRefusalKind.EMAIL:
+            return tr("flows.manager.edit.refused.email", value=value)
+
+
+def profile_field_value_refusal(path: str, value: str) -> str | None:
+    """Why the profile schema would refuse ``value`` at ``path``, or ``None``.
+
+    The manager's edit dialog asks this before it closes, so a value the
+    record will not take is refused at the box the operator typed it into
+    rather than after a storage round trip. It must therefore judge exactly
+    what the write door judges, and it does so by building the very fact the
+    door would build: the fact carrier is what promotes ``"true"`` to a real
+    :class:`bool` and ``"1978-03-15"`` to a :class:`datetime.date`, so asking
+    the schema about the raw string instead would answer a different
+    question and disagree with storage on precisely the values that matter.
+
+    A blank is not this door's business — it is a clear, which the required
+    field guard and the write door judge — and an unparseable fact is left
+    to the write door too, since a path the fact carrier itself rejects is a
+    surface defect rather than a value the operator can fix.
+    """
+    from pydantic import ValidationError
+
+    from ....domain.user_profile import (
+        UserProfileFact,
+        UserProfileNotFoundError,
+        load_user_profile_schema,
+        profile_value_refusal,
+        section_field_key,
+    )
+
+    stripped = value.strip()
+    if not stripped:
+        return None
+    try:
+        declared = load_user_profile_schema().field(section_field_key(path))
+        coerced = UserProfileFact(path=path, value=stripped).value
+    except (UserProfileNotFoundError, ValidationError):
+        # A path the schema does not declare, or one the fact carrier will
+        # not accept, is the surface offering a row it should not have. The
+        # write door refuses it as an unknown field and says so; guessing a
+        # value-shaped refusal here would name the wrong fault.
+        return None
+    refusal = profile_value_refusal(declared, coerced)
+    if refusal is None:
+        return None
+    return _refusal_sentence(refusal.kind, value=stripped, accepted=_accepted_clause(declared))
+
+
+def _accepted_clause(field: ProfileFieldDefinition) -> str:
+    """What this field accepts, as data rather than as a sentence.
+
+    Only the two kinds whose accepted set is DECLARED carry content: an
+    enum's tokens and a numeric field's bounds are things the operator
+    cannot guess and that differ per field. Every other kind's shape is
+    fixed and already stated by its own message.
+
+    Rendered as bare tokens and numerals, never as prose, because it is
+    substituted into a translated sentence: a clause worded here would
+    arrive in English inside a Spanish refusal, and building the sentence
+    out of translated fragments instead would leave every catalogue holding
+    half-phrases nobody can order correctly.
+    """
+    from ....domain.user_profile import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
+
+    if field.type is ProfileFieldType.ENUM:
+        return ", ".join(field.enum_values)
+    if field.type not in NUMERIC_PROFILE_FIELD_TYPES:
+        return ""
+    minimum, maximum = field.minimum, field.maximum
+    if minimum is not None and maximum is not None:
+        return f" ({minimum} - {maximum})"
+    if minimum is not None:
+        return f" (>= {minimum})"
+    if maximum is not None:
+        return f" (<= {maximum})"
+    return ""
+
+
 def _active_profile_manager_storage(
     *,
     label: str | None = None,
@@ -223,6 +333,7 @@ def present_profile_manager(*, label: str | None = None) -> None:
         overview,
         persist=persist,
         actions=manager_actions(),
+        validate=profile_field_value_refusal,
     )
 
 
@@ -309,4 +420,5 @@ __all__ = [
     "present_form",
     "present_profile_manager",
     "present_registration",
+    "profile_field_value_refusal",
 ]
