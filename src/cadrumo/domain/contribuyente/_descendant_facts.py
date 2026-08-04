@@ -1,9 +1,10 @@
 """Helpers for persisting and reloading DescendantInfo as profile facts.
 
 DescendantInfo records are stored as individual profile facts under the
-``renta_family.descendiente.{n}.{field}`` key hierarchy. Aggregate summary
-facts are derived and stored alongside individual facts so that the registry
-binding resolver can look them up by a simple ``profile_key`` selector.
+``renta_family.descendiente.{n}.{field}`` key hierarchy. One aggregate — the
+row count — is stored alongside them so the registry binding resolver can look
+it up by a simple ``profile_key`` selector. Aggregates the ENGINE derives are
+not stored here; see the note below the fact table.
 
 Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.birth_date              ISO-8601 date string
@@ -20,7 +21,14 @@ Stored fact paths per descendant (n = 0-based index):
 
 Aggregate facts stored:
   renta_family.descendientes_count               int count
-  renta_family.gastos_guarderia_reales_2024      sum of gastos_guarderia for eligible menores-3 (absent when zero)
+
+The Art. 81 bis guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
+is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
+the calculate-time injector recomputes it from the per-child
+``gastos_guarderia`` figures above and overwrites whatever the index holds,
+precisely so an operator's number can never be substituted for the law's. The
+profile write door refuses that path outright, so projecting it from here would
+refuse the whole batch rather than persist a second, divergent copy.
 """
 
 from __future__ import annotations
@@ -37,7 +45,6 @@ from .family import DescendantInfo
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
-_GASTOS_REALES_2024_PATH = "renta_family.gastos_guarderia_reales_2024"
 
 
 def _discapacidad_grade(value: int | None) -> Literal[0, 33, 65] | None:
