@@ -5,16 +5,16 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:fc69d82bb47447678e70ef683e49af56ad67edd1fe3f1d76424090122e384637'
+body_hash: 'sha256:8d7b4c5cf357e6354a3a11844a5cf03edf2f803609b9f7340ca32d7f3435e001'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
 
-# `user-docs-search-consolidation` audit: `P06.S23 resolver review`
+# `user-docs-search-consolidation` audit: `P06 deterministic enrollment follow-up`
 
 ## Scope
 
-Audit the four landed P06 deterministic-enrollment slices against the accepted search ADR and the current P06 plan: `088e3255a8`, `77c2e8ea49`, `18a777cc44`, and `a4281864a9e31438ccc9b536657cb89d7576020f`. The review is read-only and deliberately excludes tests, builds, Pagefind compilation, deployment, and live probes.
+Audit the landed P06 deterministic-enrollment slices against the accepted search ADR and the current P06 plan: `088e3255a8`, `77c2e8ea49`, `18a777cc44`, `a4281864a9e31438ccc9b536657cb89d7576020f`, `21436e572dce4ae84de9358fd990d8af30593aa4`, `3fb2c90cae363b464daab7ef0efcf99f0be43d7f`, `a294ac35ed`, and `ea5e441d7c`. The review is read-only and deliberately excludes tests, builds, Pagefind compilation, deployment, and live probes.
 
 ## Findings
 
@@ -46,13 +46,13 @@ The initial census validated surface names but did not enforce `covered <= total
 
 The new fail-closed resolver deliberately drops model-only Diseño workbook/PDF hits without an individual locator, while existing resolution expectations still describe those hits as resolvable. P06.S24 must reconcile the expectation with the intended evidence boundary rather than silently restoring a representative fallback.
 
-### definition-whitespace | low | Whitespace-only localized values are treated inconsistently
+### definition-whitespace | corrected | Whitespace-only localized values now fall back consistently
 
-The projection accepts whitespace-only localized labels or help as authored, while the census treats equivalent content as missing. P06.S24 should normalize this boundary or make the distinction explicit before claiming localized definition completeness.
+The projection previously accepted whitespace-only localized labels or help as authored, while the census treated equivalent content as missing. Commit `ea5e441d7c` strips localized Spanish and non-Spanish values before deciding whether to use them, preserving non-empty values and the existing Spanish fallback. The focused formal review inspected the full file and exact diff and returned PASS with no findings. Runtime locale/detail parity remains a P06.S24 gate.
 
-### review-revalidation | medium | Fresh review after the corrections was not returned
+### review-revalidation | medium | Fresh review remains outstanding for the structured lookup corrections
 
-The original formal review identified the two high findings above, and both corrective commits were inspected by the coordinator with owned-path diffs and non-test syntax checks. A fresh `vaultspec-code-reviewer` dispatch was then attempted, but it did not return after bounded waits and was shut down. P06.S22 and P06.S23 therefore remain open until a reviewer result or an explicit later review record is available.
+The original formal review identified the two high findings above. The structured Pagefind and registry-header corrections were inspected by the coordinator with owned-path diffs and non-test syntax checks, but their first fresh formal review did not return after bounded waits and was shut down. The later S21 localization correction did receive a focused formal PASS, but that result does not cover the structured lookup or resolver paths. P06.S22 and P06.S23 therefore remain open until each has its own reviewer result or an explicit later review record.
 
 ### coverage-review | low | Census invariant correction formally passes
 
@@ -60,7 +60,7 @@ The replacement reviewer inspected `a294ac35ed` against the P06 plan and groundi
 
 ## Recommendations
 
-- The focused P06.S22 and P06.S23 corrections are landed; obtain a fresh formal review of the corrected paths before closing either step.
+- The focused P06.S22 and P06.S23 corrections are landed; obtain a fresh formal review of each corrected path before closing either step. S21's separate localization correction has passed focused review.
 - Execute P06.S24 with real-behaviour gates for the projection census, M130/casilla-15 structured search, locale/detail output, and target resolvability before closing P06.
 - Re-run the build-time sweep after the resolver change and compare relevance coverage and dropped-hit counts; do not interpret the old `22/6,359` report as current after the new fail-closed rule.
 - Reconcile the existing Diseño workbook/PDF expectations and locale behavior in that gate; the census invariants are now formally reviewed. No test execution is authorized yet.

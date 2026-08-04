@@ -6,7 +6,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:dff797a3b2365eec62f3a133305f43c9f16365e5b7894578fc2d5b858183e40e'
+body_hash: 'sha256:c95119ecfea2ebdf72c71f65a180842f6eb59048588f28e2a85f4c836bf1d928'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -38,7 +38,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 ### audit
 
 - `2026-08-04-user-docs-search-consolidation-audit` - `user-docs-search-consolidation` audit: `P01.S01 shipped search licence rule amendment`
-- `2026-08-04-user-docs-search-consolidation-p06-s23-review-audit` - `user-docs-search-consolidation` audit: `P06.S23 resolver review`
+- `2026-08-04-user-docs-search-consolidation-p06-s23-review-audit` - `user-docs-search-consolidation` audit: `P06 deterministic enrollment follow-up`
 
 ### exec
 

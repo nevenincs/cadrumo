@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:3b879b6dad90fef29d7b0e3a7a19fbc9566a78ffc30b63e8ee7e90594e003297'
+body_hash: 'sha256:a60084759290ae19debec27c96bd6ba30f2aa9e410dc36a6a6c8d62a6ac899b8'
 step_id: 'S21'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -25,16 +25,17 @@ related:
 
 ## Outcome
 
-Commit `77c2e8ea49` carries registry-backed definition metadata through the casilla search record and destination surface. Formula expressions are intentionally not invented: the projection carries the canonical formula id, while the authoritative formula table remains outside this projection seam.
+Commits `77c2e8ea49` and `ea5e441d7c` carry registry-backed definition metadata through the casilla search record and destination surface, with whitespace-only localized values treated as absent before Spanish fallback. Formula expressions are intentionally not invented: the projection carries the canonical formula id, while the authoritative formula table remains outside this projection seam.
 
 ## Tracking
 
 - Opaque `(modelo, casilla_id)` identity unchanged: complete.
 - Localized labels and help with Spanish fallback: complete.
+- Whitespace-only localized labels/help treated as absent before fallback: complete.
 - Input kind, data type, requiredness, binding, and formula id: complete.
 - Formula expression parity with the registry detail query: pending a later detail/build gate.
 - Built Pagefind metadata/browser rendering: pending P06.S24/P04.S11; not run in this step.
 
 ## Notes
 
-The implementation agent ran RAG discovery, owned-file history/diff checks, and `git diff --check`. Tests, builds, Pagefind compilation, deployment, and live probes were not run. The mandatory code-review pass is still pending; the step must not be marked closed until that review returns.
+The implementation agent ran RAG discovery, owned-file history/diff checks, and `git diff --check`. The focused formal reviewer inspected the full file and exact `ea5e441d7c` diff and returned PASS with no findings, including the whitespace normalization, Spanish fallback, and RST escaping boundary. Tests, builds, Pagefind compilation, deployment, and live probes were not run. P06.S24 still owns the runtime locale/detail and built-surface gates.
