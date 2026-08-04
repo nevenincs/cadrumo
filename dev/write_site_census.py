@@ -130,11 +130,37 @@ shipped. :attr:`WriteSite.constrained` is not a trusted finding generator at
 any scope -- reading its output can surface a real site, but a clean run
 proves nothing about the sites it never printed.
 
+``--vocabulary`` answers a third question, distinct from both scopes above:
+not "is this write enrolled" and not "what root does every hand-composed
+path trace back to", but "of the literals that name taxonomy vocabulary at
+all, which ones actually sit on a taxonomy-anchored chain". A vocabulary
+scanner that matches a segment name without resolving its chain's root
+commits this campaign's own founding defect -- a name re-typed instead of
+read from its declaration, mirrored as a name MATCHED instead of ANCHORED.
+Measured on the production set once anchor resolution replaced name
+matching: 2 of 6 raw matches were a different tree entirely
+(``locales/_modelo_manager.py``'s ``manifest.toml`` roots at
+``bundled_path("registry", "aeat")``, the bundled calculation-registry
+tree, not the taxonomy's own bucket ``manifest.toml`` at
+``<root>/buckets/<bucket_id>/manifest.toml``) -- a 33% false-positive rate a
+literal-only scan cannot see. :func:`vocabulary_literal_sites` walks
+``.joinpath(...)`` call chains as well as ``/`` chains (production AEAT
+code composes almost exclusively with the former), works across both
+scopes (the false positive above is a PRODUCTION site), and reports every
+candidate whose chain contains at least one literal matching
+:func:`_taxonomy_subpath_tokens`, regardless of whether a write primitive
+ever consumes it. :class:`VocabularySite.bucket` is the three-way split a
+residual measurement needs -- ``in_taxonomy`` / ``out_of_tree`` (with the
+root's classification as its reason) / ``unresolved`` -- and
+``unresolved`` is never folded into either side.
+
 Usage::
 
     python -m dev.write_site_census <revision>
     python -m dev.write_site_census <revision> --json
     python -m dev.write_site_census <revision> --scope tests
+    python -m dev.write_site_census <revision> --vocabulary
+    python -m dev.write_site_census <revision> --vocabulary --scope tests --json
 """
 
 from __future__ import annotations
@@ -381,28 +407,78 @@ def test_modules(revision: str) -> list[str]:
     ]
 
 
-def origin_symbol(node: ast.AST | None) -> str:
-    """Reduce a path expression to the symbol it is rooted in."""
-    if node is None:
-        return "<absent>"
+def _walk_chain(node: ast.AST) -> tuple[ast.AST, list[str]]:
+    """Walk a path-composition chain to its root, collecting every literal segment.
+
+    A ``/`` right operand, or a call's positional argument, counts -- which is
+    how a ``.joinpath("a", "b")`` call's literals are seen without
+    special-casing that method name: any call's arguments are already walked
+    here the same way :func:`origin_symbol` already walks into any call's
+    ``func`` generically.
+
+    Shared by :func:`origin_symbol` (which reports only the root symbol) and
+    :func:`_chain_literal_segments` (which reports only the literals), so the
+    two can never see a different chain shape -- the anchor and the literal it
+    anchors are resolved by one traversal, not two that could drift apart.
+    """
+    segments: list[str] = []
     while True:
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            right = node.right
+            if isinstance(right, ast.Constant) and isinstance(right.value, str):
+                segments.append(right.value)
             node = node.left
         elif isinstance(node, ast.Call):
+            for argument in node.args:
+                if isinstance(argument, ast.Constant) and isinstance(argument.value, str):
+                    segments.append(argument.value)
             node = node.func
         elif isinstance(node, ast.Attribute):
             if node.attr in TAXONOMY_MARKERS or node.attr.startswith(SETTINGS_FIELD_PREFIX):
-                return node.attr
+                return node, segments
             node = node.value
         elif isinstance(node, ast.Subscript):
             node = node.value
         else:
             break
+    return node, segments
+
+
+def _root_symbol(node: ast.AST) -> str:
+    """Name the symbol a :func:`_walk_chain` root resolved to."""
+    if isinstance(node, ast.Attribute):
+        # Only reached via _walk_chain's early return on a taxonomy-marker
+        # attribute -- the loop never lets any other Attribute survive to here.
+        return node.attr
     if isinstance(node, ast.Name):
         return node.id
     if isinstance(node, ast.Constant):
         return f"<literal {node.value!r}>"
     return f"<{type(node).__name__}>"
+
+
+def origin_symbol(node: ast.AST | None) -> str:
+    """Reduce a path expression to the symbol it is rooted in."""
+    if node is None:
+        return "<absent>"
+    root, _segments = _walk_chain(node)
+    return _root_symbol(root)
+
+
+def _chain_literal_segments(node: ast.AST | None) -> tuple[str, ...]:
+    """Return every string-literal segment met walking ``node``'s chain to its root.
+
+    Unlike :func:`_literal_tail`, which stops at the first non-literal segment
+    walking backward from the tail (the shape the constrained-injection check
+    needs), this collects every literal anywhere in the chain -- a
+    ``.joinpath("modelos", modelo_id, "revisions", revision_id)`` call's two
+    literal arguments are both returned even though a non-literal name sits
+    between them.
+    """
+    if node is None:
+        return ()
+    _root, segments = _walk_chain(node)
+    return tuple(segments)
 
 
 def write_target(node: ast.Call) -> tuple[str, ast.AST | None] | None:
@@ -540,6 +616,180 @@ def _top_level_div_chains(scope_node: ast.AST) -> list[ast.BinOp]:
     return chains
 
 
+#: Method names that continue a path-composition chain the way a ``/`` operator
+#: does. AEAT production code composes almost exclusively with ``.joinpath()``,
+#: never ``/`` -- a ``/``-only chain walk sees none of it, which is exactly how
+#: the ``_modelo_manager.py`` false positive stayed invisible to a naive
+#: literal grep: the site was never a division chain to begin with.
+#: ``with_suffix``/``with_name`` are also included: ``envelope_path.with_suffix(
+#: ".lock")`` derives a new path from its receiver exactly like ``.joinpath()``
+#: does, and ``_rotation.py``'s own ``.lock``-suffix convention -- one of the
+#: six known production sites this residual measurement tracks -- is spelled
+#: that way, not with ``/`` or ``.joinpath()``.
+_JOIN_METHODS: Final[frozenset[str]] = frozenset({"joinpath", "with_suffix", "with_name"})
+
+
+def _is_join_chain_link(node: ast.AST) -> bool:
+    """Whether ``node`` is one link in a path-composition chain: a ``/`` join or a ``.joinpath(...)`` call."""
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        return True
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _JOIN_METHODS
+
+
+def _chain_receiver(node: ast.AST) -> ast.AST | None:
+    """Return the node ``node`` (a chain link) continues from, or ``None`` if it is not one."""
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        return node.left
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _JOIN_METHODS:
+        return node.func.value
+    return None
+
+
+def _top_level_join_chains(scope_node: ast.AST) -> list[ast.AST]:
+    """Return each maximal path-composition chain in ``scope_node``, outermost node only.
+
+    Generalises :func:`_top_level_div_chains` to also recognise a
+    ``.joinpath(...)`` call as a chain link, using the same top-level
+    exclusion shape: a node is excluded when the nearest ancestor chain link
+    continues FROM this node (:func:`_chain_receiver` returns it), so
+    ``root.joinpath("a").joinpath("b")`` is one chain rooted at the outermost
+    call, not two.
+
+    A ``.joinpath(...)`` call's receiver sits one level deeper than a ``/``
+    operand does: ``Call(func=Attribute(value=<receiver>, attr="joinpath"))``
+    means the immediate AST parent of a nested join-chain call is that
+    ``Attribute`` wrapper, not the outer ``Call`` itself. Skipping over a
+    single intervening ``Attribute`` when walking up is what lets the
+    exclusion check reach the real outer chain link -- without it, every
+    inner call in a ``.joinpath().joinpath()`` chain is also reported as its
+    own top-level site.
+    """
+    parent_of: dict[int, ast.AST] = {}
+    for parent in ast.walk(scope_node):
+        for child in ast.iter_child_nodes(parent):
+            parent_of[id(child)] = parent
+    chains: list[ast.AST] = []
+    for node in ast.walk(scope_node):
+        if not _is_join_chain_link(node):
+            continue
+        parent = parent_of.get(id(node))
+        if isinstance(parent, ast.Attribute):
+            parent = parent_of.get(id(parent))
+        if parent is not None and _chain_receiver(parent) is node:
+            continue
+        chains.append(node)
+    return chains
+
+
+@dataclass(frozen=True, slots=True)
+class VocabularySite:
+    """One taxonomy-vocabulary literal in genuine path-composition position, with its chain's root classified.
+
+    Distinct from :class:`WriteSite`: this reports every vocabulary-matching
+    chain regardless of whether a write primitive ever consumes it (the
+    ``--scope tests`` bare-expression walk :func:`census` already runs does
+    that, but unfiltered by vocabulary and ``/``-chains only), across
+    ``.joinpath(...)`` call chains as well as ``/`` chains, and in the
+    production scope as well as tests -- the three generalisations this
+    residual-measurement question needs and :func:`census`'s existing walk
+    does not provide.
+    """
+
+    module: str
+    line: int
+    segments: tuple[str, ...]
+    origin: str
+    classification: str
+
+    @property
+    def bucket(self) -> str:
+        """The three-way split a residual measurement needs.
+
+        Never fold ``unresolved`` into either side of the decidable-versus-
+        excluded question -- a denominator must not inherit the walker's own
+        blind spot.
+        """
+        if self.classification == "taxonomy":
+            return "in_taxonomy"
+        if self.classification in {"local", "unresolved"}:
+            return "unresolved"
+        return "out_of_tree"
+
+
+def vocabulary_literal_sites(revision: str, *, scope: str = "production") -> list[VocabularySite]:
+    """Every taxonomy-vocabulary literal in genuine path-composition position, root resolved and classified.
+
+    Args:
+        revision: Git revision to read; pin it, never pass a moving name.
+        scope: One of :data:`SCOPES`. A vocabulary-matching literal can be a
+            scanner false positive in either scope -- the
+            ``_modelo_manager.py`` ``bundled_path()`` case that motivated this
+            function is a PRODUCTION site, not a test one.
+
+    A chain is a candidate only when at least one of its literal segments
+    (:func:`_chain_literal_segments`) matches a declared taxonomy subpath or
+    one of its path components (:func:`_taxonomy_subpath_tokens`); this is
+    the vocabulary filter :func:`census`'s bare-expression walk does not
+    apply, since that walk answers a different question (every hand-composed
+    path, not only ones naming taxonomy vocabulary).
+
+    Raises:
+        ValueError: If ``scope`` is not a member of :data:`SCOPES`.
+    """
+    if scope not in SCOPES:
+        raise ValueError(f"scope must be one of {sorted(SCOPES)}, got {scope!r}")
+    module_lister = production_modules if scope == "production" else test_modules
+    vocabulary = _taxonomy_subpath_tokens()
+    sites: list[VocabularySite] = []
+    for module in module_lister(revision):
+        try:
+            tree = ast.parse(_git_show(revision, module))
+        except SyntaxError:
+            continue
+        module_params = {
+            argument.arg
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        }
+        class_bindings: dict[int, dict[str, ast.AST]] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                shared = _bindings(node)
+                for child in ast.walk(node):
+                    class_bindings.setdefault(id(child), shared)
+        module_bindings = _bindings(tree)
+
+        seen: set[int] = set()
+        for scope_node in ast.walk(tree):
+            local_params: set[str] = set()
+            if isinstance(scope_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                arguments = scope_node.args
+                local_params = {
+                    argument.arg for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs)
+                }
+            scopes = [_bindings(scope_node), class_bindings.get(id(scope_node), {}), module_bindings]
+            for chain in _top_level_join_chains(scope_node):
+                if chain.lineno in seen:
+                    continue
+                root, segments = _walk_chain(chain)
+                if vocabulary.isdisjoint(segments):
+                    continue
+                symbol = _trace(_root_symbol(root), scopes)
+                classification = classify(symbol, local_params=local_params, module_params=module_params)
+                seen.add(chain.lineno)
+                sites.append(
+                    VocabularySite(
+                        module=module,
+                        line=chain.lineno,
+                        segments=tuple(segments),
+                        origin=symbol,
+                        classification=classification,
+                    ),
+                )
+    return sorted(sites, key=lambda site: (site.module, site.line))
+
+
 def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
     """Return every file-producing site in the chosen module set at ``revision``.
 
@@ -643,6 +893,53 @@ def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
     return sorted(sites, key=lambda site: (site.module, site.line))
 
 
+def _main_vocabulary(arguments: argparse.Namespace) -> int:
+    """Print the vocabulary-literal residual report: three counts, never one.
+
+    ``in_taxonomy`` (a real candidate), ``out_of_tree`` (excluded, with the
+    classification -- fixture/temporary/pass_through/literal -- as its
+    reason), and ``unresolved`` (the walker could not classify the root).
+    ``unresolved`` is never folded into either of the other two: a
+    denominator must not inherit the walker's own blind spot.
+    """
+    sites = vocabulary_literal_sites(arguments.revision, scope=arguments.scope)
+    by_bucket: dict[str, list[VocabularySite]] = {"in_taxonomy": [], "out_of_tree": [], "unresolved": []}
+    for site in sites:
+        by_bucket[site.bucket].append(site)
+
+    if arguments.json:
+        payload = {
+            "revision": arguments.revision,
+            "scope": arguments.scope,
+            "candidate_count": len(sites),
+            "in_taxonomy_count": len(by_bucket["in_taxonomy"]),
+            "out_of_tree_count": len(by_bucket["out_of_tree"]),
+            "unresolved_count": len(by_bucket["unresolved"]),
+            "out_of_tree_by_reason": dict(Counter(site.classification for site in by_bucket["out_of_tree"])),
+            "sites": [asdict(site) | {"bucket": site.bucket} for site in sites],
+        }
+        print(json.dumps(payload, indent=2))
+        return 0
+
+    print(f"revision {arguments.revision}")
+    print(f"scope {arguments.scope}")
+    print(f"taxonomy-vocabulary literals in path-composition position {len(sites)}")
+    print(f"  in_taxonomy   {len(by_bucket['in_taxonomy']):4d}  -- real candidates")
+    print(f"  out_of_tree   {len(by_bucket['out_of_tree']):4d}  -- excluded, reason below")
+    print(f"  unresolved    {len(by_bucket['unresolved']):4d}  -- root not classifiable; read these")
+    if by_bucket["out_of_tree"]:
+        print("\nout_of_tree by reason:")
+        for classification, count in Counter(site.classification for site in by_bucket["out_of_tree"]).most_common():
+            print(f"  {classification:14s} {count:4d}")
+    print(f"\nin_taxonomy candidates ({len(by_bucket['in_taxonomy'])}):")
+    for site in by_bucket["in_taxonomy"]:
+        print(f"  {site.module}:{site.line}  {site.segments}  root={site.origin}")
+    print(f"\nunresolved -- read these, do not trust either bucket ({len(by_bucket['unresolved'])}):")
+    for site in by_bucket["unresolved"]:
+        print(f"  {site.module}:{site.line}  {site.segments}  root={site.origin}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """Print the census for one pinned revision, as text or JSON."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -654,7 +951,19 @@ def main(argv: list[str] | None = None) -> int:
         default="production",
         help="module set to walk; 'tests' answers a narrower question -- see the module docstring",
     )
+    parser.add_argument(
+        "--vocabulary",
+        action="store_true",
+        help=(
+            "report taxonomy-vocabulary literals in path-composition position instead of "
+            "write-primitive sites, with each chain's root anchor resolved and classified "
+            "(the residual-measurement question, not the write-enrolment one)"
+        ),
+    )
     arguments = parser.parse_args(argv)
+
+    if arguments.vocabulary:
+        return _main_vocabulary(arguments)
 
     sites = census(arguments.revision, scope=arguments.scope)
     unresolved_count = sum(1 for site in sites if site.provenance == "unresolved")

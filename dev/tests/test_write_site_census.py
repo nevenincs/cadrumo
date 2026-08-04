@@ -16,14 +16,19 @@ import ast
 import pytest
 
 from dev.write_site_census import (
+    VocabularySite,
     WriteSite,
     _bindings,
+    _chain_literal_segments,
     _is_constrained,
     _literal_tail,
     _module_signals_constraint_risk,
+    _root_symbol,
     _taxonomy_subpath_tokens,
     _top_level_div_chains,
+    _top_level_join_chains,
     _trace,
+    _walk_chain,
     classify,
     origin_symbol,
     production_modules,
@@ -468,3 +473,129 @@ def test_a_write_primitive_called_directly_on_the_chain_is_also_caught() -> None
         "    subprocess.run(['aeat', 'config'])\n"
     )
     assert _constrained_at(source)
+
+
+# ── Anchor-aware vocabulary-literal resolution ──────────────────────────────
+#
+# The scanner that measured the S78 residual matched taxonomy-vocabulary
+# segment names WITHOUT resolving their chain's root -- the exact defect this
+# campaign was chartered against, and the reason `_modelo_manager.py`'s two
+# `bundled_path("registry", "aeat")`-rooted ``manifest.toml`` sites (a
+# different tree than the taxonomy's own bucket ``manifest.toml``, anchored
+# at `storage_root`) were reported as candidates. These tests reproduce that
+# exact pair -- a known in-taxonomy site and the known out-of-tree false
+# positive -- and prove :func:`vocabulary_literal_sites`'s underlying pipeline
+# separates them, per the campaign's own positive-control discipline: a
+# classifier never shown failing on its own name-collision is not evidence.
+
+
+def test_top_level_join_chains_recognises_a_joinpath_call() -> None:
+    """A ``.joinpath(...)`` call is a chain link, not only ``/``.
+
+    Production AEAT code composes almost exclusively with ``.joinpath()``,
+    so a ``/``-only walk sees none of it.
+    """
+    tree = ast.parse('root.joinpath("modelos", modelo_id)\n')
+    chains = _top_level_join_chains(tree)
+    assert len(chains) == 1
+    assert isinstance(chains[0], ast.Call)
+
+
+def test_top_level_join_chains_counts_a_chained_joinpath_call_once() -> None:
+    """``root.joinpath("a").joinpath("b")`` is one chain, rooted at the outermost call."""
+    tree = ast.parse('root.joinpath("a").joinpath("b")\n')
+    assert len(_top_level_join_chains(tree)) == 1
+
+
+def test_top_level_join_chains_counts_a_mixed_div_and_joinpath_chain_once() -> None:
+    """A chain mixing ``/`` and ``.joinpath(...)`` is still one maximal chain."""
+    tree = ast.parse('(root / "a").joinpath("b")\n')
+    assert len(_top_level_join_chains(tree)) == 1
+
+
+def test_top_level_join_chains_counts_two_independent_joinpath_calls_separately() -> None:
+    """Two unrelated ``.joinpath(...)`` calls in one scope are two chains."""
+    tree = ast.parse('x = a.joinpath("b")\ny = c.joinpath("d")\n')
+    assert len(_top_level_join_chains(tree)) == 2
+
+
+def test_chain_literal_segments_collects_every_joinpath_argument_not_only_the_tail() -> None:
+    """Unlike :func:`_literal_tail`, every literal argument counts, even with a non-literal between them."""
+    node = ast.parse('root.joinpath("modelos", modelo_id, "revisions", revision_id)\n').body[0].value
+    assert set(_chain_literal_segments(node)) == {"modelos", "revisions"}
+
+
+def test_chain_literal_segments_follows_a_div_chain_into_a_trailing_joinpath_call() -> None:
+    """A ``/`` chain ending in ``.joinpath(...)`` still yields every literal from both shapes."""
+    node = ast.parse('(root / "a").joinpath("b", "c")\n').body[0].value
+    assert set(_chain_literal_segments(node)) == {"a", "b", "c"}
+
+
+def test_walk_chain_resolves_the_root_through_a_bundled_path_call_with_literal_arguments() -> None:
+    """``bundled_path("registry", "aeat")`` resolves to the ``bundled_path`` root.
+
+    Its own call arguments are collected as literals the same as any other
+    call this walker descends through.
+    """
+    node = ast.parse('bundled_path("registry", "aeat").joinpath("modelos", "manifest.toml")\n').body[0].value
+    root, segments = _walk_chain(node)
+    assert _root_symbol(root) == "bundled_path"
+    assert set(segments) == {"registry", "aeat", "modelos", "manifest.toml"}
+
+
+def _vocabulary_classification(source: str) -> str:
+    """Drive the classification half of :func:`vocabulary_literal_sites` over a synthetic module.
+
+    Mirrors :func:`vocabulary_literal_sites`'s per-module inner loop without
+    the git module listing, the same shape :func:`_constrained_bare_chain_at`
+    uses to test the constrained-check pipeline without going through
+    :func:`census`.
+    """
+    tree = ast.parse(source)
+    module_bindings = _bindings(tree)
+    chains = _top_level_join_chains(tree)
+    if not chains:
+        raise AssertionError(f"no path-composition chain in {source!r}")
+    vocabulary = _taxonomy_subpath_tokens()
+    matched = [chain for chain in chains if not vocabulary.isdisjoint(_chain_literal_segments(chain))]
+    if not matched:
+        raise AssertionError(f"no vocabulary-matching chain in {source!r}")
+    root, _segments = _walk_chain(matched[-1])
+    origin = _trace(_root_symbol(root), [module_bindings])
+    return classify(origin, local_params=set(), module_params=set())
+
+
+def test_the_modelo_manager_manifest_false_positive_is_classified_out_of_tree() -> None:
+    """Reproduces the exact real defect: a bundled-registry ``manifest.toml`` resolves to ``fixture``, not ``taxonomy``.
+
+    The real site (``locales/_modelo_manager.py``): ``modelo_dir =
+    self._contained_path("modelos", modelo_id)`` where ``self.registry_root =
+    bundled_path("registry", "aeat")``, then
+    ``modelo_dir.joinpath("manifest.toml")``. Minimised to the two-hop shape
+    that actually resolves the root: the ``manifest.toml`` chain's own
+    receiver is ``bundled_path(...)``.
+    """
+    source = (
+        'registry_root = bundled_path("registry", "aeat")\n'
+        'modelo_dir = registry_root.joinpath("modelos", modelo_id)\n'
+        'result = modelo_dir.joinpath("manifest.toml")\n'
+    )
+    classification = _vocabulary_classification(source)
+    assert classification == "fixture"
+
+
+def test_a_real_taxonomy_manifest_write_is_classified_in_taxonomy() -> None:
+    """The known in-taxonomy counterpart: a bucket manifest rooted at a real accessor call."""
+    source = 'result = storage_path(StorageCategory.BUCKETS).joinpath(bucket_id, "manifest.toml")\n'
+    classification = _vocabulary_classification(source)
+    assert classification == "taxonomy"
+
+
+def test_vocabulary_site_bucket_separates_in_taxonomy_out_of_tree_and_unresolved() -> None:
+    """The three-way split the residual measurement needs -- unresolved never folds into either side."""
+    assert VocabularySite("m.py", 1, ("manifest.toml",), "storage_path", "taxonomy").bucket == "in_taxonomy"
+    assert VocabularySite("m.py", 1, ("manifest.toml",), "bundled_path", "fixture").bucket == "out_of_tree"
+    assert VocabularySite("m.py", 1, ("manifest.toml",), "tmp_path", "temporary").bucket == "out_of_tree"
+    assert VocabularySite("m.py", 1, ("manifest.toml",), "x", "pass_through").bucket == "out_of_tree"
+    assert VocabularySite("m.py", 1, ("manifest.toml",), "<unknown>", "local").bucket == "unresolved"
+    assert VocabularySite("m.py", 1, ("manifest.toml",), "<unknown>", "unresolved").bucket == "unresolved"
