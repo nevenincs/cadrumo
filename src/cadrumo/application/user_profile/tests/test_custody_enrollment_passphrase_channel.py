@@ -19,10 +19,14 @@ Each test runs inside a sessionless storage root so the custody audit event
 degrades to its documented no-op instead of reaching for whichever profile the
 developer's own pointer file happens to name.
 
-The ``"master.recovery.key"`` literal is deliberate: it is the provider's own
-filename choice (matches ``_RECOVERY_WRAP_FILENAME`` in ``.._custody``,
-derived from ``StorageCategory.SECRETS_MASTER_RECOVERY_KEY``'s declared
-subpath), not a caller-supplied value.
+The ``"master.recovery.key"`` literal at the refused-enrollment
+``not (...).exists()`` assertion keeps its literal because a wrong path
+would trivially satisfy it -- the assertion passes against any path that
+happens not to exist, so the path must be the real one. At the later
+``.is_file()`` assertion the literal is the provider's own filename choice
+(matches ``_RECOVERY_WRAP_FILENAME`` in ``.._custody``, derived from
+``StorageCategory.SECRETS_MASTER_RECOVERY_KEY``'s declared subpath), not a
+caller-supplied value.
 """
 
 from __future__ import annotations
