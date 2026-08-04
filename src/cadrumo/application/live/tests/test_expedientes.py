@@ -14,6 +14,13 @@ See Also:
     :data:`~adapters.persistence.storage.LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE`
         Registered namespace, sensitivity, schema-version, and object-key
         grammar for persisted expedientes captures.
+
+The ``"live"`` literal in ``cadrumo_audit_dir / "live" / "expedientes" / ...``
+is a ``not (...).exists()`` refusal guard proving a captured tax id never
+leaks into a plaintext audit-trail file alongside the encrypted secure-object
+write. An accessor aimed at the wrong location would leave that assertion
+trivially satisfied -- the exact silent-pass shape a refusal test must not
+risk -- so the literal stays.
 """
 
 from __future__ import annotations
@@ -21,6 +28,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -39,6 +47,10 @@ from .._expedientes import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
+
 _DECLARACION_CONSULT_URL = aeat_url("www6", configured_path("sede_paths", "declaracion_consult"))
 _BUCKET_A_ID = "56565656-5656-4656-8656-565656565656"
 _BUCKET_B_ID = "57575757-5757-4757-8757-575757575757"
