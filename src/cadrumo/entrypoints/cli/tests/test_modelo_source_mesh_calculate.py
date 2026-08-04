@@ -258,10 +258,7 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
         UserProfileFact(path="filing_export.declaration_type", value="1"),
         UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-        UserProfileFact(path="renta_family.descendientes_minimos_aggregate_2024", value=Decimal("0")),
-        UserProfileFact(path="renta_family.gastos_guarderia_reales_2024", value=Decimal("0")),
         UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-        UserProfileFact(path="renta_family.descendientes_menores_3_2024", value=Decimal("0")),
         UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
     )
     facts_by_path = {fact.path: fact for fact in record.facts}
