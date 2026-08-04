@@ -46,6 +46,38 @@ from .family import DescendantInfo
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
 
+_DESCENDIENTE_FLAG_KEYS = frozenset(
+    {
+        "NACIMIENTO",
+        "ADOPCION",
+        "DISCAPACIDAD",
+        "CONVIVENCIA",
+        "CUSTODIA",
+        "RENTAS",
+        "DECLARACION_PROPIA",
+        "PRORRATA",
+        "MESES_TRABAJO",
+        "GASTOS_GUARDERIA",
+        "NIF",
+    },
+)
+"""Every key ``--descendiente`` accepts, so an unrecognised one is refused rather than ignored.
+
+The parser looks each known key UP; without this set a token it does not
+recognise would sit unread in the parsed mapping while the field it was meant to
+set kept its default. That is a silent drop, and it shipped once: a catalogue
+translated the key tokens, the accented forms stopped matching, and an operator
+declaring a NON-cohabiting descendant got one recorded as cohabiting -- granting
+a minimo they were not entitled to. Help copy alone was under-declaring tax.
+
+The catalogues are fixed and a behavioural gate now drives every advertised token
+through this parser. This set closes the other half: a token that was never
+advertised at all -- a typo, a stale flag from a script, a future locale edit the
+gate's extraction misses -- now fails loudly instead of vanishing. Every other
+structured-token surface in this tree already refuses unknown keys, through a
+typed enum, a strict model, or an explicit check. This one was the exception.
+"""
+
 
 def _discapacidad_grade(value: int | None) -> Literal[0, 33, 65] | None:
     match value:
@@ -278,6 +310,13 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     on missing required keys or invalid values.
     """
     parts = {k.strip().upper(): v.strip() for k, _, v in (p.partition("=") for p in raw.split(","))}
+
+    unknown = sorted(key for key in parts if key not in _DESCENDIENTE_FLAG_KEYS)
+    if unknown:
+        raise ProfileAnswerTypeError(
+            f"--descendiente does not accept {', '.join(unknown)}; "
+            f"accepted keys are {', '.join(sorted(_DESCENDIENTE_FLAG_KEYS))}",
+        )
 
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:
