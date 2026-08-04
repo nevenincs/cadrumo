@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:135ccc909fbbfe7f18084d919ca74452280a18b79db6dc4d59c928d5370a4809'
+body_hash: 'sha256:ae04994e3ff9d03cf76276c4c64925100f2700bbceaf1fc6619d84c65589e37a'
 related: []
 ---
 
@@ -106,12 +106,27 @@ So a field read is a **gate-guaranteed member with a parity-pinned default**, no
 a second authority. **Accessor versus field is a style difference, not an
 enrollment difference**; only re-typing the segment escapes the taxonomy.
 
-**Two consequences worth stating plainly.** Accessor adoption — 8 call sites
-across 5 modules against 21 modules reading fields — is **hygiene, not
+**Two consequences worth stating plainly.** Accessor adoption is **hygiene, not
 correctness**, and if this document's language overstates adoption the language
-narrows rather than 21 modules migrating for zero enrollment gain. And the parity
-gate makes the duplicate **safe, not single**: a subpath is still spelled in two
-places, it simply cannot drift. That residual is `S114`'s, not the criterion's.
+narrows rather than modules migrating for zero enrollment gain. Measured at
+`5da2b328f9`, as three numbers rather than a ratio:
+
+```
+modules calling storage_path(          8
+modules reading a bound path field    24
+in both                                1    core/observability/_store.py
+```
+
+**Deliberately not expressed as "8 of N".** An earlier version of this line said
+"5 of 26"; both figures were wrong — the 5 came from a grep pattern that missed a
+name at end-of-line with no trailing comma, and the 26 was the sum of two
+overlapping samples presented as a population. The real denominator is however
+many production modules resolve a storage location at all, which nobody has
+measured, so a reader should form their own view from the three counts.
+
+And the parity gate makes the duplicate **safe, not single**: a subpath is still
+spelled in two places, it simply cannot drift. That residual is `S114`'s, not the
+criterion's.
 
 ## Criterion elements
 
@@ -730,6 +745,53 @@ renames were reverted at `dee79c3a3b`.
 by reading one site. This one is not — it is a property of the *relationship*
 between a site and a fixture or subprocess elsewhere, so a site-by-site review
 cannot see it by construction, and two careful readers already proved that.
+
+### 5h. `S78` is not done, and the tree cannot tell you whether it is
+
+**STATUS: open — the campaign's only open Step, and larger than it looked.**
+
+**The sizing instrument had to be replaced before the remainder could be seen.**
+Raw substring counting was wrong: the `live` band's 65 and the `runs` band's 60
+were roughly **90% CLI argv tokens** — `invoke_cached_cli(["app", "live",
+"filed", ...])` — not paths at all. The correct instrument is an AST scan
+counting only string constants that are a `/` operand or a `joinpath`/`glob`
+argument. Measured that way at `5da2b328f9`:
+
+```
+path-composition hits in files WITHOUT a pin declaration   442
+path-composition hits in files WITH one                    101
+```
+
+with a **17-segment tail carrying no sweep record** — `master.recovery.key`,
+`cache`, `drafts`, `logs`, and a thirteen-segment remainder.
+
+**And the harder half, which bears on how anyone judges completeness:**
+
+> **`different-namespace` and `never examined` are byte-identical in the tree.**
+
+Four of the six classification outcomes leave no trace. `migrate` removes the
+literal and `injected` renames it — both visible. But `different-namespace` and
+`accessor-is-the-subject` leave the site **exactly as it was**, so a literal that
+was examined and correctly ruled out of scope is indistinguishable from one
+nobody has ever read. **Only `pin` marks itself.**
+
+The consequence is that **the tree is not the record**: no scan of the codebase
+can answer whether `S78` is complete, because completeness is a fact about which
+sites were *classified*, and classification is invisible for two thirds of the
+outcomes. The durable record is an explicit **swept-literals ledger** — per
+segment, whether it was swept now or already swept and confirmed — which the band
+reports have been accumulating without anyone having named it as the artefact.
+
+**This is element 5e's shape one level up.** There, a dead declaration satisfies
+the criterion vacuously because there is no site to enrol. Here, an unexamined
+literal is indistinguishable from a correctly-excluded one because neither leaves
+a mark. **Both are places where silence reads as coverage**, which is the failure
+this campaign exists to surface — and finding it in the campaign's own
+completeness accounting is the sharpest instance of it.
+
+**What would make this "no"**: declaring `S78` complete on a clean scan. A clean
+scan is consistent with every remaining literal having been examined *and* with
+none of them having been.
 
 ## This document was itself untracked until hours before closure
 
