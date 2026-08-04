@@ -6,7 +6,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c25f542a2bc2aa74634e6e323e84232bb280a82a9a0d0a4a6beea2d55e14b18'
+body_hash: 'sha256:2a1fbda04b12ace6e11d86cbf792be7fb13ddc8bb0346709f8fad1e5bc2a529c'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -20,8 +20,11 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P03-S10]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P03-S11]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P03-S12]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S13]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S14]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-plan]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
 ---
@@ -35,10 +38,11 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 ### adr
 
 - `2026-08-04-minimo-descendientes-eligibility-adr` - `minimo-descendientes-eligibility` adr: `Complete the Art. 58/61 LIRPF eligibility predicate before the derived-aggregate override closes` | (**status:** `accepted`)
+- `2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr` - `minimo-descendientes-eligibility` adr: `Add the relationship-kind and entry-event axes the descendant model lacks, defer month-level guarderia spend` | (**status:** `accepted`)
 
 ### audit
 
-- `2026-08-04-minimo-descendientes-eligibility-audit` - `minimo-descendientes-eligibility` audit: `closing honesty review`
+- `2026-08-04-minimo-descendientes-eligibility-audit` - `minimo-descendientes-eligibility` audit: closing honesty review
 
 ### exec
 
@@ -54,6 +58,8 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P03-S10` - Confirm the autonomico aggregate and the anualidades eligibility flag are both corrected by the same predicate change
 - `2026-08-04-minimo-descendientes-eligibility-P03-S11` - Replace the hardcoded ceiling literals in the two descendant test modules with reads of the registry parameters the campaign authored, matching how the new eligibility module already resolves them, because inlined regulatory figures decouple those tests from the authority and would keep them passing against a stale ceiling if a future revision moved it
 - `2026-08-04-minimo-descendientes-eligibility-P03-S12` - Advise when a declared descendant contributes to the minimo with no rentas figure on record, because the existing undeclared diagnostic returns early whenever descendiente facts exist and that early return reasons about a declared ZERO, which does not hold for a declared descendant whose rentas are simply absent and who therefore over-claims silently
+- `2026-08-04-minimo-descendientes-eligibility-P04-S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface
+- `2026-08-04-minimo-descendientes-eligibility-P04-S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche
 
 ### plan
 

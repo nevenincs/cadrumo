@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-04'
-body_hash: 'sha256:b5de963257f1a44d8cdc82e18503069d782c1d03eef86cffc33bbedafe657a4e'
+body_hash: 'sha256:46c78f55387c2c27ae91169e9f4c53b5927fca42e8d0d883c11ec3200eababb2'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -54,11 +54,54 @@ Give the two new facts a production writer on the descendiente CLI flow, and pro
 - [x] `P03.S10` - Confirm the autonomico aggregate and the anualidades eligibility flag are both corrected by the same predicate change; `src/cadrumo/application/modelo/tests/`.
 - [x] `P03.S12` - Advise when a declared descendant contributes to the minimo with no rentas figure on record, because the existing undeclared diagnostic returns early whenever descendiente facts exist and that early return reasons about a declared ZERO, which does not hold for a declared descendant whose rentas are simply absent and who therefore over-claims silently; `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py, src/cadrumo/application/modelo/tests/`.
 
+### Phase `P04` - the deferred descendant axes, reopened after closure
+
+Reopens this feature for the residue its own closing audit carried forward. The deferred-descendant-axes ADR decided the two precondition axes and amended all four of its original decisions; the numbering continues from the closed range rather than restarting, so the feature index reads as one lifecycle with a gap where the campaign closed and reopened. That is what happened.
+
+- [x] `P04.S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface; `src/cadrumo/core/_descendant_relacion.py`.
+- [x] `P04.S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche; `src/cadrumo/domain/contribuyente/family.py`.
+- [ ] `P04.S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one; `src/cadrumo/domain/contribuyente/family.py`.
+- [ ] `P04.S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin; `src/cadrumo/domain/contribuyente/family.py`.
+- [ ] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
+
 ## Parallelization
 
 `P01` and the schema half of `P02` are independent and may run concurrently. The
 predicate work in `P02` depends on `P01` landing first, because the thresholds are
 caller-supplied parameters rather than literals. `P03` depends on `P02`.
+
+`P04.S13` had to be one Step and one commit rather than several. Retiring the
+adoption-named date is a field removal, and the relocation discipline requires the
+canonical site, every consumer, every fixture and every test to share one index and one
+commit, so splitting the axis from its entry surface would have left the tree
+uncollectable in between. `P04.S14` followed separately because it corrects a defect
+found by self-review after the first landed, not because the two are independent.
+
+`P04.S15` is open and unblocked. Both entry-event dates now exist, so the Art. 81.1
+adoption clause can carry the date-scoped window it actually has rather than borrowing
+the Art. 58.2 period-scoped one. The two genuinely diverge, and one predicate serving
+both would silently apply one statute's window to the other's deduction.
+
+`P04.S16` is BLOCKED and must not be started. The Art. 81.2 increase extends into the
+period the child turns three, for spend incurred after the birthday and up to the month
+before the second cycle of infant education may begin. That upper bound is a
+per-comunidad regional determination rather than a fixed calendar month, grounded
+against the live authority on 2026-08-04, so neither the persisted shape nor the engine
+can hard-code one. Every pre-split shape would bake an unverified answer into stored
+data. The blocker is the regional table, not the modelling, and it is a larger
+precondition than the governing ADR originally recorded.
+
+`P04.S17` is BLOCKED and must not be started. It is REOPENED from retired. The ADR
+retired the dependencia assimilation on the reasoning that the statutory carve-out for
+judicial anualidades removes the one common household shape and that no reachable case
+could be constructed, and both halves were refuted against the live authority: the
+carve-out turns on anualidades actually being SATISFIED rather than on the regime being
+available, and the authority states the no-custody non-paying supporter as entitled in
+terms. The blocker is per-child attribution of anualidades. The staged boundary the ADR
+names is to assimilate only where the filer declares none at all, which errs toward
+under-grant with a visible advisory. Whoever takes it must sweep the existing
+incompatibility injector in the same change, because landing one half of an
+incompatibility pair is this campaign's most frequently repeated defect.
 
 ## Verification
 
@@ -70,3 +113,35 @@ mínimo and an advisory naming the inference; the anualidades flag reads sin der
 a descendant excluded by the cap; and every expected figure in the new tests derives
 from the bundled AEAT manual or the consolidated LIRPF text rather than from the
 formula under test.
+
+`P04` adds its own criteria. `S13` is verified: the closed relación set carries all five
+members with the entitling subset declared once and derived everywhere, the retired
+adoption-named date survives only in docstrings explaining the re-anchoring, and the cap
+is measured rather than asserted, with a child fostered in 2019 and adopted in 2022
+granted three periods and nothing after. The persisted-shape change carries a
+save-load-strict-equality roundtrip over one record per relación with every defaultable
+field set to a non-default value, plus an anti-tautology proof that deleting the stored
+token changes the reloaded record and changes it toward under-grant rather than toward
+entitlement. Coverage is structural rather than numeric, so nothing re-derives a
+registry formula against itself; the monetary side stays grounded against the bundled
+worked example, whose child is adopted and which therefore evidences the adopción route
+only.
+
+Three mutations were run against `S13` and each must turn the suite red: removing the
+relación check from the entry-date resolver, making the coherence validator a no-op, and
+switching the window anchor from the earliest entitling event to the latest. The first
+initially left every test green, because the coherence validator makes that check
+unreachable through the model, so a second-layer test constructing the forbidden record
+directly was added. Any later change to these guards re-runs that probe rather than
+reasoning about coverage.
+
+`S14` is verified by a case table asserting the missing-anchor report stays silent
+wherever nothing is lost: a descendant already under three, one the statute excludes
+from the limb, one not cohabiting, and one over 25 with no discapacidad.
+
+`S15` is complete when the Art. 81.1 window is date-scoped and a test shows it diverging
+from the Art. 58.2 period-scoped window for the same child. `S16` and `S17` are complete
+only when their named blockers are cleared first, and neither may be closed by narrowing
+its scope to the unblocked part: the ADR records both at full scope deliberately, and a
+campaign that narrows its own completion criterion reads as rigour while leaving the gap
+open.
