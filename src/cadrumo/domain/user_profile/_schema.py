@@ -209,12 +209,12 @@ _DERIVED_SELECTOR_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(r"\{([^{}]
 
 @lru_cache(maxsize=64)
 def _compiled_derived_selector_pattern(pattern: str) -> re.Pattern[str]:
-    """Compile a declared derived-selector pattern into an anchored regex.
+    r"""Compile a declared derived-selector pattern into an anchored regex.
 
     Literal segments between placeholders are individually :func:`re.escape`-d
     and the placeholder fragments spliced in raw. That ordering matters:
     escaping the whole template first would mangle the fragments' own regex
-    metacharacters. The result carries a terminal ``\\Z`` anchor so a pattern
+    metacharacters. The result carries a terminal ``\Z`` anchor so a pattern
     can never match a longer sibling path.
 
     An unrecognised placeholder raises rather than matching anything, so a

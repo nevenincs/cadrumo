@@ -85,6 +85,7 @@ from ._registry_contract import (
 )
 from ._schema import (
     NUMERIC_PROFILE_FIELD_TYPES,
+    ProfileDerivedSelectorDefinition,
     ProfileFieldDefinition,
     ProfileFieldType,
     ProfileRemovePolicy,
@@ -147,6 +148,7 @@ __all__ = [
     "CoverageManifest",
     "ProfileAlreadyExistsError",
     "ProfileBucketMismatchError",
+    "ProfileDerivedSelectorDefinition",
     "ProfileExportError",
     "ProfileFieldDefinition",
     "ProfileFieldType",
