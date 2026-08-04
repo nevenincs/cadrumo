@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-04'
-body_hash: 'sha256:e0332f7934bfab820d379ba7df9764cff2f2390479b734a2fa7508535d6d573e'
+body_hash: 'sha256:3b3122a7fc70d344c285d184a5630ddf604dabd309e5ea1c875be9a634ff3c77'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -271,6 +271,7 @@ Runs the mandatory fresh-context honesty review before any completion claim, tra
 
 - [x] `W05.P22.S82` - Backfill real Description and Outcome content into the seventeen W01.P01-P03 exec records that were checked complete but left as empty scaffolds since the campaign's earliest reconciliation pass, predating even the 33-of-64 mark, so plan-closure-requires-exec-records holds for the whole plan and not only the steps reconciled in this pass; `.vault/exec/2026-08-03-canonical-storage-management/`.
 - [x] `W05.P22.S115` - Search the test corpus for assertions that a taxonomy-declared storage location is never created, via both the storage_path accessor and direct settings-field reads, classify each hit as a genuine dormancy claim or a refusal-guard/setup-baseline false positive, then write and land an accessor-routed persist-then-assert-absent test for each confirmed dormant category a real writer could ever populate; `src/cadrumo/domain/filing/tests/test_secure_storage_roundtrip.py, src/cadrumo/adapters/persistence/profile/tests/test_justificante_repository.py`.
+- [x] `W05.P22.S116` - Extend the W05.P22.S115 dormancy-assertion procedure to the other eight rotation-plan entries selfaudit found sharing the same declared-consumer signal (FINANCIAL_TRANSACTIONS, INVOICES, USAGE_RATIOS, SUBMISSIONS, SUBMISSIONS_AMENDMENTS, SUBMISSIONS_AMENDMENT_RESULTS, FILING_HISTORY, WORKFLOW_RUNS), checking each entry's consumer_module individually rather than inheriting the all-twelve-share-one-consumer generalisation, and writing an accessor-routed persist-then-assert-absent test for every entry with a real writer; `src/cadrumo/adapters/persistence/profile/tests/test_transactions_repository_roundtrip.py, src/cadrumo/adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py, src/cadrumo/domain/usage_ratios/tests/test_service.py, src/cadrumo/adapters/persistence/storage/tests/test_submission_repository.py, src/cadrumo/domain/filing/tests/test_amendment_roundtrip.py, src/cadrumo/application/filing/tests/test_history_repository_roundtrip.py, src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py`.
 
 ## Parallelization
 
