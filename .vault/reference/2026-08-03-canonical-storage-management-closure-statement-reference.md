@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:df36cb1a70975a05ad9903e1ce3e59810055dbd752e6660ec634493ee579a201'
+body_hash: 'sha256:5340adea869197e59edaf7c6c0d23ff88bcab99451a3810fb214c188b190a627'
 related: []
 ---
 
@@ -783,12 +783,20 @@ escalate rather than weaken if a converted assertion goes red.
 
 ### 5g. A sixth classification outcome: injected-but-constrained
 
-**STATUS: open, mechanical detection in progress with `rootpath`.**
+**STATUS: open. Mechanical detection was attempted, measured against pre-stated
+oracles, and rejected as a finding generator — see the detection subsection.**
 
-`S78`'s dispositions were pin / migrate / injected / different-namespace. A sixth
-exists: **the test supplies the path, so it reads as freely chosen, but a sibling
-fixture derives it from the real accessor or a child process recomputes it** — so
-the literal is load-bearing after all and renaming it breaks the handoff.
+`S78`'s dispositions were pin / migrate / injected / different-namespace /
+accessor-is-the-subject. A sixth exists: **the test supplies the path, so it reads
+as freely chosen, but a sibling fixture derives it from the real accessor or a
+child process recomputes it** — so the literal is load-bearing after all and
+renaming it breaks the handoff.
+
+**The verdict is `pin`, and the discriminator is that a rename breaks the test.**
+That is the operational definition: not "does this site look injected", but "does
+anything else reach the same path by another route". `write_site_census.py:673`
+states it in the tool's own output — *classification is pin, a rename would break
+it*.
 
 Found the hard way: two independent reviewers classified the same three `secrets`
 sites as free, and only an attempted rename revealed the constraint. Three
@@ -798,6 +806,35 @@ renames were reverted at `dee79c3a3b`.
 by reading one site. This one is not — it is a property of the *relationship*
 between a site and a fixture or subprocess elsewhere, so a site-by-site review
 cannot see it by construction, and two careful readers already proved that.
+
+**The detection rule for a human reader**: for any apparently-injected path, ask
+whether anything else in that test derives the same path independently — a
+sibling fixture, a subprocess, a CLI invocation wrapper. If yes, the literal is
+constrained and the disposition is `pin`.
+
+#### Mechanical detection was tried and does not work — do not rebuild it
+
+Recorded so the next person does not build the same tool without knowing it was
+built and measured. `WriteSite.constrained` exists in `dev/write_site_census.py`
+and its `--scope tests` sweep was checked against three oracles stated before the
+run (`f101eb9427`, audit
+`2026-08-04-...-constrained-detector-sweep-diagnosis-audit`):
+
+- **over-fires roughly 30x** — 114 flags at `64c9fe6d6e` against at best 3 real
+  candidates, independently reproduced at a second pin (`53f80f0830`, 110 flags)
+- **misses two of the three known `secrets` positives** — the very sites that
+  established the category
+- **three distinct over-firing mechanisms**, all rooted in `CONSTRAINT_RISK_SIGNALS`
+  reusing `TAXONOMY_MARKERS` — designed for narrow root-of-expression tracing — as
+  a blanket identifier-presence check with no regard for binding context
+- the two misses have **different** causes, and the diagnosable one
+  (`invoke_cached_cli` absent from the risk-signal set) **would not rescue the
+  tool**, since over-firing is the dominant failure mode
+
+It was diagnosed rather than tuned to the oracles, which is why the conclusion is
+trustworthy in the negative direction. The code, its tests, and its self-reported
+unresolved rate are kept and remain valid; what is rejected is treating its output
+as a finding list.
 
 ### 5h. `S78` is not done, and the tree cannot tell you whether it is
 
@@ -832,15 +869,27 @@ afterwards**:
 | `injected` | renames it to a non-taxonomy token | no — nothing marks the rename as a classification |
 | `different-namespace` | leaves it untouched | no |
 | `accessor-is-the-subject` | leaves it untouched | no |
-| `pin` | declares it in `PINNED_TAXONOMY_LITERALS` | **yes — the only one** |
+| `pin` | declares it in `PINNED_TAXONOMY_LITERALS` | **yes** |
+| `injected-but-constrained` (`5g`) | resolves to `pin` — the literal was load-bearing after all | **yes**, via the pin it produces |
 
-All five were visible in the diff at the time. Only the last is visible to
-somebody arriving later with a grep. (An earlier draft wrote "four of six" while
-naming five outcomes; the ratio is restated here over the rows it can enumerate.)
+All six were visible in the diff at the time. Only the last two are visible to
+somebody arriving later with a grep, and the second of those is the first wearing
+a different hat. **Four of the six leave nothing a later reader can find.**
+
+**A correction to this element, which is the same failure the element describes.**
+A prior revision replaced "four of six" with "four of five", on the grounds that
+the sixth outcome was "named nowhere in the vault". It is named **eighteen lines
+above this table**, as the heading of element `5g`, in the file that was open at
+the time. The original count was right; only the visible-versus-readable
+confusion was wrong, and the fix for a contradiction between prose and table was
+never to delete a row. This is the `master.recovery.key` shape for the third
+time — an absence asserted without reading the file — committed inside the clause
+that exists to document it, by the reader who had just written that you must read
+the whole file before reporting something missing.
 
 The consequence is that **the tree is not the record**: no scan of the codebase
 can answer whether `S78` is complete, because completeness is a fact about which
-sites were *classified*, and classification is unreadable for four of the five
+sites were *classified*, and classification is unreadable for four of the six
 outcomes. The durable record is an explicit **swept-literals ledger** — per
 segment, whether it was swept now or already swept and confirmed — which the band
 reports have been accumulating without anyone having named it as the artefact.
@@ -888,7 +937,7 @@ which felt like diligence. **A pattern you have just been burned by is the one
 you will over-apply next.**
 
 **The falsifier rests on the disposition table and on nothing else.** Four of the
-five dispositions leave nothing a later reader can grep, so a clean scan is
+six dispositions leave nothing a later reader can grep, so a clean scan is
 consistent with every literal having been examined *and* with none of them having
 been. That argument needs no incident to support it — it is a property of the
 classification scheme, demonstrated by every band the campaign closed.
