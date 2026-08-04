@@ -1,10 +1,21 @@
-"""Pytest fixtures for registry CLI tests."""
+"""Pytest fixtures for registry CLI tests.
+
+The ``"secrets"`` literal in the CLI env below is not an arbitrary injected
+value: it must agree with what :func:`~tests.secure_sql.isolated_runtime_profile`
+already minted the master key under, since that fixture derives
+``cadrumo_secret_store_dir`` from the real taxonomy accessor
+(``storage_overrides(tmp_path, StorageCategory.SECRETS)`` -> ``tmp_path /
+"secrets"``). The CLI subprocesses this env drives must independently compute
+the same location to unlock the profile the fixture already created; renaming
+it to a fictional segment breaks that handoff.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -13,6 +24,9 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 
@@ -26,7 +40,7 @@ def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> 
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
                 "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
                 "CADRUMO_SECRET_STORE_BACKEND": "file",
-                "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "fallback-store"),
+                "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
                 "CADRUMO_BLOB_STORE_DIR": str(tmp_path / "blobs"),
                 "CADRUMO_AUDIT_DIR": str(tmp_path / "audit"),
                 "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
