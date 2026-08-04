@@ -251,10 +251,36 @@ API. This is a first-class part of the contract, not an afterthought.
 **Amendment — a read of a bound path field satisfies enrollment.** The affirmative
 sentence above says *produced by that accessor*, and the five disqualifiers do not
 mention reading `settings.cadrumo_X_dir`. A field read therefore fell in a gap: not
-the affirmative case, not excluded. It was measured, and the gap is real —
-**8 production modules call `storage_path(`, 21 read a bound path field, and the
-two sets are disjoint**, at `bfe2da17f6`. Left unruled, the two available
-readings change what "done" means by roughly a factor of three.
+the affirmative case, not excluded. It was measured, and the gap is real. At
+`2698a73774`, enumerated with the predicates below so the counts are reproducible
+rather than quoted:
+
+```
+git grep -lE '\.cadrumo_[a-z_]*_dir\b'                       -- 'src/cadrumo/**/*.py' | grep -v tests
+git grep -lE '(^|[^_a-zA-Z])(bucket_scoped_)?storage_path\(' -- 'src/cadrumo/**/*.py' | grep -v tests
+
+candidate pool                21
+prose-only (a mention, not a use)   3
+REAL field readers            18
+accessor modules per R5        9   -- storage_path( 8, bucket_scoped_storage_path( 4, either 9
+overlap                        1   -- adapters/persistence/storage/master_key/_master_key.py
+```
+
+**The accessor set is 9, not 8, because R5 says so**: its own first sentence names
+`storage_path(category)` *and* "a scoped variant [that] takes the bucket
+identifier for per-bucket members". The scoped call is part of this contract, not
+a separate thing.
+
+**The one overlap is a legitimate dual-door module, not adoption failure**, and it
+is the more useful fact. `master_key/_master_key.py` reads the field at `:293` and
+`:1154` because `SECRETS` is operator-overridable — resolving it through
+`storage_path()` would silently disagree with an operator's override — while its
+`bucket_scoped_storage_path()` call at `:771` reaches a different location
+entirely. **The accessor has a stated limit**, and this module sits on it
+deliberately.
+
+Left unruled, the two available readings change what "done" means by roughly a
+factor of two.
 
 *The figure took four attempts and the failures are instructive, so the counts
 above should be recomputed rather than quoted.* A first pass gave `5` from an
@@ -262,10 +288,30 @@ import-form pattern that missed a name at end-of-line with no trailing comma; a
 second gave `5 + 21 = 26`, a sum of overlapping samples presented as a
 population; a third gave 8 / 24 / 1 overlap by counting **file presence**. The
 last was still wrong: three of those 24 mention a field only in a Sphinx
-`:attr:` role, and one of the three is the supposed overlap module, whose
+`:attr:` role, and one of the three is `core/observability/_store.py`, whose
 docstring records that it resolves through the accessor **rather than** by
 reading the field. **A mention is not a use, and the prose asserted the negation
 of what matching it implied.**
+
+**A fifth attempt then failed in two new ways at once, and it was the
+correction.** It reported 8 / 21 / disjoint. Both errors are worth naming because
+neither was carelessness:
+
+- **`21` inherited a superseded base.** `24 − 3` and `21 − 3` remove the same
+  three prose-only modules from different starting pools; the pool was `21`, and
+  a corrected enumeration had landed minutes earlier. **A correction can be
+  arithmetically sound and still wrong, by being applied to a stale operand.**
+- **"disjoint" removed a false overlap without looking for a real one.**
+  Discovering `_store.py` was not the overlap is not the same as establishing
+  there is none — and there is one. The accessor set had been drawn as
+  `storage_path(` alone, narrower than **this ruling's own first sentence**
+  defines it, so the module that calls only the scoped variant fell outside it.
+
+**Eight attempts, each smaller than the last.** The list is here so a reader does
+not quote the figure: **recompute it.** Its instability is not noise in the
+underlying fact — the ruling never depended on the ratio — it is a property of
+measuring names in a codebase that reuses them, and it is the same lesson the
+`SensitivityClass.AUDIT` collision teaches from the gate side.
 
 **Ruling: a read of a `Path`-typed `Settings` field bound to a taxonomy member is
 enrolled.** Not by preference — by two gates that make the field a taxonomy-governed
