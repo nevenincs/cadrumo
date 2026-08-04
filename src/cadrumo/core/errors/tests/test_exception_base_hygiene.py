@@ -17,10 +17,19 @@ same change.
 
 Read per class, never inherited. An inherited rationale would exempt every
 subclass of a declaring class, a hole the allowlist did not have.
+
+The gate below walks IMPORTED modules, so its subject set is whatever the
+installed environment actually executed. That is deliberate -- resolving a base
+through aliases and multiple inheritance needs the live MRO, which source alone
+cannot give -- but it means a class defined only inside an optional-import
+fallback branch is invisible whenever the extra IS installed. The AST companion
+at the end of this module covers exactly that blind spot; see its docstring for
+why two gates deliberately overlap here.
 """
 
 from __future__ import annotations
 
+import ast
 import importlib
 import inspect
 import pkgutil
@@ -29,6 +38,8 @@ from types import ModuleType
 import pytest
 
 from .... import __path__ as _cadrumo_package_path
+from ....tests import production_python_files, repo_relative
+from . import describe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -95,12 +106,21 @@ def test_scan_reaches_a_plausible_exception_population() -> None:
     far below the measured figure (near 630 classes) so ordinary churn never
     trips it, and far enough above zero that a packaging or import-walk
     regression fails loudly instead of silently.
+
+    The scope line is reported rather than only asserted. Because this walk
+    imports, its subject set is a property of the installed environment, and a
+    green that does not say what it covered invites the reader to assume it
+    covered everything. Stating the population and the extras that shaped it
+    makes the difference between two machines visible in the log instead of
+    discoverable only by a dedicated investigation.
     """
     population = _production_exception_classes()
+    print(f"exception-base scope: {len(population)} classes scanned; {describe_optional_extras()}")
     assert len(population) >= _MIN_EXCEPTION_CLASSES_SCANNED, (
         f"only {len(population)} production exception classes discovered (floor "
         f"{_MIN_EXCEPTION_CLASSES_SCANNED}); the import walk collapsed, so a green result below "
-        "would mean 'nothing was examined' rather than 'nothing is wrong'"
+        f"would mean 'nothing was examined' rather than 'nothing is wrong'. Scope: "
+        f"{describe_optional_extras()}"
     )
 
 
@@ -188,3 +208,185 @@ def test_the_rationale_declaration_is_per_class_and_discriminates() -> None:
     assert not _has_only_bare_bases(_DeclaredButNoLongerBareError), (
         "the reciprocal gate must flag a class whose declaration outlived its bare-base condition"
     )
+
+
+# ---------------------------------------------------------------------------
+# AST companion: the classes the import walk above structurally cannot see.
+# ---------------------------------------------------------------------------
+
+#: Lowest plausible number of production modules the source scan parses. Far
+#: below the measured figure so ordinary churn never trips it, far enough above
+#: zero that a collapsed scan reds instead of greening vacuously.
+_MIN_MODULES_PARSED = 400
+
+_IMPORT_FAILURE_NAMES = frozenset({"ImportError", "ModuleNotFoundError"})
+_BARE_BASE_NAMES = frozenset(base.__name__ for base in _BARE_EXCEPTION_BASES)
+
+
+def _handles_import_failure(handler: ast.ExceptHandler) -> bool:
+    """Whether *handler* catches a missing optional dependency."""
+    caught = handler.type
+    if isinstance(caught, ast.Name):
+        return caught.id in _IMPORT_FAILURE_NAMES
+    if isinstance(caught, ast.Tuple):
+        return any(isinstance(item, ast.Name) and item.id in _IMPORT_FAILURE_NAMES for item in caught.elts)
+    return False
+
+
+def _roots_only_at_bare_builtins_in_source(node: ast.ClassDef) -> bool:
+    """Whether every declared base of *node* is a bare builtin, by name.
+
+    Source-level and therefore conservative: a base written as an alias or an
+    attribute is not treated as bare, because only the live MRO could say. That
+    is the exact limitation which keeps this a companion to the import walk
+    rather than a replacement for it.
+    """
+    bases = node.bases
+    return bool(bases) and all(isinstance(base, ast.Name) and base.id in _BARE_BASE_NAMES for base in bases)
+
+
+def _declares_rationale_in_body(node: ast.ClassDef) -> bool:
+    """Whether *node*'s own body assigns a non-blank rationale.
+
+    Body-scoped, mirroring the ``__dict__`` read of the live gate: a rationale
+    on a base class must not exempt this one.
+    """
+    for statement in node.body:
+        targets: list[ast.expr] = []
+        if isinstance(statement, ast.Assign):
+            targets = list(statement.targets)
+        elif isinstance(statement, ast.AnnAssign):
+            targets = [statement.target]
+        else:
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == _BARE_BASE_RATIONALE_ATTR for target in targets):
+            continue
+        value = statement.value
+        if isinstance(value, ast.Constant) and isinstance(value.value, str) and value.value.strip():
+            return True
+    return False
+
+
+def _classes_defined_in_import_fallbacks() -> tuple[list[tuple[str, ast.ClassDef]], int]:
+    """Return ``(fallback-defined classes, modules parsed)`` from source."""
+    found: list[tuple[str, ast.ClassDef]] = []
+    parsed = 0
+    for path in production_python_files():
+        try:
+            tree = ast.parse(path.read_bytes().decode("utf-8"))
+        except (SyntaxError, UnicodeDecodeError):
+            # A peer mid-edit in this shared worktree must not red the gate;
+            # a mass-skip is caught by the module floor below.
+            continue
+        parsed += 1
+        for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
+            if not _handles_import_failure(handler):
+                continue
+            found.extend((repo_relative(path), node) for node in ast.walk(handler) if isinstance(node, ast.ClassDef))
+    return found, parsed
+
+
+def test_the_source_scan_finds_optional_import_fallback_classes() -> None:
+    """Anti-vacuity for the companion below, on both of its axes.
+
+    The check is a "no violations found" shape over a subject set that is small
+    by nature, so it greens identically whether every subject complies or no
+    subject was found. Both inputs are therefore pinned: the module corpus must
+    not collapse, and at least one fallback-defined class must still exist.
+
+    If a refactor legitimately moves the last such class out of a fallback
+    branch, this reds — deliberately. Retiring the companion then becomes a
+    decision someone records, rather than a green that quietly means nothing.
+    """
+    found, parsed = _classes_defined_in_import_fallbacks()
+    assert parsed >= _MIN_MODULES_PARSED, (
+        f"parsed only {parsed} production modules (floor {_MIN_MODULES_PARSED}); the source scan "
+        "collapsed, so the companion below would pass by examining nothing"
+    )
+    assert found, (
+        "no class is defined inside an optional-import fallback branch, so the companion below has "
+        "no subjects and passes vacuously. If that is now true by design, retire the companion "
+        "explicitly instead of leaving a gate that checks nothing"
+    )
+
+
+def test_optional_import_fallback_classes_declare_their_bare_root_in_source() -> None:
+    """A fallback-defined class rooting at a bare builtin declares why, in source.
+
+    This exists because the import walk at the top of this module structurally
+    cannot see these classes. A class defined inside ``except ImportError`` is
+    only defined when the extra is ABSENT; with the extra installed the name
+    binds to the third-party original, so the fallback never executes and the
+    live gate examines nothing. ``adapters.outbound.aeat._playwright`` is the
+    real instance: with the ``browser`` extra installed, ``PlaywrightError``
+    resolves to playwright's own ``Error`` class.
+
+    The declaration on that class is correct today. The hazard the two gates
+    together close is not a hidden violation but an unexecuted check: a typo in
+    the attribute name would be green on every machine carrying the extra and
+    red only on the thinnest install, surfacing at the worst possible moment.
+    Reading the declaration from source removes the environment from the
+    question entirely.
+
+    Deliberately additive. Source cannot resolve aliased or multi-level bases,
+    so this narrower deterministic check supplements the broader live walk
+    rather than replacing it.
+    """
+    found, _ = _classes_defined_in_import_fallbacks()
+    violations = [
+        f"{relative}:{node.lineno}: {node.name}("
+        + ", ".join(base.id for base in node.bases if isinstance(base, ast.Name))
+        + ")"
+        for relative, node in found
+        if _roots_only_at_bare_builtins_in_source(node) and not _declares_rationale_in_body(node)
+    ]
+    assert violations == [], (
+        "class(es) defined inside an optional-import fallback root only at bare builtin bases and "
+        f"declare no reason in their own body. The live import walk cannot see these when the extra "
+        f"is installed, so declare `{_BARE_BASE_RATIONALE_ATTR}: ClassVar[str]` on the class "
+        "itself:\n  " + "\n  ".join(violations)
+    )
+
+
+def test_the_source_readers_discriminate() -> None:
+    """Drives both source readers over synthetic classes, both ways.
+
+    Without this, readers that never matched anything would produce an empty
+    violation list indistinguishable from readers that work.
+    """
+    module = ast.parse(
+        "try:\n"
+        "    from third_party import Boom\n"
+        "except ImportError:\n"
+        "    class Declared(Exception):\n"
+        "        __bare_base_rationale__ = 'deliberate'\n"
+        "    class Undeclared(Exception):\n"
+        "        pass\n"
+        "    class Blank(Exception):\n"
+        "        __bare_base_rationale__ = '   '\n"
+        "    class Registered(CadrumoError):\n"
+        "        pass\n"
+        "    class Subclass(Declared):\n"
+        "        pass\n"
+    )
+    handler = next(node for node in ast.walk(module) if isinstance(node, ast.ExceptHandler))
+    assert _handles_import_failure(handler)
+    classes = {node.name: node for node in ast.walk(handler) if isinstance(node, ast.ClassDef)}
+
+    assert _roots_only_at_bare_builtins_in_source(classes["Undeclared"])
+    assert not _roots_only_at_bare_builtins_in_source(classes["Registered"]), (
+        "a registry-bound root must not be treated as a bare builtin"
+    )
+    assert not _roots_only_at_bare_builtins_in_source(classes["Subclass"]), (
+        "a non-builtin base must not be treated as bare; only the live MRO could resolve it"
+    )
+    assert _declares_rationale_in_body(classes["Declared"])
+    assert not _declares_rationale_in_body(classes["Undeclared"])
+    assert not _declares_rationale_in_body(classes["Blank"]), "a blank rationale must not exempt"
+    assert not _declares_rationale_in_body(classes["Subclass"]), (
+        "an inherited rationale must not exempt a subclass; the reader is body-scoped"
+    )
+
+    non_import = ast.parse("try:\n    pass\nexcept ValueError:\n    class Boom(Exception):\n        pass\n")
+    other_handler = next(node for node in ast.walk(non_import) if isinstance(node, ast.ExceptHandler))
+    assert not _handles_import_failure(other_handler), "only optional-import fallbacks are in scope"
