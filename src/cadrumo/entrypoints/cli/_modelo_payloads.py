@@ -1202,6 +1202,20 @@ class ModeloAggregateResult(OutputSchema):
     for every other modelo); it is primary structured result data the command
     produces, sourced from the already-ingested per-perceptor-clave withholding
     detail, not an incidental diagnostic.
+
+    ``clave_breakdown`` and ``observation_count`` are deliberately NOT
+    cross-validated against each other. They are different slices of the same
+    ledger, not one derived from the other: ``observation_count`` reflects the
+    retenciones provider's own aggregation (``result.log_fields``), while
+    ``clave_breakdown`` is a separate CLI-local projection of the withholding
+    observations the ``--withholding-observation`` flags supplied directly
+    (see ``aggregate_withholding_by_clave`` in ``_modelo_aggregate_cli.py``). A
+    prior invariant asserting ``breakdown_percepciones <= observation_count``
+    was removed: it was never true by construction (the two counts have no
+    routed relationship for M190, the only modelo that ever populates
+    ``clave_breakdown``) and it rejected every M190 call whose withholding
+    observations were not additionally routed through the retenciones
+    provider's own store.
     """
 
     operation: str = "modelo.aggregate"
@@ -1244,17 +1258,6 @@ class ModeloAggregateResult(OutputSchema):
         if len(value) != len(set(value)):
             raise ValueError("source_kinds must be unique")
         return value
-
-    @model_validator(mode="after")
-    def _counters_agree_with_rows(self) -> ModeloAggregateResult:
-        """Keep the rendered clave rows within the declared observation count."""
-        breakdown_percepciones = sum(row.percepcion_count for row in self.clave_breakdown)
-        if breakdown_percepciones > self.observation_count:
-            raise ValueError(
-                f"clave_breakdown accounts for {breakdown_percepciones} percepciones "
-                f"but observation_count is {self.observation_count}",
-            )
-        return self
 
     @classmethod
     def from_aggregation_result(
