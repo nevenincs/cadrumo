@@ -142,3 +142,35 @@ relocation: the canonical site, every consumer, every fixture and every test sha
 index and one commit, so splitting the axis from its entry surface would have left the
 tree uncollectable in between. The API stub follows as a separate commit, which was a
 miss - the scaffolding discipline asks for it in the same commit as the source change.
+
+### Correction, appended after the fact
+
+The verification claim above is true and was misleading, and a peer caught what it hid.
+
+One fact-path consumer was NOT swept: the Rioja adoption manual-oracle module still read
+`renta_family.descendiente.0.adoption_date` after the rename. A peer landed the re-key
+immediately after this Step, in the commit subject `re-key the Rioja adoption oracle to
+the current fact shape`.
+
+The mechanism is the part worth recording. That module is marked `integration`, and every
+suite run cited above used the default marker selection, which is `unit` and deselects
+it - so all 18 of its tests were deselected, not passed. The count of 2696 was real and
+covered none of them. Worse, the miss would not have announced itself as an error: an
+unrecognised fact path is silently ignored by the reconstruction regex, so the oracle's
+"adopted child" would have been rebuilt with no entry date at all rather than raising.
+
+The sweep itself found the file. A `rg` over the retired names listed it, and it was then
+dropped when the mechanical rename was scoped to three test directories that did not
+include the modelo one. Locating a consumer and then losing it between the search and the
+edit is the failure, not the search.
+
+Re-run afterwards with `-m integration` across the contribuyente, modelo and wizard
+surfaces: 96 pass, including the re-keyed oracle module, so no further consumer is
+outstanding. The CLI integration surface carries ten unrelated failures - ECB
+euro-reference-rate network timeouts and M036 period-token assertions - and none of the
+ten files contains any of the retired or new tokens, checked by grep rather than assumed.
+
+The durable lesson: a marker-selected suite is not a verification of a rename. A
+tree-wide rename must be verified with the marker selection that actually reaches the
+renamed symbol, and `--collect-only` reporting thousands of deselected tests is the signal
+that the default selection is not the whole tree.
