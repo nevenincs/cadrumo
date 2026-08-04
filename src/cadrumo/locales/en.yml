@@ -1510,6 +1510,8 @@ application:
       command_input_invalid_fallback: one or more profile fields failed validation
       create_missing_filing_baseline: 'Profile creation is missing filing identity
         details. Add these flags and run the command again: %{missing_flags}.'
+      descendant_rentas_not_a_valid_amount: The descendant's annual income is not
+        a valid amount. Enter euros with a dot for decimals, for example 1234.56.
       edit_missing_filing_baseline: 'This profile edit would leave filing identity
         details incomplete. Add these flags to the same command and run it again:
         %{missing_flags}.'
@@ -7364,7 +7366,8 @@ wizard:
             label: No, I claim it alone
           'true':
             label: Yes, split between both
-        help: Leave blank to derive it from your marital status and declaration type.
+        help: Leave blank to derive it from your marital status, a spouse record and
+          the declaration type.
         prompt: Is another taxpayer also entitled to the allowance for this descendant?
       rentas-anuales:
         help: Leave blank if unknown. High income can remove the descendant allowance.
@@ -7409,7 +7412,7 @@ wizard:
           DE, FR). Required when fiscal-residency is non_resident_irnr.
       descendiente:
         help: 'Per-descendant data for Art. 58 LIRPF mínimo (repeatable). Format:
-          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
+          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:

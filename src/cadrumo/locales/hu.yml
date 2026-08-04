@@ -1566,6 +1566,8 @@ application:
       create_missing_filing_baseline: 'A profil létrehozásához hiányoznak a bevallási
         azonosító adatok. Adja hozzá ezeket a kapcsolókat, és futtassa újra a parancsot:
         %{missing_flags}'
+      descendant_rentas_not_a_valid_amount: A leszármazott éves jövedelme nem érvényes
+        összeg. Add meg az összeget euróban, tizedesponttal, például 1234.56.
       edit_missing_filing_baseline: 'Ez a profilszerkesztés hiányos bevallási azonosító
         adatokkal hagyná a profilt. Adja hozzá ezeket a kapcsolókat ugyanahhoz a parancshoz,
         és futtassa újra: %{missing_flags}'
@@ -7721,8 +7723,8 @@ wizard:
             label: Nem, egyedül érvényesítem
           'true':
             label: Igen, megosztva a kettő között
-        help: Hagyd üresen, és a családi állapotodból és a bevallás típusából vezetjük
-          le.
+        help: Hagyd üresen, és a családi állapotodból, a rögzített házastársból és
+          a bevallás típusából vezetjük le.
         prompt: Jogosult másik adózó is a kedvezményre ezen leszármazott után?
       rentas-anuales:
         help: Hagyd üresen, ha nem tudod. A magas jövedelem megszüntetheti a kedvezményt.
@@ -7771,7 +7773,7 @@ wizard:
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
         help: 'Leszármazotti adatok az LIRPF 58. cikk szerinti minimumhoz (megismételhető).
-          Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
+          Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:

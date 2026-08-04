@@ -161,12 +161,27 @@ def test_descendiente_add_then_calculate_computes_the_registry_tranche(
         f"Full casilla_values keys sample: {list(calc_payload['casilla_values'])[:20]}"
     )
 
-    # No undeclared-descendientes advisory: the profile explicitly declared one.
+    # Advisory assertions are made per SOURCE KIND, not over every advisory
+    # mentioning 0513. The broader form asserted that a declared descendant
+    # raises NOTHING about that casilla, which was true only while one advisory
+    # existed; a later, correct advisory on the same casilla then failed a test
+    # whose own message names a different one.
     notices = unwrap_envelope_notices(calc_result.output)
-    undeclared = [
-        n for n in notices if n["code"] == "modelo.work.calculate.source_advisory" and "0513" in n.get("message", "")
-    ]
-    assert undeclared == [], f"declared descendientes must not trigger the undeclared-facts advisory; got {undeclared}"
+    advisories = [n for n in notices if n["code"] == "modelo.work.calculate.source_advisory"]
+    kinds = {n.get("context", {}).get("source_kind") for n in advisories}
+
+    # The declared descendant is exactly what this advisory exists NOT to fire on.
+    assert "minimo_descendientes_undeclared" not in kinds, (
+        f"declared descendientes must not trigger the undeclared-facts advisory; got {advisories}"
+    )
+
+    # And the end-to-end proof that an advisory reaches an operator at all: this
+    # descendant was entered with no RENTAS figure, so the Art. 58.1 / Art. 61
+    # norma 2a disclosure must arrive through the real CLI envelope rather than
+    # only through a collector call. Nothing else in the suite drives that path.
+    assert "minimo_descendientes_rentas_undeclared" in kinds, (
+        f"a descendant declared without a rentas figure must raise the disclosure; got {advisories}"
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -1639,6 +1639,8 @@ application:
         validació
       create_missing_filing_baseline: 'A la creació del perfil li falten dades d''identitat
         per presentar models. Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}.'
+      descendant_rentas_not_a_valid_amount: Les rendes anuals del descendent no són
+        un import vàlid. Introdueix els euros amb punt decimal, per exemple 1234.56.
       edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les dades
         d''identitat per presentar models. Afegeix aquests flags a la mateixa ordre
         i torna-la a executar: %{missing_flags}.'
@@ -7822,7 +7824,8 @@ wizard:
             label: No, l'aplico només jo
           'true':
             label: Sí, es reparteix entre tots dos
-        help: Deixa-ho en blanc i es deduirà del teu estat civil i tipus de declaració.
+        help: Deixa-ho en blanc i es deduirà del teu estat civil, del cònjuge registrat
+          i del tipus de declaració.
         prompt: Un altre contribuent també té dret al mínim per aquest descendent?
       rentas-anuales:
         help: Deixa-ho en blanc si no ho saps. Una renda alta pot impedir el mínim
@@ -7868,7 +7871,7 @@ wizard:
           FR). Obligatori quan fiscal-residency és non_resident_irnr.
       descendiente:
         help: 'Dades per descendent per al mínim de l''art. 58 LIRPF (repetible).
-          Format: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,Convivència=true|false][,NIF=XXXXXXXXX]'
+          Format: NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:
