@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:7ed64ca7d5c0e657b39684fb15c2b35dd027c7c92e2bf8ac97e5c29b71040df4'
+body_hash: 'sha256:9c58d239122f51ab9304b78d797544c1d4c5997706cbeaa101e22ad443f04998'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
@@ -115,3 +115,39 @@ manifest and unresolved register sealed evidence. Do not promote provisional
 groups, emit catalogues, compare parity, or mutate production in this step.
 Complete the pre-emission placeholder and year-parameterization review gate
 before any staging emitter hardens a representation.
+
+### pre-emission-review | low | No actionable safety or intent findings
+
+The pre-emission register is a strict, frozen, source-manifest-bound record. It
+does not write the registry, stage output, or mutate the old reader. Every
+mirrored and key-echo placeholder receives an explicit delete-versus-migrate
+disposition while parity retains the captured old value. The register exposes
+the measured 9,477 mirrored-help debt as 9,453 mirrored leaves plus 24 help key
+echoes, and separately counts the 24 label key echoes.
+
+Year-token entries are admitted only for exact annual revision identifiers whose
+embedded year matches the revision, whose one-token template reproduces every
+captured value exactly, and whose official-Spanish source is the `es` locale.
+Fallback-only non-Spanish rows and mixed authored/fallback families are not
+promoted into a parameterized declaration. Ordering, counters, source binding,
+and the canonical review digest are strictly validated. Ruff, basedpyright, and
+the focused real bundled-corpus integration test passed; no critical, high, or
+medium implementation finding was identified.
+
+### migration-validation-boundary | low | Broad folder validation remains corpus-drift limited
+
+The full migration integration folder produced 13 passing tests and one failure
+in the pre-existing candidate-classification expectation: it expected 144
+grounded rows but observed 3,576 while concurrent registry fragment edits were
+active. The moving-source refusal and the later passing focused S18 run show the
+reader's drift guard is operating as designed. The peer-owned corpus and its
+expectation were left unchanged.
+
+### user-profile-phase | medium | The amended plan still needs a dedicated user-profile phase
+
+The accepted ADR amendment records the load-bearing user-profile schema surface
+and requires every non-Modelo natural-language schema surface to be classified
+before cutover. The current plan has not yet gained a dedicated user-profile
+phase. Sol must amend the architecture-owned plan before later emitter or parity
+steps can claim campaign completeness; this S18 implementation intentionally
+does not absorb that scope.

@@ -39,6 +39,13 @@ from .manager import (
     fingerprint_registry_corpus,
     generate_canonical_occurrence_candidates,
 )
+from .review import (
+    PlaceholderReviewEntry,
+    PreEmissionReviewRegister,
+    YearParameterizedReviewEntry,
+    YearRevisionValue,
+    build_pre_emission_review_register,
+)
 
 __all__ = [
     "CandidateClassification",
@@ -50,12 +57,17 @@ __all__ = [
     "CorpusFingerprint",
     "MigrationInventoryError",
     "MigrationSourceInventory",
+    "PlaceholderReviewEntry",
+    "PreEmissionReviewRegister",
     "ResolvedLocalizationEntry",
     "ResolvedLocalizationMatrix",
     "RevisionInventoryEntry",
     "SourceManifest",
     "SourceManifestEntry",
     "UnresolvedReviewRegister",
+    "YearParameterizedReviewEntry",
+    "YearRevisionValue",
+    "build_pre_emission_review_register",
     "build_source_inventory",
     "build_source_manifest",
     "build_unresolved_review_register",

@@ -4,7 +4,7 @@ tags:
   - '#modelo-localization-cascade'
 date: '2026-08-04'
 modified: '2026-08-04'
-body_hash: 'sha256:1d924bfc3c19c8fc59e1a7d5e90750709cabdfdd85c039eee26f0cd3b69e60e1'
+body_hash: 'sha256:bb47fbdd396c6675dc7e1defad31690d2b719344d594177ea1c06ea64ab114ed'
 tier: L3
 related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
@@ -58,7 +58,7 @@ Produce deterministic canonical candidates, exact occurrence records, unresolved
 - [x] `W01.P02.S03` - Generate canonical occurrence candidates from model, revision, casilla, and field identity; `dev/registry/migration`.
 - [x] `W01.P02.S04` - Classify candidates as grounded, revision-exact, or continuity-candidate without promoting provisional identity; `dev/registry/migration`.
 - [x] `W01.P02.S05` - Emit a sealed source manifest and unresolved review register with hashes, drift fields, and leaf state; `dev/registry/migration`.
-- [ ] `W01.P02.S18` - Resolve placeholder debt and year-parameterized label decisions before emission; `dev/registry/migration and the authorizing ADR/research records`.
+- [x] `W01.P02.S18` - Resolve placeholder debt and year-parameterized label decisions before emission; `dev/registry/migration and the authorizing ADR/research records`.
 
 ## Wave `W02` - Staged migration emitter
 
