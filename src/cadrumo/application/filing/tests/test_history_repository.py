@@ -54,14 +54,27 @@ def repo() -> ModeloHistoryRepository:
     return ModeloHistoryRepository()
 
 
+def _bucket_database_file(storage_root: Path) -> Path:
+    """Resolve the bucket's database file through the taxonomy, not a literal.
+
+    These tests are about encryption at rest, not about where the file lands,
+    so the path is scaffolding for reaching it. ``BUCKET_DATABASE_FILENAME`` is
+    bucket-relative and already carries its ``db/`` segment, so it joins onto
+    ``bucket_dir`` -- joining it onto ``db_dir`` doubles the directory.
+    """
+    from ....adapters.persistence.storage import BUCKET_DATABASE_FILENAME
+    from ....adapters.persistence.storage.bucket import bucket_paths
+
+    return bucket_paths(storage_root, "filing-test").bucket_dir / BUCKET_DATABASE_FILENAME
+
 def _database_bytes(storage_root: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(storage_root / "buckets" / "filing-test" / "db" / "cadrumo.db")
+    return read_db_at_rest_bytes(_bucket_database_file(storage_root))
 
 
 def _database_payloads(storage_root: Path) -> tuple[bytes, ...]:
-    db_path = storage_root / "buckets" / "filing-test" / "db" / "cadrumo.db"
+    db_path = _bucket_database_file(storage_root)
     with sqlite3.connect(db_path) as connection:
         return tuple(bytes(row[0]) for row in connection.execute("SELECT payload FROM secure_objects"))
 
