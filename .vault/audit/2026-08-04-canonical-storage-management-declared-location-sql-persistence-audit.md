@@ -115,6 +115,30 @@ set of twelve that all share the signal. The remaining eight are now a named,
 finite list, and the check that settles each is cheap and already demonstrated:
 read the owning module's docstring, then look for a test.
 
+**"The signal" means being a rotation-plan target with a SQL namespace — not a
+shared `consumer_module`.** Stated because the two are easy to conflate: the
+shared-consumer mechanism above is a claim about **four** members, verified
+member-by-member, and it does not extend to twelve. Measured across all twelve
+rotation targets at `5fe2b895a8`:
+
+```
+11 of 12   adapters/persistence/storage/_rotation.py
+ 1 of 12   application/workflow/_persistence.py      (WORKFLOW_RUNS)
+```
+
+So the mechanism is **not** one function's read-only view of twelve locations. It
+is the same SQL-only architecture reached through **two** declared consumers, and
+the second one states its own case in production prose: `_persistence.py:577`
+says `runs_dir` "remains part of the API as a logical marker path for callers"
+with no plaintext run file written there. The finding survives and its mechanism
+narrows; the eight-entry follow-up list is unaffected, since the settling check
+is per-entry either way.
+
+*Provenance: `conv2` checked each entry's `consumer_module` instead of inheriting
+the pattern and found the `WORKFLOW_RUNS` exception; the coordinator's
+generalisation from four to twelve was supplied in relay and is corrected here.
+The distribution above is this auditor's own measurement at the named pin.*
+
 **And this does not enlarge the population claim.** Twelve rotation entries is
 still a subset of the taxonomy, chosen because a sweep enumerates them — not a
 measurement of how many declared members are dormant. Reporting it as one would

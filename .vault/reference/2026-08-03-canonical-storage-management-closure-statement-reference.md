@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:5340adea869197e59edaf7c6c0d23ff88bcab99451a3810fb214c188b190a627'
+body_hash: 'sha256:a279e804f13db8f8c599dda2440e79a6a02c240eca26ba3abadc597d72e080e9'
 related: []
 ---
 
@@ -812,6 +812,20 @@ whether anything else in that test derives the same path independently — a
 sibling fixture, a subprocess, a CLI invocation wrapper. If yes, the literal is
 constrained and the disposition is `pin`.
 
+**The same rule catches a test that was born vacuous.**
+`test_save_does_not_create_requested_plaintext_file`
+(`domain/usage_ratios/tests/test_service.py:58`) asserts `not target.exists()`
+for `target = tmp_path / "a" / "b" / "ratios.json"` — a path never passed to
+`save_usage_ratios`, which takes only `profile` and `bucket_id`. It passes
+identically whether or not the real location is written, and always did. This is
+the constrained question run backwards: there, a path looks freely chosen but is
+secretly load-bearing; here, a path looks load-bearing but is connected to
+nothing. **Ask the same question — what else reaches this path? — and the answer
+"nothing, including the code under test" is the tell.** Its sibling
+`test_save_persists_only_to_the_secure_database_object` is the non-vacuous form.
+Accessor routing prevents a test drifting to vacuous; it does not prevent one
+arriving that way.
+
 #### Mechanical detection was tried and does not work — do not rebuild it
 
 Recorded so the next person does not build the same tool without knowing it was
@@ -835,6 +849,22 @@ It was diagnosed rather than tuned to the oracles, which is why the conclusion i
 trustworthy in the negative direction. The code, its tests, and its self-reported
 unresolved rate are kept and remain valid; what is rejected is treating its output
 as a finding list.
+
+**The strongest form of the rejection is not the over-firing rate.** An earlier
+gloss held that the tool prints more sites than a hand classification would read;
+that was wrong by roughly 6.4x — measured by `honesty`, against a real denominator
+of **702 coinciding tails across 187 files**, 110 flags is a **16% cut**, not an
+increase. (Reported here as `honesty`'s measurement; not independently reproduced
+by this author.) The verdict survives on better ground:
+
+> **519 of the 702 carry no risk signal and are never printed — and two of the
+> three oracles live in that discarded set.**
+
+A filter whose discard pile provably contains true positives does not merely have
+poor recall. It silently converts *"I have not read these"* into *"these have been
+checked"*, which is this campaign's governing failure mode wearing the clothes of
+a labour saving. That is the reason not to ship it, and it holds independently of
+how favourable the reading-volume arithmetic turns out to be.
 
 ### 5h. `S78` is not done, and the tree cannot tell you whether it is
 
