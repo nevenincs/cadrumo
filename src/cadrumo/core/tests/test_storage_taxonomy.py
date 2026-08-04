@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
+from typing import Final
 
 import pytest
 from pydantic import ValidationError
@@ -40,6 +41,19 @@ from ..config import Settings, override_settings
 from ..errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"registry"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``root / "cache" / "registry"`` in
+``test_tree_targets_skip_fixed_layout_and_absent_opt_in_members`` is the
+independent oracle for ``storage_tree_targets``'s own composition -- the
+negative membership assertion it defends (an unset opt-in override must not
+be materialised) would be tautological if re-derived from the same
+accessor. Not to be confused with the CALCULATION registry's bundled TOML
+authoring tree (``_data/registry/aeat/...``), an unrelated concept several
+other modules in this corpus also spell ``"registry"``.
+"""
 
 
 def _axis_members(axis: type[StrEnum]) -> set[str]:

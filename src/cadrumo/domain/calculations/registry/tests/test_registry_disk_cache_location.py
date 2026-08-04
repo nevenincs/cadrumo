@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -22,6 +23,16 @@ from .._loader_cache import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"registry"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+The ``"registry"`` in ``tmp_path / "state" / "cache" / "registry"`` is the
+independent oracle pinned against ``StorageCategory.REGISTRY_DISK_CACHE``'s
+declared subpath -- see the comment at the assertion. Not the CALCULATION
+registry's bundled TOML tree several sibling test modules also spell
+``"registry"``; this is the storage-taxonomy disk-cache location.
+"""
 
 
 def test_production_derives_cache_registry_under_storage_root(tmp_path: Path) -> None:
