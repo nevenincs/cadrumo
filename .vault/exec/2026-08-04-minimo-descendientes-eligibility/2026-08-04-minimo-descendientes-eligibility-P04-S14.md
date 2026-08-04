@@ -5,10 +5,11 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9e0a834356be388eaf86943b4fc8ecb479adc8426ea03bd2d1cf188d90ef943d'
+body_hash: 'sha256:afcc5ba19430648b8b21389d01dcf8299e5d8d444421b194040bd69ce02f34b3'
 step_id: 'S14'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
+  - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
 ---
 
 <!-- FRONTMATTER RULES:

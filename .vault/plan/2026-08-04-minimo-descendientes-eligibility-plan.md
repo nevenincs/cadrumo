@@ -4,11 +4,12 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-04'
-body_hash: 'sha256:46c78f55387c2c27ae91169e9f4c53b5927fca42e8d0d883c11ec3200eababb2'
+body_hash: 'sha256:7bc139cb415d46e0229925c98991716a431e477ba1436cc6dac5f2e52c338976'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
 ---
 
 # `minimo-descendientes-eligibility` plan
@@ -56,7 +57,7 @@ Give the two new facts a production writer on the descendiente CLI flow, and pro
 
 ### Phase `P04` - the deferred descendant axes, reopened after closure
 
-Reopens this feature for the residue its own closing audit carried forward. The deferred-descendant-axes ADR decided the two precondition axes and amended all four of its original decisions; the numbering continues from the closed range rather than restarting, so the feature index reads as one lifecycle with a gap where the campaign closed and reopened. That is what happened.
+Reopens this feature for the residue its own closing audit carried forward, so it is not a settled question being reopened but a deferral being executed. The deferred-descendant-axes ADR decided the two precondition axes and amended all four of its original decisions. The numbering continues from the closed range rather than restarting, so the feature index reads as one lifecycle with a gap where the campaign closed and reopened, which is what happened. A separate plan for that ADR was opened and then archived as superseded by this Phase: the exec lifecycle gate binds on the feature tag, an ADR carrying a topic infix cannot get its own plan with exec records, and two plans describing one body of work is the drift this campaign spent its day removing.
 
 - [x] `P04.S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface; `src/cadrumo/core/_descendant_relacion.py`.
 - [x] `P04.S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche; `src/cadrumo/domain/contribuyente/family.py`.

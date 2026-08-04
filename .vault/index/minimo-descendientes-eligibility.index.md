@@ -6,7 +6,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a1fbda04b12ace6e11d86cbf792be7fb13ddc8bb0346709f8fad1e5bc2a529c'
+body_hash: 'sha256:251737c41223aa516142a194ea9ee5f31f1d778388ecfc2c0b63502f1c849ae2'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-plan]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-vaultspec-plan-exec-feature-tag-bind-audit]]'
 ---
 
 # `minimo-descendientes-eligibility` feature index
@@ -43,6 +44,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 ### audit
 
 - `2026-08-04-minimo-descendientes-eligibility-audit` - `minimo-descendientes-eligibility` audit: closing honesty review
+- `2026-08-04-minimo-descendientes-eligibility-vaultspec-plan-exec-feature-tag-bind-audit` - `minimo-descendientes-eligibility` audit: `A topic-infixed ADR can never get its own plan with exec records`
 
 ### exec
 
