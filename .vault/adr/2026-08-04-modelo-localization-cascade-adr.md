@@ -16,7 +16,7 @@ supersedes:
   - '2026-06-11-modelo-locales-cli-adr'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:c57513f8e0d2089f4d0472c7ab5e9008b6edc03b97b9eadb5a6f8e36bc73d76f'
+body_hash: 'sha256:6942b9f16746c9d412e906588c0844b3cf775db65a6256c4efd9935bcd0c843e'
 ---
 # `modelo-localization-cascade` adr: `root-only language-neutral schema localization cascade` | (**status:** `accepted`)
 
@@ -158,6 +158,8 @@ Migration copies each current official Spanish string into the `es` catalogue un
 Spanish is the translation source, not an optional localization. Every non-Spanish translation is reviewed against the Spanish value at the same canonical key. Legal and source references remain attached to the schema occurrence that derives the key, preserving provenance without using prose as identity.
 
 The migration must inventory every natural-language schema field. A field classified as localizable moves to the catalogue. A field classified as identifier, legal reference, source reference, AEAT code, or evidence remains in schema or corpus data. Unclassified string fields block cutover.
+
+**Amendment (2026-08-05) — the inventory boundary extends beyond the Modelo tree.** A census of the non-Modelo registry surfaces found natural-language schema text the original scope did not name: the centralized user-profile schema carries 26 section titles and 162 field descriptions of deliberately mixed-language prose (its short labels already resolve through the locale catalogues, but the prose remains the wizard copy authority and the translation fallback), and the calendars (46), iva (36), and categories (8) trees carry candidate label and description strings; topics, treaties, and apoderamientos measured clean. The inventory must classify these surfaces under the same localizable-versus-identifier discipline before cutover — either enrolling them in the root-catalogue key system or recording an explicit decision for why their text stays schema-resident. A surface omitted from the inventory is itself an unclassified state and blocks cutover.
 
 ### D6 - Separate schema loading, locale loading, and caches
 
