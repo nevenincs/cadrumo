@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:99110edd51d8ab630da3f7d2484db7b1f27f7992b1428e14a30af50e7785d382'
+body_hash: 'sha256:135ccc909fbbfe7f18084d919ca74452280a18b79db6dc4d59c928d5370a4809'
 related: []
 ---
 
@@ -551,6 +551,51 @@ modules pass. Four new findings from the same audit are tracked as `S111`–`S11
 and as the `R16` correction, above and in the closure-criterion reference's
 fragile-spots section — the clean result does not cover them, and citing the
 clean parts should not be read as covering the open ones.
+
+### 5e. A dead declaration passes the criterion for free
+
+**STATUS: open, population unmeasured.** Three members now declare a filesystem
+location whose records actually live in the encrypted SQL `secure_objects`
+table — the blob-store attachments entry, the `AttachmentStore` filesystem
+assumption, and `cadrumo_justificantes_dir`. Persistence migrated; the
+declaration did not.
+
+**Why this is a criterion element and not a tidiness note.** A declared location
+that nothing writes to satisfies *"all file-producing sites are enrolled"*
+**vacuously** — there is no site to enrol, so the member passes for free. A
+criterion a dead declaration cannot fail is one more place silence reads as
+coverage, which is the failure this campaign exists to surface. It is a hole in
+the completion criterion itself, not a footnote to it.
+
+**The population is not known, and two attempts to bound it failed.** A
+module-level probe ("does a referencing module contain a write primitive")
+missed `JUSTIFICANTES`, because `_rotation.py` genuinely writes — elsewhere. A
+per-read probe keyed on the settings field returned `NO-READ` for `LOGS`, `RUNS`
+and `TOKENS`, which are demonstrably written, because production reaches
+locations through `storage_path(StorageCategory.X)` — the accessor this campaign
+built and mandated. **The taxonomy's own success removed the syntactic handle the
+second measurement needed.** Two instruments, two different positive-control
+failures; no count is carried forward from either.
+
+**Severity is reachability, not declaration.** A bare unwritten declaration is
+dead weight — a wrong mental model for a reader, an always-empty row in
+`config storage list`. It becomes a defect when something acts on it. For
+`cadrumo_justificantes_dir` that path is live: its only non-declaration
+production consumer is a `RotationPlanEntry` describing a `.envelope.json` shape
+nothing writes, so the sole thing reaching the location is a plan to act on
+records that are not there.
+
+**What would settle it** is a filesystem observation rather than a source one:
+exercise each feature and check whether the declared directory receives bytes.
+That work is in flight. Its honest ceiling belongs here in advance — **absence of
+bytes in an observed window is not proof that nothing ever writes there.** A
+location on an error path or behind a filing action stays empty and looks
+identical to a dead one, so the achievable result is *"N observed receiving
+bytes, M not, under this named workload"*, and M is not a dormancy finding on its
+own.
+
+**What would make this "no"**: closing on a criterion that a dead declaration
+passes, without recording that the class exists and its size is unknown.
 
 ## This document was itself untracked until hours before closure
 
