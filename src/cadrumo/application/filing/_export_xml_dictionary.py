@@ -574,7 +574,14 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
         return f"{value.day}/{value.month}/{value.year}"
     numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
     if numeric is not None:
-        amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
+        amount = coerce_decimal(value)
+        if amount is None:
+            raise FilingExportValidationError(
+                f"amount for a {data_type} row could not be read: {value!r}. "
+                "The accepted form is a dot decimal separator with no thousands "
+                "grouping, e.g. 1234.56; the Spanish shape 1.234,56 is refused "
+                "because it cannot be told from a three-decimal figure.",
+            )
         scale = int(numeric["scale"])
         return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
     return str(value).strip()

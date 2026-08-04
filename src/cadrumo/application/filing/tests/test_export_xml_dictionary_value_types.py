@@ -31,6 +31,7 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources import bundled_path
+from ....domain.filing import FilingExportValidationError
 from .._export_xml_dictionary import _format_xml_dictionary_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -168,3 +169,34 @@ def test_the_scale_is_read_off_the_type_code_rather_than_enumerated() -> None:
 def test_a_non_numeric_row_is_left_alone() -> None:
     assert _format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
     assert _format_xml_dictionary_value("TIT", Decimal("2")) == "2"
+
+
+def test_a_numeric_row_refuses_an_amount_it_cannot_read() -> None:
+    """An unreadable amount refuses rather than rendering as zero.
+
+    The renderer previously coerced with ``default=Decimal("0")``, so a value it
+    could not read became ``0.00`` on the filed artefact. ``0.00`` satisfies the
+    XSD for a ``P102`` row, so neither the schema nor any downstream check could
+    have caught it: a taxpayer's figure would have been declared to AEAT as
+    nothing, silently.
+
+    The Spanish shape is the case that matters. ``1.234,56`` cannot be told from a
+    three-decimal figure by any parser, which is why the operator-facing amount
+    grammar already refuses it rather than guessing -- this aligns the write side
+    with the decision the read side and the CLI option grammar both enforce.
+    """
+    for unreadable in ("1.234,56", "-1.234,56", "abc", ""):
+        with pytest.raises(FilingExportValidationError, match="could not be read"):
+            _format_xml_dictionary_value("P102", unreadable)
+
+
+def test_the_refusal_does_not_reach_a_value_the_row_can_read() -> None:
+    """Positive control: the refusal is not simply rejecting everything.
+
+    Without this, a renderer that raised on every numeric row would satisfy the
+    refusal test above while breaking every export.
+    """
+    assert _format_xml_dictionary_value("P102", Decimal("1234.56")) == "1234.56"
+    assert _format_xml_dictionary_value("P102", "1234.56") == "1234.56"
+    assert _format_xml_dictionary_value("P102", 0) == "0.00"
+    assert _format_xml_dictionary_value("X", "1.234,56") == "1.234,56"
