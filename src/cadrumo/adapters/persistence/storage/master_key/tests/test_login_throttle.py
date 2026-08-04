@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -35,6 +36,9 @@ from .._login_throttle import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"keystore"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "77777777-7777-4777-8777-777777777777"

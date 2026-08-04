@@ -19,6 +19,7 @@ The literal is the independent oracle. Do not migrate it to the accessor.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -32,6 +33,9 @@ from .._keystore_paths import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"keystore", "buckets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_keystore_root_is_sibling_of_buckets(tmp_path: Path) -> None:
