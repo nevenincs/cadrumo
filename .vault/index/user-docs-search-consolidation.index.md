@@ -6,9 +6,10 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:20796ea9f45478c22c0225ff99b81956fb058e884d43e55a0c4376a36e485278'
+body_hash: 'sha256:909ce6c2a74529d6ced3db0fc551f7e01d1461c624ac4d5d9a2dacab05ae3227'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S10]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S11]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S19]]'
@@ -37,6 +38,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P04-S11` - Add a deployment-parity gate asserting the built site's pagefind entry carries every decided record kind and every language root, so an env value can never silently re-narrow the shipped contract again
 - `2026-08-01-user-docs-search-consolidation-P04-S19` - Make the record-injection language follow the build language with the card summary preferring the root language's description, so every localized root's records land in the index its palette loads, correcting the module's stale per-language docstring in the same change and citing the localized-root artefact measurement in the exec record
 - `2026-08-01-user-docs-search-consolidation-P01-S01` - Amend the shipped-search-licence-clean rule source to the licence-and-provenance-scoped form ruled in R5 and propagate it with vaultspec-core sync in a coordinated quiet window
+- `2026-08-01-user-docs-search-consolidation-P01-S02` - Confirm the semantic-search-precompile-boundary plan is closed through its honesty review and record that confirmation before any rung-2 step is dispatched
 
 ### plan
 
