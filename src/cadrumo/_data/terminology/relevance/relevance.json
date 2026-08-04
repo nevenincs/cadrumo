@@ -3278,13 +3278,6 @@
           "ranking_weight": 0.484813
         },
         {
-          "record_id": "legal:rd-1007-2023",
-          "target": "_generated/legal/boe-a-2023-24840.html",
-          "kind": "legal",
-          "surface": "legal",
-          "ranking_weight": 0.484506
-        },
-        {
           "record_id": "code:cadrumo.domain.renta._substrate",
           "target": "api/cadrumo.domain.renta._substrate.html",
           "kind": "page",
@@ -6106,13 +6099,6 @@
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.473904
-        },
-        {
-          "record_id": "legal:rd-1007-2023",
-          "target": "_generated/legal/boe-a-2023-24840.html",
-          "kind": "legal",
-          "surface": "legal",
-          "ranking_weight": 0.470708
         }
       ],
       "dropped_count": 10,
