@@ -58,6 +58,21 @@ LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTT
 #: and read here, so the on-disk hierarchy has one inventory rather than two
 #: agreeing constants.
 CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
+#: The six names below back the parameterised fan-out grammars further down this
+#: module (run-trace, LLM usage/telemetry logs, the token acquisition lock, and
+#: the two cache families). Each was previously hand-typed straight into its
+#: grammar string even though the taxonomy already declares it, duplicating the
+#: name the same way the bucket/keystore literals above did before this module
+#: started reading them off ``storage_location`` too.
+RUNS_DIRNAME = storage_location(StorageCategory.RUNS).subpath
+LLM_USAGE_DIRNAME = storage_location(StorageCategory.LLM_USAGE).subpath
+LLM_RUN_TELEMETRY_DIRNAME = storage_location(StorageCategory.LLM_RUN_TELEMETRY).subpath
+TOKENS_DIRNAME = storage_location(StorageCategory.TOKENS).subpath
+#: Two-component subpaths (``cache/<name>``) -- interpolated whole, not split,
+#: since the taxonomy declares the compound as one subpath rather than two
+#: nested categories.
+VALIDATION_VERDICT_CACHE_SUBPATH = storage_location(StorageCategory.VALIDATION_VERDICT_CACHE).subpath
+LLM_CACHE_SUBPATH = storage_location(StorageCategory.LLM_CACHE).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential
@@ -158,10 +173,13 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # bucket root, inside the directory the entry above governs. ``segment``
         # is omitted rather than given the nested value, matching the other
         # non-single-component entries below (``secure_objects_table``,
-        # ``blob_manifest``).
+        # ``blob_manifest``). ``BUCKET_DATABASE_FILENAME`` is already the
+        # bucket-root-relative nested path (``db/cadrumo.db``, per its own
+        # docstring above) -- interpolating ``BUCKET_DB_DIRNAME`` in front of it
+        # too would re-duplicate the ``db`` segment it already carries.
         key="bucket_database_file",
         kind=StoragePathKind.FILE,
-        grammar="<root>/buckets/<bucket_id>/db/cadrumo.db",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_DATABASE_FILENAME}",
         owner="cadrumo.core.config",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
@@ -307,14 +325,16 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # sidecar are two distinct on-disk artefacts sharing one stem.
         key="local_provider_object",
         kind=StoragePathKind.BLOB_OBJECT,
-        grammar="<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.bin",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_BLOBS_DIRNAME}/<namespace>/<hmac_prefix>--<label>.bin",
         owner="cadrumo.adapters.outbound.storage",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="local_provider_object_sidecar",
         kind=StoragePathKind.BLOB_OBJECT,
-        grammar="<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json",
+        grammar=(
+            f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_BLOBS_DIRNAME}/<namespace>/<hmac_prefix>--<label>.meta.json"
+        ),
         owner="cadrumo.adapters.outbound.storage",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
@@ -326,21 +346,21 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # promoted to a declared shape until now.
         key="run_trace",
         kind=StoragePathKind.FILE,
-        grammar="<root>/runs/<run_id>/trace.json",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/trace.json",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_events",
         kind=StoragePathKind.FILE,
-        grammar="<root>/runs/<run_id>/events.jsonl",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/events.jsonl",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_envelope",
         kind=StoragePathKind.FILE,
-        grammar="<root>/runs/<run_id>/envelope.json",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/envelope.json",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
@@ -367,35 +387,35 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="llm_usage_record",
         kind=StoragePathKind.FILE,
-        grammar="<root>/llm-usage/usage-<timestamp>.jsonl",
+        grammar=f"<root>/{LLM_USAGE_DIRNAME}/usage-<timestamp>.jsonl",
         owner="cadrumo.adapters.outbound.llm",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="llm_run_telemetry_record",
         kind=StoragePathKind.FILE,
-        grammar="<root>/llm-run-telemetry/run-telemetry-<timestamp>.jsonl",
+        grammar=f"<root>/{LLM_RUN_TELEMETRY_DIRNAME}/run-telemetry-<timestamp>.jsonl",
         owner="cadrumo.adapters.outbound.llm",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="auth_acquisition_lock",
         kind=StoragePathKind.FILE,
-        grammar="<root>/tokens/<bucket_id>-<auth_provider_kind>-auth.lock",
+        grammar=f"<root>/{TOKENS_DIRNAME}/<bucket_id>-<auth_provider_kind>-auth.lock",
         owner="cadrumo.application.auth",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="validation_verdict_cache_entry",
         kind=StoragePathKind.FILE,
-        grammar="<root>/cache/registry-verdict/cadrumo_validation_verdict_<sha256[:16]>.json",
+        grammar=f"<root>/{VALIDATION_VERDICT_CACHE_SUBPATH}/cadrumo_validation_verdict_<sha256[:16]>.json",
         owner="cadrumo.domain.calculations.registry",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="llm_cache_entry",
         kind=StoragePathKind.FILE,
-        grammar="<root>/cache/llm-cache/<provider>/<model>/<sha256>-<sha256>.json",
+        grammar=f"<root>/{LLM_CACHE_SUBPATH}/<provider>/<model>/<sha256>-<sha256>.json",
         owner="cadrumo.adapters.outbound.llm",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
