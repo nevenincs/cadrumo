@@ -3698,8 +3698,9 @@ cli:
         profile delete %{name} --yes' per confirmar.
       delete_yes_help: Confirma explícitament l'eliminació
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,Convivència=true|false][,Custòdia=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
-          Repetible.
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Repetible. Executa `aeat config profile descendiente` sense subordre per
+          introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} descendent(s).

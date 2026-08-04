@@ -1,0 +1,137 @@
+"""Parity gate: every key the ``--descendiente`` help advertises is one the parser honours.
+
+The help string is the only place an operator learns how to express a descendant
+fact non-interactively, and it drifted from the parser twice in one campaign.
+Three keys the parser had accepted for a whole phase were missing from it, so a
+filer refused at the write door and reaching for ``--help`` could not discover
+how to state a rentas figure at all.
+
+The sharper failure was in the Catalan catalogue, and it is the reason this gate
+tests BEHAVIOUR rather than comparing the help against a hand-written key list.
+That translation had localised the key TOKENS themselves, offering
+``Convivència=`` and ``Custòdia=``. The parser upper-cases and compares tokens
+literally, so those were not refused -- they were silently DROPPED, leaving
+``convive_con_contribuyente`` at its cohabiting default. A Catalan operator
+following the shipped help to declare a NON-cohabiting descendant therefore got
+one marked as cohabiting, granting a mínimo por descendientes they were not
+entitled to. A key list restated here would have matched the English help and
+missed that entirely.
+
+So the gate extracts whatever tokens the help actually advertises, in every
+locale, and drives each one through the real parser. A token the parser ignores
+fails, whether it was mistranslated, renamed, or never implemented.
+"""
+
+from __future__ import annotations
+
+import re
+
+import pytest
+
+from ....core.i18n import tr
+from ....domain.contribuyente import parse_descendiente_flag
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_HELP_KEY = "cli.config.profile.descendiente.add_flag_help"
+_LOCALES = ("en", "es", "ca", "hu")
+
+#: A token is a bare ``KEY=`` occurrence in the help copy.
+_TOKEN_RE = re.compile(r"([A-Za-zÀ-ÿ_]+)=")
+
+#: The birth date every probe carries, since the parser requires it.
+_BIRTH = "NACIMIENTO=2015-01-01"
+
+#: One probe value per advertised key, chosen so the parsed record differs from
+#: the value a DROPPED token would leave behind. Each pairs the flag fragment
+#: with a predicate that is True only when the parser HONOURED it.
+_PROBES: dict[str, tuple[str, str]] = {
+    "NACIMIENTO": ("NACIMIENTO=2015-01-01", "birth_date"),
+    "ADOPCION": ("ADOPCION=2016-01-01", "adoption_date"),
+    "DISCAPACIDAD": ("DISCAPACIDAD=33", "discapacidad_grado"),
+    "CONVIVENCIA": ("CONVIVENCIA=false", "convive_con_contribuyente"),
+    "CUSTODIA": ("CUSTODIA=true", "custodia_compartida"),
+    "RENTAS": ("RENTAS=9500", "rentas_anuales_euros"),
+    "DECLARACION_PROPIA": ("DECLARACION_PROPIA=true", "presenta_declaracion_propia"),
+    "PRORRATA": ("PRORRATA=true", "prorrata_minimo"),
+    "MESES_TRABAJO": ("MESES_TRABAJO=6", "meses_madre_trabajo_2024"),
+    "GASTOS_GUARDERIA": ("GASTOS_GUARDERIA=900", "gastos_guarderia_euros"),
+    "NIF": ("NIF=12345678Z", "nif"),
+}
+
+
+def _advertised_tokens(locale: str) -> set[str]:
+    return set(_TOKEN_RE.findall(tr(_HELP_KEY, locale=locale)))
+
+
+def _rendered_option_tokens() -> set[str]:
+    """Tokens on the option as the CLI actually renders it to an operator.
+
+    Read off the live ``OptionInfo`` rather than the locale catalogue, so this
+    covers the whole path -- key, resolution, and the inline fallback behind it
+    -- as one surface. If ``tr`` ever stopped resolving, this is what the
+    operator would see, and it still has to name every accepted key.
+    """
+    import inspect
+
+    from .._config._descendiente import descendiente_add
+
+    option = inspect.signature(descendiente_add).parameters["descendiente"].default
+    return set(_TOKEN_RE.findall(getattr(option, "help", "") or ""))
+
+
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_every_advertised_key_is_honoured_by_the_parser(locale: str) -> None:
+    """No locale may advertise a token the parser drops.
+
+    This is the Catalan-token regression: a mistranslated key parses without
+    error and silently keeps the claiming default, so only round-tripping the
+    advertised token through the real parser catches it.
+    """
+    advertised = _advertised_tokens(locale)
+    assert advertised, f"{locale}: help advertises no KEY= tokens at all"
+
+    unknown = advertised - set(_PROBES)
+    assert not unknown, (
+        f"{locale}: help advertises token(s) the parser does not accept: {sorted(unknown)}. "
+        "Key tokens are part of the parse contract and must not be translated."
+    )
+
+    baseline = parse_descendiente_flag(_BIRTH)
+    for token in sorted(advertised - {"NACIMIENTO"}):
+        fragment, attribute = _PROBES[token]
+        parsed = parse_descendiente_flag(f"{_BIRTH},{fragment}")
+        assert getattr(parsed, attribute) != getattr(baseline, attribute), (
+            f"{locale}: help advertises {token}= but the parser ignored it -- "
+            f"{attribute} stayed at {getattr(baseline, attribute)!r}"
+        )
+
+
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_every_parser_key_is_advertised(locale: str) -> None:
+    """The discoverability half: a key the parser accepts must appear in the help.
+
+    Three keys were accepted for a whole phase while absent from this string, so
+    the only surface an operator consults could not lead them to the facts the
+    write door was refusing them for.
+    """
+    missing = set(_PROBES) - _advertised_tokens(locale)
+    assert not missing, f"{locale}: parser accepts {sorted(missing)} but the help never mentions them"
+
+
+def test_the_rendered_option_names_every_accepted_key() -> None:
+    """The surface an operator actually reads must name every key the parser takes."""
+    assert _rendered_option_tokens() == set(_PROBES)
+
+
+def test_the_help_names_no_euro_figure() -> None:
+    """Copy must not restate a registry ceiling.
+
+    The Art. 58.1 and Art. 61 norma 2ª limits live as registry parameters per
+    filing year. Naming one here would decouple the copy from the figure the
+    engine resolves and drift the moment a revision moved it.
+    """
+    for locale in _LOCALES:
+        help_text = tr(_HELP_KEY, locale=locale)
+        for figure in ("8.000", "8000", "1.800", "1800"):
+            assert figure not in help_text, f"{locale}: help restates the registry figure {figure!r}"
