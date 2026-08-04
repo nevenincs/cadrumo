@@ -165,3 +165,64 @@ def test_decimal_accepts_blank_when_gated() -> None:
 
     assert verdict.ok
     assert canonical == ""
+
+
+#: The affirmative and negative words each shipped catalogue's
+#: ``flows.errors.invalid_confirm`` message actually names:
+#:   en  "Answer yes or no."
+#:   es  "Responde sí o no."
+#:   ca  "Respon sí o no."
+#:   hu  "Válaszolj igennel vagy nemmel."
+#: Listed here rather than parsed out of the prose, because a test that read the
+#: message would agree with whatever the message happened to say. A new locale
+#: has to be added by hand, which is the point: shipping a prompt obliges you to
+#: ship the words it asks for.
+_ADVERTISED_CONFIRM_WORDS: tuple[tuple[str, str, str], ...] = (
+    ("en", "yes", "no"),
+    ("es", "sí", "no"),
+    ("ca", "sí", "no"),
+    ("hu", "igen", "nem"),
+)
+
+
+@pytest.mark.parametrize(("locale", "affirmative", "negative"), _ADVERTISED_CONFIRM_WORDS)
+def test_a_confirm_page_accepts_the_words_its_own_refusal_advertises(
+    locale: str,
+    affirmative: str,
+    negative: str,
+) -> None:
+    """Every locale can answer the question its own prompt asks.
+
+    The confirm door once carried a private token set that knew no Spanish
+    affirmative at all and neither Hungarian word. A taxpayer reading
+    "Responde sí o no" typed ``sí`` and was refused with that same sentence
+    again -- able to decline, since ``no`` happened to be in the set, but not to
+    consent. Under ``hu`` neither ``igen`` nor ``nem`` was recognised, so the
+    page could not be answered either way.
+
+    Both directions are asserted because the Spanish failure was asymmetric:
+    testing only the negative would have passed throughout the defect.
+    """
+    page = _page(widget=FlowWidgetKind.CONFIRM)
+
+    yes_token, yes_verdict = validate_widget_shape(page, affirmative)
+    no_token, no_verdict = validate_widget_shape(page, negative)
+
+    assert yes_verdict.ok, f"{locale}: prompt advertises {affirmative!r} but the door refuses it"
+    assert no_verdict.ok, f"{locale}: prompt advertises {negative!r} but the door refuses it"
+    assert (yes_token, no_token) == ("true", "false")
+
+
+def test_a_confirm_page_still_refuses_a_word_no_prompt_advertises() -> None:
+    """Positive control: the door has not simply stopped refusing.
+
+    Without this, a validator that accepted every non-blank token would satisfy
+    every case above while admitting anything at all.
+    """
+    page = _page(widget=FlowWidgetKind.CONFIRM)
+
+    token, verdict = validate_widget_shape(page, "peut-être")
+
+    assert not verdict.ok
+    assert verdict.message_key == "flows.errors.invalid_confirm"
+    assert token == ""

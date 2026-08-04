@@ -23,11 +23,21 @@ _log = get_logger(__name__)
 # and "verdadero", the ordinary word, were not; accepting one spelling of yes
 # and not another is arbitrary from the operator's side, and the spellings that
 # were missing are precisely the ones a reader then turned silently into "no".
-_TRUTHY: frozenset[str] = frozenset({"true", "1", "yes", "y", "si", "sí", "s", "verdadero"})
+#
+# Hungarian joined the set when a shipped prompt was found asking for words this
+# vocabulary did not know: the flows confirm widget renders "Válaszolj igennel
+# vagy nemmel" under the `hu` catalogue, so a Hungarian speaker was instructed to
+# type `igen` and then refused -- unable to answer either way, since `nem` was
+# missing too. A locale that ships a prompt has to ship the words that prompt
+# asks for; the alternative is telling a taxpayer to say something the product
+# cannot hear.
+_TRUTHY: frozenset[str] = frozenset(
+    {"true", "1", "yes", "y", "si", "sí", "s", "verdadero", "igen"},
+)
 
 # Tokens that unambiguously mean "false", paired spelling-for-spelling with the
 # affirmative set above so neither half is more Spanish than the other.
-_FALSY: frozenset[str] = frozenset({"false", "0", "no", "n", "falso"})
+_FALSY: frozenset[str] = frozenset({"false", "0", "no", "n", "falso", "nem"})
 
 
 def _parse_bool(raw: str | None) -> bool | None:
