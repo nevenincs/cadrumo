@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-04'
-body_hash: 'sha256:090bdc0bb5fd5e82262dbe1adf59d2994076158ebe7513646f797e5ab5fa52c6'
+body_hash: 'sha256:e5d1893987c1e6ab65c696b1d24636d66a99e1d04b710f8a48e4248d3cecd2b2'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -46,7 +46,7 @@ Prove the multilingual recall claim against the built site, keep every existing 
 
 - [ ] `P03.S08` - Prove per-root multilingual recall with worked-example queries in each of the four languages recalling concept and casilla records on every language root through the behavioural gates on the built site, then re-run the same probes against the deployed roots so a CI pass can never mask a broken live root; `dev/docs/tests/`.
 - [ ] `P03.S09` - Run the fresh-context honesty review against the closure summary and persist it as a vault audit, closing or formally deferring every surfaced item; `.vault/audit/`.
-- [ ] `P03.S18` - Sweep for surviving artefacts of the overtaken audit campaigns beyond the two named commits and for incomplete-landing residue on the search surface, grounding the sweep with vaultspec-rag over both code and vault and confirming each candidate site with rg, and record the result with any remediation opened as new steps, noting instances already closed at HEAD by their commit rather than re-opening them; `.vault/audit/`.
+- [x] `P03.S18` - Sweep for surviving artefacts of the overtaken audit campaigns beyond the two named commits and for incomplete-landing residue on the search surface, grounding the sweep with vaultspec-rag over both code and vault and confirming each candidate site with rg, and record the result with any remediation opened as new steps, noting instances already closed at HEAD by their commit rather than re-opening them; `.vault/audit/`.
 
 ### Phase `P04` - Deployed-contract remediation
 
