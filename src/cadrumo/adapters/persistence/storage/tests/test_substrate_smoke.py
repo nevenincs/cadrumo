@@ -61,7 +61,7 @@ def test_full_chain_secret_round_trip(tmp_path: Path) -> None:
     """End-to-end: secret-store record persists through the full crypto stack."""
     provider = EphemeralMasterKeyProvider()
     blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
+        root_dir=tmp_path / "store-root",
         master_key_provider=provider,
     )
     secret_store = SecretStore(
@@ -85,7 +85,7 @@ def test_full_chain_secret_round_trip(tmp_path: Path) -> None:
 
     # The plaintext key and the plaintext value must NOT appear anywhere
     # under the store directory (encrypted-at-rest invariant).
-    for path in (tmp_path / "blobs").rglob("*"):
+    for path in (tmp_path / "store-root").rglob("*"):
         if path.is_file():
             data = path.read_bytes()
             assert b"refresh-token-abc-xyz" not in data

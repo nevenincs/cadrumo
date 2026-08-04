@@ -59,7 +59,7 @@ _WRONG_BUT_WELL_FORMED = sha256_hex(b"a different natural key entirely")
 @pytest.fixture
 def store(tmp_path: Path) -> Iterator[SecretStore]:
     provider = EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE))
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "blobs", master_key_provider=provider)
+    blob_store = EncryptedBlobStore(root_dir=tmp_path / "store-root", master_key_provider=provider)
     yield SecretStore(
         store_dir=tmp_path / "fallback-store",
         blob_store=blob_store,
