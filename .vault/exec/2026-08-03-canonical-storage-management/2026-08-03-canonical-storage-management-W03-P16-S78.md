@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:5fd293a92fa76001dbd5469b77525ab9c3a0c33add1449d1a73b18a643e21b5e'
+body_hash: 'sha256:b510836132d750e055859fb8aa17960c28878167b9f82296e1593fc9821622c3'
 step_id: 'S78'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
@@ -81,3 +81,97 @@ No incidents, no data loss, no `rm`/`Remove-Item` of any form. The
 provenance-gate and taxonomy false positives in the originally-handed-off
 file list were resolved by reading, not by editing -- two files were
 correctly left untouched rather than churned against a stale count.
+
+## Batch: scanner tooling built to support this Step's triage
+
+Not a literal-migration batch; the supporting instrument several later
+batches (`secrets`, `registry`, `drafts`, `master.recovery.key`, `cache`,
+`logs`, the small-band tail) read against.
+
+- **Enumeration method**: extended `dev/write_site_census.py`'s
+  `--scope production` write-primitive census with a `--scope tests`
+  walk. Two site-discovery mechanisms feed one shared classification
+  path (`classify()`, `_is_constrained()`): the existing write-primitive
+  gate (`write_target()`), plus a new maximal-`/`-join-chain walk
+  (`_top_level_div_chains()`) that also reaches bare path expressions no
+  write primitive ever consumes (a fixture lookup fed to `open(..., "rb")`,
+  a dict value handed to an env-var override, a path built only to appear
+  on the right of an `assert`) -- the shape the `--scope production` gate
+  was correctly narrow enough to miss. Also added a `fixture` provenance
+  bucket (`FIXTURES_DIR`/`bundled_path`, following import aliases through
+  `_bindings()`) so a bundled-corpus reference is not misclassified as a
+  taxonomy write site.
+- **Verification actually run**: 65 unit tests in
+  `dev/tests/test_write_site_census.py` pinning each new primitive's
+  discrimination in both directions (real shape vs. lookalike), including
+  a real-`git ls-tree` disjoint-partition check between
+  `production_modules()`/`test_modules()`. A follow-on "injected-but-
+  constrained" co-occurrence heuristic (`WriteSite.constrained`) was
+  built, measured against three known-positive oracles and the discard
+  population it silently produced, found to miss 2 of 3 oracles and
+  over-fire roughly 30x tree-wide, and retired as untrusted rather than
+  shipped -- full diagnosis, decision history, and two in-place
+  corrections in `.vault/audit/2026-08-04-canonical-storage-management-constrained-detector-sweep-diagnosis-audit.md`.
+  Also fixed a pre-existing `--json`-mode crash (`site.__dict__` on a
+  `slots=True` dataclass) found while extending the tool.
+- **Site list**: not applicable in the literal-migration sense -- this
+  batch is the instrument, not a set of edited test files. The instrument's
+  own sweep output (the flagged/discard split, the oracle validation, the
+  per-mechanism over-firing breakdown) is the site list, and it lives in
+  the audit document above rather than duplicated here.
+- **Commits**: `1cd16de6c3` (`--scope tests` walk), `5d0af05dd3` (constrained
+  detector, later retired), `8f0981a2d1` (retraction/revert of an attempted
+  signal-set fix once a sampled-recall measurement disqualified it).
+
+This Step remains open. The scanner did not close any literal band itself;
+every band closed in this campaign (`secrets`, `registry`, `blobs`,
+`cadrumo.db`, `justificantes`, `manifest.toml`, `cache`, `logs`,
+`master.recovery.key`, the small-band tail) was closed by a human reading
+the sites the write-primitive gate or the `--scope tests` walk surfaced,
+not by the tool alone.
+
+## Batch: `drafts` literal band (`StorageCategory.DRAFTS`)
+
+Method divergence recorded as fact: the Step's specified gate (provenance
+gate scoped to the package, plus that package's own suite) did not run.
+Execution was a targeted `rg` sweep plus reading, verified with `ruff` and
+no test edits (nothing needed migrating), not a package-by-package walk.
+
+- **Enumeration method**: `rg '"drafts"'` across `src/cadrumo` (23 raw
+  hits), then a manual AST-shape filter to the same corrected definition
+  this Step's later bands used -- a string constant that is a `/` operand
+  or a keyword-argument value feeding one (`tmp_path / "drafts"`,
+  `cadrumo_drafts_dir=tmp_path / "drafts"`), excluding set/tuple
+  membership literals, a dict value mapping a settings-field name to its
+  subpath, an enum-value assignment (`DRAFTS = "drafts"`), the taxonomy's
+  own `subpath=` declaration, and a dict-subscript assertion. The
+  prediction (low collapse: no known different-namespace collision, the
+  domain's English word `drafts` has no Spanish-stem competitor the way
+  `borrador` does) was stated in
+  `.vault/audit/2026-08-04-canonical-storage-management-collapse-predictor-verification-audit.md`
+  before this enumeration was read, not after.
+- **Verification**: no code changed (all 15 sites already resolve through
+  the real `cadrumo_drafts_dir` settings field), so verification was the
+  read itself -- confirmed each of the 15 against its call site, plus one
+  cross-check that the word's only OTHER referent in the codebase
+  (`filing_drafts.py`'s SQL-backed `ModeloDraft` repository, namespace
+  `"cadrumo.domain.filing.drafts"`) is a dot-separated namespace string,
+  never a `/`-joined path segment, so it does not collide with the
+  path-composition definition above. `ruff check` clean (no files touched).
+- **Site list**: 15 of 23 raw hits are genuine path-composition sites, all
+  15 already enrolled via `cadrumo_drafts_dir` --
+  `adapters/persistence/storage/tests/test_rotation.py` (5),
+  `application/review/tests/test_adapters.py`,
+  `application/review/tests/test_aggregator.py`,
+  `application/review/tests/test_confidence_filter.py`,
+  `application/setup/tests/test_cli.py`,
+  `core/tests/test_output_dir_state_root.py`,
+  `domain/calculations/registry/tests/test_inss_maternidad_paternidad_art7h.py`,
+  `entrypoints/cli/tests/test_language_flag_help_honesty.py`,
+  `entrypoints/cli/tests/test_repair_privacy_contract.py`,
+  `entrypoints/cli/tests/test_root_help_shape.py`,
+  `entrypoints/cli/tests/test_workflow_surface.py`. Disposition for all 15:
+  already-enrolled, no action. The other 8 raw hits are non-path-composition
+  mentions (excluded above), no action.
+- **Reference**: full prediction-versus-measured writeup in the audit
+  document cited above; no separate commit, since nothing was edited.
