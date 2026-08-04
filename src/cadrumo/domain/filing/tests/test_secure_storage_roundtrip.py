@@ -24,7 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....core import Period
+from ....core import Period, StorageCategory, storage_path
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._schema import (
@@ -180,6 +180,34 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.review_checksum == "a" * 64
     assert loaded.approval_basis is not None
     assert loaded.approval_basis.draft_payload_fingerprint == "b" * 16
+
+
+def test_filing_draft_persists_only_to_the_secure_database_object(
+    tmp_path: Path,
+) -> None:
+    """A saved draft never reaches the plaintext ``drafts`` taxonomy directory.
+
+    :data:`StorageCategory.DRAFTS` declares
+    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
+    that module only walks the directory to re-encrypt any
+    ``.envelope.json`` files found there on master-key rotation -- it is a
+    sweep, not a writer. :class:`ModeloDraftRepository`'s own module
+    docstring states "no plaintext draft JSON or envelope file lands on
+    disk"; this proves it, mirroring
+    ``test_put_file_reads_source_but_persists_only_secure_database_object``
+    for the attachments store. The assertion routes through
+    :func:`storage_path` rather than a literal so a future taxonomy subpath
+    move is tracked automatically instead of silently passing vacuously
+    against a stale path.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        original = _populated_draft()
+        repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
+        repo.save(original)
+
+        assert repo.load(original.draft_id) == original
+        assert not storage_path(StorageCategory.DRAFTS).exists()
 
 
 def test_modelo_value_rejects_legacy_formula_trace_key() -> None:

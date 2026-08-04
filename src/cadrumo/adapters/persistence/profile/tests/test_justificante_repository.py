@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core import Period
+from .....core import Period, StorageCategory, storage_path
 from .....domain.justificante import Justificante
 from .....tests.aeat_literal_fixtures import JUSTIFICANTE_VERIFY_PATH_FIXTURE, aeat_url
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -109,6 +109,30 @@ class TestSaveLoad:
         repo.save(record)
         repo.save(record)
         assert repo.list_csvs() == (record.csv,)
+
+    def test_save_persists_only_to_the_secure_database_object(
+        self, repo: JustificanteRepository, tmp_path: Path,
+    ) -> None:
+        """A saved justificante never reaches the plaintext ``justificantes`` directory.
+
+        :data:`StorageCategory.JUSTIFICANTES` declares
+        ``adapters/persistence/storage/_rotation.py`` as its sole consumer,
+        and that module only walks the directory to re-encrypt any
+        ``.envelope.json`` files found there on master-key rotation -- it is
+        a sweep, not a writer. :class:`JustificanteRepository`'s own module
+        docstring states "no plaintext metadata JSON or envelope file lands
+        on disk"; this proves it, mirroring
+        ``test_put_file_reads_source_but_persists_only_secure_database_object``
+        for the attachments store. The assertion routes through
+        :func:`storage_path` rather than a literal so a future taxonomy
+        subpath move is tracked automatically instead of silently passing
+        vacuously against a stale path.
+        """
+        record = _make_justificante(tmp_path)
+        repo.save(record)
+
+        assert repo.load(record.csv) == record
+        assert not storage_path(StorageCategory.JUSTIFICANTES).exists()
 
 
 class TestListIter:

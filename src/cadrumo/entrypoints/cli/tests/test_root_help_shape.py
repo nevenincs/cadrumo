@@ -1,4 +1,14 @@
-"""Real CLI tests for workflow-oriented root help and bare invocation."""
+"""Real CLI tests for workflow-oriented root help and bare invocation.
+
+The ``"logs"`` literal in
+``test_installed_console_profile_create_honors_isolated_storage_env`` is
+deliberate: ``_console_env`` sets ``cadrumo_local_storage_root`` to
+``tmp_path / "storage"`` with no log-directory override, so
+``tmp_path / "storage" / "logs"`` is the real DEFAULT-derived location the
+``config repair logs`` command's own output must report -- not an injected
+value. That function does not use ``isolated_profile_storage_root``
+(used elsewhere in this file); it is self-contained on ``_console_env``.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +20,7 @@ import subprocess
 import sys
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -25,6 +36,9 @@ from ....tests.secure_sql import isolated_profile_storage_root, isolated_session
 from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 @pytest.fixture(autouse=True)

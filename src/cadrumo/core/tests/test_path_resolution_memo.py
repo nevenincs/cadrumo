@@ -133,11 +133,11 @@ def test_relative_and_absolute_paths_of_the_same_name_do_not_collide(tmp_path: P
     )
     anchor = platform_user_data_root(inputs)
 
-    relative = resolve_project_path("logs", state_root_inputs=inputs)
-    absolute = resolve_project_path(tmp_path / "logs")
+    relative = resolve_project_path("probe-logs", state_root_inputs=inputs)
+    absolute = resolve_project_path(tmp_path / "probe-logs")
 
-    assert relative == (anchor / "logs").resolve()
-    assert absolute == (tmp_path / "logs").resolve()
+    assert relative == (anchor / "probe-logs").resolve()
+    assert absolute == (tmp_path / "probe-logs").resolve()
     assert relative != absolute
 
 

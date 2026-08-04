@@ -32,7 +32,7 @@ def _rotating_file_handlers(log_dir: Path) -> list[logging.handlers.RotatingFile
 
 
 def test_file_handler_is_rotating_with_settings_cap_and_backups(tmp_path: Path) -> None:
-    log_dir = tmp_path / "logs"
+    log_dir = tmp_path / "probe-logs"
     original_configured = _logging_mod._CONFIGURED
     try:
         _logging_mod._CONFIGURED = False
@@ -54,7 +54,7 @@ def test_file_handler_is_rotating_with_settings_cap_and_backups(tmp_path: Path) 
 
 
 def test_log_rolls_over_and_bounds_backups(tmp_path: Path) -> None:
-    log_dir = tmp_path / "logs"
+    log_dir = tmp_path / "probe-logs"
     original_configured = _logging_mod._CONFIGURED
     try:
         _logging_mod._CONFIGURED = False

@@ -3,6 +3,14 @@
 Pinning the override flow at the call site documents that the logging
 helper picks up the override exactly the way it used to pick up
 ``CADRUMO_LOG_DIR`` env writes. No env-var manipulation here.
+
+``test_default_log_file_path_observes_override`` uses a fictional
+``"probe-logs"`` override target: the value is arbitrary, since the test's
+subject is override propagation, not any real location.
+``test_default_log_file_path_falls_back_to_default_without_override`` keeps
+the real ``"logs"`` literal -- it asserts the genuine, unoverridden DEFAULT
+derivation, not a `/`-join site (a name-equality check, not a taxonomy
+census target).
 """
 
 from __future__ import annotations
@@ -18,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_default_log_file_path_observes_override(tmp_path: Path) -> None:
-    target = tmp_path / "logs"
+    target = tmp_path / "probe-logs"
     with override_settings(cadrumo_log_dir=target):
         resolved = default_log_file_path()
     assert resolved.parent == target
