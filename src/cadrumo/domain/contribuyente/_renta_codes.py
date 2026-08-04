@@ -14,7 +14,11 @@ separate from Modelo 145 withholding categories.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
+from types import MappingProxyType
+
+from ._ccaa import CCAA
 
 
 class RentaDeclaracionType(StrEnum):
@@ -69,6 +73,84 @@ def modelo100_ecivil_export_code(value: object) -> str:
             "supply the official Estado Civil code 1-4"
         )
     raise ValueError(f"Modelo 100 ECIVIL export code must be one of 1, 2, 3, or 4; got {code!r}")
+
+
+# The código each autonomous community carries on a Modelo 100 declaration.
+#
+# Grounded in the ``tipo_CCAA`` simpleType of the bundled Modelo 100 record-design
+# XSD (``corpus/aeat_official/disenos_registro/modelo_100/files/``): the código
+# table is an ``xs:documentation`` annotation sitting inside the same simpleType
+# that carries the ``xs:enumeration`` constraining ``codigoCADeclaracion``, so it
+# cannot disagree with AEAT's own validator. All six bundled exercises (2020-2025,
+# four distinct AEAT update dates) carry a byte-identical enumeration and table.
+#
+# This table is Modelo 100's, and is NOT a general-purpose CCAA numbering. Two
+# other numberings for the same communities disagree with it and must never be
+# substituted:
+#   * Modelo 763's design register diverges almost everywhere past código 03 --
+#     its 13 is Madrid, where Modelo 100's 13 is Región de Murcia.
+#   * The INE comunidad codes agree on 01-06, 09, 18 and 19 and then diverge on
+#     eight entries -- INE swaps Castilla y León with Castilla-La Mancha, and its
+#     12, 13, 16 and 17 are Galicia, Madrid, País Vasco and La Rioja against
+#     Modelo 100's Madrid, Murcia, La Rioja and C. Valenciana. A spot-check of
+#     the leading entries passes against INE while more than half of Spain would
+#     still misfile, which is why the grounding test derives every código from
+#     the XSD rather than checking a sample.
+#
+# Códigos 18, 19 and 20 (Ceuta, Melilla, no residente) are declared by the XSD but
+# unreachable from :class:`CCAA`, which is the ordinary common-regime catalogue:
+# the autonomous cities raise ``ForalRegimeError`` and "no residente" is not a
+# comunidad. Códigos 14 and 15 are assigned to nothing in the AEAT table.
+RENTA_MODELO100_CCAA_CODIGOS: Mapping[CCAA, str] = MappingProxyType(
+    {
+        CCAA.ANDALUCIA: "01",
+        CCAA.ARAGON: "02",
+        CCAA.ASTURIAS: "03",
+        CCAA.BALEARES: "04",
+        CCAA.CANARIAS: "05",
+        CCAA.CANTABRIA: "06",
+        CCAA.CASTILLA_LA_MANCHA: "07",
+        CCAA.CASTILLA_Y_LEON: "08",
+        CCAA.CATALUNA: "09",
+        CCAA.EXTREMADURA: "10",
+        CCAA.GALICIA: "11",
+        CCAA.MADRID: "12",
+        CCAA.MURCIA: "13",
+        CCAA.LA_RIOJA: "16",
+        CCAA.COMUNIDAD_VALENCIANA: "17",
+    },
+)
+"""Official Modelo 100 CCAA códigos accepted by the bundled XSD."""
+
+
+def modelo100_ccaa_codigo(value: CCAA | str) -> str:
+    """Return the official Modelo 100 código for an autonomous community.
+
+    Args:
+        value: The community to look up, as a :class:`CCAA` member or its
+            canonical lowercase token (``"madrid"``). Any other string is a
+            community this export cannot name, and is refused rather than
+            resolved.
+
+    Returns:
+        The two-digit código AEAT's Modelo 100 schema accepts for ``value``.
+
+    Raises:
+        ValueError: when ``value`` names no community that carries a Modelo 100
+            código. Refusing is deliberate: a community exported under the wrong
+            código produces a declaration that validates against the AEAT schema
+            while naming the wrong comunidad, so an absent código must fail the
+            export rather than fall back to a default.
+    """
+    try:
+        community: CCAA | None = CCAA(value)
+    except ValueError:
+        community = None
+    codigo = RENTA_MODELO100_CCAA_CODIGOS.get(community) if community is not None else None
+    if codigo is None:
+        valid = ", ".join(sorted(member.value for member in RENTA_MODELO100_CCAA_CODIGOS))
+        raise ValueError(f"no Modelo 100 CCAA código is assigned to {value!r}; communities carrying a código: {valid}")
+    return codigo
 
 
 class RentaDisabilityGrade(StrEnum):
@@ -225,6 +307,7 @@ class SituacionFamiliarM145(StrEnum):
 
 
 __all__ = [
+    "RENTA_MODELO100_CCAA_CODIGOS",
     "RENTA_MODELO100_ECIVIL_EXPORT_CODES",
     "UE_EEA_COUNTRY_CODES",
     "FiscalResidency",
@@ -234,5 +317,6 @@ __all__ = [
     "RentaSexCode",
     "SituacionFamiliar",
     "SituacionFamiliarM145",
+    "modelo100_ccaa_codigo",
     "modelo100_ecivil_export_code",
 ]
