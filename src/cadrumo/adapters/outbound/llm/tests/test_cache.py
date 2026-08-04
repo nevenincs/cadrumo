@@ -4,6 +4,11 @@ Covers cache key determinism, hit/miss accounting, statistics, and the
 defensive containment checks in :class:`cadrumo.adapters.outbound.llm.LLMCache`
 that prevent operator-supplied model identifiers from composing unsafe logical
 cache paths.
+
+``"probe-cache"`` is a fictional directory: ``LLMCache.root_dir`` is a
+constructor parameter, never a taxonomy accessor, and the test proves the
+plaintext directory it names is never created regardless of what it is
+called.
 """
 
 from __future__ import annotations
@@ -194,13 +199,13 @@ def test_cache_path_normalises_ollama_tag_model(tmp_path: Path) -> None:
 
 
 def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:
-    cache = LLMCache(root_dir=tmp_path / "cache")
+    cache = LLMCache(root_dir=tmp_path / "probe-cache")
     request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
     response = _response().model_copy(update={"text": "CACHE-CANARY-123"})
 
     cache.write(request, response)
 
-    assert not (tmp_path / "cache").exists()
+    assert not (tmp_path / "probe-cache").exists()
     # The encrypted store lives under the secure-object bucket layout, not
     # directly at tmp_path.  Search all .db files under tmp_path to
     # confirm the canary text is absent from every encrypted file.

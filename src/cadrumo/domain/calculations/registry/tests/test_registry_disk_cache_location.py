@@ -24,7 +24,7 @@ from .._loader_cache import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"registry"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"registry", "cache"})
 """Taxonomy-vocabulary literals this module deliberately pins.
 
 The ``"registry"`` in ``tmp_path / "state" / "cache" / "registry"`` is the

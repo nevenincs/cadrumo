@@ -29,7 +29,7 @@ def test_live_anthropic_round_trip(tmp_path: Path) -> None:
 
     requires_live_enabled()
     settings = Settings(
-        cadrumo_llm_cache_dir=tmp_path / "cache",
+        cadrumo_llm_cache_dir=tmp_path / "probe-cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
     )
     if settings.cadrumo_llm_anthropic_api_key is None:

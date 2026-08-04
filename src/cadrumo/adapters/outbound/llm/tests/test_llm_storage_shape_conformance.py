@@ -23,6 +23,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -33,6 +34,14 @@ from .....tests.storage_scope import storage_overrides
 from .. import LLMCache, LLMProvider, LLMRequest, LLMResponse, LLMRunRecord, LLMRunTelemetryRecorder, UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cache"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``tmp_path / "cache" / "llm-cache" / "not-nested-enough.json"`` in the
+positive-control test is the real declared grammar shape, deliberately
+mis-nested to prove the matcher can still fail.
+"""
 
 _CREATED_AT = datetime(2026, 5, 28, 12, 20, 0, tzinfo=UTC)
 

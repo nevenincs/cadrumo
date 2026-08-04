@@ -42,7 +42,7 @@ from ..errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"registry"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"registry", "cache"})
 """Taxonomy-vocabulary literals this module deliberately pins.
 
 ``root / "cache" / "registry"`` in

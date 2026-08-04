@@ -11,6 +11,7 @@ sibling ``test_validation_verdict_cache`` module.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -29,6 +30,19 @@ from .._validate_verdict import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cache"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``tmp_path / "state" / "cache" / "registry-verdict"`` in
+``test_verdict_cache_path_derives_under_cache_namespace`` is the independent
+oracle for ``verdict_cache_path``'s default-derivation, called with no
+``cadrumo_validation_verdict_cache_dir`` override. The ``"registry"`` in the
+other functions' ``tmp_path / "registry" / "aeat"`` scaffolding is the
+calculation registry's bundled TOML authoring tree, an unrelated
+different-namespace concept -- not the storage taxonomy's ``cache/registry``
+member this file is otherwise about.
+"""
 
 
 def test_verdict_cache_path_derives_under_cache_namespace(tmp_path: Path) -> None:
