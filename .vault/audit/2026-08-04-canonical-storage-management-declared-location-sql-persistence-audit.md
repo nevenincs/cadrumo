@@ -65,6 +65,36 @@ not a floor, not a ceiling, and not evidence.
 Recording the failed probe rather than discarding it, because the reason it fails
 is the finding: every cheap instrument available asks a *proxy* question.
 
+### a-second-instrument-fails-a-different-positive-control | high | Per-read forward tracing reports NO-READ for locations that are demonstrably written
+
+Built a second, stronger instrument after the first failed: rather than
+module-level co-occurrence, classify **each production read of a settings field**
+by what happens to the value in that scope — reaches a write primitive, escapes
+into a call, or lies inert.
+
+It discriminates in principle. It fails in practice, and on a different control:
+
+- **One member of 27 reports `WRITES`** — `SECRETS`.
+- **Eleven report `NO-READ`**, including `LOGS`, `RUNS`, `TOKENS`,
+  `LLM_CACHE`, `MCP_TELEMETRY`. Those are demonstrably written: the write-site
+  census attributes real writes to `runs_dir` and `log_file`, and
+  `observability/_store.py` writes `runs_dir / run_id` in as many words.
+- The remaining fifteen report `ESCAPES-ONLY`, almost all into `Path(...)` or a
+  helper.
+
+The cause is that production overwhelmingly reaches a location through
+`storage_path(StorageCategory.X)` — the accessor the campaign built and
+mandated — not through `settings.cadrumo_x_dir`. **An instrument keyed on the
+settings field is blind to the very convention the campaign succeeded in
+establishing.** That is a genuinely funny result and a real one: the taxonomy's
+own success removed the syntactic handle the measurement needed.
+
+So the first instrument produced a false negative on the known positive, and the
+second produces false negatives on eleven known positives. **Two failures, two
+different mechanisms, both discovered by checking a case whose answer was already
+known.** Neither number is reported, because a count from an instrument that
+fails its control is not a measurement.
+
 ### why-static-analysis-cannot-answer-it | high | Reference and write are both proxies, and this pattern defeats each one separately
 
 Three questions, easily confused, and the pattern slips between them:
@@ -91,7 +121,25 @@ before/after snapshot sees the result however the write happened, which is the
 shape this project already found necessary for absence claims after a
 primitive-wrapping census reported a false zero.
 
-### the-conv2-overlap-prediction | medium | The namespace fix and the dormancy set are probably different sets, and confirming that is cheap
+### the-conv2-prediction-resolved | none | Confirmed in the strongest available form: the other set is empty
+
+Predicted that the liveness-gate namespace fix and this dormancy set would be
+different populations. **Confirmed, and more sharply than predicted.** `conv2`
+landed the fix and re-ran the gate against the real taxonomy: 13 pass, **no
+newly-failing member**. No currently-declared `consumer_module` claim was ever
+satisfied *only* by a collision — the `AUDIT` instance was the sole exploitation
+of the hole and had already been re-pointed before the mechanism was closed.
+
+The two sets cannot coincide, because one of them is empty.
+
+The null is worth more than the confirmation, and it cuts against the hypothesis
+rather than for it: **as far as that gate can see, every claim is honestly
+backed.** Which means the gate will not find this pattern, and the reason is
+precisely the reference-versus-write gap — a member can be genuinely referenced
+by production while nothing ever writes a file there. The gate is not weak; it
+is answering a different question, correctly.
+
+### the-superseded-overlap-prediction | superseded | Original wording, kept for the trail
 
 Asked to coordinate rather than duplicate, and the coordination is worth stating
 as a prediction the re-run will confirm or refute.
