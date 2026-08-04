@@ -54,9 +54,18 @@ PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
         "session.v1.json",
         "bucket.dek.json",
         "login-throttle.json",
+        "audit",
+        "blobs",
+        "active-profile",
     },
 )
 """Taxonomy-vocabulary literals this module deliberately pins.
+
+``"audit"`` and ``"blobs"`` are the shared on-disk names
+``test_the_duplicated_names_resolve_to_distinct_members`` asserts both the
+root and bucket-relative members resolve to, independent of the accessor
+under test. ``"active-profile"`` is the fixed-layout member's leaf name in
+``test_storage_path_falls_back_to_the_root_for_a_fieldless_member``.
 
 This module is the taxonomy's own accessor test: ``storage_path``,
 ``bucket_scoped_storage_path``, and ``storage_tree_targets`` are the functions
