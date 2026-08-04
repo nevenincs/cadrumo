@@ -58,7 +58,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
             "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
             "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
             "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
-            "CADRUMO_DRAFTS_DIR": str(tmp_path / "drafts"),
+            "CADRUMO_DRAFTS_DIR": str(tmp_path / "probe-drafts"),
         },
     )
     if language is not None:

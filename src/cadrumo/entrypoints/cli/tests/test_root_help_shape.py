@@ -69,7 +69,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             setting_env("cadrumo_runs_dir"): str(tmp_path / "probe-runs"),
             setting_env("cadrumo_financial_txs_dir"): str(tmp_path / "txs"),
             setting_env("cadrumo_invoices_dir"): str(tmp_path / "invoices"),
-            setting_env("cadrumo_drafts_dir"): str(tmp_path / "drafts"),
+            setting_env("cadrumo_drafts_dir"): str(tmp_path / "probe-drafts"),
             setting_env("cadrumo_output_language"): "en",
         },
     )

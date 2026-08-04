@@ -138,7 +138,7 @@ class TestCliFlag:
                 "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
                 "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
                 "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),
-                "CADRUMO_DRAFTS_DIR": str(tmp_path / "drafts"),
+                "CADRUMO_DRAFTS_DIR": str(tmp_path / "probe-drafts"),
             },
         )
         assert result.exit_code == 0
