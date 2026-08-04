@@ -14,6 +14,8 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
+from ...adapters.persistence.storage.bucket import bucket_paths
+from ...core import StorageCategory, storage_location
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (
     ConfigResetDeletionMarker,
@@ -80,7 +82,7 @@ def test_create_roundtrips_atomically_with_restrictive_permissions(
     assert repository.load(operation.operation_id) == operation
     assert repository.list() == (operation,)
     assert path.parent == tmp_path / "reset-operations"
-    assert tmp_path / "buckets" not in path.parents
+    assert tmp_path / storage_location(StorageCategory.BUCKETS).subpath not in path.parents
     assert tuple(path.parent.glob("*.tmp")) == ()
     if os.name != "nt":
         assert stat.S_IMODE(path.parent.stat().st_mode) == 0o700
@@ -274,7 +276,7 @@ def test_repository_refuses_linked_root_redirected_into_bucket(
     tmp_path: Path,
 ) -> None:
     """A link-like journal root cannot redirect operation bytes into a target."""
-    bucket_dir = tmp_path / "buckets" / _BUCKET_ID
+    bucket_dir = bucket_paths(tmp_path, _BUCKET_ID).bucket_dir
     bucket_dir.mkdir(parents=True)
     linked_root = tmp_path / "reset-operations"
     linked_root.symlink_to(bucket_dir, target_is_directory=True)

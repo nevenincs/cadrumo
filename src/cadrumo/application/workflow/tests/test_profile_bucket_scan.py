@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
+from ....adapters.persistence.storage.bucket import bucket_paths
 from .._profile_bucket_scan import list_profile_bucket_scan_issues, list_profile_buckets
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -17,7 +18,7 @@ def test_profile_bucket_scan_reports_malformed_manifest_without_live_surface_lea
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    bucket_dir = tmp_path / "buckets" / "operator"
+    bucket_dir = bucket_paths(tmp_path, "operator").bucket_dir
     bucket_dir.mkdir(parents=True)
     (bucket_dir / BUCKET_MANIFEST_FILENAME).write_text("bucket_id = [\n", encoding="utf-8")
 
@@ -81,7 +82,7 @@ def test_malformed_label_becomes_a_scan_issue_instead_of_crashing_enumeration(
     constraint, so the manifest fails to load and lands in the issue surface.
     """
     bucket_id = "44444444-4444-4444-8444-444444444444"
-    bucket_dir = tmp_path / "buckets" / bucket_id
+    bucket_dir = bucket_paths(tmp_path, bucket_id).bucket_dir
     bucket_dir.mkdir(parents=True)
     (bucket_dir / BUCKET_MANIFEST_FILENAME).write_text(
         _manifest_toml(bucket_id=bucket_id, label=label),
@@ -103,7 +104,7 @@ def test_a_valid_label_still_enumerates_and_raises_no_scan_issue(tmp_path: Path)
     manifest had stopped loading.
     """
     bucket_id = "44444444-4444-4444-8444-444444444444"
-    bucket_dir = tmp_path / "buckets" / bucket_id
+    bucket_dir = bucket_paths(tmp_path, bucket_id).bucket_dir
     bucket_dir.mkdir(parents=True)
     (bucket_dir / BUCKET_MANIFEST_FILENAME).write_text(
         _manifest_toml(bucket_id=bucket_id, label="Operator Bucket"),
@@ -127,7 +128,7 @@ def test_one_malformed_manifest_does_not_hide_the_other_profiles(tmp_path: Path)
     good_id = "11111111-1111-4111-8111-111111111111"
     bad_id = "22222222-2222-4222-8222-222222222222"
     for bucket_id, label in ((good_id, "Good Bucket"), (bad_id, "")):
-        bucket_dir = tmp_path / "buckets" / bucket_id
+        bucket_dir = bucket_paths(tmp_path, bucket_id).bucket_dir
         bucket_dir.mkdir(parents=True)
         (bucket_dir / BUCKET_MANIFEST_FILENAME).write_text(
             _manifest_toml(bucket_id=bucket_id, label=label),
@@ -153,7 +154,7 @@ def test_manifest_claiming_another_bucket_never_reaches_the_live_surface(tmp_pat
     """
     directory_id = "11111111-1111-4111-8111-111111111111"
     claimed_id = "22222222-2222-4222-8222-222222222222"
-    bucket_dir = tmp_path / "buckets" / directory_id
+    bucket_dir = bucket_paths(tmp_path, directory_id).bucket_dir
     bucket_dir.mkdir(parents=True)
     (bucket_dir / BUCKET_MANIFEST_FILENAME).write_text(
         _manifest_toml(bucket_id=claimed_id, label="Impostor"),
@@ -172,7 +173,7 @@ def test_manifest_claiming_another_bucket_never_reaches_the_live_surface(tmp_pat
 def test_a_manifest_naming_its_own_directory_still_enumerates(tmp_path: Path) -> None:
     """Anti-tautology: the refusal above discriminates rather than always-refusing."""
     directory_id = "11111111-1111-4111-8111-111111111111"
-    bucket_dir = tmp_path / "buckets" / directory_id
+    bucket_dir = bucket_paths(tmp_path, directory_id).bucket_dir
     bucket_dir.mkdir(parents=True)
     (bucket_dir / BUCKET_MANIFEST_FILENAME).write_text(
         _manifest_toml(bucket_id=directory_id, label="Genuine"),

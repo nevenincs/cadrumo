@@ -26,6 +26,7 @@ from ..adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..application.user_profile import login_profile
 from ..application.workflow import read_profile_bucket
+from ..core import StorageCategory, storage_location
 from ..core.classification import SensitivityClass
 from ..core.config import StorageRouteKind, load_settings, override_settings
 from .cli_runner import invoke_cached_cli
@@ -87,7 +88,7 @@ def test_isolated_ephemeral_secure_sql_routes_default_engine_to_tmp_database(
             database_rows = connection.exec_driver_sql("PRAGMA database_list").fetchall()
 
     database_paths = {Path(str(row[2])).resolve() for row in database_rows if row[2]}
-    assert (tmp_path / "cadrumo.db").resolve() in database_paths
+    assert (tmp_path / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath).resolve() in database_paths
     assert not has_active_bucket_session()
 
 
@@ -95,7 +96,7 @@ def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(t
     storage_root = tmp_path / "operator-storage"
     control_database = bucket_paths(storage_root, _CONTROL_BUCKET_ID).database_file
     isolated_root = tmp_path / "isolated-storage"
-    isolated_database = isolated_root / "cadrumo.db"
+    isolated_database = isolated_root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
 
     with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=_CONTROL_BUCKET_ID):
         dispose_engine()
@@ -151,7 +152,7 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
     assert runtime.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
     assert runtime.route_attached_to_active_bucket
     assert _secure_object_row_count(profile.paths.database_file) == 1
-    assert not (profile.storage_root / "cadrumo.db").exists()
+    assert not (profile.storage_root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath).exists()
     assert not has_active_bucket_session()
 
 
@@ -235,7 +236,7 @@ class TestHarnessReapsSessionKeys:
         directory under ``buckets/`` must be ignored rather than raise the
         canonical-identity refusal out of a teardown.
         """
-        (tmp_path / "buckets" / "not-a-uuid").mkdir(parents=True)
+        bucket_paths(tmp_path, "not-a-uuid").bucket_dir.mkdir(parents=True)
         reap_profile_session_keys(tmp_path)
 
     @pytest.mark.os_keychain

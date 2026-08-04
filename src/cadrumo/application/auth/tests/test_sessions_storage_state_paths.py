@@ -30,6 +30,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import _session_store
+from ....adapters.persistence.storage.bucket import bucket_paths
 from ....core import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -142,7 +143,7 @@ def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None
 
 def _hash_bucket_tree(storage_root: Path, bucket_id: str) -> str:
     """Return a stable fingerprint of every on-disk byte under one bucket's directory."""
-    bucket_dir = storage_root / "buckets" / bucket_id
+    bucket_dir = bucket_paths(storage_root, bucket_id).bucket_dir
     digest = hashlib.sha256()
     for file in sorted(p for p in bucket_dir.rglob("*") if p.is_file()):
         digest.update(file.relative_to(bucket_dir).as_posix().encode("utf-8"))

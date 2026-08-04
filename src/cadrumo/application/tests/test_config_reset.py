@@ -151,7 +151,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
     tmp_path: Path,
 ) -> None:
     from ...adapters.persistence.storage.bucket import bucket_paths
-    from ...core import AuthProviderKind, pointer_path
+    from ...core import AuthProviderKind, StorageCategory, pointer_path, storage_location
     from ...core.config import load_settings
     from .._config_reset_models import ConfigResetOperationStatus, ConfigResetTargetPhase
     from .._config_reset_repository import ConfigResetJournalRepository
@@ -166,7 +166,7 @@ def test_start_discovers_live_tombstoned_and_dangling_targets_then_completes(
 
     with _isolated_reset_root(tmp_path) as root:
         root.mkdir(parents=True, exist_ok=True)
-        cold_default_database = root / "cadrumo.db"
+        cold_default_database = root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
         cold_default_bytes = b"cold-default-database-is-not-a-profile-bucket"
         cold_default_database.write_bytes(cold_default_bytes)
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
