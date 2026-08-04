@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:1063eb71c6f411cb0ff60e443a5dbcbaaa316cdf9dad8f0fa859e6c37d0b4829'
+body_hash: 'sha256:03f16f736d394744e00e7736b75ebce507c446cd8c5ccf7a070e85d289bba582'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -205,7 +205,7 @@ Retires per-field overrides that duplicate the taxonomy at a call site, includin
 
 Re-expresses each test whose reason for existing is the on-disk name it asserts, so it still defends that property against the taxonomy rather than degenerating into an accessor-equals-itself tautology.
 
-- [ ] `W03.P15.S77` - Re-express each pins-by-design test so it still defends its original on-disk-name property against the taxonomy's resolved value rather than degenerating into an accessor-equals-itself tautology, starting with the five master-key and keystore entries the provenance gate still carries as pending debt; `src/cadrumo/adapters/persistence/storage/master_key/tests/, src/cadrumo/adapters/persistence/storage/bucket/tests/`.
+- [x] `W03.P15.S77` - Re-express each pins-by-design test so it still defends its original on-disk-name property against the taxonomy's resolved value rather than degenerating into an accessor-equals-itself tautology, starting with the five master-key and keystore entries the provenance gate still carries as pending debt; `src/cadrumo/adapters/persistence/storage/master_key/tests/, src/cadrumo/adapters/persistence/storage/bucket/tests/`.
 
 ### Phase `W03.P16` - incidental test literal burndown by package
 
