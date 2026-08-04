@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:87996e2bf7aba98455db4bd7221132f0e9271ba04451e39ed1c047deafec9c8d'
+body_hash: 'sha256:bd9712cd23c20b471d8bd3fd14295157bb4c6836b16a95f9e0190e8c78765eda'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
@@ -33,9 +33,10 @@ related:
 
 ## Scope
 
-Review W01.P01.S01 against the authorizing plan, ADR, and research. Audit the
-read-only source fingerprint, supported revision inventory, strict records, real
-behavior tests, and the explicit boundary against production mutation.
+Review W01.P01.S01 and W01.P01.S02 against the authorizing plan, ADR, and
+research. Audit the read-only source fingerprint, supported revision inventory,
+resolved matrix, strict records, real behavior tests, and the explicit boundary
+against production mutation.
 
 ## Findings
 
@@ -57,8 +58,19 @@ tests exercise the real bundled tree and a real temporary filesystem without
 fakes, patches, skips, xfails, or tautological business logic. Focused Ruff and
 pytest validation passed.
 
+### resolved-matrix | low | No actionable safety or intent findings
+
+S02 reads the current public loader's materialized label/help behavior for every
+supported modelo, revision, casilla, locale, and field. It binds the rows to the
+S01 fingerprint, checks the corpus before and after loading and row construction,
+validates complete deterministic coordinates, and writes nothing to the source
+tree or live registry. The tests assert the real measured population,
+root/revision precedence, Spanish label fallback, absent help behavior, and
+unchanged source metadata. Ruff, basedpyright, and six focused integration tests
+passed. No critical, high, or medium findings were identified.
+
 ## Recommendations
 
-Keep the source fingerprint and revision inventory as the immutable input
-contract for later extraction stages. Do not add resolved-leaf extraction,
-classification, emission, or production mutation to this step’s surface.
+Keep the S01 fingerprint and revision inventory immutable inputs to the S02
+matrix. Later candidate classification, emission, parity, and production
+mutation must remain separate plan steps.

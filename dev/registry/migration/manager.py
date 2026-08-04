@@ -1,10 +1,11 @@
-"""Build the deterministic, read-only source contract for registry migration.
+"""Build deterministic, read-only source contracts for registry migration.
 
-The migration application must begin from a pinned source tree and an
-explicit inventory of the revisions the current compiler supports. This
-module supplies that foundation without reading resolved localization leaves
-or writing any registry or migration output. Later migration stages can carry
-the immutable records returned here into their own sealed artifacts.
+The migration application must begin from a pinned source tree, an explicit
+inventory of the revisions the current compiler supports, and the complete
+resolved localization matrix produced by that compiler. This module supplies
+those foundations without writing any registry or migration output. Later
+migration stages can carry the immutable records returned here into their own
+sealed artifacts.
 
 The corpus digest is content-based and machine-independent: sorted POSIX
 relative paths, byte counts, and per-file SHA-256 values are length-framed into
@@ -22,8 +23,11 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import hash_file, sha256_hex
 from cadrumo.domain.calculations.registry import (
+    CasillaDefinition,
+    ModeloDefinition,
     ModeloRevisionSource,
     ModeloSource,
     discover_modelo_sources,
@@ -32,11 +36,17 @@ from cadrumo.domain.calculations.registry import (
 
 _CORPUS_FINGERPRINT_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.corpus-fingerprint.v1"
 _SOURCE_INVENTORY_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.source-inventory.v1"
+_RESOLVED_MATRIX_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.resolved-matrix.v1"
 _CORPUS_SCOPE: Final[str] = "registry/aeat/**/*.toml"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
 ModeloSourceLayout = Literal["single_file", "directory"]
 RevisionSourceLayout = Literal["inline", "revision_file", "fragment_directory"]
+LocalizationField = Literal["label", "help"]
+LocalizationResolution = Literal["localized", "official_spanish", "absent"]
+
+_SUPPORTED_LOCALES: Final[tuple[str, ...]] = tuple(language.value for language in OutputLanguage)
+_LOCALIZATION_FIELDS: Final[tuple[LocalizationField, ...]] = ("label", "help")
 
 
 class MigrationInventoryError(ValueError):
@@ -167,6 +177,113 @@ class MigrationSourceInventory(_StrictRecord):
             raise ValueError("revision_count does not match supported_revisions")
         if {item.modelo_id for item in self.supported_revisions} != set(self.modelo_ids):
             raise ValueError("every modelo_id must own at least one supported revision")
+        return self
+
+
+class ResolvedLocalizationEntry(_StrictRecord):
+    """One resolved locale/field value for one supported casilla occurrence."""
+
+    modelo_id: str = Field(min_length=1)
+    revision_id: str = Field(min_length=1)
+    casilla_id: str = Field(min_length=1)
+    continuidad_id: str | None = Field(default=None, min_length=1)
+    locale: str
+    field: LocalizationField
+    value: str | None
+    resolution: LocalizationResolution
+
+    @field_validator("modelo_id", "revision_id", "casilla_id")
+    @classmethod
+    def _validate_identifier(cls, value: str) -> str:
+        """Reject empty or whitespace-only resolved identities."""
+        if not value.strip():
+            raise ValueError("resolved localization identities must not be blank")
+        return value
+
+    @field_validator("locale")
+    @classmethod
+    def _validate_locale(cls, value: str) -> str:
+        """Keep the matrix bound to the closed production locale set."""
+        if value not in _SUPPORTED_LOCALES:
+            raise ValueError(f"unsupported resolved localization locale {value!r}")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_resolution(self) -> ResolvedLocalizationEntry:
+        """Ensure resolution states and values describe one real loader result."""
+        if self.resolution == "official_spanish" and self.field != "label":
+            raise ValueError("official_spanish resolution is valid only for label entries")
+        if self.resolution == "absent" and self.value is not None:
+            raise ValueError("absent resolution must not carry a value")
+        if self.resolution != "absent" and self.value is None:
+            raise ValueError("resolved localization must carry a value")
+        return self
+
+
+class ResolvedLocalizationMatrix(_StrictRecord):
+    """Complete deterministic resolution matrix from the current registry loader."""
+
+    schema_id: str = _RESOLVED_MATRIX_SCHEMA
+    corpus_fingerprint: CorpusFingerprint
+    locales: tuple[str, ...] = _SUPPORTED_LOCALES
+    fields: tuple[LocalizationField, ...] = _LOCALIZATION_FIELDS
+    entry_count: int = Field(ge=0)
+    modelo_count: int = Field(ge=0)
+    revision_count: int = Field(ge=0)
+    occurrence_count: int = Field(ge=0)
+    localized_count: int = Field(ge=0)
+    official_spanish_fallback_count: int = Field(ge=0)
+    absent_count: int = Field(ge=0)
+    entries: tuple[ResolvedLocalizationEntry, ...]
+
+    @model_validator(mode="after")
+    def _validate_matrix(self) -> ResolvedLocalizationMatrix:
+        """Reject incomplete, reordered, duplicated, or tampered matrix rows."""
+        if self.schema_id != _RESOLVED_MATRIX_SCHEMA:
+            raise ValueError(f"unsupported resolved localization matrix schema {self.schema_id!r}")
+        if self.locales != _SUPPORTED_LOCALES:
+            raise ValueError("locales must equal the supported production locale set in canonical order")
+        if self.fields != _LOCALIZATION_FIELDS:
+            raise ValueError("fields must be the canonical label/help pair")
+
+        entry_keys = tuple(_resolved_entry_key(entry) for entry in self.entries)
+        if entry_keys != tuple(sorted(entry_keys)) or len(entry_keys) != len(set(entry_keys)):
+            raise ValueError("resolved localization entries must be unique and sorted by canonical coordinate")
+        if self.entry_count != len(self.entries):
+            raise ValueError("entry_count does not match entries")
+
+        occurrence_keys = {(entry.modelo_id, entry.revision_id, entry.casilla_id) for entry in self.entries}
+        revision_keys = {(entry.modelo_id, entry.revision_id) for entry in self.entries}
+        modelo_ids = {entry.modelo_id for entry in self.entries}
+        if self.occurrence_count != len(occurrence_keys):
+            raise ValueError("occurrence_count does not match unique occurrence coordinates")
+        if self.revision_count != len(revision_keys):
+            raise ValueError("revision_count does not match unique revision coordinates")
+        if self.modelo_count != len(modelo_ids):
+            raise ValueError("modelo_count does not match unique modelo ids")
+        expected_entry_count = self.occurrence_count * len(self.locales) * len(self.fields)
+        if self.entry_count != expected_entry_count:
+            raise ValueError("matrix does not contain every locale/field coordinate for every occurrence")
+
+        expected_coordinates = {(locale, field) for locale in self.locales for field in self.fields}
+        coordinates_by_occurrence: dict[tuple[str, str, str], set[tuple[str, LocalizationField]]] = {}
+        for entry in self.entries:
+            coordinates_by_occurrence.setdefault(
+                (entry.modelo_id, entry.revision_id, entry.casilla_id),
+                set(),
+            ).add((entry.locale, entry.field))
+        if any(coordinates != expected_coordinates for coordinates in coordinates_by_occurrence.values()):
+            raise ValueError("each occurrence must have one row for every locale and field")
+
+        localized_count = sum(entry.resolution == "localized" for entry in self.entries)
+        fallback_count = sum(entry.resolution == "official_spanish" for entry in self.entries)
+        absent_count = sum(entry.resolution == "absent" for entry in self.entries)
+        if self.localized_count != localized_count:
+            raise ValueError("localized_count does not match entry resolution states")
+        if self.official_spanish_fallback_count != fallback_count:
+            raise ValueError("official_spanish_fallback_count does not match entry resolution states")
+        if self.absent_count != absent_count:
+            raise ValueError("absent_count does not match entry resolution states")
         return self
 
 
@@ -394,12 +511,165 @@ def build_source_inventory(root: Path) -> MigrationSourceInventory:
     )
 
 
+def _resolved_entry_key(entry: ResolvedLocalizationEntry) -> tuple[str, str, str, str, str]:
+    """Return the canonical sort coordinate for one resolved matrix row."""
+    return (entry.modelo_id, entry.revision_id, entry.casilla_id, entry.locale, entry.field)
+
+
+def _resolved_entries_for_casilla(
+    *,
+    modelo_id: str,
+    revision_id: str,
+    casilla: CasillaDefinition,
+) -> tuple[ResolvedLocalizationEntry, ...]:
+    """Read every supported locale/field through the current loader behavior."""
+    entries: list[ResolvedLocalizationEntry] = []
+    for locale in _SUPPORTED_LOCALES:
+        entries.append(
+            ResolvedLocalizationEntry(
+                modelo_id=modelo_id,
+                revision_id=revision_id,
+                casilla_id=casilla.id,
+                continuidad_id=casilla.continuidad_id,
+                locale=locale,
+                field="label",
+                value=casilla.get_label(locale),
+                resolution=("localized" if locale in casilla.localized_labels else "official_spanish"),
+            ),
+        )
+        entries.append(
+            ResolvedLocalizationEntry(
+                modelo_id=modelo_id,
+                revision_id=revision_id,
+                casilla_id=casilla.id,
+                continuidad_id=casilla.continuidad_id,
+                locale=locale,
+                field="help",
+                value=casilla.get_help(locale),
+                resolution=("localized" if locale in casilla.localized_help else "absent"),
+            ),
+        )
+    return tuple(entries)
+
+
+def _validate_loaded_registry_against_inventory(
+    modelos: tuple[ModeloDefinition, ...],
+    inventory: MigrationSourceInventory,
+) -> dict[str, ModeloDefinition]:
+    """Require the loaded compiler population to match the pinned identities."""
+    modelos_by_id = {str(modelo.id): modelo for modelo in modelos}
+    if len(modelos_by_id) != len(modelos):
+        raise MigrationInventoryError("current loader returned duplicate modelo ids")
+    if tuple(sorted(modelos_by_id)) != inventory.modelo_ids:
+        raise MigrationInventoryError(
+            "current loader and pinned inventory disagree on modelo ids: "
+            f"loader={sorted(modelos_by_id)!r} inventory={list(inventory.modelo_ids)!r}",
+        )
+    actual_revision_keys = tuple(
+        sorted(
+            (modelo_id, str(revision_id))
+            for modelo_id, modelo in modelos_by_id.items()
+            for revision_id in modelo.revisions
+        ),
+    )
+    expected_revision_keys = tuple((item.modelo_id, item.revision_id) for item in inventory.supported_revisions)
+    if actual_revision_keys != expected_revision_keys:
+        raise MigrationInventoryError(
+            "current loader and pinned inventory disagree on supported revisions: "
+            f"loader={list(actual_revision_keys)!r} inventory={list(expected_revision_keys)!r}",
+        )
+    return modelos_by_id
+
+
+def extract_resolved_localization_matrix(
+    root: Path,
+    inventory: MigrationSourceInventory | None = None,
+) -> ResolvedLocalizationMatrix:
+    """Extract the complete current resolved localization matrix read-only.
+
+    The matrix uses the production loader's materialized get_label and
+    get_help behavior for every supported Modelo, revision, casilla, locale,
+    and field. A supplied S01 inventory pins the extraction to one corpus
+    fingerprint; when omitted, the inventory is built immediately before
+    extraction. Fingerprints are checked before loading, after loading, and
+    after row construction so a concurrent source edit cannot yield a mixed
+    matrix. This function never writes to the registry or migration output.
+
+    Args:
+        root: Registry root containing the current modelos corpus.
+        inventory: Optional immutable S01 source inventory to bind to.
+
+    Returns:
+        A strict, sorted ResolvedLocalizationMatrix.
+
+    Raises:
+        MigrationInventoryError: If the pinned corpus drifts, the loader
+            population changes, or source loading cannot complete.
+    """
+    resolved = _resolved_directory(root)
+    pinned = inventory if inventory is not None else build_source_inventory(resolved)
+    before = fingerprint_registry_corpus(resolved)
+    if before != pinned.corpus_fingerprint:
+        raise MigrationInventoryError(
+            "registry source no longer matches the pinned inventory before resolved extraction; rebuild the inventory",
+        )
+    try:
+        modelos, _catalogues = load_registry_tree(resolved)
+    except Exception as exc:
+        raise MigrationInventoryError(f"could not load the pinned registry for resolved extraction: {exc}") from exc
+    after_load = fingerprint_registry_corpus(resolved)
+    if after_load != before:
+        raise MigrationInventoryError(
+            f"registry source changed while resolved localization was loaded at {resolved}; "
+            "retry after concurrent writes settle",
+        )
+
+    modelos_by_id = _validate_loaded_registry_against_inventory(modelos, pinned)
+    entries: list[ResolvedLocalizationEntry] = []
+    for modelo_id in sorted(modelos_by_id):
+        modelo = modelos_by_id[modelo_id]
+        for revision_id in sorted(str(key) for key in modelo.revisions):
+            revision = modelo.revisions[revision_id]
+            for casilla in sorted(revision.casillas, key=lambda item: item.id):
+                entries.extend(
+                    _resolved_entries_for_casilla(
+                        modelo_id=modelo_id,
+                        revision_id=revision_id,
+                        casilla=casilla,
+                    ),
+                )
+    frozen_entries = tuple(sorted(entries, key=_resolved_entry_key))
+    finished = fingerprint_registry_corpus(resolved)
+    if finished != after_load:
+        raise MigrationInventoryError(
+            f"registry source changed while resolved localization rows were built at {resolved}; "
+            "retry after concurrent writes settle",
+        )
+
+    return ResolvedLocalizationMatrix(
+        corpus_fingerprint=pinned.corpus_fingerprint,
+        entry_count=len(frozen_entries),
+        modelo_count=len({entry.modelo_id for entry in frozen_entries}),
+        revision_count=len({(entry.modelo_id, entry.revision_id) for entry in frozen_entries}),
+        occurrence_count=len(
+            {(entry.modelo_id, entry.revision_id, entry.casilla_id) for entry in frozen_entries},
+        ),
+        localized_count=sum(entry.resolution == "localized" for entry in frozen_entries),
+        official_spanish_fallback_count=sum(entry.resolution == "official_spanish" for entry in frozen_entries),
+        absent_count=sum(entry.resolution == "absent" for entry in frozen_entries),
+        entries=frozen_entries,
+    )
+
+
 __all__ = [
     "CorpusFileFingerprint",
     "CorpusFingerprint",
     "MigrationInventoryError",
     "MigrationSourceInventory",
+    "ResolvedLocalizationEntry",
+    "ResolvedLocalizationMatrix",
     "RevisionInventoryEntry",
     "build_source_inventory",
+    "extract_resolved_localization_matrix",
     "fingerprint_registry_corpus",
 ]

@@ -19,8 +19,11 @@ from .manager import (
     CorpusFingerprint,
     MigrationInventoryError,
     MigrationSourceInventory,
+    ResolvedLocalizationEntry,
+    ResolvedLocalizationMatrix,
     RevisionInventoryEntry,
     build_source_inventory,
+    extract_resolved_localization_matrix,
     fingerprint_registry_corpus,
 )
 
@@ -29,7 +32,10 @@ __all__ = [
     "CorpusFingerprint",
     "MigrationInventoryError",
     "MigrationSourceInventory",
+    "ResolvedLocalizationEntry",
+    "ResolvedLocalizationMatrix",
     "RevisionInventoryEntry",
     "build_source_inventory",
+    "extract_resolved_localization_matrix",
     "fingerprint_registry_corpus",
 ]

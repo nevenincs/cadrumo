@@ -4,7 +4,7 @@ tags:
   - '#modelo-localization-cascade'
 date: '2026-08-04'
 modified: '2026-08-04'
-body_hash: 'sha256:3fbf3f52a8ed0c96153b3aed71f6f0c276ea2fbb15d0eefb0e3a9e0bc715e8be'
+body_hash: 'sha256:b837bc9808a5c2601876a901e90162854f6bddeeb0a9325aa84b768036d46d75'
 tier: L3
 related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
@@ -49,7 +49,7 @@ Pin the existing corpus and define the extraction and identity contract that the
 Capture the complete existing localization corpus through the current loader without changing production data.
 
 - [x] `W01.P01.S01` - Pin the corpus fingerprint and supported revision inventory; `dev/registry/migration`.
-- [ ] `W01.P01.S02` - Extract the current resolved localization matrix without mutating production data; `dev/registry/migration`.
+- [x] `W01.P01.S02` - Extract the current resolved localization matrix without mutating production data; `dev/registry/migration`.
 
 ### Phase `W01.P02` - Identity and classification manifest
 
