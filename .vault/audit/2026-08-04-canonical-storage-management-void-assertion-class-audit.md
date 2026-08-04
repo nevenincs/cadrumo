@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:69de7bef44bceb2d5c31bd7ea02c9a79baa8637e2438bbf24abd113c5b776bb1'
+body_hash: 'sha256:40835e51a76659ca3a30059ffd62e38a2bc0ac4418275290c952493dbea309d5'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
   - "[[2026-08-03-canonical-storage-management-W05-P22-S115]]"
@@ -109,7 +109,7 @@ owner, excluded before counting. 16 remain as genuine candidates; none beyond th
 confirmed above were mutation-tested individually.
 
 Two sub-clusters are **analogous** to a mechanism measured today, not independently proven:
-- Six sites (`adapters/persistence/storage/sql/tests/test_engine.py:194`,
+- Seven line-locations across five files (`adapters/persistence/storage/sql/tests/test_engine.py:194`,
   `adapters/persistence/storage/tests/test_cadrumo_state_identity_acceptance.py:96`,
   `core/tests/test_storage_route_classification.py:131,144`,
   `entrypoints/cli/tests/test_root_fallback_write_guard.py:201,272`,
@@ -122,7 +122,10 @@ Two sub-clusters are **analogous** to a mechanism measured today, not independen
   a negative check that stays true regardless of whether the precedence logic underneath it
   does anything.
 
-The remaining nine are **pattern-matched only**, unverified:
+The remaining five are **pattern-matched only**, unverified. (Corrected post-commit: this
+was first reported to the team as "nine," a subtraction — 16 minus the analogous cluster —
+that was never checked against the actual enumeration below, which only ever listed five.
+16 genuine hits = 3 confirmed-today + 8 analogous + 5 pattern-matched-only.)
 - Three (`application/live/tests/test_expedientes.py:257`,
   `test_notifications.py:294`, `test_verify.py:330`) check a nested
   `cadrumo_audit_dir / "live" / "<domain>" / "<bucket_id>.jsonl"` never appears, immediately
@@ -151,11 +154,11 @@ literals through called helper functions before comparing).
 
 Do not remediate any site from this audit yet; disposition is a scoping decision for a
 follow-on plan, not a cleanup folded into this one. A follow-on ADR should decide: whether
-the six-site `cadrumo.db` refusal-guard cluster and `test_token_dir_state_root.py:77` are
+the seven-line `cadrumo.db` refusal-guard cluster and `test_token_dir_state_root.py:77` are
 re-expressed to route through the taxonomy accessor (closing the void at the cost of the
 accessor-equals-itself tautology risk this campaign has repeatedly had to reason through
 elsewhere) or re-pinned as deliberate independent-oracle literals with the void risk stated
-in-docstring; whether the nine pattern-matched-only candidates warrant individual mutation
+in-docstring; whether the five pattern-matched-only candidates warrant individual mutation
 verification before any edit, given two of five and two of two predictions in this pass
 diverged from measurement; and whether the three `cadrumo_audit_dir / "live" / ...` sites
 and the `submissions` capability-absence site should be folded into the `W05.P22.S115`
