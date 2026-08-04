@@ -2,6 +2,11 @@
 id = "modelo-100-2022-xml-dictionary"
 format = "xml_dictionary"
 dictionary_source_ref = "aeat-dr-100-2022-dictionary"
+# AEAT declares the Aux block mandatory and first in every Modelo 100 XSD while no
+# bundled dictionary describes its rows, so its values are declared here. VERSION
+# is deliberately absent: no bundled source carries a genuine one, and a plausible
+# token would validate while asserting something unverified.
+aux_idioma = "E"
 legal_refs = [
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",

@@ -29,7 +29,8 @@ from ....domain.filing import (
     ModeloValueKind,
 )
 from ....domain.submission import ModeloDraftStatus
-from .._export import DeclaracionVerifyVerdict, export_draft, verify_export
+from .._export import DeclaracionVerifyVerdict, verify_export
+from .._export_xml_dictionary import render_xml_dictionary_layout
 from ..runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -48,6 +49,26 @@ def _provider() -> RegistrySchemaAccessor:
         modelos=("100",),
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, "0A"),
+    )
+
+
+def _write_declared_export(provider: RegistrySchemaAccessor, *, draft: ModeloDraft, output: Path) -> None:
+    """Render and write through a layout that declares its ``Aux`` block.
+
+    The shipped Modelo 100 layouts leave ``aux_version`` undeclared, because AEAT
+    publishes no authoritative value for the declaration's mandatory
+    ``Aux/VERSION`` element, so the export write door refuses them. The boolean
+    row-type asymmetry under test here is independent of that gap; declaring the
+    value through the registry's own model keeps the question answerable.
+    """
+    layout = provider.get_subview("100").export_layouts[0].model_copy(update={"aux_version": "1.00"})
+    output.write_bytes(
+        render_xml_dictionary_layout(
+            layout,
+            draft=draft,
+            headers={"surnames": "APELLIDO UNO APELLIDO DOS", "name": "NOMBRE"},
+            schema_provider=provider,
+        ),
     )
 
 
@@ -101,12 +122,7 @@ def test_both_boolean_row_types_verify_against_the_draft(tmp_path: Path, marker:
     provider = _provider()
     draft = _draft(provider, marker=marker)
     output = tmp_path / f"modelo-100-boolean-{marker}.xml"
-    export_draft(
-        draft,
-        output_path=output,
-        headers={"surnames": "APELLIDO UNO APELLIDO DOS", "name": "NOMBRE"},
-        schema_provider=provider,
-    )
+    _write_declared_export(provider, draft=draft, output=output)
 
     result = verify_export(draft, file_path=output, schema_provider=provider)
 
@@ -123,12 +139,7 @@ def test_the_two_row_types_are_spelled_differently_in_the_file(tmp_path: Path) -
     """
     provider = _provider()
     output = tmp_path / "modelo-100-boolean-spellings.xml"
-    export_draft(
-        _draft(provider, marker=True),
-        output_path=output,
-        headers={"surnames": "APELLIDO UNO APELLIDO DOS", "name": "NOMBRE"},
-        schema_provider=provider,
-    )
+    _write_declared_export(provider, draft=_draft(provider, marker=True), output=output)
 
     rendered = output.read_text(encoding="utf-8")
 

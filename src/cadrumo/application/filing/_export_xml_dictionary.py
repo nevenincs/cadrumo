@@ -51,6 +51,11 @@ ElementTree.register_namespace("xsi", _XML_SCHEMA_INSTANCE_NS)
 
 _XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
 
+# The declaration's identity block. Mandatory and first in the ``Declaracion``
+# sequence of every bundled AEAT Modelo 100 XSD, and absent from every bundled
+# dictionary, so it is written from the layout rather than from a dictionary row.
+_AUX_TAG = "Aux"
+
 # Model groups carry no sibling position of their own when reading declared
 # order: a declaration nested inside one sits at the position the group occupies
 # in its parent, so the walk descends through them rather than treating them as
@@ -104,6 +109,7 @@ def render_xml_dictionary_layout(
         _xml_dictionary_xsd_source(layout, schema_provider.sources),
         source_root=schema_provider.source_root,
     )
+    _append_declaration_aux(root, layout)
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     for entry in entries:
@@ -221,6 +227,25 @@ def _latest_xml_dictionary_xsd_version(source: SourceReference, *, source_root: 
     if not versions:
         raise FilingExportValidationError(f"XML dictionary XSD source {source.id!r} declares no versionxsd values")
     return sorted(versions, key=lambda item: tuple(int(part) for part in item.split(".")))[-1]
+
+
+def _append_declaration_aux(root: ElementTree.Element[str], layout: ExportLayoutDefinition) -> None:
+    """Write the declaration's ``Aux`` identity block from the layout's declaration.
+
+    The block is mandatory and first in every AEAT Modelo 100 XSD, and no bundled
+    dictionary describes a single one of its rows, so it cannot be reached by the
+    dictionary-driven walk that writes everything else here.
+
+    Both children are ``minOccurs="1"``, so a block missing either is invalid and
+    is not worth writing: when ``aux_version`` is undeclared this writes nothing,
+    and :func:`~application.filing.assert_xml_declaration_aux_declared` refuses
+    the export at the write door rather than letting a partial block reach disk.
+    """
+    if layout.aux_idioma is None or layout.aux_version is None:
+        return
+    aux = ElementTree.SubElement(root, _AUX_TAG)
+    ElementTree.SubElement(aux, "Idioma").text = layout.aux_idioma.value
+    ElementTree.SubElement(aux, "VERSION").text = layout.aux_version
 
 
 def _xsd_declared_children(node: ElementTree.Element[str]) -> list[ElementTree.Element[str]]:

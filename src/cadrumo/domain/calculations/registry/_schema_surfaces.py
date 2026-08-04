@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import ExportLayoutFormat
+from ....core import DeclaracionIdioma, ExportLayoutFormat
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
@@ -40,6 +40,7 @@ __all__ = [
     "CasillaConstraints",
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
+    "DeclaracionIdiomaValue",
     "ExportFieldDefinition",
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
@@ -757,6 +758,32 @@ ExportLayoutFormatValue = Annotated[ExportLayoutFormat, BeforeValidator(_coerce_
 """Annotated export-layout format that hydrates TOML string literals to members."""
 
 
+def _coerce_declaracion_idioma(value: object) -> DeclaracionIdioma | None:
+    """Hydrate an ``Aux/Idioma`` TOML token to its member.
+
+    Mirrors :func:`_coerce_export_layout_format`: the registry TOML stores AEAT's
+    plain single-character token, and strict validation would otherwise reject the
+    string outright. A token outside the schema's ``(E|G|C|V){1}`` pattern is
+    refused by name, with the accepted set spelled out, rather than as a bare type
+    error an author cannot act on.
+    """
+    if value is None or isinstance(value, DeclaracionIdioma):
+        return value
+    if isinstance(value, str):
+        try:
+            return DeclaracionIdioma(value)
+        except ValueError:
+            raise RegistryValidationError(
+                f"export layout aux_idioma {value!r} is not a language the AEAT declaration accepts; "
+                f"expected one of {[member.value for member in DeclaracionIdioma]}",
+            ) from None
+    raise RegistryValidationError(f"export layout aux_idioma must be a string, got {type(value).__name__!r}")
+
+
+DeclaracionIdiomaValue = Annotated[DeclaracionIdioma | None, BeforeValidator(_coerce_declaracion_idioma)]
+"""Annotated ``Aux/Idioma`` language that hydrates TOML string literals to members."""
+
+
 class ExportLayoutDefinition(RegistryModel):
     id: ExportLayoutId
     format: ExportLayoutFormatValue = ExportLayoutFormat.FIXED_WIDTH
@@ -764,6 +791,37 @@ class ExportLayoutDefinition(RegistryModel):
     source_refs: SourceRefs
     legal_refs: LegalRefs
     records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
+    aux_idioma: DeclaracionIdiomaValue = None
+    """Language the declaration's mandatory ``Aux/Idioma`` element declares.
+
+    The AEAT dictionary that drives an ``xml_dictionary`` render describes no
+    ``Aux`` row at all, in any bundled revision, while every XSD makes the block
+    mandatory and first — so the value cannot come from the dictionary and is
+    declared here instead, beside the format that requires it.
+    """
+
+    aux_version: str | None = Field(default=None, min_length=1, max_length=4)
+    """Producer token the declaration's mandatory ``Aux/VERSION`` element carries.
+
+    Deliberately has NO default, and that is load-bearing rather than caution.
+    AEAT declares the element as ``tipo_String4L`` — four characters against a
+    permissive pattern, with no enumeration, no annotation, and no worked example
+    carrying a genuine value anywhere in the bundled corpus. So a plausible token
+    such as ``"1.00"`` would VALIDATE while asserting something nothing verified,
+    the document would start passing our own checks, and the gap would stop being
+    reported at all.
+
+    Two sources that look authoritative are not. A real AEAT-submitted
+    declaration in the fixture corpus carries ``<VERSION>2.02</VERSION>``, which
+    is a redaction placeholder — the sanitiser assigned sequential field-position
+    indices, and its siblings include an ``ECIVIL`` of ``6`` where the schema
+    admits only 1-4. And the registry's own ``LegalParameter`` surface, the
+    obvious home for a "declared parameter", requires a legal citation this value
+    has none of; declaring it there would have meant inventing one.
+
+    Absent, the export refuses rather than emitting a partial ``Aux`` — which
+    would be invalid regardless, since the element is ``minOccurs="1"``.
+    """
 
     @model_validator(mode="after")
     def _validate_layout_format(self) -> ExportLayoutDefinition:
@@ -774,6 +832,15 @@ class ExportLayoutDefinition(RegistryModel):
                 raise RegistryValidationError(
                     f"export layout {self.id!r} dictionary source must be included in source_refs",
                 )
+            if self.aux_idioma is None:
+                raise RegistryValidationError(
+                    f"export layout {self.id!r} must declare aux_idioma: the declaration's Aux block is "
+                    "mandatory in every AEAT XSD and no dictionary declares its rows",
+                )
+        elif self.aux_idioma is not None or self.aux_version is not None:
+            raise RegistryValidationError(
+                f"export layout {self.id!r} declares Aux identity on a {self.format} layout, which has no Aux block",
+            )
         return self
 
     @model_validator(mode="after")

@@ -70,6 +70,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.categories import SpendingCategory
 from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.filing import FilingExportError
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
 from ....domain.transactions import (
@@ -99,6 +100,7 @@ from .. import (
     persist_filed_revision_observation,
     verify_modelo_revision,
 )
+from .._export import ModeloExportError
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -721,26 +723,34 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
         if finding.severity.value == "blocking" or "formula-divergence" in finding.message
     ]
 
+    # The operator reaches a verified revision and then cannot export it. Modelo
+    # 100's XML layouts leave the declaration's mandatory Aux/VERSION undeclared,
+    # because AEAT publishes no authoritative value for it, and the export refuses
+    # rather than writing a document that fails at its own first element. The
+    # calculation and verification above are unaffected -- which is the point of
+    # keeping this replay end-to-end: it shows exactly how far the operator gets.
     output = tmp_path / "modelo-100-2024-0A.xml"
-    receipt = export_modelo_revision(
-        ModeloExportCommand(
-            calculation_revision_id=annual.calculation_revision_id,
-            output_path=output,
-            actor="autonoma-cli-rerun",
-        ),
-        workflow_profile=_autonoma_workflow_profile(),
-        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-        filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects),
-        bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
-        calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
-    )
+    with pytest.raises(ModeloExportError) as refusal:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=annual.calculation_revision_id,
+                output_path=output,
+                actor="autonoma-cli-rerun",
+            ),
+            workflow_profile=_autonoma_workflow_profile(),
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            filing_repository=ModeloRecordCatalogueRepository(objects=secure_objects),
+            bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects),
+            calculation_observation_repository=CalculationObservationRepository(objects=secure_objects),
+        )
 
-    xml = output.read_text(encoding="utf-8")
-    assert receipt.output_path == output
-    assert "<RET1>4500.00</RET1>" in xml
-    assert "<RET9>1520.00</RET9>" in xml
-    assert "<PAGOS>6020.00</PAGOS>" in xml
+    # The operator-facing wrapper carries a translated key, so the structural
+    # cause is what names the undeclared field. Reading it here also proves the
+    # wrapper preserves that cause rather than flattening it to a write failure.
+    assert isinstance(refusal.value.__cause__, FilingExportError)
+    assert "aux_version" in str(refusal.value.__cause__)
+    assert not output.exists()
 
 
 def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(

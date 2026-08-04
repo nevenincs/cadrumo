@@ -422,8 +422,60 @@ def _format_missing_casilla(casilla_id: CasillaId, metadata: tuple[str, str | No
 did_page_suppressed = _did_page_suppressed
 
 
+def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition) -> None:
+    """Panic if an ``xml_dictionary`` export cannot write its mandatory ``Aux``.
+
+    Every AEAT Modelo 100 XSD opens ``Declaracion`` with ``Aux``, ``minOccurs=1``,
+    whose ``Idioma`` and ``VERSION`` children are each ``minOccurs=1`` too. No
+    bundled dictionary declares a single ``Aux`` row in any revision, so the
+    dictionary-driven writer cannot reach the block and the values are declared on
+    the layout instead. When one is undeclared the block cannot be written at all:
+    a partial ``Aux`` is invalid, and omitting it makes the document fail at its
+    very first element.
+
+    The refusal exists because the alternative is worse than an error. AEAT types
+    ``VERSION`` as ``tipo_String4L`` — four characters, permissive pattern, no
+    enumeration — so an invented token would VALIDATE, the document would start
+    passing every check made of it, and the gap would stop being reported while an
+    unverified value rode to the tax authority. Refusing keeps the gap visible; the
+    export resumes the moment the layout declares a real value, with no code change.
+
+    This runs at the write door rather than inside the renderer because the property
+    it defends is that no unfileable artefact reaches the operator, and because an
+    operator who receives a file believes they hold a filing artefact.
+
+    Args:
+        layout: The export layout about to be written.
+
+    Raises:
+        FilingExportError: The layout is ``xml_dictionary`` and cannot supply the
+            mandatory block, naming the undeclared field.
+    """
+    if layout.format is not ExportLayoutFormat.XML_DICTIONARY:
+        return
+    undeclared = [
+        name
+        for name, value in (("aux_idioma", layout.aux_idioma), ("aux_version", layout.aux_version))
+        if value is None
+    ]
+    if not undeclared:
+        return
+    missing = ", ".join(undeclared)
+    raise FilingExportError(
+        f"export layout {layout.id!r} cannot write the declaration's mandatory Aux block: "
+        f"{missing} is not declared on the layout. Every AEAT XSD for this modelo declares Aux "
+        "with minOccurs=1 as the first element of Declaracion, and its Idioma and VERSION children "
+        "are mandatory too, so a partial block is invalid and an omitted one fails at the first "
+        "element. No bundled AEAT dictionary declares these rows and no bundled source carries an "
+        "authoritative VERSION, so the value cannot be derived and is not invented: an invented "
+        "token would satisfy the schema while asserting something unverified. Declare "
+        f"{missing} on the export layout once AEAT's value is known.",
+    )
+
+
 __all__ = [
     "assert_export_mirrors_manifest",
+    "assert_xml_declaration_aux_declared",
     "boe_representable_casilla_ids",
     "did_page_suppressed",
     "rendered_casilla_ids",
