@@ -724,3 +724,126 @@ full read, not the sample, is what this record reflects.
   reconfirmation.
 - **Commits**: `91921ad634`, `f0b748ca8a`, `5b73dcb883`, `2f59886f75`,
   `5a9b8f20b1`, `73021c6b94`, `d8aa97cc8c`.
+
+## Batch: six-band closure after the goal-hook reopened the Step
+
+The Step had been reasoned off the closure path -- the plan's own text placed
+W03.P14-P16 outside the operator's sharpened criterion. A goal hook rejected
+that: the standing goal says *every codesite and api has been migrated*, and a
+campaign narrowing its own completion criterion and then meeting the narrowed
+version is not the same thing. Reopened and burned down.
+
+### The population moved twice, both times against the coordinator's own instrument
+
+A fresh AST scan at `fdc82ccb61` found 417 bare taxonomy-segment literals, of
+which **210 sat in genuine path-composition position** across 88 files (6
+production / 204 tests). That figure was wrong twice, in opposite directions:
+
+- **Over-reporting.** The scanner matched segment names *without their anchor* --
+  this campaign's founding defect, reproduced in the instrument built to measure
+  it. Measured 33% false-positive rate on the production set:
+  `locales/_modelo_manager.py` roots at `bundled_path("registry","aeat")`, while
+  the taxonomy's `manifest.toml` is `<root>/buckets/<bucket_id>/manifest.toml`
+  anchored `storage_root`.
+- **Under-reporting, twice.** Four segments (`db`, `cache`, `audit`, `blobs`)
+  had been excluded as "non-discriminating" -- `blobs` explicitly because it was
+  *anchor-sensitive*, which is the reason to check a segment rather than skip it,
+  and `blobs`/`blobs` is this campaign's founding defect. A probe with a positive
+  control (same walker, production filter removed: 0 -> 57) recovered **57 sites
+  across 30 files**. Separately, a segment bound to a *constant* never enters a
+  `/` chain at all, so path-position scanning is blind to it; that recovered
+  **5 production sites**.
+
+Corrected population: **261 test sites plus 6 production candidates.** The 57
+recovered sites were routed to the *owning* band as addenda rather than to a
+seventh lane, because 13 of their 30 files were already open on a lane's desk.
+
+### Per-band results
+
+| band | scope | sites | migrate | pin | false-positive | commits |
+|---|---|---|---|---|---|---|
+| A | `core/tests` | 53 | 0 | 27 | 15 | `85a35a5711`, `446e349fe5`, `a7c457cd23` |
+| B | `adapters/outbound` | 36 | 0 | 2 | 33 | no change needed |
+| C | `adapters/persistence` | 55 | 0 | 34 | 21 | `70589f8d3d`, `d705ca546f` |
+| D | `entrypoints/cli` | 33 | 14 | 8 | 11 | `1e37fde8f8` |
+| E | observability + calculations | 41 | 10 | 4 | 23 | `7f3c38e951` |
+| F | tail | 43 | 10 | 7 | 20 | `f4532e6090` |
+
+**123 of 261 were the scanner's false positives and 82 were legitimate pins.**
+Only 34 were real migrations. A bulk migration driven off the scan output would
+have destroyed more than it fixed -- including `test_rotation.py:628`, where
+`buggy_roots = (storage_root / "blobs",)` preserves the pre-fix doubled-`blobs`
+root as a regression proof of the campaign's founding defect.
+
+### Production was not clean, contrary to the earlier claim
+
+- **MIGRATED** `_secret_store.py` -- `SECRET_INDEX_FILENAME` and
+  `SECRET_INDEX_SCHEMA_VERSION` folded onto the taxonomy. The schema-version
+  docstring moved to the version-gate *check* it documents, after confirming it
+  explained why the comparison exists rather than why the value is 1.
+- **MIGRATED** `core/observability` -- the intra-core `_EVENTS_FILENAME`
+  duplicate merged (`a51b1cf041`). Real stakes rather than tidiness: had the two
+  drifted, events written through the sink during `run_context()` would land in a
+  different file than readers look for.
+- **MIGRATED** `cli/__init__.py:1204` -- the filename now reads
+  `storage_location(...).subpath`. Verified structurally rather than by timing
+  (the box was under 144-process load, making timing meaningless):
+  `cadrumo.core` is imported at module level regardless, and `storage_location`'s
+  body is `return STORAGE_TAXONOMY[category]`. The temp root stays severed;
+  root-anchor and filename are separate axes.
+- **PINNED** `_config_llm_fields.py:54` and `config.py:503` -- pydantic requires
+  a default and deriving it closes an import cycle.
+- **FACADE GAP** `SECRET_INDEX_FILENAME` was never exported from the package
+  `__init__` while every sibling constant was. This explains the *origin* of the
+  duplication without excusing `_secret_store.py`, which is inside the package
+  and had no barrier at all.
+
+### The pin marker now enforces something
+
+`PINNED_TAXONOMY_LITERALS` had 41 declaring files and **zero consumers** -- every
+pin verdict this campaign produced lived only in prose. `7b10b17737` makes it a
+gate over two independently discovered sides (a human-authored frozenset versus
+an AST walk of the module body), so a rename moves one and not the other. Its
+first design was falsified by the corpus: the dominant real pin shape is a
+hand-maintained oracle *table*, where the literal never enters a join chain.
+
+### Measurement after, same instrument as the baseline
+
+```
+before  210 sites / 88 files   6 production   (fdc82ccb61)
+after   170 sites / 72 files   5 production   (3ab4dac368)
+```
+
+Same scanner and same definition, so the delta is comparable. It is *not*
+comparable to the 261 population, which includes the 57 sites this scanner
+cannot see. Production's remaining five are the two different-tree false
+positives, the two pinned-by-design, and the rotation lock-suffix convention --
+all verdicted, none unmigrated.
+
+### Instrument blind spots, and one refuted claim
+
+Five blind spots surfaced, four in instruments this campaign built: anchor-blind
+matching; four segments excluded unchecked; constants invisible to path-position
+scanning; `.with_suffix()` and `.with_name()` unrecognised as chain links (caught
+by the census tool's own positive control *before* shipping, having made
+`_rotation.py:180` invisible); and the inert pin marker. Three independent
+instruments learned the same lesson: **path-shaped matching does not find path
+literals, it finds literals in path syntax.**
+
+One coordinator claim was refuted rather than confirmed: that
+`git commit -- <pathspec>` bypasses `.git/index.lock` through a temporary index.
+A direct test (`git commit --dry-run -m probe -- <path>`) failed on the lock. A
+lane reported the technique as confirmed, but four lanes committed within 35
+seconds of one another once the lock cleared, two via the ordinary `git add`
+path -- the success was a confound, not a mechanism. How commits landed during
+the genuine hold is NOT STATED; no further explanation is offered.
+
+### Open
+
+- The anchor-aware census (`e71e798292`) is the instrument that removes the 33%
+  error bar from any future residual figure. Its full-corpus run had not
+  completed when this record was written, so **no anchor-resolved headline number
+  is recorded here.**
+- `PENDING_UNDECLARED` in the pin gate carries two live entries (`master.key`,
+  `master.kdf` in `test_config_custody_profile_lifecycle.py`), shrink-only and
+  reconciled by their own test.

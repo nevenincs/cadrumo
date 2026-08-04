@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-04'
-body_hash: 'sha256:3b3122a7fc70d344c285d184a5630ddf604dabd309e5ea1c875be9a634ff3c77'
+body_hash: 'sha256:89416076cf38562091064df190e53d909c1753d1b339ebc76bbc99f2f38ab5fc'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -211,7 +211,7 @@ Re-expresses each test whose reason for existing is the on-disk name it asserts,
 
 Burns down the mechanically re-pointable literal corpus one test package at a time, each Step gated by the provenance gate scoped to that package plus that package's own suite.
 
-- [ ] `W03.P16.S78` - Burn down the incidental literal corpus one test package at a time across the roughly 108 files carrying path-valued overrides and the roughly 350 hand-rolled override sites, each package gated by the provenance gate scoped to it plus its own suite; `src/cadrumo/tests/`.
+- [x] `W03.P16.S78` - Burn down the incidental literal corpus one test package at a time across the roughly 108 files carrying path-valued overrides and the roughly 350 hand-rolled override sites, each package gated by the provenance gate scoped to it plus its own suite; `src/cadrumo/tests/`.
 
 ### Phase `W03.P23` - test cleanup, a separate hygiene standard from enrollment
 
