@@ -822,18 +822,35 @@ with a **17-segment tail carrying no sweep record** — `master.recovery.key`,
 
 > **`different-namespace` and `never examined` are byte-identical in the tree.**
 
-Four of the six classification outcomes leave no trace. `migrate` removes the
-literal and `injected` renames it — both visible. But `different-namespace` and
-`accessor-is-the-subject` leave the site **exactly as it was**, so a literal that
-was examined and correctly ruled out of scope is indistinguishable from one
-nobody has ever read. **Only `pin` marks itself.**
+The disposition table is the whole argument, and the distinction it turns on is
+**visible in the diff that made the change** versus **readable in the tree
+afterwards**:
+
+| disposition | what it does to the site | readable afterwards |
+|---|---|---|
+| `migrate` | removes the literal | no — the site is gone, identical to one that never existed |
+| `injected` | renames it to a non-taxonomy token | no — nothing marks the rename as a classification |
+| `different-namespace` | leaves it untouched | no |
+| `accessor-is-the-subject` | leaves it untouched | no |
+| `pin` | declares it in `PINNED_TAXONOMY_LITERALS` | **yes — the only one** |
+
+All five were visible in the diff at the time. Only the last is visible to
+somebody arriving later with a grep. (An earlier draft wrote "four of six" while
+naming five outcomes; the ratio is restated here over the rows it can enumerate.)
 
 The consequence is that **the tree is not the record**: no scan of the codebase
 can answer whether `S78` is complete, because completeness is a fact about which
-sites were *classified*, and classification is invisible for two thirds of the
+sites were *classified*, and classification is unreadable for four of the five
 outcomes. The durable record is an explicit **swept-literals ledger** — per
 segment, whether it was swept now or already swept and confirmed — which the band
 reports have been accumulating without anyone having named it as the artefact.
+
+**Every band this campaign closed sits under this table.** `cadrumo.db`,
+`secrets`, `iva-wallet`, `invoices`, the LLM trio, `live`, `financial`, the
+thirteen-segment small-band tail — for each of them the only closure evidence
+still readable in the tree is its `pin` declarations. That is not a further
+measurement; it follows from the table, which is exactly why the table is
+sufficient on its own.
 
 **This is element 5e's shape one level up.** There, a dead declaration satisfies
 the criterion vacuously because there is no site to enrol. Here, an unexamined
@@ -870,19 +887,33 @@ than the last — the second precisely because the first had just been corrected
 which felt like diligence. **A pattern you have just been burned by is the one
 you will over-apply next.**
 
-The element's falsifier never depended on either. Four of six dispositions leave
-no trace, so a clean scan is consistent with every literal having been examined
-and with none of them having been — that stands on the disposition table alone.
+**The falsifier rests on the disposition table and on nothing else.** Four of the
+five dispositions leave nothing a later reader can grep, so a clean scan is
+consistent with every literal having been examined *and* with none of them having
+been. That argument needs no incident to support it — it is a property of the
+classification scheme, demonstrated by every band the campaign closed.
+
+**One argument was offered as support and has been withdrawn from that role.**
+The ledger is keyed by literal, so a file swept under band A can present as
+unswept to a review of band B. That is true by construction, and it was proposed
+as the explanation for the `master.recovery.key` incident — whereupon its only
+candidate instance was refuted, the declaration having been in the file the
+review read. It is kept here as **structural but unobserved**: zero demonstrated
+cases, so it supports nothing and must not be cited as though it did.
+
 **Two secondary points survive as claims in their own right**, both independently
 evidenced and neither resting on the retracted incident: a completeness claim
 needs its domain stated (*"N sites in the M files I examined"*, never a bare
 "all"), and a reviewer who finds extra sites has found a **scope mismatch** until
 history or the file itself says otherwise.
 
-**A third specimen is not wanted here.** Two attempts to illustrate this element
-produced two false findings; the honest record is that the element is real and
-its illustrations were not, which is itself the clearest demonstration available
-of what it describes.
+**Three accounts, three corrections, one clause.** Two worked examples and then a
+supporting argument whose sole instance was refuted — each of them the most
+comfortable available explanation, and each accepted a little faster than the one
+before. The clause's own lesson describes its own revision history, and that is
+the only illustration it is going to get: a third specimen is not wanted here,
+and the honest record is that the element is real while every attempt to picture
+it was not.
 
 **What would make this "no"**: declaring `S78` complete on a clean scan. A clean
 scan is consistent with every remaining literal having been examined *and* with
