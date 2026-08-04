@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:a6fadacaf6893cb7ec5fad3b311c3e7bbc3271468dc40c72800c1d8b43ee8252'
+body_hash: 'sha256:c31ae5f5d8d4f3ede0cbe5a8168c63862bfc0106b66d909ae2c42bf7a55426a4'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -148,17 +148,34 @@ objection would have condemned the tool even at perfect recall. The real
 question was never precision; it is whether the 519-site discard pile is safe
 to never read.
 
-Independently reproduced with a separate implementation of the same walk,
-pinned later at `dcfb8209e4` (`53f80f0830` is its ancestor): the flagged set
-matched exactly (110), and the coinciding-tail population had shrunk to
-307/197, with 26 fewer files carrying a coinciding tail at all. The shrink is
-explained, not a discrepancy — the intervening commits are this campaign's own
-`S78` hand-classification landings (migrations, pins, and renames across
-`master.recovery.key`, `cache`, `logs`, the small-band tail, and others),
-retiring real sites out of the coinciding-tail population between the two
-pins. Confirms the instrument is stable across two independent
-implementations and that the hand-classification lanes are shrinking the true
-risk surface even while the automated detector stays retired.
+**Correction, recorded in place rather than silently edited.** This section
+previously claimed an independent reproduction at `dcfb8209e4` "confirming"
+the instrument — flagged set matching at 110 against a coinciding-tail
+population "shrunk" to 307/197, attributed to intervening `S78`
+hand-classification commits retiring real sites. **That reconciliation is
+false.** `honesty` measured both the `53f80f0830` and `dcfb8209e4` versions of
+the detector directly against the `dcfb8209e4` tree and got identical results
+from each (`183`/`519`/`702`) — the detector file is byte-identical between the
+two pins (`git diff 53f80f0830 dcfb8209e4 -- dev/write_site_census.py` is
+empty), and the intervening test-tree churn (11 files, +464/−7, net additive)
+cannot retire 212 sites. A cross-check recorded as agreement is exactly the
+kind of finding this campaign has learned gets the least scrutiny, because
+nobody re-runs a result that already confirms the thesis; this one did not
+get that scrutiny before landing, and should have.
+
+What `307`/`197`/`110` actually measures is not yet established. It was
+produced by a standalone re-implementation of the walk (not the production
+`census()` entry point), and the bug — if it is one — has not been isolated:
+the write-call and bare-chain branches were each written to mirror
+`write_target`'s and `_top_level_div_chains`'s exact inputs to `_literal_tail`,
+but the aggregate count still diverges roughly 2.3x from the same walk run
+independently. Left open rather than reconciled to a story a second reading
+could not sustain. `honesty`'s own `183` vs `110` gap (a coinciding-tail site
+in a risk-signalling module should, by `_is_constrained`'s construction, be
+exactly the flagged set) is also unresolved and may share a root cause with
+this one. The population figures to cite until this is resolved are
+`honesty`'s directly-measured `702`/`519`/`183`/`110`, not the retracted
+`307`/`197`.
 
 ### sampled-recall-of-the-discard-pile-finds-23-percent-rename-sensitive | critical | The class is not reachable by module-local co-occurrence, and no signal-set tuning fixes that
 
@@ -168,19 +185,32 @@ scale): `honesty` drew `random.Random(20260804)`, n=30, from the 519-site
 discard pile and classified each against the real production code, not the
 test snippet alone.
 
+**Correction, recorded in place.** The classification was first reported as 7
+of 30 rename-sensitive (5 breaks, 2 voids) without checking enrollment — a
+correctly-declared `PINNED_TAXONOMY_LITERALS` pin is *resolved* work (a rename
+is supposed to require editing it), not residue. Two of the seven are declared
+pins covering the exact sampled site (`test_corpus_text_cache_location.py:42`,
+`test_storage_substrate_state_root.py:43`), leaving:
+
 ```
-genuinely constrained -- a rename BREAKS the test          5
-rename does not break it, but silently VOIDS the assertion  2
-not constrained                                            23
+                              undeclared-sensitive (real residue)
+genuinely constrained -- BREAKS the test                4
+silently VOIDS the assertion instead of breaking         1
+declared pin (resolved, not residue)                     2
+not constrained                                          23
 ```
 
-**7 of 30 = 23%** rename-sensitive. Point estimate ~121 of 519; Wilson 95% CI
-≈ 12%–41%, i.e. an estimated 61–212 rename-sensitive sites in the pile this
-check currently never surfaces.
+**5 of 30 = 16.7%** undeclared rename-sensitive. Point estimate ~87 of 519;
+Wilson 95% CI ≈ 7.4%–33.6%, i.e. an estimated 38–174 undeclared rename-
+sensitive sites in the pile this check currently never surfaces. (The sample
+also spans the whole test tree, not only the narrower `src/cadrumo/tests/`
+package some `S78` figures scope to — only 3 of the 30 sites sit inside that
+narrower package. If a citation of this figure needs that narrower scope, it
+should be re-drawn against it rather than assumed comparable.)
 
-Read against the real callees, the five that break outright share one
-structural property none of this detector's vocabulary reaches: the segment
-is independently derived **inside the production function under test**
+Read against the real callees, the undeclared breaks share one structural
+property none of this detector's vocabulary reaches: the segment is
+independently derived **inside the production function under test**
 (`_profile_bucket_scan`'s own docstring: "Scans every `<root>/buckets/*/manifest.toml`");
 the caller's text names no accessor, no subprocess, no marker of any kind —
 there is nothing in the calling module to join on. This is a materially
@@ -194,35 +224,36 @@ misses caught genuinely, the other incidentally, per a second reading — and
 was retracted rather than shipped; see the decision history above and the
 revert commit on `dev/write_site_census.py`.
 
-Two of the seven surface a distinct, more dangerous failure mode: a rename
-does not break the test, it silently **voids** it — an absence assertion
-(`assert not (root / "buckets").exists()`) keeps passing once the thing it
-should have caught moved. Precisely stated, this is a **fragility with a
-silent-failure mode, not a live defect today**: the guard is correct and
-effective at the current taxonomy segment, and only stops working if that
+The one undeclared void surfaces a distinct, more dangerous failure mode: a
+rename does not break the test, it silently **voids** it — an absence
+assertion (`assert not (root / "buckets").exists()`) keeps passing once the
+thing it should have caught moved. Precisely stated, this is a **fragility
+with a silent-failure mode, not a live defect today**: the guard is correct
+and effective at the current taxonomy segment, and only stops working if that
 segment is renamed without the assertion being noticed and updated. "A broken
 test screams; a voided one does not," and neither is visible to any detector,
 including this one, framed around "a rename would break it." Tracked
 separately as its own severity category and owned elsewhere in this campaign
 rather than duplicated here.
 
-**Caveat on the central claim, stated plainly:** the five break-outright and
-two void sites above are classified by reading each callee, not by mutating
-the taxonomy segment and running the test — **reasoned, not measured.** A
-mutation-tested confirmation of these seven, and a check on whether the void
-pattern is itself a swept class, is in flight elsewhere in this campaign. This
-finding's verdict does not depend on that confirmation (the sample's
-structural argument — nothing in the caller to join on — holds from the read
-alone), but the seven-site figure itself should be treated as reasoned until
-that measurement lands, and this document updated in place once it does.
+**Caveat on the central claim, stated plainly:** the five undeclared sites
+above are classified by reading each callee, not by mutating the taxonomy
+segment and running the test — **reasoned, not measured.** A mutation-tested
+confirmation of these five, and a check on whether the void pattern is itself
+a swept class, is in flight elsewhere in this campaign. This finding's verdict
+does not depend on that confirmation (the sample's structural argument —
+nothing in the caller to join on — holds from the read alone), but the count
+itself should be treated as reasoned until that measurement lands, and this
+document updated in place once it does.
 
 ## Recommendations
 
 **Final: `WriteSite.constrained` stays retired, at every scope, not funded.**
 The recall measurement is the disqualifier the precision estimate never could
-be: a random sample of the sites this check silently discards found 23%
-rename-sensitive, dominated by a mechanism (production-side derivation) no
-co-occurrence signal — current or extended — can reach. A clean tree-wide or
+be: a random sample of the sites this check silently discards found roughly
+17% genuinely rename-sensitive and undeclared, dominated by a mechanism
+(production-side derivation) no co-occurrence signal — current or extended —
+can reach. A clean tree-wide or
 diff-scoped run proves nothing about the population it never printed, so
 neither scope is safe to trust as a completeness signal. This supersedes the
 mid-session reversal to fund two specific fixes and retarget to diff-scoped
@@ -273,7 +304,7 @@ campaign.
 rather than a negotiation, twice over.** "Missing any known positive is
 disqualifying" turned 114-flags-for-3-true-positives into a settled question on
 contact rather than an argument about tolerable ratios. The same discipline —
-"random, not chosen" — is what makes the 23% recall figure load-bearing: a
+"random, not chosen" — is what makes the recall figure load-bearing: a
 hand-picked sample would have reproduced the original three-oracle problem at
 a different scale, and neither a defender nor a critic could have out-argued
 the other from a cherry-picked number.
