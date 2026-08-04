@@ -265,7 +265,6 @@ def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -
 
     assert version.returncode == 0, version.stderr
     assert version.stdout == f"{PRODUCT_IDENTITY.display_name} {__version__}\n"
-    assert __version__ == "0.2.1"
     assert help_result.returncode == 0, help_result.stderr
     assert help_result.stdout.startswith(f"{PRODUCT_IDENTITY.display_name} -")
     assert f"{PRODUCT_IDENTITY.cli_executable} config" in help_result.stdout

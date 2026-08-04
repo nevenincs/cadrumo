@@ -95,12 +95,12 @@ class StoragePathDefinition(BaseModel):
 
     Required for every ``<root>``-anchored kind (``FILE``, ``DIRECTORY``,
     ``BLOB_OBJECT``) and forbidden for ``LOGICAL_SQL`` (a ``db://`` logical
-    path has no ``<root>`` token to anchor). Declared rather than assumed
-    uniform: the three blob-content entries anchor at
-    :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s
-    own ``root_dir``, distinct BY CONTRACT from the storage root every other
-    entry means, whatever the two currently happen to resolve to
-    -- see :class:`StoragePathAnchor`.
+    path has no ``<root>`` token to anchor). The three blob-content entries
+    declare :attr:`StoragePathAnchor.BLOB_STORE_ROOT` rather than
+    :attr:`~StoragePathAnchor.STORAGE_ROOT`; see :class:`StoragePathAnchor`'s
+    own docstring for what that distinction currently rests on (an open
+    question, not a settled one) and for why both anchors are checked by
+    the directory-agreement gate regardless.
     """
 
     @field_validator("key")
