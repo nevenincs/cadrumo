@@ -380,6 +380,10 @@ def test_the_production_separation_check_still_refuses_a_nested_keystore(tmp_pat
     from ...adapters.persistence.storage.bucket import BucketValidationError, validate_keystore_separation
 
     root = tmp_path / "state"
+    # Deliberately the WRONG shape -- this is the composition
+    # validate_keystore_separation must reject, not a pin of the correct
+    # keystore location (that is `root / "keystore" / "primary"`, asserted
+    # above in test_the_scoped_accessor_resolves_bucket_and_keystore_members).
     nested = root / "buckets" / "primary" / "keystore"
 
     with pytest.raises(BucketValidationError):
