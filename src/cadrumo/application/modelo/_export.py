@@ -109,7 +109,7 @@ from ._action_errors import (
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
-from ._profile_binding import compose_legal_full_name, resolve_profile_export_values
+from ._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )

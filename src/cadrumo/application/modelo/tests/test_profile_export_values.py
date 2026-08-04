@@ -22,7 +22,7 @@ from ....core import BindingSourceKind, Modelo
 from ....core.resources import resources
 from ....domain.calculations.registry import DataBindingDefinition
 from ....domain.user_profile import load_user_profile_schema
-from .._profile_binding import compose_legal_full_name, resolve_profile_export_values
+from .._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
