@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:84713854ab8aefced7cadb5561699341c8429e17e4e88cf9bca67a9fd3667155'
+body_hash: 'sha256:cc507b83242c5f4b3c1fdc3bc24479495312fee55d8ca480983039f189693019'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
@@ -73,6 +73,66 @@ rather than a single threshold test.
 A coordination hazard applies: a peer campaign is mid-refactor consolidating decimal
 parsing onto the canonical helpers, which is exactly the code that owns this. The remedy
 may belong inside that work rather than beside it.
+
+
+### Measured since: the blast radius resolves, and the second site is not where it looked
+
+**The leaf parser is closed and the gate now sees its layer.** The descendiente flag routes
+through the canonical grammar and refuses the Spanish thousands shape, the ambiguous forms,
+and exponent notation. The regression asserts an outcome divergence rather than describing
+one, using a figure away from both ceilings — the two threshold figures are in the
+parametrised refusal set with the reason recorded, since a probe at either boundary cannot
+distinguish the two readings.
+
+The enforcing gate previously declared its scope by layer, which encoded an assumption that
+operator input never reaches the domain package. It does. Scope now follows the input
+instead. Widening surfaced eight further domain sites, every one exempted with a stated
+reason rather than tightened: AEAT export XML, registry-authored TOML, oracle replay text
+and workbook parity figures are machine-produced, and one is an inverted non-finiteness
+predicate where routing it through the strict grammar would make the guard *more*
+permissive.
+
+### The second site is a JSON re-parse promoter, and tightening it would break reloads
+
+The brief named the profile fact carrier as the write door. It is not. Its own docstring
+states it promotes strings back to typed values when a persisted record is re-read — the
+serialiser emits Decimal and date as strings, and this validator restores them before the
+union resolves. It serves **app-written persisted values**; operator text merely passes
+through the same path.
+
+Measured consequence of applying the strict grammar there: a legitimately persisted
+three-decimal value, such as a business-use ratio, round-trips today and would begin
+**refusing on reload**. So the fix as briefed converts a silent misread into a load failure
+on existing records. That is worse than the sequencing risk anticipated — it is not that the
+change needs a roundtrip test, it is that the location is wrong.
+
+### Why neither existing authority can close it, which is the structural finding
+
+Two mechanisms exist that ought to cover this, and both are structurally unable to.
+
+**The widened gate cannot see it.** The parse there is guarded by a regex fullmatch rather
+than being a bare constructor call, so it never appears in the scan. Extending the gate's
+layer scope does not reach it, and no claim is made that it does.
+
+**The declared numeric authority runs too late.** There is a single declared authority for
+whether a value is legal for a given numeric field, and it executes *after* coercion. By the
+time it is consulted the ambiguous string has already become a Decimal three orders of
+magnitude below what the operator typed, and that value sits legally within range. **The
+string is destroyed before the only authority that could judge it is reached.**
+
+That is the canonicalization defect in its sharpest form, and it is not the one this record
+originally described. An authority exists, is correctly declared as the single home for the
+question, and cannot answer it — because it receives the wrong type. Adding a second
+authority earlier in the path is the fragmenting move; the correct fix is to place the
+existing one where the information still exists.
+
+### The decision this now needs
+
+Enforcement has to happen where the string is still a string **and** is known to be
+operator-typed. That requires the profile write boundary to distinguish an operator write
+from an application reload, which it currently does not. That is a boundary design decision
+rather than a parser change, and it should be recorded before it is built.
+
 
 ## The decision this needs
 
