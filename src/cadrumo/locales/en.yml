@@ -3445,7 +3445,7 @@ cli:
         %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
       descendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
           Repeatable. Run `aeat config profile descendiente` with no subcommand to
           enter these guided.
         add_help: Add one or more descendants to the active profile.
@@ -7320,10 +7320,12 @@ wizard:
         provenance: Your setup answer
       title: Cross-check with your censo certificate
     descendientes:
-      adoption-date:
-        before_birth: The adoption date cannot be earlier than the date of birth.
-        in_future: The adoption date cannot be in the future.
-        prompt: Adoption date (leave blank if not adopted)
+      acogimiento-resolucion:
+        help: 'Date of the first preadoptive or permanent fostering resolution. Give
+          it even if the child was later adopted: the under-three increase is counted
+          from the first fostering and runs for three periods in total, and the adoption
+          does not restart it.'
+        prompt: First fostering resolution date
       birth-date:
         prompt: Date of birth
       convivencia:
@@ -7347,12 +7349,25 @@ wizard:
           '65':
             label: 65% or more
         prompt: Disability grade
+      entry-event:
+        before_birth: The entry date cannot be earlier than the date of birth.
+        in_future: The entry date cannot be in the future.
+        relacion_mismatch: This date does not match the relationship you gave. The
+          Registro Civil inscription applies only to an adopted descendant, and the
+          fostering resolution only to preadoptive or permanent fostering, or to an
+          adopted child previously fostered. Correct the relationship or clear the
+          date.
       gastos-guarderia:
         help: Amounts paid to an authorised nursery (Art. 81.2 LIRPF) that increase
           the maternity deduction; whole euros.
         invalid_negative: Nursery expenses cannot be negative; enter 0 or a positive
           amount in euros.
         prompt: Nursery expenses paid in the filing year (euros)
+      inscripcion-registro-civil:
+        help: Date the adoption was inscribed in the Registro Civil. Where inscription
+          was not required, give the date of the judicial or administrative resolution
+          instead. The under-three increase is counted from that date.
+        prompt: Registro Civil inscription date
       meses-madre-trabajo:
         help: 'For the maternity deduction (Art. 81 LIRPF): months (0-12) the mother
           paid Social Security while this child was under 3.'
@@ -7369,6 +7384,23 @@ wizard:
         help: Leave blank to derive it from your marital status, a spouse record and
           the declaration type.
         prompt: Is another taxpayer also entitled to the allowance for this descendant?
+      relacion:
+        choices:
+          acogimiento_preadoptivo_o_permanente:
+            label: Preadoptive or permanent fostering
+          acogimiento_temporal:
+            label: Temporary fostering
+          adoptado:
+            label: Adopted
+          descendiente:
+            label: Descendant (child or grandchild)
+          tutela:
+            label: Guardianship or legal representation
+        help: Choose the legal relationship. All of them entitle you to the mínimo
+          por descendientes. Only adoption and preadoptive or permanent fostering
+          also entitle you to the under-three increase regardless of the child's age;
+          temporary fostering and guardianship do not.
+        prompt: Relationship to this descendant
       rentas-anuales:
         help: Leave blank if unknown. High income can remove the descendant allowance.
         invalid_negative: The descendant's income cannot be negative.
@@ -7411,8 +7443,7 @@ wizard:
         help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
           DE, FR). Required when fiscal-residency is non_resident_irnr.
       descendiente:
-        help: 'Per-descendant data for Art. 58 LIRPF mínimo (repeatable). Format:
-          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:

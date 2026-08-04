@@ -19,6 +19,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     CUSTODIA_COMPARTIDA_PRORRATA_FACTOR,
@@ -119,9 +120,36 @@ class DescendantInfo(BaseModel):
     ------
     birth_date
         Required date of birth.
-    adoption_date
-        Finalisation date of the adoption, or ``None`` for a biological child.
-        When present it must be ≥ ``birth_date`` and ≤ today.
+    relacion
+        The legal relationship linking this descendant to the contribuyente
+        (:class:`~cadrumo.core.DescendantRelacion`). Defaults to
+        :attr:`~cadrumo.core.DescendantRelacion.DESCENDIENTE`, so an absent
+        fact means an ordinary descendant. Art. 58.1 assimilates tutela and
+        acogimiento for the tranches while Art. 58.2 names only "adopción o
+        acogimiento, tanto preadoptivo como permanente" for the increase, so
+        the two clauses need this distinction drawn rather than inferred.
+    inscripcion_registro_civil_date
+        The Art. 58.2 entry event for an ADOPTION: the date the adoption was
+        inscribed in the Registro Civil, or — where inscription is not
+        required — the date of the resolución judicial o administrativa. One
+        anchor with two legal sources, not two meanings, which is why it is one
+        field. Permitted only on an
+        :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` record.
+
+        This is a RE-ANCHORING rather than a rename of the retired
+        ``adoption_date``: that field was documented as the adoption's
+        *finalisation*, while Art. 58.2 anchors on the *inscription*. Where a
+        profile previously carried a finalisation date the two can differ, and
+        the inscription is the one the statute counts from.
+    acogimiento_resolucion_date
+        The Art. 58.2 entry event for an acogimiento: the date of the FIRST
+        ENTITLING resolución — preadoptivo or permanente, the two shapes the
+        statute names. Permitted on those records and on an ``ADOPTADO``
+        record, because Art. 58.2's three periods are a CAP measured from the
+        first entitling event rather than a count the later adoption restarts:
+        a fostered-then-adopted child holds both dates and gets three periods
+        in total, not six. A temporal placement is not entitling and therefore
+        has no truthful value for this field.
     discapacidad_grado
         0 = sin discapacidad, 33 = grado ≥ 33 % < 65 %, 65 = grado ≥ 65 %.
         A disabled descendant remains mínimo-eligible regardless of age.
@@ -171,7 +199,9 @@ class DescendantInfo(BaseModel):
     model_config = _STRICT_FROZEN
 
     birth_date: date
-    adoption_date: date | None = None
+    relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE
+    inscripcion_registro_civil_date: date | None = None
+    acogimiento_resolucion_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool = True
     custodia_compartida: bool = False
@@ -182,10 +212,120 @@ class DescendantInfo(BaseModel):
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     nif: str | None = None
 
-    @field_validator("birth_date", "adoption_date", mode="before")
+    @field_validator(
+        "birth_date",
+        "inscripcion_registro_civil_date",
+        "acogimiento_resolucion_date",
+        mode="before",
+    )
     @classmethod
     def _parse_date(cls, value: object) -> object:
         return _coerce_iso_date_field(value)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _infer_relacion_from_inscripcion(cls, data: object) -> object:
+        """Read an unstated relación off an inscription date rather than guessing.
+
+        A Registro Civil inscription date is the adoption anchor and nothing
+        else carries it, so a record supplying one while saying nothing about
+        the relación has already stated it — resolving that to
+        :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` is a reading of the
+        same information, not an inference about a case the operator left open.
+
+        Deliberately NOT symmetric with the acogimiento date. That date is
+        compatible with two members and the statute treats them oppositely, so
+        picking one would be the guess this axis exists to remove; an
+        acogimiento date with no stated relación is refused below instead, and
+        the refusal names both members so the operator resolves it themselves.
+
+        Runs ``mode="before"`` because the default makes an ABSENT relación and
+        an explicitly-ordinary one indistinguishable afterwards, and those two
+        get opposite treatment: absent is read, explicit is a contradiction the
+        coherence check refuses.
+
+        An explicit ``None`` counts as unstated, which is what lets every entry
+        door express "the operator did not answer" without each inventing its
+        own sentinel: the flag parser, the fact-index reader and the wizard
+        projection all pass the optional token straight through. The key is then
+        dropped so the field default applies.
+        """
+        if not isinstance(data, dict):
+            return data
+        # Untyped by construction: this is raw pre-validation input, and
+        # pydantic re-validates every value against the declared field type
+        # immediately after.
+        raw = cast("dict[str, object]", data)
+        if raw.get("relacion") is not None:
+            return raw
+        if raw.get("inscripcion_registro_civil_date") is not None:
+            return {**raw, "relacion": DescendantRelacion.ADOPTADO}
+        return {key: value for key, value in raw.items() if key != "relacion"}
+
+    @model_validator(mode="after")
+    def _validate_entry_event_dates(self) -> DescendantInfo:
+        """Enforce the entry-event dates' ordering and their relación coherence.
+
+        Two rules, and they fail in deliberately different directions.
+
+        ORDERING refuses: an entry event before the birth or in the future is
+        not a fact about any real placement, exactly as the retired
+        ``adoption_date`` refused the same shapes.
+
+        COHERENCE refuses an entry date carried by a relación the statute
+        excludes — a tutela guardian, a temporal acogimiento carer, or an
+        explicitly-ordinary descendant. Tolerating it would leave an entitling
+        anchor sitting on an excluded record, and the Art. 58.2 limb would then
+        be reachable through the only date field those records have. That is
+        the over-grant this axis was added to prevent, so it fails loudly at
+        the boundary rather than being filtered later by whichever predicate
+        happens to remember.
+
+        The converse — an entitling relación with NO entry date — is VALID and
+        silent here. The window limb simply cannot fire without an anchor, so
+        the record under-grants; refusing it would block an operator from
+        recording a placement whose date they do not yet hold, and a refusal to
+        record is worse than a grant deferred. The calculate path raises a
+        visible advisory for exactly that state.
+        """
+        self._refuse_out_of_range_entry_dates()
+        self._refuse_incoherent_entry_dates()
+        return self
+
+    def _refuse_out_of_range_entry_dates(self) -> None:
+        """Refuse an entry event before the birth or in the future."""
+        today = today_madrid()
+        for field_name, value in (
+            ("inscripcion_registro_civil_date", self.inscripcion_registro_civil_date),
+            ("acogimiento_resolucion_date", self.acogimiento_resolucion_date),
+        ):
+            if value is None:
+                continue
+            if value < self.birth_date:
+                raise ProfileValidationError(f"{field_name} {value} must be ≥ birth_date {self.birth_date}")
+            if value > today:
+                raise ProfileValidationError(
+                    f"{field_name} {value} must not be in the future (today={today})",
+                )
+
+    def _refuse_incoherent_entry_dates(self) -> None:
+        """Refuse an entry-event date the declared relación cannot carry."""
+        if self.inscripcion_registro_civil_date is not None and self.relacion is not DescendantRelacion.ADOPTADO:
+            raise ProfileValidationError(
+                f"inscripcion_registro_civil_date is the Art. 58.2 anchor for an adoption and cannot be "
+                f"carried by relacion={self.relacion.value!r}. Set relacion="
+                f"{DescendantRelacion.ADOPTADO.value!r}, or record the placement date as "
+                f"acogimiento_resolucion_date if this is an acogimiento.",
+            )
+        if self.acogimiento_resolucion_date is not None and self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+            entitling = ", ".join(sorted(member.value for member in ART_58_2_ENTITLING_RELACIONES))
+            raise ProfileValidationError(
+                f"acogimiento_resolucion_date is the first ENTITLING acogimiento resolución (Art. 58.2 "
+                f"names acogimiento 'tanto preadoptivo como permanente') and cannot be carried by "
+                f"relacion={self.relacion.value!r}; accepted values are {entitling}. A temporal "
+                f"acogimiento is assimilated by Art. 58.1 for the tranches but excluded from the "
+                f"Art. 58.2 increase, so it carries no entry date.",
+            )
 
     @field_validator("nif")
     @classmethod
@@ -199,19 +339,6 @@ class DescendantInfo(BaseModel):
             raise ProfileValidationError(f"nif must be 9 characters, got {len(stripped)!r} for {value!r}")
         return stripped
 
-    @model_validator(mode="after")
-    def _validate_adoption_date(self) -> DescendantInfo:
-        if self.adoption_date is None:
-            return self
-        if self.adoption_date < self.birth_date:
-            raise ProfileValidationError(f"adoption_date {self.adoption_date} must be ≥ birth_date {self.birth_date}")
-        today = today_madrid()
-        if self.adoption_date > today:
-            raise ProfileValidationError(
-                f"adoption_date {self.adoption_date} must not be in the future (today={today})",
-            )
-        return self
-
     def age_at_year_end(self, filing_year: int) -> int:
         """Return the descendant's age on 31 December of *filing_year*."""
         year_end = date(filing_year, 12, 31)
@@ -222,8 +349,49 @@ class DescendantInfo(BaseModel):
         return age
 
     def _entry_date(self) -> date:
-        """The effective entry date used for prorrata: adoption or birth."""
-        return self.adoption_date if self.adoption_date is not None else self.birth_date
+        """The nacimiento/adopción entry date the Madrid deducción window measures from.
+
+        ADOPTION-SPECIFIC, and that is the whole reason two named dates replaced
+        one general field. The Madrid decree (DL 1/2010 art. 4) keys its window
+        on "nacimiento o adopción" and names no acogimiento, so an acogimiento
+        resolución must not move this anchor even though it does open the
+        Art. 58.2 window — the two statutes count from different events for the
+        same child, and a single entry date could serve only one of them.
+
+        Reading the inscription field alone is sufficient rather than lucky:
+        :meth:`_refuse_incoherent_entry_dates` guarantees it is populated only
+        on an :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` record, so a
+        present value is always an adoption. Absent, the birth is the event.
+        """
+        return (
+            self.inscripcion_registro_civil_date
+            if self.inscripcion_registro_civil_date is not None
+            else self.birth_date
+        )
+
+    def art_58_2_entry_date(self) -> date | None:
+        """The FIRST entitling entry event for the Art. 58.2 window, or ``None``.
+
+        Art. 58.2's three periods are a cap rather than a restart: where the
+        circumstances change — the authority's own worked example is an adoption
+        following a fostering — the increase continues for the remaining periods
+        up to a maximum of three. Anchoring on whichever event the record
+        happens to hold would grant a fostered-then-adopted child up to six
+        periods where the statute allows three, so the earliest entitling event
+        is the anchor and the later one changes nothing.
+
+        Returns ``None`` for a relación the statute excludes from the limb
+        (tutela, temporal acogimiento, an ordinary descendant) and for an
+        entitling relación whose date is not yet recorded.
+        """
+        if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+            return None
+        candidates = [
+            value
+            for value in (self.inscripcion_registro_civil_date, self.acogimiento_resolucion_date)
+            if value is not None
+        ]
+        return min(candidates) if candidates else None
 
     def exceeds_rentas_cap(self, thresholds: MinimoDescendientesThresholds) -> bool:
         """True when a DECLARED rentas figure breaches the Art. 58.1 ceiling.
@@ -362,32 +530,65 @@ class DescendantInfo(BaseModel):
         statute's window to the other's deduction, which is why the two are
         resolved apart.
 
-        Art. 58.2 names "adopción o acogimiento" and NOT tutela, so this limb
-        keys on ``adoption_date``, documented here as the adoption's
-        finalisation date. A descendant under tutela carries none and is never
-        granted the increase by this limb, which is the correct outcome. An
-        acogimiento placement that is not an adoption also carries none, so it
-        stays under-granted; closing that needs a relationship-kind fact this
-        axis does not yet hold.
+        The second limb reads ``relacion`` rather than the presence of a date,
+        which is what makes the statute's three-way split expressible. Art. 58.1
+        assimilates "tutela y acogimiento"; Art. 58.2 names "adopción o
+        acogimiento, tanto preadoptivo como permanente". So a tutela guardian
+        and a TEMPORAL acogimiento carer both take the ordinary tranches and
+        neither takes this increase, while a preadoptivo or permanente carer
+        takes both. Keying the limb on a date alone would grant it to whoever
+        recorded one, which is the over-grant the relación axis exists to close.
 
-        Precision limit worth stating: Art. 58.2 anchors on the Registro Civil
-        inscription, or on the resolución where inscription is not required,
-        while this model carries a single adoption date. Where the resolución
-        and the inscription straddle a year boundary the window can start one
-        period early or late.
+        The anchor is :meth:`art_58_2_entry_date` — the FIRST entitling event —
+        so the three periods cap a fostered-then-adopted child's window rather
+        than restarting on the adoption.
         """
         if not self.convive_con_contribuyente:
             return False
         if self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES:
             return True
-        if self.adoption_date is None:
+        entry_date = self.art_58_2_entry_date()
+        if entry_date is None:
             return False
-        periods_since_entry = filing_year - self.adoption_date.year
+        periods_since_entry = filing_year - entry_date.year
         return 0 <= periods_since_entry <= _NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS
 
     def entry_year(self) -> int:
-        """Calendar year of the nacimiento/adopción event (deducción-window anchor)."""
+        """Calendar year of the nacimiento/adopción event, for the Madrid deducción window.
+
+        Scoped to the autonomic nacimiento/adopción deducción and NOT to
+        Art. 58.2, which counts from a different event for the same child: see
+        :meth:`_entry_date` for why an acogimiento resolución moves one anchor
+        and not the other, and :meth:`art_58_2_entry_date` for the state anchor.
+        """
         return self._entry_date().year
+
+    def art_58_2_window_anchor_missing(self, filing_year: int) -> bool:
+        """True when an entitling relación has no entry date, so the limb cannot fire.
+
+        The recordable state the coherence validators deliberately allow: an
+        operator may declare an adoption or an entitling acogimiento before they
+        hold the inscription or resolución date. Art. 58.2's age-independent
+        increase then cannot be granted, because the window has nothing to
+        measure from — an UNDER-grant, which is the safe direction, but a silent
+        one unless something says so.
+
+        Reports only the state that changes an outcome, so the advisory it feeds
+        stays worth reading. A relación the statute excludes from the limb has
+        no anchor to be missing. A non-cohabiting descendant takes no mínimo at
+        all. And a descendant already under three takes the increase through the
+        ordinary limb regardless, so a missing anchor costs them nothing this
+        year — the flag is for the older adopted or fostered child, who is
+        exactly the household the age-independent sentence was written for and
+        the one currently granted nothing.
+        """
+        if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+            return False
+        if not self.convive_con_contribuyente:
+            return False
+        if self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES:
+            return False
+        return self.art_58_2_entry_date() is None
 
     def is_nacimiento_adopcion_eligible(
         self,

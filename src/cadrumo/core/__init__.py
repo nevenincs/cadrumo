@@ -159,6 +159,10 @@ from ._post_filing_event import (
     classify_post_filing_event_kind,
     post_filing_event_is_actionable,
 )
+from ._descendant_relacion import (
+    ART_58_2_ENTITLING_RELACIONES,
+    DescendantRelacion,
+)
 from ._profile_session import ProfileSessionRefusalReason
 from ._prorrata_exclusions import (
     ART_104_TRES_AUTO_DERIVED_EXCLUSIONS,
@@ -276,6 +280,7 @@ __all__: list[str] = [
     "ANTHROPIC_EXTRA",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
+    "ART_58_2_ENTITLING_RELACIONES",
     "BROWSER_EXTRA",
     "COMPATIBILITY_REGIME",
     "DEFAULT_WRITE_PROVENANCE",
@@ -326,6 +331,7 @@ __all__: list[str] = [
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
+    "DescendantRelacion",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",

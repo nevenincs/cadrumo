@@ -43,6 +43,7 @@ from ..calculations import CalculationObservationRepository
 from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 from ._minimo_descendientes_advisory import (
     collect_descendientes_count_desync_diagnostics,
+    collect_minimo_descendientes_entry_date_missing_diagnostics,
     collect_minimo_descendientes_prorrata_inferred_diagnostics,
     collect_minimo_descendientes_rentas_undeclared_diagnostics,
     collect_minimo_descendientes_undeclared_diagnostics,
@@ -150,6 +151,12 @@ def collect_bucket_aggregation_advisory_diagnostics(
             bucket_id=bucket_id,
         )
         + collect_minimo_descendientes_rentas_undeclared_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            bucket_id=bucket_id,
+        )
+        + collect_minimo_descendientes_entry_date_missing_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,

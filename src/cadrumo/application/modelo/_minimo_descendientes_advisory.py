@@ -45,6 +45,7 @@ from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casill
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
+    "collect_minimo_descendientes_entry_date_missing_diagnostics",
     "collect_minimo_descendientes_prorrata_inferred_diagnostics",
     "collect_minimo_descendientes_rentas_undeclared_diagnostics",
     "collect_minimo_descendientes_undeclared_diagnostics",
@@ -58,6 +59,7 @@ _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
 _COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
 _PRORRATA_INFERRED_SOURCE_KIND = "minimo_descendientes_prorrata_inferred"
 _RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
+_ENTRY_DATE_MISSING_SOURCE_KIND = "minimo_descendientes_entry_date_missing"
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -344,6 +346,86 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
                 "withdraws it above the rentas ceiling, and Art. 61 norma 2ª when the descendant files "
                 "their own return above that figure; an absent figure exceeds neither. Declare it with "
                 "`descendiente add --descendiente RENTAS=N`. RENTAS=0 is a valid answer and silences this"
+            ),
+            casilla_id=estatal_id,
+        ),
+    )
+
+
+def collect_minimo_descendientes_entry_date_missing_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise when an adopted or fostered descendant has no Art. 58.2 entry date.
+
+    Art. 58.2 grants the under-three increase "con independencia de la edad del
+    menor" for an adopción or an acogimiento preadoptivo o permanente, in the
+    period the entry event falls and the two following. The window therefore
+    needs an anchor: the Registro Civil inscription (or the resolución where
+    inscription is not required) for an adoption, the first entitling resolución
+    for an acogimiento.
+
+    Recording the relación WITHOUT its date is a state the model deliberately
+    accepts rather than refuses — an operator may know a child is adopted before
+    they hold the inscription date, and refusing the record would be worse than
+    deferring the grant. The consequence is that the age-independent limb cannot
+    fire, so the household the sentence was written for receives nothing, which
+    is an under-grant and therefore the safe direction — but a silent one unless
+    something says so (`no-silent-under-declaration`).
+
+    Narrow by construction, on the same reasoning as its siblings: a descendant
+    already under three takes the increase through the ordinary limb regardless,
+    a non-cohabiting one takes no mínimo at all, and a relación the statute
+    excludes from the limb (tutela, temporal acogimiento) has no anchor to be
+    missing. Only the older adopted or fostered child — exactly the case the
+    age-independent clause exists for — is reported.
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated. Its ``valid_to``
+            supplies the devengo year the age limb is anchored to.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        A one-element tuple carrying the advisory, or an empty tuple.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    if estatal_id is None:
+        return ()
+    if revision.valid_to is None:
+        # An open-ended revision fixes no devengo date, so the age limb of the
+        # report test has no anchor. Silent rather than guessing a year.
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+    filing_year = revision.valid_to.year
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    missing = [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
+        if descendant.art_58_2_window_anchor_missing(filing_year)
+    ]
+    if not missing:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_ENTRY_DATE_MISSING_SOURCE_KIND,
+            message=(
+                f"casilla {estatal_id!r} (mínimo por descendientes) withholds the Art. 58.2 LIRPF increase "
+                f"for {_name_indices(missing)}: the relación is an adopción or an entitling acogimiento, "
+                "which the statute grants regardless of the child's age in the entry period and the two "
+                "following, but no entry date is on record so the window cannot be measured. Declare it "
+                "with `descendiente add --descendiente INSCRIPCION=YYYY-MM-DD` (Registro Civil "
+                "inscription, or the resolución where inscription is not required) or ACOGIMIENTO="
+                "YYYY-MM-DD for the first entitling acogimiento resolución"
             ),
             casilla_id=estatal_id,
         ),

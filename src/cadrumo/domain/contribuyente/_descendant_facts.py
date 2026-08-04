@@ -8,7 +8,10 @@ not stored here; see the note below the fact table.
 
 Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.birth_date              ISO-8601 date string
-  renta_family.descendiente.{n}.adoption_date           ISO-8601 date string or absent
+  renta_family.descendiente.{n}.relacion                DescendantRelacion token (absent means ordinary)
+  renta_family.descendiente.{n}.inscripcion_registro_civil
+                                                        ISO-8601 date string or absent
+  renta_family.descendiente.{n}.acogimiento_resolucion  ISO-8601 date string or absent
   renta_family.descendiente.{n}.discapacidad            "0" / "33" / "65" or absent
   renta_family.descendiente.{n}.convivencia             "true" / "false"
   renta_family.descendiente.{n}.custodia_compartida     "true" / "false" (absent means False)
@@ -39,6 +42,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
+from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing import parse_bool, parse_iso8601_date
@@ -59,7 +63,9 @@ _COUNT_PATH = "renta_family.descendientes_count"
 _DESCENDIENTE_FLAG_KEYS = frozenset(
     {
         "NACIMIENTO",
-        "ADOPCION",
+        "RELACION",
+        "INSCRIPCION",
+        "ACOGIMIENTO",
         "DISCAPACIDAD",
         "CONVIVENCIA",
         "CUSTODIA",
@@ -113,8 +119,15 @@ def descendant_facts_from_list(
     for idx, d in enumerate(descendientes):
         prefix = f"{_DESCENDANT_FACT_PREFIX}.{idx}"
         facts.append((f"{prefix}.birth_date", d.birth_date.isoformat()))
-        if d.adoption_date is not None:
-            facts.append((f"{prefix}.adoption_date", d.adoption_date.isoformat()))
+        # The ordinary relación is the default, so it emits no fact: an absent
+        # token means an ordinary descendant on the read side too, and writing
+        # the default would make every existing profile look re-declared.
+        if d.relacion is not DescendantRelacion.DESCENDIENTE:
+            facts.append((f"{prefix}.relacion", d.relacion.value))
+        if d.inscripcion_registro_civil_date is not None:
+            facts.append((f"{prefix}.inscripcion_registro_civil", d.inscripcion_registro_civil_date.isoformat()))
+        if d.acogimiento_resolucion_date is not None:
+            facts.append((f"{prefix}.acogimiento_resolucion", d.acogimiento_resolucion_date.isoformat()))
         if d.discapacidad_grado is not None:
             facts.append((f"{prefix}.discapacidad", str(d.discapacidad_grado)))
         facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
@@ -138,10 +151,55 @@ def descendant_facts_from_list(
 
 _N_RE = re.compile(
     r"^renta_family\.descendiente\.(\d+)\."
-    r"(birth_date|adoption_date|discapacidad|convivencia|custodia_compartida|"
+    r"(birth_date|relacion|inscripcion_registro_civil|acogimiento_resolucion|"
+    r"discapacidad|convivencia|custodia_compartida|"
     r"rentas_anuales|declaracion_propia|prorrata_minimo|"
     r"meses_madre_trabajo|gastos_guarderia|nif)$",
 )
+
+
+def relacion_kwarg(relacion: DescendantRelacion | None) -> dict[str, DescendantRelacion]:
+    """Render an optional relación as the constructor keyword, OMITTING it when unstated.
+
+    "Unstated" and "ordinary descendant" are different inputs and the record
+    treats them differently: an unstated relación carrying a Registro Civil
+    inscription is read as an adoption, while an explicitly-ordinary one
+    carrying the same date is a contradiction the coherence rule refuses. The
+    only way to express "unstated" to a pydantic constructor is to leave the
+    keyword out, so every door routes through this rather than inventing a
+    sentinel — and the type checker sees a plain
+    :class:`~cadrumo.core.DescendantRelacion` at each call site.
+    """
+    return {} if relacion is None else {"relacion": relacion}
+
+
+def _stored_relacion(raw: str | None, *, index: int) -> DescendantRelacion | None:
+    """Read one descendant's stored relación, refusing a token outside the closed set.
+
+    Returns ``None`` for an absent token — UNSTATED, not "ordinary". The two
+    differ: :class:`~domain.contribuyente.DescendantInfo` reads an unstated
+    relación carrying an inscription date as an adoption, and defaults it to the
+    ordinary descendant otherwise. Resolving absence to the ordinary member here
+    would pre-empt that reading and turn the adoption record into a
+    contradiction the coherence validator then refuses.
+
+    A PRESENT but unreadable token refuses rather than falling back, for the
+    reason every other guard in this module refuses: the fallback points in the
+    claiming direction on one side and the excluded direction on the other, and
+    neither is a reading of what the operator wrote. A corrupted
+    ``acogimiento_temporal`` resolving to the default would additionally strip
+    the record of the one distinction keeping the Art. 58.2 increase away from
+    it.
+    """
+    if raw is None:
+        return None
+    try:
+        return DescendantRelacion(raw.strip().lower())
+    except ValueError:
+        accepted = ", ".join(member.value for member in DescendantRelacion)
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.relacion must be one of {accepted}; got {raw!r}.",
+        ) from None
 
 
 def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, ...]:
@@ -175,8 +233,11 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         # on a malformed non-empty string); birth_raw is non-empty here.
         birth_date = parse_iso8601_date(birth_raw)
         assert birth_date is not None
-        adoption_raw = row.get("adoption_date")
-        adoption_date = parse_iso8601_date(adoption_raw) if adoption_raw else None
+        relacion = _stored_relacion(row.get("relacion"), index=idx)
+        inscripcion_raw = row.get("inscripcion_registro_civil")
+        inscripcion_date = parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None
+        acogimiento_raw = row.get("acogimiento_resolucion")
+        acogimiento_date = parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None
         discapacidad_raw = row.get("discapacidad")
         if discapacidad_raw is not None:
             disc_val = int(discapacidad_raw)
@@ -213,7 +274,9 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         result.append(
             DescendantInfo(
                 birth_date=birth_date,
-                adoption_date=adoption_date,
+                **relacion_kwarg(relacion),
+                inscripcion_registro_civil_date=inscripcion_date,
+                acogimiento_resolucion_date=acogimiento_date,
                 discapacidad_grado=_discapacidad_grade(disc_val),
                 convive_con_contribuyente=convive,
                 custodia_compartida=custodia,
@@ -318,7 +381,21 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
 
     Accepted keys (case-insensitive):
       NACIMIENTO=YYYY-MM-DD  (required) birth date
-      ADOPCION=YYYY-MM-DD    (optional) adoption finalisation date
+      RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|
+               acogimiento_temporal|tutela
+                             (optional, default descendiente) Art. 58.1 / 58.2
+                             relationship. A temporal acogimiento takes the
+                             tranches and NOT the under-three increase.
+      INSCRIPCION=YYYY-MM-DD (optional) Registro Civil inscription of the
+                             adoption, or the resolución judicial o
+                             administrativa where inscription is not required
+                             — the Art. 58.2 anchor for RELACION=adoptado.
+                             Supplying it without RELACION reads as adoptado.
+      ACOGIMIENTO=YYYY-MM-DD (optional) first ENTITLING acogimiento resolución
+                             — the Art. 58.2 anchor for a preadoptivo or
+                             permanente placement, and retained on an adoptado
+                             record so a fostered-then-adopted child's window
+                             is capped at three periods rather than restarted.
       DISCAPACIDAD=0|33|65   (optional) discapacidad grade
       CONVIVENCIA=true|false (optional, default true) cohabitation flag
       CUSTODIA=true|false    (optional, default false) custodia compartida (Art. 61 LIRPF)
@@ -353,10 +430,21 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     birth_date = parse_iso8601_date(nacimiento_raw)
     assert birth_date is not None
 
-    adoption_date: date | None = None
-    adopcion_raw = parts.get("ADOPCION")
-    if adopcion_raw:
-        adoption_date = parse_iso8601_date(adopcion_raw)
+    # RELACION is read through the same stored-token authority the fact-index
+    # path uses, so the flag door and the profile-read door refuse an unknown
+    # value identically rather than each inventing a tolerance.
+    relacion_raw = parts.get("RELACION")
+    relacion = _stored_relacion(relacion_raw.strip() or None if relacion_raw else None, index=0)
+
+    inscripcion_date: date | None = None
+    inscripcion_raw = parts.get("INSCRIPCION")
+    if inscripcion_raw:
+        inscripcion_date = parse_iso8601_date(inscripcion_raw)
+
+    acogimiento_date: date | None = None
+    acogimiento_raw = parts.get("ACOGIMIENTO")
+    if acogimiento_raw:
+        acogimiento_date = parse_iso8601_date(acogimiento_raw)
 
     discapacidad_grado = None
     disc_raw = parts.get("DISCAPACIDAD")
@@ -411,7 +499,9 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
 
     return DescendantInfo(
         birth_date=birth_date,
-        adoption_date=adoption_date,
+        **relacion_kwarg(relacion),
+        inscripcion_registro_civil_date=inscripcion_date,
+        acogimiento_resolucion_date=acogimiento_date,
         discapacidad_grado=_discapacidad_grade(discapacidad_grado),
         convive_con_contribuyente=convive,
         custodia_compartida=custodia,
@@ -428,4 +518,5 @@ __all__ = [
     "descendant_facts_from_list",
     "descendant_list_from_facts",
     "parse_descendiente_flag",
+    "relacion_kwarg",
 ]

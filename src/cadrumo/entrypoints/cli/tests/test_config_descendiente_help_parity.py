@@ -58,7 +58,19 @@ _BIRTH = "NACIMIENTO=2015-01-01"
 #: with a predicate that is True only when the parser HONOURED it.
 _PROBES: dict[str, tuple[str, str]] = {
     "NACIMIENTO": ("NACIMIENTO=2015-01-01", "birth_date"),
-    "ADOPCION": ("ADOPCION=2016-01-01", "adoption_date"),
+    # RELACION probes with a NON-entitling member on purpose. An entitling one
+    # would also be produced by the INSCRIPCION probe's inference, so a parser
+    # that dropped RELACION entirely could still look honoured; temporal
+    # acogimiento is reachable only by reading the token itself.
+    "RELACION": ("RELACION=acogimiento_temporal", "relacion"),
+    "INSCRIPCION": ("INSCRIPCION=2016-01-01", "inscripcion_registro_civil_date"),
+    # The acogimiento date needs an entitling relación to be accepted at all, so
+    # its probe carries one. That makes the fragment a two-key probe, which is
+    # correct here: the coherence rule is part of what the key means.
+    "ACOGIMIENTO": (
+        "RELACION=acogimiento_preadoptivo_o_permanente,ACOGIMIENTO=2016-01-01",
+        "acogimiento_resolucion_date",
+    ),
     "DISCAPACIDAD": ("DISCAPACIDAD=33", "discapacidad_grado"),
     "CONVIVENCIA": ("CONVIVENCIA=false", "convive_con_contribuyente"),
     "CUSTODIA": ("CUSTODIA=true", "custodia_compartida"),

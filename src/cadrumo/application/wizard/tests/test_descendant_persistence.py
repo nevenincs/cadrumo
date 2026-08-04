@@ -43,7 +43,7 @@ _DESCENDANT_ANSWERS = {
     "descendientes#0.convivencia": "true",
     "descendientes#0.gastos-guarderia": "900",
     "descendientes#1.birth-date": "2015-03-01",
-    "descendientes#1.adoption-date": "2016-06-01",
+    "descendientes#1.inscripcion-registro-civil": "2016-06-01",
     "descendientes#1.convivencia": "true",
     "descendientes#1.nif": "00000000T",
 }
@@ -77,7 +77,7 @@ def _baseline_with_two_descendants() -> dict[str, str]:
 _MAXIMAL_DESCENDANT_ANSWERS = {
     "descendientes-count": "2",
     "descendientes#0.birth-date": "2020-01-15",
-    "descendientes#0.adoption-date": "2021-03-01",
+    "descendientes#0.inscripcion-registro-civil": "2021-03-01",
     "descendientes#0.discapacidad": "33",
     "descendientes#0.convivencia": "true",
     "descendientes#0.custodia-compartida": "true",
@@ -231,7 +231,7 @@ def test_resume_seeding_reinstantiates_the_group_and_round_trips(_backend: Path)
     assert seeded["descendientes#0.birth-date"] == "2023-05-10"
     assert seeded["descendientes#0.gastos-guarderia"] == "900"
     assert seeded["descendientes#1.birth-date"] == "2015-03-01"
-    assert seeded["descendientes#1.adoption-date"] == "2016-06-01"
+    assert seeded["descendientes#1.inscripcion-registro-civil"] == "2016-06-01"
     assert seeded["descendientes#1.nif"] == "00000000T"
 
     # resume_flow re-instantiates the group from the seed: the count commits
@@ -240,7 +240,7 @@ def test_resume_seeding_reinstantiates_the_group_and_round_trips(_backend: Path)
     state = resume_flow(definition, seeded, mode=FlowMode.CREATE)
     assert state.instance_counts.get(DESCENDANTS_GROUP_ID) == 2
     assert state.answers["descendientes#0.birth-date"] == "2023-05-10"
-    assert state.answers["descendientes#1.adoption-date"] == "2016-06-01"
+    assert state.answers["descendientes#1.inscripcion-registro-civil"] == "2016-06-01"
     assert not any(key.startswith("descendientes") for key in state.stale)
 
     # Completing from the resumed answers reconstructs an identical fact set.
@@ -270,7 +270,7 @@ def test_resume_seeding_round_trips_a_maximal_descendant_fixture(_backend: Path)
     # Instance 0: every optional field round-trips.
     assert seeded["descendientes-count"] == "2"
     assert seeded["descendientes#0.birth-date"] == "2020-01-15"
-    assert seeded["descendientes#0.adoption-date"] == "2021-03-01"
+    assert seeded["descendientes#0.inscripcion-registro-civil"] == "2021-03-01"
     assert seeded["descendientes#0.discapacidad"] == "33"
     assert seeded["descendientes#0.convivencia"] == "true"
     assert seeded["descendientes#0.custodia-compartida"] == "true"

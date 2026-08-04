@@ -22,7 +22,12 @@ from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
 from ._deduccion_maternidad import compute_deduccion_maternidad_0611
-from ._descendant_facts import descendant_facts_from_list, descendant_list_from_facts, parse_descendiente_flag
+from ._descendant_facts import (
+    descendant_facts_from_list,
+    descendant_list_from_facts,
+    parse_descendiente_flag,
+    relacion_kwarg,
+)
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._keys import (
     ProfileKey,
@@ -225,6 +230,7 @@ __all__ = [
     "parse_tax_region",
     "profile_keys",
     "register_profile_keys",
+    "relacion_kwarg",
     "required_profile_keys",
     "within_multi_year_applicability_window",
 ]

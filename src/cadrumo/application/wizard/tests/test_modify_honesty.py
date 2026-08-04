@@ -61,7 +61,7 @@ from .._commands import (
     _emit_wizard_success,
     _setup_flow_definition,
 )
-from .._descendant_group import DESCENDANT_ADOPTION_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
+from .._descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -193,10 +193,10 @@ def test_modify_definition_carries_no_descendant_pages() -> None:
     modify_ids = {item.id for item in modify_familia.items}
 
     assert {DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID} <= create_ids
-    assert DESCENDANT_ADOPTION_VALIDATOR_ID in create_definition.flow_validator_ids
+    assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID in create_definition.flow_validator_ids
     assert DESCENDANTS_COUNT_PAGE_ID not in modify_ids
     assert DESCENDANTS_GROUP_ID not in modify_ids
-    assert DESCENDANT_ADOPTION_VALIDATOR_ID not in modify_definition.flow_validator_ids
+    assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID not in modify_definition.flow_validator_ids
 
 
 def test_edit_envelope_carries_descendants_via_door_notice(

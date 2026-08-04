@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import DescendantRelacion
 from ....core.flows import REPEATING_INSTANCE_SEPARATOR, FlowMode
 from ....domain.contribuyente import (
     DescendantInfo,
@@ -39,7 +40,7 @@ from ...user_profile import (
 from ...workflow import workflow_state_repository
 from .. import build_descendant_door, persist_descendant_door_answers
 from .._descendant_door import DESCENDANT_DOOR_FLOW_ID, build_descendant_door_definition
-from .._descendant_group import DESCENDANT_ADOPTION_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
+from .._descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,19 +80,31 @@ def _instance_key(index: int, page_id: str) -> str:
     return f"{_INSTANCE}{index}.{page_id}"
 
 
-def _door_tokens(count: int, *, adoption: str = "") -> list[str]:
-    """Ordered canonical tokens for a scripted door walk declaring ``count`` rows."""
+def _door_tokens(count: int, *, inscripcion: str = "") -> list[str]:
+    """Ordered canonical tokens for a scripted door walk declaring ``count`` rows.
+
+    Supplying an *inscripcion* also selects ``adoptado``, because the inscription
+    page is gated on that relación: a token list carrying the date without the
+    relación would drive a page the engine never makes visible. The two travel
+    together here for the same reason they do in the model -- the date has no
+    meaning apart from the relationship it anchors.
+
+    The acogimiento page stays blank. It is visible for an adoptado record (the
+    cap-not-restart shape) and is exercised by the live-walk canonical set; this
+    helper's subject is the ordering and future-date rules.
+    """
     tokens = [str(count)]
+    relacion = DescendantRelacion.ADOPTADO.value if inscripcion else ""
     for offset in range(count):
         birth = date(2015 + offset, 6, 1).isoformat()
-        tokens.extend([birth, adoption, "0", "true", "false", "", "", ""])
+        tokens.extend([birth, relacion, *([inscripcion, ""] if inscripcion else []), "0", "true", "false", "", "", ""])
     return tokens
 
 
 # ── definition: the group is adopted, the entity-type gate stripped ──
 
 
-def test_door_definition_adopts_the_group_and_carries_the_adoption_validator() -> None:
+def test_door_definition_adopts_the_group_and_carries_the_entry_event_validator() -> None:
     definition = build_descendant_door_definition()
     assert definition.id == DESCENDANT_DOOR_FLOW_ID
     (section,) = definition.sections
@@ -102,7 +115,7 @@ def test_door_definition_adopts_the_group_and_carries_the_adoption_validator() -
     # page, and a dangling gate would fail the definition's earlier-page check.
     assert count_page.visible_when is None
     assert group.id == DESCENDANTS_GROUP_ID
-    assert DESCENDANT_ADOPTION_VALIDATOR_ID in definition.flow_validator_ids
+    assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID in definition.flow_validator_ids
 
 
 # ── seed: existing descendants re-instantiate the group ──────────────
@@ -213,21 +226,21 @@ def test_childless_record_seeds_empty_and_commits_no_descendant_fact(_backend: P
     assert values[_UNTOUCHED_PATH] == _UNTOUCHED_VALUE
 
 
-# ── review gate: the adoption cross-field rule is live on the door ───
+# ── review gate: the entry-event cross-field rule is live on the door ─
 
 
-def test_adoption_before_birth_is_refused_on_the_door() -> None:
+def test_entry_event_before_birth_is_refused_on_the_door() -> None:
     definition = build_descendant_door_definition()
-    # Adoption predates birth: committed per-page (DATE-shape valid) but blocked
-    # by the flow-scope adoption validator carried onto the door at submit.
-    tokens = _door_tokens(1, adoption="2010-01-01")
+    # Inscription predates birth: committed per-page (DATE-shape valid) but
+    # blocked by the flow-scope entry-event validator carried onto the door.
+    tokens = _door_tokens(1, inscripcion="2010-01-01")
     with pytest.raises(FlowSubmitError):
         run_scripted_flow(definition, tokens, mode=FlowMode.MODIFY)
 
 
-def test_valid_adoption_after_birth_submits_on_the_door() -> None:
+def test_valid_entry_event_after_birth_submits_on_the_door() -> None:
     definition = build_descendant_door_definition()
-    tokens = _door_tokens(1, adoption="2016-01-01")
+    tokens = _door_tokens(1, inscripcion="2016-01-01")
     state, projection = run_scripted_flow(definition, tokens, mode=FlowMode.MODIFY)
     assert projection.submit_eligible
     assert state.answers[DESCENDANTS_COUNT_PAGE_ID] == "1"

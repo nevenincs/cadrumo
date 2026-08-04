@@ -24,7 +24,7 @@ from ...flows import (
 from .. import descendant_facts_from_answers
 from .._catalogue import SETUP_FLOW
 from .._commands import _project_scripted_answers, _setup_flow_definition
-from .._descendant_group import DESCENDANT_ADOPTION_VALIDATOR_ID
+from .._descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID
 from .test_scripted_parity import _INDIVIDUAL_CANONICAL
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -42,6 +42,12 @@ _DESCENDANTS_CANONICAL: dict[str, str] = {
     **_INDIVIDUAL_CANONICAL,
     "descendientes-count": "2",
     "descendientes#0.birth-date": "2023-05-10",
+    # A TEMPORAL acogimiento: assimilated by Art. 58.1 for the tranches and
+    # excluded by Art. 58.2 from the increase. Chosen for the canonical set
+    # deliberately -- it is the member whose absence would have forced this
+    # carer to pick an entitling one, so a walk that never records it leaves
+    # the over-grant this axis exists to prevent unexercised end to end.
+    "descendientes#0.relacion": "acogimiento_temporal",
     "descendientes#0.convivencia": "true",
     # A two-decimal figure: the page declares FlowWidgetKind.DECIMAL, matching
     # the genuinely-Decimal domain field and the precision the CLI
@@ -54,7 +60,12 @@ _DESCENDANTS_CANONICAL: dict[str, str] = {
     "descendientes#0.prorrata-minimo": "false",
     "descendientes#0.gastos-guarderia": "900",
     "descendientes#1.birth-date": "2015-03-01",
-    "descendientes#1.adoption-date": "2016-06-01",
+    # Fostered then adopted, so BOTH entry dates are answered. That is the
+    # cap-not-restart shape: Art. 58.2's three periods run from the earlier
+    # placement, and a walk carrying only the adoption could not express it.
+    "descendientes#1.relacion": "adoptado",
+    "descendientes#1.acogimiento-resolucion": "2016-02-01",
+    "descendientes#1.inscripcion-registro-civil": "2016-06-01",
     "descendientes#1.convivencia": "true",
     "descendientes#1.nif": "00000000T",
 }
@@ -67,7 +78,7 @@ def test_descendant_pages_are_live_on_the_setup_definition() -> None:
 
     assert "descendientes-count" in item_ids
     assert "descendientes" in item_ids
-    assert DESCENDANT_ADOPTION_VALIDATOR_ID in definition.flow_validator_ids
+    assert DESCENDANT_ENTRY_EVENT_VALIDATOR_ID in definition.flow_validator_ids
 
 
 def test_natural_person_walk_reveals_the_instance_pages_when_count_positive() -> None:
@@ -94,8 +105,16 @@ def test_scripted_walk_over_the_live_definition_collects_descendants_and_submits
     facts = dict(descendant_facts_from_answers(state.answers))
     assert facts["renta_family.descendiente.0.birth_date"] == "2023-05-10"
     assert facts["renta_family.descendiente.0.gastos_guarderia"] == "900"
-    assert facts["renta_family.descendiente.1.adoption_date"] == "2016-06-01"
+    assert facts["renta_family.descendiente.1.relacion"] == "adoptado"
+    assert facts["renta_family.descendiente.1.acogimiento_resolucion"] == "2016-02-01"
+    assert facts["renta_family.descendiente.1.inscripcion_registro_civil"] == "2016-06-01"
     assert facts["renta_family.descendiente.1.nif"] == "00000000T"
+    # The temporal carer records the relación and NO entry date, which is the
+    # only truthful shape available to them and the one that withholds the
+    # Art. 58.2 increase.
+    assert facts["renta_family.descendiente.0.relacion"] == "acogimiento_temporal"
+    assert "renta_family.descendiente.0.inscripcion_registro_civil" not in facts
+    assert "renta_family.descendiente.0.acogimiento_resolucion" not in facts
     assert facts["renta_family.descendientes_count"] == "2"
     # The per-child childcare figure is stored; its Art. 81 bis sum is derived
     # at calculate time and refused at the write door, so it is absent here.
@@ -139,11 +158,11 @@ def test_scripted_walk_with_a_negative_rentas_refuses() -> None:
         run_scripted_flow(definition, tokens, mode=FlowMode.CREATE)
 
 
-def test_scripted_walk_with_a_bad_adoption_date_refuses_at_submit() -> None:
-    # A birth-before-adoption pair proves the adoption cross-field validator
-    # is LIVE on the real _setup_flow_definition's flow-scope submit gate.
+def test_scripted_walk_with_a_bad_entry_date_refuses_at_submit() -> None:
+    # A birth-before-inscription pair proves the entry-event cross-field
+    # validator is LIVE on the real _setup_flow_definition's submit gate.
     definition = _setup_flow_definition(SETUP_FLOW)
-    canonical = {**_DESCENDANTS_CANONICAL, "descendientes#1.adoption-date": "2000-01-01"}
+    canonical = {**_DESCENDANTS_CANONICAL, "descendientes#1.inscripcion-registro-civil": "2000-01-01"}
     tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
 
     with pytest.raises(FlowSubmitError):

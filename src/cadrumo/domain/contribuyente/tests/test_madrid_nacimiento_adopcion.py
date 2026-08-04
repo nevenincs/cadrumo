@@ -19,6 +19,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import DescendantRelacion
 from ..family import (
     DescendantInfo,
     RentaFamilyProfile,
@@ -54,19 +55,46 @@ def test_applicability_window_rejects_negative_following_periods() -> None:
 
 
 def _child(*, birth: date, adoption: date | None = None, convive: bool = True, shared: bool = False) -> DescendantInfo:
+    """Build a descendant, treating *adoption* as the Registro Civil inscription.
+
+    The relación is left unstated so the record's own inference resolves it from
+    the inscription date -- the shape an operator produces when they supply a
+    date and answer nothing about the relationship.
+    """
     return DescendantInfo(
         birth_date=birth,
-        adoption_date=adoption,
+        inscripcion_registro_civil_date=adoption,
         convive_con_contribuyente=convive,
         custodia_compartida=shared,
     )
 
 
-def test_eligibility_uses_adoption_date_as_entry_when_present() -> None:
-    """A child born in 2018 but adopted in 2024 is in the 2025 window via adoption_date."""
+def test_eligibility_uses_inscripcion_date_as_entry_when_present() -> None:
+    """A child born in 2018 but adopted in 2024 is in the 2025 window via the inscription."""
     child = _child(birth=date(2018, 5, 1), adoption=date(2024, 3, 10))
     assert child.entry_year() == 2024
     assert child.is_nacimiento_adopcion_eligible(2025) is True
+
+
+def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
+    """The Madrid decree keys on nacimiento and adopcion, so a fostering must not trigger it.
+
+    This is the measured reason two named dates replaced one general field. DL
+    1/2010 art. 4 names "hijos nacidos o adoptados" and no acogimiento, while
+    Art. 58.2 counts its window from the first entitling placement. A single
+    entry date would serve one statute and silently mis-serve the other: a child
+    fostered in 2024 would enter the Madrid window they have no right to.
+    """
+    fostered = DescendantInfo(
+        birth_date=date(2018, 5, 1),
+        relacion=DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
+        acogimiento_resolucion_date=date(2024, 3, 10),
+    )
+    assert fostered.entry_year() == 2018
+    assert fostered.is_nacimiento_adopcion_eligible(2025) is False
+    # The same placement DOES open the Art. 58.2 window, which is what makes the
+    # two anchors genuinely different rather than one being unused.
+    assert fostered.is_eligible_minimo_incremento_menor_tres(2025) is True
 
 
 def test_eligibility_excludes_non_cohabiting_and_out_of_window_children() -> None:

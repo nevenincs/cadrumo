@@ -21,9 +21,12 @@ from typing import TYPE_CHECKING, Literal
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
+    from datetime import date
+
     from ...domain.contribuyente import DescendantInfo
     from ...domain.user_profile import UserProfileRecord
 
+from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date
@@ -288,24 +291,63 @@ def _discapacidad_grade(raw: str) -> Literal[0, 33, 65] | None:
             return None
 
 
-def _safe_adoption_date(birth_raw: str, adoption_raw: str | None) -> str | None:
-    """Return the adoption token only when it is a valid pair with birth.
+def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:
+    """Return the entry-event date only when it is a valid pair with birth.
 
-    A cross-field adoption invariant (adoption >= birth, adoption <= today)
-    is surfaced as a review verdict before submit, but the checkpoint
+    The cross-field entry-event invariants (entry >= birth, entry <= today) are
+    surfaced as review verdicts before submit, but the checkpoint
     (save-and-exit) persist path runs no flow validators, so an out-of-order
-    adoption date could still reach this projection. Dropping the invalid
-    optional token here keeps the checkpoint write from raising a raw
-    ``DescendantInfo`` model error; the review verdict still blocks the final
-    submit until the operator corrects it.
+    date could still reach this projection. Dropping the invalid optional token
+    here keeps the checkpoint write from raising a raw ``DescendantInfo`` model
+    error; the review verdict still blocks the final submit until the operator
+    corrects it.
     """
-    if not adoption_raw:
+    if not entry_raw:
         return None
     birth = parse_iso8601_date(birth_raw) if birth_raw else None
-    adoption = parse_iso8601_date(adoption_raw)
-    if birth is None or adoption is None or adoption < birth or adoption > today_madrid():
+    entry = parse_iso8601_date(entry_raw)
+    if birth is None or entry is None or entry < birth or entry > today_madrid():
         return None
-    return adoption_raw
+    return entry
+
+
+def _safe_relacion_and_entry_dates(
+    row: Mapping[str, str],
+) -> tuple[DescendantRelacion | None, date | None, date | None]:
+    """Read one instance's relación and the two entry dates it may legitimately carry.
+
+    Drops an entry date the declared relación cannot carry, for the same reason
+    :func:`_safe_entry_date` drops an out-of-order one: the checkpoint path runs
+    no flow validators, so a stale answer left behind when the operator changed
+    the relación would otherwise raise a raw model error out of a save-and-exit.
+
+    Dropping is the safe direction here specifically. The dropped value is an
+    Art. 58.2 window anchor, so losing it can only WITHHOLD the increase, never
+    grant it — while keeping it on an excluded record is exactly the over-grant
+    the relación axis exists to prevent. The review verdict still blocks the
+    final submit, so the operator is told rather than silently trimmed.
+    """
+    from ...core import ART_58_2_ENTITLING_RELACIONES
+
+    raw_relacion = (row.get("relacion") or "").strip()
+    try:
+        relacion = DescendantRelacion(raw_relacion) if raw_relacion else None
+    except ValueError:
+        relacion = None
+    birth_raw = row["birth-date"]
+    inscripcion = _safe_entry_date(birth_raw, row.get("inscripcion-registro-civil"))
+    acogimiento = _safe_entry_date(birth_raw, row.get("acogimiento-resolucion"))
+    if relacion is not None and relacion is not DescendantRelacion.ADOPTADO:
+        inscripcion = None
+    if relacion is not None and relacion not in ART_58_2_ENTITLING_RELACIONES:
+        acogimiento = None
+    elif relacion is None and acogimiento is not None:
+        # An unstated relación cannot carry an acogimiento date: the canonical
+        # record refuses it because the token is compatible with two members the
+        # statute treats oppositely, and guessing between them is the one thing
+        # this axis must not do.
+        acogimiento = None
+    return relacion, inscripcion, acogimiento
 
 
 def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
@@ -314,10 +356,11 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     Blank optional answers fall back to the record's own defaults
     (convivencia defaults to cohabiting, custodia to sole custody, the
     integer supplements to zero); the ISO date strings are coerced by the
-    record's own field validators. An out-of-order adoption date is dropped
-    (see :func:`_safe_adoption_date`) so a checkpoint save never raw-raises.
+    record's own field validators. An out-of-order or relación-incompatible
+    entry date is dropped (see :func:`_safe_relacion_and_entry_dates`) so a
+    checkpoint save never raw-raises.
     """
-    from ...domain.contribuyente import DescendantInfo
+    from ...domain.contribuyente import DescendantInfo, relacion_kwarg
 
     meses = row.get("meses-madre-trabajo") or ""
     gastos = row.get("gastos-guarderia") or ""
@@ -325,8 +368,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     assert birth_date is not None
     rentas = row.get("rentas-anuales", "").strip()
     prorrata = row.get("prorrata-minimo", "").strip()
-    adoption_token = _safe_adoption_date(row["birth-date"], row.get("adoption-date"))
-    adoption_date = parse_iso8601_date(adoption_token) if adoption_token else None
+    relacion, inscripcion_date, acogimiento_date = _safe_relacion_and_entry_dates(row)
     # Operator-typed euros, so the strict grammar with the money cap: a bare
     # Decimal() admitted '1e3', '+100', 'NaN' and 'Infinity', and read the
     # Spanish thousands shape '1.000' as one euro. The cap refuses that shape
@@ -349,7 +391,9 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         )
     return DescendantInfo(
         birth_date=birth_date,
-        adoption_date=adoption_date,
+        **relacion_kwarg(relacion),
+        inscripcion_registro_civil_date=inscripcion_date,
+        acogimiento_resolucion_date=acogimiento_date,
         discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
         # Both read through the canonical vocabulary, and both resolve an
         # unreadable or unanswered value to the NON-CLAIMING direction.
@@ -472,7 +516,25 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
         f"{prefix}.declaracion-propia": "true" if descendant.presenta_declaracion_propia else "false",
     }
     optional: tuple[tuple[str, object | None], ...] = (
-        ("adoption-date", descendant.adoption_date.isoformat() if descendant.adoption_date is not None else None),
+        # The ordinary relación emits no answer: it is the record's own default,
+        # so re-emitting it would commit an answer on a resume walk that the
+        # original walk never gave, and the two legs would stop matching.
+        (
+            "relacion",
+            descendant.relacion.value if descendant.relacion is not DescendantRelacion.DESCENDIENTE else None,
+        ),
+        (
+            "inscripcion-registro-civil",
+            descendant.inscripcion_registro_civil_date.isoformat()
+            if descendant.inscripcion_registro_civil_date is not None
+            else None,
+        ),
+        (
+            "acogimiento-resolucion",
+            descendant.acogimiento_resolucion_date.isoformat()
+            if descendant.acogimiento_resolucion_date is not None
+            else None,
+        ),
         ("discapacidad", descendant.discapacidad_grado),
         # Both are counts whose zero means "none recorded", so zero emits no
         # answer at all rather than a literal "0" the resume walk would commit.

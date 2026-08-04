@@ -32,6 +32,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
@@ -46,6 +47,7 @@ from ..flows import (
     FlowPage,
     FlowRepeatingGroup,
     FlowSection,
+    FlowVisibility,
     ValidationVerdict,
     register_answer_validator,
     register_cross_field_validator,
@@ -65,7 +67,9 @@ DESCENDANTS_COUNT_PAGE_ID = "descendientes-count"
 # Per-descendant page ids, in walk order. These bare tokens are the
 # ``<page-id>`` half of every ``descendientes#<index>.<page-id>`` answer key.
 _BIRTH_DATE_PAGE_ID = "birth-date"
-_ADOPTION_DATE_PAGE_ID = "adoption-date"
+_RELACION_PAGE_ID = "relacion"
+_INSCRIPCION_PAGE_ID = "inscripcion-registro-civil"
+_ACOGIMIENTO_PAGE_ID = "acogimiento-resolucion"
 _DISCAPACIDAD_PAGE_ID = "discapacidad"
 _CONVIVENCIA_PAGE_ID = "convivencia"
 _CUSTODIA_COMPARTIDA_PAGE_ID = "custodia-compartida"
@@ -79,7 +83,9 @@ _NIF_PAGE_ID = "nif"
 #: Per-descendant page ids in walk order (consumed by the fact projection).
 DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _BIRTH_DATE_PAGE_ID,
-    _ADOPTION_DATE_PAGE_ID,
+    _RELACION_PAGE_ID,
+    _INSCRIPCION_PAGE_ID,
+    _ACOGIMIENTO_PAGE_ID,
     _DISCAPACIDAD_PAGE_ID,
     _CONVIVENCIA_PAGE_ID,
     _CUSTODIA_COMPARTIDA_PAGE_ID,
@@ -103,11 +109,31 @@ DESCENDANT_GASTOS_VALIDATOR_ID = "descendant-gastos-nonneg"
 #: Registered id of the per-answer descendant rentas-anuales sign validator.
 DESCENDANT_RENTAS_VALIDATOR_ID = "descendant-rentas-nonneg"
 
-#: Registered id of the flow-scope descendant adoption-date cross-field validator.
-DESCENDANT_ADOPTION_VALIDATOR_ID = "descendant-adoption-dates"
+#: Registered id of the flow-scope descendant entry-event cross-field validator.
+#:
+#: Covers both Art. 58.2 anchors (the Registro Civil inscription and the
+#: acogimiento resolución) and their coherence against the declared relación.
+#: One validator rather than two because the rules are not independent: which
+#: date a record may carry is decided by the relación, so splitting them would
+#: leave each half checking a condition the other half owns.
+DESCENDANT_ENTRY_EVENT_VALIDATOR_ID = "descendant-entry-event-dates"
 
 _MESES_MIN = 0
 _MESES_MAX = 12
+
+#: Relación tokens that may carry a Registro Civil inscription date.
+#:
+#: Derived from the core enum, never re-listed: the inscription is the adoption
+#: anchor, so this is the single-member set the canonical record enforces.
+_INSCRIPCION_RELACIONES: frozenset[str] = frozenset({DescendantRelacion.ADOPTADO.value})
+
+#: Relación tokens that may carry an entitling acogimiento resolución date.
+#:
+#: Derived from :data:`~cadrumo.core.ART_58_2_ENTITLING_RELACIONES` so the wizard
+#: gate and the model validator cannot disagree about which placements the
+#: statute entitles — a temporal acogimiento is excluded from both by
+#: construction rather than by two hand-maintained lists agreeing today.
+_ACOGIMIENTO_RELACIONES: frozenset[str] = frozenset(member.value for member in ART_58_2_ENTITLING_RELACIONES)
 
 # --- copy references (new wizard.setup.descendientes.* locale keys) ---------
 
@@ -115,7 +141,21 @@ _GROUP_TITLE_LOCALE_KEY = "wizard.setup.descendientes.title"
 _COUNT_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.count.prompt"
 _COUNT_HELP_LOCALE_KEY = "wizard.setup.descendientes.count.help"
 _BIRTH_DATE_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.birth-date.prompt"
-_ADOPTION_DATE_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.adoption-date.prompt"
+_RELACION_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.relacion.prompt"
+_RELACION_HELP_LOCALE_KEY = "wizard.setup.descendientes.relacion.help"
+_RELACION_CHOICE_DESCENDIENTE_LOCALE_KEY = "wizard.setup.descendientes.relacion.choices.descendiente.label"
+_RELACION_CHOICE_ADOPTADO_LOCALE_KEY = "wizard.setup.descendientes.relacion.choices.adoptado.label"
+_RELACION_CHOICE_ACOGIMIENTO_PP_LOCALE_KEY = (
+    "wizard.setup.descendientes.relacion.choices.acogimiento_preadoptivo_o_permanente.label"
+)
+_RELACION_CHOICE_ACOGIMIENTO_TEMPORAL_LOCALE_KEY = (
+    "wizard.setup.descendientes.relacion.choices.acogimiento_temporal.label"
+)
+_RELACION_CHOICE_TUTELA_LOCALE_KEY = "wizard.setup.descendientes.relacion.choices.tutela.label"
+_INSCRIPCION_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-civil.prompt"
+_INSCRIPCION_HELP_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-civil.help"
+_ACOGIMIENTO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.prompt"
+_ACOGIMIENTO_HELP_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.help"
 _DISCAPACIDAD_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.prompt"
 _DISCAPACIDAD_CHOICE_0_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.0.label"
 _DISCAPACIDAD_CHOICE_33_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.33.label"
@@ -137,14 +177,15 @@ _GASTOS_GUARDERIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia
 _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
 
 # Verdict message keys minted for the constraint guards below (the range,
-# sign, and adoption-order refusals). Reused generic keys were checked
+# sign, and entry-event refusals). Reused generic keys were checked
 # first: the closest existing leaves (cli.config.descendiente.*) carry
 # CLI-flag-specific prose, so wizard-namespace keys are minted here.
 _MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
 _RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
 _GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
-_ADOPTION_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.adoption-date.before_birth"
-_ADOPTION_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.adoption-date.in_future"
+_ENTRY_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.before_birth"
+_ENTRY_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.entry-event.in_future"
+_ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.relacion_mismatch"
 
 # Format hints reuse the shared wizard.setup.format.* keys already shipped
 # by the format-hint decorator; the NIF failure verdict reuses the existing
@@ -170,7 +211,17 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _COUNT_PROMPT_LOCALE_KEY,
     _COUNT_HELP_LOCALE_KEY,
     _BIRTH_DATE_PROMPT_LOCALE_KEY,
-    _ADOPTION_DATE_PROMPT_LOCALE_KEY,
+    _RELACION_PROMPT_LOCALE_KEY,
+    _RELACION_HELP_LOCALE_KEY,
+    _RELACION_CHOICE_DESCENDIENTE_LOCALE_KEY,
+    _RELACION_CHOICE_ADOPTADO_LOCALE_KEY,
+    _RELACION_CHOICE_ACOGIMIENTO_PP_LOCALE_KEY,
+    _RELACION_CHOICE_ACOGIMIENTO_TEMPORAL_LOCALE_KEY,
+    _RELACION_CHOICE_TUTELA_LOCALE_KEY,
+    _INSCRIPCION_PROMPT_LOCALE_KEY,
+    _INSCRIPCION_HELP_LOCALE_KEY,
+    _ACOGIMIENTO_PROMPT_LOCALE_KEY,
+    _ACOGIMIENTO_HELP_LOCALE_KEY,
     _DISCAPACIDAD_PROMPT_LOCALE_KEY,
     _DISCAPACIDAD_CHOICE_0_LOCALE_KEY,
     _DISCAPACIDAD_CHOICE_33_LOCALE_KEY,
@@ -193,8 +244,9 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _MESES_INVALID_RANGE_LOCALE_KEY,
     _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
     _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
-    _ADOPTION_BEFORE_BIRTH_LOCALE_KEY,
-    _ADOPTION_IN_FUTURE_LOCALE_KEY,
+    _ENTRY_BEFORE_BIRTH_LOCALE_KEY,
+    _ENTRY_IN_FUTURE_LOCALE_KEY,
+    _ENTRY_RELACION_MISMATCH_LOCALE_KEY,
 )
 
 
@@ -296,70 +348,91 @@ register_answer_validator(DESCENDANT_GASTOS_VALIDATOR_ID, _validate_gastos_nonne
 register_answer_validator(DESCENDANT_RENTAS_VALIDATOR_ID, _validate_rentas_nonneg)
 
 
-def _validate_descendant_adoption_dates(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
-    """Flow-scope guard for the per-instance adoption-vs-birth date invariants.
+def _validate_descendant_entry_event_dates(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
+    """Flow-scope guard for the per-instance Art. 58.2 entry-event invariants.
 
-    Adoption-vs-birth is a cross-field rule (two pages inside one instance),
-    so it cannot be a per-answer validator: this scans every descendant
-    instance in the answer map and refuses an adoption date earlier than the
-    birth date or in the future. Both are enforced as review verdicts before
-    persist; the same invariants stay as ``DescendantInfo`` model validators
-    for defence-in-depth. Values are canonical ISO strings (DATE-shape
-    validated), so parsing succeeds; a page id and instance index are the
-    only context — never the raw date.
+    Both rules span pages inside one instance, so neither can be a per-answer
+    validator: an entry date is judged against the BIRTH date on a sibling page,
+    and against the RELACIÓN on another. This scans every descendant instance
+    and refuses an entry event earlier than the birth or in the future, and an
+    entry date the declared relación cannot carry.
+
+    The relación gate is enforced here as well as by the page-visibility
+    conditions, and that is not redundancy. Visibility stops the operator
+    REACHING an incompatible page in an interactive walk, but a scripted or
+    resumed answer map can carry an answer whose gate later stopped holding —
+    the operator changes the relación from adoptado to tutela and the
+    inscription answer is left behind. Enforcing it as a verdict is what turns
+    that into a blocked submit rather than a refusal raised from deep inside the
+    persist path, where it would read as a crash.
+
+    A page id and instance index are the only context; the raw date never enters
+    a diagnostic.
     """
     today = today_madrid()
     prefix_root = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}"
     verdicts = [
         verdict
-        for instance, raw in _adoption_date_answers(answers, prefix_root=prefix_root)
-        if (
-            verdict := _adoption_date_verdict(
-                raw,
-                birth_raw=answers.get(f"{prefix_root}{instance}.{_BIRTH_DATE_PAGE_ID}", ""),
-                instance=instance,
-                today=today,
-            )
+        for instance in sorted(_descendant_instances(answers, prefix_root=prefix_root))
+        for verdict in _entry_event_verdicts(
+            answers,
+            prefix=f"{prefix_root}{instance}",
+            instance=instance,
+            today=today,
         )
-        is not None
     ]
     return tuple(verdicts) if verdicts else (ValidationVerdict.passed(),)
 
 
-def _adoption_date_answers(answers: Mapping[str, str], *, prefix_root: str) -> list[tuple[str, str]]:
-    """Yield each populated adoption-date answer as its (instance, raw) pair."""
-    return [
-        (key[len(prefix_root) :].split(".", 1)[0], raw)
-        for key, raw in answers.items()
-        if key.startswith(prefix_root) and key.endswith(f".{_ADOPTION_DATE_PAGE_ID}") and raw
-    ]
+def _descendant_instances(answers: Mapping[str, str], *, prefix_root: str) -> set[str]:
+    """The instance indices present in the answer map, as bare tokens."""
+    return {key[len(prefix_root) :].split(".", 1)[0] for key in answers if key.startswith(prefix_root) and "." in key}
 
 
-def _adoption_date_verdict(
-    raw: str,
+def _entry_event_verdicts(
+    answers: Mapping[str, str],
     *,
-    birth_raw: str,
+    prefix: str,
     instance: str,
     today: date,
-) -> ValidationVerdict | None:
-    """Judge one instance's adoption date, or ``None`` when it is sound.
+) -> list[ValidationVerdict]:
+    """Judge one instance's two entry-event dates against birth, today and relación."""
+    birth = parse_iso8601_date(answers.get(f"{prefix}.{_BIRTH_DATE_PAGE_ID}") or "") or None
+    relacion = (answers.get(f"{prefix}.{_RELACION_PAGE_ID}") or "").strip()
+    verdicts: list[ValidationVerdict] = []
+    for page_id, permitted in (
+        (_INSCRIPCION_PAGE_ID, _INSCRIPCION_RELACIONES),
+        (_ACOGIMIENTO_PAGE_ID, _ACOGIMIENTO_RELACIONES),
+    ):
+        raw = answers.get(f"{prefix}.{page_id}") or ""
+        if not raw:
+            continue
+        entry = parse_iso8601_date(raw)
+        if entry is None:
+            continue
+        # A future date is reported on its own; only a past one is then compared
+        # against the birth, so the operator is told the one thing wrong with the
+        # value rather than two overlapping refusals.
+        if entry > today:
+            verdicts.append(ValidationVerdict.failed(_ENTRY_IN_FUTURE_LOCALE_KEY, instance=instance, page=page_id))
+        elif birth is not None and entry < birth:
+            verdicts.append(ValidationVerdict.failed(_ENTRY_BEFORE_BIRTH_LOCALE_KEY, instance=instance, page=page_id))
+        # An UNSTATED relación is not judged: an inscription date alone reads as
+        # an adoption (the canonical record infers it), so refusing here would
+        # block the shape the model accepts.
+        if relacion and relacion not in permitted:
+            verdicts.append(
+                ValidationVerdict.failed(
+                    _ENTRY_RELACION_MISMATCH_LOCALE_KEY,
+                    instance=instance,
+                    page=page_id,
+                    accepted=", ".join(sorted(permitted)),
+                ),
+            )
+    return verdicts
 
-    A future adoption date is reported on its own; only a past one is then
-    compared against the birth date, so an operator is told the one thing
-    wrong with the value rather than two overlapping refusals.
-    """
-    adoption = parse_iso8601_date(raw)
-    if adoption is None:
-        return None
-    if adoption > today:
-        return ValidationVerdict.failed(_ADOPTION_IN_FUTURE_LOCALE_KEY, instance=instance)
-    birth = parse_iso8601_date(birth_raw) if birth_raw else None
-    if birth is not None and adoption < birth:
-        return ValidationVerdict.failed(_ADOPTION_BEFORE_BIRTH_LOCALE_KEY, instance=instance)
-    return None
 
-
-register_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID, _validate_descendant_adoption_dates)
+register_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, _validate_descendant_entry_event_dates)
 
 
 # The count question is gated to a natural person: only an IRPF-personal
@@ -382,6 +455,48 @@ DESCENDANTS_COUNT_PAGE: FlowPage = FlowPage(
     required=False,
     visible_when=_NATURAL_PERSON_GATE,
     answer_type=int,
+)
+
+
+#: Art. 58.1 / 58.2 relación choices, in the order an operator recognises them.
+#:
+#: Every member of the closed set is offered, including the two that take the
+#: tranches without the increase (temporal acogimiento, tutela). Omitting either
+#: would leave that carer no honest answer, and an operator with no honest answer
+#: picks the nearest entitling one -- which is the over-grant this axis exists to
+#: prevent, arriving through the surface rather than through the model.
+_RELACION_CHOICES: tuple[FlowChoice, ...] = (
+    FlowChoice(
+        value=DescendantRelacion.DESCENDIENTE.value,
+        label=_locale_ref(_RELACION_CHOICE_DESCENDIENTE_LOCALE_KEY),
+    ),
+    FlowChoice(
+        value=DescendantRelacion.ADOPTADO.value,
+        label=_locale_ref(_RELACION_CHOICE_ADOPTADO_LOCALE_KEY),
+    ),
+    FlowChoice(
+        value=DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE.value,
+        label=_locale_ref(_RELACION_CHOICE_ACOGIMIENTO_PP_LOCALE_KEY),
+    ),
+    FlowChoice(
+        value=DescendantRelacion.ACOGIMIENTO_TEMPORAL.value,
+        label=_locale_ref(_RELACION_CHOICE_ACOGIMIENTO_TEMPORAL_LOCALE_KEY),
+    ),
+    FlowChoice(
+        value=DescendantRelacion.TUTELA.value,
+        label=_locale_ref(_RELACION_CHOICE_TUTELA_LOCALE_KEY),
+    ),
+)
+
+
+#: Visibility for the acogimiento resolución page: every entitling relación.
+#:
+#: Built from :data:`~cadrumo.core.ART_58_2_ENTITLING_RELACIONES` and sorted so
+#: the clause order is stable, rather than listing the two members here. Adding
+#: an entitling relación to the statute's set therefore reaches the wizard gate
+#: without a second edit that could be forgotten.
+_ACOGIMIENTO_VISIBILITY: FlowVisibility = FlowVisibility(
+    any_of=tuple(FlowCondition(page_id=_RELACION_PAGE_ID, equals=value) for value in sorted(_ACOGIMIENTO_RELACIONES)),
 )
 
 
@@ -411,12 +526,52 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         answer_type=str,
     ),
     FlowPage(
-        id=_ADOPTION_DATE_PAGE_ID,
+        id=_RELACION_PAGE_ID,
+        widget=FlowWidgetKind.SELECT,
+        prompt=_locale_ref(_RELACION_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_RELACION_HELP_LOCALE_KEY),
+        choices=_RELACION_CHOICES,
+        # Optional with no default: leaving it unanswered means an ordinary
+        # descendant, which is both the record's own default and the
+        # overwhelming case, so the majority of walks answer nothing here.
+        required=False,
+        answer_type=str,
+    ),
+    # Both entry-date pages are GATED on the relación answer rather than shown
+    # unconditionally. The gate is per-instance -- the engine resolves a clause
+    # against `<group>#<index>.<page-id>` before the bare id -- so each
+    # descendant's dates follow that descendant's own relación. Gating is what
+    # keeps a tutela guardian or a temporal acogimiento carer from ever seeing a
+    # field the statute gives them no entitling value for; the cross-field
+    # verdict and the model validator then hold the same line for a scripted or
+    # resumed answer map, where visibility alone proves nothing.
+    FlowPage(
+        id=_INSCRIPCION_PAGE_ID,
         widget=FlowWidgetKind.DATE,
-        prompt=_locale_ref(_ADOPTION_DATE_PROMPT_LOCALE_KEY),
+        prompt=_locale_ref(_INSCRIPCION_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_INSCRIPCION_HELP_LOCALE_KEY),
         format_hint=_locale_ref(_FORMAT_DATE_LOCALE_KEY),
         required=False,
         answer_type=str,
+        visible_when=FlowCondition(
+            page_id=_RELACION_PAGE_ID,
+            equals=DescendantRelacion.ADOPTADO.value,
+        ),
+    ),
+    FlowPage(
+        id=_ACOGIMIENTO_PAGE_ID,
+        widget=FlowWidgetKind.DATE,
+        prompt=_locale_ref(_ACOGIMIENTO_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_ACOGIMIENTO_HELP_LOCALE_KEY),
+        format_hint=_locale_ref(_FORMAT_DATE_LOCALE_KEY),
+        required=False,
+        answer_type=str,
+        # Shown for an adoptado record too, and that is the cap-not-restart rule
+        # made reachable: a fostered-then-adopted child's window is measured
+        # from the earlier placement, so without this page the operator could
+        # only record the later event and the engine would grant three fresh
+        # periods on top of the ones already run.
+        visible_when=_ACOGIMIENTO_VISIBILITY,
     ),
     FlowPage(
         id=_DISCAPACIDAD_PAGE_ID,
@@ -524,8 +679,9 @@ def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
     Appends the count-source page and the repeating group to the familia
     section, in that order, so the substrate's count-source validator sees
     the INTEGER count page before the group that names it, and names the
-    flow-scope adoption-date cross-field validator on the definition so a
-    bad adoption date blocks submit. Raises when the familia section is
+    flow-scope entry-event cross-field validator on the definition so a bad
+    entry date -- or one the declared relación cannot carry -- blocks
+    submit. Raises when the familia section is
     absent -- a silent no-op would drop the whole descendant surface.
     Idempotent on the flow validator id: re-applying does not duplicate it.
     """
@@ -546,8 +702,8 @@ def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
             f"attach_descendant_group: definition {definition.id!r} has no {_FAMILIA_SECTION_ID!r} section",
         )
     flow_validator_ids = definition.flow_validator_ids
-    if DESCENDANT_ADOPTION_VALIDATOR_ID not in flow_validator_ids:
-        flow_validator_ids = (*flow_validator_ids, DESCENDANT_ADOPTION_VALIDATOR_ID)
+    if DESCENDANT_ENTRY_EVENT_VALIDATOR_ID not in flow_validator_ids:
+        flow_validator_ids = (*flow_validator_ids, DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
     return definition.model_copy(
         update={"sections": tuple(sections), "flow_validator_ids": flow_validator_ids},
     )
@@ -557,7 +713,7 @@ __all__ = [
     "DESCENDANTS_COUNT_PAGE",
     "DESCENDANTS_COUNT_PAGE_ID",
     "DESCENDANTS_GROUP_ID",
-    "DESCENDANT_ADOPTION_VALIDATOR_ID",
+    "DESCENDANT_ENTRY_EVENT_VALIDATOR_ID",
     "DESCENDANT_GASTOS_VALIDATOR_ID",
     "DESCENDANT_GROUP",
     "DESCENDANT_LOCALE_KEYS",

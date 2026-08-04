@@ -50,6 +50,7 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from datetime import date
 
     from ....adapters.inbound.tui import FormChoice, FormFieldKind, FormPage
     from ....application.workflow import ProfileBucketPointer
@@ -143,6 +144,11 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     workflow_state_repository().update(lambda current: set_active_fields(current, (*clears, *upserts)))
 
 
+def _iso_or_dash(value: date | None) -> str:
+    """Render an optional entry-event date for the text row, or a dash when absent."""
+    return value.isoformat() if value is not None else "-"
+
+
 def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[str]:
     lines: list[str] = []
     for index, descendant in enumerate(descendientes):
@@ -151,7 +157,9 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                 (
                     f"descendiente[{index}]",
                     f"nacimiento={descendant.birth_date.isoformat()}",
-                    f"adopcion={descendant.adoption_date.isoformat() if descendant.adoption_date else '-'}",
+                    f"relacion={descendant.relacion.value}",
+                    f"inscripcion={_iso_or_dash(descendant.inscripcion_registro_civil_date)}",
+                    f"acogimiento={_iso_or_dash(descendant.acogimiento_resolucion_date)}",
                     f"discapacidad={descendant.discapacidad_grado if descendant.discapacidad_grado is not None else 0}",
                     f"convivencia={str(descendant.convive_con_contribuyente).lower()}",
                     f"custodia={str(descendant.custodia_compartida).lower()}",
@@ -179,7 +187,9 @@ def _emit_descendiente_list(
             ProfileDescendientePayload(
                 index=index,
                 birth_date=descendant.birth_date,
-                adoption_date=descendant.adoption_date,
+                relacion=descendant.relacion,
+                inscripcion_registro_civil_date=descendant.inscripcion_registro_civil_date,
+                acogimiento_resolucion_date=descendant.acogimiento_resolucion_date,
                 discapacidad_grado=descendant.discapacidad_grado,
                 convive_con_contribuyente=descendant.convive_con_contribuyente,
                 custodia_compartida=descendant.custodia_compartida,
@@ -327,8 +337,12 @@ def _descendant_prompt(page_id: str) -> str:
     match page_id:
         case "birth-date":
             return _tr("wizard.setup.descendientes.birth-date.prompt")
-        case "adoption-date":
-            return _tr("wizard.setup.descendientes.adoption-date.prompt")
+        case "relacion":
+            return _tr("wizard.setup.descendientes.relacion.prompt")
+        case "inscripcion-registro-civil":
+            return _tr("wizard.setup.descendientes.inscripcion-registro-civil.prompt")
+        case "acogimiento-resolucion":
+            return _tr("wizard.setup.descendientes.acogimiento-resolucion.prompt")
         case "discapacidad":
             return _tr("wizard.setup.descendientes.discapacidad.prompt")
         case "convivencia":
@@ -389,7 +403,9 @@ def descendiente_add(
         help=tr(
             "cli.config.profile.descendiente.add_flag_help",
             default=(
-                "NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65]"
+                "NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|"
+                "acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela]"
+                "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65]"
                 "[,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
                 "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
                 "[,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. "

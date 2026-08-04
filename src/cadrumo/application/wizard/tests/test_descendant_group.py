@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, DescendantRelacion
 from ....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -40,13 +40,13 @@ from ...flows import (
 )
 from .. import attach_descendant_group, descendant_facts_from_answers
 from .._descendant_group import (
-    _ADOPTION_BEFORE_BIRTH_LOCALE_KEY,
-    _ADOPTION_IN_FUTURE_LOCALE_KEY,
+    _ENTRY_BEFORE_BIRTH_LOCALE_KEY,
+    _ENTRY_IN_FUTURE_LOCALE_KEY,
     _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
     _MESES_INVALID_RANGE_LOCALE_KEY,
     _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
     _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY,
-    DESCENDANT_ADOPTION_VALIDATOR_ID,
+    DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     DESCENDANT_GROUP,
     DESCENDANTS_COUNT_PAGE,
 )
@@ -126,7 +126,11 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
 
     # Instance 1: older adopted child under shared custody, carrying a NIF.
     state = answer(definition, state, "descendientes#1.birth-date", "2015-03-01")
-    state = answer(definition, state, "descendientes#1.adoption-date", "2016-06-01")
+    # The inscription page is GATED on this instance's relación, so the answer
+    # has to precede it -- answering it first is not test convenience, it is the
+    # gate being real: without it the engine refuses the target as not visible.
+    state = answer(definition, state, "descendientes#1.relacion", DescendantRelacion.ADOPTADO.value)
+    state = answer(definition, state, "descendientes#1.inscripcion-registro-civil", "2016-06-01")
     state = answer(definition, state, "descendientes#1.convivencia", "true")
     state = answer(definition, state, "descendientes#1.custodia-compartida", "true")
     state = answer(definition, state, "descendientes#1.nif", _VALID_NIF)
@@ -143,7 +147,8 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
         "renta_family.descendiente.0.meses_madre_trabajo": "6",
         "renta_family.descendiente.0.gastos_guarderia": "900",
         "renta_family.descendiente.1.birth_date": "2015-03-01",
-        "renta_family.descendiente.1.adoption_date": "2016-06-01",
+        "renta_family.descendiente.1.relacion": "adoptado",
+        "renta_family.descendiente.1.inscripcion_registro_civil": "2016-06-01",
         "renta_family.descendiente.1.convivencia": "true",
         "renta_family.descendiente.1.custodia_compartida": "true",
         "renta_family.descendiente.1.nif": _VALID_NIF,
@@ -295,33 +300,33 @@ def test_negative_rentas_refuses_as_a_verdict() -> None:
 
 
 def test_adoption_before_birth_refuses_at_flow_scope() -> None:
-    validator = resolve_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID)
+    validator = resolve_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
     verdicts = validator(
         {
             "descendientes#0.birth-date": "2020-05-10",
-            "descendientes#0.adoption-date": "2010-01-01",
+            "descendientes#0.inscripcion-registro-civil": "2010-01-01",
         },
     )
-    assert [v.message_key for v in verdicts if not v.ok] == [_ADOPTION_BEFORE_BIRTH_LOCALE_KEY]
+    assert [v.message_key for v in verdicts if not v.ok] == [_ENTRY_BEFORE_BIRTH_LOCALE_KEY]
 
 
 def test_adoption_in_future_refuses_at_flow_scope() -> None:
-    validator = resolve_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID)
+    validator = resolve_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
     verdicts = validator(
         {
             "descendientes#0.birth-date": "2020-05-10",
-            "descendientes#0.adoption-date": "2999-01-01",
+            "descendientes#0.inscripcion-registro-civil": "2999-01-01",
         },
     )
-    assert [v.message_key for v in verdicts if not v.ok] == [_ADOPTION_IN_FUTURE_LOCALE_KEY]
+    assert [v.message_key for v in verdicts if not v.ok] == [_ENTRY_IN_FUTURE_LOCALE_KEY]
 
 
 def test_valid_adoption_pair_passes_flow_scope() -> None:
-    validator = resolve_cross_field_validator(DESCENDANT_ADOPTION_VALIDATOR_ID)
+    validator = resolve_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
     verdicts = validator(
         {
             "descendientes#0.birth-date": "2015-03-01",
-            "descendientes#0.adoption-date": "2016-06-01",
+            "descendientes#0.inscripcion-registro-civil": "2016-06-01",
         },
     )
     assert all(v.ok for v in verdicts)
@@ -340,12 +345,12 @@ def test_attach_descendant_group_names_the_adoption_flow_validator() -> None:
         },
     )
     attached = attach_descendant_group(base)
-    assert attached.flow_validator_ids.count(DESCENDANT_ADOPTION_VALIDATOR_ID) == 1
+    assert attached.flow_validator_ids.count(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID) == 1
 
     # Idempotent on the flow validator id: a definition already naming it is
     # not given a duplicate.
-    pre_named = base.model_copy(update={"flow_validator_ids": (DESCENDANT_ADOPTION_VALIDATOR_ID,)})
-    assert attach_descendant_group(pre_named).flow_validator_ids.count(DESCENDANT_ADOPTION_VALIDATOR_ID) == 1
+    pre_named = base.model_copy(update={"flow_validator_ids": (DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,)})
+    assert attach_descendant_group(pre_named).flow_validator_ids.count(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID) == 1
 
 
 def test_attach_descendant_group_refuses_without_a_familia_section() -> None:

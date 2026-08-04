@@ -14,6 +14,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from ....core import DescendantRelacion
 from ..family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, _coerce_iso_date_field
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -51,14 +52,39 @@ def test_descendant_info_birth_date_from_iso_string() -> None:
     assert info.birth_date == date(2020, 6, 1)
 
 
-def test_descendant_info_adoption_date_none_passthrough() -> None:
-    info = DescendantInfo(birth_date=date(2020, 1, 1), adoption_date=None)
-    assert info.adoption_date is None
+def test_descendant_info_entry_event_dates_none_passthrough() -> None:
+    info = DescendantInfo(
+        birth_date=date(2020, 1, 1),
+        inscripcion_registro_civil_date=None,
+        acogimiento_resolucion_date=None,
+    )
+    assert info.inscripcion_registro_civil_date is None
+    assert info.acogimiento_resolucion_date is None
 
 
-def test_descendant_info_adoption_date_from_iso_string() -> None:
-    info = DescendantInfo.model_validate({"birth_date": date(2020, 1, 1), "adoption_date": "2021-05-10"})
-    assert info.adoption_date == date(2021, 5, 10)
+def test_descendant_info_inscripcion_date_from_iso_string() -> None:
+    info = DescendantInfo.model_validate(
+        {"birth_date": date(2020, 1, 1), "inscripcion_registro_civil_date": "2021-05-10"},
+    )
+    assert info.inscripcion_registro_civil_date == date(2021, 5, 10)
+
+
+def test_descendant_info_acogimiento_date_from_iso_string() -> None:
+    info = DescendantInfo.model_validate(
+        {
+            "birth_date": date(2020, 1, 1),
+            "relacion": DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
+            "acogimiento_resolucion_date": "2021-05-10",
+        },
+    )
+    assert info.acogimiento_resolucion_date == date(2021, 5, 10)
+
+
+def test_descendant_info_entry_date_bad_format_raises() -> None:
+    """The ISO coercion covers both new date fields, not only birth_date."""
+    for field in ("inscripcion_registro_civil_date", "acogimiento_resolucion_date"):
+        with pytest.raises(ValidationError):
+            DescendantInfo.model_validate({"birth_date": date(2020, 1, 1), field: "10-05-2021"})
 
 
 def test_descendant_info_birth_date_bad_format_raises() -> None:

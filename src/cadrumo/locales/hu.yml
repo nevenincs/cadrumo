@@ -3648,8 +3648,8 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
-          Ismételhető. Futtasd az `aeat config profile descendiente` parancsot alparancs
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
@@ -7675,10 +7675,12 @@ wizard:
         provenance: Az Ön beállítási válasza
       title: Összevetés a Certificado de Situación Censal tanúsítvánnyal
     descendientes:
-      adoption-date:
-        before_birth: Az örökbefogadás dátuma nem lehet korábbi a születési dátumnál.
-        in_future: Az örökbefogadás dátuma nem lehet jövőbeli.
-        prompt: Örökbefogadás dátuma (hagyja üresen, ha nem örökbefogadott)
+      acogimiento-resolucion:
+        help: 'Az első örökbefogadás előtti vagy tartós nevelésbe vételi határozat
+          dátuma. Akkor is adja meg, ha a gyermeket később örökbefogadták: a hároméves
+          kor alatti növekmény az első nevelésbe vételtől számít, összesen három időszakon
+          át tart, és az örökbefogadás nem indítja újra.'
+        prompt: Az első nevelésbe vételi határozat dátuma
       birth-date:
         prompt: Születési dátum
       convivencia:
@@ -7703,12 +7705,25 @@ wizard:
           '65':
             label: 65% vagy több
         prompt: Fogyatékosság mértéke
+      entry-event:
+        before_birth: A belépés dátuma nem lehet korábbi a születési dátumnál.
+        in_future: A belépés dátuma nem lehet jövőbeli.
+        relacion_mismatch: Ez a dátum nem felel meg a megadott jogviszonynak. Az anyakönyvi
+          bejegyzés csak örökbefogadott leszármazottra vonatkozik, a nevelésbe vételi
+          határozat pedig csak örökbefogadás előtti vagy tartós nevelésbe vételre,
+          illetve korábban nevelésbe vett örökbefogadottra. Javítsa a jogviszonyt,
+          vagy törölje a dátumot.
       gastos-guarderia:
         help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81.2. cikk), amelyek
           növelik az anyasági levonást; egész euró.
         invalid_negative: A bölcsődei költség nem lehet negatív; adjon meg 0-t vagy
           pozitív összeget euróban (LIRPF 81 bis cikk).
         prompt: Az adóévben fizetett bölcsődei költségek (euró)
+      inscripcion-registro-civil:
+        help: Az a dátum, amikor az örökbefogadást az anyakönyvbe bejegyezték. Ha
+          a bejegyzés nem volt szükséges, adja meg a bírósági vagy hatósági határozat
+          dátumát. A hároméves kor alatti növekmény ettől a dátumtól számít.
+        prompt: Anyakönyvi bejegyzés dátuma
       meses-madre-trabajo:
         help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0–12), amikor az
           anya tb-járulékot fizetett a 3 év alatti gyermek mellett.'
@@ -7726,6 +7741,24 @@ wizard:
         help: Hagyd üresen, és a családi állapotodból, a rögzített házastársból és
           a bevallás típusából vezetjük le.
         prompt: Jogosult másik adózó is a kedvezményre ezen leszármazott után?
+      relacion:
+        choices:
+          acogimiento_preadoptivo_o_permanente:
+            label: Örökbefogadás előtti vagy tartós nevelésbe vétel
+          acogimiento_temporal:
+            label: Ideiglenes nevelésbe vétel
+          adoptado:
+            label: Örökbefogadott
+          descendiente:
+            label: Leszármazott (gyermek vagy unoka)
+          tutela:
+            label: Gyámság vagy törvényes képviselet
+        help: Válassza ki a jogviszonyt. Mindegyik jogosít a leszármazottak utáni
+          adóalap-kedvezményre. Csak az örökbefogadás és az örökbefogadás előtti vagy
+          tartós nevelésbe vétel jogosít ezenfelül a hároméves kor alatti növekményre,
+          a gyermek életkorától függetlenül; az ideiglenes nevelésbe vétel és a gyámság
+          nem.
+        prompt: Kapcsolat ezzel a leszármazottal
       rentas-anuales:
         help: Hagyd üresen, ha nem tudod. A magas jövedelem megszüntetheti a kedvezményt.
         invalid_negative: A leszármazott jövedelme nem lehet negatív.
@@ -7772,8 +7805,7 @@ wizard:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
-        help: 'Leszármazotti adatok az LIRPF 58. cikk szerinti minimumhoz (megismételhető).
-          Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:

@@ -11,10 +11,18 @@ feed the Art. 81 LIRPF deducción maternidad (81.1) and guardería increment (81
 Dropping either at the transport boundary would silently remove a taxpayer's
 deduction from every machine-readable surface, so they are carried, not summarised.
 
-``birth_date`` and ``adoption_date`` are declared as real :class:`datetime.date`
-values rather than free strings. The strict :class:`OutputSchema` base refuses an
-ISO string for a date field, so emit sites pass the typed value they already hold;
-``model_dump(mode="json")`` renders the same ISO-8601 wire form as before.
+``birth_date`` and the two entry-event dates are declared as real
+:class:`datetime.date` values rather than free strings. The strict
+:class:`OutputSchema` base refuses an ISO string for a date field, so emit sites
+pass the typed value they already hold; ``model_dump(mode="json")`` renders the
+same ISO-8601 wire form as before.
+
+``relacion`` rides as the :class:`~cadrumo.core.DescendantRelacion` member rather
+than a bare string, so a consumer reading this transport gets the same closed set
+the engine branches on. It is what decides whether the Art. 58.2 increase applies
+at all — a temporal acogimiento takes the tranches and not the increase — so
+flattening it here would put the one distinction the axis exists to draw outside
+the machine-readable contract.
 """
 
 from __future__ import annotations
@@ -25,6 +33,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, StringConstraints, model_validator
 
+from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.time import today_madrid
 from ._schemas import OutputSchema, register_schema
 
@@ -45,7 +54,9 @@ class ProfileDescendientePayload(OutputSchema):
 
     index: int = Field(ge=0)
     birth_date: date
-    adoption_date: date | None = None
+    relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE
+    inscripcion_registro_civil_date: date | None = None
+    acogimiento_resolucion_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool
     custodia_compartida: bool
@@ -57,15 +68,35 @@ class ProfileDescendientePayload(OutputSchema):
     nif: DescendantNif | None = None
 
     @model_validator(mode="after")
-    def _validate_adoption_date(self) -> ProfileDescendientePayload:
-        """Mirror the canonical adoption-date ordering and non-future rules."""
-        if self.adoption_date is None:
-            return self
-        if self.adoption_date < self.birth_date:
-            raise ValueError(f"adoption_date {self.adoption_date} must be >= birth_date {self.birth_date}")
-        today = today_madrid()
-        if self.adoption_date > today:
-            raise ValueError(f"adoption_date {self.adoption_date} must not be in the future (today={today})")
+    def _validate_entry_event_dates(self) -> ProfileDescendientePayload:
+        """Mirror the canonical entry-date ordering AND the relación coherence rules.
+
+        The ordering half was always mirrored here. The coherence half is
+        mirrored too, and deliberately rather than defensively: this transport
+        is a lossless projection, so a payload a consumer could construct but
+        the canonical record would refuse is a shape that exists only on the
+        wire. That is precisely where the excluded case would re-enter — a
+        tutela or temporal-acogimiento row carrying an entitling anchor.
+        """
+        for field_name, value in (
+            ("inscripcion_registro_civil_date", self.inscripcion_registro_civil_date),
+            ("acogimiento_resolucion_date", self.acogimiento_resolucion_date),
+        ):
+            if value is None:
+                continue
+            if value < self.birth_date:
+                raise ValueError(f"{field_name} {value} must be >= birth_date {self.birth_date}")
+            today = today_madrid()
+            if value > today:
+                raise ValueError(f"{field_name} {value} must not be in the future (today={today})")
+        if self.inscripcion_registro_civil_date is not None and self.relacion is not DescendantRelacion.ADOPTADO:
+            raise ValueError(
+                f"inscripcion_registro_civil_date cannot be carried by relacion={self.relacion.value!r}",
+            )
+        if self.acogimiento_resolucion_date is not None and self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+            raise ValueError(
+                f"acogimiento_resolucion_date cannot be carried by relacion={self.relacion.value!r}",
+            )
         return self
 
 
