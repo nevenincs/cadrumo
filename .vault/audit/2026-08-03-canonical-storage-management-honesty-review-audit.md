@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:acc50900788db5e57cab7af36759be5b066d3e42dbfbca97a5d008447a3e4e8e'
+body_hash: 'sha256:d827066f42bdf88b0b0de6788f528895c29ff16229e2099fa37325810dc49721'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'
@@ -1085,6 +1085,65 @@ consistently-applied, module-wide design choice with a stated rationale and pass
 coverage — reversing it inside an unrelated bug fix would be scope creep, and the right
 owner is whoever designs the eventual operator-facing rotation verb (today there is none).
 Recorded here so it survives outside the Step record that happened to surface it.
+
+### third-declared-location-with-no-filesystem-writer | low | A third taxonomy member names a location whose real persistence is SQL, not filesystem
+
+Surfaced investigating `S78`'s `justificantes` literal cluster (see the `source_pdf_path`
+fix, commit `e61a1da33f`), independent of the rotation-guard finding above but the same
+shape, and the third instance of it this campaign has now found. Recorded separately, not
+folded into that finding, because the mechanism is different: that one is about what a
+guard does with a `False`; this one is about a taxonomy member naming a location nothing
+writes to at all.
+
+**Where.** `StorageCategory.JUSTIFICANTES` (`core/_storage_taxonomy_locations.py:421-426`,
+`settings_field="cadrumo_justificantes_dir"`, `consumer_module="adapters/persistence/
+storage/_rotation.py"`) has exactly three production references, all of them declaration
+or plan-construction sites: the settings field itself (`core/config.py:898`), the
+`env_var_names` listing (`core/config.py:1215`), and one `RotationPlanEntry` in
+`default_rotation_plan` (`_rotation.py:479`, a `.envelope.json`-file rotation entry with
+HKDF context `cadrumo.domain.justificante.metadata.v1`). Nothing else in production reads
+or writes `cadrumo_justificantes_dir`. The real justificante persistence path,
+`JustificanteRepository` (`adapters/persistence/profile/justificante.py:34`), subclasses
+`SecureBoundRepository` — SQL `secure_objects`, not filesystem — and never references the
+setting.
+
+**The pattern, now three for three.** `cadrumo_attachments_dir` /
+`StorageCategory.ATTACHMENTS` (`_storage_taxonomy_locations.py:477-483`) is the second
+instance: its only production references are the declaration sites plus a
+`RotationPlanEntry` for `ATTACHMENTS_MANIFESTS` (`_rotation.py:442`), while the real
+`AttachmentStore` is likewise `SecureObjectRepository`-backed. `default_blob_store_roots`'s
+doubled-path fix (`5fbd329fd0`) is the first — it found and removed `cadrumo_attachments_dir`
+from the *blob-store* rotation candidate list on the identical reasoning. All three name a
+`StorageCategory` member whose settings field, taxonomy declaration, and one rotation-plan
+entry are its entire production footprint — the taxonomy still believes these are
+filesystem locations a taxpayer's data lives under; the application moved that data to SQL
+`secure_objects` (bucket-DEK-encrypted, not master-key-encrypted) at some point this
+campaign did not touch, and neither the settings field nor the taxonomy member nor the
+rotation-plan entries were retired when the migration happened.
+
+**Severity, stated explicitly, same discipline as the rotation-guard finding above.** `low`,
+and the reason is again reachability, not consequence. Unlike that finding, though,
+reachability here is not "zero callers of a dormant function" — `default_rotation_plan`
+covers real ground the campaign has not audited end-to-end (nine other `RotationPlanEntry`
+rows), and rotation-plan wiring is likewise uncalled from any operator verb today, so the
+*specific* justificantes/attachments entries carry no live consequence either way: they
+name a directory that materialises empty and a rotation walk that finds nothing to rotate,
+which is merely wasted work, not silent data loss, because there was never anything there
+to lose. The consequence would change if either category's `settings_field` were later
+reused for a real filesystem write without updating the taxonomy's model of what persists
+where — that is speculative, not observed, which is why this stays a documentation finding
+rather than a defect claim.
+
+**Not fixed here, and not obviously any one campaign's fix to make.** Removing the two
+stale `RotationPlanEntry` rows is a two-line change in `default_rotation_plan`, symmetric
+with what the doubled-path fix already did for `default_blob_store_roots`. Retiring the
+`cadrumo_justificantes_dir` / `cadrumo_attachments_dir` settings fields and their taxonomy
+members entirely is a bigger question this record does not answer: it would mean the
+taxonomy stops declaring a location for two consumer types (attachments, justificante
+metadata) that this campaign's own closure criterion says every application-chosen
+location must resolve through the taxonomy — except these two no longer choose a
+filesystem location at all. Three instances is a pattern worth naming at the closure
+statement rather than chasing member-by-member inside the literal-corpus burndown.
 
 ### s109-and-s111-independently-verified | none | Both hold; the S109 plan row suggested a tautology and the implementer correctly declined it
 
