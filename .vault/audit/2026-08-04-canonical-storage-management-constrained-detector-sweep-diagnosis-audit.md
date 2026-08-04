@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:c31ae5f5d8d4f3ede0cbe5a8168c63862bfc0106b66d909ae2c42bf7a55426a4'
+body_hash: 'sha256:5c365e8bc862a00d5f30b6eb910606f80fb6162a0d5bfde00eaa5fadd96e4f7c'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -163,19 +163,43 @@ kind of finding this campaign has learned gets the least scrutiny, because
 nobody re-runs a result that already confirms the thesis; this one did not
 get that scrutiny before landing, and should have.
 
-What `307`/`197`/`110` actually measures is not yet established. It was
-produced by a standalone re-implementation of the walk (not the production
-`census()` entry point), and the bug — if it is one — has not been isolated:
-the write-call and bare-chain branches were each written to mirror
-`write_target`'s and `_top_level_div_chains`'s exact inputs to `_literal_tail`,
-but the aggregate count still diverges roughly 2.3x from the same walk run
-independently. Left open rather than reconciled to a story a second reading
-could not sustain. `honesty`'s own `183` vs `110` gap (a coinciding-tail site
-in a risk-signalling module should, by `_is_constrained`'s construction, be
-exactly the flagged set) is also unresolved and may share a root cause with
-this one. The population figures to cite until this is resolved are
-`honesty`'s directly-measured `702`/`519`/`183`/`110`, not the retracted
-`307`/`197`.
+**Resolved, second correction.** `307`/`197`/`110` is not a bug; it is a
+different unit, and `honesty` found the mechanism by reading the standalone
+script rather than guessing at it. `702`/`519`/`183` counts every
+`ast.BinOp` node whose literal tail coincides with a taxonomy token, with no
+top-level restriction and no provenance filter; `307`/`197`/`110` counts
+`temporary`/`pass_through` sites at the census's own unit — a maximal
+top-level `/`-join chain (`_top_level_div_chains`), one entry per site, the
+same unit `_is_constrained` actually consumes. A single multi-segment path
+(`storage_root / "buckets" / "acme" / "db" / "cadrumo.db"`) is four nested
+`BinOp` nodes, so it entered the raw-node population four times and the
+census-unit population once. Both were internally consistent, correctly
+computed, real measurements of two different things sharing the word
+"sites".
+
+**This inflation runs the other way too, and it means `honesty`'s own
+702/519/183 need the same correction.** Deduplicated to distinct
+`(file, line)` pairs, the raw-node population is `475` total, `328`
+discard pile, `147` signal-bearing — not `702`/`519`/`183`. The `110`
+flagged/`constrained` figure is unaffected either way: it was always
+computed at the census's own line-deduplicated unit
+(`census()`'s `seen: set[int]`), confirmed both by `honesty`'s exact
+replication of this document's own walk (`305`/`199`/`106`, matching
+`307`/`197`/`110` up to the residual noise of two independent
+implementations) and, independently, by running the real production
+`--json` output directly at `honesty`'s pin: `constrained_count: 110`
+across `36` files, an exact match to this walk's own `signal=True: 110 / 36
+files`. **The 110 figure is now ground-truth confirmed against the
+production entry point itself, not only cross-instrument agreement.**
+
+The population figures to cite going forward are the deduplicated,
+line-level ones — `475` total / `328` discard / `147` signal-bearing / `110`
+flagged — not the raw-BinOp `702`/`519`/`183` this section originally
+reported, nor the un-reconciled `307`/`197` this document briefly (and
+wrongly) treated as a discrepancy. One piece remains genuinely open rather
+than assumed: `honesty`'s replication of the discard-pile *file* count
+(`97`) does not match this walk's own (`64`); flagged as unresolved rather
+than reconciled to either.
 
 ### sampled-recall-of-the-discard-pile-finds-23-percent-rename-sensitive | critical | The class is not reachable by module-local co-occurrence, and no signal-set tuning fixes that
 
@@ -207,6 +231,19 @@ also spans the whole test tree, not only the narrower `src/cadrumo/tests/`
 package some `S78` figures scope to — only 3 of the 30 sites sit inside that
 narrower package. If a citation of this figure needs that narrower scope, it
 should be re-drawn against it rather than assumed comparable.)
+
+**A further caveat, not yet resolved.** The `519` this sample was drawn from
+is the raw-`ast.BinOp`-node discard pile (see the correction above); the
+line-deduplicated discard pile is `328`. Because a multi-segment path enters
+the raw population once per nested join, the sample was drawn
+**nesting-weighted** — a four-segment path had four times the selection
+probability of a one-segment one, and longer paths skew toward
+source-path-shaped homonyms rather than an injected literal. Whether that
+biases the 16.7% rate itself (not only the projection's denominator) is
+open; simply re-projecting onto `328` would understate the correction if the
+bias also moved the rate. Left as a stated limitation rather than a
+recomputed figure — a re-draw against the deduplicated population, not
+arithmetic on this one, is what would settle it.
 
 Read against the real callees, the undeclared breaks share one structural
 property none of this detector's vocabulary reaches: the segment is
