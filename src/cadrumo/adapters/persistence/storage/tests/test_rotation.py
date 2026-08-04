@@ -728,10 +728,13 @@ class TestRotationLockTargetAlignment:
         # The usage-ratios writer locks
         # ``target.with_suffix('.lock')`` for ``target = usage-ratios.json``.
         # The rotation plan entry for the usage-ratios profile must
-        # produce the same lock target.
+        # produce the same lock target. "probe-store" is a fictional
+        # directory: RotationPlanEntry takes store_dir as a parameter, so the
+        # directory name is arbitrary and the test's subject is lock-target
+        # agreement, not any real taxonomy location.
         from .....core import exclusive_file_lock
 
-        store = tmp_path / "financial"
+        store = tmp_path / "probe-store"
         store.mkdir()
         envelope_path = store / "usage-ratios.json"
         envelope_path.write_text("{}", encoding=UTF_8_ENCODING)

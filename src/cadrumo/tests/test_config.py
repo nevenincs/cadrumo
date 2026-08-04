@@ -335,6 +335,11 @@ class TestRepoRelativePathNormalisationCoverage:
         """End-to-end: relative env values for the three audit-flagged paths anchor to
         the platform user-data root (not the process cwd).
 
+        ``"probe-category"`` is a deliberately fictional segment, not the real
+        ``StorageCategory.FINANCIAL_TRANSACTIONS`` subpath: the env value the
+        test supplies is arbitrary, and the property under test is the
+        anchoring mechanism, not any particular taxonomy default.
+
         The running platform's live anchor variable is pinned to an isolated
         tmp_path subtree (see ``_isolated_live_platform_anchor``) so the test
         never touches or asserts against the real machine's application-data
@@ -348,14 +353,14 @@ class TestRepoRelativePathNormalisationCoverage:
         env_name, env_value, inputs = _isolated_live_platform_anchor(isolated_app_data)
         with scoped_env_var(env_name, env_value):
             with _isolated_aeat_env(
-                CADRUMO_INVOICES_DIR="var/financial/invoices",
-                CADRUMO_ATTACHMENTS_DIR="var/financial/attachments",
+                CADRUMO_INVOICES_DIR="var/probe-category/invoices",
+                CADRUMO_ATTACHMENTS_DIR="var/probe-category/attachments",
                 CADRUMO_RUNS_DIR="var/runs",
             ):
                 settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         app_root = platform_user_data_root(inputs)
-        assert settings.cadrumo_invoices_dir == app_root / "var" / "financial" / "invoices"
-        assert settings.cadrumo_attachments_dir == app_root / "var" / "financial" / "attachments"
+        assert settings.cadrumo_invoices_dir == app_root / "var" / "probe-category" / "invoices"
+        assert settings.cadrumo_attachments_dir == app_root / "var" / "probe-category" / "attachments"
         assert settings.cadrumo_runs_dir == app_root / "var" / "runs"
 
 

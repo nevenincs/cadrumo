@@ -27,7 +27,7 @@ from .storage_scope import relocated_storage_path, storage_env_overrides, storag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets", "financial"})
 """Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
