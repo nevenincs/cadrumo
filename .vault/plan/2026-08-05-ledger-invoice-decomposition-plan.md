@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:a6ed4d40910418804b8edf2544eda737fd5678d072e9b8c5c1f3a9402b57d2f2'
+body_hash: 'sha256:806860756b270a71325ed3dc52ddba9883976c1a5295086ac3eb8ae8f48d35d1'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -80,6 +80,6 @@ Prove the chain against external AEAT authority rather than against itself, anch
 - [ ] `P05.S16` - Ground the chain on an exempt-services example proving the under-declaration direction is closed; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `P05.S17` - Add strict roundtrip coverage for every new persisted field, with an anti-tautology proof that a deleted field is refused on load; `src/cadrumo/application/calculations/tests`.
 - [ ] `P05.S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition; `src/cadrumo/application/aggregation/tests`.
-- [ ] `P05.S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded; `src/cadrumo/application/aggregation/tests`.
-- [ ] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
+- [x] `P05.S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded; `src/cadrumo/application/aggregation/tests`.
+- [x] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
 - [ ] `P05.S25` - Gate every advisory message builder as constructible at zero, one and many items against its own model's declared cap, read from the field rather than restated; `src/cadrumo/tests`.
