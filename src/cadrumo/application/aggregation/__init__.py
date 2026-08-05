@@ -105,6 +105,14 @@ from ._foreign_assets import (
     declarable_asset_classes_720,
     declarable_class,
 )
+from ._invoice_retencion import (
+    INVOICE_RETENCION_DEFECT_GUIDANCE,
+    InvoiceRetencionProjection,
+    InvoiceRetencionProjectionDefect,
+    InvoiceRetencionRouting,
+    project_received_invoice_retencion,
+    route_invoice_retenciones,
+)
 from ._iva_ledger import (
     AnnualDeducibleTotalsByRegime,
     IvaLedgerAggregation,
@@ -223,6 +231,7 @@ __all__ = [
     "ACCEPTED_SOURCE_KINDS",
     "ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND",
     "DEFERRED_SOURCE_KINDS",
+    "INVOICE_RETENCION_DEFECT_GUIDANCE",
     "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
     "AggregationCategoryCoverageError",
@@ -253,6 +262,9 @@ __all__ = [
     "ForeignAssetIngestObservation",
     "ForeignAssetsAggregation",
     "ForeignAssetsAggregationSourceResolver",
+    "InvoiceRetencionProjection",
+    "InvoiceRetencionProjectionDefect",
+    "InvoiceRetencionRouting",
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
@@ -337,7 +349,9 @@ __all__ = [
     "persist_percepcion_observations",
     "persist_retencion_observations",
     "precedence_ladder_sources",
+    "project_received_invoice_retencion",
     "retencion_observation_key",
+    "route_invoice_retenciones",
     "row_fingerprint",
     "stale_filed_revisions",
     "storage_degradation_resolution",
