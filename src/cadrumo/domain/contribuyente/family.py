@@ -1456,6 +1456,69 @@ class RentaFamilyProfile(BaseModel):
         """
         return sum(d.guarderia_contributing_spend(filing_year) for d in self.descendientes)
 
+    def incremento_guarderia_0613(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        cap_anual: Decimal,
+    ) -> Decimal:
+        """Art. 81.2 guardería increment (casilla 0613), prorated and capped PER CHILD.
+
+        The manual states the increment "puede alcanzar hasta 1.000 euros
+        anuales y se calculará proporcionalmente al número de meses en que se
+        cumplan de forma simultánea los requisitos exigidos en el artículo 81.1
+        y 2", and works it as ``1.000 / 12 x meses``. It then states the result
+        as that child's own limit — "Límite del incremento: 166,67 euros" — so
+        the cap is per child rather than a household total.
+
+        Each child contributes ``min(cap_anual / 12 x meses, su gasto)`` and the
+        contributions are SUMMED. The per-child bound is the load-bearing part:
+        an aggregate ``min`` over the household lets one child's unused cap
+        absorb another child's excess spend, and it is also what let the missing
+        proration hide, because filtering one term of a household-wide ``min``
+        reads as completing the month rules.
+
+        *meses* is the SIMULTANEITY intersection the manual describes, taken as
+        the smaller of the two sides. The Art. 81.2 side is a real month set
+        (:meth:`DescendantInfo.guarderia_qualifying_meses`); the Art. 81.1 side
+        is only a COUNT, because the record stores how many months the mother
+        qualified and never which ones. So this is a genuine intersection on one
+        side and an upper bound on the other, and it over-states only when the
+        two spans do not overlap — a mother qualifying January to April against
+        nursery paid September to October. That residual is disclosed to the
+        operator rather than presented as measured, and the exact fix, month
+        identity on the Art. 81.1 side, is tracked separately. It is adopted
+        because the alternative is leaving a flat per-child cap that over-grants
+        every mid-year birth and every partial-year enrolment outright.
+
+        *cap_anual* is a registry ``money`` parameter the caller resolves per
+        filing year; this method performs no euro-figure lookup of its own
+        (`aeat-schema-central-config`).
+
+        Returns ``Decimal("0")`` when no descendant qualifies, which is the
+        legally correct zero rather than an under-declaration.
+        """
+        from ...core.money import round_to_cents
+
+        available = self.dependencia_assimilation_available
+        total = Decimal("0")
+        for descendant in self.descendientes:
+            meses = min(
+                descendant.guarderia_qualifying_meses(filing_year),
+                descendant.maternidad_contributing_meses(
+                    filing_year,
+                    thresholds=thresholds,
+                    dependencia_assimilation_available=available,
+                ),
+            )
+            if meses <= 0:
+                continue
+            prorated_cap = round_to_cents(cap_anual / Decimal(12) * Decimal(meses))
+            spend = Decimal(descendant.guarderia_contributing_spend(filing_year))
+            total += min(prorated_cap, spend)
+        return total
+
     def meses_maternidad_por_descendiente(
         self,
         filing_year: int,
