@@ -19,7 +19,8 @@ from __future__ import annotations
 from pydantic import Field, model_validator
 
 from ...application.modelo import ResultSummaryRole
-from ...domain.calculations.registry import CasillaId, FormulaId, LegalRefId, SourceRefId
+from ...domain.calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
+from ...domain.modelos import CalculationRevisionId, WorkUnitId
 from ._schemas import OutputSchema
 
 
@@ -95,4 +96,41 @@ class ResultSummaryRowPayload(OutputSchema):
     label: str
 
 
-__all__ = ["DetailRowPayload", "ObservationPayload", "ResultSummaryRowPayload"]
+class CalculationRevisionProjectionFields(OutputSchema):
+    """Shared JSON projection of a persisted :class:`CalculationRevision`.
+
+    ``aeat app modelo work calculate``, ``... work revision``, and
+    ``... work wizard`` each emit the same calculation-revision snapshot
+    fields, plus their own command-specific extras (``saved``/
+    ``saved_confirmation``, Modelo 202 modality, the wizard's
+    ``prompted_casillas``, …). Not itself a ``register_schema`` target: each
+    concrete result subclasses this mixin and registers its own command
+    path, so the shared fields stay declared once while each command keeps
+    its own strict, independently-registered schema.
+    """
+
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
+    state: str
+    casilla_values: dict[CasillaId, str]
+    observations: tuple[ObservationPayload, ...]
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    detail_rows: tuple[DetailRowPayload, ...] = ()
+    binding_overrides: dict[BindingId, str]
+    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
+    input_values_by_casilla_id: dict[CasillaId, str]
+    created_at: str
+    updated_at: str
+    verified_at: str | None = None
+    verified_by: str | None = None
+    filed_at: str | None = None
+    filed_by: str | None = None
+    superseded_at: str | None = None
+
+
+__all__ = [
+    "CalculationRevisionProjectionFields",
+    "DetailRowPayload",
+    "ObservationPayload",
+    "ResultSummaryRowPayload",
+]

@@ -21,23 +21,18 @@ these split schemas so modelo work emitters keep one payload import surface.
 
 from __future__ import annotations
 
-from pydantic import Field
-
-from ...domain.calculations.registry import BindingId, CasillaId, RelationId
-from ...domain.modelos import (
-    CalculationRevisionId,
-    WorkUnitId,
-)
-from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
+from ...domain.modelos import CalculationRevisionId, WorkUnitId
+from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields, ObservationPayload
 from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("modelo.work.revision")
-class WorkRevisionResult(OutputSchema):
+class WorkRevisionResult(CalculationRevisionProjectionFields):
     """Single-revision shape returned by ``aeat app modelo work revision``.
 
     Carries the JSON-safe projection of one
-    :class:`CalculationRevision`, matching
+    :class:`CalculationRevision` (the shared
+    :class:`CalculationRevisionProjectionFields` base), matching
     :class:`WorkCalculateResult` minus the persistence-confirmation pair
     (``saved`` / ``saved_confirmation``). Modelo 202 modality comes from
     :class:`Modelo202ModalitySummary` and stays on the same optional fields as
@@ -46,23 +41,6 @@ class WorkRevisionResult(OutputSchema):
     """
 
     operation: str = "modelo.work.revision"
-    calculation_revision_id: CalculationRevisionId
-    work_unit_id: WorkUnitId
-    state: str
-    casilla_values: dict[CasillaId, str]
-    observations: tuple[ObservationPayload, ...]
-    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
-    detail_rows: tuple[DetailRowPayload, ...] = ()
-    binding_overrides: dict[BindingId, str]
-    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
-    input_values_by_casilla_id: dict[CasillaId, str]
-    created_at: str
-    updated_at: str
-    verified_at: str | None = None
-    verified_by: str | None = None
-    filed_at: str | None = None
-    filed_by: str | None = None
-    superseded_at: str | None = None
     modality: str | None = None
     modality_reason: str | None = None
 
