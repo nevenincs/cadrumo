@@ -1,0 +1,400 @@
+---
+tags:
+  - '#adr'
+  - '#ledger-invoice-decomposition'
+date: '2026-08-05'
+modified: '2026-08-05'
+body_schema: 'body-v1'
+body_hash: 'sha256:230b0c0b3309f2f54a888c3cce24a81b41b9cfa9c0da63302df8f65b954ca09d'
+related:
+  - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
+---
+
+# `ledger-invoice-decomposition` adr: `Invoice decomposition and income grounding` | (**status:** `proposed`)
+
+## Problem Statement
+
+Two coupled hardening sites, escalated deliberately by the operator, need one coherent
+ruling. Grounding: `2026-08-05-ledger-invoice-decomposition-reference` (claims there
+marked MEASURED/REASONED; each verified twice).
+
+**Site 1 — ledger ingestion.** The income pipeline gross-folds bank-credited cash into
+the income casilla when no invoice substrate is recorded, and the error changes
+direction with the invoice: a rated invoice over-declares (cash ≈ 1.06 × base at 21%
+IVA / 15% retención), an IVA-exempt professional service under-declares 15% of base and
+simultaneously drops the offsetting retenciones credit. The expense side deliberately
+refuses exactly this gross-fold (`MISSING_TAXABLE_BASE`); the income side has no
+equivalent issue reason. The operator's position, ruled on here: a partial invoice
+declaration is ambiguous and must be excluded from calculations, but must NOT disappear
+silently — advisories must ride both the ledger surface and the calculation engine.
+
+**Site 2 — calculation backend.** How a single invoice decomposes into base, IVA
+repercutido, retención and total as a function of invoice type and operation territory
+— including currency normalisation — and how domestic, intracomunitaria and
+foreign/overseas categories change WHICH components exist and how each feeds the tax
+calculation.
+
+Two pending findings are folded in rather than left loose: **F26** (the renta-income
+selector `fact` defaults to the legally-weaker measure) and **F27** (income-side
+missing-substrate advisory, keeping the fallback).
+
+## Considerations
+
+- The defect chain, the selector-default exposure, the legal grounding for the income
+  measure, and the coverage state are established in
+  `2026-08-05-ledger-invoice-decomposition-reference` and are not re-argued here.
+- MEASURED (this record, 2026-08-05, live BOE cross-check the reference called for): the
+  previously non-bundled accounting step of the IVA-exclusion chain is confirmed against
+  live consolidated BOE text of RD 1514/2007 (PGC, BOE-A-2007-19884). NRV 12.ª: "El IVA
+  repercutido no formará parte del ingreso derivado de las operaciones gravadas por
+  dicho impuesto". NRV 14.ª: "Los impuestos que gravan las operaciones de venta de
+  bienes y prestación de servicios que la empresa debe repercutir a terceros como el
+  impuesto sobre el valor añadido y los impuestos especiales, así como las cantidades
+  recibidas por cuenta de terceros, no formarán parte de los ingresos." The reference's
+  REASONED IVA-exclusion claim is thereby upgraded: LIRPF art. 27 / art. 28.1 → IS rules
+  → resultado contable → PGC NRV 12.ª/14.ª. These PGC excerpts are NOT yet in the
+  bundled corpus; bundling them is an implementation obligation before any registry
+  `legal_refs` cites them.
+- MEASURED (live BOE, same pass): RD 439/2007 (RIRPF) art. 95.1 — professional
+  retención is "15 por ciento sobre los ingresos íntegros satisfechos", 7 por ciento in
+  the inicio-de-actividad window; the retención base is the ingresos íntegros, not the
+  IVA-inclusive total. Art. 110.3.a — retenciones practicadas are deducted from the
+  pago fraccionado for professional activities in estimación directa, confirming
+  casilla 01 income must be pre-retención or the retención counts twice.
+- MEASURED: the renta-family fact `gross_income_sum` appears in NO committed registry
+  binding; the registry's only `gross_income_sum` selector is Modelo 210's
+  (`modelos/210/revisions/2025/bindings/0001-bindings.toml`), whose observations sum
+  the DECLARED `M210IncomeClassification.gross_income_amount`, not raw cash — the name
+  is accurate there and misleading only in the renta and impatriado families, which sum
+  `abs(raw.amount)`. One stale comment in the M130 cumulative-income fragment names
+  "the gross_income_sum path" and must ride any rename.
+- MEASURED: the `taxable_base_sum` fact coerces a missing base to zero
+  (`observation.taxable_base_amount or Decimal("0")`,
+  `domain/calculations/registry/_ledger_bindings.py`), and M130 casilla 01 carries two
+  committed `taxable_base_sum` bindings — a second, distinct silent under-declaration
+  surface inside an already-committed binding.
+- MEASURED: the withheld-amount inference requires BOTH `taxable_base` and `iva_amount`
+  non-None, so a declared-exempt invoice (legitimately cuota-less) can never recover
+  its retención through inference as coded.
+- Accepted decisions this record must compose with, not contradict:
+  `2026-05-27-source-jurisdiction-axis-adr` (M100/M130 never filter on jurisdiction;
+  per-modelo scope filters live downstream), `2026-07-01-modelo-151-beckham-source-scope-adr`
+  (per-family classifiers are the accepted duplication cost; ES-gated),
+  `2026-07-10-m210-irnr-phase-2-engine-adr` (declared classification only, no inference
+  from generic categories; a bound value has one writer),
+  `2026-06-09-modelo-iva-routing-carry-adr` (advisories fire only on cuota-bearing
+  categories, consumed as the named frozenset), `2026-06-04-llm-ledger-classification-adr`
+  (LLM selects, system derives; no numeric tax field may be LLM-emitted; IRPF/retención
+  category grounding deferred to its own decision), `2026-04-17-invoice-catalogue-adr`
+  (invoice-level totals exact, `derive_invoice_id` input set fixed, reconciliation
+  suggest-only), `2026-06-10-ledger-invoice-unification-adr` (rich and slim invoice
+  aggregates both survive; locked source-kind strings), `2026-07-21-ledger-fx-conversion-adr`
+  (one FX acquisition path, refusal over approximation),
+  `2026-06-19-silent-zero-base-aggregation-adr` (an untagged expense is surfaced rather
+  than gross-folded; a regulated base casilla aggregates from a grounded mechanism or
+  is deferred by ADR, never silently zero).
+- Project rules bearing directly: no-silent-under-declaration (and its mirror: the
+  reference records that over-declaration harms the taxpayer and nothing watches that
+  direction today), cli-notices-are-the-only-diagnostic-channel,
+  aeat-schema-central-config, aeat-calculation-grounding,
+  no-tautological-calculation-tests, aeat-safety-legal-gates (the app never files),
+  binding-source-kind-single-taxonomy, no-legacy-compatibility (pre-beta: rename by
+  deletion, no alias).
+- A clean bank import with no invoice records is a plausible, common operator state;
+  the gross-fold is only dangerous in known-direction cases (exempt services). Severity
+  must weigh operator ergonomics against the exempt-services hazard.
+
+## Considered options
+
+**Site 1 — grounding contract and outcome classes**
+
+1. Status quo: keep the silent gross-fold. Rejected — it is the defect; the expense
+   side already refuses it, so the asymmetry is also incoherent.
+2. Exclude every substrate-less income row from aggregation (full mirror of the gasto
+   `MISSING_TAXABLE_BASE` exclusion). Rejected — income and expense are not symmetric:
+   dropping untagged income silently UNDER-declares by the whole row, which is worse
+   than mis-measuring it, and it would punish the common clean-bank-import state.
+   (This is also the F27 keep-the-fallback ruling.)
+3. **Chosen:** a third outcome class — *declarable-but-ungrounded* — alongside eligible
+   and excluded-with-issue. Bank rows lacking substrate stay IN the sum via the
+   existing per-observation fallback but are flagged, on both the ledger preflight
+   surface and the calculate path's typed notice channel. Partial invoice RECORDS
+   (an `Invoice`/`BusinessOperationInvoice` failing its decomposition contract) are
+   excluded from enrichment and calculation but surfaced — excluded-but-visible, per
+   the operator's position.
+4. Severity blocking-at-verify for every ungrounded row. Rejected as the default —
+   it makes the common state unfileable; kept as the targeted escalation for the
+   known-direction hazard (see Implementation, D3).
+
+**Site 2 — decomposition model**
+
+1. Per-category fact taxonomy replacing the per-family one. Rejected — the accepted
+   per-family module shape (`2026-07-01-modelo-151-beckham-source-scope-adr`,
+   `2026-07-10-m210-irnr-phase-2-engine-adr`) encodes SCOPE (which modelo a measure
+   feeds, under which legal regime); the IVA category encodes which COMPONENTS exist.
+   Collapsing the two axes into one taxonomy would re-couple regulatory-distinct
+   bindings the corpus deliberately separated.
+2. Free-form per-resolver component logic (status quo, grown case by case). Rejected —
+   scattered inline knowledge of which categories carry a cuota is exactly what the
+   named frozensets were created to end.
+3. **Chosen:** a two-axis model. Axis A (per-category, declared data in `domain/iva`
+   beside the existing named frozensets): a component-expectation table stating, per
+   `IvaCategory`, whether cuota is required/forbidden, whether recargo may exist, and
+   whether retención is expected/possible/not-expected, each row carrying `legal_refs`.
+   Axis B (per-family, unchanged shape): each ledger family's observation builder and
+   fact vocabulary consumes Axis A when decomposing a row for its modelo.
+
+**Retención derivation**
+
+1. Always require declared retención. Rejected — the existing bounded inference
+   (invoice gross minus cash, capped by the registry max rate) is measured, correct
+   when substrate exists, and matches how the paper trail actually looks.
+2. Derive base from cash by inverting an assumed rate (base = cash / (1 − r)).
+   Rejected outright — selecting r (15% vs 7% vs sectoral rates) is a per-row legal
+   fact the system cannot infer; inventing it is fabricated legal behaviour.
+3. **Chosen:** declared-first, bounded-inference-second, inversion-never. Inference
+   precondition is relaxed from "base AND iva_amount both present" to "base present
+   AND cuota determinable from the declared category" (zero for the cuota-less set,
+   rate-derived otherwise), so declared-exempt invoices recover their retención.
+
+## Constraints
+
+- The eight LIVA articles the routing-carry ADR names (arts. 7, 13, 15, 17, 20, 22,
+  25, 26) are still absent from the legal catalogue/corpus; any Axis-A row grounding
+  export, intra-community or import treatment is gated on bundling them
+  (`legal-grounding-verifies-bundled-authoritative-corpus`). The PGC NRV 12.ª/14.ª
+  excerpts verified live in this record are likewise not yet bundled.
+- Registry values (retención rates 15%/7%, IVA rates, component expectations) land in
+  the registry/central config with `legal_refs`, never as feature-module literals.
+- The LLM boundary is structural: no schema may let a model emit `retencion_rate`,
+  `retencion_amount`, `taxable_base` or `iva_amount`
+  (`2026-06-04-llm-ledger-classification-adr`).
+- A registry-bound value has one writer; the advisory channel reports, it never
+  mutates values (`composition-service-no-parallel-write-path`,
+  `2026-07-10-m210-irnr-phase-2-engine-adr`).
+- The pull path and calculate path share one aggregation
+  (`one-aggregation-path-pull-equals-calculate`): the third outcome class and its
+  advisory must surface identically on both.
+- Gate ordering inside the income classifier is pinned by
+  `2026-07-05-ledger-latency-budget-adr`; the new substrate check must slot after the
+  existing cheap gates, not reorder them.
+- The rich `Invoice` totals discipline (line tolerance 0.01, invoice-level exact) and
+  the fixed `derive_invoice_id` input set must not be silently altered: retención
+  stays OUTSIDE `grand_total` (`grand_total == base_total + iva_total` restated
+  deliberately; retención is a settlement-side deduction, not a price component), and
+  new shape fields are non-identity fields.
+- `IrpfCategory`/retención-type closed-enum authoring was explicitly deferred to its
+  own decision by `2026-06-04-llm-ledger-classification-adr`; this record does not
+  pre-empt it (see Consequences — operator questions).
+- The severity escalation (D3) must not create a filing deadlock for taxpayers whose
+  ledger genuinely has no invoice-level substrate; the escalation is scoped to
+  declared-category rows only, where the operator has already asserted the treatment.
+
+## Implementation
+
+High-level shape; the named change list an implementation plan must cover.
+
+**D1 — minimum calculation-grounded shape (Site 1).** An actividad-económica income
+row is *calculation-grounded* iff it declares: (a) an IVA treatment — an `IvaCategory`
+other than `UNKNOWN`/`ERRONEOUS_INVOICE`; (b) `taxable_base`, EUR-native or carrying a
+resolved FX pair; (c) a cuota consistent with (a): explicit `iva_amount` for rated
+categories, structurally zero for members of the cuota-less set; and (d) retención
+substrate — a declared withheld amount, or the D5 inference precondition satisfied, or
+the Axis-A expectation "not-expected" for the row's category. The ambiguity boundary
+is the CATEGORY axis, not the amounts: a base with `iva_amount` zero and category
+`DOMESTIC_EXEMPT` is grounded exempt income; the same amounts with no category are
+ambiguous (untagged vs exempt are indistinguishable) and the row is ungrounded.
+Counterparty residency/tax identity remains an invoice-record concern, not a row
+grounding requirement.
+
+**D2 — third outcome class and dual advisory (Site 1, rules F27 ACCEPTED).** Add a
+*declarable-but-ungrounded* class to the income pipeline. Ungrounded bank rows keep
+contributing through the existing `ingresos_integros_sum` per-observation fallback —
+the fallback is KEPT; removing it would silently drop untagged income entirely — but
+each such row emits a typed missing-substrate signal: a new income-side issue/advisory
+reason (the long-missing mirror of the gasto `MISSING_TAXABLE_BASE`), surfaced (i) on
+the ledger preflight surface and (ii) on the calculate path as a non-blocking notice
+through the envelope notice channel, with transaction ids and the count/sum of
+cash-fallback contributions in `Notice.context`. The observation model grows an
+explicit grounding marker (substrate-declared vs cash-fallback) so the advisory, the
+evidence bundle, and tests key on a fact, not on field-nullness heuristics. Partial
+invoice RECORDS failing their decomposition contract are excluded from
+enrichment/aggregation and surfaced through the same channel (excluded-but-visible).
+Additionally `taxable_base_sum` stops coercing a missing base to zero: a base-less row
+in a `taxable_base_sum` window joins the ungrounded class and the advisory instead of
+silently contributing nothing.
+
+**D3 — severity (RECOMMENDATION; operator ratifies).** Default severity is ADVISORY at
+calculate/draft/export: filing on cash-derived income stays possible after a visible
+notice, because a clean bank import with no invoice records is a plausible common
+state. Escalate to BLOCKING at verify only for the known-direction hazard: a row whose
+declared category is cuota-less/exempt AND that lacks `taxable_base` — there the
+under-declaration direction is certain, the magnitude is unquantifiable without
+substrate, and the operator has already engaged with the row (a category was
+declared), so demanding the base is proportionate. Undeclared-category rows never
+block. Trade-off stated: this leaves the silent-under-declaration window open for the
+exempt freelancer who never tags anything — that residual risk is exactly what the
+always-on advisory exists to surface, and closing it fully would make the common
+state unfileable.
+
+**D4 — decomposition identity and per-category components (Site 2).** Canonical
+per-invoice identity: `total (contraprestación) = taxable_base + cuota IVA
+[+ recargo]`; `cash = total − retención`. Retención is not a price component and never
+enters `grand_total`. Component existence is Axis-A declared data per `IvaCategory` —
+a component-expectation table in `domain/iva` beside (and derived from, where
+applicable) the existing named frozensets, each row with `legal_refs`: domestic rated
+categories carry base + cuota (+ optional retención for professional services);
+`DOMESTIC_EXEMPT` (LIVA art. 20) carries base, no cuota, retención possible;
+`INTRA_COMMUNITY_SUPPLY` (art. 25) and the export categories (arts. 21/22) carry base
+only, zero cuota — cuota-less is NOT substrate-less, their bases still feed base-only
+casillas — with retención not-expected (REASONED: the withholding obligation falls on
+Spanish-resident payers and permanent establishments; a foreign payer without PE is
+generally outside it — to be confirmed against LIRPF art. 99 / RIRPF art. 76 when the
+corpus entries land); reverse-charge acquisition categories carry base with the cuota
+self-assessed by the recipient (both devengada and, where deducible, soportada);
+`IMPORT_THIRD_COUNTRY` carries base with cuota settled at customs. The engine consults
+Axis A when decomposing; per-family builders (Axis B) keep their accepted shape.
+
+**D5 — retención (Site 2).** Declared-first: an invoice or row that knows its
+retención declares amount (and optionally rate). Derivable-second: the existing
+bounded inference (invoice gross minus cash, capped by the registry maximum supported
+rate) remains the only derivation, with its precondition relaxed per Considered
+options so cuota-less categories qualify; derived values carry derivation provenance.
+Inversion-never: no path may reconstruct base from cash by assuming a retención rate.
+Retención rates (15% general professional, 7% inicio-de-actividad — live-verified
+2026-08-05 against RD 439/2007 art. 95.1) become registry parameters with `legal_refs`,
+consumed by the max-rate bound and any future rate-suggestion surface; they are never
+feature-module literals and never LLM-emitted.
+
+**D6 — territory and the income measure (Site 2).** The per-family fact vocabularies
+stay (resident M100/M130 unfiltered per the source-jurisdiction axis; M151 ES-gated;
+M210 declared-classification-only). Territory changes which FAMILY a row can feed and,
+via the category, which COMPONENTS exist — it does not change the resident income
+measure. The renta income measure for casilla 01/0171 remains ingresos íntegros:
+IVA-exclusive (PGC NRV 12.ª/14.ª chain, now live-verified) and pre-retención (RIRPF
+art. 110.3.a).
+
+**D7 — currency.** All components of one invoice normalise through the single ECB FX
+path with one rate/date pair (`2026-07-21-ledger-fx-conversion-adr`); a row or invoice
+whose conversion cannot be resolved is refused from grounding (existing predicate),
+never approximated, and joins the visible-exclusion surface.
+
+**D8 — F26 ACCEPTED, extended.** Remove the `fact` default from the renta ledger
+income selector so the field is required and an omitting binding fails registry
+validation loudly; zero behaviour change (all six committed bindings are explicit —
+MEASURED in the reference). Extend the same requiredness to the impatriado selector
+(its default is the stronger measure, but a silent default on one sibling and not the
+other re-creates the divergence F26 closes); the IRNR selector's single-member
+Literal is structurally not a choice and is untouched. Additionally rename the
+renta-family and impatriado-family fact `gross_income_sum` → `cash_received_sum`
+(honest name for what it computes: `abs(raw.amount)`); MEASURED: no committed binding
+uses it in either family, so the rename is a zero-registry-impact deletion-rename per
+no-legacy-compatibility — sweeping the one stale M130 fragment comment — while
+Modelo 210's accurately-named `gross_income_sum` (summing the declared classification
+amount) is expressly out of scope.
+
+**Named change list for the implementation plan.**
+
+1. Registry selectors: `fact` required (no default) on the renta and impatriado
+   income selectors; registry-validation error message lists the accepted facts.
+2. Fact rename `gross_income_sum` → `cash_received_sum` in the renta and impatriado
+   families (code, docstrings, the stale M130 fragment comment, tests); M210 untouched.
+3. Income pipeline: new missing-substrate issue/advisory reason; observation grounding
+   marker (substrate-declared vs cash-fallback); preflight surface entry; calculate
+   path notice with context; identical surfacing on pull and calculate.
+4. `taxable_base_sum` stops or-zero coercion; base-less rows join the advisory.
+5. Withheld inference precondition relaxed to category-determinable cuota; exempt
+   invoices recover retención; existing max-rate bound retained.
+6. Axis-A component-expectation table in `domain/iva` with `legal_refs`, derived
+   from/beside the named frozensets (never a third inline set).
+7. Registry retención rate parameters (RIRPF art. 95) with legal catalogue entries;
+   corpus bundling: PGC NRV 12.ª/14.ª excerpts; LIVA arts. 7/13/15/17/20/22/25/26
+   (Tier-2 gate of `2026-06-09-modelo-iva-routing-carry-adr`); LIRPF art. 99 / RIRPF
+   art. 76 for the retención-expectation grounding.
+8. Invoice records: consistency validator for `retention_rate`/`retention_amount` on
+   the rich `Invoice` (against `base_total`, retención outside `grand_total`, both
+   restated deliberately); partial-invoice decomposition contract with
+   excluded-but-visible surfacing; slim-invoice retención fields pending the operator
+   question below.
+9. Verify-stage escalation rule per D3 (behind operator ratification).
+10. Tests: grounded against AEAT workbooks/manual worked examples and the bundled
+    corpus (a worked example with retención and an exempt-services example are the
+    two anchor cases); anti-tautology per no-tautological-calculation-tests; roundtrip
+    coverage for every new persisted field per aeat-roundtrip-discipline.
+
+## Rationale
+
+- **Included-but-flagged for bank rows, excluded-but-visible for invoice records** is
+  the only combination that honours both halves of the operator's position at once:
+  ambiguous partial declarations do not feed calculations (the invoice record is the
+  declaration; a bare bank row declares nothing beyond its cash), and nothing
+  disappears silently. Full exclusion of bank rows would convert a mis-measurement
+  into a total omission — a strictly worse silent under-declaration, which is why F27
+  keeps the fallback.
+- **The category axis as the ambiguity boundary** is the knockout for Site 1: amounts
+  cannot distinguish exempt from untagged (both show base with no IVA), but a declared
+  `DOMESTIC_EXEMPT` versus an absent category is exactly that distinction, already
+  typed, already closed, and already grounded per member. No new axis is invented.
+- **Two axes rather than one taxonomy** wins Site 2 because the corpus has already
+  decided both halves separately: per-family modules encode regulatory scope (three
+  accepted ADRs), and the named cuota-less frozensets encode per-category component
+  law. The gap was never a missing taxonomy — it was that component knowledge is not
+  yet declared data with `legal_refs`. Axis A fills precisely that gap.
+- **Declared-first retención with bounded inference** follows the measured reality:
+  the existing gross-minus-cash inference is correct and capped when substrate exists;
+  the failure was its precondition (requiring a cuota that legally does not exist for
+  exempt services), not its mechanism. Rate inversion is rejected on
+  aeat-safety-legal-gates grounds: it manufactures a per-row legal fact.
+- **D3's targeted escalation** puts the blocking cost exactly where the danger is
+  measured to be (the reference's exempt-services case: 15%-of-base silent
+  under-declaration) and where the operator has already engaged with the row, while
+  the common clean-import state files with a visible advisory. The advisory also
+  closes, for this surface, the unwatched over-declaration direction the reference
+  flags: the same notice fires whichever direction the cash-fallback error runs.
+- **F26 with the rename** is accepted because a required field plus an honest name
+  removes both halves of the prospective exposure: no binding can silently inherit the
+  weakest measure, and no author can mistake cash for gross income. Both are
+  zero-behaviour-change today (MEASURED), which is the cheapest moment to land them.
+
+## Consequences
+
+- GAINS: the income side stops being the outlier — every declarable-but-ungrounded
+  euro is visible on both operator surfaces; the exempt-services silent
+  under-declaration acquires a targeted gate; the over-declaring rated-invoice
+  fallback acquires its first watcher; component existence per category becomes
+  auditable registry-grounded data; retención handling gains a legal anchor
+  (live-verified rates) and loses its exempt-services blind spot; two latent
+  silent-zero surfaces (`taxable_base_sum` or-zero, selector default) close with zero
+  behaviour change today.
+- DIFFICULTIES: corpus bundling is the long pole — eight LIVA articles, the PGC
+  excerpts, and the retención-obligation articles gate the full Axis-A grounding;
+  until they land, Axis-A rows for intra-community/export/import treatment carry
+  provisional grounding and must say so. The advisory must be tuned to fire once per
+  aggregation with aggregate context, not once per row, or it will train operators to
+  ignore it (the routing-carry ADR's crying-wolf lesson).
+- PATHWAYS: the Axis-A table is the natural home for future OSS decomposition and for
+  the recargo supplier-side flow the silent-zero ADR scoped out; the grounding marker
+  on observations gives the evidence bundle a per-row substrate story exports can
+  render.
+- PITFALLS: do not let the third outcome class leak into the gasto pipeline's
+  semantics — the expense-side exclusion is deliberate and correct (no silent
+  over-declaration of gastos) and has an anti-normalisation control; do not re-derive
+  a local cuota-less set anywhere (consume the named frozensets); do not let the
+  verify escalation fire on undeclared-category rows.
+- **Operator questions this record declines to rule on**, each because it is a product
+  or legal-authority judgement rather than an architecture one:
+  1. RATIFY OR AMEND D3's severity split (advisory default; verify-blocking only for
+     declared-cuota-less rows without base). Architecture supports either severity;
+     the filing-ergonomics-versus-hazard weighting is the operator's.
+  2. Whether the slim `BusinessOperationInvoice` gains retención fields, or issuing
+     professionals are directed to the rich `Invoice` — a product-surface choice
+     between two accepted aggregates (`2026-06-10-ledger-invoice-unification-adr`).
+  3. Whether to author the deferred `IrpfCategory`/retención-type closed enum now.
+     The registry rate parameters (D5) need only a minimal
+     professional/inicio-de-actividad axis; the full enum grounding was deferred to
+     its own decision by `2026-06-04-llm-ledger-classification-adr` and remains so.
+  4. The REASONED foreign-payer no-retención expectation (D4) needs confirmation
+     against LIRPF art. 99 / RIRPF art. 76 once bundled; if the operator knows of
+     counter-cases (foreign payers with Spanish PE among their counterparties), the
+     Axis-A expectation for intra-community/export categories should be "possible"
+     rather than "not-expected".
