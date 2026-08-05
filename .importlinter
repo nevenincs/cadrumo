@@ -177,6 +177,13 @@ ignore_imports =
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
     cadrumo.core.tests.** -> cadrumo.entrypoints.**
+    # The shared fixture package reaches storage itself, so a core test that
+    # imports a helper from it inherits the edge. Both the bare package and its
+    # submodules are listed: `cadrumo.tests.**` does not match `cadrumo.tests`.
+    cadrumo.core.tests.** -> cadrumo.tests
+    cadrumo.core.tests.** -> cadrumo.tests.**
+    cadrumo.core.**.tests.** -> cadrumo.tests
+    cadrumo.core.**.tests.** -> cadrumo.tests.**
     # ── core/resources/_repos deferred loader imports (ADR-sanctioned, see above) ──
     cadrumo.core.resources._repos.apoderamientos -> cadrumo.domain.auth.apoderamientos
     cadrumo.core.resources._repos.category_profiles -> cadrumo.domain.categories
@@ -250,13 +257,27 @@ ignore_imports =
     # under a tests/ folder) are the same roundtrip-discipline fixture pattern.
     cadrumo.application.**.conftest -> cadrumo.adapters.**
     cadrumo.domain.**.conftest -> cadrumo.application.**
+    # The layer-root conftest reaches the shared fixture package the same way
+    # the nested ones reach adapters; `**.conftest` does not match a conftest
+    # sitting directly at the layer root.
+    cadrumo.application.conftest -> cadrumo.tests
     # test modules that route through the shared cadrumo.tests.* fixture helpers
     # (cadrumo.tests is a cross-cutting test-support package, not a declared
     # layer) which themselves transitively reach a forbidden outer layer.
+    # Each layer is listed twice: `cadrumo.tests.**` matches a submodule import,
+    # but the package's own __init__ re-exports the fixture helpers, so a test
+    # importing from `cadrumo.tests` directly creates an edge to the BARE
+    # package -- which `.**` does not match. Both forms are needed per layer.
     cadrumo.domain.**.tests.** -> cadrumo.tests.**
+    cadrumo.domain.**.tests.** -> cadrumo.tests
     cadrumo.application.tests.** -> cadrumo.tests.**
+    cadrumo.application.tests.** -> cadrumo.tests
     cadrumo.application.**.tests.** -> cadrumo.tests.**
-    cadrumo.domain.**.tests.** -> cadrumo.locales
+    cadrumo.application.**.tests.** -> cadrumo.tests
+    cadrumo.core.tests.** -> cadrumo.tests.**
+    cadrumo.core.tests.** -> cadrumo.tests
+    cadrumo.core.**.tests.** -> cadrumo.tests.**
+    cadrumo.core.**.tests.** -> cadrumo.tests
     # ── D9 follow-up: local-import lifts made these concrete storage edges
     #    import-linter-visible; pin exact targets, not broad source modules. ──
     cadrumo.application.modelo._m145_communication_records -> cadrumo.adapters.persistence.storage
@@ -268,6 +289,19 @@ ignore_imports =
     cadrumo.application.operator_output._sandbox_notice -> cadrumo.adapters.persistence.storage.bucket
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto
+    # Two further function-local edges of the same shape, surfaced when the
+    # stale `domain.**.tests.** -> cadrumo.locales` entry above was removed: an
+    # unmatched ignore aborted this contract before it evaluated, so the layered
+    # gate had been reporting nothing at all. Pinned exactly, per the D9 rule.
+    #
+    # UNLIKE the D9 entries these are NOT adjudicated debt: the D7 lazy-import
+    # policy gate that carried the declared inventory of sanctioned
+    # function-local first-party edges was deleted, so nothing now records
+    # whether these two are intended. Treat them as layer breaches to invert (a
+    # Protocol plus injection point, as the registry/renta case above did),
+    # not as permanent grants.
+    cadrumo.application.preflight -> cadrumo.adapters.outbound.storage
+    cadrumo.application.auth._certificate_sources_operator -> cadrumo.adapters.outbound.aeat.auth.certificate
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_replay_guard -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage
