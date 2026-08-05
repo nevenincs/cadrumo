@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:014625ff3af988305fcffb3a09804d2044279e69d84b92a516e3858c2ce3b4b6'
+body_hash: 'sha256:372fd03ba6db8c361d6f76f996a91edf30a234bc577a8a1c31008b4067fe8cfd'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -54,7 +54,7 @@ Declare which components an invoice of each IVA category actually has, as regist
 - [ ] `P02.S09` - Land the legal catalogue entries every component-expectation row cites, each resolving to bundled authoritative corpus text; `src/cadrumo/_data/registry/aeat/legal`.
 - [ ] `P02.S10` - Land the RIRPF article 95 retencion rate parameters as registry data rather than feature-module literals; `src/cadrumo/_data/registry/aeat/legal`.
 - [x] `P02.S18` - Re-key the component-expectation table on the category and invoice-kind pair, declaring the retencion role per row so an issued credit and a received liability stop sharing a shape; `src/cadrumo/domain/iva/_components.py`.
-- [ ] `P02.S19` - Reconcile the rich-invoice IvaRate enum against the registry rate table, closing the missing members rather than leaving a rate the registry knows and the record cannot express; `src/cadrumo/domain/invoices/_models.py`.
+- [x] `P02.S19` - Reconcile the rich-invoice IvaRate enum against the registry rate table, closing the missing members rather than leaving a rate the registry knows and the record cannot express; `src/cadrumo/domain/invoices/_models.py`.
 - [ ] `P02.S21` - Bundle the place-of-supply articles governing cross-border category selection, so the judgement is grounded rather than derived from counterparty country; `src/cadrumo/_data/corpus/normatives/html`.
 
 ### Phase `P03` - Retencion derivation and invoice contracts
