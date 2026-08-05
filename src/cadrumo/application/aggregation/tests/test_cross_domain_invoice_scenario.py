@@ -1,0 +1,380 @@
+"""One ledger invoice, asserted across renta income, retenciones and IVA together.
+
+Every domain that consumes a ledger invoice was already covered on its own, and
+each was green. What nothing checked was whether the three AGREE about the same
+invoice, so a decomposition satisfying each consumer's local expectation while
+contradicting the others had no gate to trip.
+
+These scenarios drive ONE transaction through all three projections and assert
+the figures reconcile to a single decomposition. The invoice is an ordinary
+Spanish professional service::
+
+    base imponible      1000.00
+    IVA repercutido      210.00   (21%, LIVA art. 90)
+    retencion            150.00   (15%, RIRPF art. 95.1, withheld on the BASE)
+    -------------------------------
+    total                1210.00   = base + cuota
+    cash received        1060.00   = total - retencion
+
+Those figures come from the invoice arithmetic and the two cited rates, never
+from what any aggregator currently returns. That direction matters: an expected
+value read off the engine agrees with the engine by construction and proves
+nothing. If a projection disagrees with the numbers below, the projection is
+what is wrong.
+
+The second scenario is the same invoice with its substrate unrecorded, which is
+the common state of a clean bank import. It is not a smaller version of the
+first: one missing field moves the income figure the WRONG WAY by 60 and
+destroys a 150 credit, leaving the taxpayer about 210 worse off on a single
+invoice. What the gates below pin is that neither half happens silently.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, date, datetime
+from decimal import Decimal
+
+import pytest
+
+from ....core import Period
+from ....core.aggregation import LedgerIncomeGrounding
+from ....domain.iva import IvaCategory
+from ....domain.transactions import (
+    BusinessClassification,
+    Transaction,
+    TransactionCatalogue,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
+from .._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
+from .._renta_income_ledger import aggregate_renta_income_ledger
+from ._renta_income_aggregation_support import _raw_transaction
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+# The invoice, stated once. Derived from the two cited rates and the canonical
+# identity, not from engine output.
+_BASE = Decimal("1000.00")
+_CUOTA = Decimal("210.00")
+_RETENCION = Decimal("150.00")
+_TOTAL = _BASE + _CUOTA
+_CASH = _TOTAL - _RETENCION
+
+_BUCKET = "bucket-cross-domain"
+_VALUE_DATE = date(2024, 2, 15)
+_PERIOD = Period.from_year_and_code(2024, "1T")
+
+
+def test_the_scenario_figures_satisfy_the_canonical_invoice_identity() -> None:
+    """The fixture numbers are internally consistent before anything consumes them.
+
+    Cheap, and it is the difference between a scenario grounded in invoice
+    arithmetic and one grounded in four numbers somebody typed. If this fails,
+    every assertion below is measuring against a fiction.
+    """
+    assert Decimal("1210.00") == _TOTAL
+    assert Decimal("1060.00") == _CASH
+    assert (_BASE * Decimal("0.21")).quantize(Decimal("0.01")) == _CUOTA
+    assert (_BASE * Decimal("0.15")).quantize(Decimal("0.01")) == _RETENCION
+
+
+def _invoice_transaction(
+    *,
+    with_substrate: bool,
+    provider_id: str = "tx-cross-domain",
+) -> Transaction:
+    """One INCOMING professional receipt, with or without its invoice substrate.
+
+    Both variants credit the SAME cash. That is the whole point: the bank line
+    is identical and only the recorded invoice differs, which is exactly the
+    pair of states a cash amount cannot tell apart.
+    """
+    payload: dict[str, object] = {
+        # Reuses the module-local raw-row factory the other income tests build
+        # on, so this scenario cannot drift from them on the shape of a ledger
+        # line while claiming to describe the same pipeline.
+        "raw": _raw_transaction(
+            provider_id,
+            booked_date=_VALUE_DATE,
+            value_date=_VALUE_DATE,
+            amount=_CASH,
+        ),
+        "direction": TransactionDirection.INCOMING,
+        "group_label": None,
+        "source_jurisdiction": "ES",
+        "business_classification": BusinessClassification.BUSINESS,
+        "irpf_category": "actividad_economica",
+        "lifecycle_state": TransactionLifecycleState.ACTIVE,
+        "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+        "classified_by": "manual",
+    }
+    if with_substrate:
+        payload["taxable_base"] = _BASE
+        payload["iva_amount"] = _CUOTA
+        payload["iva_rate"] = Decimal("0.21")
+        payload["iva_category"] = IvaCategory.DOMESTIC_GENERAL_21
+    return Transaction.model_validate(payload)
+
+
+def _catalogue(transaction: Transaction) -> TransactionCatalogue:
+    return TransactionCatalogue.model_validate({transaction.transaction_id: transaction})
+
+
+def _reconciliation_violations(
+    income_base: Decimal | None,
+    income_cash: Decimal,
+    withheld: Decimal,
+    iva_base: Decimal,
+    iva_cuota: Decimal,
+) -> tuple[str, ...]:
+    """Return every way the three legs fail to describe one invoice.
+
+    Expressed as returned DATA rather than as bare asserts so the same rule can
+    be driven in both directions: the live scenario asserts it finds nothing,
+    and the mutation tests below assert it finds the specific thing they broke.
+    A checker that could only ever be asserted true is indistinguishable from
+    one that always returns true, which is the vacuity this shape rules out.
+
+    Accepts loose figures rather than the aggregation objects because the
+    mutation tests need to feed combinations the production models would
+    rightly refuse to construct.
+    """
+    violations: list[str] = []
+    if income_base is None:
+        return ("income leg declares no taxable base",)
+    if iva_base != income_base:
+        violations.append("iva base disagrees with income base")
+    if income_base + iva_cuota != _TOTAL:
+        violations.append("base plus cuota does not close the invoice total")
+    if _TOTAL - withheld != income_cash:
+        violations.append("total minus retencion does not close the cash received")
+    return tuple(violations)
+
+
+# --------------------------------------------------------------------------- #
+# The grounded invoice: three domains, one decomposition
+# --------------------------------------------------------------------------- #
+
+
+def test_a_grounded_invoice_reconciles_across_income_retenciones_and_iva() -> None:
+    """All three projections agree about one invoice, and agree with the paper.
+
+    Income takes the IVA-exclusive base (ingresos integros, since IVA
+    repercutido is collected for Hacienda per PGC NRV 12.a/14.a). Retenciones
+    recovers the 150 the payer withheld, by inference from gross minus cash.
+    IVA sees the 210 cuota. Each is asserted against the invoice figure, and the
+    three are then asserted to reconcile to the same total, which is the
+    cross-domain property no single-domain test could state.
+    """
+    transaction = _invoice_transaction(with_substrate=True)
+    catalogue = _catalogue(transaction)
+
+    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    assert len(income.observations) == 1
+    observation = income.observations[0]
+
+    # Income leg: the base, never the cash and never the IVA-inclusive total.
+    assert observation.taxable_base_amount == _BASE
+    assert observation.grounding is LedgerIncomeGrounding.SUBSTRATE_DECLARED
+    assert observation.gross_amount == _CASH
+
+    # Retenciones leg: the withheld figure recovered from the substrate.
+    assert observation.withheld_amount == _RETENCION
+
+    # IVA leg: the cuota repercutida.
+    assert len(iva.observations) == 1
+    assert iva.observations[0].base_amount == _BASE
+    assert iva.observations[0].iva_amount == _CUOTA
+
+    # Nothing was excluded from either pipeline.
+    assert income.issues == ()
+    assert iva.issues == ()
+
+    # The cross-domain reconciliation: the three legs are three views of ONE
+    # decomposition, so they must close the identity the invoice satisfies.
+    # Driven through the shared checker, which the mutation tests below prove
+    # is capable of reporting a violation.
+    assert (
+        _reconciliation_violations(
+            income_base=observation.taxable_base_amount,
+            income_cash=observation.gross_amount,
+            withheld=observation.withheld_amount,
+            iva_base=iva.observations[0].base_amount,
+            iva_cuota=iva.observations[0].iva_amount,
+        )
+        == ()
+    )
+
+
+# --------------------------------------------------------------------------- #
+# The ungrounded invoice: excluded or flagged, never silent
+# --------------------------------------------------------------------------- #
+
+
+def test_an_ungrounded_invoice_is_never_silently_dropped_nor_silently_folded() -> None:
+    """The substrate-less twin, and the two different ways each domain answers.
+
+    The operator instruction this pins is that a correctly-FAILING condition
+    matters as much as a correct filing. The two domains answer differently and
+    both answers are deliberate:
+
+    * IVA EXCLUDES the row and says so. An untagged line has no cuota to
+      declare, and inventing one would fabricate a liability.
+    * Income KEEPS the row and flags it. Dropping it would under-declare by the
+      whole 1060 rather than mis-measure it by 60, which is strictly worse, so
+      the fallback is deliberate and the grounding marker is what makes it
+      visible.
+
+    Neither is silent, and that is the invariant. What is asserted here is not
+    that the figures are right, since they are knowingly wrong, but that the
+    wrongness is announced.
+    """
+    transaction = _invoice_transaction(with_substrate=False)
+    catalogue = _catalogue(transaction)
+
+    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    # IVA: excluded, with a reason naming the missing fact.
+    assert iva.observations == ()
+    assert IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE in {issue.reason for issue in iva.issues}
+
+    # Income: kept, and marked as resting on cash rather than substrate.
+    assert len(income.observations) == 1
+    observation = income.observations[0]
+    assert observation.grounding is LedgerIncomeGrounding.CASH_FALLBACK
+    assert observation.taxable_base_amount is None
+
+
+def test_the_ungrounded_invoice_costs_the_taxpayer_in_both_directions_at_once() -> None:
+    """One missing field moves two figures against the taxpayer simultaneously.
+
+    This is the measured harm the campaign exists to make visible, pinned as a
+    regression so a later change cannot quietly alter its size. Income is
+    OVER-declared, because the credited cash (1060) exceeds the base (1000):
+    the IVA repercutido inflates it by more than the retencion deflates it. And
+    the 150 credit is lost entirely, because the withholding inference needs the
+    substrate that is missing.
+
+    Both are asserted against the correct figures rather than as bare constants,
+    so the test states WHY each number is wrong rather than merely that it is.
+    """
+    income = aggregate_renta_income_ledger(
+        _catalogue(_invoice_transaction(with_substrate=False)),
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+    )
+    observation = income.observations[0]
+
+    # Over-declared income: the row contributes cash, which is above the base.
+    assert observation.gross_amount == _CASH
+    assert observation.gross_amount > _BASE
+    assert observation.gross_amount - _BASE == Decimal("60.00")
+
+    # Lost credit: the retencion cannot be inferred without the substrate.
+    assert observation.withheld_amount == Decimal("0")
+    assert observation.withheld_amount != _RETENCION
+
+    # The combined swing against the taxpayer on a single invoice.
+    assert (observation.gross_amount - _BASE) + _RETENCION == Decimal("210.00")
+
+
+# --------------------------------------------------------------------------- #
+# S24: the reconciliation is proven able to FAIL, not merely observed passing
+# --------------------------------------------------------------------------- #
+#
+# A cross-domain assertion that has only ever been seen green is
+# indistinguishable from one that cannot go red. These drive the SAME checker
+# the live scenario uses, against decompositions that are deliberately wrong in
+# one place each, and assert it names exactly the break.
+#
+# The mutations are applied to the DATA rather than by patching the production
+# decomposition, deliberately: a monkeypatched aggregator is barred here, and a
+# test that rewrites the code under test proves things about the patch rather
+# than about the shipped path. The complementary production-code mutations
+# (breaking the aggregators themselves and confirming this module reddens) are
+# run out of band and recorded in the Step's execution record, because they
+# cannot live in the suite without patching.
+
+
+def test_a_disagreeing_iva_base_is_caught() -> None:
+    """If IVA and income disagree about the base, the invoice is not one invoice.
+
+    The single most likely real divergence: two pipelines reading the same
+    field through different paths and drifting apart. Each leg would still
+    satisfy its own domain's tests.
+    """
+    violations = _reconciliation_violations(
+        income_base=_BASE,
+        income_cash=_CASH,
+        withheld=_RETENCION,
+        iva_base=_BASE + Decimal("1.00"),
+        iva_cuota=_CUOTA,
+    )
+    assert "iva base disagrees with income base" in violations
+
+
+def test_a_cuota_that_does_not_close_the_total_is_caught() -> None:
+    """A wrong cuota breaks base + cuota = total even with both legs internally fine."""
+    violations = _reconciliation_violations(
+        income_base=_BASE,
+        income_cash=_CASH,
+        withheld=_RETENCION,
+        iva_base=_BASE,
+        iva_cuota=_CUOTA + Decimal("10.00"),
+    )
+    assert "base plus cuota does not close the invoice total" in violations
+
+
+def test_a_withholding_that_does_not_close_the_cash_is_caught() -> None:
+    """The retencion leg is checked against cash, not merely asserted non-zero.
+
+    This is the assertion that would have caught the substrate-less case
+    silently returning zero if the cash had not also moved -- the pair is what
+    makes it a reconciliation rather than two independent facts.
+    """
+    violations = _reconciliation_violations(
+        income_base=_BASE,
+        income_cash=_CASH,
+        withheld=Decimal("0"),
+        iva_base=_BASE,
+        iva_cuota=_CUOTA,
+    )
+    assert "total minus retencion does not close the cash received" in violations
+
+
+def test_a_missing_income_base_is_caught_before_the_other_checks_run() -> None:
+    """An absent base short-circuits: with no base, the later checks are unanswerable.
+
+    Reported as its own violation rather than crashing or silently skipping,
+    so the ungrounded case is distinguishable from a reconciling one.
+    """
+    violations = _reconciliation_violations(
+        income_base=None,
+        income_cash=_CASH,
+        withheld=Decimal("0"),
+        iva_base=_BASE,
+        iva_cuota=_CUOTA,
+    )
+    assert violations == ("income leg declares no taxable base",)
+
+
+def test_the_checker_is_silent_only_on_the_true_decomposition() -> None:
+    """The control. Without it, an always-empty checker passes every test above.
+
+    Each mutation test asserts a specific violation is PRESENT; none of them
+    would fail if the checker reported every possible violation unconditionally.
+    This is the other half: on the correct figures it reports nothing at all.
+    """
+    assert (
+        _reconciliation_violations(
+            income_base=_BASE,
+            income_cash=_CASH,
+            withheld=_RETENCION,
+            iva_base=_BASE,
+            iva_cuota=_CUOTA,
+        )
+        == ()
+    )
