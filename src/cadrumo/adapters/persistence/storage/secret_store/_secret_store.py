@@ -26,10 +26,8 @@ when it is absent.
 
 from __future__ import annotations
 
-import hmac
 from collections.abc import Iterable
 from datetime import datetime
-from hashlib import sha256
 from pathlib import Path
 from typing import Final
 
@@ -52,10 +50,7 @@ from ..blob_store import (
     BlobReference,
     EncryptedBlobStore,
 )
-from ..crypto import (
-    KEY_SIZE,
-    derive_key,
-)
+from ..crypto import hkdf_hmac_digest
 from ..envelope import Envelope
 from ..errors import (
     BlobIntegrityError,
@@ -245,24 +240,22 @@ class SecretStore:
 
     def _digest(self, key: str) -> str:
         """Return the HMAC-SHA256 lookup digest for ``key`` as 64 hex chars."""
-        sub_key = derive_key(
-            key_material=self._master_key(),
-            salt=b"",
+        digest = hkdf_hmac_digest(
+            self._master_key(),
             context=_HKDF_CONTEXT_SECRET_LOOKUP,
-            length=KEY_SIZE,
+            material=key.encode(UTF_8_ENCODING),
         )
-        return hmac.new(sub_key, key.encode(UTF_8_ENCODING), sha256).hexdigest()
+        return digest.hex()
 
     def value_witness(self, *, key: str, value: bytes) -> str:
         """Return a master-keyed, non-reversible witness for one key/value request."""
-        sub_key = derive_key(
-            key_material=self._master_key(),
-            salt=b"",
-            context=_HKDF_CONTEXT_SECRET_VALUE_WITNESS,
-            length=KEY_SIZE,
-        )
         material = key.encode(UTF_8_ENCODING) + b"\x00" + value
-        return hmac.new(sub_key, material, sha256).hexdigest()
+        digest = hkdf_hmac_digest(
+            self._master_key(),
+            context=_HKDF_CONTEXT_SECRET_VALUE_WITNESS,
+            material=material,
+        )
+        return digest.hex()
 
     def _index_path(self) -> Path:
         """Return the catalogue file path."""
