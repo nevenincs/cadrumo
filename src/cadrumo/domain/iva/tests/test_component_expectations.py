@@ -42,12 +42,15 @@ from .. import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EVIDENCE_EXEMPT_IVA_CATEGORIES,
     IVA_CATEGORY_COMPONENTS,
+    InvoiceKind,
     IvaCategory,
     IvaCategoryComponents,
     IvaComponentPresence,
     IvaCuotaSettlement,
     IvaGroundingConfidence,
+    IvaKindApplicability,
     IvaRetencionExpectation,
+    IvaRetencionRole,
     category_bears_taxable_base,
     category_cuota_is_zero_by_law,
     cuota_less_m303_categories_from_table,
@@ -101,21 +104,25 @@ def test_every_iva_category_declares_its_components() -> None:
     data, so adding a category forces the author to state what it carries
     rather than leaving each decomposition site to guess.
     """
-    undeclared = sorted(category.value for category in IvaCategory if category not in IVA_CATEGORY_COMPONENTS)
+    declared = {category for category, _kind in IVA_CATEGORY_COMPONENTS}
+    undeclared = sorted(category.value for category in IvaCategory if category not in declared)
     assert undeclared == [], f"IvaCategory members without an Axis-A row: {undeclared}"
 
 
 def test_table_declares_no_category_outside_the_enum() -> None:
     """Every table key is a live enum member, and its row agrees with its key."""
-    for category, row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
         assert isinstance(category, IvaCategory)
+        assert isinstance(kind, InvoiceKind)
         assert row.category is category, f"row keyed {category.value!r} declares {row.category.value!r}"
+        assert row.kind is kind, f"row keyed {kind.value!r} declares {row.kind.value!r}"
 
 
 def test_lookup_returns_the_keyed_row_for_every_member() -> None:
     """The public accessor resolves every member without falling through."""
     for category in IvaCategory:
-        assert iva_category_components(category) is IVA_CATEGORY_COMPONENTS[category]
+        for kind in InvoiceKind:
+            assert iva_category_components(category, kind) is IVA_CATEGORY_COMPONENTS[(category, kind)]
 
 
 # --------------------------------------------------------------------------- #
@@ -141,9 +148,20 @@ def test_per_category_cuota_columns_agree_with_the_frozenset(category: IvaCatego
     set-level assertion above would also pass if two rows were edited in
     compensating directions, while this one names the drifted category.
     """
-    row = IVA_CATEGORY_COMPONENTS[category]
-    declared_cuota_less = (
+    arising = [
+        row
+        for kind in InvoiceKind
+        for row in (IVA_CATEGORY_COMPONENTS[(category, kind)],)
+        if row.applicability is IvaKindApplicability.ARISES
+    ]
+    assert arising, f"{category.value} declares no arising kind at all"
+    # Mirrors the derivation's quantifier: a category is cuota-less only when
+    # NO arising kind of it produces a general-303 cuota. Reading a single
+    # fixed kind here would disagree with the derivation for a category whose
+    # sides differ, and DOMESTIC_REVERSE_CHARGE is exactly that category.
+    declared_cuota_less = all(
         row.cuota is IvaComponentPresence.ZERO_BY_LAW or row.cuota_settlement is IvaCuotaSettlement.REGIMEN_ESPECIAL
+        for row in arising
     )
     assert declared_cuota_less is (category in CUOTA_LESS_M303_IVA_CATEGORIES), (
         f"{category.value}: table says cuota-less={declared_cuota_less}, "
@@ -194,12 +212,21 @@ def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategor
     categories is ungrounded, not legitimately empty, and that is precisely
     what a bare cash amount cannot tell you.
     """
-    assert category_bears_taxable_base(category), f"{category.value} is cuota-less but must still carry a taxable base"
+    for kind in InvoiceKind:
+        row = IVA_CATEGORY_COMPONENTS[(category, kind)]
+        if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+            continue
+        assert category_bears_taxable_base(category, kind), (
+            f"{category.value}/{kind.value} is cuota-less but must still carry a taxable base"
+        )
 
 
 def test_only_sentinel_categories_answer_unknown() -> None:
     """Every real category commits to an expectation; only sentinels may abstain."""
-    for category, row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+        if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+            continue
+        del kind
         abstains = (
             row.base is IvaComponentPresence.UNKNOWN
             or row.cuota is IvaComponentPresence.UNKNOWN
@@ -218,8 +245,8 @@ def test_zero_by_law_cuota_is_exactly_the_determinable_zero_predicate() -> None:
     determinable from the declared category" rather than "explicit iva_amount
     recorded" so a declared-exempt invoice can recover its retención.
     """
-    for category, row in IVA_CATEGORY_COMPONENTS.items():
-        assert category_cuota_is_zero_by_law(category) is (row.cuota is IvaComponentPresence.ZERO_BY_LAW)
+    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+        assert category_cuota_is_zero_by_law(category, kind) is (row.cuota is IvaComponentPresence.ZERO_BY_LAW)
 
 
 # --------------------------------------------------------------------------- #
@@ -261,7 +288,7 @@ def test_pending_legal_refs_are_genuinely_unbundled() -> None:
 
 def test_bundled_corpus_grounding_requires_a_citation() -> None:
     """A row cannot claim bundled grounding while citing nothing."""
-    for category, row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
         claims_bundled = IvaGroundingConfidence.BUNDLED_CORPUS in (
             row.cuota_grounding,
             row.recargo_grounding,
@@ -277,7 +304,7 @@ def test_weakly_grounded_retencion_expectations_carry_their_caveat() -> None:
     An unmarked guess in a legal table is worse than a gap: the next reader
     treats it as verified. The note is where the carve-outs live.
     """
-    for category, row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
         if row.retencion_grounding is IvaGroundingConfidence.BUNDLED_CORPUS:
             continue
         assert row.retencion_note.strip(), (
@@ -288,7 +315,7 @@ def test_weakly_grounded_retencion_expectations_carry_their_caveat() -> None:
 
 def test_live_source_only_rows_name_the_unbundled_provision() -> None:
     """Live-source-only grounding must point at the provision still to be bundled."""
-    for category, row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
         if IvaGroundingConfidence.LIVE_SOURCE_ONLY not in (
             row.cuota_grounding,
             row.recargo_grounding,
@@ -303,7 +330,7 @@ def test_live_source_only_rows_name_the_unbundled_provision() -> None:
 def test_sentinel_rows_declare_their_grounding_as_ungrounded() -> None:
     """A sentinel abstains honestly rather than borrowing someone else's citation."""
     for category in sorted(_SENTINEL_CATEGORIES, key=lambda c: c.value):
-        row = IVA_CATEGORY_COMPONENTS[category]
+        row = IVA_CATEGORY_COMPONENTS[(category, InvoiceKind.RECEIVED)]
         assert row.cuota_grounding is IvaGroundingConfidence.UNGROUNDED
         assert row.recargo_grounding is IvaGroundingConfidence.UNGROUNDED
         assert row.retencion_grounding is IvaGroundingConfidence.UNGROUNDED
@@ -312,7 +339,7 @@ def test_sentinel_rows_declare_their_grounding_as_ungrounded() -> None:
 
 def test_no_row_cites_the_same_ref_as_both_bundled_and_pending() -> None:
     """A provision is either in the catalogue or it is not."""
-    for category, row in IVA_CATEGORY_COMPONENTS.items():
+    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
         overlap = sorted(set(row.legal_refs) & set(row.pending_legal_refs))
         assert overlap == [], f"{category.value} cites {overlap} as both bundled and pending"
 
@@ -325,6 +352,11 @@ def test_no_row_cites_the_same_ref_as_both_bundled_and_pending() -> None:
 def _valid_row_kwargs() -> dict[str, object]:
     return {
         "category": IvaCategory.DOMESTIC_EXEMPT,
+        "kind": InvoiceKind.ISSUED,
+        "applicability": IvaKindApplicability.ARISES,
+        # POSSIBLE retención on an ISSUED invoice: withheld from the taxpayer,
+        # so a credit. The role validator is exercised directly below.
+        "retencion_role": IvaRetencionRole.TAXPAYER_CREDIT,
         "base": IvaComponentPresence.REQUIRED,
         "cuota": IvaComponentPresence.ZERO_BY_LAW,
         "cuota_settlement": IvaCuotaSettlement.NONE,
@@ -402,4 +434,141 @@ def test_a_ref_cannot_be_both_bundled_and_pending_on_one_row() -> None:
     """The model refuses the contradiction the table-level gate also checks."""
     kwargs = _valid_row_kwargs() | {"pending_legal_refs": ("ley-37-1992:art-20",)}
     with pytest.raises(ValidationError, match="both bundled and pending"):
+        IvaCategoryComponents(**kwargs)
+
+
+# --------------------------------------------------------------------------- #
+# The kind axis — completeness, non-triviality, and role coherence
+# --------------------------------------------------------------------------- #
+
+
+def test_every_category_kind_pair_declares_a_row() -> None:
+    """Completeness now means every PAIR, not merely every category.
+
+    The category-level gate above is deliberately kept rather than replaced:
+    losing it while adding this one would be a silent coverage reduction, since
+    a table could satisfy "every pair present" while dropping a category
+    entirely from both kinds.
+    """
+    missing = sorted(
+        f"{category.value}/{kind.value}"
+        for category in IvaCategory
+        for kind in InvoiceKind
+        if (category, kind) not in IVA_CATEGORY_COMPONENTS
+    )
+    assert missing == [], f"(category, kind) pairs without an Axis-A row: {missing}"
+
+
+def test_the_kind_axis_actually_bifurcates_at_least_one_category() -> None:
+    """A 32-row table that ignored kind would satisfy completeness identically.
+
+    This is the assertion that gives the re-key its meaning. Completeness can
+    only count rows; it cannot see whether the second key does any work. If
+    every category declared the same columns and the same retención role on
+    both sides, the pair key would be ceremony and this test says so.
+
+    Do not delete this as redundant with the completeness gate. It is the only
+    gate that fails when the kind axis is present but inert.
+    """
+    bifurcated = [
+        category.value
+        for category in IvaCategory
+        if _kind_distinguishing_columns(IVA_CATEGORY_COMPONENTS[(category, InvoiceKind.ISSUED)])
+        != _kind_distinguishing_columns(IVA_CATEGORY_COMPONENTS[(category, InvoiceKind.RECEIVED)])
+    ]
+    assert bifurcated, (
+        "no category differs across ISSUED and RECEIVED — the (category, kind) key is doing no "
+        "work, so the table is a category-keyed table wearing a pair-shaped key"
+    )
+
+
+def _kind_distinguishing_columns(row: IvaCategoryComponents) -> tuple[object, ...]:
+    """The columns whose divergence across kinds is what the pair key exists for."""
+    return (row.applicability, row.retencion_role, row.cuota, row.cuota_settlement)
+
+
+def test_retencion_role_is_the_credit_liability_inversion_the_kind_dictates() -> None:
+    """Every row's role matches its kind, so the column can be read without re-deriving.
+
+    The inversion is the whole reason the table is keyed on the pair: the same
+    withheld euro is the taxpayer's credit on an invoice they issued (RIRPF
+    art. 110.3.a) and their liability to AEAT on one they received. A row that
+    got this backwards would invert a deduction into a debt.
+    """
+    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
+        label = f"{category.value}/{kind.value}"
+        if row.retencion is IvaRetencionExpectation.UNKNOWN:
+            assert row.retencion_role is IvaRetencionRole.UNKNOWN, label
+        elif row.retencion is IvaRetencionExpectation.NOT_EXPECTED:
+            assert row.retencion_role is IvaRetencionRole.NONE, label
+        elif kind is InvoiceKind.ISSUED:
+            assert row.retencion_role is IvaRetencionRole.TAXPAYER_CREDIT, label
+        else:
+            assert row.retencion_role is IvaRetencionRole.TAXPAYER_LIABILITY, label
+
+
+def test_both_retencion_roles_are_actually_used() -> None:
+    """Neither role is dead data.
+
+    A table that only ever declared one role would pass the coherence gate
+    above trivially — that gate checks agreement, not that both branches occur.
+    """
+    roles = {row.retencion_role for row in IVA_CATEGORY_COMPONENTS.values()}
+    assert IvaRetencionRole.TAXPAYER_CREDIT in roles
+    assert IvaRetencionRole.TAXPAYER_LIABILITY in roles
+
+
+def test_non_arising_pairs_are_a_strict_nonempty_subset() -> None:
+    """Directional categories are declared one-sided, and most pairs still arise.
+
+    Both bounds matter. Zero non-arising pairs would mean the directional
+    categories were never declared one-sided, so an "import" the taxpayer
+    issued would read as a real operation. Everything non-arising would mean
+    the table describes nothing.
+    """
+    non_arising = {
+        (category.value, kind.value)
+        for (category, kind), row in IVA_CATEGORY_COMPONENTS.items()
+        if row.applicability is IvaKindApplicability.DOES_NOT_ARISE
+    }
+    assert non_arising, "no pair is declared non-arising, so no category is treated as directional"
+    assert len(non_arising) < len(IVA_CATEGORY_COMPONENTS), "every pair is non-arising; the table describes nothing"
+
+
+def test_a_role_contradicting_its_kind_is_refused() -> None:
+    """The role is validated, not trusted — a received credit cannot be authored."""
+    kwargs = _valid_row_kwargs()
+    kwargs["kind"] = InvoiceKind.RECEIVED
+    kwargs["retencion_role"] = IvaRetencionRole.TAXPAYER_CREDIT
+    with pytest.raises(ValidationError, match="requires role"):
+        IvaCategoryComponents(**kwargs)
+
+
+def test_a_non_arising_pair_asserting_components_is_refused() -> None:
+    """A pair that cannot occur cannot also claim a required base."""
+    kwargs = _valid_row_kwargs()
+    kwargs["applicability"] = IvaKindApplicability.DOES_NOT_ARISE
+    kwargs["retencion"] = IvaRetencionExpectation.UNKNOWN
+    kwargs["retencion_role"] = IvaRetencionRole.UNKNOWN
+    kwargs["retencion_note"] = "counterpart named here"
+    with pytest.raises(ValidationError, match="cannot assert"):
+        IvaCategoryComponents(**kwargs)
+
+
+def test_a_non_arising_pair_without_a_counterpart_note_is_refused() -> None:
+    """The only useful thing a non-arising row carries is which category IS this side."""
+    kwargs = _valid_row_kwargs()
+    kwargs["applicability"] = IvaKindApplicability.DOES_NOT_ARISE
+    kwargs["base"] = IvaComponentPresence.UNKNOWN
+    kwargs["cuota"] = IvaComponentPresence.UNKNOWN
+    kwargs["cuota_settlement"] = IvaCuotaSettlement.UNKNOWN
+    kwargs["cuota_grounding"] = IvaGroundingConfidence.UNGROUNDED
+    kwargs["recargo"] = IvaComponentPresence.UNKNOWN
+    kwargs["recargo_grounding"] = IvaGroundingConfidence.UNGROUNDED
+    kwargs["retencion"] = IvaRetencionExpectation.UNKNOWN
+    kwargs["retencion_grounding"] = IvaGroundingConfidence.UNGROUNDED
+    kwargs["retencion_role"] = IvaRetencionRole.UNKNOWN
+    kwargs["retencion_note"] = "   "
+    kwargs["legal_refs"] = ()
+    with pytest.raises(ValidationError, match="counterpart"):
         IvaCategoryComponents(**kwargs)

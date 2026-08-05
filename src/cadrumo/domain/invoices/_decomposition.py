@@ -53,6 +53,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..iva import (
     IvaCategory,
     IvaComponentPresence,
+    IvaKindApplicability,
     category_bears_taxable_base,
     iva_category_components,
 )
@@ -306,7 +307,17 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     if category is None:
         yield InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED
         return
-    row = iva_category_components(category)
+    # Keyed on the invoice's own kind: the Axis-A row for a category differs by
+    # direction, so reading it without the kind would answer about the wrong
+    # side of the operation. The invoice carries its kind, so the caller never
+    # has to guess.
+    row = iva_category_components(category, invoice.kind)
+    if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
+        # The category is one-directional and this invoice claims the other
+        # side (an "import" the taxpayer issued, say). The combination is not a
+        # real operation, so the declaration is as unusable as an absent one.
+        yield InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED
+        return
     # The two placeholder categories are not named here. Their Axis-A rows
     # already declare their own components UNKNOWN, so reading that column is
     # both the same test and one that keeps working if the enum grows another
@@ -314,7 +325,7 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     if row.base is IvaComponentPresence.UNKNOWN or row.cuota is IvaComponentPresence.UNKNOWN:
         yield InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED
         return
-    if category_bears_taxable_base(category) and invoice.base_total == Decimal("0"):
+    if category_bears_taxable_base(category, invoice.kind) and invoice.base_total == Decimal("0"):
         yield InvoiceDecompositionDefect.TAXABLE_BASE_ABSENT
     if _carries_a_cuota_its_category_forbids(invoice, row.cuota):
         yield InvoiceDecompositionDefect.CUOTA_CONTRADICTS_CATEGORY
