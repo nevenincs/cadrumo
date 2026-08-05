@@ -1341,8 +1341,19 @@ class RentaFamilyProfile(BaseModel):
     cotizaciones_ss_madre_2024: int = Field(default=0, ge=0)
     """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
 
-    Used as the statutory cap for the Art. 81.2 guardería incremento:
-    0613 = min(gastos_guarderia_reales, hijos_menores_3 × 1000, cotizaciones_ss_madre_2024).
+    Used as the statutory ceiling on the Art. 81.2 guardería incremento, applied
+    to the household total AFTER the per-child proration
+    (:meth:`RentaFamilyProfile.incremento_guarderia_0613`): each child
+    contributes ``min(cap_anual / 12 × meses, su gasto)``, those contributions
+    are summed, and this figure caps the sum.
+
+    Do not read it as one term of a flat household-wide
+    ``min(gasto, hijos × cap_anual, cotizaciones)``. That shape was the defect:
+    it granted a child in the guardería two months the same ceiling as one there
+    all year, and it let one child's unused ceiling absorb another's excess
+    spend. The annual cap itself is a registry ``money`` parameter, never a
+    literal here (`aeat-schema-central-config`).
+
     Default ``0`` (cap not declared; guardería incremento will be zero).
     """
     """Structured per-descendant data for Art. 58 mínimo calculation.
