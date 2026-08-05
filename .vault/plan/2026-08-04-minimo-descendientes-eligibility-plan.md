@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:e69fe28623e3cb55b405470eb8a8ebdcd602a43e6c44500d82a17f6495715ed9'
+body_hash: 'sha256:1084d9a9e3143b4c3b925c5633e8294a452efeb19b6260b8abfaa10a38a151bf'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -82,6 +82,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [ ] `P04.S33` - Point the two-authorities refusal and the withheld advisory at a route that can actually edit a declared descendant, because both name descendiente add which only appends rows while the paged editing door refuses on a piped host, so the documented remedy is not actionable for the autonomous-agent operator this CLI is built for; `src/cadrumo/locales/, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `P04.S34` - Retire the calculate-time maternidad flag so casilla 0611 has one authority, because the flag carries a free-form hijo id that no descendant record answers to and is today reconciled only by a mutual refusal, which contains the two-authority hazard without removing it, and the refusal is what currently blocks 0611 from becoming registry-computed like its 0613 sibling; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py, src/cadrumo/locales/`.
 - [ ] `P04.S35` - Make casilla 0611 registry-computed like its 0613 sibling once the flag is retired, because 0611 is an operator-supplied input in every revision while the engine now derives every term it needs, so the two halves of one deduction are produced by two different mechanisms and only one of them is auditable from the registry; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/, src/cadrumo/application/modelo/_profile_binding.py`.
+- [ ] `P04.S36` - Restore the erased typing in the prorrata advisory test, replacing tuple of object with the typed diagnostic tuple and the kwargs splat with explicit keyword parameters, and delete all six type-ignore directives, because a peer commit titled as an index refresh degraded a campaign test to compile against a widened DescendantInfo rather than updating its fixtures, while a sibling test in the same surface was moved the OPPOSITE way on the same convention the same day; `src/cadrumo/application/modelo/tests/test_minimo_descendientes_prorrata_inferred_advisory.py`.
 
 ## Parallelization
 
