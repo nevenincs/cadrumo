@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4abd1676cbbfe13e306ca722b3200a62b0bd2296960a874f654bf252c38f2324'
+body_hash: 'sha256:f9499438721c32e46aaea7a910eb00b9a950ca4ffc374d4f7d15fffe1f3abfab'
 related: []
 ---
 
@@ -635,6 +635,57 @@ fleet.** One runner was lost to it entirely, one is a day into it, and six more 
 the window during the few hours this audit took to write. A liveness check is no longer
 a tidiness proposal; it is the only control that would have surfaced any of these before
 the cheap remedy expired.
+
+### macbook-outage-timed | critical | The clock started at 12:00 today, which makes the cheap remedy still available for all six
+
+Refining the outage finding above with the timestamp, because the age of an outage
+determines which remedy is still on the table. The mesh-network peer record reports the
+host last seen at **12:00:00 on the day of this audit** — minutes before it was noticed,
+not at some unknown earlier point.
+
+That is materially better news than the finding first implied. The full inactivity window
+is still ahead of all six registrations. Every one of them is still recoverable by
+starting its listener, and none has yet reached the point where its stored configuration
+dies and re-registration becomes the only route — the point the lost Linux runner passed
+unobserved.
+
+So the correct characterisation is not that six registrations are somewhere in the
+window, but that **six registrations entered the window at 12:00 today**, and the cheap
+remedy is available to all of them for roughly a fortnight. What is needed is an operator
+action on the host, not a re-provisioning exercise. No attempt was made to start them:
+that is a host act on the operator's own machine, and this session has no non-interactive
+privileged path to it.
+
+### status-representation-is-not-liveness | high | A peer status line can read healthy for a host that has just gone, and a monitor built on it would report this fleet green
+
+This finding exists because the outage was briefly retracted on the strength of a status
+line, and the retraction was itself wrong. It is recorded because the trap will catch the
+next reader the same way.
+
+The mesh-network status output describes a peer's **last-known route and cumulative
+traffic**. Shortly after a host disappears it still shows a plausible direct route and
+large byte counters, because those are historical facts about a connection that used to
+work — they are not assertions that the peer is reachable now. Read quickly, that
+presents as a healthy host. The word describing the connection type sits on the same line
+as the word describing liveness, and only the second one is the state.
+
+The probes that actually discriminate are a mesh ping, which times out with no reply, and
+the structured status output, whose explicit online field reads false and whose last-seen
+field carries the timestamp. Both were run for this audit and both agree with the
+GitHub-side view.
+
+A name-resolution failure is a separate trap in the same family and was originally
+mistaken for one: the host's ordinary name does not resolve, which is indistinguishable
+from a host being down until a probe on the mesh name discriminates. Here both readings
+happened to point the same way, but they could have diverged.
+
+**This is direct evidence for what the proposed liveness check must query.** The design
+above already specifies observing what the *service* believes rather than the host, and
+this is exactly why: throughout this outage the GitHub runners endpoint reported all six
+registrations offline — correctly, immediately, and unambiguously — while a host-level
+status line still read as active. A monitor built on host status would have reported this
+fleet healthy at the moment it was most degraded. The service's view is the one that
+decides whether jobs get scheduled, so it is also the only view worth alarming on.
 
 ## Recommendations
 
