@@ -21,6 +21,16 @@ around the existing, unmodified
 The encrypted row's storage policy is governed by
 :class:`~adapters.persistence.storage.SensitivityClass`.
 
+``mark_consumed`` composes
+:class:`~adapters.persistence.profile.ProfileBareModelSecurePersistence`'s
+``mutate`` for its read-mutate-write-with-retry mechanic, rather than
+hand-rolling the loop: the ledger is stored bare (``ConsumedNonceLedger.model_dump_json()``
+directly, no ``Envelope`` wrapper), matching that kernel's wire shape exactly,
+and the "refuse a duplicate nonce unretried, else append and retry only on a
+genuine revision conflict" logic is precisely the ``mutate`` contract. ``load``
+stays hand-rolled because it translates a bare ``OSError`` into
+``RecipientReplayGuardError``, a translation the kernel does not perform.
+
 Nonce identity is clock-free (the nonce is a random 32-byte value minted once
 per encryption, never derived from a timestamp), so replay defence does not
 depend on wall-clock ordering the way the paired expiry check does -- see
@@ -44,11 +54,11 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile import ProfileBareModelSecurePersistence
 from ...adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
 )
 from ...adapters.persistence.storage import (
-    SecureObjectRevisionConflictError,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
@@ -67,6 +77,16 @@ if TYPE_CHECKING:
 # A stale writer always fails closed at the secure-object CAS boundary. This
 # generous bound lets a hot burst make progress without turning unbounded
 # contention into an infinite loop.
+#
+# Deliberately higher than ProfileBareModelSecurePersistence.mutate()'s
+# default of 4: nonce consumption is a burst-contention point in a way most
+# singleton-document mutations are not -- a recipient re-running a decrypt
+# CLI verb, or several concurrent decrypt attempts of the same captured
+# package, all race to mutate this exact ledger at once. 4 attempts is tuned
+# for occasional single-writer contention; this ledger's own concurrency
+# test (test_concurrent_same_nonce_consumption_allows_exactly_one_success)
+# exercises 8 simultaneous writers on one nonce, which the default budget
+# is not sized for.
 _CONSUME_RETRY_LIMIT = 64
 
 
@@ -134,6 +154,13 @@ class RecipientReplayGuardRepository:
             self._objects = secure_object_repository_for_bucket(bucket_id)
         else:
             self._objects = secure_object_repository_for_active_bucket()
+        self._storage = ProfileBareModelSecurePersistence(
+            objects=self._objects,
+            definition=_NAMESPACE,
+            model_type=ConsumedNonceLedger,
+            empty_document=ConsumedNonceLedger,
+            write_provenance="application.modelo.review_package_recipient_replay_guard",
+        )
 
     def load(self) -> ConsumedNonceLedger:
         """Load the ledger, returning an empty ledger when absent.
@@ -197,35 +224,17 @@ class RecipientReplayGuardRepository:
                 file -- the package has been presented for decryption before.
         """
         record = ConsumedNonceRecord(nonce_hex=nonce_hex, consumed_at=consumed_at or _utc_now())
-        for attempt in range(_CONSUME_RETRY_LIMIT):
-            current, revision_id = self._load_revisioned()
+
+        def _append_if_new(current: ConsumedNonceLedger) -> ConsumedNonceLedger:
             if any(existing.nonce_hex == nonce_hex for existing in current.records):
                 raise RecipientPackageReplayedError(
                     "recipient-encrypted package nonce has already been consumed; refusing replay",
                     context={"nonce_hex": nonce_hex},
                     translated_message="application.modelo.errors.recipient_decryption_failed",
                 )
-            updated = ConsumedNonceLedger(records=(*current.records, record))
-            try:
-                self._save_revisioned(updated, expected_revision_id=revision_id)
-            except SecureObjectRevisionConflictError:
-                if attempt + 1 == _CONSUME_RETRY_LIMIT:
-                    raise
-                continue
-            return updated
-        raise AssertionError("bounded recipient replay consumption retry loop exhausted")
+            return ConsumedNonceLedger(records=(*current.records, record))
 
-    def _save_revisioned(self, ledger: ConsumedNonceLedger, *, expected_revision_id: str) -> None:
-        self._objects.save(
-            namespace=_NAMESPACE.namespace,
-            object_key=self._object_key,
-            classification=_NAMESPACE.sensitivity,
-            schema_version=_NAMESPACE.schema_version,
-            written_at=_utc_now(),
-            payload=ledger.model_dump_json().encode(_UTF_8_ENCODING),
-            write_provenance="application.modelo.review_package_recipient_replay_guard",
-            expected_revision_id=expected_revision_id,
-        )
+        return self._storage.mutate(_append_if_new, attempts=_CONSUME_RETRY_LIMIT)
 
     @property
     def _object_key(self) -> str:
