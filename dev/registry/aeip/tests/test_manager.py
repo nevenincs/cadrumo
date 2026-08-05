@@ -112,8 +112,8 @@ def test_every_occurrence_carries_a_parsed_programme_title(inventory) -> None:
 
     Nothing else in an anexo-A event row distinguishes one programme from
     another: the ids repack yearly, the ``semantic_role`` is shared by the
-    whole family, and every row carries the same single ``legal_refs`` entry.
-    If the committed registry ever stops carrying these labels -- for instance
+    whole family, and the ``legal_refs`` vary only by revision, never by
+    programme. If the committed registry ever stops carrying these labels -- for instance
     if they move wholesale into the locale catalogues -- the event-keyed scheme
     loses its input, and this gate is where that must surface loudly rather
     than as a silently empty plan.
@@ -349,6 +349,63 @@ def test_a_misplaced_split_is_refused_rather_than_emitting_a_gapped_chain(invent
         "a split that leaves a segment spanning the gap must still be refused"
     )
     _assert_all_contiguous(inventory, resolved)
+
+
+def test_legal_refs_drift_is_classified_not_called_unchanged(inventory) -> None:
+    """A pair whose legal refs moved must not be recorded as ``unchanged``.
+
+    The 2025 revision adds an ordinal reference to every row in the family, so
+    every chain crossing 2024 -> 2025 really has evolved its legal refs.
+    Recording those as ``unchanged`` would be a drift the strict cross-revision
+    validator refuses, which is exactly the failure this pins.
+    """
+    plan = plan_chains(inventory)
+    # A retirement also spans 2024 -> 2025 but describes a box the target
+    # revision no longer declares, so only continuing pairs are in scope here.
+    crossing = [
+        pair
+        for entry in plan.entries
+        for pair in entry.pairs
+        if (pair.from_revision, pair.to_revision) == ("2024", "2025") and pair.evolution_kind != "retired"
+    ]
+    assert crossing, "expected continuing chains spanning the 2024 -> 2025 boundary"
+    assert all(pair.evolution_kind != "unchanged" for pair in crossing), (
+        "the 2025 legal-refs addition must be reflected in the evolution kind"
+    )
+    assert all("legal_refs_evolved" in pair.evolution_kind for pair in crossing)
+
+    # Every planned kind stays inside the registry's closed set.
+    allowed = {
+        "unchanged",
+        "label_evolved",
+        "legal_refs_evolved",
+        "label_and_legal_refs_evolved",
+        "repurposed",
+        "retired",
+    }
+    assert {pair.evolution_kind for entry in plan.entries for pair in entry.pairs} <= allowed
+
+
+def test_rendered_record_carries_the_target_revision_legal_refs(inventory) -> None:
+    """A record renders the refs its pair actually carries, not a fixed default."""
+    import tomllib
+
+    plan = plan_chains(inventory)
+    pair = next(
+        pair
+        for entry in plan.entries
+        for pair in entry.pairs
+        if (pair.from_revision, pair.to_revision) == ("2024", "2025") and pair.evolution_kind != "retired"
+    )
+    rendered = tomllib.loads(render_evolution_record(pair, casilla_id="0000"))
+    record = rendered["revisions"]["2025"]["casilla_continuidad_evolutions"][0]
+    assert record["legal_refs"] == list(pair.legal_refs)
+    assert len(record["legal_refs"]) > 1, "the 2025 rows carry more than the framework article"
+
+    # A retirement instead keeps the refs of the revision that last declared
+    # the box, since the target revision declares nothing to cite.
+    retirement = next(pair for entry in plan.entries for pair in entry.pairs if pair.evolution_kind == "retired")
+    assert retirement.legal_refs, "a retirement still cites the chain's own refs"
 
 
 def test_slug_derivation_folds_accents_and_ordinals() -> None:
