@@ -280,28 +280,10 @@ _MAX_NAMED_DESCENDANTS = 3
 
 
 def _name_indices(indices: list[int]) -> str:
-    """Render descendant paths for a message, bounded regardless of household size.
-
-    Factors the shared namespace out of the list rather than repeating it per
-    index. Repeating it was the dominant term: at three named descendants the
-    prefix alone accounted for 78 of the rendered 96 characters, so six of this
-    module's advisories spent a sixth of their entire character budget restating
-    one constant string. Two of them consequently truncated in production for an
-    ordinary four-child household.
-
-    Factoring recovers a flat 50 characters in every multi-descendant case and
-    loses nothing: the paths are reconstructible by distributing the prefix, and
-    the rendered form reads closer to how the fact namespace is actually
-    addressed. It costs two characters in the single-descendant case, which is
-    the case with the most headroom to spare.
-
-    The count remains exact and the elision remains visible; only the naming is
-    abbreviated, and the omitted count is stated.
-    """
-    shown = ", ".join(str(index) for index in indices[:_MAX_NAMED_DESCENDANTS])
-    named = f"{_DESCENDANT_FACT_PREFIX[:-1]}.{{{shown}}}"
+    """Render descendant paths for a message, bounded regardless of household size."""
+    shown = ", ".join(f"renta_family.descendiente.{index}" for index in indices[:_MAX_NAMED_DESCENDANTS])
     remainder = len(indices) - _MAX_NAMED_DESCENDANTS
-    return f"{named} and {remainder} more" if remainder > 0 else named
+    return f"{shown} and {remainder} more" if remainder > 0 else shown
 
 
 def collect_minimo_descendientes_rentas_undeclared_diagnostics(
