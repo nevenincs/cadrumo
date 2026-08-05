@@ -29,7 +29,7 @@ from ......tests.aeat_literal_fixtures import (
 )
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
-from .._errors import SedeNavigationError, SedeParseError
+from .._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
@@ -650,6 +650,51 @@ def test_parse_spanish_decimal_whitespace_only_cell_raises_with_translated_messa
     assert exc.translated_message is not None
     assert exc.translated_message != "adapters.sede.errors.iva_wallet_empty_amount_cell"
     assert len(exc.translated_message) > 10
+
+
+# ---------------------------------------------------------------------------
+# _parse_spanish_decimal requires the two-decimal comma tail every observed
+# AEAT wallet cell carries -- a dot-grouped figure lacking it is a template
+# shape change, not a value ``strip_thousands=True`` should silently guess.
+# ---------------------------------------------------------------------------
+
+
+def test_parse_spanish_decimal_accepts_the_shapes_the_live_wallet_actually_prints() -> None:
+    """Every shape observed in the committed cartera fixtures still parses."""
+    assert _parse_spanish_decimal("1.500,00") == Decimal("1500.00")
+    assert _parse_spanish_decimal("400,50") == Decimal("400.50")
+    assert _parse_spanish_decimal("123,45") == Decimal("123.45")
+    assert _parse_spanish_decimal("0,00") == Decimal("0.00")
+    assert _parse_spanish_decimal("1.000.000,00") == Decimal("1000000.00")
+
+
+def test_parse_spanish_decimal_rejects_a_dot_grouped_amount_missing_its_decimal_tail() -> None:
+    """A row cell without AEAT's mandatory ``,NN`` tail is a shape change, not a value.
+
+    Before this guard, ``strip_thousands=True`` read every dot as a thousands
+    separator unconditionally: ``"1.500"`` (had AEAT ever rendered a wallet
+    cell without decimals) would have silently parsed to ``Decimal("1500")``
+    with no signal that the page no longer matches what every committed
+    fixture shows AEAT actually prints. It must now raise instead.
+    """
+    with pytest.raises(SedeParseError) as exc_info:
+        _parse_spanish_decimal("1.500")
+
+    assert exc_info.value.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED
+
+
+def test_parse_spanish_decimal_rejects_a_bare_integer_amount_cell() -> None:
+    """A bare integer with no separator at all is also refused, not silently accepted."""
+    with pytest.raises(SedeParseError) as exc_info:
+        _parse_spanish_decimal("500")
+
+    assert exc_info.value.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED
+
+
+def test_parse_spanish_decimal_negative_amount_reaches_its_own_refusal_message() -> None:
+    """A correctly-shaped negative amount is refused for being negative, not for its shape."""
+    with pytest.raises(SedeParseError, match="must be non-negative"):
+        _parse_spanish_decimal("-1,00")
 
 
 def test_wallet_read_guard_admits_sibling_load_balancer_host() -> None:

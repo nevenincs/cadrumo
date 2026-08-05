@@ -40,6 +40,13 @@ from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 _ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 _SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}")
+_STRICT_AEAT_MONEY_RE = re.compile(r"^-?\d{1,3}(?:\.\d{3})*,\d{2}$|^-?\d+,\d{2}$")
+"""Anchored counterpart of :data:`_SPANISH_AMOUNT_RE`, mandating the printed
+figure IS the two-decimal comma-tailed AEAT money shape end to end, rather
+than merely containing one. Enforced by :func:`_parse_spanish_decimal` on
+every caller, including the per-row wallet cell that previously reached
+:func:`~cadrumo.core.decimal.normalize_decimal_separators` with no shape
+check at all -- see that function's docstring for why."""
 
 _EXTERNAL = Settings.external_constants()
 _WALLET_PATH = _EXTERNAL.aeat.sede_paths.iva_compensation_wallet
@@ -568,14 +575,46 @@ def _parse_year(value: str) -> int:
 
 
 def _parse_spanish_decimal(value: str) -> Decimal:
+    """Parse an AEAT wallet money cell, unconditionally reading a dot as a thousands separator.
+
+    Unlike :func:`~adapters.inbound.pdf.parse_spanish_decimal` (PDF receipts,
+    which explicitly tolerate an English-rendered receipt per
+    :mod:`adapters.inbound.justificante._extract`) and
+    :func:`~adapters.inbound.financial.providers.parse_amount_value`
+    (arbitrary-locale bank exports), the thousands-vs-decimal reading is
+    never genuinely ambiguous here: this module reads exactly one
+    Spanish-locale-only authenticated AEAT internal sede surface (the own-name
+    IVA compensation wallet cartera), which has no English render. So
+    ``strip_thousands=True`` is a deliberate narrower assumption grounded in
+    the source, not a missing guard equivalent to those two.
+
+    What the cartera source DOES guarantee, and what this function enforces
+    rather than assumes, is AEAT's own UNE 82100 printed-money convention: a
+    mandatory two-decimal comma tail. The aggregate "pendientes de períodos
+    anteriores" total is read through :data:`_SPANISH_AMOUNT_RE`, which
+    already mandates that shape; this shared parser applies the same
+    anchored check (:data:`_STRICT_AEAT_MONEY_RE`) to every caller, closing
+    the asymmetry the per-row wallet cell previously had -- it reached
+    :func:`~cadrumo.core.decimal.normalize_decimal_separators` with no shape
+    check at all, so a future AEAT template rendering that column without
+    decimals would have been silently reinterpreted as a thousands-grouped
+    integer instead of surfacing as the shape change it would actually be.
+    """
     cleaned = value.replace("\xa0", " ").strip()
-    cleaned = normalize_decimal_separators(cleaned, strip_thousands=True)
-    cleaned = re.sub(r"[^0-9.\-]", "", cleaned)
     if not cleaned:
         raise SedeParseError(
             "IVA wallet amount cell is empty",
             translated_message=tr("adapters.sede.errors.iva_wallet_empty_amount_cell"),
         )
+    if not _STRICT_AEAT_MONEY_RE.match(cleaned):
+        raise SedeParseError(
+            f"IVA wallet amount cell does not match the expected AEAT money shape "
+            f"(a dot-grouped thousands, two-decimal comma tail): {value!r}",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={"raw_value": value},
+        )
+    cleaned = normalize_decimal_separators(cleaned, strip_thousands=True)
+    cleaned = re.sub(r"[^0-9.\-]", "", cleaned)
     try:
         amount = Decimal(cleaned)
     except InvalidOperation as exc:
