@@ -211,6 +211,553 @@
     return total - Math.min(entry.title.length, 40) / 10;
   }
 
+  /* ── Rung-2 static semantic seam (source-only, fail closed) ────────────
+   * Update 6 authorises a browser reader for a future, measured artifact. It
+   * does not author a default URL, a threshold, a model download, or a second
+   * result authority. The only enablement surface is the explicit
+   * `window.__CADRUMO_SEARCH_RUNG2__` configuration emitted beside a future
+   * build. With no configuration, or with any incomplete/tampered payload,
+   * this seam returns no candidates and the existing Pagefind ladder remains
+   * authoritative.
+   *
+   * Config v1 shape (all values are required before the tier can run):
+   *   {
+   *     schema_version: "cadrumo.docs-search.rung2-config.v1",
+   *     enabled: true,
+   *     normalization_version: RUNG2_NORMALIZATION_VERSION,
+   *     matrix_url, bridge_url, matrix_sha256, bridge_sha256,
+   *     acceptance: {
+   *       approved: true,
+   *       minimum_coverage_ratio, cosine_floor, runner_up_margin,
+   *       maximum_quantization_drift, measured_quantization_drift,
+   *       payload_bytes, quantization_accepted, held_out_top_five_loss,
+   *       held_out_miss_rate, no_locale_or_kind_regression,
+   *     },
+   *   }
+   *
+   * The matrix is the schema-v2 artifact emitted by _static_matrix.py. The
+   * bridge v1 is a separate bounded JSON payload whose term rows link to
+   * ordered opaque record_ids and whose manifest hydrates those ids to the
+   * already-authoritative href/title/display metadata. URLs are consumed only
+   * from that manifest; this code never parses an id or constructs a target. */
+  var RUNG2_CONFIG_SCHEMA = "cadrumo.docs-search.rung2-config.v1";
+  var RUNG2_BRIDGE_SCHEMA = "cadrumo.docs-search.rung2-bridge.v1";
+  var RUNG2_NORMALIZATION_VERSION = "cadrumo.docs-search-tokenization.v1";
+  var RUNG2_MATRIX_SCHEMA_VERSION = 2;
+  var RUNG2_MODEL_REPOSITORY = "minishlab/potion-multilingual-128M";
+  var RUNG2_MODEL_REVISION = "e7421cd79c75fc506b88bb75723ae0a234994720";
+  var RUNG2_MODEL_LICENSE = "MIT";
+  var RUNG2_DIMENSION = 256;
+  var RUNG2_MAX_PAYLOAD_BYTES = 3000000;
+  var RUNG2_QUANTIZATION = "symmetric-per-row-int8-f32-v1";
+  var RUNG2_ROW_ORDER = "canonical-utf8-byte-order-v1";
+  var RUNG2_HEX64 = /^[0-9a-f]{64}$/;
+  var RUNG2_TOKEN_PATTERN = null;
+  try {
+    /* Property escapes are part of the pinned browser algorithm. An older
+     * engine therefore disables Rung 2 instead of silently changing recall. */
+    RUNG2_TOKEN_PATTERN = new RegExp("[\\p{L}\\p{N}]+", "gu");
+  } catch (e) {
+    RUNG2_TOKEN_PATTERN = null;
+  }
+  var RUNG2_BUNDLE_PROMISE = null;
+
+  function rung2Has(value, key) {
+    return Object.prototype.hasOwnProperty.call(value, key);
+  }
+
+  function rung2Object(value, label) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      throw new Error(label + " must be an object");
+    }
+    return value;
+  }
+
+  function rung2Keys(value, allowed, label) {
+    var keys = Object.keys(value);
+    for (var i = 0; i < keys.length; i++) {
+      if (allowed.indexOf(keys[i]) < 0) {
+        throw new Error(label + " contains an unknown field");
+      }
+    }
+  }
+
+  function rung2RequiredString(value, key, label) {
+    if (!rung2Has(value, key) || typeof value[key] !== "string" || !value[key]) {
+      throw new Error(label + "." + key + " is required");
+    }
+    return value[key];
+  }
+
+  function rung2Hex(value, label) {
+    if (typeof value !== "string" || !RUNG2_HEX64.test(value)) {
+      throw new Error(label + " must be a lowercase SHA-256 hex digest");
+    }
+    return value;
+  }
+
+  function rung2Finite(value, label) {
+    if (typeof value !== "number" || !isFinite(value)) {
+      throw new Error(label + " must be finite");
+    }
+    return value;
+  }
+
+  function rung2Bounded(value, minimum, maximum, label) {
+    rung2Finite(value, label);
+    if (value < minimum || value > maximum) {
+      throw new Error(label + " is outside its approved range");
+    }
+    return value;
+  }
+
+  function rung2Integer(value, minimum, maximum, label) {
+    if (typeof value !== "number" || !isFinite(value) || Math.floor(value) !== value) {
+      throw new Error(label + " must be an integer");
+    }
+    if (value < minimum || value > maximum) {
+      throw new Error(label + " is outside its approved range");
+    }
+    return value;
+  }
+
+  function rung2Normalize(value) {
+    if (typeof value !== "string" || !RUNG2_TOKEN_PATTERN || typeof value.normalize !== "function") {
+      return null;
+    }
+    var normalized = value.normalize("NFKC").toLowerCase();
+    var tokens = normalized.match(RUNG2_TOKEN_PATTERN) || [];
+    return { text: tokens.join(" "), tokens: tokens };
+  }
+
+  function rung2NormalizeTerm(value) {
+    if (typeof value !== "string" || typeof value.normalize !== "function") return null;
+    var normalized = value.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+    return normalized || null;
+  }
+
+  function rung2Utf8Bytes(value) {
+    var bytes = [];
+    for (var i = 0; i < value.length; i++) {
+      var codePoint = value.charCodeAt(i);
+      if (codePoint >= 0xd800 && codePoint <= 0xdbff) {
+        var low = value.charCodeAt(i + 1);
+        if (low >= 0xdc00 && low <= 0xdfff) {
+          codePoint = 0x10000 + ((codePoint - 0xd800) << 10) + (low - 0xdc00);
+          i += 1;
+        } else {
+          throw new Error("unpaired surrogate in UTF-8 value");
+        }
+      } else if (codePoint >= 0xdc00 && codePoint <= 0xdfff) {
+        throw new Error("unpaired surrogate in UTF-8 value");
+      }
+      if (codePoint <= 0x7f) {
+        bytes.push(codePoint);
+      } else if (codePoint <= 0x7ff) {
+        bytes.push(0xc0 | (codePoint >> 6), 0x80 | (codePoint & 0x3f));
+      } else if (codePoint <= 0xffff) {
+        bytes.push(
+          0xe0 | (codePoint >> 12),
+          0x80 | ((codePoint >> 6) & 0x3f),
+          0x80 | (codePoint & 0x3f)
+        );
+      } else {
+        bytes.push(
+          0xf0 | (codePoint >> 18),
+          0x80 | ((codePoint >> 12) & 0x3f),
+          0x80 | ((codePoint >> 6) & 0x3f),
+          0x80 | (codePoint & 0x3f)
+        );
+      }
+    }
+    return bytes;
+  }
+
+  function rung2Utf8Compare(left, right) {
+    var a = rung2Utf8Bytes(left);
+    var b = rung2Utf8Bytes(right);
+    var length = Math.min(a.length, b.length);
+    for (var i = 0; i < length; i++) {
+      if (a[i] !== b[i]) return a[i] - b[i];
+    }
+    return a.length - b.length;
+  }
+
+  function rung2Sha256(bytes) {
+    if (!window.crypto || !window.crypto.subtle) return Promise.reject(new Error("Web Crypto unavailable"));
+    return window.crypto.subtle.digest("SHA-256", bytes).then(function (digest) {
+      var view = new Uint8Array(digest);
+      var hex = "";
+      for (var i = 0; i < view.length; i++) hex += view[i].toString(16).padStart(2, "0");
+      return hex;
+    });
+  }
+
+  function rung2FetchJson(url) {
+    if (typeof TextDecoder === "undefined") return Promise.reject(new Error("TextDecoder unavailable"));
+    return fetch(url, { credentials: "same-origin" }).then(function (response) {
+      if (!response.ok) throw new Error("Rung-2 payload unavailable");
+      return response.arrayBuffer();
+    }).then(function (buffer) {
+      var bytes = new Uint8Array(buffer);
+      var text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+      var payload = JSON.parse(text);
+      return { bytes: bytes, text: text, payload: payload };
+    });
+  }
+
+  function rung2SameOriginUrl(value) {
+    if (typeof value !== "string" || !value) throw new Error("Rung-2 URL is required");
+    var url = new URL(value, document.baseURI);
+    if (url.origin !== window.location.origin) throw new Error("Rung-2 URL must be same-origin");
+    return url.href;
+  }
+
+  function rung2ValidateConfig(config) {
+    rung2Object(config, "Rung-2 config");
+    rung2Keys(config, [
+      "schema_version", "enabled", "normalization_version", "matrix_url", "bridge_url",
+      "matrix_sha256", "bridge_sha256", "acceptance",
+    ], "Rung-2 config");
+    if (config.schema_version !== RUNG2_CONFIG_SCHEMA || config.enabled !== true) {
+      throw new Error("Rung-2 config is not explicitly enabled");
+    }
+    if (config.normalization_version !== RUNG2_NORMALIZATION_VERSION) {
+      throw new Error("Rung-2 normalization version mismatch");
+    }
+    var matrixUrl = rung2SameOriginUrl(rung2RequiredString(config, "matrix_url", "Rung-2 config"));
+    var bridgeUrl = rung2SameOriginUrl(rung2RequiredString(config, "bridge_url", "Rung-2 config"));
+    var matrixSha = rung2Hex(rung2RequiredString(config, "matrix_sha256", "Rung-2 config"), "matrix_sha256");
+    var bridgeSha = rung2Hex(rung2RequiredString(config, "bridge_sha256", "Rung-2 config"), "bridge_sha256");
+    var acceptance = rung2Object(config.acceptance, "Rung-2 acceptance");
+    rung2Keys(acceptance, [
+      "approved", "minimum_coverage_ratio", "cosine_floor", "runner_up_margin",
+      "maximum_quantization_drift", "measured_quantization_drift", "payload_bytes",
+      "quantization_accepted", "held_out_top_five_loss", "held_out_miss_rate",
+      "no_locale_or_kind_regression",
+    ], "Rung-2 acceptance");
+    if (acceptance.approved !== true || acceptance.quantization_accepted !== true ||
+        acceptance.held_out_top_five_loss !== false || acceptance.no_locale_or_kind_regression !== true) {
+      throw new Error("Rung-2 acceptance is incomplete");
+    }
+    rung2Bounded(acceptance.minimum_coverage_ratio, Number.MIN_VALUE, 1, "minimum_coverage_ratio");
+    rung2Bounded(acceptance.cosine_floor, -1, 1, "cosine_floor");
+    rung2Bounded(acceptance.runner_up_margin, 0, 2, "runner_up_margin");
+    rung2Bounded(acceptance.maximum_quantization_drift, 0, 2, "maximum_quantization_drift");
+    if (rung2Finite(acceptance.measured_quantization_drift, "measured_quantization_drift") >
+        acceptance.maximum_quantization_drift) {
+      throw new Error("Rung-2 quantization drift exceeds acceptance");
+    }
+    rung2Bounded(acceptance.held_out_miss_rate, 0, 0.1, "held_out_miss_rate");
+    rung2Integer(acceptance.payload_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "payload_bytes");
+    return {
+      matrixUrl: matrixUrl,
+      bridgeUrl: bridgeUrl,
+      matrixSha: matrixSha,
+      bridgeSha: bridgeSha,
+      acceptance: acceptance,
+    };
+  }
+
+  function rung2ValidateInt8Row(row, dimension, label, tokenKey) {
+    rung2Object(row, label);
+    rung2Keys(row, [tokenKey, "scale", "values", "model_token_ids", "token_count"], label);
+    rung2RequiredString(row, tokenKey, label);
+    rung2Finite(row.scale, label + ".scale");
+    if (row.scale <= 0 || Math.fround(row.scale) !== row.scale) {
+      throw new Error(label + ".scale is not an exact positive float32");
+    }
+    if (!Array.isArray(row.values) || row.values.length !== dimension || !row.values.some(function (value) { return value !== 0; })) {
+      throw new Error(label + ".values has the wrong dimension or is zero");
+    }
+    row.values.forEach(function (value) {
+      rung2Integer(value, -127, 127, label + ".values");
+    });
+  }
+
+  function rung2ValidateTokenIds(value, expectedCount, label) {
+    if (!Array.isArray(value) || value.length !== expectedCount || !value.length) {
+      throw new Error(label + " must contain the complete token-id tuple");
+    }
+    value.forEach(function (tokenId) {
+      rung2Integer(tokenId, 0, Number.MAX_SAFE_INTEGER, label);
+    });
+  }
+
+  function rung2ValidateMatrix(matrix) {
+    rung2Object(matrix, "Rung-2 matrix");
+    rung2Keys(matrix, [
+      "schema_version", "model", "vocabulary_sha256", "vocabulary_count", "query_token_sha256",
+      "query_token_count", "dimension", "quantization_algorithm", "row_order", "token_inventory",
+      "rows", "query_token_rows", "serialized_bytes", "artifact_sha256",
+    ], "Rung-2 matrix");
+    if (matrix.schema_version !== RUNG2_MATRIX_SCHEMA_VERSION || matrix.quantization_algorithm !== RUNG2_QUANTIZATION ||
+        matrix.row_order !== RUNG2_ROW_ORDER || matrix.dimension !== RUNG2_DIMENSION) {
+      throw new Error("Rung-2 matrix schema or model dimension mismatch");
+    }
+    var model = rung2Object(matrix.model, "Rung-2 matrix.model");
+    rung2Keys(model, ["repository", "revision", "spdx_license", "dimension"], "Rung-2 matrix.model");
+    if (model.repository !== RUNG2_MODEL_REPOSITORY || model.revision !== RUNG2_MODEL_REVISION ||
+        model.spdx_license !== RUNG2_MODEL_LICENSE || model.dimension !== RUNG2_DIMENSION) {
+      throw new Error("Rung-2 model provenance mismatch");
+    }
+    rung2Hex(matrix.vocabulary_sha256, "vocabulary_sha256");
+    rung2Hex(matrix.query_token_sha256, "query_token_sha256");
+    rung2Hex(matrix.artifact_sha256, "artifact_sha256");
+    rung2Integer(matrix.vocabulary_count, 1, Number.MAX_SAFE_INTEGER, "vocabulary_count");
+    rung2Integer(matrix.query_token_count, 1, Number.MAX_SAFE_INTEGER, "query_token_count");
+    rung2Integer(matrix.serialized_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "serialized_bytes");
+    if (!Array.isArray(matrix.rows) || matrix.rows.length !== matrix.vocabulary_count ||
+        !Array.isArray(matrix.token_inventory) || matrix.token_inventory.length !== matrix.vocabulary_count ||
+        !Array.isArray(matrix.query_token_rows) || matrix.query_token_rows.length !== matrix.query_token_count) {
+      throw new Error("Rung-2 matrix counts do not match rows");
+    }
+
+    var terms = [];
+    var termSet = Object.create(null);
+    matrix.rows.forEach(function (row, index) {
+      rung2ValidateInt8Row(row, matrix.dimension, "Rung-2 matrix.rows[" + index + "]", "term");
+      var canonical = rung2NormalizeTerm(row.term);
+      if (canonical !== row.term || termSet[row.term]) throw new Error("Rung-2 terms are not canonical and unique");
+      termSet[row.term] = true;
+      terms.push(row.term);
+      if (index && rung2Utf8Compare(terms[index - 1], row.term) >= 0) throw new Error("Rung-2 terms are not UTF-8 ordered");
+    });
+    matrix.token_inventory.forEach(function (entry, index) {
+      rung2Object(entry, "Rung-2 token_inventory[" + index + "]");
+      rung2Keys(entry, ["term", "token_ids", "token_count"], "Rung-2 token_inventory[" + index + "]");
+      if (entry.term !== terms[index]) throw new Error("Rung-2 token inventory order mismatch");
+      rung2Integer(entry.token_count, 1, Number.MAX_SAFE_INTEGER, "Rung-2 token_count");
+      rung2ValidateTokenIds(entry.token_ids, entry.token_count, "Rung-2 token_inventory token_ids");
+    });
+
+    var queryTokens = [];
+    var querySet = Object.create(null);
+    var queryRows = Object.create(null);
+    matrix.query_token_rows.forEach(function (row, index) {
+      rung2ValidateInt8Row(row, matrix.dimension, "Rung-2 query_token_rows[" + index + "]", "token");
+      rung2Integer(row.token_count, 1, Number.MAX_SAFE_INTEGER, "Rung-2 query token_count");
+      rung2ValidateTokenIds(row.model_token_ids, row.token_count, "Rung-2 query model_token_ids");
+      var normalized = rung2Normalize(row.token);
+      if (!normalized || normalized.tokens.length !== 1 || normalized.tokens[0] !== row.token || querySet[row.token]) {
+        throw new Error("Rung-2 query tokens are not canonical and unique");
+      }
+      querySet[row.token] = true;
+      queryTokens.push(row.token);
+      queryRows[row.token] = row;
+      if (index && rung2Utf8Compare(queryTokens[index - 1], row.token) >= 0) throw new Error("Rung-2 query tokens are not UTF-8 ordered");
+    });
+    return { matrix: matrix, terms: terms, queryTokens: queryTokens, queryRows: queryRows, termRows: matrix.rows };
+  }
+
+  function rung2ValidateBridge(bridge, matrix, config) {
+    rung2Object(bridge, "Rung-2 bridge");
+    rung2Keys(bridge, [
+      "schema_version", "normalization_version", "matrix_sha256", "matrix_artifact_sha256",
+      "vocabulary_sha256", "query_token_sha256", "serialized_bytes", "terms", "records",
+    ], "Rung-2 bridge");
+    if (bridge.schema_version !== RUNG2_BRIDGE_SCHEMA || bridge.normalization_version !== RUNG2_NORMALIZATION_VERSION ||
+        bridge.matrix_sha256 !== config.matrixSha || bridge.matrix_artifact_sha256 !== matrix.artifact_sha256 ||
+        bridge.vocabulary_sha256 !== matrix.vocabulary_sha256 || bridge.query_token_sha256 !== matrix.query_token_sha256) {
+      throw new Error("Rung-2 bridge hash or normalization link mismatch");
+    }
+    rung2Integer(bridge.serialized_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "bridge.serialized_bytes");
+    if (!Array.isArray(bridge.terms) || bridge.terms.length !== matrix.rows.length || !Array.isArray(bridge.records)) {
+      throw new Error("Rung-2 bridge counts are invalid");
+    }
+    var records = Object.create(null);
+    bridge.records.forEach(function (record, index) {
+      rung2Object(record, "Rung-2 records[" + index + "]");
+      rung2Keys(record, ["record_id", "href", "title", "display_class", "weight", "summary", "crumb", "kind", "modelo", "number", "segmento", "domain", "command_path"], "Rung-2 records[" + index + "]");
+      var id = rung2RequiredString(record, "record_id", "Rung-2 record");
+      if (records[id]) throw new Error("Rung-2 manifest contains duplicate record_id");
+      rung2RequiredString(record, "href", "Rung-2 record");
+      rung2RequiredString(record, "title", "Rung-2 record");
+      rung2RequiredString(record, "display_class", "Rung-2 record");
+      if (["casilla", "modelo", "cli", "technical", "doc"].indexOf(record.display_class) < 0) throw new Error("Rung-2 record has an invalid display class");
+      rung2Bounded(record.weight, 0, 1, "Rung-2 record.weight");
+      var kind = rung2RequiredString(record, "kind", "Rung-2 record");
+      if (["concept", "casilla", "cli", "page", "legal"].indexOf(kind) < 0) throw new Error("Rung-2 record has an invalid kind");
+      ["summary", "crumb", "kind", "modelo", "number", "segmento", "domain", "command_path"].forEach(function (key) {
+        if (rung2Has(record, key) && typeof record[key] !== "string") throw new Error("Rung-2 record metadata is not text");
+      });
+      records[id] = record;
+    });
+    var terms = Object.create(null);
+    var referencedRecords = Object.create(null);
+    bridge.terms.forEach(function (entry, index) {
+      rung2Object(entry, "Rung-2 bridge.terms[" + index + "]");
+      rung2Keys(entry, ["term", "targets"], "Rung-2 bridge term");
+      if (entry.term !== matrix.rows[index].term || terms[entry.term] || !Array.isArray(entry.targets) || !entry.targets.length) {
+        throw new Error("Rung-2 bridge term order or targets are invalid");
+      }
+      var targetIds = Object.create(null);
+      terms[entry.term] = entry.targets.map(function (target, targetIndex) {
+        rung2Object(target, "Rung-2 bridge target");
+        rung2Keys(target, ["record_id", "ranking_weight"], "Rung-2 bridge target");
+        var recordId = rung2RequiredString(target, "record_id", "Rung-2 target");
+        if (!records[recordId]) throw new Error("Rung-2 target has no manifest record");
+        if (targetIds[recordId]) throw new Error("Rung-2 term has duplicate record_id targets");
+        targetIds[recordId] = true;
+        referencedRecords[recordId] = true;
+        rung2Bounded(target.ranking_weight, 0, 1, "Rung-2 target.ranking_weight");
+        if (targetIndex && entry.targets[targetIndex - 1].ranking_weight < target.ranking_weight) {
+          throw new Error("Rung-2 targets are not ordered by ranking weight");
+        }
+        return { recordId: recordId, rankingWeight: target.ranking_weight };
+      });
+    });
+    Object.keys(records).forEach(function (recordId) {
+      if (!referencedRecords[recordId]) throw new Error("Rung-2 manifest contains an unreferenced record_id");
+    });
+    return { terms: terms, records: records, serializedBytes: bridge.serialized_bytes };
+  }
+
+  function rung2Dequantize(row, dimension) {
+    var vector = new Float32Array(dimension);
+    for (var i = 0; i < dimension; i++) vector[i] = Math.fround(row.values[i] * row.scale);
+    var normSquared = Math.fround(0);
+    for (var j = 0; j < dimension; j++) normSquared = Math.fround(normSquared + Math.fround(vector[j] * vector[j]));
+    var norm = Math.sqrt(normSquared);
+    if (!isFinite(norm) || norm <= 0) throw new Error("Rung-2 vector is zero or non-finite");
+    return { vector: vector, norm: norm };
+  }
+
+  function rung2BuildRows(bundle) {
+    var rows = Object.create(null);
+    bundle.termRows.forEach(function (row) {
+      rows[row.term] = rung2Dequantize(row, bundle.matrix.dimension);
+    });
+    return rows;
+  }
+
+  function loadRung2Bundle() {
+    if (RUNG2_BUNDLE_PROMISE) return RUNG2_BUNDLE_PROMISE;
+    var rawConfig = window.__CADRUMO_SEARCH_RUNG2__;
+    if (!rawConfig) return (RUNG2_BUNDLE_PROMISE = Promise.resolve(null));
+    RUNG2_BUNDLE_PROMISE = Promise.resolve().then(function () {
+      var config = rung2ValidateConfig(rawConfig);
+      return Promise.all([rung2FetchJson(config.matrixUrl), rung2FetchJson(config.bridgeUrl)]).then(function (payloads) {
+        var matrixPayload = payloads[0];
+        var bridgePayload = payloads[1];
+        var combinedBytes = matrixPayload.bytes.byteLength + bridgePayload.bytes.byteLength;
+        if (combinedBytes !== config.acceptance.payload_bytes || combinedBytes > RUNG2_MAX_PAYLOAD_BYTES) {
+          throw new Error("Rung-2 payload is outside the measured bound");
+        }
+        if (matrixPayload.bytes.byteLength !== matrixPayload.payload.serialized_bytes ||
+            bridgePayload.bytes.byteLength !== bridgePayload.payload.serialized_bytes) {
+          throw new Error("Rung-2 serialized byte stamps do not match");
+        }
+        return Promise.all([
+          rung2Sha256(matrixPayload.bytes.buffer),
+          rung2Sha256(bridgePayload.bytes.buffer),
+        ]).then(function (hashes) {
+          if (hashes[0] !== config.matrixSha || hashes[1] !== config.bridgeSha) throw new Error("Rung-2 payload hash mismatch");
+          var matrix = rung2ValidateMatrix(matrixPayload.payload);
+          var bridge = rung2ValidateBridge(bridgePayload.payload, matrix.matrix, config);
+          return Promise.all([
+            rung2Sha256(new TextEncoder().encode(matrix.terms.join("\n")).buffer),
+            rung2Sha256(new TextEncoder().encode(matrix.queryTokens.join("\n")).buffer),
+          ]).then(function (fingerprints) {
+            if (fingerprints[0] !== matrix.matrix.vocabulary_sha256 || fingerprints[1] !== matrix.matrix.query_token_sha256) {
+              throw new Error("Rung-2 vocabulary fingerprint mismatch");
+            }
+            return {
+              config: config,
+              matrix: matrix.matrix,
+              queryRows: matrix.queryRows,
+              termRows: matrix.termRows,
+              bridge: bridge,
+              termVectors: rung2BuildRows(matrix),
+            };
+          });
+        });
+      });
+    }).catch(function () {
+      /* Missing config, malformed data, unavailable crypto, or any acceptance
+       * mismatch is a deliberate no-semantic-result outcome. */
+      return null;
+    });
+    return RUNG2_BUNDLE_PROMISE;
+  }
+
+  function rung2SemanticCandidates(bundle, query) {
+    if (!bundle || !Math.fround) return [];
+    var normalized = rung2Normalize(query);
+    if (!normalized || !normalized.tokens.length) return [];
+    var covered = 0;
+    var dimension = bundle.matrix.dimension;
+    var queryVector = new Float32Array(dimension);
+    normalized.tokens.forEach(function (token) {
+      var row = bundle.queryRows[token];
+      if (!row) return;
+      covered += 1;
+      for (var i = 0; i < dimension; i++) {
+        queryVector[i] = Math.fround(queryVector[i] + Math.fround(row.values[i] * row.scale));
+      }
+    });
+    if (!covered || covered / normalized.tokens.length < bundle.config.acceptance.minimum_coverage_ratio) return [];
+    for (var j = 0; j < dimension; j++) if (!isFinite(queryVector[j])) return [];
+    for (var k = 0; k < dimension; k++) queryVector[k] = Math.fround(queryVector[k] / covered);
+    var queryNormSquared = Math.fround(0);
+    for (var n = 0; n < dimension; n++) queryNormSquared = Math.fround(queryNormSquared + Math.fround(queryVector[n] * queryVector[n]));
+    var queryNorm = Math.sqrt(queryNormSquared);
+    if (!isFinite(queryNorm) || queryNorm <= 0) return [];
+    var scored = bundle.termRows.map(function (row) {
+      var termVector = bundle.termVectors[row.term];
+      var dot = Math.fround(0);
+      for (var i = 0; i < dimension; i++) dot = Math.fround(dot + Math.fround(queryVector[i] * termVector.vector[i]));
+      var score = dot / (queryNorm * termVector.norm);
+      return { term: row.term, score: score };
+    }).filter(function (candidate) {
+      return isFinite(candidate.score) && candidate.score >= bundle.config.acceptance.cosine_floor;
+    }).sort(function (left, right) {
+      if (right.score !== left.score) return right.score - left.score;
+      return rung2Utf8Compare(left.term, right.term);
+    });
+    if (!scored.length) return [];
+    if (scored.length > 1 && scored[0].score - scored[1].score < bundle.config.acceptance.runner_up_margin) return [];
+    var byRecord = Object.create(null);
+    scored.forEach(function (candidate) {
+      (bundle.bridge.terms[candidate.term] || []).forEach(function (target) {
+        var prior = byRecord[target.recordId];
+        if (!prior || candidate.score > prior.semanticScore ||
+            candidate.score === prior.semanticScore && target.rankingWeight > prior.semanticRankingWeight) {
+          byRecord[target.recordId] = {
+            recordId: target.recordId,
+            semanticScore: candidate.score,
+            semanticRankingWeight: target.rankingWeight,
+          };
+        }
+      });
+    });
+    return Object.keys(byRecord).map(function (recordId) {
+      var candidate = byRecord[recordId];
+      var record = bundle.bridge.records[recordId];
+      var crumb = record.crumb || "";
+      if (!crumb && record.modelo && record.number) {
+        crumb = "Modelo " + record.modelo + " · " + record.number + (record.segmento ? " · " + record.segmento : "");
+      }
+      return {
+        title: record.title,
+        href: record.href,
+        crumb: crumb,
+        excerpt: record.summary || "",
+        kind: record.kind,
+        displayClass: record.display_class,
+        tierRank: 1 + record.weight,
+        recordId: candidate.recordId,
+        semanticScore: candidate.semanticScore,
+        semanticRankingWeight: candidate.semanticRankingWeight,
+        directMatchStrength: 0,
+      };
+    }).sort(function (left, right) {
+      if (right.semanticScore !== left.semanticScore) return right.semanticScore - left.semanticScore;
+      if (right.semanticRankingWeight !== left.semanticRankingWeight) return right.semanticRankingWeight - left.semanticRankingWeight;
+      return rung2Utf8Compare(left.recordId, right.recordId);
+    }).slice(0, 5);
+  }
+
   /* ── Search controller ─────────────────────────────────────────────────
    * The full search behaviour (Pagefind loading, the two-pass card/page
    * search, the ADR-D5 compose ladder, the PERF-003 relevance tie-break,
@@ -551,6 +1098,9 @@
         excerpt: summary || excerpt || "",
         kind: kind,
         displayClass: displayClass,
+        /* Newer injection payloads may carry the opaque id. Older Pagefind
+         * records remain valid and dedupe by their href below. */
+        recordId: meta && meta.record_id ? meta.record_id : null,
         /* Card band: 1 + shipped weight (≥ 1.7). Full-text band: the class's
          * intra-band rank in (0, 1), so a `doc` page outranks a `technical`
          * page while every page stays below every card. */
@@ -594,7 +1144,7 @@
     function searchPagefind(query) {
       return loadPagefind()
         .then(function (pf) {
-          if (!pf || typeof pf.search !== "function") return [];
+          if (!pf || typeof pf.search !== "function") return { cards: [], structured: false };
           /* Run the two passes SEQUENTIALLY. Two concurrent searches on one
            * Pagefind instance make the first supersede-cancel the other -
            * Pagefind keeps only the latest in-flight search and resolves the
@@ -602,41 +1152,57 @@
            * was still typing. Awaiting each pass in turn removes the
            * self-supersede so both reliably return. */
           return searchStructuredCasilla(pf, query).then(function (structured) {
-            if (structured.length) return structured;
+            if (structured.length) return { cards: structured, structured: true };
             return Promise.resolve(
               pf.search(query, { sort: { weight: "desc" } })
             ).then(function (cardRes) {
               return Promise.resolve(pf.search(query)).then(function (pageRes) {
-              var cardResults = cardRes && cardRes.results ? cardRes.results : [];
-              var pageResults = pageRes && pageRes.results ? pageRes.results : [];
-              /* The weight-sorted pass ties every concept card at the flat
-               * tier-one weight, so capture each url's relevance rank from the
-               * textual pass and carry it onto the card; compose() breaks
-               * within-tier ties by it, floating the best textual match to the
-               * top of its tier while cards still sit above full-text pages. */
-              var relRank = {};
-              pageResults.forEach(function (r, i) {
-                if (relRank[r.url] === undefined) relRank[r.url] = i;
-              });
-              return dataToCards(cardResults, 12, true).then(function (cards) {
-                return dataToCards(pageResults, 6, false).then(function (pages) {
-                  var all = cards.concat(pages);
-                  all.forEach(function (item) {
-                    item.relRank =
-                      relRank[item.href] !== undefined
-                        ? relRank[item.href]
-                        : Number.MAX_SAFE_INTEGER;
+                var cardResults = cardRes && cardRes.results ? cardRes.results : [];
+                var pageResults = pageRes && pageRes.results ? pageRes.results : [];
+                /* The weight-sorted pass ties every concept card at the flat
+                 * tier-one weight, so capture each url's relevance rank from the
+                 * textual pass and carry it onto the card; compose() breaks
+                 * within-tier ties by it, floating the best textual match to the
+                 * top of its tier while cards still sit above full-text pages. */
+                var relRank = {};
+                pageResults.forEach(function (r, i) {
+                  if (relRank[r.url] === undefined) relRank[r.url] = i;
+                });
+                return dataToCards(cardResults, 12, true).then(function (cards) {
+                  return dataToCards(pageResults, 6, false).then(function (pages) {
+                    var all = cards.concat(pages);
+                    all.forEach(function (item) {
+                      item.relRank =
+                        relRank[item.href] !== undefined
+                          ? relRank[item.href]
+                          : Number.MAX_SAFE_INTEGER;
+                    });
+                    return { cards: all, structured: false };
                   });
-                  return all;
                 });
               });
-            });
             });
           });
         })
         .catch(function () {
-          /* A Pagefind failure degrades to nav-only; it never breaks the
-           * palette or leaves an unhandled rejection. */
+          /* Pagefind is optional; its absence must not prevent a separately
+           * validated semantic bundle from being considered. */
+          return { cards: [], structured: false };
+        })
+        .then(function (result) {
+          if (result.structured) return result.cards;
+          /* The semantic tier is an additive source inside this controller.
+           * It never replaces the structured casilla first-refusal above and
+           * it can only hydrate records from the validated bridge. */
+          return loadRung2Bundle().then(function (bundle) {
+            var semantic = rung2SemanticCandidates(bundle, query);
+            return result.cards.concat(semantic);
+          });
+        })
+        .catch(function () {
+          /* Any semantic/configuration failure also degrades to the ordinary
+           * nav/Pagefind ladder; it never breaks the palette or leaves an
+           * unhandled rejection. */
           return [];
         });
     }
@@ -690,6 +1256,7 @@
 
     function compose(query, pagefindCards) {
       var seenHref = {};
+      var seenRecordId = {};
       var ordered = [];
       var cards = (pagefindCards || []).slice().sort(function (a, b) {
         /* Primary axis: the shipped-weight tier rank (D8 ladder doc > modelo >
@@ -701,19 +1268,35 @@
          * and cross-lingual matches (e.g. "pro rata" -> prorrata) whose title is
          * in another language. */
         if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
-        var ma = titleMatch(a.title, query);
-        var mb = titleMatch(b.title, query);
+        var ma = typeof a.directMatchStrength === "number" ? a.directMatchStrength : titleMatch(a.title, query);
+        var mb = typeof b.directMatchStrength === "number" ? b.directMatchStrength : titleMatch(b.title, query);
         if (mb !== ma) return mb - ma;
+        var aSemantic = typeof a.semanticScore === "number";
+        var bSemantic = typeof b.semanticScore === "number";
+        if (aSemantic && bSemantic) {
+          if (b.semanticScore !== a.semanticScore) return b.semanticScore - a.semanticScore;
+          if ((b.semanticRankingWeight || 0) !== (a.semanticRankingWeight || 0)) {
+            return (b.semanticRankingWeight || 0) - (a.semanticRankingWeight || 0);
+          }
+          if (a.recordId && b.recordId) return rung2Utf8Compare(a.recordId, b.recordId);
+        } else if (aSemantic !== bSemantic) {
+          /* Pagefind's lexical cards include declared aliases; those direct
+           * results precede the semantic fallback when their direct-match
+           * strength is otherwise tied. */
+          return aSemantic ? 1 : -1;
+        }
         return (a.relRank || 0) - (b.relRank || 0);
       });
       cards.forEach(function (card) {
-        if (seenHref[card.href]) return;
+        if (seenHref[card.href] || (card.recordId && seenRecordId[card.recordId])) return;
         seenHref[card.href] = true;
+        if (card.recordId) seenRecordId[card.recordId] = true;
         ordered.push(card);
       });
       navMatches(query).forEach(function (entry) {
-        if (seenHref[entry.href]) return;
+        if (seenHref[entry.href] || (entry.recordId && seenRecordId[entry.recordId])) return;
         seenHref[entry.href] = true;
+        if (entry.recordId) seenRecordId[entry.recordId] = true;
         ordered.push(entry);
       });
       if (handoffRow) ordered.push(fullSearchEntry(query));
