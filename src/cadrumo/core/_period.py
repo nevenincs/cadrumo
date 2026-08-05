@@ -307,6 +307,14 @@ def registry_period_kind(token: str) -> PeriodKind:
     :attr:`PeriodKind.EXTENDED`, matching what a :class:`Period` reported for them
     while one validator still served both boundaries.
 
+    This lives here, rather than in the one registry validator that calls it,
+    because :func:`_period_kind_for_code` is the single cadence authority
+    :attr:`Period.kind` also reads. Registry ownership would force either a
+    cross-package import of that private helper or a second token-to-cadence map —
+    a duplicate authority for "what cadence is this token". One narrow public
+    function for one narrow caller is the cheaper of the two, and it names the
+    vocabulary it speaks now that two vocabularies exist.
+
     Raises:
         ValueError: When ``token`` is not an accepted registry period code.
     """

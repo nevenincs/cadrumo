@@ -403,6 +403,11 @@ def iva_compensation_state_from_registry_observation(
             context={"modelo": observation.modelo},
         )
     _validate_registry_observation_casilla_ids(observation)
+    # The fallback builds a typed filing period from a deserialised registry token,
+    # which refuses an administrative or symbolic-selector token. Nothing here is
+    # safe by type: it is safe because the Modelo 303 guard above already rejected
+    # every modelo whose registry periods carry those tokens. Widening that guard
+    # to another modelo makes this a reachable refusal.
     period = observation.filing_period or Period.from_year_and_code(observation.filing_year, observation.period)
     key = source_observation_key or f"303:{observation.filing_year}:{period.registry_token}:{expediente_id}"
     return _iva_compensation_state_from_values(
