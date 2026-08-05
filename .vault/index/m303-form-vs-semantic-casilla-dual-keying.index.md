@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-form-vs-semantic-casilla-dual-keying'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:ef46239dff77df1638403451730fedb10ed1bb6e94bb997a3e8633f933a0e29a'
 related:

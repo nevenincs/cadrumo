@@ -5,32 +5,13 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:fb1a325cbb533c1cf3879bae11d956eb832ff9ca042cf5ccc855faf5e8a461c4'
+body_hash: 'sha256:48608208a67700024952afdd8e527f69e35aa702dec08da2da96624e3a45bcf3'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
   - "[[2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research]]"
   - "[[2026-08-05-user-docs-search-consolidation-source-contract-reference]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace user-docs-search-consolidation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backticks: `src/module.py`. -->
 
 # `user-docs-search-consolidation` audit: `Rung-2 evaluator source review`
 

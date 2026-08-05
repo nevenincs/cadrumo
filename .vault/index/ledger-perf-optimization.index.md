@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-perf-optimization'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:55f12b4dcf25f3ee4590ec7862794c30138ce0be5abe2d1fd673b664441e4c83'
 related:

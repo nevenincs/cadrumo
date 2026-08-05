@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-hardening-close'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:ffcc07e37b33c12a8242d1fecb15045e12c9ad1e9e65ae29f23d9216839974e0'
 related:

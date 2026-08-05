@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-construct-pressure'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:c25f59e5d42dffea9f32f477333d6daada0ec57053861965f7a01bc16b48da48'
 related:

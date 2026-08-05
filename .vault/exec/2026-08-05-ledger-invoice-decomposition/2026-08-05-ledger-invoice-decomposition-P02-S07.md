@@ -5,44 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:fe7efa2e1e915e5041bf7c5c373caa0b63391c4e861dab0b5df82600d2d2b24f'
+body_hash: 'sha256:33c79dde1a3859f048ff75365677ead72df160d7707e0387f5563d206c09b37d'
 step_id: 'S07'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ledger-invoice-decomposition with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S07 and 2026-08-05-ledger-invoice-decomposition-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Declare the per-category component-expectation table as registry-grounded data derived from the existing cuota-less frozensets, never a parallel list and ## Scope
-
-- `src/cadrumo/domain/iva/_schema.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Declare the per-category component-expectation table as registry-grounded data derived from the existing cuota-less frozensets, never a parallel list
 
@@ -52,10 +19,12 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+Coordinator adjudication (invoice-adr, 2026-08-05): the Step's work was executed by the `iva-component-axis` / `income-grounding` lanes and landed before this record was written; the author is weekly-limited, so this body is written from verification at HEAD rather than by the executing agent. The coordinator (team-lead) independently verified the work DONE at HEAD; this record closes the honest gap between the landed work and its empty scaffold.
 
 ## Outcome
 
+DONE, landed at `8585c78fd3` (table declared, 50 tests green at landing) and re-keyed on the (category, invoice kind) pair at `1e61fc0d74` per the ADR amendment. Verified at HEAD by one targeted probe: the component-expectation table lives in `src/cadrumo/domain/iva/_components.py` as one declared row per (IvaCategory, kind) pair with per-row `legal_refs`, and the cuota-less set is DERIVED from the table's cuota columns and asserted equal to the canonical `CUOTA_LESS_M303_IVA_CATEGORIES` frozenset by an import-time divergence guard (`_components.py:1043`) — no parallel list exists, which is the Step's load-bearing requirement.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Scope divergence, recorded honestly: the plan row sited the work in `src/cadrumo/domain/iva/_schema.py`; the implementation landed in the sibling module `src/cadrumo/domain/iva/_components.py` (the frozensets stay in `_schema.py`, the table derives from them across the module boundary). Same package, same facade, requirement met; the file split follows the module-size convention. A post-landing review finding (carve-out-guard-lost, HIGH) on the later `69b72040b5` upgrade of this table's grounding tiers is tracked separately and does not reopen this Step.

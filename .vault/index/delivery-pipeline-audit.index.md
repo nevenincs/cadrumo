@@ -3,15 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#delivery-pipeline-audit'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:778cd222c589f92024f7346bd6f404c1bb5327b90f7a962d74027ce632203240'
+body_hash: 'sha256:324a550d4a99850db39e84ccbe020d77b19e7f44fcdf59d93b5b5745e0e31412'
 related:
   - '[[2026-07-24-delivery-pipeline-audit-adr]]'
   - '[[2026-07-24-delivery-pipeline-audit-audit]]'
   - '[[2026-07-25-delivery-pipeline-audit-S01]]'
-  - '[[2026-07-25-delivery-pipeline-audit-S02]]'
   - '[[2026-07-25-delivery-pipeline-audit-S03]]'
   - '[[2026-07-25-delivery-pipeline-audit-S04]]'
   - '[[2026-07-25-delivery-pipeline-audit-S05]]'
@@ -42,7 +41,6 @@ Auto-generated index of all documents tagged with `#delivery-pipeline-audit`.
 - `2026-07-25-delivery-pipeline-audit-S06` - D3 gate, assert the Development Status classifier is identical across the three pyprojects so the next posture change is a one-fact edit plus gate rather than a silent fork
 - `2026-07-25-delivery-pipeline-audit-S07` - D4, derive shipped-manifest author identity from PRODUCT_IDENTITY while preserving the pyproject legal author as a distinct fact, since the two are different claims and collapsing them loses the legal one
 - `2026-07-25-delivery-pipeline-audit-S01` - D1, hold pypi-upload.yml under its narrow written charter naming the tracked deletion issue in its header comment, adding no new capability in the interim and keeping it behind CADRUMO_PUBLISH_ENABLED, tracked as GitHub issue 618
-- `2026-07-25-delivery-pipeline-audit-S02` - D1 trigger, delete pypi-upload.yml with its conformance test and its three PyPI Trusted Publishing registrations upon the first successful publish-release Gate 3 PyPI publication, blocked until that publication happens
 
 ### plan
 

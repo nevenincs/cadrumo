@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli-cascade-supersession'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:a9b08230bb0084d5b914a1c31169cd4ee06eacd122d090063c56dc4b704c9433'
 related:

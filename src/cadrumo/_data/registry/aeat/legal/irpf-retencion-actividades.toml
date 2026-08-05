@@ -7,19 +7,30 @@
 # Python literals in feature modules.
 #
 # Cross-checked against the live BOE consolidated text of RD 439/2007 art. 95
-# on 2026-08-05 (https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a95):
+# on 2026-08-05 via the BOE Legislacion Consolidada open-data API (bloque a95,
+# full amendment history BOE-A-2007-6820 -> BOE-A-2014-12730 -> BOE-A-2015-7770
+# -> BOE-A-2018-17601 -> BOE-A-2023-2023, vigente desde 2023-01-26):
 # "se aplicara el tipo de retencion del 15 por ciento sobre los ingresos
 # integros satisfechos" and "el tipo de retencion sera del 7 por ciento en el
-# periodo impositivo de inicio de actividades y en los dos siguientes".
+# periodo impositivo de inicio de actividades y en los dos siguientes". Rates
+# confirmed byte-identical across every tracked redaccion since 2007.
 #
-# KNOWN CORPUS STALENESS (recorded, not silently accepted): the bundled excerpt
-# corpus/normatives/html/rd-439-2007-art-95.html is an older consolidation of
-# the same article. The two rate figures below are byte-identical in both, but
-# the bundled excerpt still names the "Sociedad Estatal Loterias y Apuestas del
-# Estado" and carries a letra d) for IAE groups 851-869, where the live
-# consolidated text names the "entidad publica empresarial Loterias y Apuestas
-# del Estado", omits that letra d), and adds the halving rule for rendimientos
-# entitled to the deduccion of LIRPF art. 68.4. Only the 15/7 rates are
+# CORPUS CORRECTED 2026-08-05 (independent re-verification superseded an
+# earlier 2026-08-05 staleness note whose three claims did not survive an
+# independent fetch): the bundled excerpt was rewritten to the current
+# (2023-01-26-onward) redaccion. The earlier note claimed live text (a) names
+# the "entidad publica empresarial Loterias y Apuestas del Estado", (b) omits
+# letra d), and (c) adds a halving rule -- none of that held under direct
+# retrieval. "Entidad publica empresarial" is the ORIGINAL 2007 wording only;
+# every redaccion since 2015 (including current) reads "Sociedad Estatal
+# Loterias y Apuestas del Estado", which the prior excerpt already had
+# correctly. Letra d) is NOT omitted from current text -- it did not exist at
+# all before RD 31/2023, which introduced it in one amendment together with an
+# artistas/audiovisual extension (15.000-euro / 75%-of-total threshold) the
+# prior excerpt's letra d) lacked. There is no "halving" rule in current text:
+# every redaccion since 2007 has carried SOME art.-68.4 reduction clause (a
+# halving through RD 633/2015, a 60% reduction from RD 1461/2018 onward) --
+# the prior excerpt had NONE of it, in any form. Only the 15/7 rates are
 # grounded here; the collectives list is not consumed by any parameter.
 
 [parameters."rirpf-art-95:retencion-actividades-profesionales-general"]

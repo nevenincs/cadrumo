@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#all-profile-reset'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:1344c03ad758d3db0fb9cc4906d6bb07604d6a579ab309fac8aaa79beea3fb36'
 related:

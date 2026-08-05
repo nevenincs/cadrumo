@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#declaracion-real-render-verification'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4eadf8fa99a75c40a8794586e2a001a065a4ed074af4c5fa536d7cfa65653fdb'
+body_hash: 'sha256:389a1b9e3e7a29714b79380859b024d638ece61b35d8eb93f856dba48d25c579'
 related:
   - '[[2026-07-26-declaracion-real-render-verification-P01-S01]]'
   - '[[2026-07-26-declaracion-real-render-verification-P01-S02]]'
@@ -52,6 +52,7 @@ related:
   - '[[2026-07-27-declaracion-real-render-verification-language-partition-attack-and-ejercicio-scoping-audit]]'
   - '[[2026-07-27-declaracion-real-render-verification-ledger-safe-fix-mechanisms-for-modelo-100-audit]]'
   - '[[2026-07-27-declaracion-real-render-verification-modelo-100-manifest-reconciliation-gap-audit]]'
+  - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
 ---
 
 # `declaracion-real-render-verification` feature index
@@ -115,3 +116,7 @@ Auto-generated index of all documents tagged with `#declaracion-real-render-veri
 ### plan
 
 - `2026-07-26-declaracion-real-render-verification-plan` - `declaracion-real-render-verification` plan
+
+### research
+
+- `2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research` - `declaracion-real-render-verification` research: `specimen corpus distribution measurements`

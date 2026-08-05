@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-hardening-next-work'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:41c7e01605f0f469e3581811dcac687540241d518046e15c37ed011e4aace7b5'
 related:

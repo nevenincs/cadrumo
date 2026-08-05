@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-structural-localization'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:9a029d918447167db7a32d9985a2a0ffea4628e003988914f7340c1fa189544d'
 related:

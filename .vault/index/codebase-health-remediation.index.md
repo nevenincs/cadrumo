@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#codebase-health-remediation'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:4900f1d0b56e57d25e098c141314c13e13c854f5022535ee57fe7391803dcccb'
 related:

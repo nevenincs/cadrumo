@@ -124,4 +124,3 @@ That warning is why this correction matters more than tidiness. The plan row was
 The same drift is corrected in the plan's own prose in the same change: a sentence there still said this Step was awaiting review "which is why the row is still open", while the row had been checked.
 
 Surfaced by the campaign-close honesty review, which was looking for exactly this class — a document that outlives the correction that retired its premise.
-

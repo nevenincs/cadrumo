@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#registry-localization-backend'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:5569a965bb9a723242669060c360f90a603eeacf1948eb70fb645f977f54ea6f'
+body_hash: 'sha256:8064b26be00dfda8b36bd5fef98e28711f440d283ac480b10f18e24ad52acd0a'
 related:
   - '[[2026-06-08-registry-localization-backend-P01-S01]]'
   - '[[2026-06-08-registry-localization-backend-P01-S02]]'
@@ -53,7 +53,7 @@ Auto-generated index of all documents tagged with `#registry-localization-backen
 
 ### adr
 
-- `2026-06-08-registry-localization-backend-adr` - `registry-localization-backend` adr: `schema localization support architecture` | (**status:** `accepted`)
+- `2026-06-08-registry-localization-backend-adr` - `registry-localization-backend` adr: `schema localization support architecture` | (**status:** `superseded`)
 
 ### audit
 

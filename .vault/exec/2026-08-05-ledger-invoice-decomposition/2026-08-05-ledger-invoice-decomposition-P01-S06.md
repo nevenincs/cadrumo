@@ -5,44 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:081ad7bef449e6d0bef6a9f4347f17783ebd5b4752871f9ca5022717780c82e1'
+body_hash: 'sha256:df9455be6854390b53642b497e1e6b980080f85743eee7faeca62037662febbe'
 step_id: 'S06'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ledger-invoice-decomposition with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S06 and 2026-08-05-ledger-invoice-decomposition-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Stop taxable_base_sum coercing a missing base to zero, routing base-less rows into the ungrounded class and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/_ledger_bindings.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Stop taxable_base_sum coercing a missing base to zero, routing base-less rows into the ungrounded class
 

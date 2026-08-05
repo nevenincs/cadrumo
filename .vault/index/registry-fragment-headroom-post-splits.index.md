@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-fragment-headroom-post-splits'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:89b1699e4d70f0345c9c154dea3410caecb86884e1d19c2dc87aefa825855e23'
 related:

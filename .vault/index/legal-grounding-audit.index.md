@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#legal-grounding-audit'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:9030db8aae9c71e2268eef0096e5765087beea38b299a2eb4bca4f69560bb0a3'
 related:

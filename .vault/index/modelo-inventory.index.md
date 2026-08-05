@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-inventory'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:849249fa46c30217db483b839212ba8c5ffbca7c38c92b44c82244af818a3d0a'
 related:

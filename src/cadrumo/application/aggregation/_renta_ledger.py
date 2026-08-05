@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodKind
+from ...core import Modelo, Period, PeriodKind, elided_prose
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
@@ -132,6 +132,15 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     REGION_UNDECLARED_FOR_OVERRIDE = "region_undeclared_for_override"
 
 
+#: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
+#:
+#: These issues explain why a ledger row was excluded, so refusing one over its
+#: length would drop the explanation for the exclusion AND fail the aggregation
+#: that produced it -- a silent under-declaration dressed as a validation error.
+#: Shortening the sentence is strictly the lesser loss.
+_IssueDetail = elided_prose(512)
+
+
 class RentaLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating ledger rows."""
 
@@ -141,7 +150,7 @@ class RentaLedgerAggregationIssue(BaseModel):
     purchase_invoice_evidence_id: str | None = Field(default=None, min_length=1, max_length=128)
     category_id: str | None = Field(default=None, min_length=1, max_length=128)
     reason: RentaLedgerAggregationIssueReason
-    detail: str = Field(min_length=1, max_length=512)
+    detail: _IssueDetail
 
 
 class _PurchaseInvoiceEvidencePayload(BaseModel):
@@ -519,7 +528,7 @@ def _classify_renta_transaction(
         return _renta_transaction_issue(
             transaction,
             RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
-            _bounded_detail(str(exc)),
+            str(exc),
         )
     if not resolved_period.contains(fact.filing_date):
         return _renta_transaction_issue(
@@ -544,7 +553,7 @@ def _classify_renta_transaction(
         return _renta_transaction_issue(
             transaction,
             RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
-            _bounded_detail(str(exc)),
+            str(exc),
         )
 
 
@@ -712,12 +721,6 @@ def _casilla_aggregation(
         casilla_values=totals,
         provenance=tuple(provenance_rows),
     )
-
-
-def _bounded_detail(detail: str) -> str:
-    if len(detail) <= 512:
-        return detail
-    return f"{detail[:509]}..."
 
 
 __all__ = [

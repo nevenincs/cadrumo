@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#manual-practico'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:06cf777bd58bd0493dabe591bd95de0fbfcc3795f5fc2cf990f3b61ab78808c5'
 related:

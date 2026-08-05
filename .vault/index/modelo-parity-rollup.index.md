@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b83a17adf43d8aeb479c6ab8b7b974184ae72986b63ead03f92f88ecea2a63a'
+body_hash: 'sha256:fb4d6711d30c5e17a20a582df4fa18fa43f139a4485458cb35e2c5ce1ee71202'
 related:
   - '[[2026-08-05-modelo-parity-rollup-W01-P03-S01]]'
   - '[[2026-08-05-modelo-parity-rollup-W01-P03-S02]]'
@@ -40,6 +40,7 @@ related:
   - '[[2026-08-05-modelo-parity-rollup-W06-P13-S29]]'
   - '[[2026-08-05-modelo-parity-rollup-W06-P13-S30]]'
   - '[[2026-08-05-modelo-parity-rollup-W06-P13-S31]]'
+  - '[[2026-08-05-modelo-parity-rollup-W06-P13-S32]]'
   - '[[2026-08-05-modelo-parity-rollup-denominator-research]]'
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
   - '[[2026-08-05-modelo-parity-rollup-m100-2021-audit]]'
@@ -68,6 +69,7 @@ related:
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-source-contract-research]]'
   - '[[2026-08-05-modelo-parity-rollup-s17-0613-cap-rounding-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s17-fifth-sol-ruling-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research]]'
   - '[[2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-tranche-review-audit]]'
@@ -105,6 +107,7 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 - `2026-08-05-modelo-parity-rollup-s16-s18-fourth-sol-boundary-audit` - `modelo-parity-rollup` audit: `S16 S17 S18 fourth SOL authorization boundary`
 - `2026-08-05-modelo-parity-rollup-s16-s18-oracle-code-review-audit` - `modelo-parity-rollup` audit: `S16 S18 oracle code review`
 - `2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit` - `modelo-parity-rollup` audit: `S16 S18 third SOL adjudication`
+- `2026-08-05-modelo-parity-rollup-s17-fifth-sol-ruling-audit` - `modelo-parity-rollup` audit: `S17 fifth SOL ruling`
 - `2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit` - `modelo-parity-rollup` audit: `Modelo parity rollup semantic decision boundary`
 - `2026-08-05-modelo-parity-rollup-tranche-review-audit` - `modelo-parity-rollup` audit: `Luna Max parity tranche code review`
 
@@ -142,6 +145,7 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 - `2026-08-05-modelo-parity-rollup-W06-P13-S29` - Draft the SOL-bounded S16 rental source-contract research and a proposed ADR without changing fincas models, persistence, source readiness, or M100 0150 wiring
 - `2026-08-05-modelo-parity-rollup-W06-P13-S30` - Acquire an authoritative independent 2025 0613 cap and rounding oracle matrix, including per-child effective spend and profile-to-calculate evidence without changing 2025 schema or formula wiring
 - `2026-08-05-modelo-parity-rollup-W06-P13-S31` - Ground the annual shared-engine 2025 per-activity path for M100 1481 and produce only an independent oracle or research artifact without adding an M131 casilla-01 relation
+- `2026-08-05-modelo-parity-rollup-W06-P13-S32` - Acquire the complete authoritative 2025 0613 cap and rounding oracle matrix and return it to SOL before any producer promotion
 
 ### plan
 

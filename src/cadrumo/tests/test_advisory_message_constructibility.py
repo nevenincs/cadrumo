@@ -283,21 +283,27 @@ def test_every_advisory_message_is_constructible(advisory_builders: tuple[_Build
 #: Builders whose prose already leaves too little room for the data they
 #: interpolate, recorded so the ratchet below can only shrink. Each is a real
 #: variable-length exposure found when this gate first ran, not an exemption:
-#: they are listed because fixing them means editing four other campaigns'
-#: modules, and a gate held back until someone does that protects nothing in
-#: the meantime.
+#: they are listed because fixing them means editing another campaign's module,
+#: and a gate held back until someone does that protects nothing in the
+#: meantime.
 #:
-#: The two ``CalculationSourceDiagnostic`` entries cannot crash -- that model
-#: elides on overflow -- so they truncate silently instead, losing whichever
-#: interpolated term falls off the end. The two ``ModeloVerificationFinding``
-#: entries have no such validator and RAISE, which makes them the same latent
-#: crash this campaign already hit once; the 8-term one is the sharpest.
+#: Both remaining entries build ``CalculationSourceDiagnostic``, which elides on
+#: overflow, so neither can crash a filing; they truncate silently instead,
+#: losing whichever interpolated term falls off the end. That is a
+#: message-quality defect rather than a safety one -- shorten the prose to
+#: retire them.
+#:
+#: The two ``ModeloVerificationFinding`` entries this list used to carry were
+#: the sharp case: that model had no eliding validator, so its cramped builders
+#: RAISED out of ``verify``. Both were measured against the data they actually
+#: interpolate -- the 8-term one could reach roughly 190 characters against 176
+#: of headroom, so it was a live crash rather than a theoretical one -- and both
+#: had their prose shortened until the data fits with room to spare. The model
+#: now elides as well, so the shape cannot return silently.
 _KNOWN_CRAMPED_BUILDERS: frozenset[str] = frozenset(
     {
         "cadrumo/application/modelo/_prior_payment_advisory.py:184",
         "cadrumo/application/modelo/_prorrata_regularizacion_advisory.py:333",
-        "cadrumo/application/modelo/_verification_cross_period.py:442",
-        "cadrumo/application/modelo/_verification_cross_period.py:599",
     },
 )
 

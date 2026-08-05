@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-resolver-contract-unification'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:e5c20cd4931499eca02f262159edc9f536ab6dac8ad3bb32c88ef652d5b1d32d'
 related:

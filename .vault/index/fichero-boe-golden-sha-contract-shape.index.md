@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fichero-boe-golden-sha-contract-shape'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:3e51ca85e530c9d3773c97666e82e375d87c243ce8beebec8c65ac769d290d17'
 related:

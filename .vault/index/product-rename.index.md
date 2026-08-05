@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#product-rename'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:11ae50e2dbd70d9b3894c46e32118c300c6fc5ecf2af514abc8cfae654269f25'
 related:

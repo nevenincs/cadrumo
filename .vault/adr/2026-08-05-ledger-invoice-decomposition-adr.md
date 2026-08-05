@@ -5,11 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:230b0c0b3309f2f54a888c3cce24a81b41b9cfa9c0da63302df8f65b954ca09d'
+body_hash: 'sha256:2dc7ad27bc0edda2e98c3216bb51ddd0679d73744256511faea2caac9dff9689'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
+  - '[[2026-08-05-ledger-invoice-decomposition-research]]'
 ---
-
 # `ledger-invoice-decomposition` adr: `Invoice decomposition and income grounding` | (**status:** `proposed`)
 
 ## Problem Statement
@@ -314,9 +314,17 @@ premios — the scheme axis the retenciones store already names) are authored wi
 same discipline, each figure live-checked at authoring time; the IRNR 24%/19% family
 stays governed by the M210 ADRs. Rates are never feature-module literals and never
 LLM-emitted. IVA rates continue to resolve through the existing registry rate lookup
-(`2026-06-04-llm-ledger-classification-adr`); the rich-invoice `IvaRate` enum's
-known gaps (no 5% member) are reconciled against that registry table so an invoice
-can declare every rate the law has carried in the served window.
+(`2026-06-04-llm-ledger-classification-adr`). CORRECTED 2026-08-05 (coordinator
+measurement at HEAD): the rich-invoice `IvaRate` enum and the registry rate table
+ALREADY AGREE exactly — both declare {0, 4, 10, 21} for the served window
+(registry ES coverage starts 2024-01-01), and the transient 2022-2024 5% rate is
+INTENTIONALLY absent from both sides per the enum's own docstring, to be added only
+in sync with a registry rate entry if pre-2025 ingestion ever lands. The ruling is
+therefore a PARITY GATE only (enum members ≡ registry-declared rate set for the
+served window, drift in either direction fails loudly), NOT a new member; adding
+`RATE_5` unilaterally would create a member the registry cannot resolve. Whether the
+registry's pre-2024 rate coverage window should be extended for historic ingestion
+is an operator scope question (see Consequences), not an enum reconciliation.
 
 **D6 — territory and the income measure (Site 2).** The per-family fact vocabularies
 stay (resident M100/M130 unfiltered per the source-jurisdiction axis; M151 ES-gated;
@@ -344,6 +352,40 @@ uses it in either family, so the rename is a zero-registry-impact deletion-renam
 no-legacy-compatibility — sweeping the one stale M130 fragment comment — while
 Modelo 210's accurately-named `gross_income_sum` (summing the declared classification
 amount) is expressly out of scope.
+
+**D9 — canonical IVA rate mechanism (operator-raised, ruled 2026-08-05).** IVA rates
+are law-per-window DATA, never code constants: they depend on the item's tier, the
+member state, and the governing law effective at the operation date (transient
+windows exist — the 2022-2024 5% and 0% measures are the standing example). The
+canonical mechanism ALREADY EXISTS and is hereby ratified as the sole one
+(MEASURED): the date-windowed registry rate table (`registry/aeat/iva/rates.toml`;
+rows keyed member_state + kind + pct + effective window, each row carrying
+`legal_refs` — LIVA art. 90 for general, art. 91 for the reduced tiers) → typed
+`load_iva_rate_table()` → the single `lookup_rate(member_state, kind, on_date)`
+authority, resolved at the operation's devengo date. Rates derive from BOE-published
+law per window, authored into the registry with live-verified figures per
+`registry-calculation-legal-grounding`; a transient rate is a new WINDOWED ROW citing
+the RDL/ley that set it — never an edit to a constant, never a feature-module
+literal. Two-level model, made explicit: the TIER KIND (`IvaRateKind` — general /
+reduced / super-reduced / zero, plus the exempt/not-subject treatment markers) is
+the stable legal concept and stays a closed enum; the PERCENTAGE is time-varying
+registry data and must never be a hardcoded axis. Consequences for invoice records
+(rich, slim, AND the expense-invoice evidence records alike): the declared substrate
+converges on tier kind + operation date, with the numeric percentage
+registry-resolved at that date; a declared numeric that does not equal the resolved
+one is an error state under D1/D2 — IVA rates, unlike retención rates, ARE closed by
+law per window, so divergence means a wrong kind, a wrong date, or an erroneous
+invoice, and the row joins the excluded-but-visible surface for operator resolution,
+never silent acceptance and never silent correction. The rich-invoice numeric
+`IvaRate` enum is accordingly a transitional projection of the served window: it
+MUST NOT grow hardcoded members (the parity gate of item 12 holds it in lockstep
+with the registry), and its retirement in favour of kind + resolved percentage is
+plan-level work gated on operator question 5 (coverage window). Out of scope,
+stated honestly: the ITEM-to-tier assignment (which goods and services sit in which
+tier per window — the LIVA art. 91 lists and the transient RDLs that move items
+between tiers) remains a declared category-selection judgement (operator, or
+LLM-selection under the closed-list guard); authoring per-window item lists as a
+registry axis would be its own decision with its own corpus ingest.
 
 **Named change list for the implementation plan.**
 
@@ -382,8 +424,17 @@ amount) is expressly out of scope.
 11. Received-invoice retención routes into the existing per-perceptor retención store
     behind the `retenciones_aggregation` family (M111/M190); the linkage mechanism is
     plan-level design, the prohibition on a second retención path is not.
-12. Reconcile the rich-invoice `IvaRate` enum against the registry rate table (the
-    known 5% gap and any other rate the law carried in the served window).
+12. `IvaRate`-vs-registry parity GATE only (CORRECTED: the sets already agree at
+    {0, 4, 10, 21}; the 5% "gap" premise was wrong — `RATE_5` stays deliberately
+    absent until a registry rate entry for pre-2025 ingestion exists; no enum
+    member is added and no pre-2024 rate history is backfilled under this item).
+    LANDED: `test_rate_parity.py`, commit stamped P02.S19.
+13. Per D9: converge invoice records (rich, slim, expense-evidence) on declaring
+    tier kind + operation date with the percentage resolved via `lookup_rate` at
+    devengo date; declared-numeric divergence joins the excluded-but-visible
+    surface; retire the numeric `IvaRate` members once operator question 5
+    (coverage window) is answered. Direction ruled here; convergence is
+    plan-level.
 
 ## Rationale
 
@@ -461,8 +512,18 @@ amount) is expressly out of scope.
      The registry rate parameters (D5) need only a minimal
      professional/inicio-de-actividad axis; the full enum grounding was deferred to
      its own decision by `2026-06-04-llm-ledger-classification-adr` and remains so.
-  4. The REASONED foreign-payer no-retención expectation (D4) needs confirmation
-     against LIRPF art. 99 / RIRPF art. 76 once bundled; if the operator knows of
-     counter-cases (foreign payers with Spanish PE among their counterparties), the
-     Axis-A expectation for intra-community/export categories should be "possible"
-     rather than "not-expected".
+  4. The foreign-payer no-retención expectation (D4): the live RIRPF art. 76 text
+     (retrieved 2026-08-05) confirms the "not-expected" default with two
+     load-bearing carve-outs — non-residents WITH permanent establishment are
+     obligados a retener, and non-residents without PE are obligated for
+     rendimientos del trabajo and certain TRLIRNR art. 24.2 deductible-expense
+     income. The carve-outs are recorded as a `scope_note` (a default is not a
+     prohibition); the operator confirms whether counter-cases among their
+     counterparties warrant "possible" rather than "not-expected" for the
+     intra-community/export categories.
+  5. Registry IVA-rate coverage window: ES rate rows start 2024-01-01, so a
+     pre-2024 invoice resolves NO rate at all (not merely the transient 5%). Is
+     historic (pre-2024) ingestion in scope? If yes, the rate table — and, for
+     2022-2024 rows, the `IvaRate` enum in sync with it — must be extended
+     backward with live-verified figures; until then nothing backfills rate
+     history, and the parity gate (item 12) holds the two sides equal.

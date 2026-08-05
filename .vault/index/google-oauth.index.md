@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#google-oauth'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:5effe9339b43ec57447726420e13c7fcc3228fe6cef303b13721c0a24879771e'
 related:

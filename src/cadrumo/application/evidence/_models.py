@@ -28,7 +28,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, elided_prose
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -94,6 +94,15 @@ class VerificationCheck(StrEnum):
     OBJECT_REACHABILITY = "object_reachability"
 
 
+#: The bundle-check ``detail`` annotation: elides rather than refusing.
+#:
+#: A failed check explains itself by interpolating the object ids it could not
+#: reach. Refusing the RESULT over the length of that explanation would lose the
+#: verification outcome as well as its reason. Empty is the documented default
+#: for a check that passed with nothing to add.
+_CheckDetail = elided_prose(500, min_length=0)
+
+
 class EvidenceBundleCheckResult(BaseModel):
     """One :class:`VerificationCheck` outcome from a bundle verification pass.
 
@@ -106,7 +115,7 @@ class EvidenceBundleCheckResult(BaseModel):
 
     check: VerificationCheck
     passed: bool
-    detail: str = Field(default="", max_length=500)
+    detail: _CheckDetail = ""
 
 
 class EvidenceRecordRef(BaseModel):

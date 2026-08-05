@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-303-formulas'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:48e0bc1823c3dcf11a883943ab74888cea0893e0b4a0c2f379b82aa812658c7c'
 related:

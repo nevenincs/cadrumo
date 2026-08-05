@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#config-cli-profile-surface'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:9428358b10155dce3d9e749015930d7180bc29c13787b39007e4ee1e728c5659'
 related:

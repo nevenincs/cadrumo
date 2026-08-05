@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-autoconsumo-promotor'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:3be9e122e220267f3846cf57e0e68eeaf2914394f03e217cd412c845831778f4'
 related:

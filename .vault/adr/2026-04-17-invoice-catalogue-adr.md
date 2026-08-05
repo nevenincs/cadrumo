@@ -3,8 +3,8 @@ tags:
   - "#adr"
   - "#invoice-catalogue"
 date: "2026-04-17"
-modified: '2026-07-17'
-body_hash: 'sha256:c3a90c5d19b5845e673cd61be964effed14854954eac5a106a4020816a6f7fd3'
+modified: '2026-08-05'
+body_hash: 'sha256:33fca0f8f20434ad5b40467d843d6064fd77217d891b3aeaf1c1fc52cd268b4d'
 related:
   - "[[2026-04-17-invoice-catalogue-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"
@@ -356,12 +356,26 @@ file. This mirrors the stance taken by `#74`.
 
 ### Known IVA rate gaps
 
-`IvaRate` captures the five canonical Spanish rates in force for 2026
-(`RATE_0`, `RATE_4`, `RATE_10`, `RATE_21`) plus `EXEMPT` and
-`NOT_SUBJECT`. The transient `RATE_5` used in 2022-2024 Spanish energy
-/ food regulations is **intentionally omitted** — its window is closed
-and a historical-rate enum would expand every VAT downstream consumer.
-If a future issue ingests pre-2025 data, the enum can be extended.
+`IvaRate` captures the four canonical Spanish rate tiers in force for the
+registry's served window (`RATE_0`, `RATE_4`, `RATE_10`, `RATE_21`) plus
+`EXEMPT` and `NOT_SUBJECT`, which are treatment markers, not rate tiers. The
+transient `RATE_5` used in 2022-2024 Spanish energy / food regulations is
+**intentionally omitted** — its window is closed and a historical-rate enum
+would expand every VAT downstream consumer.
+
+Correction note (2026-08-05): this section's original heading and wording were
+mis-relayed downstream as "the enum has a known 5% gap to fix". Measured at
+HEAD: the enum and the registry rate table AGREE exactly — both declare
+{0, 4, 10, 21} for the served window (registry ES coverage starts 2024-01-01)
+— so there is no gap on either side, and the omission is not a defect. The
+original text also said "five canonical rates" while listing four; the count is
+four. Extension condition sharpened: if a future issue ingests pre-2025 data,
+`RATE_5` may be added ONLY in sync with a corresponding registry rate entry —
+never unilaterally, since an enum member the registry cannot resolve is real
+drift. A parity gate holding the enum's numeric members equal to the
+registry-declared rate set is ruled by `2026-08-05-ledger-invoice-decomposition-adr`
+(change-list item 12), which also records the pre-2024 coverage-window question
+as an operator decision.
 
 ## Consequences
 

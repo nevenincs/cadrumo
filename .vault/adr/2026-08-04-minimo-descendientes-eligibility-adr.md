@@ -11,8 +11,8 @@ related:
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
   - "[[2026-05-27-descendant-profile-axis-adr]]"
   - "[[2026-08-04-profile-derived-selectors-research]]"
+  - '[[2026-08-05-minimo-descendientes-eligibility-diagnostic-message-headroom-census-research]]'
 ---
-
 # `minimo-descendientes-eligibility` adr: `Complete the Art. 58/61 LIRPF eligibility predicate before the derived-aggregate override closes` | (**status:** `accepted`)
 
 ## Problem Statement

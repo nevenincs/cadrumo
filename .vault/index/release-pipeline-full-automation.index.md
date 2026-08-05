@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#release-pipeline-full-automation'
-date: '2026-08-02'
-modified: '2026-08-02'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d18cf32b63f93528d9a36b18895ca9470d5cd714d9cb9750f2b5656333ebab82'
+body_hash: 'sha256:42d98ac2ec12d6d6c59e212ac405d8d27421d8d8cf9ecdfeb41dacc35d9343c6'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -64,6 +64,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
   - '[[2026-08-02-release-pipeline-full-automation-audit]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
+  - '[[2026-08-03-release-orchestrator-rehearsal-handover-audit]]'
 ---
 
 # `release-pipeline-full-automation` feature index
@@ -79,6 +80,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 ### audit
 
 - `2026-08-02-release-pipeline-full-automation-audit` - `release-pipeline-full-automation` audit: `fresh-context honesty review of the full-automation campaign`
+- `2026-08-03-release-orchestrator-rehearsal-handover-audit` - Handover: release-orchestrator rehearsal, 2026-08-03
 
 ### exec
 

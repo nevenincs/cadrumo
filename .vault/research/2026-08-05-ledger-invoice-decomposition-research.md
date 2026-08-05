@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:285f9b73f6d041b61ace966c3b7b16b8ac4624e29e4cd61c095a855489c047d8'
+body_hash: 'sha256:e2961d8c683e650089be2be724aa17778232ded1d19c741a5c12dab27bcf93eb'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-adr]]"
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"

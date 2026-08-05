@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#schema-extraction'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:efb89c0e7dc333297a12f3cc4d674d9b6de9d10147b23ae818fe536633ac42e4'
+body_hash: 'sha256:eac8408fdf05b32c70834ddd2bd00e396bc9eb635a8248d41815912571d3dc86'
 related:
   - '[[2026-04-17-schema-extraction-adr]]'
   - '[[2026-04-17-schema-extraction-plan]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#schema-extraction`.
 
 ### adr
 
-- `2026-04-17-schema-extraction-adr` - Architecture Decision Record: AEAT modelo schema extraction (#9) | (**status:** `accepted`)
+- `2026-04-17-schema-extraction-adr` - Architecture Decision Record: AEAT modelo schema extraction (#9) | (**status:** `superseded`)
 
 ### plan
 

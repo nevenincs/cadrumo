@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2032bcb1a21dd36285aaf06b37254674535ba423b4efea80bf2b147d205792e5'
+body_hash: 'sha256:dc070ba6a485c72989c2dcd086af6d937299e1d5b69b9c848e3af6728e3a49aa'
 step_id: 'S39'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -20,8 +20,6 @@ related:
 - `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Add `death_date` to the canonical descendant record, with a validator refusing
   a death that precedes the birth.
@@ -61,8 +59,6 @@ The menor-3 supplement accrues ON TOP of the flat figure. The flat figure
 replaces the tranche only.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 FOR WHOEVER WIRES THE ASCENDIENTES MINIMO. Article 61 norma 4a fixes both
 figures in ONE sentence: 2.400 EUR for a descendiente and 1.150 EUR for an

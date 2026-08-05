@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-lazy-subcommand-mutation'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:f648ef80c662567151b0ce890570338ce211c0801fd3527a5fe23c9c93f1c942'
 related:

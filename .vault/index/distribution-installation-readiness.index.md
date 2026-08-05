@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#distribution-installation-readiness'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:cacb6fb402f9a4cfb9afd6bfa062a9232c8bfc4a04e6390bcf58aa9aed6c33d7'
+body_hash: 'sha256:adc71ee84ffcc6f1784104a8c8dcdc50c1c2271d1cce71e0e50c44a2ebb73c0e'
 related:
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S01]]'
   - '[[2026-07-15-distribution-installation-readiness-W01-P01-S02]]'
@@ -30,7 +30,6 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W02-P03-S16]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P04-S17]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P04-S18]]'
-  - '[[2026-07-15-distribution-installation-readiness-W02-P04-S19]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S21]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S22]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P05-S23]]'
@@ -41,17 +40,12 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S26]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S27]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S28]]'
-  - '[[2026-07-15-distribution-installation-readiness-W02-P06-S29]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S30]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S67]]'
   - '[[2026-07-15-distribution-installation-readiness-W02-P06-S68]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P07-S31]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P07-S32]]'
   - '[[2026-07-15-distribution-installation-readiness-W03-P07-S33]]'
-  - '[[2026-07-15-distribution-installation-readiness-W03-P08-S35]]'
-  - '[[2026-07-15-distribution-installation-readiness-W03-P08-S36]]'
-  - '[[2026-07-15-distribution-installation-readiness-W03-P08-S39]]'
-  - '[[2026-07-15-distribution-installation-readiness-W03-P08-S69]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S42]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S43]]'
   - '[[2026-07-15-distribution-installation-readiness-W04-P09-S44]]'
@@ -114,7 +108,6 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W02-P03-S16` - Reject Python lane evidence that lacks the installed tax and MCP oracles
 - `2026-07-15-distribution-installation-readiness-W02-P04-S17` - Generate a versioned Scoop manifest with immutable cohort URLs hashes persistence and both command shims
 - `2026-07-15-distribution-installation-readiness-W02-P04-S18` - Prove Scoop generation matches the cohort and exposes both installed commands
-- `2026-07-15-distribution-installation-readiness-W02-P04-S19` - Install from the intended bucket in Windows Sandbox and execute CLI MCP update and persistence behavior
 - `2026-07-15-distribution-installation-readiness-W02-P05-S21` - Generate a pinned Python virtualenv formula and immutable tap snapshot from the cohort
 - `2026-07-15-distribution-installation-readiness-W02-P05-S22` - Prove Homebrew resources hashes Python requirement commands and test block match the cohort
 - `2026-07-15-distribution-installation-readiness-W04-P09-S43` - Remove local release upload authority while retaining diagnostic build recipes
@@ -126,17 +119,12 @@ Auto-generated index of all documents tagged with `#distribution-installation-re
 - `2026-07-15-distribution-installation-readiness-W02-P06-S26` - Byte-compare the complete generated marketplace plugin tree with its source authority
 - `2026-07-15-distribution-installation-readiness-W02-P06-S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call
 - `2026-07-15-distribution-installation-readiness-W02-P06-S28` - Align MCPB platform and Python requirements with the command-bearing distribution
-- `2026-07-15-distribution-installation-readiness-W02-P06-S29` - Bind MCPB contents signing identity and bootstrap to the immutable cohort
 - `2026-07-15-distribution-installation-readiness-W02-P06-S30` - Install MCPB through each claimed client and require the real tax-work tool call
 - `2026-07-15-distribution-installation-readiness-W02-P06-S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple
 - `2026-07-15-distribution-installation-readiness-W02-P06-S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions
 - `2026-07-15-distribution-installation-readiness-W03-P07-S31` - Record cohort source digests runtime platform client command transcript result and destination
 - `2026-07-15-distribution-installation-readiness-W03-P07-S32` - Require a complete same-cohort evidence set in release readiness
 - `2026-07-15-distribution-installation-readiness-W03-P07-S33` - Reject stale skipped ambient mismatched and incomplete release evidence
-- `2026-07-15-distribution-installation-readiness-W03-P08-S35` - Execute the complete cohort and installed tax oracle on the claimed Windows Python row
-- `2026-07-15-distribution-installation-readiness-W03-P08-S36` - Execute the complete cohort and installed tax oracle on the claimed macOS Python row
-- `2026-07-15-distribution-installation-readiness-W03-P08-S39` - Claude Desktop MCPB installed tax oracle
-- `2026-07-15-distribution-installation-readiness-W03-P08-S69` - Capture each real Claude client's harness identifier inventory, MCP server name, English MCP product description, and Spanish MCP product description and compare them with the exact cohort
 - `2026-07-15-distribution-installation-readiness-W04-P09-S42` - Verify cohort hashes evidence completeness and destination versions before any upload
 - `2026-07-15-distribution-installation-readiness-W04-P09-S44` - Prove the publish workflow cannot build regenerate or accept unrelated artifacts
 - `2026-07-15-distribution-installation-readiness-W05-P11-S51` - Define the installation guide information architecture and evidence-backed claim boundaries

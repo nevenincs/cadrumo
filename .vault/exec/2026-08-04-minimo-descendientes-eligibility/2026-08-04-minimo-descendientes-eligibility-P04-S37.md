@@ -5,14 +5,12 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:9fb27b9da33202eae42f764786ad7bfc982aa449a7093b8aed11fb71524bd82a'
+body_hash: 'sha256:20e43401f0114044b6322634ab142a4b2fd5950a35ff2251ff229ad6fce1eb07'
 step_id: 'S37'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Confirm both grounding statements against the bundled manuals for all six
   served years before writing anything.
@@ -50,8 +48,6 @@ axis onto one that enumerates legal bases. The Art. 81.1 grandchild exclusion
 stays a known representability gap served by an advisory.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 THE FREE PROOF WAS ONE-DIRECTIONAL, AND THIS IS THE REUSABLE PART. The Step was
 verified by leaning on the existing whole-enum enumeration, on the reasoning

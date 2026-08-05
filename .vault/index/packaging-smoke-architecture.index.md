@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:80b59f01ec2621aebfbbe7956bc0c8cf8f64f9e3f1a94280c35c23df70787f33'
+body_hash: 'sha256:1c9092e6294305f9db9d475e6d6553debed4d089327c24dfdf1d1322cdefb127'
 related:
   - '[[2026-08-05-packaging-smoke-architecture-adr]]'
   - '[[2026-08-05-packaging-smoke-architecture-audit]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#packaging-smoke-architecture
 
 ### adr
 
-- `2026-08-05-packaging-smoke-architecture-adr` - `packaging-smoke-architecture` adr: `Lane-form hierarchy for the packaging proof surface` | (**status:** `proposed`)
+- `2026-08-05-packaging-smoke-architecture-adr` - `packaging-smoke-architecture` adr: `Lane-form hierarchy for the packaging proof surface` | (**status:** `accepted`)
 
 ### audit
 

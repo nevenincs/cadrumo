@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#claude-ecosystem-packaging'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a309711d13d9b2f8e63dbeebc7d3299f0e2f883df32028d6b46630adcc7db90'
+body_hash: 'sha256:989d41ea9c2ff3f1b2fb0ca6c8a836da8edea93a6f9216588e6714a44689ac3c'
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S01]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W01-P01-S02]]'
@@ -50,11 +50,6 @@ related:
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S40]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S41]]'
   - '[[2026-07-03-claude-ecosystem-packaging-W04-P11-S42]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S43]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S44]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-W05-P12-S45]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-W05-P13-S46]]'
-  - '[[2026-07-03-claude-ecosystem-packaging-W05-P13-S47]]'
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'
   - '[[2026-07-03-claude-ecosystem-packaging-close-honesty-review-audit]]'
   - '[[2026-07-03-claude-ecosystem-packaging-code-review-audit]]'
@@ -121,11 +116,6 @@ Auto-generated index of all documents tagged with `#claude-ecosystem-packaging`.
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S40` - Document the name-claim sequencing: publish the slim aeat wheel first (no grant needed) to claim the name
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S41` - Document the aeat-data file-size grant request template and the publish-when-granted flow so the plugin delivery is not hard-blocked on the grant
 - `2026-07-03-claude-ecosystem-packaging-W04-P11-S42` - Document the full release checklist joining versioning, wheel build, name claim, grant and plugin/marketplace push in RELEASING.md
-- `2026-07-03-claude-ecosystem-packaging-W05-P12-S43` - Install the plugin from the marketplace into the Claude Code CLI and confirm the local stdio aeat-mcp server runs (the confirmed floor)
-- `2026-07-03-claude-ecosystem-packaging-W05-P12-S44` - Operator-gated: install the plugin into Claude Desktop and confirm the local server executes (needs a real Claude Desktop install)
-- `2026-07-03-claude-ecosystem-packaging-W05-P12-S45` - Operator-gated: install the plugin into Cowork and resolve whether the local stdio server runs on-host or connectors execute in Anthropic's cloud (needs a real Cowork install)
-- `2026-07-03-claude-ecosystem-packaging-W05-P13-S46` - Operator-gated: run the golden regularizar-atrasos itinerary end-to-end through the installed plugin per the R7 live-measurement harness
-- `2026-07-03-claude-ecosystem-packaging-W05-P13-S47` - Record the verified support matrix (which clients run the local server vs skills-only) that the userdocs will state
 
 ### plan
 

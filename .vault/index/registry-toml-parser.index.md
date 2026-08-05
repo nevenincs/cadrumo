@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-toml-parser'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:ebe3f60857b8dbe865dc95518c328744ef2cbe6b9e903b1d795207ba2fe83019'
 related:

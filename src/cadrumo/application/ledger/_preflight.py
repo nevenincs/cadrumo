@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field, computed_field, field_serializer, field_v
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import Period, elided_prose
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...domain.categories import SpendingCategory, SpendingCategoryFamily, family_for
@@ -83,6 +83,15 @@ class LedgerPreflightIssueReason(StrEnum):
     ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA = "anomaly_non_declarable_recargo_equivalencia"
 
 
+#: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
+#:
+#: These issues explain why a ledger row was excluded, so refusing one over its
+#: length would drop the explanation for the exclusion AND fail the aggregation
+#: that produced it -- a silent under-declaration dressed as a validation error.
+#: Shortening the sentence is strictly the lesser loss.
+_IssueDetail = elided_prose(512)
+
+
 class LedgerPreflightIssue(BaseModel):
     """One model-readiness issue attached to a bucket-local transaction."""
 
@@ -90,7 +99,7 @@ class LedgerPreflightIssue(BaseModel):
 
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: LedgerPreflightIssueReason
-    detail: str = Field(min_length=1, max_length=512)
+    detail: _IssueDetail
 
 
 class LedgerPreflightReport(BaseModel):

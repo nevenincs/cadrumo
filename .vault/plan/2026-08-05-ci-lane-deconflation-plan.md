@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:c60547fe9523d130afaaad3ebfef89d7e6c2b1c762b199152557fb128b0af43e'
+body_hash: 'sha256:63d247ff1aabbcc249311b79bed11e240f0be176fe78825f047c9dadcf5fe46d'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -68,13 +68,14 @@ Findings the campaign surfaced in the registry and core surfaces that are real b
 
 Work this campaign found and cannot close, recorded so it is not silently dropped. Each row names why it is not ours and what the owning party must do.
 
-- [ ] `P04.S15` - Repair the four core tests broken by the root-only Modelo localization migration, it stripped title and official_name and label from the M036 manifest without updating hand-derived expectations; `src/cadrumo/core/tests/test_toml_registry_parity.py`.
+- [x] `P04.S15` - Repair the four core tests broken by the root-only Modelo localization migration, it stripped title and official_name and label from the M036 manifest without updating hand-derived expectations; `src/cadrumo/core/tests/test_toml_registry_parity.py`.
 - [ ] `P04.S16` - Re-pin the model-facing description digest once the description sources settle, the gate forbids re-pinning from a dirty tree and the locale and CLI help surfaces are actively churning; `dev/packaging/tests/test_verify_distribution_identity.py`.
 - [ ] `P04.S17` - Fill or uncheck the 204 semantic-dedup exec records that closed their Steps with empty Outcome sections, the baseline schema note forbids absorbing them into the tolerated set; `.vault/exec/2026-06-13-semantic-dedup-epic`.
 - [ ] `P04.S20` - Resolve the import-hygiene test-debt failures from the maternidad private reaches, raising a baseline designed to only decrease would invert the ratchet so establish whether the debt is legitimate before admitting it; `src/cadrumo/tests/test_import_hygiene_gate.py`.
 - [ ] `P04.S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent; `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`.
 - [ ] `P04.S24` - Confirm with the localization cascade owner that the result-summary application row is meant to follow the active output language, the repair is stronger than what it replaced but it crosses another campaign's surface; `src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py`.
 - [ ] `P04.S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in; `src/cadrumo/entrypoints/cli/tests`.
+- [ ] `P04.S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero; `.vaultspec/templates`.
 
 ## Parallelization
 

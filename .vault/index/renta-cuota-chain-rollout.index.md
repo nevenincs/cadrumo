@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-cuota-chain-rollout'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:4e6b7d695e6cf368c02acfd04ff23fc8749d5e0ca12189a23203dcc131f17e80'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-vocabulary-cli-cohesion'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:803de087744673ee65e9e68425b2353cd9ab0a898affe35b21035210323f2155'
 related:

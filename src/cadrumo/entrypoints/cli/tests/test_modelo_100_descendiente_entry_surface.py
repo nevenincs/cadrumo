@@ -231,7 +231,11 @@ def test_undeclared_descendientes_advisory_fires_when_0513_is_zero(
         and n.get("context", {}).get("source_kind") == "minimo_descendientes_undeclared"
     ]
     assert len(fired) == 1, f"expected exactly one undeclared-descendientes advisory; got notices={notices}"
-    assert "descendiente add" in fired[0]["message"]
+    # The entry command rides on `suggestion`, the notice channel's documented
+    # home for a next step, rather than inside the message prose. Asserted on
+    # that field specifically: it is what keeps the remedy out of the message's
+    # length budget, so a regression that folds it back in must fail here.
+    assert "descendiente add" in (fired[0]["suggestion"] or "")
 
 
 def test_declared_but_ineligible_descendant_does_not_fire_the_advisory(
@@ -481,7 +485,7 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
         if n.get("context", {}).get("source_kind") == "guarderia_spend_needs_monthly_detail"
     ]
     assert len(fired) == 1, f"the shape advisory must reach the operator; notices were {fired}"
-    assert "GASTOS_GUARDERIA_MENSUAL" in fired[0]["message"]
+    assert "GASTOS_GUARDERIA_MENSUAL" in (fired[0]["suggestion"] or "")
 
 
 def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
@@ -592,7 +596,7 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
         if n.get("context", {}).get("source_kind") == "guarderia_madre_meses_undeclared"
     ]
     assert len(fired) == 1, f"the zero must be explained to the operator; notices were {fired}"
-    assert "MESES_TRABAJO" in fired[0]["message"]
+    assert "MESES_TRABAJO" in (fired[0]["suggestion"] or "")
 
 
 def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(

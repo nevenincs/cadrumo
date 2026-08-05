@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s63-english-contexts'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:4b8de394db0560e468895d5053b3c72156c0be1098f2b2a89aafd23c21d05e8c'
 related:

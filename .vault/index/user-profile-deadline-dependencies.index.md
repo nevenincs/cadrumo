@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#user-profile-deadline-dependencies'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:c2e4867005e299945b1971bd69e2cc9cdc846d1925cc89023becb44fea5ca131'
 related:

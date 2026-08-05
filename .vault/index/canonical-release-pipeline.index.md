@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#canonical-release-pipeline'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:cd4c7b9a81e5d787562fdf32e6a251437e004fe1f5eabe2b8d6ab0d8d2a4504d'
 related:

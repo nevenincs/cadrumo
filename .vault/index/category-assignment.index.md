@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#category-assignment'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:4cf7c5232c1dc3c4e0335c67d65b0cc716fd5697de8c95f9f2d485ed0e4524dc'
 related:

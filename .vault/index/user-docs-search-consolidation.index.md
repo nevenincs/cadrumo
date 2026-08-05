@@ -6,12 +6,18 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:0f759510d85298a9c5134cc52669bc52e7685e35089f2d5769a32b3f5e9d7e5d'
+body_hash: 'sha256:c16126c21a73daac2074de12abe5a069b8a38356e6ef5eea336f9bfacec3d098'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S03]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S04]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S05]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S06]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S07]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S25]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S26]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P03-S08]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S09]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S18]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S10]]'
@@ -27,6 +33,8 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P06-S22]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S23]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S24]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P06-S27]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P06-S28]]'
   - '[[2026-08-01-user-docs-search-consolidation-adr]]'
   - '[[2026-08-01-user-docs-search-consolidation-plan]]'
   - '[[2026-08-04-user-docs-search-consolidation-audit]]'
@@ -42,6 +50,10 @@ related:
   - '[[2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research]]'
   - '[[2026-08-05-user-docs-search-consolidation-p02-s04-query-token-matrix-audit]]'
   - '[[2026-08-05-user-docs-search-consolidation-p02-s04-static-matrix-audit]]'
+  - '[[2026-08-05-user-docs-search-consolidation-pagefind-narrowing-audit]]'
+  - '[[2026-08-05-user-docs-search-consolidation-rung2-evaluation-audit]]'
+  - '[[2026-08-05-user-docs-search-consolidation-source-contract-reference]]'
+  - '[[2026-08-05-user-docs-search-consolidation-source-implementation-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -67,6 +79,9 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-04-user-docs-search-consolidation-p06-s24-review-audit` - `user-docs-search-consolidation` audit: `P06.S24 casilla enrollment gate review`
 - `2026-08-05-user-docs-search-consolidation-p02-s04-query-token-matrix-audit` - `user-docs-search-consolidation` audit: `P02.S04 query-token matrix contract review`
 - `2026-08-05-user-docs-search-consolidation-p02-s04-static-matrix-audit` - `user-docs-search-consolidation` audit: `P02.S04 bounded static matrix compiler review`
+- `2026-08-05-user-docs-search-consolidation-pagefind-narrowing-audit` - `user-docs-search-consolidation` audit: `Pagefind narrowing remediation source review`
+- `2026-08-05-user-docs-search-consolidation-rung2-evaluation-audit` - `user-docs-search-consolidation` audit: `Rung-2 evaluator source review`
+- `2026-08-05-user-docs-search-consolidation-source-implementation-audit` - `user-docs-search-consolidation` audit: source implementation review
 
 ### exec
 
@@ -89,10 +104,22 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P06-S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback
 - `2026-08-01-user-docs-search-consolidation-P06-S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback
 - `2026-08-01-user-docs-search-consolidation-P06-S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability
+- `2026-08-01-user-docs-search-consolidation-P02-S05` - Add the client-side cosine tier over the shipped matrix to the shared search controller so both the palette host and the search-page host rank through it inside the existing compose ladder
+- `2026-08-01-user-docs-search-consolidation-P02-S06` - Extend the licence gate to validate the shipped matrix's provenance stamp, model licence, and size bound while keeping every oracle-output and NC-ND bar intact
+- `2026-08-01-user-docs-search-consolidation-P02-S07` - Re-run the held-out miss-rate measurement over the rung-2-enabled ladder and commit the report as the new standing baseline beside the 0.1875 pre-rung-2 figure
+- `2026-08-01-user-docs-search-consolidation-P02-S25` - Establish a shared canonical JSON byte contract or equivalent artifact evidence so the browser can fail closed on nested matrix, manifest, bridge, target-list, and bundle self-attestation hashes before Rung-2 artifact acceptance
+- `2026-08-01-user-docs-search-consolidation-P02-S26` - Implement and review Rung-2 raw-byte content attestation
+- `2026-08-01-user-docs-search-consolidation-P03-S08` - 2026-08-01-user-docs-search-consolidation-P03-S08
+- `2026-08-01-user-docs-search-consolidation-P06-S27` - Design locator contract boundary
+- `2026-08-01-user-docs-search-consolidation-P06-S28` - Reconcile Diseño verification contract
 
 ### plan
 
 - `2026-08-01-user-docs-search-consolidation-plan` - `user-docs-search-consolidation` plan
+
+### reference
+
+- `2026-08-05-user-docs-search-consolidation-source-contract-reference` - `user-docs-search-consolidation` reference: source contract blueprint
 
 ### research
 

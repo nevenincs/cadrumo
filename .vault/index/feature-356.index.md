@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#feature-356'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:32f770e4e4362e7a6073acb4f13a9486cebc22d2b67dbbccbb1815aa54e6a9d3'
 related:

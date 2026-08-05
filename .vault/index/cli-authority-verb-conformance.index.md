@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance'
-date: '2026-07-28'
-modified: '2026-07-30'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:2f0545abde96483d72f6c2369d9741224f68b48cdc74dbd10f3468de221132f6'
 related:

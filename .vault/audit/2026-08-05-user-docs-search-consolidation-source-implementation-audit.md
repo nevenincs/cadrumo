@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f50c11c60dbfb591c232246c36f0e92c73f6f57d78ddb70242ed18df96a621a'
+body_hash: 'sha256:a58462e2c84c8e5abe1ed4e1290e8ce8fb1b8d18f8e1b16091473ad6a55685d1'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -182,6 +182,16 @@ The source acceptance boundary remains honest: no artifact or runtime acceptance
 ## 2026-08-05 browser-hash parity disposition
 
 RAG and the LUNA Extra High source review confirm that the browser must not recompute the Python self-attestation hashes until the two runtimes share a proven canonical JSON number contract. Python's canonical serializer preserves numeric lexical forms that JSON.parse discards, and JavaScript serialization is not byte-equivalent for every valid finite float accepted by the matrix, bridge, and manifest schemas. Adding a browser recomputation now could reject a valid future artifact or validate bytes different from the Python contract. No new canonicalizer or schema amendment is authorized in this source-only lane; browser nested-content hash parity remains a bounded follow-up before artifact acceptance. No tests, builds, artifact generation, runtime probes, or deployment were run.
+
+### Source continuation: committed JCS vector corpus
+
+Fresh vaultspec-rag grounding of ADR Update 10 and the current Python/browser canonicalizers preceded a bounded new-file addition under `dev/docs/terminology/jcs_vectors/`. The corpus covers the ratified numeric, safe-integer, escaping, Unicode, surrogate, nesting, terminal-LF, and representative hash-scope vector classes. Its Python consumer imports `canonical_json_bytes` directly; its JavaScript consumer is independent and does not invoke Python. Static JSON parsing, Ruff, basedpyright, `node --check`, and `git diff --check` passed for the new files.
+
+This advances source readiness but does not prove parity: neither consumer was executed, the browser production path was not runtime-probed, and no artifact or release evidence exists. P02.S25 remains open pending authorized independent execution and the broader Rung-2 acceptance gates. No tests, builds, model downloads, matrix generation, generated artifacts, Pagefind/runtime probes, live sweeps, reindexing, deployment, or release acceptance were run.
+
+### Source continuation: vector rejection alignment
+
+Exact source inspection found one corpus/consumer inconsistency in the newly added JCS vectors: both the production Python and independent JavaScript canonicalizers reject integer-valued binary64 numbers outside the safe-integer domain, so `1e21` cannot be an accepted upper-threshold vector under this contract. The corpus now records that case as rejected. JSON parsing, `node --check`, and focused diff checks pass; the independent consumers were not executed. This is a source correction only and does not close P02.S25.
 
 ## 2026-08-05 committed-object manifest review
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#remote-telemetry'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:4e04237dba498b838455431d2e7289c715a50e8d28dcda058fe2c675ac20a841'
 related:

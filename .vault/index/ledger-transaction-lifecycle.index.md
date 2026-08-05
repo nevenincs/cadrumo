@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-transaction-lifecycle'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:82c8e86fe78f37f127bcb5660ec843fa8ca0ac9e8fca5cb01a16f32f3496f840'
 related:

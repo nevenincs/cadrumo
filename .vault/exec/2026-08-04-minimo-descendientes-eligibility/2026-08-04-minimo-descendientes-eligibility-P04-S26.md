@@ -5,45 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:1032618e5741186c4f190df43a529ba4efdcbaa29036bb877df40bc56f4845cc'
+body_hash: 'sha256:a44772b5017d40adbf46b62ed997ff82fd4145f1fd4920f7202249d4f1646747'
 step_id: 'S26'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace minimo-descendientes-eligibility with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S26 and 2026-08-04-minimo-descendientes-eligibility-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Apply the pre-2023 cotizaciones ceiling to the computed casilla 0611 for filing years 2020 to 2022 only, or refuse to compute it for those years, because the law in force through 2022 additionally limited the deduction to the mother total Seguridad Social cotizaciones while the computation applies only the 1200 euro cap, and although the un-ceilinged arithmetic predates this campaign the wiring changed the exposed population from operators who explicitly typed the calculate flag to every operator with declared descendant months, so the defect is now reachable by default rather than newly created, and the registry declares the cotizaciones binding only in 2024 so it cannot express the ceiling for the affected years at all and ## Scope
-
-- `src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`
-- `src/cadrumo/application/modelo/_profile_binding.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Apply the pre-2023 cotizaciones ceiling to the computed casilla 0611 for filing years 2020 to 2022 only, or refuse to compute it for those years, because the law in force through 2022 additionally limited the deduction to the mother total Seguridad Social cotizaciones while the computation applies only the 1200 euro cap, and although the un-ceilinged arithmetic predates this campaign the wiring changed the exposed population from operators who explicitly typed the calculate flag to every operator with declared descendant months, so the defect is now reachable by default rather than newly created, and the registry declares the cotizaciones binding only in 2024 so it cannot express the ceiling for the affected years at all
 

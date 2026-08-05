@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-grounding-completion'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:b0978de4c51ea8725aed98eefc55a681e8cfb4b4dae855477f860f76a1f36d57'
 related:

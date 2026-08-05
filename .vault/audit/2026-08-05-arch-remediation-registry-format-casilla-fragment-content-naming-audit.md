@@ -12,8 +12,6 @@ related:
   - "[[2026-07-03-arch-remediation-registry-format-audit]]"
 ---
 
-
-
 # `arch-remediation-registry-format` audit: `casilla fragment content-derived naming: is compiled order load-bearing?`
 
 ## Scope

@@ -41,19 +41,20 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import INVOICE_CATALOGUE_NAMESPACE
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind, IvaCategory
 from .. import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# Mirrors the persistence contract declared in
-# ``adapters/persistence/profile/invoices.py``. Restated as literals rather
-# than imported, since those names are private to their owning adapter module.
-_INVOICE_NAMESPACE = "cadrumo.domain.invoices"
-_INVOICE_OBJECT_KEY = "catalogue"
-_INVOICE_CATALOGUE_VERSION = 1
+# The persistence contract is read from the namespace definition the storage
+# facade exports, not restated. A literal copy here would keep passing after
+# the real namespace, object key, or schema version moved, which would leave
+# these proofs mutating bytes nothing reads.
+_INVOICE_NAMESPACE = INVOICE_CATALOGUE_NAMESPACE.namespace
+_INVOICE_OBJECT_KEY = INVOICE_CATALOGUE_NAMESPACE.default_object_key
+_INVOICE_CATALOGUE_VERSION = INVOICE_CATALOGUE_NAMESPACE.schema_version
 
 _BASE = Decimal("1000.00")
 _RETENCION = Decimal("150.00")
@@ -93,11 +94,20 @@ def _retention_invoice() -> Invoice:
     )
 
 
-def _persist_and_mutate(tmp_path: Path, mutate) -> None:
+def _persist_and_mutate(tmp_path: Path, mutate, *, names: tuple[str, ...]) -> None:
     """Persist the fixture, prove the untouched bytes reload, then apply *mutate*.
 
     The control runs inside the same profile as the mutation, so the two share
     every condition except the edit under test.
+
+    ``names`` is what makes the refusal discriminating rather than merely
+    present. Asserting only that some ``ValidationError`` fired would stay green
+    if the retencion contract were deleted and the mutated payload happened to
+    trip an unrelated invoice validator -- the grand-total identity or a
+    line-tolerance check -- while the invariant these tests exist for was gone.
+    Every name is a FIELD IDENTIFIER the failing invariant is about, never a
+    sentence from it: identifiers are structure and survive rewording, and no
+    unrelated invoice validator names ``retention_amount``.
     """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _retention_invoice()
@@ -106,7 +116,7 @@ def _persist_and_mutate(tmp_path: Path, mutate) -> None:
         record = profile.repository.load(
             _INVOICE_NAMESPACE,
             _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
             max_supported_version=_INVOICE_CATALOGUE_VERSION,
         )
         assert record is not None
@@ -132,8 +142,14 @@ def _persist_and_mutate(tmp_path: Path, mutate) -> None:
             payload=json.dumps(envelope).encode("utf-8"),
         )
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc_info:
             InvoiceCatalogueRepository().load()
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1, f"expected one refusal, got {[error['type'] for error in errors]}"
+    raised = str(errors[0]["msg"])
+    for name in names:
+        assert name in raised, f"the refusal must name {name!r}; a different invariant fired: {raised!r}"
 
 
 def test_a_stored_rate_without_its_amount_refuses_on_load(tmp_path: Path) -> None:
@@ -142,12 +158,16 @@ def test_a_stored_rate_without_its_amount_refuses_on_load(tmp_path: Path) -> Non
     Were this to load, the routing step would read the absent amount as "no
     retencion declared" and drop a real liability out of Modelo 111 -- through
     a record shape the validator asserts is impossible.
+
+    Both retencion fields are named in the expected refusal because this
+    invariant is precisely about their pairing; a refusal naming neither would
+    be some other validator catching the mutation incidentally.
     """
 
     def _drop_amount(stored: dict[str, object]) -> None:
         del stored["retention_amount"]
 
-    _persist_and_mutate(tmp_path, _drop_amount)
+    _persist_and_mutate(tmp_path, _drop_amount, names=("retention_rate", "retention_amount"))
 
 
 def test_a_stored_retencion_above_its_base_refuses_on_load(tmp_path: Path) -> None:
@@ -155,12 +175,25 @@ def test_a_stored_retencion_above_its_base_refuses_on_load(tmp_path: Path) -> No
 
     RIRPF art. 95.1 withholds on the ingresos integros, so a stored figure
     exceeding the base is a corrupted record rather than a rounding artefact.
-    Raising the amount alone also breaks its agreement with the stored rate, so
-    the mutation is refused whichever half is checked first -- which is the
-    point: the two halves are one contract.
+
+    The expected refusal is the base bound specifically, and the stored rate is
+    removed alongside the inflated amount to make that exclusive by
+    construction. Two clauses of this contract mention both ``retention_amount``
+    and ``base_total`` -- the bound, and the rate-agreement check that follows
+    it -- so an inflated amount sitting beside its rate would be rejected by
+    either, and naming those two fields could not say which. The rate-agreement
+    clause applies only when a rate is present, so deleting the rate leaves the
+    bound as the only clause able to answer.
+
+    Exclusivity by inapplicability rather than by clause ORDER is the deliberate
+    choice. Ordering would be true today and silently worthless after a reorder,
+    which is the same shape of argument-that-outlives-its-reason this module's
+    own history has already been caught on once. As written, deleting the bound
+    makes this test red rather than letting a neighbouring clause answer for it.
     """
 
     def _inflate_amount(stored: dict[str, object]) -> None:
         stored["retention_amount"] = str(_BASE + Decimal("0.01"))
+        del stored["retention_rate"]
 
-    _persist_and_mutate(tmp_path, _inflate_amount)
+    _persist_and_mutate(tmp_path, _inflate_amount, names=("retention_amount", "base_total"))

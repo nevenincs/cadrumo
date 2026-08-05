@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:8213b308f7af73bfe037161274edd117868a647d7cb0176f76ab4f92fc3e4548'
+body_hash: 'sha256:753a3bc39b48fa867f28df79a5bf6b89666dacbffb13d6211171a1566a105fdb'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -313,7 +313,6 @@ direction is under-grant.
 definition of the qualifying child. If that definition is read differently — with a source —
 the first clause falls and the other two stand independently.
 
-
 ### DECISION: the two Art. 81.1 exclusions get DIFFERENT shapes, and the stock problem gets neither
 
 Research grounded both exclusions across the 2020-2025 manuals, byte-stable, and the
@@ -367,7 +366,6 @@ exclusion is the stronger instrument - but it is a reading, not a measurement, a
 is wrong the correction is an under-grant for that population and this decision's first
 limb falls while the shape argument stands independently.
 
-
 ### DECISION: casilla 0611 stays operator-supplied, and the 0613 asymmetry is not a defect
 
 The row that asked for 0611 to become registry-computed "like its 0613 sibling" rested on a
@@ -414,7 +412,6 @@ distinction matters: this is not the work being judged too expensive, it is the 
 being measured false. "Parity with 0613" was never achievable because the two casillas do
 not share a rule shape. If a future reform makes 0611's cap uniform again, the parity
 question genuinely reopens and this decision should be revisited rather than cited.
-
 
 ## Amendment: a design review corrected all four decisions, and refuted one
 

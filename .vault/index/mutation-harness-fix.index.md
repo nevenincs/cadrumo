@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#mutation-harness-fix'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:de0619eeaa7d094d7917cc46c5da0ca6c20c976142a71bfb804fa0e7a4e7646f'
+body_hash: 'sha256:c73e34a82079971982b278059a6b71d88a4aaae27a8b65749c23190814c845e5'
 related:
   - '[[2026-04-29-mutation-harness-fix-adr]]'
   - '[[2026-04-29-mutation-harness-fix-phase1-summary-exec]]'
@@ -31,7 +31,7 @@ Auto-generated index of all documents tagged with `#mutation-harness-fix`.
 
 ### adr
 
-- `2026-04-29-mutation-harness-fix-adr` - ADR — `mutation-harness-fix`: empirical kill-rate aggregator + M100 fixture coverage | (**status:** `accepted`)
+- `2026-04-29-mutation-harness-fix-adr` - ADR — `mutation-harness-fix`: empirical kill-rate aggregator + M100 fixture coverage | (**status:** `superseded`)
 
 ### audit
 

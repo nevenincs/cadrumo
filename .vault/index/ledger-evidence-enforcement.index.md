@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-evidence-enforcement'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:74c0b1c4f2dab8fc7145485b0859a200fb7ada94a6c24a2bf4c31c3825db6e81'
 related:

@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#modelo-addressing-ux'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:80df01d7e33b6b4163a6d133049689d3744fa0f10e33d1b6b63bfdf76c5b5268'
+body_hash: 'sha256:5b290412761be5c863a09008db9de0c38c269a7d598b02d0e194e61ff4b5ec4d'
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-code-review-audit]]'
@@ -80,12 +80,9 @@ related:
   - '[[2026-06-04-modelo-addressing-ux-w05-p17-s126-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p18-s127-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p18-s128-exec]]'
-  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s129-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p18-s130-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p18-s132-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p18-s133-exec]]'
-  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s135-exec]]'
-  - '[[2026-06-04-modelo-addressing-ux-w06-p18-s138-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p19-s134-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p19-s136-exec]]'
   - '[[2026-06-04-modelo-addressing-ux-w06-p19-s137-exec]]'
@@ -245,12 +242,9 @@ Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
 - `2026-06-04-modelo-addressing-ux-w05-p17-s126-exec` - `W05.P17.S126` Locale and translation guard coverage
 - `2026-06-04-modelo-addressing-ux-w06-p18-s127-exec` - W06.P18.S127 CLI module size and complexity inventory
 - `2026-06-04-modelo-addressing-ux-w06-p18-s128-exec` - W06.P18.S128 exact CLI business-logic leakage audit
-- `2026-06-04-modelo-addressing-ux-w06-p18-s129-exec` - W06.P18.S129 modelo addressing surface risk inventory
 - `2026-06-04-modelo-addressing-ux-w06-p18-s130-exec` - W06.P18.S130 semantic CLI boundary audit
 - `2026-06-04-modelo-addressing-ux-w06-p18-s132-exec` - W06.P18.S132 CLI boundary classification matrix
 - `2026-06-04-modelo-addressing-ux-w06-p18-s133-exec` - W06.P18.S133 backend service home map
-- `2026-06-04-modelo-addressing-ux-w06-p18-s135-exec` - W06.P18.S135 command-by-command CLI boundary classification
-- `2026-06-04-modelo-addressing-ux-w06-p18-s138-exec` - W06.P18.S138 backend homes for business and render helpers
 - `2026-06-04-modelo-addressing-ux-w06-p19-s134-exec` - W06.P19.S134 natural-key lifecycle orchestration extraction
 - `2026-06-04-modelo-addressing-ux-w06-p19-s136-exec` - W06.P19.S136 backend revision selector defaulting extraction
 - `2026-06-04-modelo-addressing-ux-w06-p19-s137-exec` - W06.P19.S137 backend adjacent command orchestration

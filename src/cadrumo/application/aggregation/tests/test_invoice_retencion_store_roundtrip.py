@@ -158,6 +158,13 @@ def test_a_dropped_field_on_disk_refuses_on_load(tmp_path: Path) -> None:
     The positive control re-persists the SAME bytes unmodified and loads them
     back equal, so a refusal produced by the mutation procedure itself could not
     be mistaken for the property under test.
+
+    The refusal is pinned to the field that was dropped rather than accepted as
+    any refusal at all. A read that rejected the mutated bytes for some other
+    reason -- an envelope-level check, a key-identity mismatch introduced by the
+    re-save -- would otherwise keep this green while the strictness it exists to
+    prove had gone. ``loc`` and ``type`` are the structural answer to which
+    check ran, so nothing here depends on message wording.
     """
     original = _routed_observation()
 
@@ -195,8 +202,13 @@ def test_a_dropped_field_on_disk_refuses_on_load(tmp_path: Path) -> None:
         del stored["retencion_amount"]
         _persist(json.dumps(envelope).encode("utf-8"))
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError) as exc_info:
             repository.load_observations(_MODELO, _PERIOD)
+
+    errors = exc_info.value.errors()
+    assert len(errors) == 1, f"expected one refusal, got {[error['type'] for error in errors]}"
+    assert errors[0]["type"] == "missing"
+    assert errors[0]["loc"][-1] == "retencion_amount"
 
 
 def test_a_dropped_perceptor_name_reloads_unequal_rather_than_silently_defaulting(

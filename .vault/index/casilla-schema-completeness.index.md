@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#casilla-schema-completeness'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:2909f20c33026a8261e3dc103ea5bcd992a2d9c3c78bb3feaa0b769781e723d4'
 related:

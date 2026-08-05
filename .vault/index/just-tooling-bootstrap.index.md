@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#just-tooling-bootstrap'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:6df00939dc72c9c97fc19f1e6fa2036972ad3341e5fae03995c975e614b5d550'
 related:

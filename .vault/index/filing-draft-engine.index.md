@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#filing-draft-engine'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f567c6e73ff3b55e899fab6d8d0d3a5d4823863e8580a3dcd9c753d88e9b3db3'
+body_hash: 'sha256:f718f191586a5d1680a82032496aeac9c189a71f6e53ddfc954e5ef484f61bda'
 related:
   - '[[2026-04-12-filing-draft-engine-adr]]'
   - '[[2026-04-12-filing-draft-engine-plan]]'
@@ -22,7 +22,7 @@ Auto-generated index of all documents tagged with `#filing-draft-engine`.
 
 ### adr
 
-- `2026-04-12-filing-draft-engine-adr` - ADR — Filing draft generation engine (#39) | (**status:** `accepted`)
+- `2026-04-12-filing-draft-engine-adr` - ADR — Filing draft generation engine (#39) | (**status:** `superseded`)
 
 ### exec
 

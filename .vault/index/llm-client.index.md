@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#llm-client'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:eb09bc1085fdf920d135f6a5f9f2a6d977467bfd53e670b2603fe6f70e3e67b9'
 related:

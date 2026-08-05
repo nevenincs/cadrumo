@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#pdf-import'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ca251d84b66b4199c3de4e5ffe41d90cd1fd47355ea026b21ffc2029e5d226f'
+body_hash: 'sha256:b18c4b09e45827d583ccd596310e92a3a98df43164ff9183a9b146340ea1f0ec'
 related:
   - '[[2026-04-20-pdf-import-adr]]'
   - '[[2026-04-20-pdf-import-phase-1-summary-exec]]'
@@ -23,7 +23,7 @@ Auto-generated index of all documents tagged with `#pdf-import`.
 
 ### adr
 
-- `2026-04-20-pdf-import-adr` - `pdf-import` adr: `reconstruct-filing-draft-from-justificante-pdf` | (**status:** `accepted`)
+- `2026-04-20-pdf-import-adr` - `pdf-import` adr: `reconstruct-filing-draft-from-justificante-pdf` | (**status:** `superseded`)
 
 ### exec
 

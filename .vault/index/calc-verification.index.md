@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#calc-verification'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:37865de19e007fd4beeac4c71d2824b4d41c9f9cd732f9da25fd3c9d5db3c7ad'
+body_hash: 'sha256:b23cb41bfd7b7dcc7c17f9ec684bc7a34c191e9ec41a14b108a2adee7ce83e90'
 related:
   - '[[2026-04-21-calc-verification-adr]]'
   - '[[2026-04-21-calc-verification-plan]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#calc-verification`.
 
 ### adr
 
-- `2026-04-21-calc-verification-adr` - `calc-verification` adr: `classify-discrepancies-then-produce-kent-readable-verdict` | (**status:** `accepted`)
+- `2026-04-21-calc-verification-adr` - `calc-verification` adr: `classify-discrepancies-then-produce-kent-readable-verdict` | (**status:** `superseded`)
 
 ### plan
 

@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#unified-review-queue'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c2028d3a4ae5c6afa5bbaa4daf879a2056b9b2f4e78ee1045e55d45798667ad'
+body_hash: 'sha256:62c596ce4afbbc59cb732293394c5dbb9003b94101a6d20bfe09cff0fa2d7b57'
 related:
   - '[[2026-04-18-unified-review-queue-adr]]'
   - '[[2026-04-18-unified-review-queue-phase1-summary-exec]]'
@@ -23,7 +23,7 @@ Auto-generated index of all documents tagged with `#unified-review-queue`.
 
 ### adr
 
-- `2026-04-18-unified-review-queue-adr` - unified-review-queue-adr | (**status:** `accepted`)
+- `2026-04-18-unified-review-queue-adr` - unified-review-queue-adr | (**status:** `superseded`)
 
 ### exec
 

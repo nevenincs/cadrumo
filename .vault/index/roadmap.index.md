@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#roadmap'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:56f7eb7b5e9e1883a710b6e4959758c7787a49bf550fbc1921001db92c351bf5'
 related:

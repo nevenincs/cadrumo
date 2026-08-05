@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#user-profile-backend-schema'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:f13feeec0f3b8b9ba808af27de641d3de47d73d1a7751fc84d5b7c6803c35867'
 related:

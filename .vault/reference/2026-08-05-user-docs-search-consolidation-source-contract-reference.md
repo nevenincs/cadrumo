@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c07e3853fa831d68192aa063160003c39242439bd2dbf60a5f4b65f8eca960b'
+body_hash: 'sha256:5e723112f20e78a3663f2e89e4fe8c36b7b69b592c796c35b20aecc24345481c'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -34,6 +34,10 @@ The generated casilla reference renderer and the projection share the destinatio
 `dev/docs/terminology/_static_matrix.py` owns canonical vocabulary/query-token identity, float32 and symmetric per-row int8 contracts, model/tokenizer provenance, and the shared serialized-size bound. `dev/docs/terminology/_model2vec_provider.py` accepts only an already-present local Potion Model2Vec directory and validates the ratified repository, immutable revision, MIT licence, dimension, and installed package boundary; it does not download a model. `_rung2_inputs.py` binds the future compiler to the committed relevance sweep and authoritative unified-record projection. `_rung2_bridge.py` links the matrix to manifest records and their targets. `_rung2_compiler.py` composes those contracts, while `_rung2_acceptance.py` and the browser reader fail closed unless measured acceptance evidence and a hash-linked bundle are supplied.
 
 The source seam is intentionally not a shipped semantic tier yet. No provider artifact, generated matrix, measured quantisation drift, held-out acceptance result, Pagefind build, browser runtime, or release configuration exists. The approved ADR therefore keeps the browser semantic tier disabled and Pagefind/lexical search authoritative until those evidence gates are separately accepted.
+
+### Cross-runtime canonical JSON vector boundary
+
+The accepted ADR Update 10 defines `cadrumo-jcs-utf8-lf-v1` as the single Python/browser byte contract: recursively UTF-16-sorted object keys, ECMAScript/JCS number spelling, strict UTF-8, and exactly one terminal LF. A language-neutral corpus and independent consumers now live under `dev/docs/terminology/jcs_vectors/`; the Python consumer imports `canonical_json_bytes` directly and the JavaScript consumer does not invoke Python. Static JSON parsing, Ruff, basedpyright, `node --check`, and `git diff --check` pass for this new source slice. The consumers have not been executed, so P02.S25 remains an evidence-gated open step and no Rung-2 artifact or browser enablement is implied.
 
 ## Verification boundary
 

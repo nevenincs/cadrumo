@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-navigability'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:4353f9a8a35349f09d658249986cc1390b9cc0cfb48d8fa9f0bd0b3b3b149550'
 related:

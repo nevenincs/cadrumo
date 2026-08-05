@@ -42,7 +42,7 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period
+from ...core import Modelo, Period, elided_prose
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
@@ -88,6 +88,15 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     MISSING_TAXABLE_BASE = "missing_taxable_base"
 
 
+#: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
+#:
+#: These issues explain why a ledger row was excluded, so refusing one over its
+#: length would drop the explanation for the exclusion AND fail the aggregation
+#: that produced it -- a silent under-declaration dressed as a validation error.
+#: Shortening the sentence is strictly the lesser loss.
+_IssueDetail = elided_prose(512)
+
+
 class RentaGastoLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating gasto ledger rows."""
 
@@ -95,7 +104,7 @@ class RentaGastoLedgerAggregationIssue(BaseModel):
 
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: RentaGastoLedgerAggregationIssueReason
-    detail: str = Field(min_length=1, max_length=512)
+    detail: _IssueDetail
 
 
 class RentaGastoObservation(BaseModel):

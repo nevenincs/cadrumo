@@ -5,14 +5,12 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a51cc729907c90268201b4f819ae846ffebf08271089e5a5ec5446494c297d18'
+body_hash: 'sha256:ba37d9720d490819e2ee52c301ff7e2e30a17237b9a7cc38e0665b9143a473fd'
 step_id: 'S45'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Author the Art. 81.2 annual cap as a money parameter on the 2024 revision.
 - Author the legal entry grounding the 1.000 figure itself.
@@ -37,8 +35,6 @@ authoring where no consumer is declared would add orphan parameters carrying a
 regulatory value nothing resolves.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 A CORRECTION TO THIS CAMPAIGN'S OWN EARLIER READING, and the substantive result
 of the Step. The increment's proration was recorded as stated by the AEAT

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ccaa-in-profile'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:ebf0f8b47fb1098cabd7928e1e3efb8e02b1422487e4fe3e57992f88cfaa0458'
 related:

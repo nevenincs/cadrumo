@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-trabajo-casilla-compute'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:6960df8e8365da78a997d8fc3f39f11683307a0bf09c1feea68cf11e4f054a69'
 related:

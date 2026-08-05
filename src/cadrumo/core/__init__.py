@@ -243,6 +243,7 @@ from .product_identity import (
     ProductIdentity,
     normalise_product_identity_references,
 )
+from .prose_elision import PROSE_ELISION_MARKER, elide_to_cap, elided_prose
 from .secure_object_write import (
     ABSENT_SECURE_OBJECT_REVISION_ID,
     DEFAULT_WRITE_PROVENANCE,
@@ -317,6 +318,7 @@ __all__: list[str] = [
     "OUT_OF_SCOPE_OBLIGATIONS",
     "PERSISTED_FORMATS",
     "PRODUCT_IDENTITY",
+    "PROSE_ELISION_MARKER",
     "RELEASED_FORMAT_FLOORS",
     "REVIEWED_REVISION_REVIEW_STATUSES",
     "ROOT_DERIVED_STORAGE_FIELDS",
@@ -406,6 +408,8 @@ __all__: list[str] = [
     "classify_post_filing_event_kind",
     "clear_pointer",
     "derive_result_disposition",
+    "elide_to_cap",
+    "elided_prose",
     "exclusive_file_lock",
     "expected_floor",
     "fold_diacritics",

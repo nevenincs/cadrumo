@@ -4,7 +4,7 @@ tags:
   - '#modelo-parity-rollup'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:ec0f1e71a832b05e14bfb695c91a16f846d60c4cb50955c061a44000ea9ee097'
+body_hash: 'sha256:4a8721459aa2b4b52177d1f56435feaa6fde6e1e10ba5d2b41f22d64025befe0'
 tier: L3
 related:
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
@@ -135,7 +135,7 @@ Create only research, proposed ADR content, and independent real-runtime oracle 
 - [x] `W06.P13.S29` - Draft the SOL-bounded S16 rental source-contract research and a proposed ADR without changing fincas models, persistence, source readiness, or M100 0150 wiring; `src/cadrumo/domain/fincas; src/cadrumo/application/aggregation; .vault/research; .vault/adr`.
 - [x] `W06.P13.S30` - Build and verify an evidence-only 2025 0613 source-capability tranche without changing 2025 schema or formula wiring; `src/cadrumo/domain/contribuyente/tests; src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md; .vault/research`.
 - [x] `W06.P13.S31` - Ground the annual shared-engine 2025 per-activity path for M100 1481 and produce only an independent oracle or research artifact without adding an M131 casilla-01 relation; `src/cadrumo/domain/calculations/registry/tests; src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025; .vault/research`.
-- [ ] `W06.P13.S32` - Acquire the complete authoritative 2025 0613 cap and rounding oracle matrix and return it to SOL before any producer promotion; `src/cadrumo/_data/corpus/manual_oracles; src/cadrumo/domain/contribuyente/tests; .vault/research`.
+- [x] `W06.P13.S32` - Acquire the complete authoritative 2025 0613 cap and rounding oracle matrix and return it to SOL before any producer promotion; `src/cadrumo/_data/corpus/manual_oracles; src/cadrumo/domain/contribuyente/tests; .vault/research`.
 
 ## Parallelization
 

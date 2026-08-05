@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#eoy-final-calculation'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:f0cec4a04e30ae1452176e96c532f1826d0cfd258beb41246e18e39e3e16b3b8'
 related:

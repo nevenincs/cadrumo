@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-campaign-hardening'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:f7598fa8f51534573ed8968435ea33101f54088b1505f7e81adb5acfb22bcd3a'
 related:

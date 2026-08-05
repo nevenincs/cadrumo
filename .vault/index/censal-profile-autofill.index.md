@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#censal-profile-autofill'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:c5b548ad47345e8ce870b665947b6ee8f1a1d3ee68d1bf778e5418adc5f5e97b'
+body_hash: 'sha256:8657355f3bacfd05079893be9febcbb2c61bffd722b9f185ab3a3a2d2c6e9ded'
 related:
   - '[[2026-07-25-censal-profile-autofill-P01-S01]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S02]]'
@@ -19,7 +19,6 @@ related:
   - '[[2026-07-25-censal-profile-autofill-P01-S18]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S19]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S20]]'
-  - '[[2026-07-25-censal-profile-autofill-P01-S23]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S24]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S28]]'
   - '[[2026-07-25-censal-profile-autofill-P01-S33]]'
@@ -93,7 +92,6 @@ Auto-generated index of all documents tagged with `#censal-profile-autofill`.
 - `2026-07-25-censal-profile-autofill-P03-S15` - Offer the censal pull as a manager action gated on the auth mode having everything it needs, unavailable with an instructive refusal until the credentials are complete
 - `2026-07-25-censal-profile-autofill-P03-S21` - Feed the censal ownership refusal from the read itself rather than from a projected tuple named for adoption, so editing that tuple cannot disarm the guard
 - `2026-07-25-censal-profile-autofill-P03-S22` - Make the clear branch consult provenance as the value branch does, so a clear the app wrote cannot earn the protection reserved for an operator decision
-- `2026-07-25-censal-profile-autofill-P01-S23` - Salvage the authenticated Clave session a post-auth navigation failure was closing unread, so a spent second factor becomes a retryable navigation
 - `2026-07-25-censal-profile-autofill-P01-S24` - Pin the session-identity comparison the certificate provider's only fail-closed check rests on, asserting the refusal and the per-return wiring rather than the expectation alone
 - `2026-07-25-censal-profile-autofill-P01-S28` - Reproduce whether a certificate provider paired with a cleared profile identity reaches any refusing guard at all, treating the composed two-agent report as unsettled until execution decides it either way, and naming what stops the read if anything does
 - `2026-07-25-censal-profile-autofill-P01-S33` - Rule on whether a schema-required profile field may be cleared or left never-set after creation, the completeness check keying on fact presence rather than value presence while the overview beside it already keys on value, and place the guard where the state is created rather than at each consumer

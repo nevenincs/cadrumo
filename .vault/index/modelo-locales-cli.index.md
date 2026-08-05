@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#modelo-locales-cli'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb2e916fcdd33128c12bc42d0efd3f1cc1abd13cbb44795eb131dc7898374c8e'
+body_hash: 'sha256:7310b139e1ae47e935cb1d9fe62db090cc882fb9f678f21f77bcf464ed335100'
 related:
   - '[[2026-06-11-modelo-locales-cli-P01-S01]]'
   - '[[2026-06-11-modelo-locales-cli-P01-S02]]'
@@ -52,7 +52,7 @@ Auto-generated index of all documents tagged with `#modelo-locales-cli`.
 
 ### adr
 
-- `2026-06-11-modelo-locales-cli-adr` - `modelo-locales-cli` adr: `cadrumo.locales manages modelo schema-local translations` | (**status:** `accepted`)
+- `2026-06-11-modelo-locales-cli-adr` - `modelo-locales-cli` adr: `cadrumo.locales manages modelo schema-local translations` | (**status:** `superseded`)
 
 ### audit
 

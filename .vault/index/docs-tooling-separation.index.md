@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-tooling-separation'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:cb5ecbf6a6ddd1b5ef1ea39614d4245c02fc437e1eabe8cdabc0e86b3a086299'
 related:

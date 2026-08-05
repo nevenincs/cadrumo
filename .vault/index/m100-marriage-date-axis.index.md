@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m100-marriage-date-axis'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:99f4b394320c188850bd50b75e899311eb17ae462893240323ccdb3cc46f5e6b'
 related:

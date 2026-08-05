@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#frontend-legal-compliance'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:0e74545d63a85cfd3dff6eef65c866783518a7932725fa202ef9d044a48086c4'
 related:

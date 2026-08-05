@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:3847919913f74ccc48ef502892d2d84870318fb340043961e212fd65d87b9c6b'
+body_hash: 'sha256:483a43cfb51a84907c6bdf5467de095e61dfa94ef2f4ac99db53573e2bd127d0'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -56,6 +56,45 @@ Static evidence only: fresh vaultspec-rag grounding, AST parsing, and focused di
 ### 2026-08-05 source continuation: authoritative assembled-input guard
 
 Fresh vaultspec-rag grounding over the P02.S04 static-matrix audit, execution record, accepted ADR, and current input/compiler modules identified a remaining handoff weakness: the typed `Rung2CompilationInputs` dataclass revalidated fingerprints but did not fail closed when constructed with a non-authoritative runtime payload or when its sweep mappings disagreed with its stamped vocabulary/query-token identities. The source boundary now requires the exact validated `SweepResult`, `Rung2InputProvenance`, and tuple of authoritative `SearchRecord` values; rejects an empty or degraded sweep; and derives both canonical vocabulary surfaces from the committed sweep mappings before accepting the supplied fingerprints. This strengthens the existing project-authoritative handoff without changing provider, artifact, browser, or acceptance behavior. Static `basedpyright`, Ruff, and focused diff checks pass. No tests, builds, model downloads, matrix generation, runtime probes, live sweeps, reindexing, or deployment were run.
+
+### 2026-08-05 fresh source disposition
+
+Fresh vaultspec-rag searches over the P02.S04 plan/audit/reference and exact reads of `_rung2_inputs.py`, `_rung2_compiler.py`, `_static_matrix.py`, and `_model2vec_provider.py` confirm the current source boundary: the committed sweep and current Handbook derive the closed query vocabulary, the authoritative Pagefind projection supplies the record manifest, and provider/model/tokenizer evidence remains an explicit local input. No additional P02.S04 source defect is justified. The remaining blocker is the real pinned provider/package/model/tokenizer evidence, matrix generation, and measured acceptance artifact; no plan row is closed.
+
+A Luna Max worker was dispatched for the same bounded input/compiler ownership but could not proceed because its required installed-version runtime-proof precondition was unavailable; it made no edit. No tests, builds, model downloads, matrix generation, runtime probes, live sweeps, reindexing, deployment, or artifact release were run.
+
+### 2026-08-05 environment boundary confirmation
+
+A fresh read-only environment check confirms that `model2vec` is not installed in the current `uv` environment (`find_spec` returned `None`), and the repository contains the provider/compiler source but no local model or matrix artifact. The project configuration deliberately omits a runtime `search` extra: semantic search is a dev-side precompile step and the shipped surface carries laundered output. The accepted provider contract therefore cannot be advanced by installing or downloading dependencies in this continuation; the pinned provider artifact, licence evidence, generated matrix, and measured acceptance gates remain open.
+
+This check did not run tests, builds, model downloads, matrix generation, Pagefind compilation, browser probes, live sweeps, runtime gates, deployment, or generated-artifact release.
+
+### 2026-08-05 current source re-audit
+
+Fresh vaultspec-rag searches over the active plan, the accepted Rung-2 ADR updates, the source contract reference, and the current terminology modules found no new source-level defect in the P02.S04 boundary. The current audit records the schema-marker, canonical-observation, float32-scale, raw-artifact-canonicality, input-provenance, and R8 raw-manifest controls as source-remediated. The remaining requirements are real provider/package/model/tokenizer evidence, installed-version proof, matrix generation, licence/quantization/held-out acceptance, and runtime evidence; none is present or authorized in this continuation.
+
+A requested Luna Max source delegation could not execute because the agent runtime required an unavailable Sol/custom-agent validation precondition; it made no edit. No tests, builds, model downloads, dependency installation, matrix or manifest generation, Pagefind/runtime probes, live sweeps, reindexing, deployment, or artifact release were run. P02.S04 remains open.
+
+Fresh `vaultspec-rag` code searches and exact source reads covered the active L2 plan, accepted ADR Updates 6–10, the source contract reference, the P02.S04 audits, `_rung2_inputs.py`, `_rung2_compiler.py`, `_static_matrix.py`, `_model2vec_provider.py`, and `_content_manifest.py`.
+
+The source boundary is complete for its authorized scope: the committed sweep and current Handbook derive canonical vocabulary/query-token identities; the authoritative Pagefind projection supplies records; the provider requires explicit local provider/model/tokenizer raw-byte manifests before import; the compiler composes the validated bundle and explicit writer; and the browser remains fail-closed without an accepted artifact. The RAG/source contract does not justify adding an unratified CLI or changing the existing entrypoint.
+
+Static evidence for this continuation:
+
+- Ruff passed for the scoped Rung-2 Python modules.
+- `basedpyright` passed with 0 errors, 0 warnings, and 0 notes.
+- Python AST parsing passed for the scoped Rung-2 modules.
+- `node --check docs/_static/cadrumo-docs.js` passed.
+- Scoped `git diff --check` passed and no conflict markers were found.
+
+Open evidence tasklist (not a plan closure signal):
+
+- OPEN — supply independently reviewed local provider-package, model-snapshot, tokenizer-vocabulary, and tokenizer-configuration manifest evidence.
+- OPEN — prove the installed pinned provider/package and model revision/licence against those raw bytes without downloading.
+- OPEN — compile the bounded matrix/bundle and record serialized-size, quantization-drift, and nested self-attestation evidence.
+- OPEN — run the separately authorized P02.S05/P02.S06/P02.S07 behavioural, licence, and held-out acceptance gates.
+
+No tests, builds, model downloads, matrix or manifest generation, Pagefind/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run. P02.S04 remains open; the source implementation is not being represented as artifact or shipped-site acceptance.
 
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 

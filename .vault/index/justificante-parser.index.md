@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#justificante-parser'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:d7fc0248990346883cb40bdc25ecd2eff929992d347b0967c0500a08e82d574c'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#json-output-contract'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:161ca5be59e1db38b4fed15256c4ef97185fcbf942db9e616f687b6537e9870e'
 related:

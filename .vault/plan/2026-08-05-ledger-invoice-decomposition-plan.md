@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:bbcf1a9e0511a38ae2e85c32a922ae8364d0a3e0dc26c3ca4e33579e0bef8b80'
+body_hash: 'sha256:fd34991bd3c4a57c61af5a1bc79a747b042c958b8175a3b58c14e2297c04c74b'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -38,7 +38,7 @@ Declare which components an invoice of each IVA category actually has, as regist
 - [x] `P02.S18` - Re-key the component-expectation table on the category and invoice-kind pair, declaring the retencion role per row so an issued credit and a received liability stop sharing a shape; `src/cadrumo/domain/iva/_components.py`.
 - [x] `P02.S19` - Reconcile the rich-invoice IvaRate enum against the registry rate table, closing the missing members rather than leaving a rate the registry knows and the record cannot express; `src/cadrumo/domain/invoices/_models.py`.
 - [x] `P02.S21` - Bundle the place-of-supply articles governing cross-border category selection, so the judgement is grounded rather than derived from counterparty country; `src/cadrumo/_data/corpus/normatives/html`.
-- [ ] `P02.S27` - Correct the six-entry LIVA batch document_id to its BOE identifier as one coherent change, then hand it to the operator for re-stamp; `src/cadrumo/_data/registry/aeat/legal`.
+- [x] `P02.S27` - Correct the six-entry LIVA batch document_id to its BOE identifier as one coherent change, then hand it to the operator for re-stamp; `src/cadrumo/_data/registry/aeat/legal`.
 
 ### Phase `P03` - Retencion derivation and invoice contracts
 
@@ -54,6 +54,7 @@ Let exempt invoices recover their retencion by relaxing the inference preconditi
 Escalate the missing-substrate advisory to a verify-stage refusal only where the under-declaration direction is certain, on operator ratification.
 
 - [ ] `P04.S14` - Escalate the advisory to a verify-stage refusal only for a row declaring a cuota-less category with no taxable base, pending operator ratification; `src/cadrumo/application/modelo`.
+- [ ] `P04.S36` - Decide whether the external-grounding gate admits bound casillas, since a bound value is as oracle-checkable as a computed one, before amending the S15 and S16 Step texts; `.vault/adr`.
 
 ### Phase `P05` - Oracle grounding and roundtrip coverage
 
@@ -67,3 +68,11 @@ Prove the chain against external AEAT authority rather than against itself, anch
 - [x] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
 - [x] `P05.S25` - Gate every advisory message builder as constructible at zero, one and many items against its own model's declared cap, read from the field rather than restated; `src/cadrumo/tests`.
 - [ ] `P05.S26` - Name the dropped retencion credit in the ungrounded advisory, not only the income mis-measurement, since the lost credit is the larger half of the harm; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [ ] `P05.S28` - Drive a received invoice through to the committed Modelo 111 binding values, asserting the filed casillas against the invoice figures rather than stopping at the aggregation totals; `src/cadrumo/application/aggregation/tests/test_invoice_retencion_routing.py`.
+- [ ] `P05.S29` - Drive the same invoice through to the committed Modelo 303 repercutido bindings so the IVA leg reaches a filed casilla like the income and retenciones legs already do; `src/cadrumo/application/aggregation/tests/test_cross_domain_invoice_scenario.py`.
+- [ ] `P05.S30` - Reconcile the duplicated binding-level assertions between the cross-domain scenario and the rated oracle module, keeping one owner for the shared claim; `src/cadrumo/application/aggregation/tests/test_cross_domain_invoice_scenario.py`.
+- [ ] `P05.S31` - Read the statutory retencion rate from the registry general_rate at every oracle expectation site, reserving the bound accessor for assertions genuinely about the inference cap; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `P05.S32` - Add a sub-cap oracle case on the 7 percent inicio-de-actividad registry rate so the bound is calibrated at more than one point; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `P05.S33` - Extract the shared oracle fixture scaffolding while keeping each test body separate, so a scenario change lands once; `src/cadrumo/domain/calculations/registry/tests`.
+- [ ] `P05.S34` - Bundle the PGC norms cited in the oracle docstrings, or mark them not-yet-bundled so the citation stops asserting grounding it lacks; `src/cadrumo/_data/corpus/normatives/html`.
+- [ ] `P05.S35` - Restore the marker integrity the two campaign-owned test modules broke, so the marker gate stops reporting a campaign surface as unclassified; `src/cadrumo/domain/iva/tests/test_component_expectations.py`.

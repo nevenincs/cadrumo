@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-design'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:5cb11f6dcb8430339dda89fd717d292913cb3d351a668b70b1f9e1f5983f51bb'
 related:

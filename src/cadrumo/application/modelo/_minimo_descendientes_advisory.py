@@ -156,20 +156,7 @@ def collect_minimo_descendientes_undeclared_diagnostics(
         # Art. 58.1-eligible, e.g. every child is over 25 and non-discapacitado); a
         # declared zero is not a silent gap.
         return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_UNDECLARED_SOURCE_KIND,
-            message=(
-                f"casilla {estatal_id!r} (mínimo por descendientes, parte estatal) resolved to zero and "
-                "the active profile declares no renta_family.descendiente facts -- if you have children "
-                "or other eligible descendants, declare them with `aeat config profile descendiente add "
-                "--descendiente NACIMIENTO=YYYY-MM-DD[,...]` before filing, or the Art. 58 LIRPF allowance "
-                "is silently omitted"
-            ),
-            casilla_id=estatal_id,
-        ),
-    )
+    return (_undeclared_advisory(estatal_id),)
 
 
 def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
@@ -251,21 +238,7 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     # large household would otherwise turn this advisory into a hard
     # ValidationError -- silencing the disclosure the chosen default rests on,
     # for the filer with the most children at stake.
-    named = _name_indices(inferred)
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_PRORRATA_INFERRED_SOURCE_KIND,
-            message=(
-                f"casilla {estatal_id!r} (mínimo por descendientes) was HALVED under Art. 61 norma 1ª "
-                f"LIRPF for {named}: the profile indicates a second entitled contribuyente (marital "
-                "status, spouse record or declaration type) and no explicit answer was given. That is "
-                "an inference, not a declared fact. State it with `descendiente add --descendiente "
-                "PRORRATA=false` to claim the full mínimo, or PRORRATA=true to confirm the split"
-            ),
-            casilla_id=estatal_id,
-        ),
-    )
+    return (_prorrata_inferred_advisory(inferred, estatal_id),)
 
 
 #: How many descendant paths a message names before summarising the rest.
@@ -284,6 +257,181 @@ def _name_indices(indices: list[int]) -> str:
     shown = ", ".join(f"renta_family.descendiente.{index}" for index in indices[:_MAX_NAMED_DESCENDANTS])
     remainder = len(indices) - _MAX_NAMED_DESCENDANTS
     return f"{shown} and {remainder} more" if remainder > 0 else shown
+
+
+def _undeclared_advisory(casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_UNDECLARED_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} (mínimo por descendientes, parte estatal) resolved to zero "
+            "because the active profile declares no renta_family.descendiente facts. If you have "
+            "children or other eligible descendants, the Art. 58 LIRPF allowance is being silently "
+            "omitted"
+        ),
+        remedy=(
+            "Declare them with `aeat config profile descendiente add --descendiente "
+            "NACIMIENTO=YYYY-MM-DD[,...]` before filing."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _prorrata_inferred_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_PRORRATA_INFERRED_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} (mínimo por descendientes) was HALVED under Art. 61 norma 1ª "
+            f"LIRPF for {_name_indices(indices)}: the profile indicates a second entitled "
+            "contribuyente (marital status, spouse record or declaration type) and no explicit "
+            "answer was given. That is an inference, not a declared fact"
+        ),
+        remedy=(
+            "State it with `descendiente add --descendiente PRORRATA=false` to claim the full "
+            "mínimo, or PRORRATA=true to confirm the split."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _rentas_undeclared_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_RENTAS_UNDECLARED_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} (mínimo por descendientes) claims a full tranche for "
+            f"{_name_indices(indices)} with no annual-rentas figure on record. Art. 58.1 LIRPF "
+            "withdraws it above the rentas ceiling, and Art. 61 norma 2ª when the descendant files "
+            "their own return above that figure; an absent figure exceeds neither"
+        ),
+        remedy=(
+            "Declare it with `descendiente add --descendiente RENTAS=N`. RENTAS=0 is a valid "
+            "answer and silences this advisory."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _entry_date_missing_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_ENTRY_DATE_MISSING_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} withholds the Art. 58.2 LIRPF increase for "
+            f"{_name_indices(indices)}: the relación is an adopción or entitling acogimiento, "
+            "granted regardless of age in the entry period and the two following, but no entry "
+            "date is on record so the window cannot be measured"
+        ),
+        remedy=(
+            "Declare INSCRIPCION=YYYY-MM-DD (Registro Civil, or the resolución if none required) "
+            "or ACOGIMIENTO=YYYY-MM-DD via `descendiente add`. The missing fact is the entry date, "
+            "not the birth date."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _guarderia_shape_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_GUARDERIA_SHAPE_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(indices)}: the "
+            "child turns three in this period, so Art. 81.2 LIRPF admits only spend after the "
+            "birthday and an annual total cannot be split across it"
+        ),
+        remedy=(
+            "Restate it month by month with `descendiente add --descendiente "
+            "GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N`. The eligible months are the ones your centre "
+            "reported, so your certificate is the authority."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _guarderia_madre_meses_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_GUARDERIA_MADRE_MESES_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} is zero despite declared guardería spend for "
+            f"{_name_indices(indices)}: Art. 81.2 LIRPF raises the maternidad deducción, so it "
+            "needs the months the mother met the Art. 81.1 requirement, and none are on record"
+        ),
+        remedy=(
+            "Declare them with `descendiente add --descendiente MESES_TRABAJO=N`, or leave the "
+            "zero if she met it in no month of this period."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _guarderia_simultaneity_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_GUARDERIA_SIMULTANEITY_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} assumes the best case for {_name_indices(indices)}: Art. "
+            "81.3 LIRPF prorates by the months the mother's requirement and the guardería spend "
+            "hold at once, and this record stores how MANY months she qualified but not WHICH, so "
+            "the overlap is taken as the largest it could be. Where the two spans do not coincide, "
+            "the real figure is lower"
+        ),
+        remedy="Check it against her records before filing.",
+        casilla_id=casilla_id,
+    )
+
+
+def _dependencia_assimilated_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_DEPENDENCIA_ASSIMILATED_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} (mínimo por descendientes) grants the Art. 58 allowance for "
+            f"{_name_indices(indices)} on DECLARED economic dependency rather than cohabitation. "
+            "The authority allows this for a progenitor without custody who pays no judicial "
+            "anualidades and still contributes to the descendant's upkeep"
+        ),
+        remedy="Confirm the declaration holds for the filing year before filing.",
+        casilla_id=casilla_id,
+    )
+
+
+def _dependencia_suppressed_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_DEPENDENCIA_SUPPRESSED_SOURCE_KIND,
+        message=(
+            f"casilla {casilla_id!r} (mínimo por descendientes) WITHHOLDS the Art. 58 dependency "
+            f"assimilation for {_name_indices(indices)} because the profile declares judicial "
+            "anualidades por alimentos. The statutory carve-out is per-child, but this model "
+            "cannot yet attribute a payment to one descendant, so a declared amount suppresses "
+            "the assimilation for all of them"
+        ),
+        remedy=(
+            "Where the anualidades are paid for a different descendant this under-grants the "
+            "mínimo, so check the figure before filing."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _count_desync_advisory(stored: Decimal, rows: int) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_COUNT_DESYNC_SOURCE_KIND,
+        message=(
+            f"profile fact {_DESCENDANTS_COUNT_PATH!r} declares {stored} but the profile carries "
+            f"{rows} renta_family.descendiente row(s). The count feeds its own Modelo 100 binding "
+            "while the mínimo por descendientes casillas are computed from the rows, so the filing "
+            "would carry two different answers"
+        ),
+        remedy=(
+            "Re-enter the descendants with `aeat config profile descendiente add --descendiente "
+            "NACIMIENTO=YYYY-MM-DD[,...]`, which rewrites the count and the rows together."
+        ),
+    )
 
 
 def collect_minimo_descendientes_rentas_undeclared_diagnostics(
@@ -361,20 +509,7 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     ]
     if not undeclared:
         return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_RENTAS_UNDECLARED_SOURCE_KIND,
-            message=(
-                f"casilla {estatal_id!r} (mínimo por descendientes) claims a full tranche for "
-                f"{_name_indices(undeclared)} with no annual-rentas figure on record. Art. 58.1 LIRPF "
-                "withdraws it above the rentas ceiling, and Art. 61 norma 2ª when the descendant files "
-                "their own return above that figure; an absent figure exceeds neither. Declare it with "
-                "`descendiente add --descendiente RENTAS=N`. RENTAS=0 is a valid answer and silences this"
-            ),
-            casilla_id=estatal_id,
-        ),
-    )
+    return (_rentas_undeclared_advisory(undeclared, estatal_id),)
 
 
 def collect_minimo_descendientes_entry_date_missing_diagnostics(
@@ -439,21 +574,7 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
     ]
     if not missing:
         return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_ENTRY_DATE_MISSING_SOURCE_KIND,
-            message=(
-                f"casilla {estatal_id!r} withholds the Art. 58.2 LIRPF increase for "
-                f"{_name_indices(missing)}: the relación is an adopción or entitling acogimiento, "
-                "granted regardless of age in the entry period and the two following, but no entry date "
-                "is on record so the window cannot be measured. Declare INSCRIPCION=YYYY-MM-DD (Registro "
-                "Civil, or the resolución if none required) or ACOGIMIENTO=YYYY-MM-DD via "
-                "`descendiente add`"
-            ),
-            casilla_id=estatal_id,
-        ),
-    )
+    return (_entry_date_missing_advisory(missing, estatal_id),)
 
 
 def collect_guarderia_spend_shape_diagnostics(
@@ -511,20 +632,7 @@ def collect_guarderia_spend_shape_diagnostics(
     ]
     if not affected:
         return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_GUARDERIA_SHAPE_SOURCE_KIND,
-            message=(
-                f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(affected)}: the "
-                "child turns three in this period, so Art. 81.2 LIRPF admits only spend after the "
-                "birthday and an annual total cannot be split across it. Restate it month by month with "
-                "`descendiente add --descendiente GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N`. The eligible "
-                "months are the ones your centre reported, so your certificate is the authority"
-            ),
-            casilla_id=casilla_id,
-        ),
-    )
+    return (_guarderia_shape_advisory(affected, casilla_id),)
 
 
 def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: str) -> _GuarderiaContext | None:
@@ -605,20 +713,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     ]
     if not affected:
         return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_GUARDERIA_MADRE_MESES_SOURCE_KIND,
-            message=(
-                f"casilla {context.casilla_id!r} is zero despite declared guardería spend for "
-                f"{_name_indices(affected)}: Art. 81.2 LIRPF raises the maternidad deducción, so it needs "
-                "the months the mother met the Art. 81.1 requirement, and none are on record. Declare them "
-                "with `descendiente add --descendiente MESES_TRABAJO=N`, or leave the zero if she met it in "
-                "no month of this period"
-            ),
-            casilla_id=context.casilla_id,
-        ),
-    )
+    return (_guarderia_madre_meses_advisory(affected, context.casilla_id),)
 
 
 def collect_guarderia_simultaneity_approximation_diagnostics(
@@ -676,20 +771,7 @@ def collect_guarderia_simultaneity_approximation_diagnostics(
     ]
     if not affected:
         return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_GUARDERIA_SIMULTANEITY_SOURCE_KIND,
-            message=(
-                f"casilla {context.casilla_id!r} assumes the best case for {_name_indices(affected)}: Art. "
-                "81.3 LIRPF prorates by the months the mother's requirement and the guardería spend hold "
-                "at once, and this record stores how MANY months she qualified but not WHICH, so the "
-                "overlap is taken as the largest it could be. Where the two spans do not coincide, the "
-                "real figure is lower. Check it against her records before filing"
-            ),
-            casilla_id=context.casilla_id,
-        ),
-    )
+    return (_guarderia_simultaneity_advisory(affected, context.casilla_id),)
 
 
 def collect_minimo_descendientes_dependencia_diagnostics(
@@ -748,37 +830,10 @@ def collect_minimo_descendientes_dependencia_diagnostics(
     diagnostics: list[CalculationSourceDiagnostic] = []
     granted = profile.dependencia_assimilated_indices(revision.valid_to.year)
     if granted:
-        diagnostics.append(
-            CalculationSourceDiagnostic(
-                reason="source_issue",
-                source_kind=_DEPENDENCIA_ASSIMILATED_SOURCE_KIND,
-                message=(
-                    f"casilla {estatal_id!r} (mínimo por descendientes) grants the Art. 58 allowance for "
-                    f"{_name_indices(list(granted))} on DECLARED economic dependency rather than "
-                    "cohabitation. The authority allows this for a progenitor without custody who pays no "
-                    "judicial anualidades and still contributes to the descendant's upkeep. Confirm the "
-                    "declaration holds for the filing year before filing"
-                ),
-                casilla_id=estatal_id,
-            ),
-        )
+        diagnostics.append(_dependencia_assimilated_advisory(list(granted), estatal_id))
     suppressed = profile.dependencia_suppressed_indices()
     if suppressed:
-        diagnostics.append(
-            CalculationSourceDiagnostic(
-                reason="source_issue",
-                source_kind=_DEPENDENCIA_SUPPRESSED_SOURCE_KIND,
-                message=(
-                    f"casilla {estatal_id!r} (mínimo por descendientes) WITHHOLDS the Art. 58 dependency "
-                    f"assimilation for {_name_indices(list(suppressed))} because the profile declares "
-                    "judicial anualidades por alimentos. The statutory carve-out is per-child, but this "
-                    "model cannot yet attribute a payment to one descendant, so a declared amount "
-                    "suppresses the assimilation for all of them. This under-grants where the anualidades "
-                    "are paid for a different descendant"
-                ),
-                casilla_id=estatal_id,
-            ),
-        )
+        diagnostics.append(_dependencia_suppressed_advisory(list(suppressed), estatal_id))
     return tuple(diagnostics)
 
 
@@ -873,17 +928,4 @@ def collect_descendientes_count_desync_diagnostics(
     stored = _stored_descendientes_count(bucket_id)
     if stored is None or stored == Decimal(rows):
         return ()
-    return (
-        CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=_COUNT_DESYNC_SOURCE_KIND,
-            message=(
-                f"profile fact {_DESCENDANTS_COUNT_PATH!r} declares {stored} but the profile carries "
-                f"{rows} renta_family.descendiente row(s). The count feeds its own Modelo 100 binding "
-                "while the mínimo por descendientes casillas are computed from the rows, so the filing "
-                "would carry two different answers. Re-enter the descendants with `aeat config profile "
-                "descendiente add --descendiente NACIMIENTO=YYYY-MM-DD[,...]`, which rewrites the count "
-                "and the rows together"
-            ),
-        ),
-    )
+    return (_count_desync_advisory(stored, rows),)

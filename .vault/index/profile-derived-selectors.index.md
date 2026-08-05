@@ -3,16 +3,17 @@ generated: true
 tags:
   - '#index'
   - '#profile-derived-selectors'
-date: '2026-08-04'
-modified: '2026-08-04'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:eaa3de5eccf59ddcadebd942f358a3128bf054770c183d82d296c7ba26719da7'
+body_hash: 'sha256:a23cd3ee0619a823eb3c29a6bb00cdb800db78531a29906ed39aa593544710a6'
 related:
   - '[[2026-08-04-profile-derived-selectors-P01-S01]]'
   - '[[2026-08-04-profile-derived-selectors-P01-S02]]'
   - '[[2026-08-04-profile-derived-selectors-P01-S03]]'
   - '[[2026-08-04-profile-derived-selectors-P02-S04]]'
   - '[[2026-08-04-profile-derived-selectors-P02-S05]]'
+  - '[[2026-08-04-profile-derived-selectors-P02-S06]]'
   - '[[2026-08-04-profile-derived-selectors-P02-S07]]'
   - '[[2026-08-04-profile-derived-selectors-P02-S08]]'
   - '[[2026-08-04-profile-derived-selectors-P02-S13]]'
@@ -47,6 +48,7 @@ Auto-generated index of all documents tagged with `#profile-derived-selectors`.
 - `2026-08-04-profile-derived-selectors-P01-S03` - Retire the dormant selector-level as-of field, its two populated registry declarations, and the presence-only assertion that blesses it
 - `2026-08-04-profile-derived-selectors-P02-S04` - Add a domain helper answering whether a path is derived, as the single written-once judgment over the declared patterns
 - `2026-08-04-profile-derived-selectors-P02-S05` - Consume the helper as the FIRST statement of the per-fact validation, before the field-index lookup, not merely before the unknown-path arm, because during this phase the declarations still stand so the index lookup succeeds and the unknown-path arm never fires, and invert in the same commit the write-door half of the override proof from P01.S01, whose fixture writes a sentinel through the real write door and will begin raising the moment this refusal lands
+- `2026-08-04-profile-derived-selectors-P02-S06` - Confirm the refusal copy follows the validation module's own convention rather than adding a locale key, because every sibling issue message there is a formatted string and the translator is not imported, so a catalogue entry for this one message would be the inconsistent pattern and would leave the copy split across two homes
 - `2026-08-04-profile-derived-selectors-P02-S07` - Filter derived paths out of the profile overview projection in the same commit as the refusal, closing the window where a row would render that the write door refuses
 - `2026-08-04-profile-derived-selectors-P02-S08` - Delete the three derived-path seed lines from the eight files carrying the duplicated block, leaving the raw operator field untouched, and do NOT add per-descendant rows to compensate because all eight profiles declare zero descendants so the injector re-derives zero from genuine absence and no expected figure may move, treating any assertion that shifts as evidence the deletion was done wrong rather than as a figure to re-pin, and excluding the two idempotency tests whose purpose is asserting the injector defers to an explicit fact
 - `2026-08-04-profile-derived-selectors-P02-S13` - Retire the write-time emission of the guarderia aggregate from the descendant projection AND add its calculate-time injection in the same commit as the refusal, injecting UNCONDITIONALLY with a zero default exactly as its menores-3 sibling does, never preserving the current emit-only-when-positive shape, because a conditional emission is the one derived pattern that legitimately resolves to nothing on an ordinary filer with descendants and no childcare spend and would therefore false-fire the later advisory on the majority case, and because that aggregate is otherwise the only one of the four with no injector so a childless or zero-expense filer leaves its casilla unresolved today
