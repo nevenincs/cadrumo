@@ -21,8 +21,11 @@ required_text = ["Ingresos íntegros", "Ingresos"]
 # Alternative income binding that uses the IVA-exclusive taxable_base
 # (base imponible) from tagged invoices rather than the gross amount.
 # Activated when transactions carry an explicit taxable_base field.
-# Feeds the same casilla 01 as the gross_income_sum path; the operator
-# selects one binding or the other via the fact selector.
+# Feeds the same casilla 01 as the ingresos_integros_sum binding above;
+# the operator selects one binding or the other via the fact selector.
+# A row carrying no declared taxable_base contributes nothing here: this
+# fact sums DECLARED bases, and inventing one from cash would fabricate a
+# legal figure.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-actividad-economica-ingresos-taxable-base-cumulative"
 source = "ledger_renta_income_aggregation"

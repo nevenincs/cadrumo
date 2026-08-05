@@ -192,21 +192,25 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
     )
 
 
-def test_gross_income_sum_fact_sums_gross_amount_unconditionally() -> None:
-    """A gross_income_sum binding sums gross_amount even when a taxable_base_amount is declared.
+def test_cash_received_sum_fact_sums_gross_amount_unconditionally() -> None:
+    """A cash_received_sum binding sums gross_amount even when a taxable_base_amount is declared.
 
     No committed ``ledger_renta_income_aggregation`` binding declares
-    ``gross_income_sum`` (the selector's own default fact), so this branch
-    of the resolver's fact dispatch had zero test coverage before this
-    test. Constructs a synthetic sibling binding on the real casilla 01 —
-    a structural wiring check, not a legal-grounding claim.
+    ``cash_received_sum``, so this branch of the resolver's fact dispatch had
+    zero test coverage before this test. Constructs a synthetic sibling
+    binding on the real casilla 01 — a structural wiring check, not a
+    legal-grounding claim.
+
+    The fact is deliberately reachable but never committed: it sums the raw
+    bank-credited cash, which is neither gross of retención nor IVA-exclusive
+    and is therefore not the ingresos-íntegros measure casilla 01 asks for.
     """
     revision = _modelo_130_snapshot().revision
     committed_binding = next(binding for binding in revision.bindings if binding.id == _INGRESOS_BINDING)
     gross_binding = committed_binding.model_copy(
         update={
             "id": "test-m130-gross-income-sum",
-            "selector": {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "gross_income_sum"},
+            "selector": {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
         },
     )
     revision_with_gross_binding = revision.model_copy(update={"bindings": (*revision.bindings, gross_binding)})
@@ -223,7 +227,7 @@ def test_gross_income_sum_fact_sums_gross_amount_unconditionally() -> None:
 
     assert resolved[gross_binding.id] == Decimal("1210.00")
     assert resolved[gross_binding.id] != tagged.taxable_base_amount, (
-        "gross_income_sum must not fall back to the ingresos_integros_sum base-preferring behaviour"
+        "cash_received_sum must not fall back to the ingresos_integros_sum base-preferring behaviour"
     )
 
 
@@ -250,7 +254,7 @@ def test_income_binding_validator_rejects_legacy_target_casilla_key() -> None:
         DataBindingDefinition(
             id="m130-income-legacy-target-key",
             source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-            selector={"modelo": "130", "target_casilla": _M130_INGRESOS_CASILLA, "fact": "gross_income_sum"},
+            selector={"modelo": "130", "target_casilla": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
             aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-modelo-130-instructions",),

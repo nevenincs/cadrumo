@@ -16,17 +16,17 @@ the shape shared by every ledger-aggregation family; this module supplies
 only the M151 selector, its ``target_casilla_id`` match predicate, the
 two-fact aggregation (``ingresos_integros_sum`` with a
 ``taxable_base_amount``-or-``gross_amount`` per-observation fallback,
-``gross_income_sum`` summing ``gross_amount`` unconditionally), and the
+``cash_received_sum`` summing ``gross_amount`` unconditionally), and the
 declarable-amount false-fire guard.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from ....core import Modelo
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
@@ -84,21 +84,48 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
     source-scoped to Spanish income by art. 93.2 LIRPF). ``target_casilla_id``
     is the base casilla that receives the annual Spanish-source total.
 
+    ``fact`` is REQUIRED and carries no default, matching its
+    :class:`~._ledger_bindings._RentaLedgerIncomeSelector` sibling. The two
+    accepted values name different legal measures of the same rows, so a
+    default silently picks a legal claim on the taxpayer's behalf — and a
+    default on one sibling but not the other re-creates exactly the divergence
+    this requiredness closes (the two families defaulted to *different* facts
+    for one concept). An omitting binding fails registry validation naming the
+    accepted set.
+
     ``fact`` controls which aggregation path is applied:
 
-    - ``"ingresos_integros_sum"`` (default) sums the fiscally computable ingreso
+    - ``"ingresos_integros_sum"`` sums the fiscally computable ingreso
       per observation: ``taxable_base_amount`` (the IVA-exclusive base imponible)
       when the transaction carries an explicit IVA tagging, falling back to
       ``gross_amount`` when no base is declared — the canonical base path.
-    - ``"gross_income_sum"`` sums ``gross_amount`` across the window, ignoring
-      any declared taxable base.
+    - ``"cash_received_sum"`` sums ``gross_amount`` across the window, ignoring
+      any declared taxable base. Named for what it computes: the cash the bank
+      credited, which is neither gross of retención nor IVA-exclusive.
     """
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     modelo: Literal[Modelo.M151] = Modelo.M151
     target_casilla_id: CasillaId
-    fact: Literal["ingresos_integros_sum", "gross_income_sum"] = "ingresos_integros_sum"
+    fact: Literal["ingresos_integros_sum", "cash_received_sum"]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _require_explicit_fact(cls, value: object) -> object:
+        """Refuse an omitted ``fact``, naming the accepted set in the message.
+
+        Pydantic's own "Field required" names the field but not its accepted
+        values; a wrong value already enumerates the ``Literal`` members. This
+        closes the missing-value half so a binding author reads the choice
+        instead of guessing it.
+        """
+        if isinstance(value, Mapping) and "fact" not in value:
+            raise ValueError(
+                "ledger_impatriado_income_aggregation selector requires an explicit 'fact'; "
+                f"accepted facts are {sorted(_IMPATRIADO_SUPPORTED_FACTS)!r}",
+            )
+        return value
 
 
 # The single Modelo 151 base casilla this aggregation may feed. Validated at
@@ -108,7 +135,10 @@ _IMPATRIADO_BASE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
     "_IMPATRIADO_BASE_CASILLAS",
     "impatriado.base-liquidable-general",
 )
-_IMPATRIADO_SUPPORTED_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "gross_income_sum"})
+# The complete accepted ``fact`` set for this family, shared by the
+# missing-``fact`` refusal message and the build-time invariant so the two can
+# never name different sets.
+_IMPATRIADO_SUPPORTED_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "cash_received_sum"})
 
 
 def _impatriado_ledger_income_selector(binding: DataBindingDefinition) -> _ImpatriadoLedgerIncomeSelector:
@@ -205,6 +235,8 @@ def _impatriado_income_aggregate(
             ),
             Decimal("0"),
         )
+    # cash_received_sum: the raw bank-credited magnitude, ignoring any declared
+    # base. ``fact`` is a required closed Literal, so this is that member alone.
     return sum((observation.gross_amount for observation in matched), Decimal("0"))
 
 
@@ -216,7 +248,7 @@ def resolve_ledger_impatriado_income_aggregation_binding_values(
 
     The ``fact`` declared in the binding selector controls which field is
     summed: ``"ingresos_integros_sum"`` → ``observation.taxable_base_amount``
-    when declared, else ``observation.gross_amount``; ``"gross_income_sum"`` →
+    when declared, else ``observation.gross_amount``; ``"cash_received_sum"`` →
     ``observation.gross_amount``. Only ES-scoped observations reach this resolver;
     the source-scope segregation is owned by the application classifier.
     Delegates the filter/aggregate skeleton to

@@ -98,7 +98,7 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
     },
     "ledger_renta_income_aggregation": {
         "target_casilla_id": _M130_INGRESOS_CASILLA,
-        "fact": "gross_income_sum",
+        "fact": "cash_received_sum",
     },
     "profile": {"profile_key": "tax.id"},
     "related_party_operation": {"fact": "row_field", "row_field": "amount"},

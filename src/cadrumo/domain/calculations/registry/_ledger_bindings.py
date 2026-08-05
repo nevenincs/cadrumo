@@ -22,7 +22,7 @@ selector parser, match predicate, and fact-dispatch aggregation.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
@@ -883,6 +883,15 @@ class _RentaLedgerIncomeSelector(BaseModel):
     income via this aggregation path). ``target_casilla_id`` is the casilla id that
     receives the cumulative revenue total.
 
+    ``fact`` is REQUIRED and carries no default. Each accepted value names a
+    different legal measure of the same rows, so a default would silently pick
+    a legal claim on the taxpayer's behalf: ``cash_received_sum`` is the raw
+    bank-credited amount — net of any retención practicada and possibly
+    IVA-inclusive — while ``ingresos_integros_sum`` is the ingresos íntegros
+    the M130 instructions actually ask for. An omitting binding fails registry
+    validation naming the accepted set rather than inheriting the weakest
+    measure.
+
     ``fact`` controls which aggregation path is applied:
 
     - ``"ingresos_integros_sum"`` sums the fiscally computable ingreso per
@@ -894,12 +903,15 @@ class _RentaLedgerIncomeSelector(BaseModel):
       fiscalmente computables"; IVA repercutido is collected on behalf of
       Hacienda and is not computable income, so a tagged invoice
       contributes its base, never its IVA-inclusive gross.
-    - ``"gross_income_sum"`` sums ``RentaIncomeObservation.gross_amount``
+    - ``"cash_received_sum"`` sums ``RentaIncomeObservation.gross_amount``
       (``raw.amount`` or its business fraction) across the window,
-      ignoring any declared taxable base.
+      ignoring any declared taxable base. Named for what it computes: the
+      cash the bank credited, which is neither gross of retención nor
+      IVA-exclusive and is therefore NOT the ingresos-íntegros measure.
     - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
       (the IVA-exclusive base imponible).  Observations whose
-      ``taxable_base_amount`` is ``None`` contribute zero to this sum.
+      ``taxable_base_amount`` is ``None`` declare no base and contribute
+      nothing to this sum.
     - ``"withheld_amount_sum"`` sums the IRPF amount withheld at source from
       net-paid professional receipts.
     """
@@ -908,9 +920,24 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     modelo: Literal[Modelo.M130, Modelo.M100] = Modelo.M130
     target_casilla_id: CasillaId
-    fact: Literal["ingresos_integros_sum", "gross_income_sum", "taxable_base_sum", "withheld_amount_sum"] = (
-        "gross_income_sum"
-    )
+    fact: Literal["ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _require_explicit_fact(cls, value: object) -> object:
+        """Refuse an omitted ``fact``, naming the accepted set in the message.
+
+        Pydantic's own "Field required" names the field but not its accepted
+        values; a wrong value already enumerates the ``Literal`` members. This
+        closes the missing-value half so a binding author reads the choice
+        instead of guessing it.
+        """
+        if isinstance(value, Mapping) and "fact" not in value:
+            raise ValueError(
+                "ledger_renta_income_aggregation selector requires an explicit 'fact'; "
+                f"accepted facts are {sorted(_RENTA_INCOME_SUPPORTED_FACTS)!r}",
+            )
+        return value
 
 
 # Per-modelo income casillas this aggregation may feed. M130 (pago fraccionado)
@@ -934,8 +961,12 @@ def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedge
         ) from exc
 
 
-_RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
-    {"ingresos_integros_sum", "gross_income_sum", "taxable_base_sum", "withheld_amount_sum"},
+# The complete accepted ``fact`` set for this family, shared by the
+# missing-``fact`` refusal message and the build-time invariant so the two can
+# never name different sets. Covers both M130 and M100, which is why the name
+# carries no modelo segment.
+_RENTA_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset(
+    {"ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"},
 )
 
 
@@ -956,10 +987,10 @@ def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBin
             f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
             f"aggregation op 'sum', got {op.value!r}",
         )
-    if selector.fact not in _RENTA_130_INCOME_SUPPORTED_FACTS:
+    if selector.fact not in _RENTA_INCOME_SUPPORTED_FACTS:
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
-            f"facts {sorted(_RENTA_130_INCOME_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
+            f"facts {sorted(_RENTA_INCOME_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
         )
 
 
@@ -1011,9 +1042,23 @@ def _renta_income_aggregate(
             Decimal("0"),
         )
     if selector.fact == "taxable_base_sum":
-        return sum((observation.taxable_base_amount or Decimal("0") for observation in matched), Decimal("0"))
+        # A row that declares no base contributes nothing: this fact sums
+        # DECLARED bases, and inventing one from cash would fabricate a legal
+        # figure. Written as an explicit ``is not None`` filter rather than
+        # ``or Decimal("0")`` so a genuinely-zero declared base and an absent
+        # one stop sharing a branch.
+        return sum(
+            (
+                observation.taxable_base_amount
+                for observation in matched
+                if observation.taxable_base_amount is not None
+            ),
+            Decimal("0"),
+        )
     if selector.fact == "withheld_amount_sum":
         return sum((observation.withheld_amount for observation in matched), Decimal("0"))
+    # cash_received_sum: the raw bank-credited magnitude, ignoring any declared
+    # base. ``fact`` is a required closed Literal, so this is that member alone.
     return sum((observation.gross_amount for observation in matched), Decimal("0"))
 
 
@@ -1026,10 +1071,10 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     The ``fact`` declared in the binding selector controls which field is
     summed: ``"ingresos_integros_sum"`` → ``observation.taxable_base_amount``
     when declared, else ``observation.gross_amount`` (per-observation
-    fallback); ``"gross_income_sum"`` → ``observation.gross_amount``;
-    ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
-    ``None``); ``"withheld_amount_sum"`` → ``observation.withheld_amount``.
-    Delegates the filter/aggregate skeleton to
+    fallback); ``"cash_received_sum"`` → ``observation.gross_amount``;
+    ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (a base-less
+    row contributes nothing); ``"withheld_amount_sum"`` →
+    ``observation.withheld_amount``. Delegates the filter/aggregate skeleton to
     :func:`resolve_ledger_family_binding_values`, shared by every ledger
     family resolver.
 
