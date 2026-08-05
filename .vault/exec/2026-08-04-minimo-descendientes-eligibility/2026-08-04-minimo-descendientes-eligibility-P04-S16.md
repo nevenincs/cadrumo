@@ -5,12 +5,12 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:135be84804e2d2d850283e6cf851edb341c3891eab259a9d5ebead576b5e2e14'
+body_hash: 'sha256:8dbd105f83482330e9cc6b31c8bf0828cd7881c125c1a430d36b25f8b7ac8032'
 step_id: 'S16'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
-# Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin
+# Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child
 
 ## Scope
 
@@ -115,62 +115,13 @@ Every new token has test coverage in every production site that carries it.
 
 ## Notes
 
-Two defects were absorbed because they sit in files this change touches. The
-guided descendiente screen labelled its rentas, declaracion-propia and
-prorrata-minimo rows with the NIF question: those three page identifiers were
-never named in the prompt match and fell through its catch-all arm, so an
-operator was asked for a tax identifier three times and the figures they typed
-went to fields they never saw named. And the locale catalogues had been missing
-the anualidades alimentos label since the economic-dependency Step landed; it is
-filled honestly in all four rather than left as a scaffold placeholder.
+The heading of this record carried the phrase "BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin" long after that blocker was retired. It is corrected here.
 
-One naming debt is knowingly deferred and recorded at both ends. The derived path
-keeps a name asserting the menor de tres population while now carrying the
-guarderia one, which is wider by exactly the turning-three period. The honest
-name would say guarderia, but renaming it means renaming a binding identifier
-that sixteen Modelo 100 test fixtures supply by name, which is a mechanical sweep
-across peer-owned files rather than part of this change. The injector documents
-the mismatch, its sole consumer is the cap term, and the wider population is the
-correct one there.
+The blocker was dissolved by research rather than satisfied: the informative return reporting childcare custody is filed exclusively by the centre, which is required to apply its own region's calendar and report the resulting months to the authority. The determination was therefore never this application's to make, and building the table would have risked contradicting a return the authority already holds. The plan's own Parallelization section records this and warns in terms that the blocker must not be reinstated from reading the row.
 
-One pre-existing gap is recorded rather than fixed. Model-level refusals reaching
-the descendiente add verb surface as untranslated pydantic errors, because that
-handler catches only the answer-type error. This change does not widen the gap:
-its own cross-field refusal is raised at the parser boundary as the translated
-type, which is where the flag door's other pre-validations already live. The
-entry-date coherence refusals shipped earlier still reach that verb untranslated.
+That warning is why this correction matters more than tidiness. The plan row was updated when the blocker retired; this record was not, so the record became the surviving carrier of exactly the stale premise the plan warns readers against. A reader who trusts records over prose — which is the ordinary reader, because the record is the structured surface — would have reinstated a precondition the campaign had already measured out of existence.
 
-The full-tree run has fourteen failures outside this surface, attributed rather
-than assumed: none of the fourteen test files mentions descendants or guarderia
-at all, the CLI root help renders correctly, and the locale diff is purely
-additive. A peer holds live uncommitted work on the registry schema and
-validator, the registry conformance manager and a Modelo 100 verification
-expectation, which is what the registry-side failures read. That work was left
-untouched, and the commit carried an explicit pathspec verified after the fact
-against what the commit actually took.
+The same drift is corrected in the plan's own prose in the same change: a sentence there still said this Step was awaiting review "which is why the row is still open", while the row had been checked.
 
-Code review returned a pass with one medium finding, fixed in the closing change
-along with a second instance of the same defect class that the review did not
-reach. Both are the shape where an almost-right guard is worse than none, because
-the test proving it works passes.
+Surfaced by the campaign-close honesty review, which was looking for exactly this class — a document that outlives the correction that retired its premise.
 
-The reported one: the annual-figure guard stripped every leading dash before
-testing for digits, so a double sign survived into the integer conversion and
-raised exactly the bare, untranslated error the guard exists to replace. Not
-reachable from any entry door, since it needs a tampered fact store.
-
-The one found while fixing it is more reachable and was authored in this same
-pass. Three sites tested operator input with the standard digit predicate, which
-answers true for superscripts and for non-ASCII digit scripts while the integer
-conversion accepts only the second group. A superscript is a shape an operator
-reaches by pasting a footnote marker out of a formatted certificate, and the
-resulting error escaped the wizard's answer validator entirely, because that
-validator catches only the typed refusal. The operator met a crash where a verdict
-was due. Both now route through one named predicate whose docstring states why the
-obvious predicate is the wrong one, because the same mistake was made
-independently at three sites and the reasoning is what stops a fourth.
-
-The Step row's own action text was corrected before the row was checked. It still
-named the per-comunidad regional table as a blocker, which was retired on
-measurement rather than descoped, and a row naming a retired blocker is a trap for
-the reader who trusts rows over prose.
