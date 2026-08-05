@@ -418,6 +418,12 @@ from ._handoffs import (
     audit_registry_relation_handoff_applicability,
     audit_registry_relation_handoffs,
 )
+from ._handoff_paths import (
+    HandoffPathClassification,
+    RegistryHandoffPathAudit,
+    RelationHandoffPathRecord,
+    audit_registry_handoff_paths,
+)
 from ._relations import (
     RegistryFoldRequirement,
     materialize_relation_binding_values,
@@ -668,6 +674,7 @@ __all__ = [
     "GroiObservation",
     "GroiOracle",
     "GroiReplayDriver",
+    "HandoffPathClassification",
     "ImpatriadoIncomeObservationProtocol",
     "InputKind",
     "InputKindValue",
@@ -752,6 +759,7 @@ __all__ = [
     "RegistryExternalLink",
     "RegistryFiledStateComparison",
     "RegistryFoldRequirement",
+    "RegistryHandoffPathAudit",
     "RegistryLoadError",
     "RegistryModeloObservation",
     "RegistryQueryService",
@@ -771,6 +779,7 @@ __all__ = [
     "RelatedPartyOperationObservation",
     "RelationDefinition",
     "RelationHandoffApplicabilityRecord",
+    "RelationHandoffPathRecord",
     "RelationHandoffRecord",
     "RelationId",
     "RemoteOperation",
@@ -833,6 +842,7 @@ __all__ = [
     "audit_bundled_classification_coherence",
     "audit_bundled_external_grounding",
     "audit_registry_construct_evidence",
+    "audit_registry_handoff_paths",
     "audit_registry_model_law_coverage",
     "audit_registry_oracle_bindings",
     "audit_registry_relation_handoff_applicability",

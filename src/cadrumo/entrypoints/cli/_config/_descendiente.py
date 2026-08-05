@@ -202,6 +202,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"dependencia={_tri(descendant.dependencia_economica)}",
                     f"custodia={str(descendant.custodia_compartida).lower()}",
                     f"meses_madre_trabajo_2024={descendant.meses_madre_trabajo_2024}",
+                    f"alta_posterior_nacimiento_mes={descendant.alta_posterior_nacimiento_mes or '-'}",
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
                     f"gastos_guarderia_mensuales={_guarderia_mensual_or_dash(descendant)}",
                     f"nif={descendant.nif or '-'}",
@@ -241,6 +242,7 @@ def _emit_descendiente_list(
                 presenta_declaracion_propia=descendant.presenta_declaracion_propia,
                 prorrata_minimo=descendant.prorrata_minimo,
                 meses_madre_trabajo_2024=descendant.meses_madre_trabajo_2024,
+                alta_posterior_nacimiento_mes=descendant.alta_posterior_nacimiento_mes,
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
                 gastos_guarderia_mensuales=tuple(
                     GuarderiaMonthSpendPayload(month=entry.month, amount_euros=entry.amount_euros)
@@ -471,7 +473,7 @@ def descendiente_add(
                 "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65]"
                 "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
                 "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
-                "[,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N]"
+                "[,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N]"
                 "[,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]. "
                 "Repeatable. Run `aeat config profile descendiente` with no "
                 "subcommand to enter these guided."

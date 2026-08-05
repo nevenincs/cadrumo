@@ -144,6 +144,93 @@ class TestParseDescendienteFlagMesesTrabajo:
 
 
 # ---------------------------------------------------------------------------
+# The Art. 81.1 post-birth alta-posterior completion month: the fact, its
+# roundtrip, its coherence rule, and the year-gated method the engine consults.
+# ---------------------------------------------------------------------------
+
+
+class TestAltaPosteriorNacimientoMes:
+    """``alta_posterior_nacimiento_mes``: the operator-supplied completion month."""
+
+    def test_parsed_from_the_descendiente_flag(self) -> None:
+        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=5")
+        assert d.alta_posterior_nacimiento_mes == 5
+
+    def test_absent_from_the_flag_stays_none(self) -> None:
+        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=8")
+        assert d.alta_posterior_nacimiento_mes is None
+
+    def test_flag_out_of_range_raises(self) -> None:
+        for case_id, spec in (
+            ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=13"),
+            ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=0"),
+        ):
+            try:
+                with pytest.raises(ValueError, match="ALTA_POSTERIOR_MES must be 1"):
+                    parse_descendiente_flag(spec)
+            except AssertionError as exc:
+                raise AssertionError(f"out-of-range ALTA_POSTERIOR_MES was accepted: {case_id}") from exc
+
+    def test_declared_with_zero_worked_months_is_refused(self) -> None:
+        """The completion month is one of the worked months, not separate from them."""
+        with pytest.raises(ValueError, match="meses_madre_trabajo_2024 is 0"):
+            DescendantInfo(birth_date=date(2023, 1, 1), alta_posterior_nacimiento_mes=5)
+
+    def test_roundtrip_stored_and_reloaded(self) -> None:
+        original = DescendantInfo(
+            birth_date=date(2023, 1, 1),
+            meses_madre_trabajo_2024=8,
+            alta_posterior_nacimiento_mes=5,
+        )
+        facts = dict(descendant_facts_from_list((original,)))
+
+        assert facts.get("renta_family.descendiente.0.alta_posterior_nacimiento_mes") == "5"
+
+        reloaded = descendant_list_from_facts(facts)
+        assert reloaded[0].alta_posterior_nacimiento_mes == 5
+        assert reloaded[0] == original
+
+    def test_roundtrip_absent_stays_absent(self) -> None:
+        original = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8)
+        facts = dict(descendant_facts_from_list((original,)))
+
+        assert "renta_family.descendiente.0.alta_posterior_nacimiento_mes" not in facts
+
+        reloaded = descendant_list_from_facts(facts)
+        assert reloaded[0].alta_posterior_nacimiento_mes is None
+
+    def test_a_corrupted_stored_month_refuses_rather_than_reading_as_absent(self) -> None:
+        """Anti-tautology: a malformed stored value must not silently withhold the increment."""
+        original = DescendantInfo(
+            birth_date=date(2023, 1, 1),
+            meses_madre_trabajo_2024=8,
+            alta_posterior_nacimiento_mes=5,
+        )
+        facts = dict(descendant_facts_from_list((original,)))
+        facts["renta_family.descendiente.0.alta_posterior_nacimiento_mes"] = "13"
+
+        with pytest.raises(ValueError, match="alta_posterior_nacimiento_mes must be a month 1-12"):
+            descendant_list_from_facts(facts)
+
+
+class TestMaternidadAltaPosteriorIncrementApplies:
+    """The engine-side gate: a declared month plus the year-2023-onward boundary."""
+
+    def test_applies_from_2023_when_declared(self) -> None:
+        child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8, alta_posterior_nacimiento_mes=5)
+        assert child.maternidad_alta_posterior_increment_applies(2023) is True
+
+    def test_does_not_apply_before_2023_even_when_declared(self) -> None:
+        """Same descendant, one filing year earlier: the route does not exist yet."""
+        child = DescendantInfo(birth_date=date(2020, 1, 1), meses_madre_trabajo_2024=8, alta_posterior_nacimiento_mes=5)
+        assert child.maternidad_alta_posterior_increment_applies(2022) is False
+
+    def test_does_not_apply_when_nothing_is_declared(self) -> None:
+        child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8)
+        assert child.maternidad_alta_posterior_increment_applies(2023) is False
+
+
+# ---------------------------------------------------------------------------
 # CLI helper functions
 # ---------------------------------------------------------------------------
 
@@ -162,15 +249,105 @@ class TestCLIHelpers:
             ("zero-months", [("0", 0)], 0),
         )
         for case_id, inputs, expected in cases:
-            assert compute_deduccion_maternidad_0611(inputs) == expected, case_id
+            assert compute_deduccion_maternidad_0611(inputs, filing_year=2024) == expected, case_id
 
     def test_compute_anti_tautology_delta(self) -> None:
         """Incrementing meses from 6 to 12 must change result by exactly 600."""
         from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        r6 = compute_deduccion_maternidad_0611([("0", 6)])
-        r12 = compute_deduccion_maternidad_0611([("0", 12)])
+        r6 = compute_deduccion_maternidad_0611([("0", 6)], filing_year=2024)
+        r12 = compute_deduccion_maternidad_0611([("0", 12)], filing_year=2024)
         assert r12 - r6 == 600
+
+
+class TestComputeDeduccionMaternidadAltaPosterior:
+    """The Art. 81.1 post-birth alta increment, oracle-anchored on the bundled
+
+    Manual Práctico de Renta 2023 worked example ("Alta en la Seguridad Social
+    con posterioridad al nacimiento y 30 días cotizados en el mes de mayo"):
+    doña M.D.O had mellizos in January 2023, was not registered with the
+    Seguridad Social at the birth, and completed the 30-day minimum
+    contribution period in May 2023. Each mellizo contributes 8 months
+    (May-December) and receives the 150 euro completion-month increment:
+    ``[(8 x 100) + (1 x 150)] = 950`` per mellizo, ``1.900`` for the two
+    together. Her older child contributes 4 months (May-August, the month
+    before his third birthday) and the same increment: ``[(4 x 100) + (1 x
+    150)] = 550``. None of these figures is derivable from the formula under
+    test without the increment: every one is the manual's own printed total.
+    """
+
+    def test_the_manual_worked_example_reproduces_verbatim(self) -> None:
+        """Every printed figure from the manual's own worked example."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        mellizos_total = compute_deduccion_maternidad_0611(
+            [("mellizo_a", 8), ("mellizo_b", 8)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"mellizo_a", "mellizo_b"}),
+        )
+        assert mellizos_total == 1900
+
+        one_mellizo = compute_deduccion_maternidad_0611(
+            [("mellizo_a", 8)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"mellizo_a"}),
+        )
+        assert one_mellizo == 950
+
+        hijo_mayor = compute_deduccion_maternidad_0611(
+            [("hijo_mayor", 4)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"hijo_mayor"}),
+        )
+        assert hijo_mayor == 550
+
+    def test_the_increment_raises_the_per_hijo_cap_to_1350(self) -> None:
+        """A hijo whose months alone would exceed 1.200 is capped at 1.350, not 1.200."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        capped = compute_deduccion_maternidad_0611(
+            [("0", 12)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"0"}),
+        )
+        assert capped == 1350
+
+    def test_a_hijo_absent_from_alta_posterior_hijos_keeps_the_ordinary_cap(self) -> None:
+        """The increment adds to a named hijo only; an unnamed one is untouched."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        mixed = compute_deduccion_maternidad_0611(
+            [("alta", 8), ("ordinary", 8)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"alta"}),
+        )
+        assert mixed == 950 + 800
+
+    def test_filing_years_before_2023_take_no_increment(self) -> None:
+        """The route is year-gated: the SAME pair and hijo id, one year earlier, gets nothing extra.
+
+        Proves the boundary runs both ways: 2023 grants the increment (asserted
+        above) and 2022 -- one year earlier, same inputs -- does not.
+        """
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        pre_2023 = compute_deduccion_maternidad_0611(
+            [("mellizo_a", 8)],
+            filing_year=2022,
+            alta_posterior_hijos=frozenset({"mellizo_a"}),
+        )
+        assert pre_2023 == 800
+
+    def test_filing_year_2022_never_exceeds_the_ordinary_1200_cap(self) -> None:
+        """The raised 1.350 cap must not leak into a pre-2023 filing year."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        pre_2023_capped = compute_deduccion_maternidad_0611(
+            [("0", 12)],
+            filing_year=2022,
+            alta_posterior_hijos=frozenset({"0"}),
+        )
+        assert pre_2023_capped == 1200
 
 
 # ---------------------------------------------------------------------------

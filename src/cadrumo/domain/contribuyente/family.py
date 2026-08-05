@@ -23,6 +23,7 @@ from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     CUSTODIA_COMPARTIDA_PRORRATA_FACTOR,
+    DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR,
     MINIMO_DESCENDIENTE_MAX_AGE,
     MINIMO_MENOR_TRES_MAX_AGE,
 )
@@ -242,6 +243,24 @@ class DescendantInfo(BaseModel):
         the 2024 filing year.  Used by Art. 81 LIRPF deducción maternidad:
         ``min(meses × 100, 1_200)`` per eligible child.  Valid range: 0–12.
         Default ``0`` (no deducción contribution from this child).
+    alta_posterior_nacimiento_mes
+        The calendar month (1-12) in which the mother — not registered with the
+        Seguridad Social or a mutualidad at this child's birth — completed the
+        30-day minimum contribution period Art. 81.1 LIRPF requires for the
+        post-birth alta route ("que en dicho momento o en cualquier momento
+        posterior estén dadas de alta ... con un período mínimo, en este último
+        caso, de 30 días cotizados"). ``None`` (the default) means the ordinary
+        case: no post-birth alta increment applies, whether because the mother
+        was already registered at the birth or because none is declared. This is
+        the mother's employment history, exactly as ``meses_madre_trabajo_2024``
+        is, and this application does not hold it and must not infer it.
+
+        The route itself is filing-year gated: LIRPF art. 81.1 reached only a
+        mother already registered "en el momento del nacimiento" before filing
+        year 2023 (see
+        :data:`~cadrumo.core.external_constants.DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR`),
+        so a declared month for an earlier filing year contributes no
+        increment — see :meth:`maternidad_alta_posterior_increment_applies`.
     gastos_guarderia_euros
         Actual guardería / centro educación infantil autorizado expenses paid
         for this child (Art. 81.2 LIRPF), as an ANNUAL total.  Integer euros,
@@ -274,6 +293,7 @@ class DescendantInfo(BaseModel):
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
+    alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
     nif: str | None = None
@@ -385,6 +405,29 @@ class DescendantInfo(BaseModel):
         """
         self._refuse_out_of_range_entry_dates()
         self._refuse_incoherent_entry_dates()
+        return self
+
+    @model_validator(mode="after")
+    def _validate_alta_posterior_coherence(self) -> DescendantInfo:
+        """Refuse an alta-posterior month declared against zero worked months.
+
+        ``meses_madre_trabajo_2024`` already counts the completion month as one
+        of its declared months (the manual's own worked example counts May
+        among the mellizos' eight months, not separately from them), so a month
+        naming a completion event while the mother is declared to have worked
+        zero months is not a state Art. 81.1 describes -- it is either a
+        forgotten MESES_TRABAJO figure or a month named for the wrong child.
+        Refusing here is the same call every other coherence rule on this
+        record makes: a silent zero-effect acceptance would leave the operator
+        believing the increment applies when nothing downstream can grant it.
+        """
+        if self.alta_posterior_nacimiento_mes is not None and self.meses_madre_trabajo_2024 <= 0:
+            raise ProfileValidationError(
+                "alta_posterior_nacimiento_mes is declared but meses_madre_trabajo_2024 is 0; the "
+                "completion month is one of the declared working months, not separate from them. "
+                "Declare meses_madre_trabajo_2024 as well, or drop alta_posterior_nacimiento_mes if "
+                "this child's mother was already registered at the birth.",
+            )
         return self
 
     def _refuse_out_of_range_entry_dates(self) -> None:
@@ -799,6 +842,26 @@ class DescendantInfo(BaseModel):
             return 0
         eligible = self._maternidad_edad_months(filing_year) | self._maternidad_entry_window_months(filing_year)
         return min(self.meses_madre_trabajo_2024, len(eligible))
+
+    def maternidad_alta_posterior_increment_applies(self, filing_year: int) -> bool:
+        """Whether Art. 81.1's post-birth alta increment applies to this child in *filing_year*.
+
+        Two conditions, both the operator's to supply and neither this method's
+        to infer: a completion month must be declared
+        (``alta_posterior_nacimiento_mes``), and *filing_year* must be at or
+        after :data:`~cadrumo.core.external_constants.DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR`
+        — the route did not exist before it, so a month recorded against an
+        earlier filing carries no increment.
+
+        Does not itself re-check :meth:`maternidad_contributing_meses`'s
+        eligibility gate: a caller only consults this for a ``hijo_id`` already
+        present in that method's contributing pairs, exactly as
+        :meth:`meses_maternidad_por_descendiente` does.
+        """
+        return (
+            self.alta_posterior_nacimiento_mes is not None
+            and filing_year >= DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR
+        )
 
     def guarderia_contributing_spend(self, filing_year: int) -> int:
         """Art. 81.2 guardería spend this descendant contributes in *filing_year*.

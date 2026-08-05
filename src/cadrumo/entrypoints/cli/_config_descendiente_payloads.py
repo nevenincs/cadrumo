@@ -86,6 +86,7 @@ class ProfileDescendientePayload(OutputSchema):
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
+    alta_posterior_nacimiento_mes: int | None = Field(default=None, ge=1, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
     gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
     nif: DescendantNif | None = None
@@ -145,6 +146,20 @@ class ProfileDescendientePayload(OutputSchema):
         if self.acogimiento_resolucion_date is not None and self.relacion not in ART_58_2_ENTITLING_RELACIONES:
             raise ValueError(
                 f"acogimiento_resolucion_date cannot be carried by relacion={self.relacion.value!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_alta_posterior_coherence(self) -> ProfileDescendientePayload:
+        """Mirror the canonical alta-posterior/worked-months coherence rule on the wire.
+
+        Mirrored for the same reason the entry-date rules above are: a payload a
+        consumer could construct but the canonical record would refuse is a
+        shape that exists only on the wire.
+        """
+        if self.alta_posterior_nacimiento_mes is not None and self.meses_madre_trabajo_2024 <= 0:
+            raise ValueError(
+                "alta_posterior_nacimiento_mes is declared but meses_madre_trabajo_2024 is 0",
             )
         return self
 

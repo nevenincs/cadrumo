@@ -682,6 +682,34 @@ DEDUCCION_MATERNIDAD_MENSUAL_EUR: Final[int] = 100
 #: The deducción accrues at €100/month and is capped at this amount per hijo; casilla 0611.
 DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR: Final[int] = 1200
 
+#: Art. 81.1 LIRPF one-off increment for the calendar month in which a madre not
+#: registered with the Seguridad Social (or a mutualidad) at the birth completes the
+#: 30-day minimum contribution period the article requires for the post-birth alta
+#: route ("estén dadas de alta en el régimen correspondiente de la Seguridad Social o
+#: Mutualidad con un período mínimo, en este último caso, de 30 días cotizados"). The
+#: bundled Manual Práctico de Renta 2023 worked example ("Alta en la Seguridad Social
+#: con posterioridad al nacimiento y 30 días cotizados en el mes de mayo") reproduces the
+#: arithmetic verbatim: the completion month counts once at the ordinary monthly rate
+#: AND once again at this increment — ``[(8 meses x 100 euros) + (1 mes x 150)] = 950``.
+DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR: Final[int] = 150
+
+#: The per-hijo annual cap while the Art. 81.1 post-birth alta increment applies:
+#: DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR raised by
+#: DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR. Matches the "Límite de la
+#: deducción por hijo (1.350 euros)" the Manual Práctico de Renta 2023 worked example
+#: states for both children it covers.
+DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR: Final[int] = 1350
+
+#: First filing year the post-birth alta route (and its 150 euro increment) reaches.
+#: Before it, Art. 81 LIRPF granted the deducción only to a madre already registered
+#: with the Seguridad Social or a mutualidad "en el momento del nacimiento" (Manual
+#: Práctico de Renta 2021, "Normativa: Arts. 81 Ley IRPF y 60 Reglamento" — the manual's
+#: own beneficiary test names no post-birth alta at all). The Manual Práctico de Renta
+#: 2023 worked example states the extension in terms: "a partir del 1 de enero de 2023
+#: se han ampliado los supuestos que dan derecho a ésta". Filing years before this take
+#: no increment and keep the ordinary DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR cap.
+DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR: Final[int] = 2023
+
 #: Art. 58.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) ordinary mínimo-por-descendientes
 #: age ceiling: a descendant qualifies for the ordinary mínimo while younger than 25
 #: (exclusive) at year end, unless disabled (which removes the age limit).

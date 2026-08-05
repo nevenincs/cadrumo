@@ -110,6 +110,8 @@ from cadrumo.domain.calculations.registry import (
     bundled_authority,
     load_bundled_external_oracle_inventory,
 )
+
+
 @dataclass(frozen=True, slots=True)
 class _SharedModeloLocaleCoverageRecord:
     """Shared-catalogue coverage for one Modelo revision and locale."""

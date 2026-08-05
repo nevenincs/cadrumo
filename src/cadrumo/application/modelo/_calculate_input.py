@@ -1028,7 +1028,21 @@ def apply_calculation_shortcut_inputs(
 
     maternidad_meses = meses_trabajo_con_hijo_menor_3 or declared_meses
     if maternidad_meses:
-        deduccion = compute_deduccion_maternidad_0611(list(maternidad_meses))
+        # The alta-posterior increment is a fact carried on the profile's
+        # descendiente records; the `--meses-trabajo-con-hijo-menor-3` shortcut
+        # supplies bare (hijo, meses) pairs with no linked record to read it
+        # from, so it never contributes the increment. The two are already
+        # mutually exclusive above.
+        alta_posterior_hijos = (
+            maternidad.alta_posterior_hijos
+            if maternidad is not None and not meses_trabajo_con_hijo_menor_3
+            else frozenset()
+        )
+        deduccion = compute_deduccion_maternidad_0611(
+            list(maternidad_meses),
+            filing_year=_work_unit_filing_year(work_unit_id),
+            alta_posterior_hijos=alta_posterior_hijos,
+        )
         resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
             deduccion
         )

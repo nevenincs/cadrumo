@@ -360,6 +360,15 @@ class MaternidadMesesResolution:
     withheld_indices: tuple[str, ...]
     ceilings_resolved: bool
     declares_meses: bool
+    alta_posterior_hijos: frozenset[str] = frozenset()
+    """``hijo_id`` values from :attr:`pairs` that also carry the Art. 81.1 post-birth
+
+    alta increment (:meth:`~domain.contribuyente.DescendantInfo.maternidad_alta_posterior_increment_applies`)
+    for the resolved filing year. A ``hijo_id`` absent from :attr:`pairs` is never a
+    member here even if its record declares a completion month, because a
+    withheld pair means the ordinary predicate already excludes the descendant,
+    and the increment can only ever add to a contributing pair, never grant one.
+    """
 
 
 def resolve_maternidad_meses(
@@ -413,6 +422,15 @@ def resolve_maternidad_meses(
         ),
         ceilings_resolved=True,
         declares_meses=declares_meses,
+        # Consulted only for a hijo_id already carried in `pairs` above: the
+        # increment can only ever add to a contributing pair, never grant one
+        # a withheld or zero-months descendant does not have.
+        alta_posterior_hijos=frozenset(
+            str(index)
+            for index, descendant in enumerate(profile.descendientes)
+            if contributed[str(index)] > 0
+            and descendant.maternidad_alta_posterior_increment_applies(snapshot.filing_year)
+        ),
     )
 
 
