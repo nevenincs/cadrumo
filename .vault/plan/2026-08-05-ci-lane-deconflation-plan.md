@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:a312a533e8ce9289503b1aae1e601241aa6e9db644c63fcebfa1314b89e741c1'
+body_hash: 'sha256:aa088dad53bf81c88a812b70cdd37f0b69526bc2f9d3509c5b5f6c496184a1f1'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -38,7 +38,7 @@ The two new lanes both failed their first real execution and their fixes are unv
 - [ ] `P01.S01` - Verify the docs lane passes on a runner now that it builds before it reads, its first run failed 13 times on an absent docs/_build/html; `.github/workflows/docs.yml`.
 - [ ] `P01.S02` - Verify the frontend lane passes on a runner under Node 22, its first run refused npm ci because jest-dom 7.0.0 requires node 22 and the manifest under-declares at 20.19; `.github/workflows/frontend.yml`.
 - [ ] `P01.S03` - Dispatch ci-full for its first ever execution and record the result, its run count is zero so every claim about its steps is structural rather than observed; `.github/workflows/ci-full.yml`.
-- [ ] `P01.S04` - Move the ci-full docs build above the tooling-gates step so the terminology gates that resolve to built HTML get their artefact, blocked until the legal-entry defect stops masking the dependency; `.github/workflows/ci-full.yml`.
+- [x] `P01.S04` - Move the ci-full docs build above the tooling-gates step so the terminology gates that resolve to built HTML get their artefact, blocked until the legal-entry defect stops masking the dependency; `.github/workflows/ci-full.yml`.
 - [ ] `P01.S05` - Decide whether to push the branch, a push carries every ancestor including peer in-flight work so it is an operator call and it gates the three verification rows above; `origin/main`.
 
 ### Phase `P02` - Enrolled-lane backlog closure
@@ -51,16 +51,16 @@ Enrolling the integration suite and the dev tooling gates exposed accumulated ro
 - [ ] `P02.S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass; `.github/workflows/ci-full.yml`.
 - [ ] `P02.S10` - Flip continue-on-error off the integration serial step once one runner execution is observed, its build branch producing three wheels and three sdists has never been watched; `.github/workflows/ci-full.yml`.
 - [x] `P02.S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom; `src/cadrumo/entrypoints/mcp`.
-- [ ] `P02.S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it; `src/cadrumo/entrypoints/mcp`.
+- [x] `P02.S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it; `src/cadrumo/entrypoints/mcp`.
 
 ### Phase `P03` - Registry and core follow-through
 
 Findings the campaign surfaced in the registry and core surfaces that are real but were correctly not fixed inline, either because they need domain grounding or because acting on them would have collided with in-flight work.
 
 - [x] `P03.S11` - Build the registry selector parity gate binding declared period_selector tokens to the accepted set, delegating to the production validator rather than restating it so the gate cannot become a second authority; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `P03.S12` - Route the declaracion parser administrative-token set through the core authority, it hardcodes four tokens and is missing COMUNICACION and VARIACION from the core set it shadows; `src/cadrumo/adapters/inbound/declaracion/_parser.py`.
+- [x] `P03.S12` - Route the declaracion parser administrative-token set through the core authority, it hardcodes four tokens and is missing COMUNICACION and VARIACION from the core set it shadows; `src/cadrumo/adapters/inbound/declaracion/_parser.py`.
 - [ ] `P03.S13` - Decide the strength class for casillas 0529 and 0531, promoting them to the coverage-gated class raises the denominator and could flip verdicts on legitimate filings so it needs domain grounding; `src/cadrumo/_data/registry/aeat/modelos/100`.
-- [ ] `P03.S14` - Fix the embedded newline in the rd-439-2007 art-76 legal entry notes field, the validator rejects any Unicode C category and a narrower scan for control characters reads as clean; `src/cadrumo/_data/registry/aeat/legal`.
+- [x] `P03.S14` - Fix the embedded newline in the rd-439-2007 art-76 legal entry notes field, the validator rejects any Unicode C category and a narrower scan for control characters reads as clean; `src/cadrumo/_data/registry/aeat/legal`.
 - [x] `P03.S18` - Pin which snapshot coordinates the filing-period cross-check covers, the consistency validator returns early on a null filing period so administrative-token snapshots quietly lost a check the validator's name still implies; `src/cadrumo/domain/calculations/registry/tests/test_snapshot_filing_period_coverage.py`.
 - [ ] `P03.S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator; `src/cadrumo/domain/calculations/registry`.
 
@@ -71,10 +71,10 @@ Work this campaign found and cannot close, recorded so it is not silently droppe
 - [x] `P04.S15` - Repair the four core tests broken by the root-only Modelo localization migration, it stripped title and official_name and label from the M036 manifest without updating hand-derived expectations; `src/cadrumo/core/tests/test_toml_registry_parity.py`.
 - [ ] `P04.S16` - Re-pin the model-facing description digest once the description sources settle, the gate forbids re-pinning from a dirty tree and the locale and CLI help surfaces are actively churning; `dev/packaging/tests/test_verify_distribution_identity.py`.
 - [ ] `P04.S17` - Fill or uncheck the 204 semantic-dedup exec records that closed their Steps with empty Outcome sections, the baseline schema note forbids absorbing them into the tolerated set; `.vault/exec/2026-06-13-semantic-dedup-epic`.
-- [ ] `P04.S20` - Resolve the import-hygiene test-debt failures from the maternidad private reaches, raising a baseline designed to only decrease would invert the ratchet so establish whether the debt is legitimate before admitting it; `src/cadrumo/tests/test_import_hygiene_gate.py`.
-- [ ] `P04.S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent; `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`.
+- [x] `P04.S20` - Resolve the import-hygiene test-debt failures from the maternidad private reaches, raising a baseline designed to only decrease would invert the ratchet so establish whether the debt is legitimate before admitting it; `src/cadrumo/tests/test_import_hygiene_gate.py`.
+- [x] `P04.S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent; `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`.
 - [ ] `P04.S24` - Confirm with the localization cascade owner that the result-summary application row is meant to follow the active output language, the repair is stronger than what it replaced but it crosses another campaign's surface; `src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py`.
-- [ ] `P04.S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in; `src/cadrumo/entrypoints/cli/tests`.
+- [x] `P04.S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in; `src/cadrumo/entrypoints/cli/tests`.
 - [x] `P04.S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero; `.vaultspec/templates`.
 - [x] `P04.S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads; `src/cadrumo/entrypoints/mcp/tests`.
 

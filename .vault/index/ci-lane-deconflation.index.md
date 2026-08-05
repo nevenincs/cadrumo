@@ -6,12 +6,19 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce5c9410d5d73b89548e74516d9a1b46fbb4cd2734d57141443a728d95cd9c46'
+body_hash: 'sha256:36deebcb4c9e6891f9761903c522f3a9f803d2b97d1eb351627fcf8b9c17696d'
 related:
+  - '[[2026-08-05-ci-lane-deconflation-P01-S04]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S22]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S23]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S11]]'
+  - '[[2026-08-05-ci-lane-deconflation-P03-S12]]'
+  - '[[2026-08-05-ci-lane-deconflation-P03-S14]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S18]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S15]]'
+  - '[[2026-08-05-ci-lane-deconflation-P04-S20]]'
+  - '[[2026-08-05-ci-lane-deconflation-P04-S21]]'
+  - '[[2026-08-05-ci-lane-deconflation-P04-S25]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S26]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S27]]'
   - '[[2026-08-05-ci-lane-deconflation-adr]]'
@@ -19,6 +26,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-plan]]'
   - '[[2026-08-05-ci-lane-deconflation-schema-size-instrument-adr]]'
+  - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 ---
 
 # `ci-lane-deconflation` feature index
@@ -34,12 +42,23 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr` - `ci-lane-deconflation` adr: `the breach is a conjunction and the payload is over its real allowance` | (**status:** `accepted`)
 - `2026-08-05-ci-lane-deconflation-schema-size-instrument-adr` - `ci-lane-deconflation` adr: `the gate measures a real target and names the wrong one` | (**status:** `accepted`)
 
+### audit
+
+- `2026-08-05-ci-lane-deconflation-step-check-attribution-audit` - `ci-lane-deconflation` audit: `the reserialisation finding is disproved and its cause misattributed`
+
 ### exec
 
+- `2026-08-05-ci-lane-deconflation-P01-S04` - Move the ci-full docs build above the tooling-gates step so the terminology gates that resolve to built HTML get their artefact, blocked until the legal-entry defect stops masking the dependency
 - `2026-08-05-ci-lane-deconflation-P02-S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom
+- `2026-08-05-ci-lane-deconflation-P02-S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it
 - `2026-08-05-ci-lane-deconflation-P03-S11` - Build the registry selector parity gate binding declared period_selector tokens to the accepted set, delegating to the production validator rather than restating it so the gate cannot become a second authority
+- `2026-08-05-ci-lane-deconflation-P03-S12` - Route the declaracion parser administrative-token set through the core authority, it hardcodes four tokens and is missing COMUNICACION and VARIACION from the core set it shadows
+- `2026-08-05-ci-lane-deconflation-P03-S14` - Fix the embedded newline in the rd-439-2007 art-76 legal entry notes field, the validator rejects any Unicode C category and a narrower scan for control characters reads as clean
 - `2026-08-05-ci-lane-deconflation-P03-S18` - Pin which snapshot coordinates the filing-period cross-check covers, the consistency validator returns early on a null filing period so administrative-token snapshots quietly lost a check the validator's name still implies
 - `2026-08-05-ci-lane-deconflation-P04-S15` - Repair the four core tests broken by the root-only Modelo localization migration, it stripped title and official_name and label from the M036 manifest without updating hand-derived expectations
+- `2026-08-05-ci-lane-deconflation-P04-S20` - Resolve the import-hygiene test-debt failures from the maternidad private reaches, raising a baseline designed to only decrease would invert the ratchet so establish whether the debt is legitimate before admitting it
+- `2026-08-05-ci-lane-deconflation-P04-S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent
+- `2026-08-05-ci-lane-deconflation-P04-S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in
 - `2026-08-05-ci-lane-deconflation-P04-S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero
 - `2026-08-05-ci-lane-deconflation-P04-S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads
 
