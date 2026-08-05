@@ -86,6 +86,45 @@ class TestAnnualTotalFallsBackToAgeEligibleMonths:
         assert _child(date(_YEAR + 1, 2, 1), annual=3000).age_eligible_guarderia_meses(_YEAR) == 0
 
 
+class TestAgeEligibleMonthsIsTotalNotJustCorrectWhereItIsCalled:
+    """The accessor answers honestly for inputs its one caller cannot produce.
+
+    ``guarderia_qualifying_meses`` reaches it only under an "under three at
+    year-end" guard, where "alive" and "alive and under three" coincide. A
+    version that simply returned twelve would be indistinguishable in
+    production -- and wrong the moment anything else asked. It is public so an
+    operator-facing advisory can quote the months it prorated by, and a figure
+    quoted to a taxpayer must be reproducible from their own child's age.
+    """
+
+    def test_a_child_already_over_three_all_year_is_eligible_for_none(self) -> None:
+        """The case that read as twelve before this was made total."""
+        assert _child(date(2019, 6, 10)).age_eligible_guarderia_meses(_YEAR) == 0
+
+    def test_a_child_turning_three_is_eligible_only_until_the_birthday_month(self) -> None:
+        """Turning three in June: January to May, five months.
+
+        The birthday month is excluded, matching the boundary the spend method
+        already draws for that period.
+        """
+        assert _child(date(2021, 6, 10)).age_eligible_guarderia_meses(_YEAR) == 5
+
+    def test_a_january_third_birthday_leaves_no_eligible_months(self) -> None:
+        assert _child(date(2021, 1, 10)).age_eligible_guarderia_meses(_YEAR) == 0
+
+    def test_the_live_path_is_unchanged_by_making_it_total(self) -> None:
+        """Under the caller's guard the answer is identical to before.
+
+        Pins that this correction is contract honesty rather than a behaviour
+        change: every descendant the one caller can reach still prorates on the
+        same month count.
+        """
+        for birth in (date(2022, 3, 1), date(2022, 12, 31), date(_YEAR, 6, 15), date(_YEAR, 1, 1)):
+            child = _child(birth, annual=1000)
+            assert child.age_at_year_end(_YEAR) < 3
+            assert child.guarderia_qualifying_meses(_YEAR) == child.age_eligible_guarderia_meses(_YEAR)
+
+
 class TestTurningThreePeriod:
     """The Art. 81.2 extension, month-scoped, and the one asymmetric case."""
 

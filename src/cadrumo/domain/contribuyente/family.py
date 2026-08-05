@@ -1075,14 +1075,33 @@ class DescendantInfo(BaseModel):
         inclusive; one born earlier and still under three at year-end is eligible
         for the whole twelve.
 
-        Public because it is the declared basis for an annual-total declaration,
-        and a figure the operator is told about should be one they can reproduce.
+        TOTAL over every input rather than correct only where it happens to be
+        called. The one caller today reaches it under an "under three at
+        year-end" guard, where "alive" and "alive and under three" coincide, so
+        a version that simply returned twelve would have been indistinguishable
+        in production -- and wrong for a five-year-old the moment anything else
+        asked. It is public precisely so an operator-facing advisory can cite
+        the months it prorated by, and a figure quoted to a taxpayer has to be
+        one they can reproduce from their own child's age. A docstring narrower
+        than the method's reachable inputs is how that stops being true.
+
+        The month the child turns three is EXCLUDED, matching the boundary
+        :meth:`guarderia_contributing_spend` already draws for that period.
         """
         if self.birth_date.year > filing_year:
             return 0
-        if self.birth_date.year == filing_year:
-            return 12 - self.birth_date.month + 1
-        return 12
+        first_month = self.birth_date.month if self.birth_date.year == filing_year else 1
+        third_birthday_year = self.birth_date.year + 3
+        if third_birthday_year < filing_year:
+            return 0
+        if third_birthday_year == filing_year:
+            # Under three only until the birthday month, which is itself
+            # excluded: the same boundary ``guarderia_contributing_spend`` draws
+            # when it drops months up to and including that month.
+            last_month = self.birth_date.month - 1
+        else:
+            last_month = 12
+        return max(0, last_month - first_month + 1)
 
     def guarderia_needs_monthly_detail(self, filing_year: int) -> bool:
         """True when only an annual total is on record for the turning-three period.
