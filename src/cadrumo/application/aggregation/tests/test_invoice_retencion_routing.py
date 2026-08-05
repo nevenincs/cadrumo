@@ -23,7 +23,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind, Period
+from ....core import BindingSourceKind, Modelo, Period
+from ....core.resources import resources
+from ....domain.calculations.registry import ModeloRevision, resolve_retenciones_aggregation_binding_values
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, iva_category_components
 from ....tests.secure_sql import isolated_runtime_profile
@@ -337,3 +339,93 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
     assert role is not IvaRetencionRole.TAXPAYER_LIABILITY
     assert received_no_liability.kind is InvoiceKind.RECEIVED
     assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
+
+
+# --------------------------------------------------------------------------- #
+# S28: the received side, carried to its filed casillas
+# --------------------------------------------------------------------------- #
+#
+# Everything above proves the projection and the aggregation agree. Neither
+# proves the registry then routes those figures to the casillas a taxpayer
+# files: a correct aggregation consumed by the wrong binding, or by none, is
+# still a wrong return, and only the binding layer reaches a declaration.
+#
+# The issued side gained that check in the cross-domain scenario. This is the
+# received side, where the sign of the consequence inverts -- here the taxpayer
+# is the RETENEDOR and the figure is a liability owed to AEAT, not a credit
+# owed to them. An error understates what is OWED, which is the direction that
+# draws a sanction, so the harsher half should not have the weaker check.
+
+_M111_ACTIVIDADES_PERCEPTORES_BINDING = "modelo-111-actividades-dinerario-perceptores"
+_M111_ACTIVIDADES_BASE_BINDING = "modelo-111-actividades-dinerario-base"
+_M111_ACTIVIDADES_RETENCIONES_BINDING = "modelo-111-actividades-dinerario-retenciones"
+
+
+def _modelo_111_revision() -> ModeloRevision:
+    """The committed M111 revision, resolved the way production resolves it.
+
+    Through the registry authority rather than a test-side snapshot builder, so
+    the bindings asserted are the ones a real calculate would load. A hand-built
+    snapshot could agree with this test and disagree with the filing.
+    """
+    return (
+        resources()
+        .modelos.authority.snapshot(
+            Modelo.M111.value,
+            filing_year=2026,
+            period="1T",
+        )
+        .revision
+    )
+
+
+def test_the_committed_m111_bindings_receive_the_invoice_figures() -> None:
+    """A received invoice reaches the casillas that declare the liability.
+
+    The base casilla takes the base imponible, never the grand total: the
+    retención is computed on what was earned, not on what was invoiced
+    including IVA. The retenciones casilla takes the withheld amount the
+    taxpayer must now hand to AEAT.
+
+    Both are asserted against the INVOICE figures rather than against the
+    aggregation totals, which is the whole point of the layer. Asserting the
+    binding against the aggregation would only prove the two agree with each
+    other, and they are computed from the same source -- they would agree while
+    both diverged from the invoice.
+    """
+    invoice = _invoice(base="1000.00", retention_amount="150.00")
+
+    routing = route_invoice_retenciones(((invoice, _PROFESIONAL),))
+    aggregation = aggregate_retenciones_111(
+        routing.observations,
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+
+    resolved = resolve_retenciones_aggregation_binding_values(_modelo_111_revision(), aggregation)
+
+    assert resolved[_M111_ACTIVIDADES_BASE_BINDING] == Decimal("1000.00")
+    assert resolved[_M111_ACTIVIDADES_RETENCIONES_BINDING] == Decimal("150.00")
+    assert resolved[_M111_ACTIVIDADES_PERCEPTORES_BINDING] == Decimal("1")
+
+
+def test_the_filed_base_is_never_the_grand_total() -> None:
+    """The declared base must exclude the IVA the invoice also carries.
+
+    Stated as its own case because the two figures are both present on the
+    invoice and only one is correct: a 1000 base at 21 % invoices at 1210, and
+    a resolver reaching for the total would file a base 21 % too high and a
+    liability computed against it. Pinning the base positively leaves that
+    substitution passing; pinning it negatively as well does not.
+    """
+    invoice = _invoice(base="1000.00", retention_amount="150.00")
+
+    routing = route_invoice_retenciones(((invoice, _PROFESIONAL),))
+    aggregation = aggregate_retenciones_111(
+        routing.observations,
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+
+    resolved = resolve_retenciones_aggregation_binding_values(_modelo_111_revision(), aggregation)
+
+    assert resolved[_M111_ACTIVIDADES_BASE_BINDING] != invoice.grand_total
+    assert resolved[_M111_ACTIVIDADES_BASE_BINDING] == invoice.base_total
