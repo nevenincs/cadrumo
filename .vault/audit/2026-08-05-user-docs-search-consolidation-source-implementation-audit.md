@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8ab9eaaff52dfa9548d93993f795bec38e7b659777a973df527ca3b791c4e89'
+body_hash: 'sha256:cfa3712be300c3c9bc40b923c95ae437e6b9b9d96a15ff4f2133ce9efc4ba66a'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -86,3 +86,9 @@ The Luna Extra High browser slice updated `docs/_static/cadrumo-docs.js`; the Py
 - `model-content-attestation`, `casilla-locale-fallback`, `bridge-order-parity`, `browser-hash-parity`, `pagefind-narrowing`, and `diseno-casilla-locator` remain bounded follow-ups; no acceptance row is closed by source-only inspection.
 
 The plan remains at 12 of 24 steps closed (50 percent), with P02.S04 and the remaining artifact, runtime, multilingual, legal, and deployment gates open.
+
+## 2026-08-05 locale-census remediation
+
+RAG confirmed that the projection's non-Spanish display labels intentionally use the shared Spanish fallback resolver, while the registry conformance surface already distinguishes authored locale values with `lookup_translation_entry`. The casilla census now keeps the display fallback unchanged but resolves each projected record's latest registry definition and counts locale coverage only when an authored `en`, `ca`, or `hu` label key has a non-null catalogue value. Missing modelos or casilla definitions fail closed as uncovered. Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, and diff checks. No tests or runtime projection were run.
+
+The `casilla-locale-fallback` finding is therefore source-remediated at the census boundary; the P06.S24 acceptance row remains open until its authorized evidence gate runs.

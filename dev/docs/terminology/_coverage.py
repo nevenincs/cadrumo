@@ -30,8 +30,8 @@ committed-artifact discipline requires.
 
 The separate casilla census below measures deterministic projection contracts
 that the relevance widening report cannot represent: exact target derivation,
-the currently carried invariant definition, localized descriptions, and
-sparse inbound relevance. It does not claim Pagefind or generated-site
+the currently carried invariant definition, authored non-Spanish registry
+locale entries, and sparse inbound relevance. It does not claim Pagefind or generated-site
 runtime parity.
 """
 
@@ -44,8 +44,13 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry import (
+    RegistrySnapshotError,
+    ValidatedRegistryAuthority,
+    bundled_authority,
+)
 
 from ._casilla_projection import project_casilla_search_records
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord, project_cli_search_records
@@ -72,6 +77,7 @@ __all__ = [
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _UTF_8: Final[str] = "utf-8"
+_NON_SPANISH_LOCALES: Final[tuple[str, ...]] = ("en", "ca", "hu")
 
 class CoverageKind(StrEnum):
     """The four enumerable target surfaces a coverage report measures.
@@ -95,8 +101,8 @@ class CasillaCoverageKind(StrEnum):
     projection. The other surfaces are subsets of that same record identity:
     ``exact-target`` observes the canonical unified-record destination,
     ``definition`` observes the Spanish invariant description currently carried
-    by the projection, ``locale`` observes at least one non-Spanish localized
-    description, and ``relevance`` observes an inbound reference in the
+    by the projection, ``locale`` observes at least one authored non-Spanish
+    registry label, and ``relevance`` observes an inbound reference in the
     committed sparse mapping.
 
     None of these values observes Pagefind or a generated HTML artefact. They
@@ -276,7 +282,9 @@ def compute_casilla_coverage_census(
     this records deterministic enrollment, not Pagefind index membership or
     generated-page/anchor existence. Definition coverage is limited to the
     Spanish invariant description currently present on the projection, and
-    locale coverage means at least one non-Spanish localized description.
+    locale coverage means at least one authored non-Spanish registry label.
+    Display descriptions may still use Spanish fallback for reader-facing
+    rendering and are therefore not authoritative for this census axis.
 
     Relevance coverage is the same inbound-record-id join used by
     :func:`compute_coverage_report`, restricted to projected casilla ids. It is
@@ -287,23 +295,26 @@ def compute_casilla_coverage_census(
         casilla_records: Projected casilla records; defaults to the bundled
             validated-authority projection.
         authority: The validated registry authority used when projecting the
-            default casilla records.
+            default casilla records and checking authored locale entries.
 
     Returns:
         A strict, frozen, deterministic census in
         :class:`CasillaCoverageKind` order.
     """
     resolved_relevance = relevance if relevance is not None else load_committed_relevance()
+    resolved_authority = authority if authority is not None else bundled_authority()
     if casilla_records is None:
-        resolved_authority = authority if authority is not None else bundled_authority()
         resolved_casillas = project_casilla_search_records(resolved_authority)[0]
     else:
         resolved_casillas = casilla_records
 
     by_id: dict[str, list[SearchRecord]] = {}
+    authored_locale: set[str] = set()
     for record in resolved_casillas:
         search_record = to_search_record(record)
         by_id.setdefault(search_record.id, []).append(search_record)
+        if _has_authored_locale(record, resolved_authority):
+            authored_locale.add(search_record.id)
 
     projected = set(by_id)
     exact_target = {
@@ -316,11 +327,7 @@ def compute_casilla_coverage_census(
         for record_id, records in by_id.items()
         if any(_has_definition(record) for record in records)
     }
-    locale = {
-        record_id
-        for record_id, records in by_id.items()
-        if any(_has_locale(record) for record in records)
-    }
+    locale = authored_locale
     referenced = _referenced_record_ids(resolved_relevance)
     relevance_ids = projected & referenced
 
@@ -461,10 +468,26 @@ def _has_definition(record: SearchRecord) -> bool:
     return bool(description and description.strip())
 
 
-def _has_locale(record: SearchRecord) -> bool:
+def _has_authored_locale(record: CasillaSearchRecord, authority: ValidatedRegistryAuthority) -> bool:
+    """Return whether the latest registry definition has an authored label."""
+    try:
+        definition = authority.modelo(record.modelo.value)
+    except RegistrySnapshotError:
+        return False
+    candidates = [
+        (revision.valid_from, str(revision_id), casilla)
+        for revision_id, revision in definition.revisions.items()
+        for casilla in revision.casillas
+        if casilla.id == record.casilla_id
+    ]
+    if not candidates:
+        return False
+    latest = max(candidates, key=lambda candidate: (candidate[0], candidate[1]))[2]
     return any(
-        language is not OutputLanguage.ES and bool(text and str(text).strip())
-        for language, text in record.descriptions.items()
+        present and value is not None
+        for locale in _NON_SPANISH_LOCALES
+        for key in latest.localization_keys
+        for present, value in (lookup_translation_entry(key, locale=locale),)
     )
 
 
