@@ -172,6 +172,27 @@ leaving it as the third state is what this campaign has spent its time removing.
 is operator-facing and self-inflicted, because the untranslated refusals reaching that
 verb are the entry-date coherence rules this Phase itself shipped.
 
+`S24` came from the axis-7 semantic-overlap pass, which this campaign had never actually
+run. Every canonicalization before it was reactive — found while doing something else —
+so the duplication set had never been enumerated independently of the work, and no
+completeness claim over it was available. Searching by MEANING rather than by symbol
+returned the record-reconstruction concept at three sites across two layers. Two are
+sound and are worth recording as such: the wizard re-projection delegates to the
+canonical `descendant_list_from_facts` and says so in its docstring, and the four
+eligibility predicates share one home with documented reasons for staying apart. The
+third is the finding. `_profile_binding` builds the same family record twice, and the
+two constructions diverge in two independent ways — the guardería path pre-checks each
+birth date by index but omits the anualidades that suppress dependency assimilation,
+while the mínimo and maternidad path carries anualidades but skips the pre-check. One
+half is live and operator-facing: the same malformed stored birth date names its row on
+one path and not the other, decided purely by which wrapper the caller reaches. The
+other half is latent rather than a wrong number, because `is_eligible_guarderia` reads
+only cohabitation and age and cannot see the omission; it is recorded for its shape, not
+its impact, since a record built two ways where one silently defaults a SUPPRESSING
+field is precisely what bites when a predicate widens — and this campaign has now met
+the widening-population shape three separate times. `S24` is held behind `S18` because
+both move the same file and `S18` must move it atomically.
+
 ## Verification
 
 The plan is complete when every Step is closed and all of the following hold: the two
