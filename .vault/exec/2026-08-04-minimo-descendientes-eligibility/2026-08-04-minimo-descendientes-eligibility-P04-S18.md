@@ -100,6 +100,22 @@ had it been live: it delegates to the statutory count while the binding it named
 the guarderia one, so a rename would have preserved a method computing the wrong
 population for the binding it served.
 
+Both lanes over the twenty-three consumer test modules: 182 passed, 19 failed. Every
+failure carries one of two foreign signatures and none names either the retired or the
+new path. Fifteen are `2 validation errors for CasillaDefinition` on a newly required
+`localization_keys` field, and four are `1 validation error for ModeloRevision`; both
+come from a peer's in-flight localization cascade, which had 148 registry files dirty in
+the working tree at the time and had made the schema field required without updating the
+fixture constructors that build those definitions in tests. A separate peer relocation of
+`IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS` aborted an earlier broader run at collection.
+
+The whole-tree before/after error-set comparison was available for this Step and was
+used -- clean at zero errors on both sides -- but it is not a reliable instrument in this
+tree and its success here was luck rather than method. The foreign signature changed
+twice inside the preceding window, so a comparison taken across a longer edit would have
+measured a peer's churn as this Step's delta. The primary evidence is the search
+returning zero live hits on both retired names.
+
 Landed through commit-tree with a diff-tree guard rather than a pathspec commit, because
 the index lock was held and retrying a pathspec commit widens exposure to a peer sweep
 rather than reducing it. The guard confirmed the written tree touched exactly the
