@@ -1205,7 +1205,6 @@ application:
         abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      calculate_maternidad_meses_two_authorities: 'Se ha indicado --meses-trabajo-con-hijo-menor-3 mientras el perfil activo ya declara meses_madre_trabajo en sus registros de descendiente. Una sola autoridad por declaracion: prescinde de la opcion y deja que los registros declarados aporten los meses del art. 81.1, o elimina MESES_TRABAJO con `aeat config profile descendiente remove <index>` y despues `add` para volver a declarar la fila sin el -- `descendiente add` por si sola solo anade filas y no puede editar una fila ya declarada.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -3209,7 +3208,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo cumplía los requisitos de la deducción por maternidad del art. 81 LIRPF -- menor de 3 años, o una adopción/acogimiento dentro de su ventana de fecha de entrada, con independencia de la edad -- y estaba en la unidad familiar. Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador libre (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES x 100, 1200)) e inyecta en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6 -> 0611 = 1800. Solo para perfiles que no declaran descendientes: si el perfil activo ya declara MESES_TRABAJO con `aeat config profile descendiente add`, esos registros aportan los meses y esta opción se rechaza.'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
