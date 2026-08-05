@@ -1025,6 +1025,65 @@ class DescendantInfo(BaseModel):
             entry.amount_euros for entry in self.gastos_guarderia_mensuales if entry.month > self.birth_date.month
         )
 
+    def guarderia_qualifying_meses(self, filing_year: int) -> int:
+        """Art. 81.2 qualifying MONTH count for this descendant in *filing_year*.
+
+        The proration basis for the increment's per-child cap, which the manual
+        states "se calculará proporcionalmente al número de meses en que se
+        cumplan de forma simultánea los requisitos exigidos en el artículo 81.1
+        y 2" and works as ``1.000 / 12 x meses``. This method answers the 81.2
+        half; the caller intersects it with the 81.1 half.
+
+        The month SELECTION mirrors :meth:`guarderia_contributing_spend` exactly
+        rather than being re-derived, and that is deliberate: the two answer the
+        same question about the same months, one in euros and one in count, so a
+        second derivation is how a spend month and a proration month come to
+        disagree. Any change to the month rules belongs in both or in neither.
+
+        An ANNUAL TOTAL carries no month information, so the count falls back to
+        the months the child was AGE-ELIGIBLE — alive and under three within the
+        period. That is an approximation and is the one place this method
+        returns a number the operator did not evidence. It is chosen over the
+        two alternatives on the grounds that it invents nothing: assuming twelve
+        would reinstate the flat cap this proration exists to remove, and
+        refusing outright would convert a live over-grant into a live
+        under-grant for what is likely the commonest declaration shape. The
+        approximation is disclosed to the operator rather than presented as a
+        measured result, and the exact fix — month identity on the Art. 81.1
+        side — is tracked separately.
+
+        Returns ``0`` for a non-cohabiting descendant and for a child past the
+        period they turn three, matching the spend method's own zeroes.
+        """
+        if not self.convive_con_contribuyente:
+            return 0
+        age_at_year_end = self.age_at_year_end(filing_year)
+        if age_at_year_end < _MAX_AGE_MENOR_TRES:
+            if self.gastos_guarderia_mensuales:
+                return len(self.gastos_guarderia_mensuales)
+            return self.age_eligible_guarderia_meses(filing_year)
+        if age_at_year_end > _MAX_AGE_MENOR_TRES:
+            return 0
+        return sum(1 for entry in self.gastos_guarderia_mensuales if entry.month > self.birth_date.month)
+
+    def age_eligible_guarderia_meses(self, filing_year: int) -> int:
+        """Months of *filing_year* in which this descendant was alive and under three.
+
+        Computable from the birth date alone, which is why the Art. 81.2 side of
+        the proration never needed a stored month set the way the Art. 81.1 side
+        does. A child born within the period is eligible from their birth month
+        inclusive; one born earlier and still under three at year-end is eligible
+        for the whole twelve.
+
+        Public because it is the declared basis for an annual-total declaration,
+        and a figure the operator is told about should be one they can reproduce.
+        """
+        if self.birth_date.year > filing_year:
+            return 0
+        if self.birth_date.year == filing_year:
+            return 12 - self.birth_date.month + 1
+        return 12
+
     def guarderia_needs_monthly_detail(self, filing_year: int) -> bool:
         """True when only an annual total is on record for the turning-three period.
 
