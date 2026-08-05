@@ -97,6 +97,24 @@ class _Materialised:
     cli_skipped_reason: str | None = None
 
 
+@dataclass(frozen=True)
+class SearchRecordProjection:
+    """The complete unified record projection consumed by Pagefind injection.
+
+    Rung 2 uses this same record set for its manifest.  Exposing the projection
+    as a read-only value object prevents a second build-time enumeration from
+    inventing a different result identity or destination authority.
+    """
+
+    records: tuple[SearchRecord, ...]
+    concepts: int
+    casillas: int
+    legal_provisions: int
+    cli_commands: int
+    cli_options: int
+    cli_skipped_reason: str | None = None
+
+
 def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     """Load the committed sweep's per-record relevance boost map, or empty.
 
@@ -180,6 +198,25 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
         out.records.extend(to_search_record(rec) for rec in commands)
         out.records.extend(to_search_record(rec) for rec in options)
     return out
+
+
+def materialise_search_records(repo_root: Path | None = None) -> SearchRecordProjection:
+    """Return the exact unified records used by the Pagefind injector.
+
+    This is a read-only build-time seam for artifact compilers.  It deliberately
+    preserves the CLI projection outcome so a caller can refuse a partial
+    manifest rather than silently compiling a bundle from a narrowed corpus.
+    """
+    materialised = _materialise_records(repo_root)
+    return SearchRecordProjection(
+        records=tuple(materialised.records),
+        concepts=materialised.concepts,
+        casillas=materialised.casillas,
+        legal_provisions=materialised.legal_provisions,
+        cli_commands=materialised.cli_commands,
+        cli_options=materialised.cli_options,
+        cli_skipped_reason=materialised.cli_skipped_reason,
+    )
 
 
 def _effective_weight(record: SearchRecord, relevance: dict[str, float]) -> float:

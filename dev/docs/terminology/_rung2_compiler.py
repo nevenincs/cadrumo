@@ -30,6 +30,7 @@ __all__ = [
     "Rung2CompilationError",
     "compile_rung2_search_bundle",
     "compile_and_write_rung2_search_bundle",
+    "compile_project_rung2_search_bundle",
 ]
 
 
@@ -116,6 +117,35 @@ def compile_and_write_rung2_search_bundle(
     except OSError as exc:
         raise Rung2CompilationError(f"cannot write Rung-2 bundle {destination}: {exc}") from exc
     return bundle
+
+
+def compile_project_rung2_search_bundle(
+    *,
+    provider: StaticEmbeddingProvider,
+    destination: Path,
+    repo_root: Path | None = None,
+    max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
+) -> Rung2SearchBundle:
+    """Compile the project-authoritative sweep and Pagefind record bundle.
+
+    This is the intended dev-box entry point.  It derives the closed vocabulary,
+    browser query-token vocabulary, committed sweep, and authoritative record
+    projection through :func:`build_rung2_compilation_inputs`, then delegates to
+    the explicit validated writer.  It never runs a live RAG sweep or chooses a
+    model; the caller must provide the already-pinned local provider.
+    """
+    from ._rung2_inputs import build_rung2_compilation_inputs
+
+    inputs = build_rung2_compilation_inputs(repo_root)
+    return compile_and_write_rung2_search_bundle(
+        vocabulary=inputs.vocabulary,
+        query_tokens=inputs.query_tokens,
+        provider=provider,
+        sweep=inputs.sweep,
+        records=inputs.records,
+        destination=destination,
+        max_serialized_bytes=max_serialized_bytes,
+    )
 
 
 def _require_canonical_vocabulary(vocabulary: tuple[str, ...]) -> None:

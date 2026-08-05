@@ -32,6 +32,7 @@ from pathlib import Path
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
 from ....core import Period, PeriodError, is_aeat_csv
+from ....core.decimal import european_thousands_reading_is_ambiguous
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.justificante import (
@@ -230,7 +231,7 @@ def _strip_accents(value: str) -> str:
 
 
 def _parse_decimal(raw: str, field: str | None = None) -> Decimal:
-    """Parse an AEAT-formatted decimal string (``1.234,56`` or ``1234.56``).
+    r"""Parse an AEAT-formatted decimal string (``1.234,56`` or ``1234.56``).
 
     Args:
         raw: Raw numeric substring captured from the PDF.
@@ -240,10 +241,27 @@ def _parse_decimal(raw: str, field: str | None = None) -> Decimal:
         A :class:`decimal.Decimal` preserving the printed precision.
 
     Raises:
-        JustificanteParseError: If the string is not a recognisable number.
+        JustificanteParseError: If the string is not a recognisable number, or
+            if it carries a dot that could equally mean thousands or decimals.
             When ``field`` is supplied, ``malformed=(field,)`` is set on the
             exception so callers can assert on the structured attribute.
+
+    The receipt's amount regexes capture ``([0-9][0-9\\.,]*)`` and so, unlike
+    :data:`~adapters.inbound.pdf.SPANISH_AMOUNT_GROUP`, do not require the
+    ``,NN`` tail that makes a printed Spanish amount unambiguous. A bare
+    ``1.234`` reaching :func:`~adapters.inbound.pdf.parse_spanish_decimal`
+    decodes as one point two three four, so a receipt total of one thousand two
+    hundred thirty-four would be recorded a thousandfold small. AEAT prints the
+    tail on money, so refusing the ambiguous shape rejects nothing a real
+    receipt carries -- and a justificante total is filing evidence, where a hard
+    refusal the operator can act on beats a plausible wrong number.
     """
+    if european_thousands_reading_is_ambiguous(raw.strip()):
+        malformed = (field,) if field is not None else ()
+        raise JustificanteParseError(
+            f"ambiguous thousands-or-decimal reading: {raw!r}",
+            malformed=malformed,
+        )
     parsed = parse_spanish_decimal(raw)
     if parsed is None:
         malformed = (field,) if field is not None else ()

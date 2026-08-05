@@ -22,11 +22,27 @@ carry semantics.
   proof of identity. Ids renumber across filing years (Modelo 100 id `1911` is
   a ganancia box in 2024 and a maternity-deduction box in 2022). Only
   `continuidad_id` asserts cross-revision identity, and only with evidence.
-- A chain id is concept-named, never numeric, so it survives renumbering:
-  `irpf.inmueble.porcentaje-propiedad`, `irpf.deduccion-autonomica.galicia.otras`.
-  Constraint: `^[a-z0-9][a-z0-9._:-]*[a-z0-9]$`, max 128 chars. Convention from
-  the live corpus: `<impuesto>.<dominio>.<concepto>`, dot-separated domains,
-  kebab-case leaves.
+- A chain id is concept-named, never numeric, so it survives renumbering.
+  Constraint: `^[a-z0-9][a-z0-9._:-]*[a-z0-9]$`, max 128 chars. Which of the
+  two shapes below applies is decided by ONE question — does the casilla's
+  `semantic_role` identify exactly one box per revision?
+  - **Role-unique → flat kebab, derived from the role**: `semantic_role`
+    lowercased with `_` → `-`, nothing else. `irpf_deduccion_galicia_otras`
+    → `irpf-deduccion-galicia-otras`. This is the overwhelming majority of the
+    corpus and it is mechanically exact — every one of the 3,159 occurrences
+    measured on 2026-08-05 equals `role.replace("_", "-")` with no exceptions.
+    Derive it; do not invent a prettier name.
+  - **Role-ambiguous → dotted, instance-keyed, hand-adjudicated**: when two or
+    more casillas in one revision share the role, a role-derived id would
+    collide and merge distinct concepts into one chain. Key on whatever DOES
+    identify the box — the event, the column, the distinguishing clause — as
+    `<impuesto>.<familia>.<instancia>.<columna>`. The anexo-A AEIP family is
+    the worked example: 71 boxes share `irpf_anexo_a_aeip_aplicado` and the ids
+    repack yearly, so `dev/registry/aeip` keys them on the programme title AEAT
+    prints (`irpf.aeip.<event-slug>.aplicado`, its `CHAIN_PREFIX`).
+  Check role-uniqueness before naming. Reaching for dotted on a role-unique
+  chain is the drift that has to be swept back out later; reaching for kebab on
+  a role-ambiguous one silently merges two concepts, which is worse.
 - Evolution kinds are a closed set: `unchanged`, `label_evolved`,
   `legal_refs_evolved`, `label_and_legal_refs_evolved`, `repurposed`,
   `retired`. Two are safety-critical: `retired` ends a chain (the target
