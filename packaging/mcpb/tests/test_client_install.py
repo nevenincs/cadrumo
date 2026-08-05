@@ -45,7 +45,7 @@ from dev.packaging._smoke_common import (
     run_checked,
 )
 from dev.packaging.python_cohort import load_python_cohort
-from dev.packaging.smoke_mcpb import _MCPB_CLI_VERSION, run_mcpb_smoke
+from dev.packaging.smoke_mcpb import MCPB_CLI_VERSION, run_mcpb_smoke
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -217,7 +217,7 @@ def test_mcpb_launches_from_the_unpacked_extension_through_the_manifest_command(
     launch = client_install_evidence["resolved_launch"]
     args = launch["args"]
 
-    assert client_install_evidence["official_validator"] == f"@anthropic-ai/mcpb@{_MCPB_CLI_VERSION}"
+    assert client_install_evidence["official_validator"] == f"@anthropic-ai/mcpb@{MCPB_CLI_VERSION}"
     # ``uv run --no-project`` runs the bootstrap with no per-session project
     # resolution; the bootstrap provisions once and direct-execs thereafter.
     assert args[0] == "run"
