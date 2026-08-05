@@ -94,6 +94,7 @@ class AeipOccurrence:
     label: str
     title: str
     fragment_path: Path
+    legal_refs: tuple[str, ...] = ()
     continuidad_id: str | None = None
 
 
@@ -144,6 +145,10 @@ class EvolutionPair:
     from_revision: str
     to_revision: str
     evolution_kind: str
+    # The legal refs the chain carries at the target revision. A retirement
+    # keeps the source revision's refs, since the target no longer declares
+    # the box at all.
+    legal_refs: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -298,6 +303,7 @@ def extract_occurrences(
                     label=label,
                     title=_title_from_label(label) or "",
                     fragment_path=fragment,
+                    legal_refs=tuple(str(ref) for ref in (entry.get("legal_refs") or ())),
                     continuidad_id=str(continuidad_id) if isinstance(continuidad_id, str) else None,
                 ),
             )
@@ -487,12 +493,22 @@ def _detect_ambiguities(
 def _classify_pair(earlier: AeipOccurrence, later: AeipOccurrence) -> str:
     """Name the evolution kind for one adjacent-revision pair.
 
-    Scoped to what this family can actually differ in: the published label.
-    Every anexo-A event row carries the same single ``legal_refs`` entry and no
-    structural core, so ``label_evolved`` and ``unchanged`` are the only kinds
-    a continuing pair can take. A retirement is planned separately.
+    An anexo-A event row declares no structural core, so the two axes that can
+    drift are the published label and the legal refs. Both must be compared:
+    the 2025 revision adds an ordinal reference to every row in the family, so
+    a pair crossing that boundary really has evolved its legal refs, and
+    recording it as ``unchanged`` would be a drift the strict cross-revision
+    validator refuses. A retirement is planned separately.
     """
-    return "unchanged" if _normalise(earlier.label) == _normalise(later.label) else "label_evolved"
+    label_moved = _normalise(earlier.label) != _normalise(later.label)
+    refs_moved = tuple(earlier.legal_refs) != tuple(later.legal_refs)
+    if label_moved and refs_moved:
+        return "label_and_legal_refs_evolved"
+    if label_moved:
+        return "label_evolved"
+    if refs_moved:
+        return "legal_refs_evolved"
+    return "unchanged"
 
 
 def plan_chains(
@@ -534,6 +550,7 @@ def plan_chains(
                     from_revision=earlier.revision_id,
                     to_revision=later.revision_id,
                     evolution_kind=_classify_pair(earlier, later),
+                    legal_refs=later.legal_refs,
                 )
                 for earlier, later in pairwise(rows)
             )
@@ -547,6 +564,7 @@ def plan_chains(
                         from_revision=rows[-1].revision_id,
                         to_revision=inventory.revisions[last_index + 1],
                         evolution_kind="retired",
+                        legal_refs=rows[-1].legal_refs,
                     ),
                 )
             entries.append(
@@ -570,17 +588,18 @@ def render_evolution_record(
     *,
     casilla_id: str,
     modelo_id: str = "100",
-    legal_refs: tuple[str, ...] = ("ley-35-2006:art-68.2",),
+    legal_refs: tuple[str, ...] | None = None,
     source_refs: tuple[str, ...] = (),
 ) -> str:
     """Render one evolution record fragment for review.
 
     The output is a preview an operator reads and lands deliberately; this
-    module never writes into the registry. ``source_refs`` must cite what was
-    actually consulted for the target revision, so it is supplied by the
-    caller rather than guessed here.
+    module never writes into the registry. ``legal_refs`` defaults to the refs
+    the pair carries at its target revision; ``source_refs`` must cite what was
+    actually consulted there, so it is supplied by the caller rather than
+    guessed here.
     """
-    refs = ", ".join(f'"{ref}"' for ref in legal_refs)
+    refs = ", ".join(f'"{ref}"' for ref in (pair.legal_refs if legal_refs is None else legal_refs))
     sources = ", ".join(f'"{ref}"' for ref in source_refs)
     record_id = f"{modelo_id}-{casilla_id}-{pair.from_revision}-{pair.to_revision}-{pair.evolution_kind}"
     return "\n".join(
