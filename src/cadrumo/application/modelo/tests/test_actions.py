@@ -984,6 +984,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2024-profile-incremento-guarderia": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-guarderia": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
