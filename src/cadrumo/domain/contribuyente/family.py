@@ -1494,10 +1494,32 @@ class RentaFamilyProfile(BaseModel):
 
         No within-year temporal prorrateo is applied: Art. 58 (in force since
         01/01/2015, BOE-A-2014-12327) declares only the two numbered
-        subsections above and no birth/adoption-date cutoff for descendientes;
-        Art. 61's temporal rules are scoped to a mid-year death (norma 4ª) and
-        to ascendientes' half-period residency (norma 5ª), neither of which
-        applies here.
+        subsections above and no birth/adoption-date cutoff for descendientes.
+
+        Art. 61 norma 4ª IS NOT MODELLED, and it governs this aggregate rather
+        than sitting outside it. This docstring previously asserted the opposite
+        — that norma 4ª is "scoped to a mid-year death … which does not apply
+        here" — which is exactly backwards: a mid-year death of a DESCENDIENTE is
+        precisely what this method computes over. A confident wrong answer stops
+        the next reader looking, so the correction matters more than the gap.
+
+        The rule has two limbs and the second is the easier to miss. A descendant
+        who dies in the period takes a FLAT amount rather than their birth-order
+        tranche — "en caso de fallecimiento de un descendiente que genere derecho
+        al mínimo por este concepto, la cuantía aplicable es de 2.400 euros" — and
+        is additionally EXCLUDED from the ordering that ranks the survivors, "sin
+        computar a estos efectos aquellos descendientes que … hubieran fallecido
+        en el ejercicio con anterioridad a la fecha de devengo del impuesto".
+        Because the tranches ascend with rank, dropping the deceased from the
+        ordering moves every younger sibling to a cheaper rank.
+
+        So the omission over-grants in the ordinary case, twice over: the
+        deceased keeps a tranche above the flat figure whenever they are not the
+        first child, and the survivors keep ranks the deceased should have
+        vacated. It is unreachable rather than merely unimplemented, because
+        ``death_date`` exists on the Modelo 100 profile row and never on
+        :class:`DescendantInfo`, so no caller can express the fact this method
+        would need.
 
         *birth_order_amounts*, *menor_tres_supplement* and *thresholds* are
         registry ``money`` parameters the caller resolves per filing year; this
