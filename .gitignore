@@ -425,3 +425,9 @@ cache/
 /frontend/output/
 /frontend/*.tsbuildinfo
 /.playwright-cli/
+
+# Operator-run probe and continuation scratch. These are working artefacts, not
+# source: three were committed by bulk sweeps and shipped ~780 KB in every clone.
+/aeat-bp-continue*.json
+/m100xsd_probe_out.xml
+/*_probe_out.xml
