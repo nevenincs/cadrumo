@@ -49,6 +49,7 @@ from ...core.errors import CadrumoError, build_error_envelope, resolve_error_mes
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 from ...core.logging import get_logger
+from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry import BindingId, CasillaId, RelationId, validated_casilla_id
 from ._common import active_bucket_id_or_refuse
 from ._errors import CliRefusedBoundaryError
@@ -794,6 +795,40 @@ def resolve_explicit_or_active_bucket_id(bucket_id: str | None) -> str:
     return active_bucket_id_or_refuse()
 
 
+def resolve_actor_option(actor: str | None) -> str:
+    """Resolve the ``--by`` actor label, refusing an over-long operator value here.
+
+    The label becomes the ``actor`` on the bucket event the verb emits, and that
+    field is bound by :data:`BUCKET_ACTOR_LABEL_MAX_LENGTH`. Left unchecked, the
+    bound is reached only once the event is constructed -- after the calculation
+    has run -- and the generic CLI validation boundary reports it as "the command
+    input failed validation, check the command's arguments" without naming
+    ``--by`` or the bound. The option's own help text does state the bound, so
+    the operator could in principle find it; what they could not do is learn from
+    the refusal which of a dozen options it was about. Refusing here names the
+    option and quotes the accepted length at parse time, and it keeps an
+    operator-supplied value from reaching the internal-fault classification
+    downstream, where it would be reported as a defect in the application.
+
+    A label resolved from application state rather than from the operator is
+    deliberately NOT bounded here: it is not the operator's to correct, and
+    silently trimming it would hide a real contract mismatch behind a shortened
+    audit label.
+    """
+    if actor is None or not actor.strip():
+        return resolve_default_actor()
+    candidate = actor.strip()
+    if len(candidate) > BUCKET_ACTOR_LABEL_MAX_LENGTH:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.actor_too_long",
+                limit=BUCKET_ACTOR_LABEL_MAX_LENGTH,
+                length=len(candidate),
+            ),
+        )
+    return candidate
+
+
 def resolve_default_actor() -> str:
     """Return the active profile display_name, or a permanent fallback label."""
     try:
@@ -827,6 +862,7 @@ __all__ = [
     "parse_relation_override",
     "parse_revision_selector",
     "parse_row_spec",
+    "resolve_actor_option",
     "resolve_default_actor",
     "resolve_explicit_or_active_bucket_id",
     "selector_bad_parameter",

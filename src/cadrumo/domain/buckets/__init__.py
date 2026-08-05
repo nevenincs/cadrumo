@@ -93,6 +93,7 @@ from ._errors import (
     BucketsError,
 )
 from ._event import (
+    BUCKET_ACTOR_LABEL_MAX_LENGTH,
     BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
     BucketActorLabel,
     BucketEvent,
@@ -115,6 +116,7 @@ from ._event_repository import (
 from ._protocols import BucketEventHistoryRepositoryProtocol
 
 __all__ = [
+    "BUCKET_ACTOR_LABEL_MAX_LENGTH",
     "BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH",
     "BucketActorLabel",
     "BucketArchiveRefusedError",

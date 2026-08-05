@@ -2968,6 +2968,7 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        actor_too_long: 'The --by label must be at most {limit} characters; received {length}. It names the actor on the audit event this command records, so give a short operator or agent name.'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits

@@ -46,7 +46,7 @@ from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 import typer
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ...adapters.inbound.tui import select_flow_frontend
 from ...application.flows import (
@@ -77,6 +77,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
+from ._errors import CliOutboundPayloadBoundaryError
 from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES, work_calculate_input_bundle_from_cli
 from ._modelo_rendering import advisory_notice, calculation_revision_lines, calculation_revision_payload
 from ._modelo_work_options import (
@@ -140,7 +141,7 @@ class _WizardDeps:
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
     require_active_profile: Callable[[], None]
     resolve_work_unit_for_cli: Callable[..., Any]
-    resolve_default_actor: Callable[[], str]
+    resolve_actor_option: Callable[[str | None], str]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
 
 
@@ -167,7 +168,7 @@ def register_work_wizard_commands(
     resolve_work_unit_for_cli: Callable[
         ..., Any
     ],  # KWARGS-ANY-RATIONALE-cli-callback: work-unit resolver callback injected by the command registrar
-    resolve_default_actor: Callable[[], str],
+    resolve_actor_option: Callable[[str | None], str],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
 ) -> None:
     """Register the guided ``work wizard`` command on the modelo work app."""
@@ -175,7 +176,7 @@ def register_work_wizard_commands(
         activate_output_language=activate_output_language,
         require_active_profile=require_active_profile,
         resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_default_actor=resolve_default_actor,
+        resolve_actor_option=resolve_actor_option,
         bad_parameter_from_error=bad_parameter_from_error,
     )
 
@@ -268,6 +269,7 @@ def _drive_wizard_calculation(
     actor: str | None,
     run_token: str,
 ) -> None:
+    resolved_actor = deps.resolve_actor_option(actor)
     prompted = list(_run_wizard_steps(steps, run_token=run_token))
 
     for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
@@ -292,10 +294,16 @@ def _drive_wizard_calculation(
             autoconsumo_promotor_base=None,
         )
 
+        # Downstream of operator-argument handling, exactly as on the direct
+        # calculate verb: the actor label is bounded above, and the prompted
+        # answers have already been parsed into a validated input bundle. A
+        # pydantic ValidationError from here is a record the application built
+        # from its own state, so it is classified by position rather than by
+        # inspecting the exception.
         try:
             calculation_result = calculate_modelo_work_revision(
                 work_unit_id=unit.work_unit_id,
-                actor=actor or deps.resolve_default_actor(),
+                actor=resolved_actor,
                 inputs=calculation_inputs,
             )
         except RegistryValidationError as exc:
@@ -313,6 +321,8 @@ def _drive_wizard_calculation(
             ModeloIvaWalletReconciliationBlocked,
         ) as exc:
             raise deps.bad_parameter_from_error(exc) from exc
+        except ValidationError as exc:
+            raise CliOutboundPayloadBoundaryError(exc) from exc
         else:
             _emit_wizard_result(ctx, calculation_result, tuple(prompted))
             return

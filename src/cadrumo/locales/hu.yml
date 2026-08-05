@@ -2690,6 +2690,9 @@ cli:
       work:
         actor_help: A műveletért felelős személy (szabad szöveges felirat, max. 64
           karakter).
+        actor_too_long: A --by címke legfeljebb {limit} karakter lehet; {length} érkezett.
+          A parancs által rögzített auditesemény szereplőjét nevezi meg, ezért adj
+          meg rövid kezelői vagy ügynöknevet.
         allow_not_applicable_help: Munkaegység létrehozása akkor is, ha a nyomtatvány
           nem vonatkozik az aktív profil adóalany-típusára.
         amend_help: Helyesbítő módosítás felépítése külsőleg benyújtott bevallás alapján.
@@ -4846,10 +4849,11 @@ cli:
     remove_key_help: Eltávolítandó pontozott locale-kulcs.
     remove_locale_help: Frissítendő locale kód.
     scaffold_check_help: Eltérések jelentése lokalizációs fájlok írása nélkül.
+    set_batch_manifest_help: JSON objektum, amely nyelvi kódokat pontozott kulcsú
+      skalártérképekre képez le.
     set_key_help: A beállítandó lokalizációs kulcs.
     set_locale_help: A célnyelv kódja (pl. hu, en, es).
     set_value_help: A kulcshoz beállítandó lokalizált érték.
-    set_batch_manifest_help: 'JSON objektum, amely nyelvi kódokat pontozott kulcsú skalártérképekre képez le.'
   log_levels:
     errors:
       flags_mutually_exclusive: A --quiet, --verbose és --debug kapcsolók kölcsönösen

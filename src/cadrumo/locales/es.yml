@@ -3208,6 +3208,7 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        actor_too_long: 'La etiqueta --by debe tener como máximo {limit} caracteres; se recibieron {length}. Identifica al actor del evento de auditoría que registra este comando, así que indica un nombre corto de operador o agente.'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
