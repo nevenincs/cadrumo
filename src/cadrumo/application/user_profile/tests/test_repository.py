@@ -275,12 +275,10 @@ def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
     with pytest.raises(ClassificationError) as excinfo:
         UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects).load(profile_id)
 
-    assert str(excinfo.value) == "profile record classification is incompatible with this repository"
-    assert (
-        excinfo.value.translated_message
-        == "application.user_profile.errors.repository_profile_record_classification_mismatch"
-    )
+    assert str(excinfo.value) == "secure-object namespace classification does not match the repository contract"
+    assert excinfo.value.translated_message == "application.user_profile.errors.repository_classification_mismatch"
     assert excinfo.value.context == {
+        "namespace": USER_PROFILE_VALUE_NAMESPACE,
         "profile_id": profile_id,
         "classification": SensitivityClass.FINANCIAL.value,
         "expected": USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity.value,
@@ -386,12 +384,10 @@ def test_snapshot_load_rejects_inner_classification_without_identifier_leak(
     with pytest.raises(ClassificationError) as excinfo:
         UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(snapshot.snapshot_id)
 
-    assert str(excinfo.value) == "profile snapshot classification is incompatible with this repository"
-    assert (
-        excinfo.value.translated_message
-        == "application.user_profile.errors.repository_profile_snapshot_classification_mismatch"
-    )
+    assert str(excinfo.value) == "secure-object namespace classification does not match the repository contract"
+    assert excinfo.value.translated_message == "application.user_profile.errors.repository_classification_mismatch"
     assert excinfo.value.context == {
+        "namespace": USER_PROFILE_SNAPSHOT_NAMESPACE,
         "snapshot_id": snapshot.snapshot_id,
         "classification": SensitivityClass.FINANCIAL.value,
         "expected": USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity.value,
