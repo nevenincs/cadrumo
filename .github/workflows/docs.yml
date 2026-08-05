@@ -93,6 +93,21 @@ jobs:
         # Chromium. Without this they fail on the harness, not on the content.
         run: just env-playwright
 
+      - name: Build the documentation site
+        # THE GATES READ A BUILT ARTEFACT, so the build is a precondition and not
+        # a duplicate of it. Several `dev/docs/tests` gates assemble a corpus from
+        # `docs/_build/html` and refuse rather than skip when it is absent — "this
+        # gate reads a real artefact, so it needs a real build to read". On a
+        # developer machine the directory is already there from ordinary work, so
+        # this dependency is invisible locally; on a runner that has never built
+        # the docs it is the whole failure. Measured: this lane's first real run
+        # (2026-08-05) failed exactly here, thirteen times over, having never been
+        # executed before because the workflow had not reached the remote.
+        #
+        # ci-full.yml carries the same gap and has been passing only where a
+        # runner's persistent workspace happened to hold a stale build.
+        run: just docs
+
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
         # module-to-stub correspondence, CLI reference drift) plus doc8 and
