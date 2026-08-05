@@ -65,7 +65,7 @@ from ....transactions import (
     TransactionCatalogue,
     TransactionDirection,
     TransactionLifecycleState,
-    maximum_supported_activity_retencion_rate,
+    load_retencion_actividades_rates,
 )
 from .. import (
     CasillaId,
@@ -193,10 +193,10 @@ def test_the_retencion_expectation_is_the_statutory_rate_not_the_engine_route() 
     article names as the base -- and the fact that the two routes meet is what
     the assertions further down are entitled to rely on.
     """
-    statutory = (_BASE * maximum_supported_activity_retencion_rate()).quantize(Decimal("0.01"))
+    statutory = (_BASE * load_retencion_actividades_rates().general_rate).quantize(Decimal("0.01"))
 
     assert statutory == _RETENCION
-    assert statutory != (_TOTAL * maximum_supported_activity_retencion_rate()).quantize(Decimal("0.01")), (
+    assert statutory != (_TOTAL * load_retencion_actividades_rates().general_rate).quantize(Decimal("0.01")), (
         "the retencion base is the base imponible, never the IVA-inclusive total"
     )
 
@@ -233,9 +233,9 @@ def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_f
     aggregation = _aggregated(declares_substrate=True)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
-    statutory = (_BASE * maximum_supported_activity_retencion_rate()).quantize(Decimal("0.01"))
+    statutory = (_BASE * load_retencion_actividades_rates().general_rate).quantize(Decimal("0.01"))
 
-    rate = maximum_supported_activity_retencion_rate()
+    rate = load_retencion_actividades_rates().general_rate
 
     assert resolved[_RETENCIONES_BINDING] == statutory
     assert resolved[_RETENCIONES_BINDING] == _RETENCION

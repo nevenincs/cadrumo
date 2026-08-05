@@ -62,7 +62,7 @@ from ....transactions import (
     TransactionCatalogue,
     TransactionDirection,
     TransactionLifecycleState,
-    maximum_supported_activity_retencion_rate,
+    load_retencion_actividades_rates,
 )
 from .. import (
     CasillaId,
@@ -226,7 +226,7 @@ def test_the_exempt_invoice_recovers_its_retencion_at_the_statutory_figure() -> 
     aggregation = _aggregated(declares_substrate=True)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
-    statutory = (_BASE * maximum_supported_activity_retencion_rate()).quantize(Decimal("0.01"))
+    statutory = (_BASE * load_retencion_actividades_rates().general_rate).quantize(Decimal("0.01"))
 
     assert resolved[_RETENCIONES_BINDING] == statutory
     assert resolved[_RETENCIONES_BINDING] == _RETENCION
