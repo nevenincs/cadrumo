@@ -2763,14 +2763,15 @@ cli:
           económica) casilla %{casilla} (LIRPF arts. 86-89).'
         m210_gross_income_source_help: 'Modelo 210 [5] authority: manual (default)
           or Spanish-source ledger aggregation.'
-        meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child under
-          3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
-          Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
-          sum(min(MESES × 100, 1200)) and injects into casilla 0611. Example: --meses-trabajo-con-hijo-menor-3
-          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Only for profiles
-          that declare no descendants: when the active profile already declares MESES_TRABAJO
-          through `aeat config profile descendiente add`, those records carry the
-          months and this option is refused.'
+        meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child qualified
+          for the Art. 81 LIRPF maternity deduction -- under 3, or an adopcion/acogimiento
+          inside its age-independent entry-date window -- and was in the family unit.
+          Format: HIJO_ID=MESES. Repeatable per child. HIJO_ID is a free label (e.g.
+          0, 1, ''laia''). Computes sum(min(MESES x 100, 1200)) and injects into casilla
+          0611. Example: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3
+          1=6 -> 0611 = 1800. Only for profiles that declare no descendants: when
+          the active profile already declares MESES_TRABAJO through `aeat config profile
+          descendiente add`, those records carry the months and this option is refused.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requires
           HIJO_ID=MESES format; received: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESES in --meses-trabajo-con-hijo-menor-3
@@ -67168,9 +67169,11 @@ wizard:
         prompt: Registro Civil inscription date
       meses-madre-trabajo:
         help: 'For the maternity deduction (Art. 81 LIRPF): months (0-12) the mother
-          paid Social Security while this child was under 3.'
+          paid Social Security while this child qualified -- under 3, or (age-independent)
+          inside the adopcion/acogimiento entry-date window recorded via INSCRIPCION/ACOGIMIENTO.'
         invalid_range: Enter a whole number of months between %{minimum} and %{maximum}.
-        prompt: Months the mother worked while the child was under 3 (filing year)
+        prompt: Months the mother worked while entitled -- child under 3, or adopcion/acogimiento
+          inside its entry-date window (filing year)
       nif:
         prompt: Descendant's NIF/NIE (leave blank if none)
       prorrata-minimo:

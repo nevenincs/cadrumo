@@ -2991,15 +2991,16 @@ cli:
           de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
         m210_gross_income_source_help: 'Autoridad de la [5] del Modelo 210: manual
           (predeterminada) o agregación de libro mayor de fuente española.'
-        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo menor
-          de 3 años estaba en la unidad familiar (Art. 81 LIRPF deducción maternidad).
-          Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador
-          libre (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES × 100, 1200)) e
-          inyecta en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12
-          --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Solo para perfiles que
-          no declaran descendientes: si el perfil activo ya declara MESES_TRABAJO
-          con `aeat config profile descendiente add`, esos registros aportan los meses
-          y esta opción se rechaza.'
+        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo cumplia
+          los requisitos de la deduccion por maternidad del art. 81 LIRPF -- menor
+          de 3 anos, o una adopcion/acogimiento dentro de su ventana de fecha de entrada,
+          con independencia de la edad -- y estaba en la unidad familiar. Formato:
+          HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador libre
+          (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES x 100, 1200)) e inyecta
+          en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3
+          1=6 -> 0611 = 1800. Solo para perfiles que no declaran descendientes: si
+          el perfil activo ya declara MESES_TRABAJO con `aeat config profile descendiente
+          add`, esos registros aportan los meses y esta opcion se rechaza.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requiere
           formato HIJO_ID=MESES; se recibió: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESES en --meses-trabajo-con-hijo-menor-3
@@ -69916,11 +69917,15 @@ wizard:
           Desde esa fecha se cuenta el aumento por menor de tres años.
         prompt: Fecha de inscripción en el Registro Civil
       meses-madre-trabajo:
-        help: 'Para la deducción por maternidad (art. 81 LIRPF): meses (0-12) en que
-          la madre cotizó a la Seguridad Social con el hijo menor de 3 años.'
+        help: 'Para la deduccion por maternidad (art. 81 LIRPF): meses (0-12) en que
+          la madre cotizo a la Seguridad Social mientras el hijo cumplia los requisitos
+          -- menor de 3 anos, o (con independencia de la edad) dentro de la ventana
+          de fecha de entrada de la adopcion/acogimiento registrada con INSCRIPCION/ACOGIMIENTO.'
         invalid_range: Introduzca un número entero de meses entre %{minimum} y %{maximum}
           (art. 81 LIRPF).
-        prompt: Meses que la madre trabajó con el hijo menor de 3 años (año de declaración)
+        prompt: Meses que la madre trabajo con derecho a la deduccion -- hijo menor
+          de 3 anos, o adopcion/acogimiento dentro de su ventana de fecha de entrada
+          (ano de declaracion)
       nif:
         prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
       prorrata-minimo:

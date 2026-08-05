@@ -2908,16 +2908,17 @@ cli:
           %{casilla} rovatába (LIRPF 86-89. cikk).'
         m210_gross_income_source_help: 'Az M210-es modell [5] mezőjének forrása: kézi
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
-        meses_trabajo_con_hijo_menor_3_help: 'A 3 évesnél fiatalabb gyermekkel végzett
-          munkahónapok száma a családi egységben (LIRPF 81. cikk anyasági levonás).
-          Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként ismételhető. A GYERMEK_AZONOSÍTÓ
-          szabad felirat (pl. 0, 1, "laia"). Kiszámítja: összeg(min(HÓNAPOK × 100;
-          1200)) és befecskendezi a 0611-es mezőbe. Példa: --meses-trabajo-con-hijo-menor-3
-          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Csak olyan profilokhoz,
-          amelyek nem deklarálnak leszármazottat: ha az aktív profil már deklarál
-          MESES_TRABAJO értéket az `aeat config profile descendiente add` paranccsal,
-          akkor azok a nyilvántartások adják a hónapokat, és ez a kapcsoló elutasításra
-          kerül.'
+        meses_trabajo_con_hijo_menor_3_help: 'Munkahonapok szama, amig a gyermek jogosult
+          volt a LIRPF 81. cikk szerinti anyasagi levonasra -- 3 ev alatti, vagy egy
+          orokbefogadas/nevelesbe vetel a belepesi datum ablakan belul, kortol fuggetlenul
+          -- es a csaladi egysegben volt. Formatum: GYERMEK_AZONOSITO=HONAPOK. Gyermekenkent
+          ismetelheto. A GYERMEK_AZONOSITO szabad felirat (pl. 0, 1, ''laia''). Kiszamitja:
+          osszeg(min(HONAPOK x 100; 1200)) es befecskendezi a 0611-es mezobe. Pelda:
+          --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6
+          -> 0611 = 1800. Csak olyan profilokhoz, amelyek nem deklaralnak leszarmazottat:
+          ha az aktiv profil mar deklaral MESES_TRABAJO erteket az `aeat config profile
+          descendiente add` paranccsal, akkor azok a nyilvantartasok adjak a honapokat,
+          es ez a kapcsolo elutasitasra kerul.'
         meses_trabajo_hijo_bad_format: 'A --meses-trabajo-con-hijo-menor-3 GYERMEK_AZONOSÍTÓ=HÓNAPOK
           formátumot igényel; kapott: {spec}.'
         meses_trabajo_hijo_not_integer: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3
@@ -67730,11 +67731,14 @@ wizard:
           dátumát. A hároméves kor alatti növekmény ettől a dátumtól számít.
         prompt: Anyakönyvi bejegyzés dátuma
       meses-madre-trabajo:
-        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0–12), amikor az
-          anya tb-járulékot fizetett a 3 év alatti gyermek mellett.'
+        help: 'Az anyasagi levonashoz (LIRPF 81. cikk): honapok (0-12), amikor az
+          anya tb-jarulekot fizetett, amig a gyermek jogosult volt -- 3 ev alatti,
+          vagy (kortol fuggetlenul) az INSCRIPCION/ACOGIMIENTO datummal rogzitett
+          orokbefogadasi/nevelesbe veteli belepesi ablakon belul.'
         invalid_range: Adjon meg egész számú hónapot %{minimum} és %{maximum} között
           (LIRPF 81. cikk).
-        prompt: Hónapok, amíg az anya dolgozott a 3 év alatti gyermek mellett (adóév)
+        prompt: Honapok, amig az anya jogosultan dolgozott -- 3 ev alatti gyermek,
+          vagy orokbefogadas/nevelesbe vetel a belepesi datum ablakan belul (adoev)
       nif:
         prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
       prorrata-minimo:
