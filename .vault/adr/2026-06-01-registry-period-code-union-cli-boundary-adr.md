@@ -4,7 +4,7 @@ tags:
   - '#registry-period-code-union'
 date: '2026-06-01'
 modified: '2026-08-05'
-body_hash: 'sha256:259474e10dcc02ebb64452c4bc4f29544c0589397e00d0f29ceec2155cfbb519'
+body_hash: 'sha256:9d01936b7af01bd44cb60d9c68fba0eefbc9089b5c497bcccb72303d7e231757'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
@@ -533,3 +533,62 @@ registry ownership would force either a cross-package private import — barred 
 `service-imports-via-top-level-reexports` — or a duplicated token-to-cadence map that can
 drift from the one `Period.kind` reads. "`PeriodKind` is core-owned" is not the argument,
 because it would equally permit the registry keeping its own map beside it.
+
+### Correction (2026-08-05, second post-implementation pass)
+
+Three further items the landed implementation turned. The incomplete-inventory item is
+already recorded above and is not repeated here.
+
+**The parser reachability caveat RESOLVES CLEAN — it is settled, not open.** This
+supersedes the "stays open" section above. Modelo 145 declares no extraction profiles at
+all: its revision directory carries `application_links`, `casillas`, `export_layouts` and
+`workbook_parity_refs`, and no `extraction_profiles` anywhere in its tree. The profile
+tuple built at `adapters/inbound/declaracion/_parser.py:488-492` is therefore empty for
+M145 and the parse raises `DeclaracionParseError` before `_filing_period_for_observation`
+is ever reached. The other production caller supplying a period override passes an
+already-typed `Period.registry_token`. So `comunicacion` and `variacion` cannot reach the
+narrow construction at line 323 in production: the normalisation set correctly stays at
+four spellings, and the new refusal is right and unreachable rather than right and
+latent-breaking.
+
+**`operation_period`: right conclusion, wrong reasoning, wrong class name.** Two
+corrections to A2 above.
+
+The class is `CounterpartObservation` (`application/aggregation/_counterpart.py:48`).
+`ManualCounterpartObservation`, as A2 names it, does not exist.
+
+More seriously, A2 justified the move on the ground that "every construction site in the
+tree passes `0A`" and "there is no production writer that could feed it an administrative
+token". That is wrong in the direction that matters. The model IS the operator boundary,
+and says so itself: its docstring records that `aeat app modelo aggregate` validates each
+`--counterpart-observation` JSON object directly against it, "so whatever it admits
+reaches the preview rollups unchecked". The flag is real
+(`entrypoints/cli/_modelo_aggregate_cli.py:57-91`). Before the narrowing an operator could
+have typed `"operation_period": "ALTA"` into an M347 rollup preview and had it accepted
+into a surface they read as a preview of a real declaration. The correct justification is
+therefore the opposite of the one given: this is an operator JSON boundary, the narrowing
+protects it, and the refusal now surfaces as a `BadParameter` carrying the pydantic field
+message and the flag name — the instructive-refusal property `aeat-architecture-boundaries`
+requires.
+
+**The failure mode, recorded because this record named it in advance.** A2 rested on an
+absence argument, and this feature's hand-off explicitly flagged absence arguments as the
+ones most likely to break against a real implementation. It broke exactly there, and the
+falsifying site was not obscure — it was the operator-facing CLI flag. Two things
+generalise. An absence claim is refuted by a single site the search shape could not see,
+so it is only as strong as the sweep behind it; and "I grepped the construction sites"
+structurally cannot see a value that arrives as parsed JSON at runtime, because there is
+no construction site to find. That is the same blind spot as the `_schema.py` miss
+recorded above — a token never spelled out in source — arrived at by a different route. A
+type narrowing justified by absence should name the sweep that produced it, so the next
+reader can judge what that sweep was incapable of seeing rather than re-trusting the
+conclusion.
+
+**`EVENT-N` framing.** The phrase "documentation placeholder" earlier in this amendment is
+superseded by the stronger ground recorded under "Why no second guard caught this" and now
+carried in source: the registry's own matcher treats the literal as a symbolic selector
+covering the concrete `EVENT-<n>` scopes, so it stands for a SET of periods by documented
+intent and cannot be a member of that set. `core-engineer` reached the same correction
+independently and named the constant `_SYMBOLIC_EVENT_SELECTOR` (`core/_period.py:91`,
+commit `76833ef3d8`). Prefer that framing; a placeholder argument rests on how the token
+looks, the selector argument on what the registry declares it to mean.
