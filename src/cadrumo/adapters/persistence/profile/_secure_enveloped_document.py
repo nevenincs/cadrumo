@@ -1,6 +1,6 @@
 """Canonical encrypted persistence kernel for Envelope-wrapped profile singleton documents.
 
-Sibling of :class:`~adapters.persistence.profile.ProfileBareModelSecurePersistence`
+Sibling of :class:`~adapters.persistence.profile._secure_model_document.ProfileBareModelSecurePersistence`
 (``_secure_model_document.py``). The two kernels cover two DIFFERENT on-disk wire
 shapes that both happen to persist "one whole singleton Pydantic document per
 profile bucket" — they are not interchangeable, and a namespace's existing shape
@@ -113,7 +113,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
                 inner envelope's schema version is not the consumer's current
                 version.
         """
-        from ..storage import Envelope, inner_envelope_version_is_current
+        from ..storage import Envelope, inner_envelope_classification_is_expected, inner_envelope_version_is_current
 
         record = self._objects.load(
             self.namespace,
@@ -124,7 +124,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         if record is None:
             return self._empty_document()
         envelope = Envelope[self._model_type].model_validate_json(record.payload)
-        if envelope.classification is not self._definition.sensitivity:
+        if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
             from ..storage import ClassificationError
 
             raise ClassificationError(
