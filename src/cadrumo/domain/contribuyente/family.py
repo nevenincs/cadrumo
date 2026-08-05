@@ -1288,15 +1288,6 @@ class RentaFamilyProfile(BaseModel):
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
         return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year))
 
-    @property
-    def descendientes_menores_3_2024(self) -> int:
-        """Count of descendants eligible for the bajo-3-años supplement in 2024.
-
-        Binding-compatible property (no argument) for the 2024 registry binding
-        ``renta-2024-profile-descendientes-menores-3``.
-        """
-        return self.descendientes_menores_3_year_end(2024)
-
     def descendientes_guarderia_count(self, filing_year: int) -> int:
         """Count of descendants who may carry an Art. 81.2 guardería increase.
 

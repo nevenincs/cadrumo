@@ -315,7 +315,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # without childcare deduction (mínimo del contribuyente chain only).
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
         # Art. 58/61 LIRPF mínimo por descendientes aggregate
         # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes

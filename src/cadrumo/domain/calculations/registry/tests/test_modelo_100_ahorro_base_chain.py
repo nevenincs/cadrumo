@@ -64,7 +64,7 @@ _BINDINGS_2024: dict[str, Decimal] = {
     # scenarios that do not exercise the maternidad-guarderia chain.
     "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-    "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+    "renta-2024-profile-descendientes-guarderia": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
     # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.

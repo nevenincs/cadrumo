@@ -6,7 +6,7 @@ target_casilla_id = "0613"
 expression = { op = "min", args = [
     { binding = "renta-2024-profile-guarderia-gastos-reales" },
     { op = "multiply", args = [
-        { binding = "renta-2024-profile-descendientes-menores-3" },
+        { binding = "renta-2024-profile-descendientes-guarderia" },
         { literal = "1000" },
     ] },
     { binding = "renta-2024-profile-cotizaciones-ss-madre" },

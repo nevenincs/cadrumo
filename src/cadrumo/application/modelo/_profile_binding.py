@@ -260,23 +260,29 @@ def _inject_derived_family_facts(
     injector runs for whatever year the registry declares a consumer for, so
     extending coverage is registry work with no code edit.
 
-    Note on the count path's NAME. ``descendientes_menores_3_{year}`` carries
-    the GUARDERÍA population, which since the Art. 81.2 month rules landed is
-    wider than "menor de 3 al devengo" by exactly the period a child turns
-    three. The name predates that divergence and its sole consumer is the 0613
-    cap, where the wider population is the correct one — capping a turning-three
-    child's spend at zero would hand back the under-grant the extension exists
-    to close. The honest name is ``descendientes_guarderia_{year}``; renaming it
-    means renaming the binding id every M100 test fixture supplies, so it is
-    left as a follow-up rather than folded into this change.
+    Note on the count path's NAME, which is now the honest one.
+    ``descendientes_guarderia_{year}`` carries the GUARDERÍA population, wider
+    than "menor de 3 al devengo" by exactly the period a child turns three since
+    the Art. 81.2 month rules landed. It was called
+    ``descendientes_menores_3_{year}`` until this rename, and the old name was a
+    lie in the load-bearing direction: it named the Art. 58.2 statutory count
+    while carrying the wider one, so a reader correcting the mismatch could
+    plausibly have narrowed the VALUE to match the NAME. That would cap a
+    turning-three child's spend at zero and hand back the under-grant the
+    extension exists to close.
+
+    The statutory count keeps the old name, correctly, on
+    :meth:`~domain.contribuyente.RentaFamilyProfile.descendientes_menores_3_year_end`.
+    The two are different populations and always were; only one of them was
+    misnamed.
     """
-    menores_key = f"renta_family.descendientes_menores_3_{filing_year}"
+    guarderia_key = f"renta_family.descendientes_guarderia_{filing_year}"
     gastos_key = f"renta_family.gastos_guarderia_reales_{filing_year}"
-    if menores_key not in declared_selectors and gastos_key not in declared_selectors:
+    if guarderia_key not in declared_selectors and gastos_key not in declared_selectors:
         return
 
     profile = _renta_family_profile_from_facts(fact_index)
-    fact_index[menores_key] = Decimal(profile.descendientes_guarderia_count(filing_year))
+    fact_index[guarderia_key] = Decimal(profile.descendientes_guarderia_count(filing_year))
     fact_index[gastos_key] = Decimal(profile.gastos_guarderia_reales(filing_year))
 
 
