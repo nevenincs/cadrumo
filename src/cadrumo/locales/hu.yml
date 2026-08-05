@@ -2908,17 +2908,17 @@ cli:
           %{casilla} rovatába (LIRPF 86-89. cikk).'
         m210_gross_income_source_help: 'Az M210-es modell [5] mezőjének forrása: kézi
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
-        meses_trabajo_con_hijo_menor_3_help: 'Munkahonapok szama, amig a gyermek jogosult
-          volt a LIRPF 81. cikk szerinti anyasagi levonasra -- 3 ev alatti, vagy egy
-          orokbefogadas/nevelesbe vetel a belepesi datum ablakan belul, kortol fuggetlenul
-          -- es a csaladi egysegben volt. Formatum: GYERMEK_AZONOSITO=HONAPOK. Gyermekenkent
-          ismetelheto. A GYERMEK_AZONOSITO szabad felirat (pl. 0, 1, ''laia''). Kiszamitja:
-          osszeg(min(HONAPOK x 100; 1200)) es befecskendezi a 0611-es mezobe. Pelda:
+        meses_trabajo_con_hijo_menor_3_help: 'Munkahónapok száma, amíg a gyermek jogosult
+          volt a LIRPF 81. cikk szerinti anyasági levonásra -- 3 év alatti, vagy egy
+          örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül, kortól függetlenül
+          -- és a családi egységben volt. Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként
+          ismételhető. A GYERMEK_AZONOSÍTÓ szabad felirat (pl. 0, 1, ''laia''). Kiszámítja:
+          összeg(min(HÓNAPOK x 100; 1200)) és befecskendezi a 0611-es mezőbe. Példa:
           --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6
-          -> 0611 = 1800. Csak olyan profilokhoz, amelyek nem deklaralnak leszarmazottat:
-          ha az aktiv profil mar deklaral MESES_TRABAJO erteket az `aeat config profile
-          descendiente add` paranccsal, akkor azok a nyilvantartasok adjak a honapokat,
-          es ez a kapcsolo elutasitasra kerul.'
+          -> 0611 = 1800. Csak olyan profilokhoz, amelyek nem deklarálnak leszármazottat:
+          ha az aktív profil már deklarál MESES_TRABAJO értéket az `aeat config profile
+          descendiente add` paranccsal, akkor azok a nyilvántartások adják a hónapokat,
+          és ez a kapcsoló elutasításra kerül.'
         meses_trabajo_hijo_bad_format: 'A --meses-trabajo-con-hijo-menor-3 GYERMEK_AZONOSÍTÓ=HÓNAPOK
           formátumot igényel; kapott: {spec}.'
         meses_trabajo_hijo_not_integer: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3
@@ -4860,28 +4860,8 @@ cli:
     allow_identical_locale_help: A frissítendő locale kódja.
     allow_identical_reason_help: Miért egyezik jogosan ez a szöveg az angollal.
     app_help: Lokalizációs katalógusok ellenőrzése és sablonjainak létrehozása.
-    audit:
-      locale_help: A sema-lokalis vizsgalatot a kivalasztott nyelvekre korlatozza.
-      modelo_help: A sema-lokalis vizsgalatot egyetlen modelo azonositora korlatozza.
-      modelos_help: Tartalmazza minden konyvtar modu modelo sema-lokalis allapotat.
-      revision_help: A sema-lokalis vizsgalatot egyetlen revizio azonositora korlatozza.
     canonicalize_product_identity:
       locale_help: Csak ezt a támogatott nyelvi katalógust frissítse.
-    modelo:
-      app_help: Modellséma helyi fordítások kezelése.
-      audit_help: Modellséma fordítások auditja.
-      coverage_help: Modellséma lefedettség kiírása.
-      field_help: Fordítási mező.
-      key_help: Semakulcs.
-      locale_help: Locale kód.
-      modelo_help: Modelo azonosító.
-      registry_root_help: Alternatív AEAT regiszter gyökér.
-      remove_help: Egy modellséma fordítás eltávolítása.
-      revision_help: Revízió azonosító.
-      scaffold_check_help: Ellenőrzés írás nélkül.
-      scaffold_help: Modellséma fordítási fájlok generálása.
-      set_help: Egy modellséma fordítás beállítása.
-      value_help: Lefordított érték.
     remove_key_help: Eltávolítandó pontozott locale-kulcs.
     remove_locale_help: Frissítendő locale kód.
     scaffold_check_help: Eltérések jelentése lokalizációs fájlok írása nélkül.
@@ -5982,8 +5962,6 @@ errors:
       sikerült menteni vagy betölteni.
     fail_modelo_filing_record_persistence: A benyújtás-rekord katalógust nem sikerült
       menteni vagy betölteni.
-    fail_modelo_locale_manager: 'Belső hiba: a modell séma-lokális fordításkezelés
-      meghiúsult.'
     fail_modelo_verification_report_persistence: Az ellenőrzési jelentés katalógust
       nem sikerült menteni vagy betölteni.
     fail_modelo_work_unit_persistence: A munkajegység-katalógust nem sikerült menteni
@@ -6916,22 +6894,6 @@ locales:
       file_ok: '%{locale_file}: rendben'
       key_extra: '  többlet %{key}'
       key_missing: '  hiányzó %{key}'
-    modelo:
-      audit:
-        missing: hiányzó locale=%{locale_code} modell=%{modelo} revizio=%{revision}
-          scope=%{scope} mező=%{field} kulcs=%{key}
-        stale: elavult locale=%{locale_code} modell=%{modelo} revizio=%{revision}
-          scope=%{scope} mező=%{field} kulcs=%{key}
-      coverage:
-        row: locale=%{locale_code} modell=%{modelo} revizio=%{revision} cimkek=%{label_translated}/%{label_required}
-          help=%{help_translated}/%{help_required}
-      remove:
-        removed: Eltávolítva %{path} %{field} %{key}
-      scaffold:
-        no_changes: A modell locale scaffold már összhangban van.
-        updated: Frissítve %{path}
-      set:
-        updated: Frissítve %{path} %{field} %{key}
     remove:
       removed: 'eltávolítva: %{locale_file}:%{key}'
     scaffold_updated: a nyelvi katalógus váza frissítve
@@ -7123,6 +7085,9 @@ modelo:
     '100':
       casilla:
         continuidad:
+          irpf-aeip-centenario-del-hockey-1923-2023-aplicado:
+            help: null
+            label: null
           irpf-anexo-a-ceuta-melilla-deduccion-importe:
             help: null
             label: null
@@ -8906,9 +8871,6 @@ modelo:
             help: null
             label: null
           irpf-vehiculo-electrico-vendedor-nif:
-            help: null
-            label: null
-          x-d5p70phec5imis1ecdimst35dpgn4qbf5li6ar1dd1nm6qr5f4mj2e9i6cmj4c1i6cn62s3cd5hm2p3f:
             help: null
             label: null
           x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
@@ -38282,7 +38244,7 @@ modelo:
               label: Ügylet típusa
             '1974':
               help: Adja meg a NIF azonosítót.
-              label: NIF
+              label: null
             '1975':
               help: Jelölje "X"-szel, ha nincs NIF.
               label: Ha nincs NIF, jelölje "X"-szel
@@ -38294,7 +38256,7 @@ modelo:
               label: Ügylet típusa
             '1978':
               help: Adja meg a NIF azonosítót.
-              label: NIF
+              label: null
             '1979':
               help: Jelölje "X"-szel, ha nincs NIF.
               label: Ha nincs NIF, jelölje "X"-szel
@@ -38456,16 +38418,16 @@ modelo:
               label: 2. megfizetett összeg
             '2044':
               help: Adja meg az 1. NIF/NIE azonosítót.
-              label: NIF/NIE 1
+              label: null
             '2045':
               help: Adja meg a 3. NIF/NIE azonosítót.
-              label: NIF/NIE 3
+              label: null
             '2046':
               help: Adja meg a 3. NIF/NIE azonosítót.
-              label: NIF/NIE 3
+              label: null
             '2047':
               help: Adja meg a 4. NIF/NIE azonosítót.
-              label: NIF/NIE 4
+              label: null
             '2049':
               help: Adja meg a fő lakóhelyként történő bérbeadásra szánt ingatlan
                 átalakításából eredő kiadásokat, a B.12 melléklet [2142] rovata szerint.
@@ -38483,16 +38445,16 @@ modelo:
                 járulékok után
             '2052':
               help: Adja meg az 1. NIF/NIE azonosítót.
-              label: NIF/NIE 1
+              label: null
             '2053':
               help: Adja meg a 3. NIF/NIE azonosítót.
-              label: NIF/NIE 3
+              label: null
             '2054':
               help: Adja meg a 3. NIF/NIE azonosítót.
-              label: NIF/NIE 3
+              label: null
             '2055':
               help: Adja meg a 4. NIF/NIE azonosítót.
-              label: NIF/NIE 4
+              label: null
             '2062':
               help: Adja meg az 1. bérbeadó NIF/NIE azonosítóját.
               label: Az 1. bérbeadó NIF/NIE azonosítója
@@ -48754,7 +48716,7 @@ modelo:
               label: Külföldi értékpapírokat tartó szervezet [00011]
             '00012':
               help: Jelölő SOCIMI szervezet esetén.
-              label: SOCIMI [00012]
+              label: null
             '00013':
               help: Jelölő spanyol gazdasági érdekcsoportosulás esetén.
               label: Spanyol gazdasági érdekcsoportosulás [00013]
@@ -67731,14 +67693,14 @@ wizard:
           dátumát. A hároméves kor alatti növekmény ettől a dátumtól számít.
         prompt: Anyakönyvi bejegyzés dátuma
       meses-madre-trabajo:
-        help: 'Az anyasagi levonashoz (LIRPF 81. cikk): honapok (0-12), amikor az
-          anya tb-jarulekot fizetett, amig a gyermek jogosult volt -- 3 ev alatti,
-          vagy (kortol fuggetlenul) az INSCRIPCION/ACOGIMIENTO datummal rogzitett
-          orokbefogadasi/nevelesbe veteli belepesi ablakon belul.'
+        help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0-12), amikor az
+          anya tb-járulékot fizetett, amíg a gyermek jogosult volt -- 3 év alatti,
+          vagy (kortól függetlenül) az INSCRIPCION/ACOGIMIENTO dátummal rögzített
+          örökbefogadási/nevelésbe vételi belépési ablakon belül.'
         invalid_range: Adjon meg egész számú hónapot %{minimum} és %{maximum} között
           (LIRPF 81. cikk).
-        prompt: Honapok, amig az anya jogosultan dolgozott -- 3 ev alatti gyermek,
-          vagy orokbefogadas/nevelesbe vetel a belepesi datum ablakan belul (adoev)
+        prompt: Hónapok, amíg az anya jogosultan dolgozott -- 3 év alatti gyermek,
+          vagy örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül (adóév)
       nif:
         prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
       prorrata-minimo:

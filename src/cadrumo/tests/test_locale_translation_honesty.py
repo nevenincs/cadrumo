@@ -1,22 +1,24 @@
-"""Honesty assertions for the non-English locale catalogues.
+"""Honesty assertions for the shared locale catalogues.
 
 A locale that ships untranslated content while pretending to be a real
-translation surface is dishonest about its support. This module pins two
-contracts. First, for every key, the value under ``ca``, ``es``, and
-``hu`` must differ from the corresponding ``en`` value, OR the deviation
-must appear in the ``_intentional_identical.json`` allowlist with an
-explicit reason. Second, no catalogue value in ANY locale (``en``
+translation surface is dishonest about its support. This module pins three
+contracts. First, generic application keys under ``ca``, ``es``, and
+``hu`` must differ from the corresponding ``en`` value. Modelo schema keys
+must instead be judged against the official Spanish source, and Spanish
+itself is never treated as a translation target. An exact non-Spanish match
+requires an explicit ``_intentional_identical.json`` reason. Second, no
+catalogue value in ANY locale (``en``
 included) may echo its own dotted key: a key-echo is the scaffold
 placeholder, never a legitimate translation, so it has no per-key
 allowlist — only a shrink-only ``_key_echo_ceiling`` ratchet recorded in
 the same allowlist file.
 
-The Modelo catalogue also contains optional locale leaves whose value is
-``null`` until a translation is authored. Those absent values are not
-untranslated strings and are excluded from the identical-to-English
-comparison; authored non-null values remain subject to the same allowlist and
-ratchet rules. The ``_untranslated_ceiling = 0`` metadata therefore grants no
-bypass for a new authored value that merely echoes English.
+The Modelo catalogue also contains optional non-Spanish leaves whose value is
+``null`` until a translation is authored. Those absent values are intentional
+Spanish fallback and are excluded from the identical-source comparison;
+authored non-null values remain subject to the same allowlist and ratchet
+rules. The ``_untranslated_ceiling = 0`` metadata therefore grants no bypass
+for a new authored value that merely echoes its canonical source.
 
 The bucket and its ceiling are retained rather than removed because
 neither is hand-editable — ``_intentional_identical.json`` is
@@ -37,6 +39,14 @@ import yaml
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LOCALES_DIR = Path(__file__).resolve().parents[1] / "locales"
+_MODELO_SCHEMA_PREFIX = "modelo.schema."
+_MODELO_SOURCE_SUFFIXES = (".label", ".title", ".official_name")
+
+
+def _is_modelo_source_key(key: str) -> bool:
+    """Return whether a Modelo leaf carries mandatory official source text."""
+
+    return key.startswith(_MODELO_SCHEMA_PREFIX) and key.endswith(_MODELO_SOURCE_SUFFIXES)
 
 # Recursive YAML node: either a leaf string or a nested mapping.
 type _LocaleNode = str | dict[str, "_LocaleNode"] | None
@@ -242,11 +252,26 @@ def test_no_catalogue_value_is_blank() -> None:
     assert failures == [], "\n".join(failures)
 
 
-def test_translated_values_differ_from_en_unless_allowlisted() -> None:
-    """Every ``ca`` / ``es`` / ``hu`` value must differ from ``en`` OR be allowlisted.
+def test_modelo_spanish_values_are_authority_source() -> None:
+    """Every enrolled Modelo key has one non-blank Spanish source value."""
+
+    es_keys = _catalogue_leaves("es")
+    offenders = sorted(
+        key
+        for key, value in es_keys.items()
+        if _is_modelo_source_key(key) and (not isinstance(value, str) or not value.strip())
+    )
+    assert offenders == [], (
+        "es.yml is the mandatory official Modelo source; these schema leaves are missing or blank: "
+        f"{offenders[:10]}"
+    )
+
+
+def test_translated_values_differ_from_canonical_source_unless_allowlisted() -> None:
+    """Generic values differ from English; Modelo values differ from Spanish.
 
     When the wholesale ``untranslated_pending`` bucket is active, the test
-    acts as a ratchet: the number of identical-to-en keys must not exceed
+    acts as a ratchet: the number of identical-source keys must not exceed
     the ``_untranslated_ceiling`` stored in the allowlist.  This prevents
     regressions that add new untranslated strings while the bulk translation
     work is in progress.
@@ -257,34 +282,54 @@ def test_translated_values_differ_from_en_unless_allowlisted() -> None:
     """
     allowlist = _load_allowlist()
     en_keys = _catalogue_leaves("en")
+    es_keys = _catalogue_leaves("es")
     failures: list[str] = []
 
     for locale_code in ("ca", "es", "hu"):
         locale_allows = allowlist.get(locale_code, set())
         locale_keys = _catalogue_leaves(locale_code)
 
-        offenders = [
-            key
-            for key, en_value in en_keys.items()
-            if (
-                key in locale_keys
-                and isinstance(en_value, str)
-                and isinstance(locale_keys[key], str)
-                and locale_keys[key] == en_value
-                and key not in locale_allows
+        offenders_by_source: dict[str, list[str]] = {}
+        for key, en_value in en_keys.items():
+            locale_value = locale_keys.get(key)
+            if not isinstance(locale_value, str):
+                continue
+            if key.startswith(_MODELO_SCHEMA_PREFIX):
+                # Spanish is the authority source for the schema. Its own
+                # value is never an untranslated translation, and absent
+                # non-Spanish values deliberately resolve to it at runtime.
+                if locale_code == "es":
+                    continue
+                source_label = "es.yml"
+                source_value = es_keys.get(key)
+            else:
+                source_label = "en.yml"
+                source_value = en_value
+            if not isinstance(source_value, str) or locale_value != source_value or key in locale_allows:
+                continue
+            offenders_by_source.setdefault(source_label, []).append(key)
+
+        for source_label, offenders in offenders_by_source.items():
+            failure = _identical_to_source_failure(
+                locale_code,
+                source_label,
+                offenders,
+                bucket_active="untranslated_pending" in locale_allows,
             )
-        ]
-        failure = _identical_to_en_failure(
-            locale_code, offenders, bucket_active="untranslated_pending" in locale_allows
-        )
-        if failure is not None:
-            failures.append(failure)
+            if failure is not None:
+                failures.append(failure)
 
     assert failures == [], "\n".join(failures)
 
 
-def _identical_to_en_failure(locale_code: str, offenders: list[str], *, bucket_active: bool) -> str | None:
-    """Render one locale's identical-to-en verdict, or ``None`` when clean.
+def _identical_to_source_failure(
+    locale_code: str,
+    source_label: str,
+    offenders: list[str],
+    *,
+    bucket_active: bool,
+) -> str | None:
+    """Render one locale's identical-source verdict, or ``None`` when clean.
 
     Wholesale-bucket mode enforces the ratchet ceiling instead of requiring
     per-key allowlist entries; a regression that adds new untranslated
@@ -295,7 +340,7 @@ def _identical_to_en_failure(locale_code: str, offenders: list[str], *, bucket_a
         if not offenders:
             return None
         return (
-            f"{locale_code}.yml carries {len(offenders)} value(s) identical to en.yml without an "
+            f"{locale_code}.yml carries {len(offenders)} value(s) identical to {source_label} without an "
             f"explicit allowlist entry. First five: {offenders[:5]}"
         )
     ceiling = _load_untranslated_ceiling(locale_code)
@@ -307,7 +352,7 @@ def _identical_to_en_failure(locale_code: str, offenders: list[str], *, bucket_a
         )
     if len(offenders) > ceiling:
         return (
-            f"{locale_code}.yml has {len(offenders)} key(s) identical to en.yml, "
+            f"{locale_code}.yml has {len(offenders)} key(s) identical to {source_label}, "
             f"exceeding the ratchet ceiling of {ceiling}. "
             f"New untranslated keys (first five of overflow): {offenders[ceiling:][:5]}"
         )

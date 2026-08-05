@@ -422,7 +422,7 @@ class LocaleManager:
         return locale_path
 
     def allow_identical(self, locale: str, dotted_key: str, reason: str) -> Path:
-        """Record one key as deliberately identical to English, with a reason.
+        """Record one key as deliberately identical to its source, with a reason.
 
         The allowlist exempts a string from the translation-honesty ratchet.
         It is for strings that are legitimately the same in both languages —
@@ -432,7 +432,7 @@ class LocaleManager:
         Args:
             locale: Locale code owning the exemption.
             dotted_key: Dotted locale key to exempt.
-            reason: Why this string is legitimately identical to English.
+            reason: Why this string is legitimately identical to its source.
 
         Returns:
             The allowlist path that was rewritten.

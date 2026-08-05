@@ -2968,14 +2968,14 @@ cli:
         m210_gross_income_source_help: 'Autoritat de la [5] del Model 210: manual
           (predeterminada) o agregació de llibre major de font espanyola.'
         meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill complia
-          els requisits de la deduccio per maternitat de l''art. 81 LIRPF -- menor
-          de 3 anys, o una adopcio/acolliment dins de la seva finestra de data d''entrada,
-          amb independencia de l''edat -- i era a la unitat familiar. Format: FILL_ID=MESOS.
-          Repetible per cada fill. FILL_ID es un identificador lliure (p. ex. 0, 1,
+          els requisits de la deducció per maternitat de l''art. 81 LIRPF -- menor
+          de 3 anys, o una adopció/acolliment dins de la seva finestra de data d''entrada,
+          amb independència de l''edat -- i era a la unitat familiar. Format: FILL_ID=MESOS.
+          Repetible per cada fill. FILL_ID és un identificador lliure (p. ex. 0, 1,
           ''laia''). Es calcula sum(min(MESOS x 100, 1200)) i s''injecta a la casella
-          0611. Nomes per a perfils que no declaren descendents: si el perfil actiu
+          0611. Només per a perfils que no declaren descendents: si el perfil actiu
           ja declara MESES_TRABAJO amb `aeat config profile descendiente add`, aquests
-          registres aporten els mesos i aquesta opcio es rebutja.'
+          registres aporten els mesos i aquesta opció es rebutja.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requereix
           format FILL_ID=MESOS; s''ha rebut: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESOS a --meses-trabajo-con-hijo-menor-3
@@ -4896,28 +4896,8 @@ cli:
     allow_identical_reason_help: Per què aquesta cadena és legítimament idèntica a
       l'anglès.
     app_help: Auditar i generar catàlegs de traducció
-    audit:
-      locale_help: Limita l'analisi de traduccio local als idiomes seleccionats.
-      modelo_help: Limita l'analisi de traduccio local a un id de model.
-      modelos_help: Inclou l'estat de traduccio local de cada model en mode directori.
-      revision_help: Limita l'analisi de traduccio local a un id de revisio.
     canonicalize_product_identity:
       locale_help: Actualitzeu només aquest catàleg d'idioma compatible.
-    modelo:
-      app_help: Gestiona traduccions locals d'esquemes de model.
-      audit_help: Audita traduccions d'esquemes de model.
-      coverage_help: Mostra cobertura d'esquema de model.
-      field_help: Camp de traducció.
-      key_help: Clau de l'esquema.
-      locale_help: Codi de locale.
-      modelo_help: Id del model.
-      registry_root_help: Arrel del registre AEAT alternativa.
-      remove_help: Elimina una traducció d'esquema de model.
-      revision_help: Id de la revisió.
-      scaffold_check_help: Comprova sense escriure.
-      scaffold_help: Genera fitxers de traducció d'esquemes de model.
-      set_help: Estableix una traducció d'esquema de model.
-      value_help: Valor traduit.
     remove_key_help: Clau de locale amb punts que s'eliminarà.
     remove_locale_help: Codi de locale que s'ha d'actualitzar.
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
@@ -6064,8 +6044,6 @@ errors:
       catàleg de revisions de càlcul.
     fail_modelo_filing_record_persistence: No s'ha pogut desar o llegir el catàleg
       de declaracions registrades.
-    fail_modelo_locale_manager: 'Error intern: la gestió de traduccions locals de
-      l''esquema del model ha fallat.'
     fail_modelo_verification_report_persistence: No s'ha pogut desar o llegir el catàleg
       d'informes de verificació.
     fail_modelo_work_unit_persistence: No s'ha pogut desar o llegir el catàleg d'unitats
@@ -7028,22 +7006,6 @@ locales:
       file_ok: '%{locale_file}: correcte'
       key_extra: '  sobrant %{key}'
       key_missing: '  falta %{key}'
-    modelo:
-      audit:
-        missing: mancant locale=%{locale_code} model=%{modelo} revisió=%{revision}
-          àmbit=%{scope} camp=%{field} clau=%{key}
-        stale: obsoleta locale=%{locale_code} model=%{modelo} revisió=%{revision}
-          àmbit=%{scope} camp=%{field} clau=%{key}
-      coverage:
-        row: locale=%{locale_code} model=%{modelo} revisió=%{revision} etiquetes=%{label_translated}/%{label_required}
-          ajuda=%{help_translated}/%{help_required}
-      remove:
-        removed: Eliminat %{path} %{field} %{key}
-      scaffold:
-        no_changes: L'scaffold de locales de model ja està alineat.
-        updated: Actualitzat %{path}
-      set:
-        updated: Actualitzat %{path} %{field} %{key}
     remove:
       removed: eliminat %{locale_file}:%{key}
     scaffold_updated: s'ha actualitzat la bastida del locale
@@ -7235,6 +7197,9 @@ modelo:
     '100':
       casilla:
         continuidad:
+          irpf-aeip-centenario-del-hockey-1923-2023-aplicado:
+            help: null
+            label: null
           irpf-anexo-a-ceuta-melilla-deduccion-importe:
             help: null
             label: null
@@ -9020,9 +8985,6 @@ modelo:
             help: null
             label: null
           irpf-vehiculo-electrico-vendedor-nif:
-            help: null
-            label: null
-          x-d5p70phec5imis1ecdimst35dpgn4qbf5li6ar1dd1nm6qr5f4mj2e9i6cmj4c1i6cn62s3cd5hm2p3f:
             help: null
             label: null
           x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
@@ -32403,7 +32365,7 @@ modelo:
             '0500':
               help: Aquest camp calculat determina la base liquidable general després
                 de les reduccions aplicables.
-              label: Base liquidable general
+              label: null
             '0501':
               help: Indiqueu la compensació de bases liquidables generals negatives
                 de 2020 a 2023 quan la casella [0500] sigui positiva, limitada a l'import
@@ -33750,7 +33712,7 @@ modelo:
                 amb risc de despoblament
             0804:
               help: Introduïu el NIF de la persona empleada.
-              label: NIF de la persona empleada
+              label: null
             0805:
               help: Introduïu la deducció de la Comunitat Valenciana per l'increment
                 dels costos del finançament aliè vinculats a la inversió en l'habitatge
@@ -34554,7 +34516,7 @@ modelo:
               label: Per despeses d'adopció
             0993:
               help: Introduïu el NIF de la persona empleada.
-              label: 'NIF de la persona empleada:'
+              label: null
             0994:
               help: Introduïu la deducció per quotes a la Seguretat Social d'empleats
                 de la llar.
@@ -37018,10 +36980,10 @@ modelo:
               label: Percentatge de titularitat
             '1616':
               help: Introduïu si la classificació és 'UR'.- Urbana.
-              label: '''UR''.- Urbana'
+              label: null
             '1617':
               help: Introduïu si la classificació és 'RU'.- Rústica.
-              label: '''RU''.- Rústica'
+              label: null
             '1618':
               help: Introduïu el nombre de dies.
               label: Nombre de dies
@@ -37453,13 +37415,13 @@ modelo:
                 (*): aplicat en aquesta declaració'
             '1724':
               help: Introduïu el NIF del productor 1.
-              label: NIF del productor 1
+              label: null
             '1725':
               help: Introduïu el NIF del productor 2.
-              label: NIF del productor 2
+              label: null
             '1726':
               help: Introduïu el NIF del productor 3.
-              label: NIF del productor 3
+              label: null
             '1727':
               help: Introduïu la deducció per activitats d'innovació tecnològica segons
                 l'art. 35.2 LIS aplicada en aquesta declaració.
@@ -37494,13 +37456,13 @@ modelo:
                 aplicat en aquesta declaració'
             '1732':
               help: Introduïu el NIF del productor 1.
-              label: NIF del productor 1
+              label: null
             '1733':
               help: Introduïu el NIF del productor 2.
-              label: NIF del productor 2
+              label: null
             '1734':
               help: Introduïu el NIF del productor 3.
-              label: NIF del productor 3
+              label: null
             '1735':
               help: Indiqueu el contribuent titular.
               label: Contribuent titular
@@ -38166,7 +38128,7 @@ modelo:
                 programa d'ajuts públics
             '1923':
               help: Introduïu la matrícula del vehicle.
-              label: Matrícula
+              label: null
             '1924':
               help: Introduïu la data de matriculació del vehicle.
               label: Data de matriculació
@@ -38385,7 +38347,7 @@ modelo:
               label: Tipus d'operació
             '1974':
               help: Introduïu el NIF.
-              label: NIF
+              label: null
             '1975':
               help: Marqueu amb una "X" si no té NIF.
               label: Si no té NIF, marqueu amb una "X"
@@ -38397,7 +38359,7 @@ modelo:
               label: Tipus d'operació
             '1978':
               help: Introduïu el NIF.
-              label: NIF
+              label: null
             '1979':
               help: Marqueu amb una "X" si no té NIF.
               label: Si no té NIF, marqueu amb una "X"
@@ -38567,16 +38529,16 @@ modelo:
               label: Import abonat 2
             '2044':
               help: Introduïu el NIF/NIE 1.
-              label: NIF/NIE 1
+              label: null
             '2045':
               help: Introduïu el NIF/NIE 3.
-              label: NIF/NIE 3
+              label: null
             '2046':
               help: Introduïu el NIF/NIE 3.
-              label: NIF/NIE 3
+              label: null
             '2047':
               help: Introduïu el NIF/NIE 4.
-              label: NIF/NIE 4
+              label: null
             '2049':
               help: Introduïu les despeses derivades de l'adequació d'un immoble destinat
                 a l'arrendament com a habitatge habitual, corresponents a la casella
@@ -38597,16 +38559,16 @@ modelo:
                 de persones empleades de la llar
             '2052':
               help: Introduïu el NIF/NIE 1.
-              label: NIF/NIE 1
+              label: null
             '2053':
               help: Introduïu el NIF/NIE 3.
-              label: NIF/NIE 3
+              label: null
             '2054':
               help: Introduïu el NIF/NIE 3.
-              label: NIF/NIE 3
+              label: null
             '2055':
               help: Introduïu el NIF/NIE 4.
-              label: NIF/NIE 4
+              label: null
             '2062':
               help: Introduïu el NIF/NIE de l'arrendador 1.
               label: NIF/NIE de l'arrendador 1
@@ -39230,10 +39192,10 @@ modelo:
               label: referència cadastral
             '0067':
               help: null
-              label: Urbana
+              label: null
             0068:
               help: null
-              label: Rústica
+              label: null
             0069:
               help: null
               label: Adreça
@@ -40346,7 +40308,7 @@ modelo:
                 cas de transmissió inter vivos dels valors)
             '0406':
               help: null
-              label: Valor al que resulta aplicable la DT 9.ª
+              label: null
             '0407':
               help: null
               label: Valor d'adquisició de les accions o participacions
@@ -40714,7 +40676,7 @@ modelo:
                 individuals o professionals
             '0500':
               help: null
-              label: Base liquidable general
+              label: null
             '0501':
               help: null
               label: 'Compensació (si la casella [0500] és positiva i fins al límit
@@ -44487,10 +44449,10 @@ modelo:
               label: '% Titularitat'
             '1616':
               help: null
-              label: '''UR''.- Urbana'
+              label: null
             '1617':
               help: null
-              label: '''RU''.- Rústica'
+              label: null
             '1618':
               help: null
               label: N.ºº de dies
@@ -44847,13 +44809,13 @@ modelo:
                 (*): Aplicat en aquesta declaració'
             '1724':
               help: null
-              label: NIF del productor 1
+              label: null
             '1725':
               help: null
-              label: NIF del productor 2
+              label: null
             '1726':
               help: null
-              label: NIF del productor 3
+              label: null
             '1727':
               help: null
               label: 'Per activitats d''innovació tecnològica (art.. 35.2 LIS): Aplicat
@@ -44879,13 +44841,13 @@ modelo:
                 aplicat en aquesta declaració'
             '1732':
               help: null
-              label: NIF del productor 1
+              label: null
             '1733':
               help: null
-              label: NIF del productor 2
+              label: null
             '1734':
               help: null
-              label: NIF del productor 3
+              label: null
             '1735':
               help: null
               label: contribuent titular
@@ -45081,7 +45043,7 @@ modelo:
               label: Adreça del Banc/Address of the bank
             '1797':
               help: null
-              label: Ciudad/City
+              label: null
             '1799':
               help: null
               label: Codi País/Country code
@@ -45448,7 +45410,7 @@ modelo:
               label: Despeses i tributs inherents a l'adquisició satisfets per l'adquirent
             '1915':
               help: null
-              label: Amortizaciones
+              label: null
             '1916':
               help: null
               label: Categoria (*)
@@ -45474,7 +45436,7 @@ modelo:
                 programa d'ajuts públiques
             '1923':
               help: null
-              label: Matrícula
+              label: null
             '1924':
               help: null
               label: Data de matriculació
@@ -45655,7 +45617,7 @@ modelo:
                 dinerària d''altres elements patrimonials)'
             '1974':
               help: null
-              label: NIF
+              label: null
             '1975':
               help: null
               label: Si no té NIF,marqui amb una \"X\"
@@ -45668,7 +45630,7 @@ modelo:
                 2: Béns Immobles; 3: Altres elements patrimonials)'
             '1978':
               help: null
-              label: NIF
+              label: null
             '1979':
               help: null
               label: Si no té NIF,marqui amb una \"X\"
@@ -45880,16 +45842,16 @@ modelo:
               label: Import abonat 2
             '2044':
               help: null
-              label: NIF/NIE 1
+              label: null
             '2045':
               help: null
-              label: NIF/NIE 3
+              label: null
             '2046':
               help: null
-              label: NIF/NIE 3
+              label: null
             '2047':
               help: null
-              label: NIF/NIE 4
+              label: null
             '2048':
               help: null
               label: 'Exercici 2022: Pendent d''aplicació en exercicis futurs'
@@ -45908,16 +45870,16 @@ modelo:
                 d'empleats o empleades de la llar
             '2052':
               help: null
-              label: NIF/NIE 1
+              label: null
             '2053':
               help: null
-              label: NIF/NIE 3
+              label: null
             '2054':
               help: null
-              label: NIF/NIE 3
+              label: null
             '2055':
               help: null
-              label: NIF/NIE 4
+              label: null
             '2056':
               help: null
               label: De quotes satisfetes a organizaciones professionals agràries
@@ -46960,7 +46922,7 @@ modelo:
               label: Base resta de rendes
             '06':
               help: null
-              label: Base total
+              label: null
             '07':
               help: null
               label: Retencions dividends i participacions
@@ -47221,7 +47183,7 @@ modelo:
             label: Suma de rendiments nets
           irpf-pf-modulos-total:
             help: null
-            label: Total
+            label: null
           irpf-pf-modulos-volumen-agrario:
             help: null
             label: Volum d'ingressos agraris del trimestre
@@ -47300,7 +47262,7 @@ modelo:
               label: Pagament de préstecs per a habitatge habitual
             '13':
               help: null
-              label: Total
+              label: null
             '14':
               help: null
               label: Resultat a ingressar d'autoliquidacions anteriors
@@ -47357,7 +47319,7 @@ modelo:
               label: Pagament de préstecs per a habitatge habitual
             '13':
               help: null
-              label: Total
+              label: null
             '14':
               help: null
               label: Resultat a ingressar d'autoliquidacions anteriors
@@ -47511,7 +47473,7 @@ modelo:
               label: Pagament de préstecs per a habitatge habitual
             '13':
               help: null
-              label: Total
+              label: null
             '14':
               help: null
               label: Resultat a ingressar d'autoliquidacions anteriors
@@ -47665,7 +47627,7 @@ modelo:
               label: Pagament de préstecs per a habitatge habitual
             '13':
               help: null
-              label: Total
+              label: null
             '14':
               help: null
               label: Resultat a ingressar d'autoliquidacions anteriors
@@ -48011,7 +47973,7 @@ modelo:
               label: 1. Mobilitat geogràfica, data de trasllat
             x-e1in4or5e1q6ushedpkmc:
               help: null
-              label: 1. NIF del perceptor
+              label: null
             x-e1in4or5e1q6ushedpnmqojick:
               help: null
               label: 1. Nom del perceptor
@@ -48248,7 +48210,7 @@ modelo:
             label: Cognoms i nom, raó social o denominació del perceptor
           payee-nif:
             help: null
-            label: NIF del perceptor
+            label: null
           payee-province:
             help: null
             label: Codi de província del domicili del perceptor
@@ -48335,7 +48297,7 @@ modelo:
               label: Modalitat de renda o rendiment
             x-e1in4opedpkmc:
               help: null
-              label: NIF del perceptor
+              label: null
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: null
               label: NIF del representant legal del perceptor
@@ -48433,7 +48395,7 @@ modelo:
               label: Modalitat de renda o rendiment
             x-e1in4opedpkmc:
               help: null
-              label: NIF del perceptor
+              label: null
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
               help: null
               label: NIF del representant legal del perceptor
@@ -48794,7 +48756,7 @@ modelo:
               label: Entitat de tinença de valors estrangers [00011]
             '00012':
               help: Indicador d'entitat SOCIMI.
-              label: SOCIMI [00012]
+              label: null
             '00013':
               help: Indicador d'agrupació d'interès econòmic espanyola.
               label: Agrupació d'interès econòmic espanyola [00013]
@@ -48813,7 +48775,7 @@ modelo:
                 [00016]
             '00017':
               help: Indicador de cooperativa protegida.
-              label: Cooperativa protegida [00017]
+              label: null
             00018:
               help: Indicador de cooperativa especialment protegida.
               label: Cooperativa especialment protegida [00018]
@@ -48831,7 +48793,7 @@ modelo:
               label: Règim d'entitats navilieres en funció del tonatge [00022]
             '00023':
               help: Indicador de gran empresa.
-              label: Gran empresa [00023]
+              label: null
             '00024':
               help: Indicador d'entitat de crèdit.
               label: Entitat de crèdit [00024]
@@ -67606,15 +67568,15 @@ wizard:
           d'aquesta data es compta l'augment per menor de tres anys.
         prompt: Data d'inscripció al Registre Civil
       meses-madre-trabajo:
-        help: 'Per a la deduccio per maternitat (art. 81 LIRPF): mesos (0-12) en que
+        help: 'Per a la deducció per maternitat (art. 81 LIRPF): mesos (0-12) en què
           la mare va cotitzar a la Seguretat Social mentre el fill complia els requisits
-          -- menor de 3 anys, o (amb independencia de l''edat) dins de la finestra
-          de data d''entrada de l''adopcio/acolliment registrada amb INSCRIPCION/ACOGIMIENTO.'
+          -- menor de 3 anys, o (amb independència de l''edat) dins de la finestra
+          de data d''entrada de l''adopció/acolliment registrada amb INSCRIPCION/ACOGIMIENTO.'
         invalid_range: Introduïu un nombre enter de mesos entre %{minimum} i %{maximum}
           (art. 81 LIRPF).
-        prompt: Mesos que la mare va treballar amb dret a la deduccio -- fill menor
-          de 3 anys, o adopcio/acolliment dins de la seva finestra de data d'entrada
-          (any de declaracio)
+        prompt: Mesos que la mare va treballar amb dret a la deducció -- fill menor
+          de 3 anys, o adopció/acolliment dins de la seva finestra de data d'entrada
+          (any de declaració)
       nif:
         prompt: NIF/NIE del descendent (deixi en blanc si no en té)
       prorrata-minimo:

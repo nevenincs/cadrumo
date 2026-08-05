@@ -2991,16 +2991,16 @@ cli:
           de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
         m210_gross_income_source_help: 'Autoridad de la [5] del Modelo 210: manual
           (predeterminada) o agregación de libro mayor de fuente española.'
-        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo cumplia
-          los requisitos de la deduccion por maternidad del art. 81 LIRPF -- menor
-          de 3 anos, o una adopcion/acogimiento dentro de su ventana de fecha de entrada,
+        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo cumplía
+          los requisitos de la deducción por maternidad del art. 81 LIRPF -- menor
+          de 3 años, o una adopción/acogimiento dentro de su ventana de fecha de entrada,
           con independencia de la edad -- y estaba en la unidad familiar. Formato:
           HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador libre
           (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES x 100, 1200)) e inyecta
           en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3
           1=6 -> 0611 = 1800. Solo para perfiles que no declaran descendientes: si
           el perfil activo ya declara MESES_TRABAJO con `aeat config profile descendiente
-          add`, esos registros aportan los meses y esta opcion se rechaza.'
+          add`, esos registros aportan los meses y esta opción se rechaza.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requiere
           formato HIJO_ID=MESES; se recibió: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESES en --meses-trabajo-con-hijo-menor-3
@@ -4933,28 +4933,8 @@ cli:
     allow_identical_reason_help: Por qué esta cadena es legítimamente idéntica al
       inglés.
     app_help: Auditar y generar catálogos de traducción
-    audit:
-      locale_help: Limita el analisis de traduccion local a los idiomas seleccionados.
-      modelo_help: Limita el analisis de traduccion local a un id de modelo.
-      modelos_help: Incluye el estado de traduccion local de cada modelo en modo directorio.
-      revision_help: Limita el analisis de traduccion local a un id de revision.
     canonicalize_product_identity:
       locale_help: Actualiza solo este catálogo de idioma compatible.
-    modelo:
-      app_help: Gestiona traducciones locales de esquemas de modelo.
-      audit_help: Audita traducciones de esquemas de modelo.
-      coverage_help: Muestra cobertura de esquema de modelo.
-      field_help: Campo de traducción.
-      key_help: Clave del esquema.
-      locale_help: Código de locale.
-      modelo_help: Id del modelo.
-      registry_root_help: Raíz del registro AEAT alternativa.
-      remove_help: Elimina una traducción de esquema de modelo.
-      revision_help: Id de la revisión.
-      scaffold_check_help: Comprueba sin escribir.
-      scaffold_help: Genera archivos de traducción de esquemas de modelo.
-      set_help: Establece una traducción de esquema de modelo.
-      value_help: Valor traducido.
     remove_key_help: Clave de locale con puntos que se eliminará.
     remove_locale_help: Código de locale a actualizar.
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
@@ -6108,8 +6088,6 @@ errors:
       de revisiones de cálculo.
     fail_modelo_filing_record_persistence: No se pudo guardar o leer el catálogo de
       declaraciones registradas.
-    fail_modelo_locale_manager: 'Error interno: la gestión de traducciones locales
-      de esquemas de modelo ha fallado.'
     fail_modelo_verification_report_persistence: No se pudo guardar o leer el catálogo
       de informes de verificación.
     fail_modelo_work_unit_persistence: No se pudo guardar o leer el catálogo de unidades
@@ -7071,22 +7049,6 @@ locales:
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
       key_missing: '  falta %{key}'
-    modelo:
-      audit:
-        missing: faltante locale=%{locale_code} modelo=%{modelo} revision=%{revision}
-          ambito=%{scope} campo=%{field} clave=%{key}
-        stale: obsoleta locale=%{locale_code} modelo=%{modelo} revision=%{revision}
-          ambito=%{scope} campo=%{field} clave=%{key}
-      coverage:
-        row: locale=%{locale_code} modelo=%{modelo} revision=%{revision} etiquetas=%{label_translated}/%{label_required}
-          ayuda=%{help_translated}/%{help_required}
-      remove:
-        removed: Eliminado %{path} %{field} %{key}
-      scaffold:
-        no_changes: El scaffold de locales de modelo ya está alineado.
-        updated: Actualizado %{path}
-      set:
-        updated: Actualizado %{path} %{field} %{key}
     remove:
       removed: eliminado %{locale_file}:%{key}
     scaffold_updated: catálogo de locale actualizado
@@ -7303,6 +7265,9 @@ modelo:
     '100':
       casilla:
         continuidad:
+          irpf-aeip-centenario-del-hockey-1923-2023-aplicado:
+            help: null
+            label: '"Centenario del Hockey 1923-2023": Aplicado en esta declaración'
           irpf-anexo-a-ceuta-melilla-deduccion-importe:
             help: null
             label: Importe total de la deducción por razón de las rentas obtenidas
@@ -9282,9 +9247,6 @@ modelo:
           irpf-vehiculo-electrico-vendedor-nif:
             help: null
             label: NIF/NIE de la persona/entidad vendedora
-          x-d5p70phec5imis1ecdimst35dpgn4qbf5li6ar1dd1nm6qr5f4mj2e9i6cmj4c1i6cn62s3cd5hm2p3f:
-            help: null
-            label: '"Centenario del Hockey 1923-2023": Aplicado en esta declaración'
           x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
             help: null
             label: Por acogimiento de personas o familias ucranianas desplazadas con
@@ -69917,15 +69879,15 @@ wizard:
           Desde esa fecha se cuenta el aumento por menor de tres años.
         prompt: Fecha de inscripción en el Registro Civil
       meses-madre-trabajo:
-        help: 'Para la deduccion por maternidad (art. 81 LIRPF): meses (0-12) en que
-          la madre cotizo a la Seguridad Social mientras el hijo cumplia los requisitos
-          -- menor de 3 anos, o (con independencia de la edad) dentro de la ventana
-          de fecha de entrada de la adopcion/acogimiento registrada con INSCRIPCION/ACOGIMIENTO.'
+        help: 'Para la deducción por maternidad (art. 81 LIRPF): meses (0-12) en que
+          la madre cotizó a la Seguridad Social mientras el hijo cumplía los requisitos
+          -- menor de 3 años, o (con independencia de la edad) dentro de la ventana
+          de fecha de entrada de la adopción/acogimiento registrada con INSCRIPCION/ACOGIMIENTO.'
         invalid_range: Introduzca un número entero de meses entre %{minimum} y %{maximum}
           (art. 81 LIRPF).
-        prompt: Meses que la madre trabajo con derecho a la deduccion -- hijo menor
-          de 3 anos, o adopcion/acogimiento dentro de su ventana de fecha de entrada
-          (ano de declaracion)
+        prompt: Meses que la madre trabajó con derecho a la deducción -- hijo menor
+          de 3 años, o adopción/acogimiento dentro de su ventana de fecha de entrada
+          (año de declaración)
       nif:
         prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
       prorrata-minimo:

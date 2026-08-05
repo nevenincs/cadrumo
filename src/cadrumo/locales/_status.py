@@ -34,6 +34,8 @@ from .manager import (
 )
 
 _REFERENCE_LOCALE_FILE = "en.yml"
+_MODELO_SOURCE_LOCALE_FILE = "es.yml"
+_MODELO_SCHEMA_PREFIX = "modelo.schema."
 _PENDING_BUCKET_KEY = "untranslated_pending"
 
 # tr() consumes these kwargs as rendering directives and strips them from the
@@ -97,9 +99,12 @@ def classify_catalogue_leaf(
         key: Dotted locale key being classified.
         value: The locale's stored leaf, or ``None`` when missing or not a
             string.
-        reference_value: The reference (English) catalogue's leaf for ``key``.
-        is_reference_locale: Whether the classified catalogue is the
-            reference catalogue itself.
+        reference_value: The canonical source catalogue's leaf for ``key``.
+        is_reference_locale: Whether the classified catalogue is a source
+            equivalent for this key. English is the source for generic
+            application keys; Spanish is the mandatory source for Modelo
+            schema keys, while English may carry the same official text when
+            the source itself is already English.
         allowlisted: Whether the key carries a per-key
             deliberately-identical allowlist entry for this locale.
 
@@ -152,6 +157,7 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
         for path in sorted(manager.locales_dir.glob("*.yml"))
     }
     reference_leaves = leaves_by_file.get(_REFERENCE_LOCALE_FILE, {})
+    modelo_source_leaves = leaves_by_file.get(_MODELO_SOURCE_LOCALE_FILE, {})
 
     return tuple(
         _catalogue_record(
@@ -159,6 +165,7 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
             leaves=leaves,
             required_keys=required_keys,
             reference_leaves=reference_leaves,
+            modelo_source_leaves=modelo_source_leaves,
             allowlist=allowlist,
             namespace_prefixes=namespace_prefixes,
         )
@@ -172,6 +179,7 @@ def _catalogue_record(
     leaves: dict[str, str],
     required_keys: set[str],
     reference_leaves: dict[str, str],
+    modelo_source_leaves: dict[str, str],
     allowlist: dict[str, dict[str, object]],
     namespace_prefixes: tuple[str, ...],
 ) -> CatalogueStatusRecord:
@@ -182,11 +190,15 @@ def _catalogue_record(
     }
     counts = dict.fromkeys(CatalogueLeafState, 0)
     for key in required_keys:
+        is_modelo_key = key.startswith(_MODELO_SCHEMA_PREFIX)
         state = classify_catalogue_leaf(
             key,
             leaves.get(key),
-            reference_value=reference_leaves.get(key),
-            is_reference_locale=locale_file == _REFERENCE_LOCALE_FILE,
+            reference_value=(modelo_source_leaves if is_modelo_key else reference_leaves).get(key),
+            is_reference_locale=(
+                locale_file == _REFERENCE_LOCALE_FILE
+                or (is_modelo_key and locale_file == _MODELO_SOURCE_LOCALE_FILE)
+            ),
             allowlisted=key in allowed_keys,
         )
         counts[state] += 1

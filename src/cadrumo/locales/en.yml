@@ -4576,28 +4576,8 @@ cli:
     allow_identical_locale_help: Locale code to update.
     allow_identical_reason_help: Why this string is legitimately identical to English.
     app_help: Audit and scaffold locale catalogues
-    audit:
-      locale_help: Restrict the schema-local scan to selected locales.
-      modelo_help: Restrict the schema-local scan to one modelo id.
-      modelos_help: Include the schema-local state of every directory-mode modelo.
-      revision_help: Restrict the schema-local scan to one revision id.
     canonicalize_product_identity:
       locale_help: Update only this supported locale catalogue.
-    modelo:
-      app_help: Manage modelo schema-local translations.
-      audit_help: Audit modelo schema translations.
-      coverage_help: Print modelo schema coverage.
-      field_help: Translation field.
-      key_help: Schema key.
-      locale_help: Locale code.
-      modelo_help: Modelo id.
-      registry_root_help: AEAT registry root override.
-      remove_help: Remove one modelo schema translation.
-      revision_help: Revision id.
-      scaffold_check_help: Check without writing.
-      scaffold_help: Scaffold modelo schema translation files.
-      set_help: Set one modelo schema translation.
-      value_help: Translated value.
     remove_key_help: Dotted locale key to remove.
     remove_locale_help: Locale code to update.
     scaffold_check_help: Report drift without writing locale files
@@ -5669,8 +5649,6 @@ errors:
       could not be saved or loaded.
     fail_modelo_filing_record_persistence: The filing-record catalogue could not be
       saved or loaded.
-    fail_modelo_locale_manager: 'Internal error: modelo schema-local translation management
-      failed.'
     fail_modelo_verification_report_persistence: The verification-report catalogue
       could not be saved or loaded.
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
@@ -6584,22 +6562,6 @@ locales:
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
       key_missing: '  missing %{key}'
-    modelo:
-      audit:
-        missing: missing locale=%{locale_code} modelo=%{modelo} revision=%{revision}
-          scope=%{scope} field=%{field} key=%{key}
-        stale: stale locale=%{locale_code} modelo=%{modelo} revision=%{revision} scope=%{scope}
-          field=%{field} key=%{key}
-      coverage:
-        row: locale=%{locale_code} modelo=%{modelo} revision=%{revision} labels=%{label_translated}/%{label_required}
-          help=%{help_translated}/%{help_required}
-      remove:
-        removed: Removed %{path} %{field} %{key}
-      scaffold:
-        no_changes: Modelo locale scaffold already aligned.
-        updated: Updated %{path}
-      set:
-        updated: Updated %{path} %{field} %{key}
     remove:
       removed: removed %{locale_file}:%{key}
     scaffold_updated: locale scaffold updated
@@ -6787,6 +6749,9 @@ modelo:
     '100':
       casilla:
         continuidad:
+          irpf-aeip-centenario-del-hockey-1923-2023-aplicado:
+            help: null
+            label: null
           irpf-anexo-a-ceuta-melilla-deduccion-importe:
             help: null
             label: null
@@ -8570,9 +8535,6 @@ modelo:
             help: null
             label: null
           irpf-vehiculo-electrico-vendedor-nif:
-            help: null
-            label: null
-          x-d5p70phec5imis1ecdimst35dpgn4qbf5li6ar1dd1nm6qr5f4mj2e9i6cmj4c1i6cn62s3cd5hm2p3f:
             help: null
             label: null
           x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
