@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:1084d9a9e3143b4c3b925c5633e8294a452efeb19b6260b8abfaa10a38a151bf'
+body_hash: 'sha256:e8370cb24e0c18a4700dd54e0729d621eda07ea21b8ee3b6ba0210a8e56dced5'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -83,6 +83,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [ ] `P04.S34` - Retire the calculate-time maternidad flag so casilla 0611 has one authority, because the flag carries a free-form hijo id that no descendant record answers to and is today reconciled only by a mutual refusal, which contains the two-authority hazard without removing it, and the refusal is what currently blocks 0611 from becoming registry-computed like its 0613 sibling; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py, src/cadrumo/locales/`.
 - [ ] `P04.S35` - Make casilla 0611 registry-computed like its 0613 sibling once the flag is retired, because 0611 is an operator-supplied input in every revision while the engine now derives every term it needs, so the two halves of one deduction are produced by two different mechanisms and only one of them is auditable from the registry; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/, src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S36` - Restore the erased typing in the prorrata advisory test, replacing tuple of object with the typed diagnostic tuple and the kwargs splat with explicit keyword parameters, and delete all six type-ignore directives, because a peer commit titled as an index refresh degraded a campaign test to compile against a widened DescendantInfo rather than updating its fixtures, while a sibling test in the same surface was moved the OPPOSITE way on the same convention the same day; `src/cadrumo/application/modelo/tests/test_minimo_descendientes_prorrata_inferred_advisory.py`.
+- [ ] `P04.S37` - Decide whether the relacion axis needs members for the two populations the Art. 81.1 exclusion names but the axis cannot express, a grandchild or other descendant by consanguinity other than a child, and a minor held under guarda y custodia by judicial resolution, because both are minimo-eligible under Art. 58.1 and excluded from the deduccion by the manual, so each currently records as an ordinary descendant and takes the full twelve months, and the answer is a representability decision of ADR shape rather than a patch; `src/cadrumo/core/_descendant_relacion.py`.
 
 ## Parallelization
 
