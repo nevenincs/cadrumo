@@ -82,6 +82,21 @@ def _invocation_argv() -> list[str]:
     return list(captured) if captured is not None else list(sys.argv[1:])
 
 
+def _rejected_option_token(exc: BaseException) -> str | None:
+    """Return the option token click rejected as unknown, if this is that failure.
+
+    A ``NoSuchOption`` means click already ruled the token is not an option of
+    the invoked command, so the token expresses no operator intent and must not
+    be read back out of argv as an output-mode request.
+    ``BadOptionUsage`` is deliberately excluded: there the option IS known and
+    the operator's request stands, only its usage was wrong.
+    """
+    option_name = getattr(exc, "option_name", None)
+    if option_name and _has_base(exc, "NoSuchOption"):
+        return str(option_name)
+    return None
+
+
 def _json_requested_for(exc: BaseException) -> bool:
     """Return whether the failed invocation asked for JSON output.
 
@@ -90,11 +105,22 @@ def _json_requested_for(exc: BaseException) -> bool:
     terminal handler runs); falls back to the captured invocation argv for
     failures that carry no context (a Choice ``BadParameter`` with no ``ctx``,
     a bad root option, or a crash before dispatch).
+
+    An option click rejected as unknown is dropped before the argv fallback
+    reads it. The fallback is syntactic, so it cannot tell a registered
+    ``--json`` flag from an unknown token of the same spelling; without the
+    drop, the retired command-local ``--json`` spelling made every
+    ``aeat ... --json`` typo answer a text-mode operator with a JSON error
+    document. An independent ``--format json`` elsewhere in argv still wins.
     """
     ctx = getattr(exc, "ctx", None)
     if ctx is not None and context_chain_requests_json(ctx):
         return True
-    return argv_requests_json(_invocation_argv())
+    rejected = _rejected_option_token(exc)
+    argv = _invocation_argv()
+    if rejected is not None:
+        argv = [token for token in argv if token != rejected]
+    return argv_requests_json(argv)
 
 
 def _parse_time_output_language() -> str:
