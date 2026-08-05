@@ -11,6 +11,12 @@ over-count. This module holds that one algorithm so
 :class:`~._percepciones_observations_repository.PercepcionObservationRepository`
 and :class:`~._retencion_observations_repository.RetencionObservationRepository`
 both call it instead of each carrying their own copy of the loop.
+
+It also holds :func:`hashed_tax_id_token`, the one normalise-then-hash step
+both repositories' opaque object-key builders need. The two stores stay
+intentionally distinct (different distinct keys, different models — see each
+module's own docstring), but this single identity-hashing primitive is
+identical between them and belongs here rather than duplicated per file.
 """
 
 from __future__ import annotations
@@ -23,10 +29,41 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.storage import safe_repository_id
 from ...core import Period
+from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import sha256_hex
+from ...core.identity import tax_id_identity_token
 from ...core.time import now
+from ._errors import AggregationValidationError, t
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureBoundRepository
+
+
+def hashed_tax_id_token(tax_id: str, *, field_name: str) -> str:
+    """Return the sha256 of a tax id's canonical identity token.
+
+    Normalises through the same :func:`tax_id_identity_token` each observation
+    model applies on construction, so an object key and its aggregation
+    grouping key derive from one identity. The normalisation is idempotent, so
+    an observation-sourced tax id passes through unchanged; the blank guard
+    remains as a defence for callers that key without an observation.
+
+    Args:
+        tax_id: The perceptor's tax id, in any of the forms
+            :func:`tax_id_identity_token` accepts.
+        field_name: The field name to report in the blank-token refusal, so
+            each caller's diagnostic names its own parameter.
+
+    Raises:
+        AggregationValidationError: ``tax_id`` normalises to a blank token.
+    """
+    token = tax_id_identity_token(tax_id)
+    if not token:
+        raise AggregationValidationError(
+            t("aggregation.retenciones.errors.perceptor_nif_blank"),
+            context={"field": field_name},
+        )
+    return sha256_hex(token.encode(UTF_8_ENCODING))
 
 
 class _WindowKeyedPayload(Protocol):
@@ -114,4 +151,4 @@ def _in_window(payload: BaseModel, *, modelo: str, filing_year: int, period: Per
     )
 
 
-__all__ = ["replace_observation_window"]
+__all__ = ["hashed_tax_id_token", "replace_observation_window"]
