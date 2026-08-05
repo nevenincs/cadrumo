@@ -45,6 +45,7 @@ _M180_RETENCIONES_SOURCE_REFS = (
 def _m180_retenciones_revision() -> ModeloRevision:
     return ModeloRevision(
         id="2023-y-siguientes",
+        localization_key="test.schema.revision.2023-y-siguientes.label",
         valid_from=date(2023, 1, 1),
         period_selector=PeriodSelector(year_from=2023, periods=("0A",)),
         legal_refs=_M180_RETENCIONES_LEGAL_REFS,

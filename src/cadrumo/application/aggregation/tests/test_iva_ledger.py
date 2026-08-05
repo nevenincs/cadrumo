@@ -75,6 +75,7 @@ def _iva_binding(
 def _revision_with_iva_bindings(revision_id: str, *bindings: DataBindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id=revision_id,
+        localization_key=f"test.schema.revision.{revision_id}.label",
         valid_from=date(2026, 1, 1),
         period_selector=PeriodSelector(year_from=2026, periods=("1T", "2T", "3T", "4T", "0A")),
         legal_refs=("ley-37-1992:art-88",),

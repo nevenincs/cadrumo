@@ -10,6 +10,7 @@ import pytest
 from ....core import BindingSourceKind, Modelo, Period
 from ....core.aggregation import RetencionScheme
 from ....domain.calculations.registry import validated_casilla_id
+from ....domain.transactions import TransactionCatalogue
 from .._errors import AggregationPeriodError
 from .._grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names
 from .._renta_income_ledger import RentaIncomeObservation
@@ -370,8 +371,9 @@ def test_cumulative_year_to_date_window_is_the_one_the_m130_halves_share() -> No
     period = Period.from_year_and_code(2026, "3T")
     window = cumulative_year_to_date_window(period)
 
-    income = aggregate_renta_income_ledger({}, bucket_id="b", period=period)
-    gasto = aggregate_renta_gasto_ledger({}, bucket_id="b", period=period)
+    empty = TransactionCatalogue()
+    income = aggregate_renta_income_ledger(empty, bucket_id="b", period=period)
+    gasto = aggregate_renta_gasto_ledger(empty, bucket_id="b", period=period)
 
     assert income.period == window.period
     assert gasto.period == window.period
