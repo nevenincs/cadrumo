@@ -212,10 +212,26 @@ def thin_output_schema(command_key: str, schema: dict[str, object]) -> dict[str,
 
     The output schema is the command's result-model JSON Schema. A thinned verb
     advertises two disjoint shapes: a zero-row result keeps its bulk array inline
-    as ``[]``; a non-empty result removes the array and requires the two summary
+    as ``[]``; a non-empty result drops the array and carries the two summary
     markers (``<key>_resource`` string, ``<key>_count`` positive integer). The
-    empty branch deliberately drops the array's item schema because no item can
-    occur there, retaining the static size-budget benefit of thinning.
+    array's ITEM schema is dropped either way, because no item can occur in
+    either shape - that is what lets :func:`_prune_orphan_defs` retire the row
+    payload's definitions, and it is where thinning's size saving comes from.
+
+    The two shapes are expressed as a ``oneOf`` over only the fields that
+    DIFFER - which of the array and the markers is required, and which is
+    forbidden - above one shared property set. Duplicating the whole property
+    body into each branch instead (the previous shape) cost more than pruning
+    the row payload saved whenever the pruned definitions were still reachable
+    from another property, so thinning could ENLARGE a schema and silently
+    worsen the position of any verb that reached for it to get under the
+    output-schema size budget.
+
+    Factoring also fixes a latent hole: a result model that does not set
+    ``additionalProperties: false`` used to have both branches accept a linked
+    payload, so ``oneOf``'s exactly-one rule rejected the very shape the server
+    emits. Forbidding the other shape explicitly, rather than relying on
+    ``additionalProperties``, makes the branches disjoint for every model.
 
     Returns:
         A thinned copy of the schema, or the input unchanged for a non-thinned verb.
@@ -226,39 +242,43 @@ def thin_output_schema(command_key: str, schema: dict[str, object]) -> dict[str,
     properties = schema.get("properties")
     if not isinstance(properties, Mapping):
         return schema
-    inline_properties = dict(properties)
-    linked_properties = dict(properties)
-    thinned_keys = {spec.result_key for spec in specs}
+    thinned_keys = [spec.result_key for spec in specs]
+    marker_keys = [key for spec in specs for key in (spec.ref_key, spec.count_key)]
+    required = schema.get("required")
+    original_required = list(required) if isinstance(required, list) else []
+
+    shared_properties = dict(properties)
     for spec in specs:
-        if spec.result_key in inline_properties:
-            inline_properties[spec.result_key] = {"type": "array", "maxItems": 0}
-        linked_properties.pop(spec.result_key, None)
-        linked_properties[spec.ref_key] = {
+        if spec.result_key in shared_properties:
+            shared_properties[spec.result_key] = {"type": "array", "maxItems": 0}
+        shared_properties[spec.ref_key] = {
             "type": "string",
             "minLength": 1,
             "description": f"Resource URI resolving the full {spec.result_key} rows (result thinning).",
         }
-        linked_properties[spec.count_key] = {
+        shared_properties[spec.count_key] = {
             "type": "integer",
             "minimum": 1,
             "description": f"Number of {spec.result_key} rows available at the resource URI.",
         }
-    inline_schema = dict(schema)
-    inline_schema["properties"] = inline_properties
-    linked_schema = dict(schema)
-    linked_schema["properties"] = linked_properties
-    required = schema.get("required")
-    linked_required = [name for name in required if name not in thinned_keys] if isinstance(required, list) else []
-    for spec in specs:
-        linked_required.extend((spec.ref_key, spec.count_key))
-    linked_schema["required"] = linked_required
-    definitions = schema.get("$defs")
-    inline_schema.pop("$defs", None)
-    linked_schema.pop("$defs", None)
-    union_schema: dict[str, object] = {"oneOf": [inline_schema, linked_schema]}
-    if isinstance(definitions, Mapping):
-        union_schema["$defs"] = dict(definitions)
-    return _prune_orphan_defs(union_schema)
+
+    # ``False`` as a property schema matches no instance, so naming a key there
+    # forbids it outright -- the branch discriminator, independent of whether the
+    # model closes itself with ``additionalProperties``.
+    inline_branch: dict[str, object] = {
+        "required": [name for name in original_required if name in set(thinned_keys)],
+        "properties": dict.fromkeys(marker_keys, False),
+    }
+    linked_branch: dict[str, object] = {
+        "required": list(marker_keys),
+        "properties": dict.fromkeys(thinned_keys, False),
+    }
+
+    thinned = dict(schema)
+    thinned["properties"] = shared_properties
+    thinned["required"] = [name for name in original_required if name not in set(thinned_keys)]
+    thinned["oneOf"] = [inline_branch, linked_branch]
+    return _prune_orphan_defs(thinned)
 
 
 def _prune_orphan_defs(schema: dict[str, object]) -> dict[str, object]:
