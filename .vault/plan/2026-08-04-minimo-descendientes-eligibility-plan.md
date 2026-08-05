@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:0e43943c3ffbb60dd9a5279d2bc5b632a069b18479320d129ee7722fd066da89'
+body_hash: 'sha256:4d9c21508a5e002cd2fc797c60a3e062d7d2b2871cb8b0bd081aeb4898cf4534'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -70,6 +70,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-derived, because the engine never sees the descendants at all and takes an operator-supplied list of hijo and month pairs, so the under-three and cohabiting conditions cannot be enforced while the profile already holds the birth dates and cohabitation facts, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited, BLOCKING S15 whose window predicate has no consumer until this resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/domain/contribuyente/family.py`.
 - [x] `P04.S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `P04.S23` - Add the Art. 81.1 post-birth alta increment, 150 euros for the month completing the 30-day contribution period, raising that child cap to 1.350 euros for filing years from 2023 only, gated on a new operator-supplied fact naming that month; `src/cadrumo/core/external_constants.py, src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`.
+- [ ] `P04.S24` - Collapse the two family-record reconstructions in _profile_binding onto one, because the guarderia path pre-checks birth dates per index but omits the anualidades that suppress dependency assimilation while the minimo and maternidad path carries anualidades but skips the pre-check, so one malformed stored birth date names its row on one path and not the other, and a predicate that later consults anualidades would silently over-grant on the guarderia path; `src/cadrumo/application/modelo/_profile_binding.py`.
 
 ## Parallelization
 
