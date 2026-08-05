@@ -31,8 +31,14 @@ def resolver() -> TargetResolver:
     return TargetResolver()
 
 
-def _hit(path: str, *, score: float = 0.7) -> ChunkHit:
-    return ChunkHit(path=path, line_start=1, line_end=20, score=score)
+def _hit(
+    path: str,
+    *,
+    score: float = 0.7,
+    line_start: int = 1,
+    line_end: int = 20,
+) -> ChunkHit:
+    return ChunkHit(path=path, line_start=line_start, line_end=line_end, score=score)
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +137,70 @@ def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None
     assert ".html" in out.record.target
     assert out.record.metadata.legal_permalink
     assert out.record.metadata.legal_refs  # at least one legal ref carried
+
+
+def test_precise_legal_toml_range_resolves_named_provision_and_preserves_boe_provenance(
+    resolver: TargetResolver,
+) -> None:
+    """A precise legal-table range resolves its generated provision target."""
+    from dev.docs.legal_reference import legal_reference_target
+    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from dev.docs.terminology._search_record import SearchRecordKind
+
+    path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
+    legal_id = "orden-hap-2250-2015:art-1"
+    entry = bundled_authority().catalogues.legal[legal_id]
+    out = resolver.resolve(_hit(path, line_start=2, line_end=19))
+
+    assert isinstance(out, ResolvedTarget)
+    assert out.surface is GroundingSurface.LEGAL
+    assert out.record.kind is SearchRecordKind.LEGAL
+    assert out.record.metadata.legal_id == legal_id
+    assert out.record.target == legal_reference_target(
+        entry.document_id,
+        legal_id,
+        article=entry.article,
+        section=entry.section,
+        corpus_ref=entry.corpus_ref,
+        permalink=str(entry.permalink),
+    )
+    assert out.record.metadata.legal_permalink == str(entry.permalink)
+    assert out.record.metadata.legal_refs == (legal_id,)
+
+
+def test_legal_toml_range_spanning_two_legal_tables_is_dropped(
+    resolver: TargetResolver,
+) -> None:
+    """A range overlapping two legal tables cannot identify one provision."""
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
+
+    path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
+    out = resolver.resolve(_hit(path, line_start=19, line_end=22))
+
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
+
+
+def test_legal_toml_range_in_sources_table_is_dropped(resolver: TargetResolver) -> None:
+    """A source-evidence table is not a legal provision target."""
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
+
+    path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
+    out = resolver.resolve(_hit(path, line_start=101, line_end=112))
+
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
+
+
+def test_invalid_legal_toml_source_range_is_dropped(resolver: TargetResolver) -> None:
+    """An invalid source line range is never mapped to a legal provision."""
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
+
+    path = "src/cadrumo/_data/registry/aeat/legal/atribucion-rentas.toml"
+    out = resolver.resolve(_hit(path, line_start=20, line_end=19))
+
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
 
 
 def test_code_module_resolves_to_its_api_stub(resolver: TargetResolver) -> None:
