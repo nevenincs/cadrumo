@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:3053092515439d2e9160b828f3438fefe0845345306cd94acb96e3b8291af2c3'
+body_hash: 'sha256:e98997e0d8a5b3d63e86faf4a1a49b5dbb185f3a3bf84d96b1426ca04975a3f4'
 step_id: 'S20'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
@@ -77,3 +77,22 @@ The retencion scheme is the reason this step could not be finished as a fully au
 The non-resident-supplier exclusion is a judgement the operator may want to revisit. The retenedor obligation on payments to non-residents runs through the IRNR surface rather than the IRPF per-perceptor family this store feeds, so routing such an invoice into Modelo 111 would file it under a modelo that does not govern it. Exclusion is the conservative direction because it surfaces the invoice rather than mis-filing it, but the ADR expressly leaves the foreign-counterparty retencion expectation open pending LIRPF art. 99 and RIRPF art. 76 reaching the bundled corpus, so this is a defensible default rather than a settled ruling.
 
 The peer's in-flight `IvaRetencionRole` enum in `src/cadrumo/domain/iva/_components.py` declares the same credit-versus-liability distinction this module routes on, from the per-category side. This module derives the role from the invoice kind directly, which is invariant across categories and stated in the ADR, so the two are not competing declarations of one fact. Once that work lands, a follow-up should confirm they agree rather than drift.
+
+### Follow-up under the operator RAG-grounding mandate
+
+Landed as commit `c99ba0ff2a` (2 files, +124 / -14). Two gaps closed, both found by searching rather than by reasoning.
+
+The direction test was re-deriving a fact that had just become declared data. `P02.S18` landed `IvaRetencionRole` on the Axis-A table, per `(category, kind)` pair and validated against that kind so it cannot be authored wrong; this module was independently testing `kind is RECEIVED` for the same thing. That is a second, unvalidated copy of one fact, free to drift from the table the rest of the engine reads, and it is precisely the operator's stated concern about redefining existing behaviour. It now reads `iva_category_components(category, kind).retencion_role`.
+
+The two implementations disagree on a real case, which is now the discriminating test: a RECEIVED invoice whose pair yields no retenedor liability is excluded, where the kind shortcut would have routed it into Modelo 111. The defect member was renamed from `NOT_A_RECEIVED_INVOICE` to `NOT_A_RETENEDOR_LIABILITY` because it now names the role rather than the kind, and an absent IVA category became its own defect: with no category there is no row to consult, and guessing the direction from the kind alone is the re-derivation being removed.
+
+The store assertion was the second gap. The previous test drove the projected observations through `aggregate_retenciones_111`, which proves the aggregator accepts them but not that they reach the store. `test_routed_retencion_lands_in_the_existing_encrypted_store` now persists through `persist_retencion_observations` -- documented in its own module as the ONE shared write path every per-perceptor producer calls -- and reads back through `RetencionObservationRepository().load_observations`, asserting on the store's contents. `test_an_excluded_invoice_leaves_the_store_empty` is its negative control: without it the store test would pass just as happily if the projection routed everything handed to it.
+
+### Mutation proofs
+
+Applied to a copy-aside, run, then restored byte-for-byte; `grep -c MUTATION` returned 0 afterwards.
+
+- Re-derive the role from the invoice kind instead of the declared table: `test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind` fails. 1 failed, 15 passed.
+- Drop the excluded half from the routing result instead of returning it: `test_routing_keeps_the_excluded_invoices_alongside_the_routed_ones` and `test_an_excluded_invoice_leaves_the_store_empty` both fail. 2 failed, 14 passed.
+
+Raw counts after the follow-up, serial (`-n 0`): `test_invoice_retencion_routing.py` 16 passed; `application/aggregation/tests` 588 passed, 7 deselected.

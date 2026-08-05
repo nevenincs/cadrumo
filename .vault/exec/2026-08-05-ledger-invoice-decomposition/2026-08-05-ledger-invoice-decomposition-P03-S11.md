@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1e46ceacd115dd57da3eb510dc15cbe1c0ed73b3a30053ee772a4cf6578c349'
+body_hash: 'sha256:a11642e4aa0807ffec42ea92347cfedb9abc4eb80f24e995b69e604e7f33df6e'
 step_id: 'S11'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
@@ -77,3 +77,13 @@ The derivation marker was first written with a two-way validator refusing any fi
 The validator was narrowed to the two directions that actually protect meaning: an inference marker sitting on no figure, and a refusal carrying the figure it refused. The `NOT_APPLICABLE` default stays permissive about the amount, which is what an observation built without reference to this axis means. The guarantee that matters is pinned on the production path instead, by `test_the_builder_never_emits_an_unmarked_withholding`.
 
 Two brief premises decayed mid-step. A peer landed the S18 category-and-kind re-key of the Axis-A table while this work was in flight, so `category_cuota_is_zero_by_law` grew a required kind argument; the income path passes the issued kind, since an actividad-economica receipt is the issued side by construction. Before that landed, their working-tree edit left `domain/iva` unimportable for several minutes and broke collection tree-wide, which produced a 140-failure run that was entirely peer breakage and not attributable to this step.
+
+### Mutation proofs
+
+Added under the operator no-vacuous-tests mandate. Each mutation was applied to a file copied aside first, the suite run, then the file restored byte-for-byte from that copy; no mutation reached the index and `grep -c MUTATION` returned 0 on both files afterwards.
+
+- Disable the max-rate bound (replace the `round_to_cents(inferred) > maximum_supported` guard with a dead branch): `test_inference_above_the_supported_rate_is_refused_not_capped` and `test_the_refusal_boundary_is_the_registry_rate_not_a_local_literal` both fail. 2 failed, 10 passed.
+- Collapse the untagged / exempt distinction (make `_determinable_cuota` return zero for every absent cuota rather than only for a category whose cuota is zero by law): `test_absent_cuota_without_a_declared_category_stays_unknown` fails. 1 failed, 11 passed.
+- Perform the forbidden inversion (reconstruct the base from cash as `cash / (1 - rate)` for a base-less row and emit the difference): `test_row_without_a_base_derives_nothing_rather_than_inverting_a_rate` fails. 1 failed, 11 passed.
+
+The third is the one worth naming: inversion-never is a prohibition, and a prohibition that no test can violate is decoration. The mutation is the exact code a well-meaning later author would write to make more rows recover a retención, and the gate now refuses it.
