@@ -4,7 +4,7 @@ tags:
   - '#registry-period-code-union'
 date: '2026-06-01'
 modified: '2026-08-05'
-body_hash: 'sha256:9d01936b7af01bd44cb60d9c68fba0eefbc9089b5c497bcccb72303d7e231757'
+body_hash: 'sha256:4274de2543f2be8a565880bdf9a1ed8d2325f0994e8741702efc47820b7fdda4'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
@@ -592,3 +592,46 @@ intent and cannot be a member of that set. `core-engineer` reached the same corr
 independently and named the constant `_SYMBOLIC_EVENT_SELECTOR` (`core/_period.py:91`,
 commit `76833ef3d8`). Prefer that framing; a placeholder argument rests on how the token
 looks, the selector argument on what the registry declares it to mean.
+
+### Correction (2026-08-05, third pass): "settled" was itself a half-closure
+
+The reachability answer above is right and the framing around it was wrong, in the exact
+way this record has already warned about twice.
+
+**The evidence, upgraded from absence to positive.** The section above argued M145 is
+unreachable from a directory listing showing no `extraction_profiles` fragment — an
+absence argument, and by now this record's least trustworthy shape. The positive form is
+available and was measured: exactly twenty modelos ship extraction profiles — 036, 100,
+111, 115, 123, 130, 131, 180, 184, 190, 193, 202, 232, 303, 347, 349, 369, 390, 720, 840 —
+and M145 is not one of them. The parser requires a resolved profile, so `comunicacion` and
+`variacion` cannot reach `_filing_period_for_observation`. Same conclusion, resting on an
+enumeration rather than on a hole.
+
+**But closing on reachability was the wrong question to close.** At HEAD on 2026-08-05,
+`adapters/inbound/declaracion/_parser.py:321` carries its own inline administrative-token
+set — `{"ALTA", "MODIFICACION", "MODIFICACIÓN", "BAJA"}` — while `core/_period.py:86`
+declares `_ADMINISTRATIVE_PERIOD_SET` with five members. That is a second authority for
+"which tokens are administrative", and the two diverge in **both** directions: the parser
+lacks `COMUNICACION` and `VARIACION` entirely, and core lacks every accented spelling the
+parser found it necessary to carry for `MODIFICACION`. Neither is a superset of the other,
+so neither can simply absorb the other.
+
+**The divergence is invisible for precisely the reason the reachability question closed
+clean.** The two members the parser lacks belong to M145, and M145 ships no extraction
+profile — so the drift cannot produce a symptom, and nothing will surface it until the day
+someone adds a profile for a modelo with an administrative selector. The fact that makes
+the gap unreachable is the same fact that hides it. That is the half-closure shape:
+answering the surface a finding names is what makes the surface it did not name invisible,
+and this record performed it one section ago by writing "settled, not open".
+
+**A constraint on whoever routes this through one authority**, because the obvious repair
+regresses a case HEAD currently handles. It is not "delete the local set and ask core":
+core's five members are unaccented, and AEAT prints these tokens in correct Spanish — the
+parser's inline set carries `MODIFICACIÓN` for exactly that reason, which is HEAD's own
+evidence that accented forms arrive. A naive swap to the core membership test would start
+refusing a spelling that works today. Folding accents before the membership question is
+asked handles it, and it also covers `COMUNICACIÓN` and `VARIACIÓN`, which **neither**
+authority handles at HEAD.
+
+This item is tracked and being worked separately. This section states the HEAD position on
+2026-08-05 and should not be read as describing its resolution.
