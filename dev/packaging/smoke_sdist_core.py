@@ -16,7 +16,6 @@ from ._smoke_common import (
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
-    run_checked,
     tracked_source_data_paths,
     validate_frozen_exports,
     venv_python_path,
@@ -27,26 +26,6 @@ from .python_cohort import (
     install_targets,
     load_python_cohort,
 )
-
-
-def _build_sdist(work_dir: Path, uv: str, *, build_root: Path) -> Path:
-    """Build the Cadrumo source distribution into the smoke work directory.
-
-    Built from ``build_root`` so the sdist corresponds to a commit rather than
-    to whatever the shared worktree happened to hold; pass a
-    :func:`~dev.packaging._smoke_common.head_extract` tree. This is the lane that
-    caught a torn peer edit live, shipping an sdist whose
-    ``application/aggregation`` import did not resolve against its own
-    ``_source_mesh`` and failing as if it were a packaging regression.
-    """
-    sdist_dir = work_dir / "sdist"
-    sdist_dir.mkdir(parents=True, exist_ok=True)
-    run_checked([uv, "build", "--sdist", "--out-dir", str(sdist_dir)], cwd=build_root)
-    sdists = sorted(sdist_dir.glob("cadrumo-*.tar.gz"))
-    if len(sdists) != 1:
-        names = [sdist.name for sdist in sdists]
-        raise SystemExit(f"expected exactly one cadrumo sdist in {sdist_dir}; got {names!r}")
-    return sdists[0]
 
 
 def _assert_sdist_contains_data(repo_root: Path, sdist: Path) -> None:

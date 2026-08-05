@@ -39,13 +39,13 @@ from typing import Any, Final
 import pytest
 from dev.packaging._smoke_common import (
     build_companion_wheels,
+    build_sdist,
     build_wheel,
     commit_defined_build_root,
     run_checked,
 )
 from dev.packaging.python_cohort import load_python_cohort
 from dev.packaging.smoke_mcpb import _MCPB_CLI_VERSION, run_mcpb_smoke
-from dev.packaging.smoke_sdist_core import _build_sdist
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -128,7 +128,7 @@ def _build_real_cohort(work: Path) -> Path:
     build_root = commit_defined_build_root(_REPO_ROOT, work)
     root_wheel = build_wheel(_REPO_ROOT, work, uv, build_root=build_root)
     manuals_wheel, official_wheel = build_companion_wheels(work, uv, build_root=build_root)
-    root_sdist = _build_sdist(work, uv, build_root=build_root)
+    root_sdist = build_sdist(work, uv, build_root=build_root)
     companion_sdists = work / "companion-sdists"
     run_checked(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
