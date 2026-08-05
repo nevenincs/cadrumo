@@ -29,7 +29,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
@@ -82,6 +82,7 @@ from ...domain.modelos import (
     validate_m347_threshold,
 )
 from ..aggregation import CalculationSourceDiagnostic
+from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS
 from ._profile_binding import MaternidadMesesResolution
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
@@ -883,6 +884,26 @@ def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: froze
     )
 
 
+def _bounded_descendant_ids(ids: Sequence[str]) -> str:
+    """Render a descendant-id list for a diagnostic, bounded regardless of household size.
+
+    The diagnostic message is length-capped by contract, and an interpolated
+    per-descendant list is the only unbounded term in the messages below. Left
+    unbounded it makes household size decide whether the advisory can be raised
+    at all: past a threshold the message overruns the cap, the model refuses,
+    and a NON-blocking advisory becomes a hard validation error that stops the
+    filing -- at exactly the moment it had something to say.
+
+    Shares :data:`_MAX_NAMED_DESCENDANTS` with the sibling advisory module that
+    first hit this rather than restating the number, so the two bounds cannot
+    drift apart. The rendering differs (bare ids here, fact paths there) but the
+    judgement being made is one judgement.
+    """
+    shown = ", ".join(ids[:_MAX_NAMED_DESCENDANTS])
+    remainder = len(ids) - _MAX_NAMED_DESCENDANTS
+    return f"{shown} and {remainder} more" if remainder > 0 else shown
+
+
 def _maternidad_ambiguous_relacion_advisory(
     ambiguous_hijo_ids: frozenset[str],
     casilla_id: CasillaId,
@@ -910,7 +931,7 @@ def _maternidad_ambiguous_relacion_advisory(
         reason="source_issue",
         source_kind=_MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND,
         message=(
-            f"descendiente {', '.join(sorted(ambiguous_hijo_ids))} contributes to the Art. 81.1 "
+            f"descendiente {_bounded_descendant_ids(sorted(ambiguous_hijo_ids))} contributes to the Art. 81.1 "
             "deducción por maternidad under the unstated relación. The manual grants the mínimo but "
             "excludes the deducción for a grandchild/other consanguinidad descendant, or a minor "
             "under judicial guarda y custodia -- the stored fact cannot distinguish either from a "
@@ -956,7 +977,7 @@ def _maternidad_meses_withheld_advisory(
         reason="source_issue",
         source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
         message=(
-            f"descendiente {', '.join(withheld)} declares meses_madre_trabajo but contributes no "
+            f"descendiente {_bounded_descendant_ids(withheld)} declares meses_madre_trabajo but contributes no "
             "Art. 81.1 deducción por maternidad: it reaches a child under three OR one inside the "
             "age-independent adopción/acogimiento entry-date window. An over-three adopción/acogimiento "
             "with no recorded entry date is withheld for a missing INSCRIPCION or ACOGIMIENTO date, not "
