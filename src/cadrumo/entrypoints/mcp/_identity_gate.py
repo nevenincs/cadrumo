@@ -127,10 +127,24 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
       includes strong logout, which clears the active identity.
     * An identity-read verb records the read on ``state`` and is allowed,
       whatever its declared mutability.
-    * Any other read-only call is allowed and leaves the state untouched.
-    * Any other mutating call is refused (returns the localized refusal text)
-      unless an identity read has occurred since session start or the last
-      active-identity change.
+    * Any other LOCAL read-only call is allowed and leaves the state untouched.
+    * Any other call - mutating, or a read that reaches AEAT - is refused
+      (returns the localized refusal text) unless an identity read has occurred
+      since session start or the last active-identity change.
+
+    The open-world exclusion is why the predicate is not simply ``read_only``. A
+    live ``pull`` changes nothing locally and is still not safe to run
+    unidentified: it fetches taxpayer data from AEAT under a certificate, so
+    reading the WRONG taxpayer is a confidentiality breach that then feeds every
+    downstream calculation. "Changes nothing" and "may proceed unidentified" are
+    different questions, and this gate asks the second.
+
+    Today the exclusion is a no-op - no exposed command is both ``read_only``
+    and ``open_world``, pinned by
+    ``test_identity_gate_open_world_invariant.py``. It is here so that the
+    invariant holds by CONSTRUCTION rather than by accident of ``read_only``
+    deriving from family mutability: were reads ever declared per command, all
+    32 AEAT-reaching verbs would otherwise drop out of this gate silently.
 
     The refusal text carries no interpolation, so it is byte-identical on both
     call paths.
@@ -141,7 +155,8 @@ def identity_gate_refusal(command_key: str, *, state: _IdentityGateState) -> str
     if command_key in IDENTITY_READ_COMMANDS:
         state.record_identity_read()
         return None
-    if command_classification(command_key).read_only:
+    classification = command_classification(command_key)
+    if classification.read_only and not classification.open_world:
         return None
     if state.identity_confirmed:
         return None
