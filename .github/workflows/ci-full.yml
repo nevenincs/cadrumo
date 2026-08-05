@@ -176,6 +176,36 @@ jobs:
         run: CADRUMO_PYTEST_WORKERS=8 just test-integration-serial
         continue-on-error: true
 
+      - name: Build the documentation site
+        # THE GATES READ A BUILT ARTEFACT, so the build is a precondition, not a
+        # duplicate of the nitpicky build the gates run themselves. Gates that
+        # assemble a corpus from `docs/_build/html` refuse rather than skip when
+        # it is absent — "this gate reads a real artefact, so it needs a real
+        # build to read", which is the right design. The dependency is invisible
+        # on a developer machine, where the directory is already there from
+        # ordinary work, and total on a runner that has never built. docs.yml met
+        # it as thirteen identical failures on its first real execution
+        # (2026-08-05).
+        #
+        # TWO consumers below need it, which is why the build sits here rather
+        # than immediately before the docs gates: the tooling step that follows
+        # runs `dev/deploy/tests`, whose publish-preflight and delivery-content
+        # gates carry the same `_BUILT_HTML` constant and the same `pytest.fail`
+        # on a missing directory. That step's own comment already names them —
+        # "the deploy-authority tests that gate the documentation publisher this
+        # repository ships". The job is sequential, so moving the build earlier
+        # cannot change the total; it only decides which consumers find an
+        # artefact. The cost of the earlier position is that a failure in a later
+        # hard step now happens after the build has been paid for.
+        #
+        # `just docs` is a FULL build despite the recipe's "changed documents"
+        # docstring — it passes `docs/conf.py`, which `planned_doc_targets`
+        # treats as the full-build trigger, so it does not depend on a diff and
+        # is correct on a cold workspace. Verified rather than assumed, because
+        # a changed-only build would no-op on a clean checkout and leave the
+        # artefact absent, which is precisely the failure this step removes.
+        run: just docs
+
       - name: Tooling gates no other lane reaches
         # The recipe's own docstring names it: "the dev/ tooling gates that no
         # other lane reaches". That was literally true of CI as well — nine
@@ -216,29 +246,6 @@ jobs:
         # dispatch, typically on a quiet machine. Serial (-n0): the benchmark
         # measures a warm in-process runtime.
         run: uv run --no-sync pytest -q -s -n0 -m perf dev/packaging/tests/test_serving_path_benchmark.py
-
-      - name: Build the documentation site
-        # THE GATES READ A BUILT ARTEFACT, so the build is a precondition, not a
-        # duplicate of the nitpicky build the gates run themselves. Several
-        # `dev/docs/tests` gates assemble a corpus from `docs/_build/html` and
-        # refuse rather than skip when it is absent — "this gate reads a real
-        # artefact, so it needs a real build to read", which is the right design.
-        # The dependency is invisible on a developer machine, where the directory
-        # is already there from ordinary work, and total on a runner that has
-        # never built. docs.yml met this as thirteen identical failures on its
-        # first real execution (2026-08-05).
-        #
-        # This step is placed immediately before its gates rather than early:
-        # the job is sequential, so position does not change the total, but a
-        # failure in any earlier hard step then costs nothing here.
-        #
-        # `just docs` is a FULL build despite the recipe's "changed documents"
-        # docstring — it passes `docs/conf.py`, which `planned_doc_targets`
-        # treats as the full-build trigger, so it does not depend on a diff and
-        # is correct on a cold workspace. Verified rather than assumed, because
-        # a changed-only build would no-op on a clean checkout and leave the
-        # artefact absent, which is precisely the failure this step removes.
-        run: just docs
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
