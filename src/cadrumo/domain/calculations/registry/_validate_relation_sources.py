@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Final
 
+from ....core import Modelo
 from ....core.aggregation import BindingSourceKind
 from ._bindings_previous_filing import is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
@@ -62,13 +63,13 @@ type IvaWalletRevisionRelationTarget = tuple[RelationId, BindingId]
 IVA_WALLET_OWNED_RELATION_TARGETS: frozenset[IvaWalletRelationTarget] = frozenset(
     {
         (
-            "303",
+            Modelo.M303.value,
             "2009-y-siguientes",
             "modelo-303-rel-self-compensacion-anteriores",
             MODELO_303_IVA_COMPENSATION_BINDING_ID,
         ),
         (
-            "303",
+            Modelo.M303.value,
             "2023-y-siguientes",
             "modelo-303-rel-self-compensacion-anteriores",
             MODELO_303_IVA_COMPENSATION_BINDING_ID,
