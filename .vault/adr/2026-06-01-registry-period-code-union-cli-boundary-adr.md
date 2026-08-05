@@ -4,7 +4,7 @@ tags:
   - '#registry-period-code-union'
 date: '2026-06-01'
 modified: '2026-08-05'
-body_hash: 'sha256:1218757c4eaff3193e886dd1aa019d70f12b40046b57418843f492e43bcadc7a'
+body_hash: 'sha256:259474e10dcc02ebb64452c4bc4f29544c0589397e00d0f29ceec2155cfbb519'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
@@ -457,3 +457,79 @@ its neighbourhood: the canonical period form is normalised once at the snapshot 
 `relation_source_requirements` compare the snapshot period by exact membership. Do not
 drop that snapshot-side normalisation on the strength of the comparison being
 case-insensitive.
+
+### Correction (2026-08-05, post-implementation): the Consequences inventory above was incomplete
+
+The split landed as commit `f50de47521` across 8 files. D6 held on contact, including the
+`EVENT-N` ruling — the implementation's own docstring now records the token as a selector
+placeholder that "addresses a revision rather than names a period", and the regex split
+makes `EVENT-\d+` filing-only.
+
+The Consequences list in this amendment was nonetheless wrong, and the reason it needs
+correcting is not that it was inaccurate but that it was **read as an inventory**: a
+reviewer sized its own scope against it. That makes such a list load-bearing rather than
+descriptive, and nothing in a list distinguishes a complete inventory from a partial one
+— an incomplete one tells a reader they are finished when they are not. Two surfaces were
+missing.
+
+**`domain/calculations/registry/_schema.py:766`.**
+`_filing_schedule_period_kind_mismatches` reconciles a `filing_schedules` declaration's
+`period_kind` against its `periods` by minting a throwaway
+`Period.from_year_and_code(2000, token)` purely to read `.kind`. Registry tokens include
+the administrative ones, so narrowing `Period.code` stopped that resolving and broke
+registry load outright. Resolved by extracting `registry_period_kind(token)`
+(`core/_period.py:300`), which accepts the full registry vocabulary: cadence is a property
+of the token alone, so `Period.kind` and the registry-facing check now read one classifier
+and neither needs a probe year. This also retires a latent oddity — a consistency check
+that had to invent a meaningless year 2000 to ask a question that was never about a year.
+
+**`entrypoints/mcp/_prompts.py`.** A4 named the MCP completion surface but not the
+prompt-argument description, which advertised its accepted forms from the same wide
+accessor. Both now consume the filing-scoped set, so the five administrative tokens are no
+longer offered or advertised as filing periods.
+
+**Why the inventory missed them, which is the part worth carrying forward.** It was built
+from two searches: consumers of the type *annotation* (`rg RegistryPeriodCode`) and
+construction from an administrative *literal* (`rg` for the token strings). The
+`_schema.py` site is neither. It builds a `Period` from a registry-sourced *variable* to
+read a *derived property*, and no administrative token appears anywhere in that file. Any
+site reading `.kind`, `.has_date_span()`, `.contains()`, or another derived property off a
+`Period` built from a registry-sourced token is a consumer of that type's admission set,
+and is invisible to both searches. A type-narrowing inventory needs a third sweep:
+`Period.from_year_and_code(` / `Period(` with a non-literal argument, each read for where
+its argument comes from. Neither of the first two sweeps can find a site whose token is
+never spelled out.
+
+### Recorded so it is not re-derived: one narrow-`Period` site is guarded by modelo, not by type
+
+`application/calculations/_iva_compensation_history.py:406` builds a `Period` from stored
+observation data — `observation.filing_period or Period.from_year_and_code(
+observation.filing_year, observation.period)` — with no vocabulary guard on the stored
+token. It is correct today and was rightly left unchanged, but its safety rests on the
+M303 refusal six lines earlier at line 400: M303 never carries an administrative token, so
+the stored period is always a filing period.
+
+That is a modelo guard doing a type guard's job. It holds exactly as long as that function
+stays M303-only, and widening it for an unrelated reason would silently reopen a narrow-
+`Period` construction over stored data — with no local signal that anything depended on
+the restriction. Not a defect and not a change request; recorded because the next reader
+will otherwise re-derive "this is fine" without knowing what it rests on, which is the
+same way the original conflation survived review.
+
+### The parser reachability caveat stays open
+
+`f50de47521` did not touch `adapters/inbound/declaracion/_parser.py`. It still normalises
+only `ALTA` / `MODIFICACION` / `MODIFICACIÓN` / `BAJA` (line 321), so `comunicacion` and
+`variacion` still fall through to the narrow construction at line 323 and will now raise
+where they previously built a `Period`. `aeat app registry verify` loading all 73 modelos
+is not evidence either way — it does not exercise the PDF parser. The open question is
+unchanged: can an M145 template reach this parser? If yes, extend the normalisation set to
+all five tokens; if no, the new refusal is correct and wanted.
+
+### On keeping `registry_period_kind` in `core`
+
+Endorsed, on this ground and not the obvious one: one shared cadence classification means
+registry ownership would force either a cross-package private import — barred by
+`service-imports-via-top-level-reexports` — or a duplicated token-to-cadence map that can
+drift from the one `Period.kind` reads. "`PeriodKind` is core-owned" is not the argument,
+because it would equally permit the registry keeping its own map beside it.
