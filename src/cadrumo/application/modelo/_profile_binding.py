@@ -289,15 +289,37 @@ def _inject_derived_family_facts(
 def _renta_family_profile_from_facts(
     fact_index: Mapping[str, UserProfileFactValue],
 ) -> RentaFamilyProfile:
-    """Rebuild the canonical family record from the stored descendant facts.
+    """Rebuild the canonical family record from the stored profile facts.
 
-    Pre-checks each row's birth date so an unparseable one refuses by INDEX. The
+    ONE reconstruction, carrying the UNION of what two used to carry separately.
+    That is the point of the function and the reason it must not be simplified
+    back: each of the two halves had something the other lacked, so collapsing
+    onto either wholesale was a silent regression in a different direction.
+
+    The BIRTH-DATE PRE-CHECK refuses an unparseable stored date by INDEX. The
     canonical reconstruction refuses too, but names the field without saying
     which row carries it, and that diagnostic was written deliberately: an
-    unparseable stored date is a data defect the operator can fix once told
-    where it is. Skipping the row instead would silently under-count the cap
-    population and drop that child's spend, quietly reducing a deducción they
-    were entitled to.
+    unparseable stored date is a data defect the operator can fix once told where
+    it is. Skipping the row instead would silently under-count the cap population
+    and drop that child's spend. The reconstruction that carried the anualidades
+    lacked this, so an operator on that path was told a date was bad and not
+    which one.
+
+    The ANUALIDADES figure is what suppresses the Art. 58 dependency assimilation
+    for every descendant, so a record rebuilt without it answers "is this
+    descendant entitled to the mínimo?" with the assimilation always available —
+    over-granting for a filer who pays judicial anualidades. The reconstruction
+    that carried the pre-check lacked this, and the guardería injector used that
+    one; the count it feeds does not read anualidades, so adding them there is a
+    no-op by inspection rather than by accident, and is stated so no later reader
+    reads it as a behaviour change.
+
+    Shared rather than rebuilt per consumer because the mínimo aggregate, the
+    anualidades régimen flag and the Art. 81.1 deducción por maternidad all ask
+    the SAME question of the same descendant in the same calculation — the
+    authority defines the qualifying child for the deducción as one "con derecho
+    a la aplicación del mínimo por descendientes". Two reconstructions let those
+    answers diverge.
     """
     idx = 0
     while True:
@@ -315,31 +337,6 @@ def _renta_family_profile_from_facts(
                 f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
             )
         idx += 1
-    descendant_facts = {
-        fact_key: str(value)
-        for fact_key, value in fact_index.items()
-        if fact_key.startswith("renta_family.descendiente.")
-    }
-    return RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
-
-
-def _minimo_eligibility_profile(fact_index: Mapping[str, UserProfileFactValue]) -> RentaFamilyProfile:
-    """Rebuild the family record every Art. 58 eligibility question is asked of.
-
-    Carries the filer's declared anualidades alongside the descendants, because
-    that figure is what suppresses the dependency assimilation for all of them.
-    A reconstruction that omitted it would answer "is this descendant entitled
-    to the mínimo?" with the assimilation always available, over-granting for a
-    filer who pays anualidades.
-
-    Named and shared rather than rebuilt per consumer: the mínimo aggregate and
-    the Art. 81.1 deducción por maternidad ask the SAME question of the same
-    descendant in the same calculation, because the authority defines the
-    qualifying child as one "con derecho a la aplicación del mínimo por
-    descendientes". Two constructions of the record would let the two answers
-    diverge, which is precisely what tying the deduction to the mínimo predicate
-    is meant to prevent.
-    """
     descendant_facts = {
         fact_key: str(value)
         for fact_key, value in fact_index.items()
@@ -409,22 +406,19 @@ def resolve_maternidad_meses(
             ceilings_resolved=False,
             declares_meses=declares_meses,
         )
-    profile = _minimo_eligibility_profile(fact_index)
-    available = profile.dependencia_assimilation_available
-    contributed = {
-        str(index): descendant.maternidad_contributing_meses(
-            snapshot.filing_year,
-            thresholds=thresholds,
-            dependencia_assimilation_available=available,
-        )
-        for index, descendant in enumerate(profile.descendientes)
-    }
+    profile = _renta_family_profile_from_facts(fact_index)
+    # The pairing is the DOMAIN's, asked for rather than recomposed here. This
+    # resolver used to build it inline while `meses_maternidad_por_descendiente`
+    # computed the same thing with no production caller -- two authorities for
+    # one answer, which is how the guarderia half once drifted from its record.
+    pairs = profile.meses_maternidad_por_descendiente(snapshot.filing_year, thresholds=thresholds)
+    contributed = dict(pairs)
     return MaternidadMesesResolution(
-        pairs=tuple((hijo_id, meses) for hijo_id, meses in contributed.items() if meses > 0),
+        pairs=pairs,
         withheld_indices=tuple(
             str(index)
             for index, descendant in enumerate(profile.descendientes)
-            if descendant.meses_madre_trabajo_2024 > 0 and contributed[str(index)] == 0
+            if descendant.meses_madre_trabajo_2024 > 0 and contributed.get(str(index), 0) == 0
         ),
         ceilings_resolved=True,
         declares_meses=declares_meses,
@@ -434,7 +428,7 @@ def resolve_maternidad_meses(
         alta_posterior_hijos=frozenset(
             str(index)
             for index, descendant in enumerate(profile.descendientes)
-            if contributed[str(index)] > 0
+            if contributed.get(str(index), 0) > 0
             and descendant.maternidad_alta_posterior_increment_applies(snapshot.filing_year)
         ),
     )
@@ -694,7 +688,7 @@ def _inject_derived_minimo_descendientes_facts(
         # exists to close, so refusing is the safe direction.
         return
 
-    profile = _minimo_eligibility_profile(fact_index)
+    profile = _renta_family_profile_from_facts(fact_index)
     second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
     birth_order_amounts, menor_tres_supplement = estatal_tranches
