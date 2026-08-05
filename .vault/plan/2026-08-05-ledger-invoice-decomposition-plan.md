@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:ea9b025da51e2f8e1914d06c02144802a6222a0010bdb50277312908bcbbb03b'
+body_hash: 'sha256:91f510748498ff21fd0a91e0d956a4272bda03293090765531b1b634b03c48b1'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -79,3 +79,6 @@ Prove the chain against external AEAT authority rather than against itself, anch
 - [ ] `P05.S15` - Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `P05.S16` - Ground the chain on an exempt-services example proving the under-declaration direction is closed; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `P05.S17` - Add strict roundtrip coverage for every new persisted field, with an anti-tautology proof that a deleted field is refused on load; `src/cadrumo/application/calculations/tests`.
+- [ ] `P05.S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition; `src/cadrumo/application/aggregation/tests`.
+- [ ] `P05.S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded; `src/cadrumo/application/aggregation/tests`.
+- [ ] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
