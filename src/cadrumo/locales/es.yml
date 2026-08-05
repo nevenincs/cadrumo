@@ -3718,6 +3718,13 @@ cli:
           Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
+        ambiguous_relacion_advisory: descendiente %{indices} declara meses_madre_trabajo
+          bajo la relacion no indicada. El manual concede el minimo pero excluye la
+          deduccion por maternidad del art. 81.1 para un nieto u otro descendiente
+          por consanguinidad distinto de un hijo, o un menor bajo guarda y custodia
+          judicial -- el dato almacenado no permite distinguirlo de un hijo real.
+          Confirme que este descendiente es un hijo, o indique la relacion real con
+          RELACION=.
         help: Declarar descendientes para el mínimo por descendientes del art. 58/61
           LIRPF.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
@@ -3726,7 +3733,6 @@ cli:
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
-        ambiguous_relacion_advisory: 'descendiente %{indices} declara meses_madre_trabajo bajo la relacion no indicada. El manual concede el minimo pero excluye la deduccion por maternidad del art. 81.1 para un nieto u otro descendiente por consanguinidad distinto de un hijo, o un menor bajo guarda y custodia judicial -- el dato almacenado no permite distinguirlo de un hijo real. Confirme que este descendiente es un hijo, o indique la relacion real con RELACION=.'
       duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
         el id de destino)
       duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
@@ -69886,6 +69892,8 @@ wizard:
             label: Adoptado
           descendiente:
             label: Descendiente (hijo o nieto)
+          guarda_y_custodia_judicial:
+            label: Guarda y custodia por resolución judicial
           tutela:
             label: Tutela o representación legal
         help: Elija la relación legal. Todas dan derecho al mínimo por descendientes.

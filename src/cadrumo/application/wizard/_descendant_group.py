@@ -174,6 +174,9 @@ _RELACION_CHOICE_ACOGIMIENTO_TEMPORAL_LOCALE_KEY = (
     "wizard.setup.descendientes.relacion.choices.acogimiento_temporal.label"
 )
 _RELACION_CHOICE_TUTELA_LOCALE_KEY = "wizard.setup.descendientes.relacion.choices.tutela.label"
+_RELACION_CHOICE_GUARDA_JUDICIAL_LOCALE_KEY = (
+    "wizard.setup.descendientes.relacion.choices.guarda_y_custodia_judicial.label"
+)
 _INSCRIPCION_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-civil.prompt"
 _INSCRIPCION_HELP_LOCALE_KEY = "wizard.setup.descendientes.inscripcion-registro-civil.help"
 _ACOGIMIENTO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.acogimiento-resolucion.prompt"
@@ -248,6 +251,7 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _RELACION_CHOICE_ACOGIMIENTO_PP_LOCALE_KEY,
     _RELACION_CHOICE_ACOGIMIENTO_TEMPORAL_LOCALE_KEY,
     _RELACION_CHOICE_TUTELA_LOCALE_KEY,
+    _RELACION_CHOICE_GUARDA_JUDICIAL_LOCALE_KEY,
     _INSCRIPCION_PROMPT_LOCALE_KEY,
     _INSCRIPCION_HELP_LOCALE_KEY,
     _ACOGIMIENTO_PROMPT_LOCALE_KEY,
@@ -596,6 +600,10 @@ _RELACION_CHOICES: tuple[FlowChoice, ...] = (
     FlowChoice(
         value=DescendantRelacion.TUTELA.value,
         label=_locale_ref(_RELACION_CHOICE_TUTELA_LOCALE_KEY),
+    ),
+    FlowChoice(
+        value=DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL.value,
+        label=_locale_ref(_RELACION_CHOICE_GUARDA_JUDICIAL_LOCALE_KEY),
     ),
 )
 

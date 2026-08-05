@@ -202,7 +202,6 @@ _N_RE = re.compile(
 )
 
 
-
 def relacion_kwarg(relacion: DescendantRelacion | None) -> dict[str, DescendantRelacion]:
     """Render an optional relación as the constructor keyword, OMITTING it when unstated.
 
@@ -522,10 +521,13 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     Accepted keys (case-insensitive):
       NACIMIENTO=YYYY-MM-DD  (required) birth date
       RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|
-               acogimiento_temporal|tutela
+               acogimiento_temporal|tutela|guarda_y_custodia_judicial
                              (optional, default descendiente) Art. 58.1 / 58.2
                              relationship. A temporal acogimiento takes the
-                             tranches and NOT the under-three increase.
+                             tranches and NOT the under-three increase. A
+                             judicial guarda y custodia takes the tranches and
+                             neither the increase nor the Art. 81.1 deducción
+                             por maternidad, which excludes it by name.
       INSCRIPCION=YYYY-MM-DD (optional) Registro Civil inscription of the
                              adoption, or the resolución judicial o
                              administrativa where inscription is not required

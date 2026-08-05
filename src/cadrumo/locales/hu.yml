@@ -1532,6 +1532,9 @@ application:
       registration_label_blank: A profil neve nem lehet üres.
       registration_passphrase_too_short: A jelszónak legalább {minimum_length} karakter
         hosszúnak kell lennie.
+      repository_classification_mismatch: A(z) %{namespace} biztonságos objektum névtér
+        a(z) %{expected} érzékenységhez van regisztrálva, de a tárolt rekord besorolása
+        %{classification}.
       repository_profile_bucket_mismatch: A(z) %{profile_id} profil nem tartozik a(z)
         %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.
       repository_profile_record_missing: Az aktív bucketben nem található profilrekord.
@@ -1542,7 +1545,6 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      repository_classification_mismatch: 'A(z) %{namespace} biztonságos objektum névtér a(z) %{expected} érzékenységhez van regisztrálva, de a tárolt rekord besorolása %{classification}.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -3637,6 +3639,13 @@ cli:
           Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
+        ambiguous_relacion_advisory: descendiente %{indices} meses_madre_trabajo erteket
+          deklaral a meg nem adott relacio alatt. A kezikonyv megadja a minimumot,
+          de kizarja a 81.1. cikk szerinti anyasagi levonast egy unoka vagy mas, gyermektol
+          elutero egyenesagi leszarmazott, vagy birosagi hatarozattal gondozasba vett
+          kiskoru eseten -- a tarolt teny nem kulonbozteti meg oket egy valodi gyermektol.
+          Erositse meg, hogy ez a leszarmazott gyermek, vagy adja meg a tenyleges
+          relaciot a RELACION= mezovel.
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} leszármazott van.
@@ -3645,7 +3654,6 @@ cli:
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
         remove_index_help: Az eltávolítandó leszármazott 0-alapú indexe.
-        ambiguous_relacion_advisory: 'descendiente %{indices} meses_madre_trabajo erteket deklaral a meg nem adott relacio alatt. A kezikonyv megadja a minimumot, de kizarja a 81.1. cikk szerinti anyasagi levonast egy unoka vagy mas, gyermektol elutero egyenesagi leszarmazott, vagy birosagi hatarozattal gondozasba vett kiskoru eseten -- a tarolt teny nem kulonbozteti meg oket egy valodi gyermektol. Erositse meg, hogy ez a leszarmazott gyermek, vagy adja meg a tenyleges relaciot a RELACION= mezovel.'
       duplicate_display_name_help: 'Az új profil megjelenítési neve (alapértelmezés:
         a célazonosító).'
       duplicate_help: Profil másolása új azonosítóra és megjelenítési névre.
@@ -67695,6 +67703,8 @@ wizard:
             label: Örökbefogadott
           descendiente:
             label: Leszármazott (gyermek vagy unoka)
+          guarda_y_custodia_judicial:
+            label: Bírósági határozaton alapuló gyermekelhelyezés
           tutela:
             label: Gyámság vagy törvényes képviselet
         help: Válassza ki a jogviszonyt. Mindegyik jogosít a leszármazottak utáni

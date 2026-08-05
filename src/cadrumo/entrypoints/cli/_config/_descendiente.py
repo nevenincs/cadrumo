@@ -532,7 +532,8 @@ def descendiente_add(
             "cli.config.profile.descendiente.add_flag_help",
             default=(
                 "NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|"
-                "acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela]"
+                "acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|"
+                "guarda_y_custodia_judicial]"
                 "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,FALLECIMIENTO=YYYY-MM-DD]"
                 "[,DISCAPACIDAD=0|33|65]"
                 "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
