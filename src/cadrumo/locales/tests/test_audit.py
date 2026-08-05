@@ -319,7 +319,23 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
     assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
 
     for locale in _LOCALES:
-        leaves = _flatten_leaf_values(manager.load_locale(locales_dir / f"{locale}.yml"))
+        # ``_flatten_leaf_values`` returns ``str | None``: a null leaf is a key that
+        # exists but carries no text -- an untranslated modelo-schema label, or an
+        # optional ``.help`` the source itself leaves empty. Those carry no prose, so
+        # every referent contract below holds trivially for them, and the regex and
+        # membership checks would raise ``TypeError`` on ``None`` rather than assert.
+        # Filter them out, then prove the remainder is not a hollowed-out set: a
+        # filter that swallowed everything would make the equality assertions pass
+        # vacuously.
+        leaves = {
+            key: value
+            for key, value in _flatten_leaf_values(manager.load_locale(locales_dir / f"{locale}.yml")).items()
+            if value is not None
+        }
+        assert len(leaves) > 10_000, (
+            f"{locale}: only {len(leaves)} non-null leaves survived filtering, so the product-identity "
+            f"contract below would be asserted against a near-empty catalogue"
+        )
         assert {key for key, value in leaves.items() if _PROSE_NAME_RE.search(value)} == _PROSE_KEYS[locale]
         assert {key for key, value in leaves.items() if _DISPLAY_NAME_RE.search(value)} == _IDENTITY_HEADING_KEYS
         assert all(PRODUCT_IDENTITY.cli_executable in leaves[key] for key in _CLI_KEYS[locale])
