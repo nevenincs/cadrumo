@@ -1033,7 +1033,7 @@ def apply_calculation_shortcut_inputs(
         # supplies bare (hijo, meses) pairs with no linked record to read it
         # from, so it never contributes the increment. The two are already
         # mutually exclusive above.
-        alta_posterior_hijos = (
+        alta_posterior_hijos: frozenset[str] = (
             maternidad.alta_posterior_hijos
             if maternidad is not None and not meses_trabajo_con_hijo_menor_3
             else frozenset()
