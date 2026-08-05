@@ -1,12 +1,17 @@
 """Modelo 210 explicit-IRNR ledger binding contract.
 
 The selected :class:`ModeloRevision` declares the bindings this module
-validates and resolves.
+validates and resolves. The resolver delegates its filter/aggregate
+skeleton to
+:func:`~.registry._ledger_binding_resolution.resolve_ledger_family_binding_values`,
+the shape shared by every ledger-aggregation family; this module supplies
+only the M210 selector, its ``target_casilla_id`` match predicate, and the
+single-fact ``gross_income_amount`` aggregation.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import Literal, Protocol
 
@@ -19,6 +24,7 @@ from ._binding_selector_utils import invariant_diagnostics, selector_against_mod
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
+from ._ledger_binding_resolution import resolve_ledger_family_binding_values
 from ._schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
@@ -93,11 +99,34 @@ class IrnrIncomeObservationProtocol(Protocol):
     def gross_income_amount(self) -> Decimal: ...
 
 
+def _irnr_income_build_matcher(
+    selector: _IrnrLedgerIncomeSelector,
+) -> Callable[[IrnrIncomeObservationProtocol], bool]:
+    target_casilla_id = selector.target_casilla_id
+
+    def matcher(observation: IrnrIncomeObservationProtocol) -> bool:
+        return observation.target_casilla_id == target_casilla_id
+
+    return matcher
+
+
+def _irnr_income_aggregate(
+    matched: Sequence[IrnrIncomeObservationProtocol],
+    selector: _IrnrLedgerIncomeSelector,
+) -> Decimal:
+    del selector  # single declared fact (gross_income_sum); nothing to dispatch on
+    return sum((observation.gross_income_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_irnr_income_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[IrnrIncomeObservationProtocol],
 ) -> dict[BindingId, Decimal]:
     """Resolve Modelo 210 gross-income bindings from selected M210 observations.
+
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver.
 
     Args:
         revision: The :class:`ModeloRevision` that declares the bindings to resolve.
@@ -109,21 +138,14 @@ def resolve_ledger_irnr_income_aggregation_binding_values(
     Raises:
         RegistryValidationError: If a declared binding has a malformed selector.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION:
-            continue
-        selector = _irnr_ledger_income_selector(binding)
-        resolved[binding.id] = sum(
-            (
-                observation.gross_income_amount
-                for observation in available
-                if observation.target_casilla_id == selector.target_casilla_id
-            ),
-            Decimal("0"),
-        )
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
+        parse_selector=_irnr_ledger_income_selector,
+        build_matcher=_irnr_income_build_matcher,
+        aggregate=_irnr_income_aggregate,
+    )
 
 
 def unsupported_ledger_irnr_income_observations(
