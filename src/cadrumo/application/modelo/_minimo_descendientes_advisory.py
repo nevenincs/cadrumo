@@ -427,13 +427,12 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
             reason="source_issue",
             source_kind=_ENTRY_DATE_MISSING_SOURCE_KIND,
             message=(
-                f"casilla {estatal_id!r} (mínimo por descendientes) withholds the Art. 58.2 LIRPF increase "
-                f"for {_name_indices(missing)}: the relación is an adopción or an entitling acogimiento, "
-                "which the statute grants regardless of the child's age in the entry period and the two "
-                "following, but no entry date is on record so the window cannot be measured. Declare it "
-                "with `descendiente add --descendiente INSCRIPCION=YYYY-MM-DD` (Registro Civil "
-                "inscription, or the resolución where inscription is not required) or ACOGIMIENTO="
-                "YYYY-MM-DD for the first entitling acogimiento resolución"
+                f"casilla {estatal_id!r} withholds the Art. 58.2 LIRPF increase for "
+                f"{_name_indices(missing)}: the relación is an adopción or entitling acogimiento, "
+                "granted regardless of age in the entry period and the two following, but no entry date "
+                "is on record so the window cannot be measured. Declare INSCRIPCION=YYYY-MM-DD (Registro "
+                "Civil, or the resolución if none required) or ACOGIMIENTO=YYYY-MM-DD via "
+                "`descendiente add`"
             ),
             casilla_id=estatal_id,
         ),
@@ -500,12 +499,11 @@ def collect_guarderia_spend_shape_diagnostics(
             reason="source_issue",
             source_kind=_GUARDERIA_SHAPE_SOURCE_KIND,
             message=(
-                f"casilla {casilla_id!r} (incremento por gastos de guardería) counts nothing for "
-                f"{_name_indices(affected)}: the child turns three in this period, so Art. 81.2 LIRPF "
-                "admits only the spend after the birthday and an annual total cannot be split across "
-                "it. Restate it month by month with `descendiente add --descendiente "
-                "GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N`. The eligible months are the ones your centre "
-                "determined and reported, so the certificate you hold is the authority"
+                f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(affected)}: the "
+                "child turns three in this period, so Art. 81.2 LIRPF admits only spend after the "
+                "birthday and an annual total cannot be split across it. Restate it month by month with "
+                "`descendiente add --descendiente GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N`. The eligible "
+                "months are the ones your centre reported, so your certificate is the authority"
             ),
             casilla_id=casilla_id,
         ),
