@@ -123,7 +123,7 @@ jobs:
         # justfile declared eleven more, the two sets overlapped by nothing, and
         # no single place answered "what runs under dev/". Inlining paths back
         # into this step puts the answer in two places again and is what
-        # `src/cadrumo/tests/test_dev_tree_lane_coverage.py` exists to catch.
+        # `src/cadrumo/tests/test_lane_reachability.py` exists to catch.
         # Routing through the recipe also makes the lane reproducible locally,
         # which it was not while it lived here.
         run: just test-dev-ci

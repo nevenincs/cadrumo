@@ -437,9 +437,10 @@ test-integration:
 # nowhere. Declare a new one in a recipe below; never inline paths into a
 # workflow, which puts the answer back in two places.
 #
-# `src/cadrumo/tests/test_dev_tree_lane_coverage.py` proves the union of these
-# recipes covers every tracked `dev/**/test_*.py`, and fails when a new test
-# directory lands that no lane names.
+# `src/cadrumo/tests/test_lane_reachability.py` proves the union of these
+# recipes covers every tracked `dev/**/test_*.py` -- both that a lane NAMES the
+# path and that its marker expression SELECTS the tests -- and fails when a new
+# test lands that no lane reaches.
 
 # Run the dev/ tooling gates that no other lane reaches. `testpaths` in
 # pyproject names only `src/cadrumo` plus one packaging file, so these
