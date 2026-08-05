@@ -104,8 +104,12 @@ jobs:
         # (2026-08-05) failed exactly here, thirteen times over, having never been
         # executed before because the workflow had not reached the remote.
         #
-        # ci-full.yml carries the same gap and has been passing only where a
-        # runner's persistent workspace happened to hold a stale build.
+        # ci-full.yml carried the same gap (fixed separately in 8cbd32eea6).
+        # CORRECTION to what this comment first claimed: that lane had not been
+        # "passing on a stale artefact" — it has NEVER RUN. The workflow's run
+        # count is zero, so it was an unrun lane carrying the same latent gap,
+        # which would have failed on its first dispatch. The stale-artefact
+        # hazard is real but had not yet had the chance to fire.
         run: just docs
 
       - name: Documentation conformance
