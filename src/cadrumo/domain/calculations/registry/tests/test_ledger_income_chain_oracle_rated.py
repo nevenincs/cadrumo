@@ -110,7 +110,7 @@ def _modelo_130_revision():
     ).revision
 
 
-def _invoice_row(*, declares_substrate: bool) -> Transaction:
+def _invoice_row(*, declares_substrate: bool, cash: Decimal | None = None) -> Transaction:
     """The one invoice as a ledger row, with or without its recorded substrate.
 
     Both variants describe the SAME real invoice and carry the same bank
@@ -121,7 +121,7 @@ def _invoice_row(*, declares_substrate: bool) -> Transaction:
         provider_transaction_id="rated-professional-invoice",
         booked_date=_VALUE_DATE,
         value_date=_VALUE_DATE,
-        amount=_CASH,
+        amount=_CASH if cash is None else cash,
         currency="EUR",
         counterparty="Cliente Profesional SL",
         description="Servicios profesionales F-2026-011",
@@ -154,7 +154,7 @@ def _invoice_row(*, declares_substrate: bool) -> Transaction:
     )
 
 
-def _aggregated(*, declares_substrate: bool):
+def _aggregated(*, declares_substrate: bool, cash: Decimal | None = None):
     """Drive one invoice through the production aggregation link of the chain.
 
     Deliberately runs the real classifier rather than hand-building an
@@ -163,7 +163,7 @@ def _aggregated(*, declares_substrate: bool):
     this module exists to cover.
     """
     return aggregate_renta_income_ledger(
-        TransactionCatalogue.from_transactions((_invoice_row(declares_substrate=declares_substrate),)),
+        TransactionCatalogue.from_transactions((_invoice_row(declares_substrate=declares_substrate, cash=cash),)),
         bucket_id=_BUCKET,
         period=_PERIOD,
     )
@@ -306,3 +306,73 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
     assert len(screened.observations) == 1
     assert screened.observations[0].target_casilla_id == _M130_INGRESOS_CASILLA
     assert screened.facts == frozenset({"ingresos_integros_sum", "taxable_base_sum"})
+
+
+# --------------------------------------------------------------------------- #
+# S32: the same chain at a rate BELOW the inference bound
+# --------------------------------------------------------------------------- #
+#
+# Every case above withholds at the RIRPF art. 95.1 general rate, which is also
+# the ceiling the withheld inference refuses to exceed. Calibrated at one point
+# only, and that point is the bound itself: an inference that clamped every
+# result to its maximum would satisfy all of them.
+#
+# So the chain is driven once more at the art. 95.1 second-paragraph rate for
+# the periodo of inicio de actividades and the two following. Same invoice,
+# same base, same cuota -- only the withheld figure and the cash it implies
+# differ, which is what a real practitioner in their first years actually
+# invoices.
+
+_INICIO_RETENCION = (_BASE * load_retencion_actividades_rates().inicio_actividad_rate).quantize(Decimal("0.01"))
+_INICIO_CASH = _TOTAL - _INICIO_RETENCION
+
+
+def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> None:
+    """The two registry rates differ, so the case below calibrates a second point.
+
+    Cheap, and it is what makes S32 more than a duplicate: if the registry ever
+    published the same figure for both, this case would silently stop testing a
+    sub-cap path while still passing, and the calibration claim would be false.
+    """
+    rates = load_retencion_actividades_rates()
+
+    assert rates.inicio_actividad_rate < rates.general_rate
+    assert _INICIO_RETENCION < _RETENCION
+    assert _INICIO_CASH > _CASH
+
+
+def test_a_sub_cap_withholding_is_inferred_at_its_own_rate_not_clamped_to_the_bound() -> None:
+    """The inference reports what was withheld, not the most it would accept.
+
+    This is the calibration the module lacked. The general-rate cases sit
+    exactly on the bound, so a derivation that returned its ceiling whenever
+    the arithmetic ran would pass every one of them. Here the correct answer is
+    strictly below the ceiling, and returning the ceiling is wrong by 80 euros
+    on a single invoice -- an over-claimed credit against the pago fraccionado.
+    """
+    aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
+
+    observation = aggregation.observations[0]
+
+    assert observation.withheld_amount == _INICIO_RETENCION
+    assert observation.withheld_amount != _RETENCION, "the bound is a ceiling, never the answer"
+    assert observation.taxable_base_amount == _BASE
+
+
+def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutory_figure() -> None:
+    """The filed casilla carries the 7 % figure, resolved through the registry.
+
+    Asserted against the statutory product rather than against the engine's
+    derivation, so the two routes to 70 stay independent: one from RIRPF art.
+    95.1 second paragraph, one from gross minus cash. Casilla 01 is asserted
+    unchanged, because the rate the payer applied does not alter the ingresos
+    integros the article names as the base.
+    """
+    revision = _modelo_130_revision()
+    aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
+
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
+    statutory = (_BASE * load_retencion_actividades_rates().inicio_actividad_rate).quantize(Decimal("0.01"))
+
+    assert resolved[_RETENCIONES_BINDING] == statutory
+    assert resolved[_INGRESOS_BINDING] == _BASE
