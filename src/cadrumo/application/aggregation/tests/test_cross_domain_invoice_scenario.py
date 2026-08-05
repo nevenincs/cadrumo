@@ -50,6 +50,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
     TransactionLifecycleState,
+    load_retencion_actividades_rates,
 )
 from .._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
 from .._renta_income_ledger import aggregate_renta_income_ledger
@@ -76,11 +77,30 @@ def test_the_scenario_figures_satisfy_the_canonical_invoice_identity() -> None:
     Cheap, and it is the difference between a scenario grounded in invoice
     arithmetic and one grounded in four numbers somebody typed. If this fails,
     every assertion below is measuring against a fiction.
+
+    The retención rate comes from the registry rather than a literal. A literal
+    here would go on asserting 15 % after the statutory rate moved -- passing
+    against superseded law while claiming to verify the chain -- and the oracle
+    modules that landed alongside this one already read it from the registry, so
+    a literal would also be a second spelling of one regulatory fact.
+
+    It reads the STATUTORY rate, not
+    :func:`maximum_supported_activity_retencion_rate`. That accessor returns the
+    same number today but its documented role is the upper bound the withheld
+    inference refuses to exceed, which is a different claim that merely
+    coincides. Asserting a statutory figure through a cap would be right for the
+    wrong reason, and would stop being right at all the moment the two are set
+    apart deliberately.
+
+    The IVA rate stays literal because it is the fixture's own choice of tier:
+    the invoice is declared as a 21 % supply, and the registry is consulted for
+    what 21 % IS, not for which tier this invoice used.
     """
     assert Decimal("1210.00") == _TOTAL
     assert Decimal("1060.00") == _CASH
     assert (_BASE * Decimal("0.21")).quantize(Decimal("0.01")) == _CUOTA
-    assert (_BASE * Decimal("0.15")).quantize(Decimal("0.01")) == _RETENCION
+    statutory_retencion_rate = load_retencion_actividades_rates().general_rate
+    assert (_BASE * statutory_retencion_rate).quantize(Decimal("0.01")) == _RETENCION
 
 
 def _invoice_transaction(
