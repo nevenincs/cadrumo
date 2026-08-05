@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:581f321efc8b151cf8baa3031fb1c3c1e2985f7963f74ed5b2719831cfc70786'
+body_hash: 'sha256:02a2824de5859a040a6d02804a35ddb15d84ac44bed98f9a5b45c9909d170aae'
 step_id: 'S15'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -45,3 +45,11 @@ The broken MCP `search_codebase` alias remains tracked in vaultspec-rag issue
 committed BOE relevance targets, and P05.S17 still owns the legal parity gate.
 No tests, builds, Pagefind runs, live probes, deployment, sweeps, or
 reindexing were run. Runtime acceptance remains pending by instruction.
+
+### 2026-08-05 source continuation: exact legal provision resolution
+
+RAG-grounded source review identified that legal catalogue TOML hits still selected the first declared provision when a file contained multiple `[legal."..."]` tables. Commit `98a1a109f9` removes that `declared[0]` fallback. `TargetResolver` now reads only source table spans, requires the RAG hit line range to overlap exactly one catalogue provision, and drops invalid, unreadable, outside-table, ambiguous, or non-authoritative hits as `NO_TARGET_ENTITY`. The resolved record still comes from the generated legal-reference projection; the BOE permalink remains typed provenance and is never the search target.
+
+Unexecuted real-behaviour coverage was added for precise resolution/provenance, cross-table ambiguity, `[sources]` ranges, and invalid ranges in `dev/docs/terminology/tests/test_resolution.py`.
+
+Static verification only: RAG grounding, Ruff, basedpyright, `git diff --check`, and conflict-marker scanning passed. The existing whole-file format check remains red on pre-existing baseline drift. No tests, builds, Pagefind runs, sweeps, reindexing, live probes, deployment, or generated artifacts were run. P05.S15 remains open for runtime/build acceptance.
