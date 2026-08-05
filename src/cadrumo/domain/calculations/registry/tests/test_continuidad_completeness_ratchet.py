@@ -77,7 +77,7 @@ _MIN_DIRECTORIES = 40
 _UNGROUNDED_BASELINE: dict[str, int] = {
     "100": 2103,
     "123": 8,
-    "131": 19,
+    "131": 10,
     "151": 1,
     "180": 30,
     "202": 2,

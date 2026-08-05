@@ -41,6 +41,7 @@ label = "Epígrafe IAE de la actividad en estimación objetiva (módulos). Para 
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "text"
 semantic_role = "irpf_pf_modulos_epigrafe_iae"
+continuidad_id = "irpf-pf-modulos-epigrafe-iae"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
@@ -53,6 +54,7 @@ label = "Módulo 1 (Personal asalariado): número de unidades"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_1_unidades"
+continuidad_id = "irpf-pf-modulos-1-unidades"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
@@ -66,6 +68,7 @@ label = "Módulo 1 (Personal asalariado): número de unidades del ejercicio ante
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_1_unidades_anterior"
+continuidad_id = "irpf-pf-modulos-1-unidades-anterior"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
@@ -79,6 +82,7 @@ label = "Módulo 2 (Personal no asalariado): número de unidades"
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_2_unidades"
+continuidad_id = "irpf-pf-modulos-2-unidades"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
@@ -92,6 +96,7 @@ label = "Módulo 3 (unidad activity-específica: superficie, distancia recorrida
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_3_unidades"
+continuidad_id = "irpf-pf-modulos-3-unidades"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
@@ -105,6 +110,7 @@ label = "Módulo 4 (unidad activity-específica: consumo de energía eléctrica 
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_4_unidades"
+continuidad_id = "irpf-pf-modulos-4-unidades"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
@@ -118,6 +124,7 @@ label = "Módulo 5 (unidad activity-específica, p.ej. resto de superficie del l
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_5_unidades"
+continuidad_id = "irpf-pf-modulos-5-unidades"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
@@ -131,6 +138,7 @@ label = "Módulo 6 (unidad activity-específica, p.ej. resto de superficie del l
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_6_unidades"
+continuidad_id = "irpf-pf-modulos-6-unidades"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
@@ -144,6 +152,7 @@ label = "Módulo 7 (unidad activity-específica, p.ej. superficie del horno o m�
 section = ["actividades_economicas_estimacion_objetiva"]
 data_type = "decimal"
 semantic_role = "irpf_pf_modulos_7_unidades"
+continuidad_id = "irpf-pf-modulos-7-unidades"
 constraints = { sign = "non_negative", legal_refs = ["orden-hac-1425-2025:art-4"], source_refs = ["aeat-modelo-131-instructions"] }
 required = false
 input_kind = "manual"
