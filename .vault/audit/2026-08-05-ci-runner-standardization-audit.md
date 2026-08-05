@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:b7d1e2bcedcbdde0f15532f252d32f7dbe361e2c3aceb23222ee0e259d75e1eb'
+body_hash: 'sha256:336f4fd1195869e159d01021a1d45378f4b0632ef13e669160745fceb6d6be74'
 related: []
 ---
 
@@ -451,6 +451,119 @@ ignore it, which is the failure mode one level up from the one it was built to f
 thousands per hour, on a hosted runner, consuming nothing from the box that already
 carries eight runners. A daily interval would have caught this loss inside the window
 before deregistration, when a restart would still have been sufficient.
+
+### liveness-design-collides-with-no-schedule-ruling | high | The proposed monitor's trigger breaks a standing operator ruling; the design is re-cast as a choice
+
+The liveness design above is sound except in its trigger, and the trigger is
+disqualifying. The CI workflow header records an operator ruling dated three weeks
+before this audit: the slow conformance surfaces are manual-dispatch only, **no
+scheduled runs**. Verified independently rather than taken on trust — no workflow in
+this repository declares a `schedule:` trigger, and the only triggers in use tree-wide
+are push and manual dispatch. The ruling is honoured completely.
+
+A scheduled monitor would therefore be the first scheduled run in the repository and
+would breach that ruling. It is not proposed. What follows is a choice for the operator,
+not a request.
+
+**Option A — scheduled check, needs an exception to the ruling.** The design as
+written. Its concrete argument is not hypothetical: the runner that vanished stopped on
+one day, was deregistered roughly eleven days later, and only then became
+unrecoverable. **A daily check would have fired inside that window, while a restart was
+still sufficient and the state volume was still alive.** The cost of the exception is
+one scheduled job; the cost of not having it was a fortnight of halved Linux capacity
+that nobody detected.
+
+**Option B — same check, no exception needed.** The identical comparison run as a job
+inside an existing dispatch-triggered workflow, or as a pre-flight step on the release
+path. It violates nothing and could land immediately. Its weakness is honest and
+should not be glossed: it only observes when somebody runs something, so a fleet that
+degrades during a quiet period stays undetected until the next release — which is
+precisely the scenario that produced this incident. It converts an unbounded blind
+window into one bounded by release cadence. That is a real improvement and a partial
+one.
+
+The three anti-decay properties bind under either option. The check must **fail**, not
+warn, because warnings inside green runs are read by nobody. It must run on a **hosted**
+runner, never a self-hosted one, or a total fleet outage silences the alarm built to
+report it. And it must be **quiet when healthy**, because a check that fires routinely
+trains its audience to ignore it — which is this same defect one level up, rebuilt by
+the fix.
+
+### restore-repairs-the-per-push-split | high | The missing runner was silently defeating the operator's own ten-minute-wall design
+
+Reading the no-schedule ruling in context surfaced something the capacity finding
+understated. The CI workflow header records a second operator directive, from the day
+before: build and test infrastructure must not take fifty minutes per step. The response
+was to split per-push verification into two parallel jobs — static checks and the unit
+suite — **explicitly sized against the two Linux runners**.
+
+With only one runner online, those two deliberately-parallel jobs had no second executor
+and ran one after the other. The per-push split, which exists specifically to hold a
+ten-minute wall, had been quietly serialised into roughly double its intended
+wall-clock for two weeks.
+
+That sharpens the capacity finding from a general concern into a specific defeat: the
+fleet was not merely under-provisioned against its documentation, it was failing an
+explicit operator performance directive, invisibly, because the failure mode was
+slowness rather than error. Restoring the pair repairs the parallelism the split was
+designed around — and it means the restore's value can be measured on the next push
+rather than argued.
+
+### windows-runner-exit-is-documented-behaviour | critical | Not a fault: it was cancelled by hand mid-job, and by design it does not come back
+
+Read-only diagnosis, no relaunch attempted. The evidence is unambiguous and it does not
+support calling this a defect.
+
+The final log records a clean, deliberate shutdown: repeated *runner will be shutdown
+for UserCancelled*, an *Exiting* line, the in-flight job moved to Canceled, the runner
+session deleted, and *runner execution been cancelled*. There is no crash, no exception,
+no resource failure. The scheduled task's non-zero exit is the console-cancellation exit
+code, not an error condition.
+
+The timing tells the rest. A job finished **Failed** at 10:37:05, the next job started
+one second later, and thirty seconds into it the cancellation arrived. That reads as a
+person watching a failure, interrupting the runner at the console, and not restarting
+it — which also means an unrelated job was killed as collateral.
+
+The hosting mode is confirmed exactly as the runners README describes: the runner is
+**not** configured as a service. No service marker exists on disk and no corresponding
+service is registered. The documentation states that this runner runs interactively in a
+console session and that killing the listener does not auto-resume it. Both hold. The
+only thing that relaunches it is an interactive logon firing its scheduled task.
+
+**So the honest answer is the one worth giving: this is the design working as
+documented, and the design cannot stay up unattended.** A console-session runner dies
+with its console, dies on an accidental interrupt, takes its running job down with it,
+and then waits for a human to log in. Restarting it is a host act that buys time until
+the next interruption; it is not a fix, and treating it as one would guarantee a repeat.
+
+### windows-runner-is-on-a-deregistration-clock | critical | The Linux incident is the preview; this one has roughly a fortnight before it is unrecoverable
+
+The two outages in this audit are the same story at different stages, and reading them
+together changes the urgency of the second.
+
+The Linux runner stopped, sat untouched, and after roughly eleven days the service
+deleted its registration for inactivity. From that moment its state volume was
+permanently dead: any container built on it wakes with credentials naming a registration
+that no longer exists and crash-loops forever, because re-registering needs a token it
+cannot obtain. Recovery required a wholly new registration.
+
+The Windows runner is now roughly one day into that same silence. Its configuration is
+still valid and a relaunch would still restore it. That will not remain true. If it is
+left down for the same interval, its registration is deleted too, and the remedy escalates
+from "start the runner" to "re-register from scratch" — on the one platform where
+provisioning is manual, un-containerised, and cannot be scripted from a peer machine.
+
+That converts the Windows outage from a queueing problem into a **deadline**. The
+queued packaging jobs are the visible cost; the invisible one is that the cheap remedy
+expires. This is not a prediction — it is a description of what already happened once on
+this box, to a runner whose recovery cost a full re-provisioning.
+
+The durable fix is the hosting mode, not the restart. Installing the runner as a service
+is the documented alternative and the README already names the migration path, including
+that the diagnostic hook then takes effect on a service restart rather than a console
+relaunch. That is an operator act on operator-owned infrastructure, and it is the only
+change that stops this recurring at every logoff, stray interrupt, and reboot.
 
 ## Recommendations
 
