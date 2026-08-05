@@ -187,7 +187,13 @@ class RegistryCasillaCollection:
         return None
 
     def all(self) -> Sequence[CasillaSchema]:
-        """Return all casilla schemas in declaration order.
+        """Return all casilla schemas ordered by canonical ``casilla_id``.
+
+        Deliberately not registry declaration order: the loader compiles
+        ``revision.casillas`` in casilla-fragment filename order, so declaration
+        order tracks the corpus layout rather than anything the filing surface
+        should depend on. :func:`collection_from_snapshot` sorts by canonical id
+        so this projection stays stable under a fragment rename.
 
         Each element is a :class:`CasillaSchema`.
         """
