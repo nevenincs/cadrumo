@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:fd34991bd3c4a57c61af5a1bc79a747b042c958b8175a3b58c14e2297c04c74b'
+body_hash: 'sha256:0c75b830edfe5910ef1ff8bcf342cd66e74e8a7931aa41ccc668c575d415c938'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -48,6 +48,7 @@ Let exempt invoices recover their retencion by relaxing the inference preconditi
 - [x] `P03.S12` - Add the invoice retencion consistency validator, holding retencion outside the grand total; `src/cadrumo/domain/transactions`.
 - [x] `P03.S13` - Add the partial-invoice decomposition contract so an ungrounded record is excluded but visible rather than silently dropped; `src/cadrumo/domain/transactions`.
 - [x] `P03.S20` - Route received-invoice retencion into the existing per-perceptor store behind retenciones_aggregation, never a second parallel retencion path; `src/cadrumo/application/aggregation`.
+- [ ] `P03.S37` - Let an invoice record that its customer is under recargo de equivalencia, so an unrecorded surcharge stops being indistinguishable from one that does not apply; `src/cadrumo/domain/invoices/_models.py`.
 
 ### Phase `P04` - Verify severity escalation
 
@@ -67,12 +68,12 @@ Prove the chain against external AEAT authority rather than against itself, anch
 - [x] `P05.S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded; `src/cadrumo/application/aggregation/tests`.
 - [x] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
 - [x] `P05.S25` - Gate every advisory message builder as constructible at zero, one and many items against its own model's declared cap, read from the field rather than restated; `src/cadrumo/tests`.
-- [ ] `P05.S26` - Name the dropped retencion credit in the ungrounded advisory, not only the income mis-measurement, since the lost credit is the larger half of the harm; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
-- [ ] `P05.S28` - Drive a received invoice through to the committed Modelo 111 binding values, asserting the filed casillas against the invoice figures rather than stopping at the aggregation totals; `src/cadrumo/application/aggregation/tests/test_invoice_retencion_routing.py`.
-- [ ] `P05.S29` - Drive the same invoice through to the committed Modelo 303 repercutido bindings so the IVA leg reaches a filed casilla like the income and retenciones legs already do; `src/cadrumo/application/aggregation/tests/test_cross_domain_invoice_scenario.py`.
-- [ ] `P05.S30` - Reconcile the duplicated binding-level assertions between the cross-domain scenario and the rated oracle module, keeping one owner for the shared claim; `src/cadrumo/application/aggregation/tests/test_cross_domain_invoice_scenario.py`.
-- [ ] `P05.S31` - Read the statutory retencion rate from the registry general_rate at every oracle expectation site, reserving the bound accessor for assertions genuinely about the inference cap; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `P05.S32` - Add a sub-cap oracle case on the 7 percent inicio-de-actividad registry rate so the bound is calibrated at more than one point; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `P05.S33` - Extract the shared oracle fixture scaffolding while keeping each test body separate, so a scenario change lands once; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `P05.S34` - Bundle the PGC norms cited in the oracle docstrings, or mark them not-yet-bundled so the citation stops asserting grounding it lacks; `src/cadrumo/_data/corpus/normatives/html`.
-- [ ] `P05.S35` - Restore the marker integrity the two campaign-owned test modules broke, so the marker gate stops reporting a campaign surface as unclassified; `src/cadrumo/domain/iva/tests/test_component_expectations.py`.
+- [x] `P05.S26` - Name the dropped retencion credit in the ungrounded advisory, not only the income mis-measurement, since the lost credit is the larger half of the harm; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [x] `P05.S28` - Drive a received invoice through to the committed Modelo 111 binding values, asserting the filed casillas against the invoice figures rather than stopping at the aggregation totals; `src/cadrumo/application/aggregation/tests/test_invoice_retencion_routing.py`.
+- [x] `P05.S29` - Drive the same invoice through to the committed Modelo 303 repercutido bindings so the IVA leg reaches a filed casilla like the income and retenciones legs already do; `src/cadrumo/application/aggregation/tests/test_cross_domain_invoice_scenario.py`.
+- [x] `P05.S30` - Reconcile the duplicated binding-level assertions between the cross-domain scenario and the rated oracle module, keeping one owner for the shared claim; `src/cadrumo/application/aggregation/tests/test_cross_domain_invoice_scenario.py`.
+- [x] `P05.S31` - Read the statutory retencion rate from the registry general_rate at every oracle expectation site, reserving the bound accessor for assertions genuinely about the inference cap; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `P05.S32` - Add a sub-cap oracle case on the 7 percent inicio-de-actividad registry rate so the bound is calibrated at more than one point; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `P05.S33` - Extract the shared oracle fixture scaffolding while keeping each test body separate, so a scenario change lands once; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `P05.S34` - Bundle the PGC norms cited in the oracle docstrings, or mark them not-yet-bundled so the citation stops asserting grounding it lacks; `src/cadrumo/_data/corpus/normatives/html`.
+- [x] `P05.S35` - Restore the marker integrity the two campaign-owned test modules broke, so the marker gate stops reporting a campaign surface as unclassified; `src/cadrumo/domain/iva/tests/test_component_expectations.py`.
