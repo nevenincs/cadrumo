@@ -1969,7 +1969,7 @@ place-of-supply rule set that decides WHICH IVA category a cross-border operatio
 belongs to. That selection is a declared judgement made by the operator, never derived \
 by the system from the counterparty's country: two invoices with identical counterparty \
 countries can fall in different categories depending on where the entrega or the \
-prestacion is localised under these articles.
+prestacion is localised under these articles. \
 Bundled text checked against the live BOE consolidated text on 2026-08-05: the anchored \
 #a68 unit of the bundled ley-37-1992.html is character-identical to the current \
 redaction BOE-A-2022-22128 (in force 2023-01-01), apart from the BOE amendment-history \

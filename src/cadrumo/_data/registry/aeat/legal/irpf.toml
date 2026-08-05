@@ -243,7 +243,7 @@ ejercicio de sus actividades; c) no residentes que operen en territorio espanol 
 MEDIANTE establecimiento permanente; d) no residentes que operen SIN mediacion de \
 establecimiento permanente, unicamente en cuanto a los rendimientos del trabajo y a \
 otros rendimientos sometidos a retencion que constituyan gasto deducible para las \
-rentas del art. 24.2 del TRLIRNR.
+rentas del art. 24.2 del TRLIRNR. \
 SCOPE NOTE - the not-expected expectation this entry grounds is a DEFAULT, never a \
 prohibition. Two carve-outs are load-bearing and both restore the obligation: a \
 non-resident payer WITH a Spanish permanent establishment is obliged under letra c), \
@@ -252,13 +252,13 @@ and for the art. 24.2 TRLIRNR deductible-expense rendimientos under letra d). A 
 counterparty falling in either carve-out bears a real retencion, so a row declaring \
 NOT_EXPECTED for that counterparty is wrong and must be corrected, not silenced. \
 Apartado 1 also excludes simple mediacion de pago from the definition of satisfacer \
-rentas, and then lists four supuestos that are NOT simple mediacion de pago.
+rentas, and then lists four supuestos that are NOT simple mediacion de pago. \
 Bundled excerpt is the current redaction BOE-A-2017-15842, retrieved from the live BOE \
 consolidated text on 2026-08-05. The excerpt reproduces the consolidated page's own \
 amendment history verbatim so the redaction can be dated from the bundled bytes alone; \
 its most recent line reads "Se modifican los apartados 2.e), f) y se anade el apartado \
 2.i) por el art. 1.9 del Real Decreto 1074/2017, de 29 de diciembre. Ref. \
-BOE-A-2017-15842".
+BOE-A-2017-15842". \
 UNRESOLVED, for the operator re-stamp: effective_from is recorded as 2017-12-30, the \
 fecha_vigencia the BOE block API reports for this redaction, which coincides with the \
 publication date of RD 1074/2017. Whether the amendment actually entered into force on \
