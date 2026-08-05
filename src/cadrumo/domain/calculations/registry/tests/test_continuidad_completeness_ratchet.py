@@ -315,8 +315,12 @@ def test_modelos_are_counted_independently(tmp_path: Path) -> None:
 
 def test_ratchet_reports_both_directions_and_a_replacement_literal() -> None:
     """The failure message must distinguish a regression from unrecorded progress."""
+    # Derived from the baseline, never re-typed as a literal: this test asserts
+    # the SHAPE of the message, so pinning a copy of the M100 figure would make
+    # every legitimate grounding commit edit the same number in four places.
+    baseline = _UNGROUNDED_BASELINE["100"]
     regressed = _Census(
-        ungrounded={"100": 2104, "303": 4},
+        ungrounded={"100": baseline + 1, "303": 4},
         partial={},
         multi_revision={},
         fragments=_MIN_FRAGMENTS,
@@ -328,7 +332,7 @@ def test_ratchet_reports_both_directions_and_a_replacement_literal() -> None:
     assert "NEW revision" in message
 
     progressed = _Census(
-        ungrounded={"100": 2000, "303": 4},
+        ungrounded={"100": baseline - 103, "303": 4},
         partial={},
         multi_revision={},
         fragments=_MIN_FRAGMENTS,
@@ -336,7 +340,7 @@ def test_ratchet_reports_both_directions_and_a_replacement_literal() -> None:
     )
     (message,) = [v for v in _ratchet_violations(progressed) if v.startswith("modelo 100")]
     assert "(-103)" in message
-    assert "lower the baseline to 2000" in message
+    assert f"lower the baseline to {baseline - 103}" in message
 
     unchanged = _Census(
         ungrounded=dict(_UNGROUNDED_BASELINE),
@@ -347,7 +351,7 @@ def test_ratchet_reports_both_directions_and_a_replacement_literal() -> None:
     )
     assert _ratchet_violations(unchanged) == []
 
-    assert '"100": 2104,' in _baseline_literal(regressed.ungrounded)
+    assert f'"100": {baseline + 1},' in _baseline_literal(regressed.ungrounded)
 
 
 def test_a_modelo_absent_from_the_baseline_may_not_carry_a_backlog() -> None:
