@@ -34,6 +34,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import DescendantRelacion
 from .._descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
@@ -214,6 +215,102 @@ class TestMaternidadEligibleMeses:
 
     def test_a_period_before_the_birth_has_no_eligible_month(self) -> None:
         assert DescendantInfo(birth_date=date(2025, 3, 1)).maternidad_eligible_meses(2024) == 0
+
+
+class TestArt811EntryWindowDivergesFromArt582:
+    """The Art. 81.1 entry window is DATE-scoped where Art. 58.2 is PERIOD-scoped.
+
+    Two windows that agree on every case tried are indistinguishable from one
+    window, so these cases are chosen to make them disagree, and to disagree in
+    BOTH directions for the same child. A late-year inscription is the shape
+    that separates them: the entry period is granted whole by the period-scoped
+    limb while its earlier months sit outside the date-scoped one, and the
+    fourth calendar year is inside the date-scoped one after the period-scoped
+    one has closed.
+    """
+
+    #: Inscribed 15 November 2021. Art. 58.2 grants periods 2021, 2022 and 2023.
+    #: Art. 81.1 runs from November 2021 to October 2024 inclusive.
+    _ADOPTADO = DescendantInfo(
+        birth_date=date(2016, 3, 2),
+        relacion=DescendantRelacion.ADOPTADO,
+        inscripcion_registro_civil_date=date(2021, 11, 15),
+        meses_madre_trabajo_2024=12,
+    )
+
+    def test_the_entry_period_is_whole_for_art_58_2_and_partial_for_art_81_1(self) -> None:
+        """First direction: the period limb is wider in the year of entry."""
+        assert self._ADOPTADO.is_eligible_minimo_incremento_menor_tres(2021) is True
+        assert self._ADOPTADO.art_81_1_entry_window_meses(2021) == 2
+
+    def test_the_fourth_year_is_inside_art_81_1_and_outside_art_58_2(self) -> None:
+        """Second direction: the date limb outlives the period limb."""
+        assert self._ADOPTADO.is_eligible_minimo_incremento_menor_tres(2024) is False
+        assert self._ADOPTADO.art_81_1_entry_window_meses(2024) == 10
+
+    def test_the_window_is_age_independent(self) -> None:
+        """ "Con independencia de la edad del menor": the child was five at inscription."""
+        assert self._ADOPTADO.maternidad_eligible_meses(2022) == 0
+        assert self._ADOPTADO.art_81_1_entry_window_meses(2022) == 12
+
+    def test_a_relacion_the_statute_excludes_opens_no_window(self) -> None:
+        """A temporal acogimiento carer takes the tranches and not this limb."""
+        temporal = DescendantInfo(
+            birth_date=date(2016, 3, 2),
+            relacion=DescendantRelacion.ACOGIMIENTO_TEMPORAL,
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert temporal.art_81_1_entry_window_meses(2024) == 0
+
+    def test_an_entitling_relacion_with_no_recorded_date_opens_no_window(self) -> None:
+        """The window has nothing to measure from, so it withholds rather than guesses."""
+        undated = DescendantInfo(
+            birth_date=date(2016, 3, 2),
+            relacion=DescendantRelacion.ADOPTADO,
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert undated.art_81_1_entry_window_meses(2024) == 0
+
+    def test_a_fostered_then_adopted_child_gets_one_window_not_two(self) -> None:
+        """The cap: anchoring on the later event would grant six years, not three."""
+        fostered_then_adopted = DescendantInfo(
+            birth_date=date(2016, 3, 2),
+            relacion=DescendantRelacion.ADOPTADO,
+            acogimiento_resolucion_date=date(2021, 11, 15),
+            inscripcion_registro_civil_date=date(2023, 6, 1),
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert fostered_then_adopted.art_81_1_entry_window_meses(2024) == 10
+        assert fostered_then_adopted.art_81_1_entry_window_meses(2025) == 0
+
+    def test_the_two_limbs_union_rather_than_taking_the_wider(self) -> None:
+        """An infant adopted in October is covered by both limbs over different months.
+
+        Under three all year, and inside the entry window from October. Neither
+        limb's own count is twelve; their union is.
+        """
+        infant = DescendantInfo(
+            birth_date=date(2024, 1, 10),
+            relacion=DescendantRelacion.ADOPTADO,
+            inscripcion_registro_civil_date=date(2024, 10, 5),
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert infant.maternidad_eligible_meses(2024) == 12
+        assert infant.art_81_1_entry_window_meses(2024) == 3
+        assert infant.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 12
+
+    def test_the_entry_window_reaches_the_deduccion(self) -> None:
+        """The consumer clause: a window nothing calls is indistinguishable from no window.
+
+        This child is five, so the under-three limb grants nothing. Every month
+        that survives here came from the entry window.
+        """
+        assert self._ADOPTADO.maternidad_eligible_meses(2024) == 0
+        assert self._ADOPTADO.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 10
 
 
 class TestMaternidadContributingMeses:

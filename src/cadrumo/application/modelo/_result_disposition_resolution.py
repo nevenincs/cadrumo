@@ -57,6 +57,7 @@ from ...core.errors import CoreValidationError
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     ModeloRevision,
+    RegistrySnapshotError,
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
     format_noncanonical_casilla_reference,
@@ -67,7 +68,8 @@ from ...domain.iva import (
     refund_disposition_available,
 )
 from ...domain.modelos import CalculationRevision, WorkUnit
-from ._action_errors import ModeloRefundElectionNotEligibleError
+from ._action_errors import CalculationRegistryUnavailableError, ModeloRefundElectionNotEligibleError
+from ._registry_resources import registry_root
 
 #: Provisional fallback "Tipo de declaración" disposition for a modelo that
 #: declares the header but has no diseño-grounded result-disposition
@@ -149,15 +151,44 @@ def _result_disposition_values_for_revision(
     The :class:`WorkUnit` selects the registry snapshot whose
     :class:`ModeloRevision` declares the canonical casilla ids accepted here.
     """
-    snapshot = resources().modelos.authority.snapshot(
-        str(work_unit.modelo),
-        filing_year=work_unit.filing_year,
-        period=period.registry_token,
-    )
+    # This deliberately does NOT delegate to
+    # resolve_registry_snapshot_for_work_unit, which is otherwise the canonical
+    # home of the D1 assertion below. That helper resolves on
+    # ``work_unit.period``; this boundary resolves on the caller-supplied
+    # ``period``, which the export path threads down for the Modelo 303
+    # refund-election decision. The two are expected to agree and nothing here
+    # proves they cannot diverge, so the resolution axis is left as it stands
+    # rather than changed silently. The refusal wording below is kept in step
+    # with the canonical helper's on purpose.
+    try:
+        snapshot = resources().modelos.authority.snapshot(
+            str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=period.registry_token,
+        )
+    except FileNotFoundError as exc:
+        raise CalculationRegistryUnavailableError(
+            translated_message="application.modelo.errors.calculation_registry_root_missing",
+            context={"registry_root": registry_root()},
+        ) from exc
+    except RegistrySnapshotError as exc:
+        raise CalculationRegistryUnavailableError(
+            translated_message="application.modelo.errors.calculation_registry_snapshot_unresolved",
+            context={
+                "modelo": str(work_unit.modelo),
+                "filing_year": work_unit.filing_year,
+                "period": period.registry_token,
+            },
+        ) from exc
     if snapshot.revision.id != work_unit.revision_id:
         raise CoreValidationError(
-            f"result disposition for work unit {work_unit.work_unit_id!r} resolved registry revision "
-            f"{snapshot.revision.id!r}, but the work unit was created against {work_unit.revision_id!r}",
+            f"work unit {work_unit.work_unit_id!r} was created against registry revision "
+            f"{work_unit.revision_id!r}, but the law-determined revision for "
+            f"modelo {str(work_unit.modelo)!r} {work_unit.filing_year} {period.registry_token!r} "
+            f"is now {snapshot.revision.id!r}. "
+            f"The registry's law-mapping was corrected after this work unit was created. "
+            f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
+            f"to bind it to the current law-determined revision.",
             context={
                 "modelo": str(work_unit.modelo),
                 "filing_year": str(work_unit.filing_year),
