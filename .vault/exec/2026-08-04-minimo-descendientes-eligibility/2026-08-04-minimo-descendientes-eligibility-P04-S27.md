@@ -10,7 +10,6 @@ step_id: 'S27'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
-
 # Author the Art. 61 norma 4a flat figure as its own registry money parameter
 
 ## Scope

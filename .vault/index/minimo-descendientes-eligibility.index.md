@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:253d9340a879911bc3e99c4c45799d9ca5782ce09eee3059dd5ece2a036c6f95'
+body_hash: 'sha256:f6a9d239206d74da0e9ad5e5b3b9ea2c7cf2eb1e348b9f1305157e8b9f779730'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -25,16 +25,34 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S15]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S16]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S17]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S18]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S19]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S20]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S21]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S22]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S23]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S24]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S26]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S27]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S28]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S29]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S30]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S31]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S32]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S33]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S34]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S35]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S36]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S38]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S39]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-plan]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-vaultspec-plan-exec-feature-tag-bind-audit]]'
+  - '[[2026-08-05-minimo-descendientes-eligibility-art-81-maternidad-connect-review-audit]]'
+  - '[[2026-08-05-minimo-descendientes-eligibility-semantic-overlap-census-audit]]'
 ---
 
 # `minimo-descendientes-eligibility` feature index
@@ -52,6 +70,8 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 
 - `2026-08-04-minimo-descendientes-eligibility-audit` - `minimo-descendientes-eligibility` audit: closing honesty review
 - `2026-08-04-minimo-descendientes-eligibility-vaultspec-plan-exec-feature-tag-bind-audit` - `minimo-descendientes-eligibility` audit: `A topic-infixed ADR can never get its own plan with exec records`
+- `2026-08-05-minimo-descendientes-eligibility-art-81-maternidad-connect-review-audit` - `minimo-descendientes-eligibility` audit: `Art. 81.1 maternidad connect review: two confirmed over-grants`
+- `2026-08-05-minimo-descendientes-eligibility-semantic-overlap-census-audit` - `minimo-descendientes-eligibility` audit: `Semantic-overlap census: one confirmed duplicate, six cleared, and the drift source`
 
 ### exec
 
@@ -72,10 +92,26 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades
 - `2026-08-04-minimo-descendientes-eligibility-P04-S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one, BLOCKED on S21 because nothing on the calculate path reads a descendant record for maternidad, so the predicate would land with no consumer and rebuild the dead shape S19 removed
 - `2026-08-04-minimo-descendientes-eligibility-P04-S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin
+- `2026-08-04-minimo-descendientes-eligibility-P04-S18` - Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name
 - `2026-08-04-minimo-descendientes-eligibility-P04-S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit
 - `2026-08-04-minimo-descendientes-eligibility-P04-S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record
 - `2026-08-04-minimo-descendientes-eligibility-P04-S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-derived, because the engine never sees the descendants at all and takes an operator-supplied list of hijo and month pairs, so the under-three and cohabiting conditions cannot be enforced while the profile already holds the birth dates and cohabitation facts, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited, BLOCKING S15 whose window predicate has no consumer until this resolves
 - `2026-08-04-minimo-descendientes-eligibility-P04-S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves
+- `2026-08-04-minimo-descendientes-eligibility-P04-S23` - Add the Art. 81.1 post-birth alta increment
+- `2026-08-04-minimo-descendientes-eligibility-P04-S24` - Collapse the two family-record reconstructions in _profile_binding onto their UNION rather than onto either one, because each carries what the other lacks, the guarderia path pre-checks every birth date and raises naming the row index while omitting the anualidades that suppress dependency assimilation, and the minimo and maternidad path carries the anualidades while having no pre-check, so collapsing onto the minimo variant silently loses the indexed diagnostic and collapsing onto the other silently over-grants for a filer paying judicial anualidades, and adding anualidades to the guarderia injector must be recorded as a stated no-op since the guarderia count does not read them
+- `2026-08-04-minimo-descendientes-eligibility-P04-S26` - Apply the pre-2023 cotizaciones ceiling to the computed casilla 0611 for filing years 2020 to 2022 only, or refuse to compute it for those years, because the law in force through 2022 additionally limited the deduction to the mother total Seguridad Social cotizaciones while the computation applies only the 1200 euro cap, and although the un-ceilinged arithmetic predates this campaign the wiring changed the exposed population from operators who explicitly typed the calculate flag to every operator with declared descendant months, so the defect is now reachable by default rather than newly created, and the registry declares the cotizaciones binding only in 2024 so it cannot express the ceiling for the affected years at all
+- `2026-08-04-minimo-descendientes-eligibility-P04-S27` - Author the Art. 61 norma 4a flat figure as its own registry money parameter
+- `2026-08-04-minimo-descendientes-eligibility-P04-S28` - Clip the Art. 81.1 month union to the Art. 58.2 anchor
+- `2026-08-04-minimo-descendientes-eligibility-P04-S29` - Declare the Art. 81.1 population as its own closed set and gate the month resolver on it
+- `2026-08-04-minimo-descendientes-eligibility-P04-S30` - Re-scope every operator-facing description of the declared-months fact
+- `2026-08-04-minimo-descendientes-eligibility-P04-S31` - Correct the withheld-maternidad advisory
+- `2026-08-04-minimo-descendientes-eligibility-P04-S32` - Refuse and advise on the pre-filter declaration rather than the post-filter pairs
+- `2026-08-04-minimo-descendientes-eligibility-P04-S33` - Point both maternidad remedies at a route that can edit a declared row
+- `2026-08-04-minimo-descendientes-eligibility-P04-S34` - Retire the calculate-time maternidad flag so casilla 0611 has one authority, because the flag carries a free-form hijo id that no descendant record answers to and is today reconciled only by a mutual refusal, which contains the two-authority hazard without removing it, and the refusal is what currently blocks 0611 from becoming registry-computed like its 0613 sibling
+- `2026-08-04-minimo-descendientes-eligibility-P04-S35` - Close the 0611 registry-computed question as a measured non-defect rather than implementing it, because 0613 is a flat-rate-times-count formula whose cap never varies per child while 0611 after the increment has a per-child varying cap, so the two casillas do not share a rule shape and parity was never achievable, and the only route to genuine registry computation is a new aggregation primitive applying a conditional per-row cap whose entire value is auditability since the figure is already correct
+- `2026-08-04-minimo-descendientes-eligibility-P04-S36` - Restore the erased typing in the prorrata advisory fixtures
+- `2026-08-04-minimo-descendientes-eligibility-P04-S38` - Advise or confirm at the point working months are declared that the child is a hijo rather than a grandchild or a minor under judicial guarda, because the ordinary predicate never reads relacion so both populations compute correctly for Art. 58.1 and 58.2 while only Art. 81.1 over-grants, and the over-grant additionally requires declared months, so that narrow conjunction reaches every already-stored record which no new enum member can do
+- `2026-08-04-minimo-descendientes-eligibility-P04-S39` - Model both limbs of the fallecimiento rule in one slice
 
 ### plan
 

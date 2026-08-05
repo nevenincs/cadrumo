@@ -5,12 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:76792c1860b7e840af09dc20969cb6b970ca2a7e9fa732f4995edc4517664245'
+body_hash: 'sha256:e1b3a8e5e7f0d95773de2802bea7d17475320ea50de6deca849f2c549ef52805'
 step_id: 'S39'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
-
 # Model both limbs of the fallecimiento rule in one slice
 
 ## Scope
