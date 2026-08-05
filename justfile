@@ -399,21 +399,29 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 [group('testing')]
 test-ratchets:
-    @uv run --no-sync pytest -q -p no:cacheprovider -rs src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
+    @uv run --no-sync pytest -q -p no:cacheprovider -rsf src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
 # progress; failures shown. `durations` is optional and, when set, prints
 # pytest's slowest-N-tests profile (CI passes a value to keep a rolling
 # public log of the suite's heaviest tests; local runs leave it unset).
+#
+# `-rsf`, not `-rs`: pytest's default `-r` value is `fE`, so passing `-rs`
+# REPLACES it rather than adding to it, and the short-summary `FAILED
+# path::test` lines disappear. The tracebacks still print, but every triage
+# path this repository documents -- see the background-capture rule -- greps
+# the log for `^FAILED` to get the fail list, so a 24-minute run yielded a
+# count with no identities and the whole suite had to be re-run to learn what
+# broke. Adding `f` back keeps the skip report the flag was added for.
 [doc('Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.')]
 [group('testing')]
 test-unit durations="":
-    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -q -rsf -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Run the unit test suite serially for reruns after a parallel failure.
 [group('testing')]
 test-unit-serial:
-    @uv run --no-sync pytest -q -rs -n0 -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rsf -n0 -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked
@@ -540,7 +548,7 @@ test-integration-serial:
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('testing')]
 test-os-keychain:
-    uv run --no-sync pytest -q -rs -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py src/cadrumo/tests/test_secure_sql.py
+    uv run --no-sync pytest -q -rsf -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py src/cadrumo/tests/test_secure_sql.py
 
 # Run the live test suite. Quiet progress; failures shown.
 [group('testing')]
