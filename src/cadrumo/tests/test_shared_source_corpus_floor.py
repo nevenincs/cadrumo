@@ -22,7 +22,7 @@ module exists to catch.
 from __future__ import annotations
 
 import ast
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import pytest
@@ -98,4 +98,61 @@ def test_the_corpus_excludes_the_data_payload_tree(source_tree_ast: Mapping[Path
     assert not leaked, (
         f"{len(leaked)} module(s) under the _data payload tree leaked into the shared corpus, "
         f"e.g. {leaked[:5]}; ratchets would scan generated data as production source"
+    )
+
+
+#: Test modules that must be in any honest test-control corpus. Spread across
+#: both trees the corpus unions (``dev/`` and ``src/cadrumo/``) so a walk that
+#: reached only one of them still fails.
+_TEST_CONTROL_ANCHORS = (
+    "src/cadrumo/tests/test_config.py",
+    "src/cadrumo/tests/test_marker_integrity.py",
+    "dev/audit/tests/test_checkout_drift.py",
+)
+
+#: Far below the real population, for the same reason as the AST floor above.
+_TEST_CONTROL_FLOOR = 100
+
+
+def _repo_relative(paths: Iterable[Path]) -> set[str]:
+    """Return repo-relative forward-slashed paths for a corpus of absolute paths."""
+    repo_root = Path(__file__).resolve().parents[3]
+    relative: set[str] = set()
+    for path in paths:
+        try:
+            relative.add(Path(path).resolve().relative_to(repo_root).as_posix())
+        except ValueError:
+            continue
+    return relative
+
+
+def test_the_test_control_corpus_is_not_empty() -> None:
+    """Six ratchets walk this corpus and assert their violation set is empty.
+
+    ``all_test_control_modules()`` unions two discovery passes. If either
+    stopped yielding -- a moved tree, a changed suffix filter -- the union can
+    empty without any gate changing, and every ratchet over it reports the same
+    clean result it reports today. Only one consumer asserted it was populated
+    before this.
+    """
+    from ._inventory import all_test_control_modules
+
+    corpus = all_test_control_modules()
+    assert len(corpus) > _TEST_CONTROL_FLOOR, (
+        f"the test-control corpus holds {len(corpus)} modules (floor {_TEST_CONTROL_FLOOR}); "
+        "the broad-exception, monkeypatch and mock ratchets all walk it, so a collapsed "
+        "corpus makes every one of them pass without reading anything"
+    )
+
+
+def test_the_test_control_corpus_reaches_both_trees() -> None:
+    """A union that lost one of its two halves still looks populated by count."""
+    from ._inventory import all_test_control_modules
+
+    present = _repo_relative(all_test_control_modules())
+    missing = sorted(anchor for anchor in _TEST_CONTROL_ANCHORS if anchor not in present)
+    assert not missing, (
+        f"the test-control corpus is missing anchor module(s): {missing}. "
+        "Either one half of the union stopped yielding, or these moved -- "
+        "re-anchor this list in the same commit as the move."
     )
