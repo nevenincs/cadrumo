@@ -99,7 +99,17 @@ from pathlib import Path
 repo = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else Path.cwd()
 out_path = Path(sys.argv[sys.argv.index("--json") + 1]) if "--json" in sys.argv else None
 _WS, _YEAR = re.compile(r"\s+"), re.compile(r"(19|20)\d{2}")
-CORE = ("number", "data_type", "semantic_role", "input_kind", "formula", "binding")
+# The strict validator compares exactly five fields
+# (_CROSS_REVISION_CASILLA_FIELDS in _cross_revision_divergence.py): label,
+# section, data_type, semantic_role, legal_refs. Tier on those, or the triage
+# lies -- `section` especially, because NO evolution kind covers it except
+# `repurposed`, which is an inheritance barrier and the opposite of the claim a
+# stamp makes. A section-drifting chain called "rubber-stamp" produces a strict
+# failure nothing can close.
+CORE = ("section", "data_type", "semantic_role")
+# Not validated, so never a strict failure -- but a `number` or `formula` move
+# is a strong renumbering signal, so carry it as a visible column.
+INFO = ("number", "input_kind", "formula", "binding")
 
 def norm(t):
     t = unicodedata.normalize("NFKC", t).casefold()
@@ -121,6 +131,7 @@ for modelo_dir in sorted(p for p in (repo / "src/cadrumo/_data/registry/aeat/mod
             continue
         labels = {norm(str(e.get("label", ""))) for e in per.values()}
         cores = {tuple((f, str(e.get(f))) for f in CORE) for e in per.values()}
+        infos = {tuple((f, str(e.get(f))) for f in INFO) for e in per.values()}
         legal = {tuple(e.get("legal_refs") or ()) for e in per.values()}
         label_state = ("identical" if len(labels) == 1
                        else "year_token_only" if len({_YEAR.sub("Y", v) for v in labels}) == 1
@@ -132,6 +143,9 @@ for modelo_dir in sorted(p for p in (repo / "src/cadrumo/_data/registry/aeat/mod
         rows.append({"modelo": modelo_dir.name, "casilla_id": cid, "revisions": sorted(per),
                      "label_state": label_state, "core_stable": core_ok,
                      "legal_refs_stable": len(legal) == 1,
+                     "unvalidated_drift": sorted(
+                         f for f in INFO if len({dict(t)[f] for t in infos}) > 1
+                     ),
                      "partially_stamped": any(e.get("continuidad_id") for e in per.values()),
                      "tier": tier})
 
@@ -169,7 +183,12 @@ modelo, cid = sys.argv[1], sys.argv[2]
 repo = Path(sys.argv[3]) if len(sys.argv) > 3 else Path.cwd()
 mdir = repo / "src/cadrumo/_data/registry/aeat/modelos" / modelo
 _WS, _YEAR = re.compile(r"\s+"), re.compile(r"(19|20)\d{2}")
-CORE = ("number", "data_type", "semantic_role", "input_kind", "formula", "binding")
+# The strict validator's compared set, minus label/legal_refs which are
+# classified separately below. Keep in step with
+# _CROSS_REVISION_CASILLA_FIELDS in _cross_revision_divergence.py.
+CORE = ("section", "data_type", "semantic_role")
+# Unvalidated, but a renumbering tell worth seeing during adjudication.
+INFO = ("number", "input_kind", "formula", "binding")
 
 def norm(t):
     t = unicodedata.normalize("NFKC", t).casefold()
@@ -193,10 +212,12 @@ print(f"=== modelo {modelo} casilla {cid}: {len(occ)} occurrence(s) ===")
 for rev in sorted(occ):
     e = occ[rev]
     core = {f: e.get(f) for f in CORE if e.get(f) is not None}
+    info = {f: e.get(f) for f in INFO if e.get(f) is not None}
     print(f"\n[{rev}] stamp={e.get('continuidad_id')!r}")
     print(f"  label: {e.get('label', '')}")
     print(f"  legal_refs: {e.get('legal_refs')}")
-    print(f"  core: {core}")
+    print(f"  core (validated): {core}")
+    print(f"  info (unvalidated): {info}")
 
 labels = {rev: str(e.get("label", "")) for rev, e in occ.items()}
 core_ok = len({tuple((f, str(e.get(f))) for f in CORE) for e in occ.values()}) == 1
@@ -206,8 +227,10 @@ label_state = ("byte-identical" if len(lv) == 1
                else "identical after normalise" if len({norm(v) for v in lv}) == 1
                else "differs only by embedded year" if len({_YEAR.sub("Y", norm(v)) for v in lv}) == 1
                else "SUBSTANTIVELY DIVERGENT -- adjudicate reword vs repurpose")
+info_drift = sorted(f for f in INFO if len({str(e.get(f)) for e in occ.values()}) > 1)
 print("\n=== drift classification ===")
-print(f"  structural core stable: {core_ok}\n  legal_refs stable:      {legal_ok}\n  label:                  {label_state}")
+print(f"  validated core stable:  {core_ok}\n  legal_refs stable:      {legal_ok}\n  label:                  {label_state}")
+print(f"  unvalidated drift:      {info_drift or 'none'}  (no strict failure; a renumbering tell)")
 tidy = label_state in ("byte-identical", "identical after normalise")
 suggestion = ("unchanged" if core_ok and legal_ok and tidy
               else "label_evolved" if core_ok and legal_ok
