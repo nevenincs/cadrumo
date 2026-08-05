@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d827066f42bdf88b0b0de6788f528895c29ff16229e2099fa37325810dc49721'
+body_hash: 'sha256:2ea4a614e042856e1f1c1d8f653086d16edf073a6901535d5ec96aa908017878'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'
@@ -901,8 +901,8 @@ assertion on a real POSIX host. Open because Windows has no meaningful mode bits
 assertion sits behind `if os.name != "nt"` and is unevaluable on the machine this campaign
 normally measures from. The instrument, in that case, is the platform itself.
 
-**Host.** `gergelys-macbook-neo` was offered and is reachable over Tailscale
-(`100.111.203.66`, active, direct), but **SSH refused both available keys**
+**Host.** The operator's macOS build host was offered and is reachable over Tailscale
+(its tailnet address, active, direct), but **SSH refused both available keys**
 (`publickey,password,keyboard-interactive`) and Tailscale SSH is not serving there. I did
 not attempt passwords and did not touch that machine's authentication — the standing
 instruction is to report blocked rather than route around an auth boundary. Measured

@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c55fba7a2c9e85e2f61bee67bea7db049ea22a8ed76b872b23aebfbb35c5a07'
+body_hash: 'sha256:47c70efa7235efcd761358c6cf445e7b1bc70655915936afbcf43c111fbe71d1'
 related: []
 ---
 
@@ -313,7 +313,7 @@ and the provenance gap is itself worth recording precisely.
   the three actually committed to `.vault/`.
 - **The coordinator's shard-dispatch figures** — real, but living in
   `storage-root-ledger/04-tests-tooling.md` and `11-bulk-shard-briefs.md`
-  under a session scratchpad directory (`C:\Users\hello\AppData\Local\Temp\claude\...\scratchpad\`),
+  under the agent session's local scratchpad directory (`AppData\Local\Temp\claude\...\scratchpad\`),
   **not `.vault/`, and not durable** — the directory is session-ephemeral and
   unverified against committed HEAD. The shard-brief table there reads:
   targets 73 files / 246 sites, carve-out (gates, not migration work) 9 files
