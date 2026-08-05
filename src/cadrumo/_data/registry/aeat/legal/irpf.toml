@@ -2994,6 +2994,25 @@ required_text = [
     "presenten declaración por este Impuesto con rentas superiores a 1.800 euros",
 ]
 
+[legal."ley-35-2006:art-61-norma-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a61"
+document_id = "BOE-A-2006-20764"
+article = "61.4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a61"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-05
+reviewed_by = "agent-authored from bundled ley-35-2006.html#a61; operator to re-stamp"
+notes = "LIRPF art 61 norma 4a: the death-in-period flat cuantia. Displacing norma 3a's devengo-date rule, a descendiente or ascendiente who dies during the periodo impositivo and generates the entitlement takes a FLAT 2.400 euros (descendiente) or 1.150 euros (ascendiente) instead of the amount that would otherwise correspond. SCOPE, read this before authoring anything adjacent: one clause fixes BOTH figures, so this entry is the single authority for the descendientes AND the ascendientes death amount, not a descendientes-only entry. Only the descendientes figure is parameterised today (renta-{year}-minimo-descendientes-fallecimiento-{year}); whoever wires the ascendientes minimo MUST cite this same entry and mint the 1.150 figure beside it rather than authoring a second legal entry for the same clause. The 2.400 descendientes figure COINCIDES with art 58.1's first-child tranche but is a legally DISTINCT figure: it is fixed here, applies at any birth order, and would not move if a reform moved the tranche, so the two must never share a parameter. CAUTION, the clause is only half the rule as the AEAT Renta manual applies it: the manual's 'Minimo por descendientes / Cuantias aplicables' section restates this flat amount AND adds the ordering limb -- the number of orden is assigned by age 'sin computar a estos efectos aquellos descendientes que, en su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo del impuesto' -- which has no counterpart in the statutory text of norma 4a and is grounded on the manual source instead. Omitting that second limb over-grants every younger sibling by leaving them at a rank the deceased should have vacated. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a61 (redaccion Ley 26/2014, en vigor 01/01/2015, unamended since; norma 4a last modified by Ley 39/2010 art 61.5 with effect 01/01/2011 and then by Ley 26/2014); operator to confirm and re-stamp."
+required_text = [
+    "en caso de fallecimiento de un descendiente o ascendiente que genere el derecho al mínimo",
+    "la cuantía será de 2.400 euros anuales o 1.150 euros anuales",
+]
+
 [legal."ley-35-2006:art-62"]
 evidence_tier = "legal_authority"
 authority = "boe"

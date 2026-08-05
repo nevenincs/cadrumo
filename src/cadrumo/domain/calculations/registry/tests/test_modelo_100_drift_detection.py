@@ -220,6 +220,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2024-minimo-contribuyente-edad-65-74-2024",
         "renta-2024-minimo-contribuyente-edad-75-2024",
         "renta-2024-minimo-descendientes-cuarto-y-siguientes-2024",
+        "renta-2024-minimo-descendientes-fallecimiento-2024",
         "renta-2024-minimo-descendientes-menor-tres-anos-2024",
         "renta-2024-minimo-descendientes-primer-hijo-2024",
         "renta-2024-minimo-descendientes-segundo-hijo-2024",
@@ -237,12 +238,25 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # renta mínimo formula can land without re-entering legal figures. The
         # consuming formula path is not yet wired into the registry evaluator;
         # this allow-list shrinks as each year's mínimo aggregation lands.
+        #
+        # The ``minimo-descendientes-*`` entries are listed here for a narrower
+        # reason than the rest, and the distinction matters to whoever tries to
+        # shrink this list: they ARE consumed, by the Art. 58/61 aggregate the
+        # application layer injects, but this gate only scans
+        # ``cadrumo.domain.*`` for ``read_parameter`` calls and only registry
+        # formulas for ``{ parameter = "..." }`` args, so an application-layer
+        # consumer is invisible to it. Deleting one of these entries reds the
+        # gate even though the parameter is live. That is a gate-reach gap, not
+        # staged data; the ``fallecimiento`` entries (Art. 61 norma 4ª's
+        # death-in-period flat figure) are listed on the same footing as the
+        # birth-order tranches they sit beside.
         "renta-2020-minimo-ascendientes-mayor-65-2020",
         "renta-2020-minimo-ascendientes-mayor-75-2020",
         "renta-2020-minimo-contribuyente-base-2020",
         "renta-2020-minimo-contribuyente-edad-65-74-2020",
         "renta-2020-minimo-contribuyente-edad-75-2020",
         "renta-2020-minimo-descendientes-cuarto-y-siguientes-2020",
+        "renta-2020-minimo-descendientes-fallecimiento-2020",
         "renta-2020-minimo-descendientes-menor-tres-anos-2020",
         "renta-2020-minimo-descendientes-primer-hijo-2020",
         "renta-2020-minimo-descendientes-segundo-hijo-2020",
@@ -256,6 +270,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2021-minimo-contribuyente-edad-65-74-2021",
         "renta-2021-minimo-contribuyente-edad-75-2021",
         "renta-2021-minimo-descendientes-cuarto-y-siguientes-2021",
+        "renta-2021-minimo-descendientes-fallecimiento-2021",
         "renta-2021-minimo-descendientes-menor-tres-anos-2021",
         "renta-2021-minimo-descendientes-primer-hijo-2021",
         "renta-2021-minimo-descendientes-segundo-hijo-2021",
@@ -269,6 +284,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2022-minimo-contribuyente-edad-65-74-2022",
         "renta-2022-minimo-contribuyente-edad-75-2022",
         "renta-2022-minimo-descendientes-cuarto-y-siguientes-2022",
+        "renta-2022-minimo-descendientes-fallecimiento-2022",
         "renta-2022-minimo-descendientes-menor-tres-anos-2022",
         "renta-2022-minimo-descendientes-primer-hijo-2022",
         "renta-2022-minimo-descendientes-segundo-hijo-2022",
@@ -282,6 +298,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2023-minimo-contribuyente-edad-65-74-2023",
         "renta-2023-minimo-contribuyente-edad-75-2023",
         "renta-2023-minimo-descendientes-cuarto-y-siguientes-2023",
+        "renta-2023-minimo-descendientes-fallecimiento-2023",
         "renta-2023-minimo-descendientes-menor-tres-anos-2023",
         "renta-2023-minimo-descendientes-primer-hijo-2023",
         "renta-2023-minimo-descendientes-segundo-hijo-2023",
@@ -295,6 +312,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2025-minimo-ascendientes-mayor-65-2025",
         "renta-2025-minimo-ascendientes-mayor-75-2025",
         "renta-2025-minimo-descendientes-cuarto-y-siguientes-2025",
+        "renta-2025-minimo-descendientes-fallecimiento-2025",
         "renta-2025-minimo-descendientes-menor-tres-anos-2025",
         "renta-2025-minimo-descendientes-primer-hijo-2025",
         "renta-2025-minimo-descendientes-segundo-hijo-2025",
