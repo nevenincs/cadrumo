@@ -105,7 +105,7 @@ import ast
 from collections import defaultdict
 from functools import cache
 from pathlib import PurePosixPath
-from typing import Final
+from typing import Final, cast
 
 import pytest
 
@@ -232,7 +232,7 @@ def _named_constants(module: str, tree: ast.AST) -> tuple[_NamedConstant, ...]:
             if isinstance(node, ast.Assign):
                 targets, value = node.targets, node.value
             elif isinstance(node, ast.AnnAssign):
-                targets, value = [node.target], node.value
+                targets, value = [cast("ast.expr", node.target)], node.value
             else:
                 continue
             if value is None or not (isinstance(value, ast.Constant) and isinstance(value.value, str)):

@@ -94,6 +94,15 @@ def build_complementaria(
     delta = _delta(original_draft, amended_draft)
     if not delta:
         raise ModeloBuilderError("complementaria requires at least one changed casilla")
+    original_csv = original_submission.justificante_csv
+    if original_csv is None:
+        # The amendment record requires the CSV that identifies what is being
+        # amended. Refusing here keeps the failure a ModeloBuilderError like
+        # every other precondition above, instead of a raw ValidationError
+        # raised from inside the record construction below.
+        raise ModeloBuilderError(
+            "complementaria requires the original submission's justificante CSV",
+        )
     amendment = ModeloComplementaria(
         amendment_id=make_amendment_id(
             submission_id=original_submission.submission_id,
@@ -101,7 +110,7 @@ def build_complementaria(
             delta=delta,
         ),
         submission_id=original_submission.submission_id,
-        original_csv=original_submission.justificante_csv,
+        original_csv=original_csv,
         original_model=original_submission.modelo,
         original_period=original_draft.period,
         delta=delta,

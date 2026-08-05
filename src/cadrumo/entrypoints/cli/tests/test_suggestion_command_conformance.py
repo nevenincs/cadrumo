@@ -443,7 +443,9 @@ def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[st
         for key, child in node.items():
             child_prefix = f"{prefix}.{key}" if prefix else str(key)
             yield from _iter_locale_leaves(child, child_prefix)
-    else:
+    elif node is not None:
+        # A null leaf is an absent translation, not a string leaf; the callers
+        # below all treat what they receive as citable text.
         yield prefix, node
 
 
