@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:525517a955cfad0fd9fa6d116bb72b02cf24ed84663755ff492bc3cf21b733ef'
+body_hash: 'sha256:26e512b12730d817f5379ac16289a10d67c762288cb25f6207c6a929510a5edc'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -26,6 +26,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S17]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S19]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S20]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S21]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S22]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
@@ -71,6 +72,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin
 - `2026-08-04-minimo-descendientes-eligibility-P04-S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit
 - `2026-08-04-minimo-descendientes-eligibility-P04-S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record
+- `2026-08-04-minimo-descendientes-eligibility-P04-S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-derived, because the engine never sees the descendants at all and takes an operator-supplied list of hijo and month pairs, so the under-three and cohabiting conditions cannot be enforced while the profile already holds the birth dates and cohabitation facts, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited, BLOCKING S15 whose window predicate has no consumer until this resolves
 - `2026-08-04-minimo-descendientes-eligibility-P04-S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves
 
 ### plan
