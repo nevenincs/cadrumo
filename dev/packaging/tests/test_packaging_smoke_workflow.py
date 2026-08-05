@@ -163,6 +163,9 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
         "oracle-emit-windows",
         "oracle-emit-macos",
         "seal-evidence-manifest",
+        # Not a campaign leg: it fails the run fast when a native leg's runner
+        # is offline, which would otherwise queue rather than go red.
+        "runner-queue-watchdog",
     }
 
     job = document["jobs"]["cadrumo-packaging-smoke"]

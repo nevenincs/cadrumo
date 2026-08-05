@@ -25,4 +25,3 @@ No source, oracle payload, formula, verification expectation, or model registry 
 ## Notes
 
 The first default-marker invocation collected zero tests and was not treated as proof; the integration-marked rerun is the valid 3/3 boundary. The runtime lane is the separate 8/8 focused projection result. These results certify only the enrolled mappings and do not convert the remaining portfolio or deferred M100 semantic rows into complete parity.
-

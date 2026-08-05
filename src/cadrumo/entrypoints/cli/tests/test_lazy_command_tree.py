@@ -12,13 +12,13 @@ subcommand groups through :class:`LazySubcommand` loaders that import
 their module only when the subtree is first resolved. These tests are
 the structural guard for that contract:
 
-* a real subprocess cold start of ``aeat --version`` must complete well
-  under the time a registry parse alone would cost; and
+* a real subprocess cold start of ``aeat --version`` must cost well
+  under the CPU a registry parse alone would burn; and
 * importing the CLI package, and invoking the ``--version`` / ``--help``
   surfaces, must not import the registry or any heavy command module.
 
 A regression that re-introduces eager registration overshoots the
-timing budget by seconds and re-populates ``sys.modules`` with the
+budget by CPU-seconds and re-populates ``sys.modules`` with the
 registry — both assertions fail loudly.
 """
 
@@ -27,30 +27,43 @@ from __future__ import annotations
 import subprocess
 import sys
 import textwrap
-import time
 
 import pytest
+from dev.ci.perf_measurement import SubprocessTiming, min_subprocess_cpu_seconds
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# A cold ``aeat --version`` — fresh interpreter, no warm import cache —
-# resolves in well under a second once the command tree is lazy. A
-# re-introduced eager registration pulls the ~0.6 s registry parse (and
-# its workflow / deadlines dependencies) into app construction, pushing
-# a cold start back toward 3 s.
+# The gate binds child-process CPU-TIME, per the `.github` control plane's
+# honest-perf-gate invariant, and prints wall-clock as an advisory only.
 #
-# The signal is the MARGINAL cost the CLI import adds over a bare
-# interpreter, not the absolute wall time: on a saturated host the bare
-# interpreter spawn itself dilates by seconds, so a fixed absolute
-# ceiling flaked under parallel load even though the import cost had not
-# regressed. We measure a bare-interpreter baseline with the identical
-# spawn harness and assert the difference, so both terms scale together
-# with host load and cancel. ``min`` over a few samples filters transient
-# scheduler spikes (contention only ever adds time). Good runs measure a
-# ~0.8 s margin; the eager-import regression overshoots ~2.9 s, so a 2.0 s
-# marginal ceiling fails hard on the regression without flaking on load.
-_MARGINAL_COLD_START_BUDGET_S = 2.0
+# Wall-clock cannot carry this gate on this machine. It is shared with a large
+# agent fleet and with CI runners for several repositories, and the dilation
+# lands on the SPAWN itself: a bare ``python -c "import sys"`` measured 1.63 s
+# to 5.00 s of wall for 0.08 s of CPU. An earlier revision tried to cancel that
+# out by subtracting a bare-interpreter WALL baseline, which is why this test is
+# on its second load-robustness attempt — the subtraction does not hold, because
+# the two spawns are dilated by independent samples of a fluctuating load, not
+# by a shared constant. CPU-time is stable across the same runs: 1.45-1.89 CPU-s
+# for the CLI spawn while its wall moved 3.23 s to 6.75 s.
+#
+# The measurement is still MARGINAL over a bare-interpreter baseline, because
+# the interpreter's own startup CPU is not the CLI's cost to answer for and
+# differs across the fleet's two machine architectures. The baseline is small
+# in CPU terms (~0.08 s), so this now corrects a floor rather than cancelling a
+# dominant term. ``min`` over a few samples is the conservative reading:
+# contention only ever ADDS CPU (SMT and cache pressure), never removes it.
+#
+# Budget derivation, not a guess: the lazy tree measures a 1.38-1.81 CPU-s
+# marginal cost on the loaded workstation, and the fleet's measured
+# contention inflation is 1.64x (``CPU_CONTENTION_MARGIN`` in
+# ``dev/ci/perf_measurement.py``), so 1.81 x 1.64 rounds to the 3.0 ceiling.
+# Restoring eager registration costs
+# 5.75 CPU-s marginal — 1.9x the ceiling — and
+# ``test_cold_start_budget_still_fails_on_eager_registration`` asserts that
+# separation on every run so the budget can never go vacuous.
+_MARGINAL_COLD_START_BUDGET_CPU_S = 3.0
 _COLD_START_SAMPLES = 3
+_COLD_START_TIMEOUT_S = 300.0
 
 # Modules that must stay out of ``sys.modules`` after a state-free CLI
 # surface runs. The registry parse is the headline cost; the heavy
@@ -92,58 +105,101 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _min_cold_start(code: str, *, samples: int = _COLD_START_SAMPLES) -> tuple[float, subprocess.CompletedProcess[str]]:
-    """Spawn ``code`` ``samples`` times; return the fastest wall time and the last result.
+def _min_cold_start(code: str, *, samples: int = _COLD_START_SAMPLES) -> tuple[float, float, SubprocessTiming]:
+    """Spawn ``code`` ``samples`` times; return (min CPU s, min wall s, last run).
 
-    ``min`` is the cleanest cold-start estimate: interpreter spawns only
-    ever gain time under host contention, so the minimum reflects the
-    unloaded cost while filtering transient scheduler spikes.
+    Delegates to the shared
+    :func:`dev.ci.perf_measurement.min_subprocess_cpu_seconds`, which owns the
+    platform-specific child-TREE CPU accounting for every perf gate in the
+    repository.
     """
 
-    best = float("inf")
-    completed: subprocess.CompletedProcess[str] | None = None
-    for _ in range(samples):
-        start = time.perf_counter()
-        completed = _run_python(code)
-        best = min(best, time.perf_counter() - start)
-    assert completed is not None
-    return best, completed
+    return min_subprocess_cpu_seconds(
+        [sys.executable, "-c", textwrap.dedent(code)],
+        samples=samples,
+        timeout_s=_COLD_START_TIMEOUT_S,
+    )
+
+
+#: A fresh-interpreter ``aeat --version`` through the real console entry point.
+#: ``main`` is the exact callable the ``cadrumo`` console script binds.
+_VERSION_COLD_START_CODE = """
+    import sys
+    sys.argv = ["aeat", "--version"]
+    from cadrumo.entrypoints.cli import main
+    try:
+        main()
+    except SystemExit as exit_:
+        raise SystemExit(exit_.code)
+    """
 
 
 @pytest.mark.serial
-def test_version_cold_start_completes_under_budget() -> None:
-    """A fresh-interpreter ``aeat --version`` returns inside the budget.
+def test_version_cold_start_completes_under_cpu_budget() -> None:
+    """A fresh-interpreter ``aeat --version`` stays inside the CPU budget.
 
     This spawns the real console entry point in a new process — paying
     interpreter startup and every import — so the assertion covers the
-    operator-visible cold start, not a warm in-process invocation. The
-    ``main`` callable is the exact function the ``cadrumo`` console script
-    binds, invoked with ``argv`` set to ``["aeat", "--version"]``.
+    operator-visible cold start, not a warm in-process invocation.
+
+    The gate binds the marginal CHILD CPU-time over a bare-interpreter
+    baseline; wall-clock is measured and printed but never asserted, because
+    on this shared machine the spawn's wall time reports the load average
+    rather than the import cost (see the module-level note).
     """
 
-    code = """
-        import sys
-        sys.argv = ["aeat", "--version"]
-        from cadrumo.entrypoints.cli import main
-        try:
-            main()
-        except SystemExit as exit_:
-            raise SystemExit(exit_.code)
-        """
-    # A bare interpreter spawn through the identical harness is the
-    # baseline; the marginal cost the CLI import adds over it is the
-    # load-invariant signal (see the module-level note).
-    baseline_elapsed, _ = _min_cold_start("import sys")
-    sut_elapsed, completed = _min_cold_start(code)
-    marginal = sut_elapsed - baseline_elapsed
+    baseline_cpu, baseline_wall, _ = _min_cold_start("import sys")
+    sut_cpu, sut_wall, completed = _min_cold_start(_VERSION_COLD_START_CODE)
+    marginal_cpu = sut_cpu - baseline_cpu
+
+    print(
+        f"\n[perf advisory] aeat --version cold start: "
+        f"marginal_cpu={marginal_cpu:.3f}s (gate=cpu<{_MARGINAL_COLD_START_BUDGET_CPU_S}s) "
+        f"cpu={sut_cpu:.3f}s baseline_cpu={baseline_cpu:.3f}s | "
+        f"wall={sut_wall:.3f}s baseline_wall={baseline_wall:.3f}s "
+        f"marginal_wall={(sut_wall - baseline_wall):.3f}s (wall advisory, never asserted)",
+    )
 
     assert completed.returncode == 0, completed.stderr
     assert completed.stdout.startswith("CADRUMO ")
-    assert marginal < _MARGINAL_COLD_START_BUDGET_S, (
-        f"aeat --version cold start added {marginal:.2f}s over a bare interpreter "
-        f"({sut_elapsed:.2f}s vs baseline {baseline_elapsed:.2f}s; budget "
-        f"{_MARGINAL_COLD_START_BUDGET_S}s) — lazy subcommand registration likely "
-        "regressed to an eager import"
+    assert marginal_cpu < _MARGINAL_COLD_START_BUDGET_CPU_S, (
+        f"aeat --version cold start added {marginal_cpu:.2f} CPU-s over a bare interpreter "
+        f"({sut_cpu:.2f} vs baseline {baseline_cpu:.2f} CPU-s; budget "
+        f"{_MARGINAL_COLD_START_BUDGET_CPU_S} CPU-s) — lazy subcommand registration likely "
+        f"regressed to an eager import (wall {sut_wall:.2f}s is advisory only)"
+    )
+
+
+@pytest.mark.serial
+def test_cold_start_budget_still_fails_on_eager_registration() -> None:
+    """The cold-start budget is not vacuous: eager registration still breaks it.
+
+    A ceiling nothing can exceed is worse than no ceiling, and moving a gate
+    from wall-clock to CPU-time is exactly the change that can quietly make one
+    unfalsifiable. This drives the real regression rather than simulating a
+    delay: it imports the very command modules
+    :data:`_FORBIDDEN_COMMAND_MODULES` names — which is what eager
+    registration did — and asserts the resulting cold start exceeds the budget.
+
+    Reading the module list from the same constant the absence guards use keeps
+    the two halves from drifting: a module dropped from that tuple weakens both
+    the guard and this proof together, visibly, rather than silently.
+    """
+
+    eager_imports = "\n".join(f"import {module}" for module in _FORBIDDEN_COMMAND_MODULES)
+    code = f"{eager_imports}\n{textwrap.dedent(_VERSION_COLD_START_CODE)}"
+
+    baseline_cpu, _, _ = _min_cold_start("import sys")
+    eager_cpu, eager_wall, completed = _min_cold_start(code)
+    marginal_cpu = eager_cpu - baseline_cpu
+
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout.startswith("CADRUMO ")
+    assert marginal_cpu > _MARGINAL_COLD_START_BUDGET_CPU_S, (
+        f"eagerly importing every heavy command module cost only {marginal_cpu:.2f} marginal CPU-s, "
+        f"which does NOT exceed the {_MARGINAL_COLD_START_BUDGET_CPU_S} CPU-s budget — the budget can "
+        f"no longer detect a regression to eager registration and must be tightened "
+        f"(wall {eager_wall:.2f}s, advisory)"
     )
 
 

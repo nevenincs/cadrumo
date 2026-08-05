@@ -5,57 +5,23 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:498311167b53c3882e1f6d8c55db73626ff8c06a4ab69b04878ecd418e5d20ba'
+body_hash: 'sha256:32ac83d8294942d9222f74c416ecf05477b7d0f17f1806b5164c0ce9a9065dcb'
 step_id: 'S20'
 related:
   - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace modelo-parity-rollup with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S20 and 2026-08-05-modelo-parity-rollup-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Modelo parity rollup S20 failure tests for formula wiring and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Modelo parity rollup S20 failure tests for formula wiring
-
-## Scope
-
-- `src/cadrumo/domain/calculations/registry/tests`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Exercise the reverse formula invariant through real registry objects.
+- Assert that formula-target and casilla-kind mismatches fail validation.
+- Assert that both sides of a producer declaration carry the same formula identity.
 
 ## Outcome
 
+The real failure-test surface passed 8 tests. The suite demonstrates that the reverse invariant can fail when a target is manual, when the casilla lacks the back-reference, when a computed casilla lacks a producer, when a noncomputed casilla carries a formula declaration, or when a formula target is duplicated.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+These are structural tests over the bundled registry and validator behavior; they do not infer a legal formula for a deferred revision.

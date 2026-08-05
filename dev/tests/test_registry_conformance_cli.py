@@ -47,6 +47,7 @@ from typer.testing import CliRunner
 from cadrumo.application.registry import (
     RegistryConformanceProfile,
     audit_bundled_registry_conformance,
+    compare_annual_casilla_population,
 )
 from cadrumo.core import ExternalOracleCorpus, RevisionReviewStatus
 from cadrumo.core.external_constants import UTF_8_ENCODING
@@ -83,6 +84,7 @@ from ..registry.conformance.manager import (
     check_conformance_ratchet,
     load_baseline,
     load_conformance_report,
+    load_locale_coverage_index,
     record_baseline,
     render_audit,
     render_coverage,
@@ -95,6 +97,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _STAMPED_MODELO = "130"
 _STAMPED_REVISION = "2019-y-siguientes"
+
+
+def _real_d2025_coordinate() -> ConformanceCoordinate:
+    """Return the coordinate and schema evidence from the real bundled report."""
+    report = load_conformance_report(validate=True)
+    if report.annual_matrix is None:
+        raise AssertionError("validated report must expose the finite annual matrix")
+    return report.annual_matrix.coordinates[0]
 
 
 @pytest.fixture(scope="module")
@@ -180,19 +190,116 @@ def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio(
     assert payload["modelo_count"] > len(matrix["coordinates"])
     assert payload["revision_count"] > len(matrix["coordinates"])
     assert len(matrix["coordinates"]) == 1
-    assert matrix["coordinates"] == [
-        {
-            "modelo": "100",
-            "filing_year": 2025,
-            "period": "0A",
-            "law_selected_revision": "2025",
-            "classification": "not_yet_measured",
-            "provisional": True,
-        },
+    coordinate = matrix["coordinates"][0]
+    assert {
+        key: coordinate[key]
+        for key in ("modelo", "filing_year", "period", "law_selected_revision", "classification", "provisional")
+    } == {
+        "modelo": "100",
+        "filing_year": 2025,
+        "period": "0A",
+        "law_selected_revision": "2025",
+        "classification": "not_yet_measured",
+        "provisional": True,
+    }
+    comparison = coordinate["schema_comparison"]
+    assert {
+        key: comparison[key]
+        for key in (
+            "modelo",
+            "filing_year",
+            "period",
+            "law_selected_revision",
+            "identity_measurement",
+            "printed_form_membership",
+            "xsd_only_attributes",
+            "identity_divergence_count",
+        )
+    } == {
+        "modelo": "100",
+        "filing_year": 2025,
+        "period": "0A",
+        "law_selected_revision": "2025",
+        "identity_measurement": "measured",
+        "printed_form_membership": "unsupported",
+        "xsd_only_attributes": "unsupported",
+        "identity_divergence_count": 33,
+    }
+    assert len(comparison["layout_comparisons"]) == 1
+    layout = comparison["layout_comparisons"][0]
+    assert layout["registry_casilla_count"] == 2238
+    assert layout["dictionary_casilla_count"] == 2205
+    assert layout["identity_divergence_count"] == 33
+    assert layout["extra_casilla_ids"] == []
+    assert layout["missing_casilla_ids"] == [
+        "0059",
+        "AJ",
+        "ANOASDLG",
+        "APENOMDLG",
+        "APENOMDLG_ASC",
+        "CONVASDLG",
+        "DECFAL",
+        "DNIASDLG",
+        "DPFNAC_C",
+        "DPFNAC_D",
+        "DPGMIN_C",
+        "DPGMIN_D",
+        "DPNIF_C",
+        "DPNIF_D",
+        "DP_APENOM_C",
+        "DP_APENOM_D",
+        "ECIVIL",
+        "FALLASDLG",
+        "FALLDLG",
+        "FNACDLG",
+        "HIJOSUE",
+        "MINUSDLG",
+        "NIFDLG",
+        "NORESIDENTE",
+        "PCTMINASDLG",
+        "PH18",
+        "RESIDENTEUE",
+        "SEXO_C",
+        "SEXO_D",
+        "TIPOTRIBUTACION",
+        "ZCCAD",
+        "ZRUE2",
+        "eo-agraria-reduccion-irregularidad-base",
     ]
     assert set(matrix["classification_census"]) == set(COORDINATE_CLASSIFICATIONS)
     assert matrix["classification_census"]["not_yet_measured"] == 1
     assert sum(matrix["classification_census"].values()) == len(matrix["coordinates"])
+
+
+def test_report_json_preserves_construct_and_casilla_provenance_ledgers() -> None:
+    """The dev payload does not drop the application-level provenance axes."""
+    result = CliRunner().invoke(app, ["report", "--json"])
+
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    rendered = next(row for row in payload["rows"] if row["modelo"] == "100" and row["revision"] == "2025")
+    source = next(
+        row
+        for row in audit_bundled_registry_conformance(validate=True).rows
+        if row.modelo == "100" and row.revision == "2025"
+    )
+
+    assert source.construct_evidence is not None
+    assert rendered["construct_evidence"] == source.construct_evidence.model_dump(mode="json")
+    assert rendered["casilla_provenance"] == [trace.model_dump(mode="json") for trace in source.casilla_provenance]
+
+
+def test_report_json_keeps_construct_evidence_unmeasured_on_degraded_read() -> None:
+    """A degraded report retains schema traces but does not claim construct proof."""
+    result = CliRunner().invoke(app, ["report", "--json", "--no-validate"])
+
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    rendered = next(row for row in payload["rows"] if row["modelo"] == "100" and row["revision"] == "2025")
+
+    assert rendered["registry_validated"] is False
+    assert rendered["construct_evidence"] is None
+    assert rendered["casilla_provenance"]
 
 
 def test_annual_matrix_revision_is_read_from_the_validated_authority() -> None:
@@ -205,6 +312,106 @@ def test_annual_matrix_revision_is_read_from_the_validated_authority() -> None:
     assert (coordinate.modelo, coordinate.filing_year, coordinate.period) == ("100", 2025, "0A")
     assert coordinate.law_selected_revision == snapshot.revision.id
     assert coordinate.law_selected_revision == "2025"
+    assert coordinate.schema_comparison == compare_annual_casilla_population(
+        snapshot,
+        source_root=bundled_authority().source_root,
+    )
+
+
+def test_report_text_renders_provenance_counts_and_degraded_absence(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """Text summarizes provenance while JSON remains the lossless ledger surface."""
+    result = CliRunner().invoke(app, ["report"])
+
+    assert result.exit_code == 0, result.stdout
+    source = next(row for row in validated_profile.rows if row.modelo == "100" and row.revision == "2025")
+    if source.construct_evidence is None:
+        raise AssertionError("validated source row must carry construct evidence")
+    row_line = next(line for line in result.stdout.splitlines() if line.startswith("row modelo=100 revision=2025 "))
+    assert f"construct_evidence_rows={len(source.construct_evidence.rows)}" in row_line
+    assert f"construct_evidence_gaps={len(source.construct_evidence.gaps)}" in row_line
+    assert f"casilla_provenance_traces={len(source.casilla_provenance)}" in row_line
+
+    degraded = CliRunner().invoke(app, ["report", "--no-validate"])
+    assert degraded.exit_code == 0, degraded.stdout
+    degraded_line = next(
+        line for line in degraded.stdout.splitlines() if line.startswith("row modelo=100 revision=2025 ")
+    )
+    assert "construct_evidence_rows=n/a" in degraded_line
+    assert "construct_evidence_gaps=n/a" in degraded_line
+
+
+def test_report_text_projects_schema_layout_and_keeps_statuses_distinct(
+    validated_profile: RegistryConformanceProfile,
+) -> None:
+    """Text exposes measured identity without collapsing unsupported/unmeasured states."""
+    result = CliRunner().invoke(app, ["report"])
+
+    assert result.exit_code == 0, result.stdout
+    assert "annual_coordinate modelo=100 filing_year=2025 period=0A law_selected_revision=2025" in result.stdout
+    assert "schema_identity_measurement=measured" in result.stdout
+    assert "schema_printed_form_membership=unsupported" in result.stdout
+    assert "schema_xsd_only_attributes=unsupported" in result.stdout
+    assert "schema_identity_divergence_count=33" in result.stdout
+    assert "annual_schema_layout modelo=100 filing_year=2025 period=0A law_selected_revision=2025" in result.stdout
+    assert "identity_measurement=measured" in result.stdout
+    assert "registry_casilla_count=2238" in result.stdout
+    assert "dictionary_casilla_count=2205" in result.stdout
+    assert "identity_divergence_count=33" in result.stdout
+    assert "extra_casilla_ids=-" in result.stdout
+    assert "missing_casilla_ids=0059,AJ,ANOASDLG" in result.stdout
+
+    authority = bundled_authority()
+    snapshot = authority.snapshot("100", filing_year=2025, period="0A")
+    unmeasured_comparison = compare_annual_casilla_population(snapshot)
+    unmeasured_coordinate = ConformanceCoordinate(
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        law_selected_revision=snapshot.revision.id,
+        schema_comparison=unmeasured_comparison,
+        classification="not_yet_measured",
+        provisional=True,
+    )
+    census: dict[str, int] = dict.fromkeys(COORDINATE_CLASSIFICATIONS, 0)
+    census["not_yet_measured"] = 1
+    locale_index, locale_unavailable_modelos = load_locale_coverage_index()
+    unmeasured_report = build_conformance_report(
+        validated_profile,
+        locale_index=locale_index,
+        locale_unavailable_modelos=locale_unavailable_modelos,
+        oracle_inventory=load_bundled_external_oracle_inventory(),
+        annual_matrix=ConformanceCoordinateMatrix(
+            coordinates=(unmeasured_coordinate,),
+            classification_census=census,
+        ),
+    )
+    unmeasured_text = render_report(unmeasured_report)
+    assert "annual_schema_layout" in unmeasured_text
+    assert "identity_measurement=unmeasured" in unmeasured_text
+    assert "printed_form_membership=unsupported" in unmeasured_text
+    assert "xsd_only_attributes=unsupported" in unmeasured_text
+
+
+def test_annual_coordinate_rejects_mismatched_schema_comparison() -> None:
+    """Nested evidence cannot silently describe a different legal coordinate."""
+    coordinate = _real_d2025_coordinate()
+    mismatched = coordinate.schema_comparison.model_copy(update={"filing_year": 2024})
+
+    with pytest.raises(
+        ValidationError,
+        match="annual schema comparison coordinate does not match enclosing coordinate",
+    ):
+        ConformanceCoordinate(
+            modelo=coordinate.modelo,
+            filing_year=coordinate.filing_year,
+            period=coordinate.period,
+            law_selected_revision=coordinate.law_selected_revision,
+            schema_comparison=mismatched,
+            classification=coordinate.classification,
+            provisional=coordinate.provisional,
+        )
 
 
 def test_degraded_report_does_not_claim_validated_annual_coordinates(
@@ -217,14 +424,7 @@ def test_degraded_report_does_not_claim_validated_annual_coordinates(
 
 def test_annual_matrix_rejects_an_incomplete_classification_census() -> None:
     """Every supported classification must remain visible, including zeroes."""
-    coordinate = ConformanceCoordinate(
-        modelo="100",
-        filing_year=2025,
-        period="0A",
-        law_selected_revision="2025",
-        classification="not_yet_measured",
-        provisional=True,
-    )
+    coordinate = _real_d2025_coordinate()
 
     with pytest.raises(ValidationError, match="must name every supported disposition exactly once"):
         ConformanceCoordinateMatrix(
@@ -235,14 +435,7 @@ def test_annual_matrix_rejects_an_incomplete_classification_census() -> None:
 
 def test_annual_matrix_rejects_a_census_count_that_does_not_match_coordinates() -> None:
     """The census must equal the enumerated population, not merely name its keys."""
-    coordinate = ConformanceCoordinate(
-        modelo="100",
-        filing_year=2025,
-        period="0A",
-        law_selected_revision="2025",
-        classification="not_yet_measured",
-        provisional=True,
-    )
+    coordinate = _real_d2025_coordinate()
     census: dict[str, int] = dict.fromkeys(COORDINATE_CLASSIFICATIONS, 0)
 
     with pytest.raises(ValidationError, match="classification census does not match the enumerated coordinates"):
@@ -254,14 +447,7 @@ def test_annual_matrix_rejects_a_census_count_that_does_not_match_coordinates() 
 
 def test_annual_matrix_rejects_duplicate_exact_coordinates() -> None:
     """The finite denominator cannot count one exact coordinate twice."""
-    coordinate = ConformanceCoordinate(
-        modelo="100",
-        filing_year=2025,
-        period="0A",
-        law_selected_revision="2025",
-        classification="not_yet_measured",
-        provisional=True,
-    )
+    coordinate = _real_d2025_coordinate()
     census: dict[str, int] = dict.fromkeys(COORDINATE_CLASSIFICATIONS, 0)
     census["not_yet_measured"] = 2
 

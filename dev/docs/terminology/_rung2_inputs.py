@@ -64,6 +64,25 @@ class Rung2CompilationInputs:
     query_token_sha256: str
     provenance: Rung2InputProvenance
 
+    def __post_init__(self) -> None:
+        """Keep the assembled source identity internally self-consistent."""
+        try:
+            canonical_terms = canonical_vocabulary(self.vocabulary)
+            canonical_tokens = canonical_query_tokens(self.query_tokens)
+        except MatrixCompilationError as exc:
+            raise Rung2InputError(f"Rung-2 compilation inputs are not canonical: {exc}") from exc
+        if canonical_terms != self.vocabulary or canonical_tokens != self.query_tokens:
+            raise Rung2InputError("Rung-2 compilation inputs must retain canonical vocabulary order")
+        if self.vocabulary_sha256 != vocabulary_fingerprint(canonical_terms):
+            raise Rung2InputError("Rung-2 vocabulary fingerprint does not match the assembled vocabulary")
+        if self.query_token_sha256 != query_token_fingerprint(canonical_tokens):
+            raise Rung2InputError("Rung-2 query-token fingerprint does not match the assembled query tokens")
+        if (
+            self.provenance.vocabulary_sha256 != self.vocabulary_sha256
+            or self.provenance.query_token_sha256 != self.query_token_sha256
+        ):
+            raise Rung2InputError("Rung-2 input provenance fingerprints do not match the assembled inputs")
+
 
 def build_rung2_compilation_inputs(
     repo_root: Path | None = None,

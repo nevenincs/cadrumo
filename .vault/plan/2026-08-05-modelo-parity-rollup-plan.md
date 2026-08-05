@@ -4,11 +4,18 @@ tags:
   - '#modelo-parity-rollup'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:2e33bd71f6bcfb7fb4871ba46570fe3cba000be9537803f30e203a13bc2864f8'
+body_hash: 'sha256:df7fed99ebe547389a4054fcf710d5ae51b38f4fc2d4d1100bc1e6221766a8d0'
 tier: L3
 related:
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
   - '[[2026-08-05-modelo-parity-rollup-denominator-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-oracle-code-review-audit]]'
 ---
 
 <!-- RETIRED: W02, P02 -->
@@ -73,9 +80,9 @@ Adjudicate M100 0150, 0613, and 1481 with focused legal, profile, aggregation, a
 
 Prepare and obtain focused SOL decisions for M100 0150, 0613, and 1481 before any manual-to-computed, profile, or cross-model production change.
 
-- [ ] `W03.P08.S16` - Adjudicate M100 0150 against the 2025 profile and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
-- [ ] `W03.P08.S17` - Adjudicate M100 0613 against monthly facts, profile capability, and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
-- [ ] `W03.P08.S18` - Adjudicate M100 1481 against Modelo 131 relation and aggregation semantics; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [x] `W03.P08.S16` - Adjudicate M100 0150 against the 2025 profile and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [x] `W03.P08.S17` - Adjudicate M100 0613 against monthly facts, profile capability, and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [x] `W03.P08.S18` - Adjudicate M100 1481 against Modelo 131 relation and aggregation semantics; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
 
 ## Wave `W04` - Execute accepted closure work
 
@@ -85,25 +92,25 @@ Implement only accepted, evidence-backed parity gaps, then run real registry and
 
 Apply only accepted schema and reverse-wiring findings with disjoint ownership and real invariant tests; leave deferred semantic rows untouched.
 
-- [ ] `W04.P09.S19` - Implement accepted schema and reverse formula invariants in the registry validator; `src/cadrumo/domain/calculations/registry/_validate.py`.
-- [ ] `W04.P09.S20` - Add real failure tests for accepted cross-revision formula wiring divergences; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `W04.P09.S21` - Run targeted M100 and registry conformance checks for the accepted invariant findings; `dev/registry/conformance/manager.py`.
+- [x] `W04.P09.S19` - Implement accepted schema and reverse formula invariants in the registry validator; `src/cadrumo/domain/calculations/registry/_validate.py`.
+- [x] `W04.P09.S20` - Add real failure tests for accepted cross-revision formula wiring divergences; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W04.P09.S21` - Run targeted M100 and registry conformance checks for the accepted invariant findings; `dev/registry/conformance/manager.py`.
 
 ### Phase `W04.P10` - Implement accepted source and handoff closure
 
 Apply only accepted legal/source and canonical cross-model handoff findings with their grounded provenance and clean-state tests.
 
-- [ ] `W04.P10.S22` - Implement accepted construct-level legal and source evidence projections; `src/cadrumo/domain/calculations/registry/_coverage.py`.
-- [ ] `W04.P10.S23` - Implement accepted canonical relation and cross-model handoff checks; `src/cadrumo/domain/calculations/registry/_validate.py`.
-- [ ] `W04.P10.S24` - Add clean-state, period, and provenance tests for accepted handoffs; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W04.P10.S22` - Implement accepted construct-level legal and source evidence projections; `src/cadrumo/domain/calculations/registry/_coverage.py`.
+- [x] `W04.P10.S23` - Implement accepted canonical relation and cross-model handoff checks; `src/cadrumo/domain/calculations/registry/_validate.py`.
+- [x] `W04.P10.S24` - Add clean-state, period, and provenance tests for accepted handoffs; `src/cadrumo/domain/calculations/registry/tests`.
 
 ### Phase `W04.P11` - Close behavioral evidence and parity report
 
 Run the real conformance, coverage, oracle, and focused test gates, complete code review, and publish an honest closure report with open and deferred populations.
 
-- [ ] `W04.P11.S25` - Record exact oracle enrollment only for certified coordinate and payload mappings; `src/cadrumo/_data/registry/aeat/modelos`.
-- [ ] `W04.P11.S26` - Run full conformance, coverage, oracle, and audit gates and capture their exact outputs; `dev/registry/conformance/manager.py`.
-- [ ] `W04.P11.S27` - Complete code review and record the final parity closure report with open and deferred populations; `.vault/audit/2026-08-05-modelo-parity-rollup-audit.md`.
+- [x] `W04.P11.S25` - Record exact oracle enrollment only for certified coordinate and payload mappings; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W04.P11.S26` - Run full conformance, coverage, oracle, and audit gates and capture their exact outputs; `dev/registry/conformance/manager.py`.
+- [x] `W04.P11.S27` - Complete code review and record the final parity closure report with open and deferred populations; `.vault/audit/2026-08-05-modelo-parity-rollup-audit.md`.
 
 ## Parallelization
 

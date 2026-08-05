@@ -30,7 +30,7 @@ def test_scoop_workflow_declares_the_native_release_row() -> None:
     """
     document = _workflow()
     assert document["name"] == "Cadrumo Scoop Acquisition"
-    assert set(document["jobs"]) == {"cadrumo-scoop-acquisition"}
+    assert set(document["jobs"]) == {"cadrumo-scoop-acquisition", "runner-queue-watchdog"}
 
     job = document["jobs"]["cadrumo-scoop-acquisition"]
     assert job["name"] == "Cadrumo / Windows / x64 / Scoop Native"

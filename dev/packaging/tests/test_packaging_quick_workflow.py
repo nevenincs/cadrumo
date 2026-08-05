@@ -47,7 +47,9 @@ def test_quick_workflow_is_exactly_three_probe_jobs() -> None:
     """One probe job per OS, no matrix, each running the quick recipe with a hard ceiling."""
     document = _quick_document()
     assert document["name"] == "Cadrumo Packaging Quick"
-    assert set(document["jobs"]) == set(_EXPECTED_JOBS)
+    # The watchdog is not a probe leg and carries no OS profile; it exists so a
+    # probe leg whose runner is offline fails fast instead of queueing.
+    assert set(document["jobs"]) == set(_EXPECTED_JOBS) | {"runner-queue-watchdog"}
     for job_name, runs_on in _EXPECTED_JOBS.items():
         job = document["jobs"][job_name]
         assert job["runs-on"] == runs_on, job_name
@@ -70,7 +72,17 @@ def test_quick_workflow_mints_no_promotable_evidence() -> None:
         assert module not in surface, module
     assert document["permissions"] == {"contents": "read"}
     for job_name, job in document["jobs"].items():
-        assert "permissions" not in job, f"{job_name} must not escalate the read-only token"
+        # Evidence honesty is a CONTENTS question: a draft release and the assets
+        # hanging off it are what make a run promotable, and no job in this lane
+        # may reach them. `actions: write` is a different capability — it cancels
+        # workflow runs and mints nothing — and exactly one job is allowed to
+        # hold it, because cancelling is the only way to turn a lane no runner
+        # can serve into a terminal state instead of a six-hour silent queue.
+        permissions = job.get("permissions") or {}
+        assert set(permissions) <= {"actions", "contents"}, f"{job_name}: unexpected permission scope"
+        assert permissions.get("contents", "read") == "read", f"{job_name} must not escalate to contents:write"
+        if permissions.get("actions") == "write":
+            assert job_name == "runner-queue-watchdog", f"{job_name} must not take actions:write"
         for step in job["steps"]:
             uses = str(step.get("uses", ""))
             assert "upload-artifact" not in uses and "download-artifact" not in uses, job_name

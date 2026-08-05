@@ -5,57 +5,23 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e4dc6b12469963a2eaaceff0c1187027b44a98c9194b6d7f76b28aa791ee2148'
+body_hash: 'sha256:0bd813b5192eadabbe212dde8bdfa6e62d28e49e26fa373146b187e87ec708d8'
 step_id: 'S23'
 related:
   - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace modelo-parity-rollup with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S23 and 2026-08-05-modelo-parity-rollup-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Modelo parity rollup S23 canonical handoff closure and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/_validate.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Modelo parity rollup S23 canonical handoff closure
-
-## Scope
-
-- `src/cadrumo/domain/calculations/registry/_validate.py`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Identify IVA-wallet ownership by exact modelo, revision, relation, and target-binding coordinate.
+- Apply the same coordinate rule to relation-source validation, handoff-path classification, and runtime exclusion.
+- Reject accidental exception inheritance when a binding identifier is reused by another relation or modelo.
 
 ## Outcome
 
+The canonical handoff projection and slot-source validator now classify wallet ownership by exact relation coordinate. A second relation reusing the M303 binding is rejected by the actual slot-hygiene gate. Application source-mesh exclusion and staging defaults use the current snapshot's exact revision scope. The relation closure, handoff, and cross-dependency tests are covered by the final 67-test focused run.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The previous broad binding-only exception set was removed. No new relation or aggregation path was introduced, and the real M303 runtime behavior remains covered.

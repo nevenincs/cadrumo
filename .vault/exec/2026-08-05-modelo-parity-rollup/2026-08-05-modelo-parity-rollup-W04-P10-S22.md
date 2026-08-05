@@ -5,57 +5,23 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2624b10b13b376ac9f7e4242b9330f74d4edb790f7c7056f31685f0eed870f51'
+body_hash: 'sha256:da4894f393b2409565c72594bb199984d7c62adf04cdedbb7f688b958f8c8116'
 step_id: 'S22'
 related:
   - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace modelo-parity-rollup with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S22 and 2026-08-05-modelo-parity-rollup-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Modelo parity rollup S22 construct evidence closure and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/_coverage.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Modelo parity rollup S22 construct evidence closure
-
-## Scope
-
-- `src/cadrumo/domain/calculations/registry/_coverage.py`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Enumerate formula, parameter, binding, relation, and selector constructs from each validated revision.
+- Preserve only legal and source references declared by the owning construct.
+- Require an opaque authority proof before complete evidence can be reported.
 
 ## Outcome
 
+The construct evidence audit distinguishes reference presence from a corpus-reconciled validation boundary. The public snapshot projection emits `unvalidated` rows when it has no authority proof; only `audit_registry_construct_evidence`, after `RegistryValidator` succeeds, attaches the private proof that permits `grounded` or `inherited` rows. The construct/evidence tests passed 7 tests.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The audit reports construct evidence only for validated registry declarations. It does not promote revision-level evidence floors into per-construct proof and does not change the legal status of any deferred M100 casilla.

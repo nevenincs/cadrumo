@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:469cbfeeabe496c005eb7dca2077df93e3461a60e30f78b2f228ed53bb4d7c0e'
+body_hash: 'sha256:f47dd327bcab5daf7f9df6e8bf23e6c69b6ae18477f33a733c0601b4bb544ddb'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
@@ -31,6 +31,10 @@ S15 now materialises legal records and carries them through the real injector (`
 ### P05.S15 legal search record injection review | low | Four-kind claims remain in search review and build documentation
 
 The new fifth kind is not reflected in several explanatory surfaces: `dev/docs/tests/test_pagefind_inject_site.py:143-151` still calls the projection four-kind and describes only concepts, casillas, and CLI; `dev/docs/tests/test_built_site_resolvability_sweep.py:3-8,145-151,187-190` still describes a four-kind/three-producer sweep; `dev/docs/build.py:419,459,493,741` still describes the injector as concept/casilla/CLI-only; `dev/docs/terminology/tests/test_unified_record.py:3-8` still names four projected kinds; and `dev/docs/terminology/_unified_record.py:348-350` omits legal from the `to_search_record` argument contract. These are stale claims rather than additional runtime behavior defects, but they can mislead future review and conceal the LEGAL surface.
+
+### empty-legal-projection | low | PASS: mandatory legal surface now fails closed
+
+Fresh RAG grounding over the injector, legal projection, and all-kind materialisation gate identified that the injector refused a skipped CLI projection but could continue with an empty legal projection. The materializer now raises `SearchInjectionError` before injection when the decided legal projection is empty. This protects the fifth `LEGAL` kind at source level; P05.S14-S17 still require their generated-surface, parity, build, and runtime evidence.
 
 ## Recommendations
 

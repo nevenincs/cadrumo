@@ -19,7 +19,6 @@ it does not generate an artifact, invoke a provider, or enable a browser tier.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterable
 from hashlib import sha256
 from pathlib import Path
@@ -27,6 +26,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ._jcs import canonical_json_bytes
 from ._rung2_provenance import Rung2InputProvenance
 from ._search_record import ResultDisplayClass, SearchRecordKind
 from ._static_matrix import (
@@ -42,6 +42,7 @@ __all__ = [
     "BRIDGE_SCHEMA_VERSION",
     "BUNDLE_SCHEMA_VERSION",
     "BridgeCompilationError",
+    "RECORD_MANIFEST_SCHEMA_VERSION",
     "RecordManifest",
     "RecordManifestEntry",
     "Rung2SearchBundle",
@@ -55,8 +56,9 @@ __all__ = [
 ]
 
 _UTF_8: Final[str] = "utf-8"
-BRIDGE_SCHEMA_VERSION: Final[int] = 1
-BUNDLE_SCHEMA_VERSION: Final[int] = 2
+BRIDGE_SCHEMA_VERSION: Final[int] = 2
+RECORD_MANIFEST_SCHEMA_VERSION: Final[int] = 2
+BUNDLE_SCHEMA_VERSION: Final[int] = 3
 _ROW_ORDER: Final[str] = "canonical-utf8-byte-order-v1"
 _SHA256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 _RecordId = Annotated[str, StringConstraints(min_length=1, max_length=320)]
@@ -110,7 +112,7 @@ class RecordManifest(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal[1]
+    schema_version: Literal[2]
     row_order: Literal["canonical-utf8-byte-order-v1"]
     record_count: int = Field(ge=1)
     records: tuple[RecordManifestEntry, ...] = Field(min_length=1)
@@ -134,7 +136,7 @@ class RecordManifest(BaseModel):
 
     def to_json_bytes(self) -> bytes:
         """Return the canonical newline-terminated manifest bytes."""
-        return _canonical_json_bytes(self.model_dump(mode="json"))
+        return canonical_json_bytes(self.model_dump(mode="json"))
 
 
 class SemanticBridgeEntry(BaseModel):
@@ -173,7 +175,7 @@ class SemanticBridge(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal[1]
+    schema_version: Literal[2]
     row_order: Literal["canonical-utf8-byte-order-v1"]
     matrix_vocabulary_sha256: _SHA256
     record_manifest_sha256: _SHA256
@@ -200,7 +202,7 @@ class SemanticBridge(BaseModel):
 
     def to_json_bytes(self) -> bytes:
         """Return the canonical newline-terminated bridge bytes."""
-        return _canonical_json_bytes(self.model_dump(mode="json"))
+        return canonical_json_bytes(self.model_dump(mode="json"))
 
 
 class Rung2SearchBundle(BaseModel):
@@ -208,7 +210,7 @@ class Rung2SearchBundle(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal[2]
+    schema_version: Literal[3]
     matrix: StaticEmbeddingMatrix
     bridge: SemanticBridge
     record_manifest: RecordManifest
@@ -245,7 +247,7 @@ class Rung2SearchBundle(BaseModel):
 
     def to_json_bytes(self) -> bytes:
         """Return the canonical complete payload bytes."""
-        return _canonical_json_bytes(self.model_dump(mode="json"))
+        return canonical_json_bytes(self.model_dump(mode="json"))
 
 
 def build_record_manifest(records: Iterable[SearchRecord]) -> RecordManifest:
@@ -277,7 +279,7 @@ def build_record_manifest(records: Iterable[SearchRecord]) -> RecordManifest:
         for record in sorted(by_id.values(), key=lambda item: item.id.encode(_UTF_8))
     )
     core: dict[str, object] = {
-        "schema_version": BRIDGE_SCHEMA_VERSION,
+        "schema_version": RECORD_MANIFEST_SCHEMA_VERSION,
         "row_order": _ROW_ORDER,
         "record_count": len(entries),
         "records": [entry.model_dump(mode="json") for entry in entries],
@@ -444,7 +446,7 @@ def _fixed_point_serialized_size(payload: dict[str, object]) -> int:
     size = 0
     for _ in range(8):
         payload["serialized_bytes"] = size
-        candidate = len(_canonical_json_bytes(payload))
+        candidate = len(canonical_json_bytes(payload))
         if candidate == size:
             return size
         size = candidate
@@ -453,9 +455,4 @@ def _fixed_point_serialized_size(payload: dict[str, object]) -> int:
 
 def _hash_json(payload: object) -> str:
     """Hash one canonical JSON value."""
-    return sha256(_canonical_json_bytes(payload)).hexdigest()
-
-
-def _canonical_json_bytes(payload: object) -> bytes:
-    """Serialize JSON with stable ordering, compact separators, and newline."""
-    return (json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode(_UTF_8)
+    return sha256(canonical_json_bytes(payload)).hexdigest()

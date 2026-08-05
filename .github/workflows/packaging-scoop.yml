@@ -38,6 +38,33 @@ permissions:
   contents: read
 
 jobs:
+  # This lane requests `windows-scoop`, which NO runner on the fleet carries —
+  # it has never been schedulable, and restoring the Windows runner will not
+  # make it so, because that registration carries only the platform triple. The
+  # label is correct and stays (the acquisition ADR requires a dedicated
+  # non-admin runner user); what changes is that dispatching it now fails in
+  # minutes with the missing label named, instead of queueing for 24 hours.
+  runner-queue-watchdog:
+    name: Cadrumo / runner queue watchdog
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "900"
+        run: python3 dev/ci/runner_queue_watchdog.py
+
   cadrumo-scoop-acquisition:
     name: Cadrumo / Windows / x64 / Scoop Native
     runs-on: [self-hosted, Windows, X64, windows-scoop]

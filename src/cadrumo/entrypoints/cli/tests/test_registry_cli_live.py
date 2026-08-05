@@ -394,7 +394,7 @@ def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
     assert "own-name" in pull.output or "nombre propio" in pull.output
     assert (
         "No AEAT filing or wallet form choices are submitted" in capture_history.output
-        or "No se envia ninguna declaracion" in capture_history.output
+        or "No se envía ninguna declaración" in capture_history.output
     )
     assert "--as-of-year" in history.output
     assert "read-only" in pull_evidence.output or "solo lectura" in pull_evidence.output

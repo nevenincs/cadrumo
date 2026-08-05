@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ced2cac9729486f205806aac55246205451af62158e38e58006052523eb3bec1'
+body_hash: 'sha256:2b546121c3d918ec77fcc75a7f6bd9cec9ecfad8891d06555e2621e50e7f624e'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -46,6 +46,12 @@ The formal remediation review recorded PASS for the four compiler strictness fin
 RAG-grounded static validation found ten basedpyright findings where runtime fail-closed checks were unreachable under overly narrow annotations. Commit `68d1d2e59b` widens only the compiler and acceptance external boundaries to honest object/iterable inputs, narrows them explicitly after preserving every runtime guard, and aligns the compiler export order with Ruff.
 
 Independent static verification passed: vaultspec-rag grounding, Ruff, basedpyright (`0 errors, 0 warnings, 0 notes`), Python AST parsing, JavaScript syntax checking, focused diff whitespace validation, and conflict-marker scanning. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run. P02.S04 remains open for the pinned provider/artifact and measured acceptance gates.
+
+### 2026-08-05 source continuation: assembled-input identity guard
+
+The authoritative `Rung2CompilationInputs` dataclass now revalidates canonical vocabulary/query-token order, recomputes both fingerprints, and requires the embedded provenance fingerprints to match before the provider-backed compiler can consume the assembled inputs. This strengthens the source-authority handoff without selecting a provider or generating an artifact. It does not close the remaining provider, model, matrix, or measured-acceptance gates for P02.S04.
+
+Static evidence only: fresh vaultspec-rag grounding, AST parsing, and focused diff checks. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run.
 
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 

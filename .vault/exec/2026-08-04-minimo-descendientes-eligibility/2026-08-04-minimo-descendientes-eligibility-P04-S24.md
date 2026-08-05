@@ -5,45 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:0db41b09f06d30eb1d0baf5ff81bff00cf285ac33b93424740bf938e94c9a30d'
+body_hash: 'sha256:b9aa2f6e5de3fa002b42ff1df850979e36ef8ca3384a133b33bd2189fbf68869'
 step_id: 'S24'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace minimo-descendientes-eligibility with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S24 and 2026-08-04-minimo-descendientes-eligibility-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Collapse the two family-record reconstructions in _profile_binding onto their UNION rather than onto either one, because each carries what the other lacks, the guarderia path pre-checks every birth date and raises naming the row index while omitting the anualidades that suppress dependency assimilation, and the minimo and maternidad path carries the anualidades while having no pre-check, so collapsing onto the minimo variant silently loses the indexed diagnostic and collapsing onto the other silently over-grants for a filer paying judicial anualidades, and adding anualidades to the guarderia injector must be recorded as a stated no-op since the guarderia count does not read them and ## Scope
-
-- `src/cadrumo/application/modelo/_profile_binding.py`
-- `src/cadrumo/domain/contribuyente/family.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Collapse the two family-record reconstructions in _profile_binding onto their UNION rather than onto either one, because each carries what the other lacks, the guarderia path pre-checks every birth date and raises naming the row index while omitting the anualidades that suppress dependency assimilation, and the minimo and maternidad path carries the anualidades while having no pre-check, so collapsing onto the minimo variant silently loses the indexed diagnostic and collapsing onto the other silently over-grants for a filer paying judicial anualidades, and adding anualidades to the guarderia injector must be recorded as a stated no-op since the guarderia count does not read them
 

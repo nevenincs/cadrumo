@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ab1ceb31141cc281f9c79da7c8dad8eede33cb37d8b8c358388abc70b7b4f672'
+body_hash: 'sha256:ce5ec730885c76bcd5c412b2b483f7ba49cf56813e66de564e7038520eacd08f'
 related:
   - '[[2026-08-05-modelo-parity-rollup-W01-P03-S01]]'
   - '[[2026-08-05-modelo-parity-rollup-W01-P03-S02]]'
@@ -16,15 +16,53 @@ related:
   - '[[2026-08-05-modelo-parity-rollup-W01-P04-S06]]'
   - '[[2026-08-05-modelo-parity-rollup-W01-P05-S07]]'
   - '[[2026-08-05-modelo-parity-rollup-W01-P05-S08]]'
+  - '[[2026-08-05-modelo-parity-rollup-W01-P05-S09]]'
+  - '[[2026-08-05-modelo-parity-rollup-W01-P06-S10]]'
+  - '[[2026-08-05-modelo-parity-rollup-W01-P06-S11]]'
+  - '[[2026-08-05-modelo-parity-rollup-W01-P06-S12]]'
+  - '[[2026-08-05-modelo-parity-rollup-W01-P07-S13]]'
   - '[[2026-08-05-modelo-parity-rollup-W01-P07-S14]]'
+  - '[[2026-08-05-modelo-parity-rollup-W01-P07-S15]]'
+  - '[[2026-08-05-modelo-parity-rollup-W03-P08-S16]]'
+  - '[[2026-08-05-modelo-parity-rollup-W03-P08-S17]]'
+  - '[[2026-08-05-modelo-parity-rollup-W03-P08-S18]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P09-S19]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P09-S20]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P09-S21]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P10-S22]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P10-S23]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P10-S24]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P11-S25]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P11-S26]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P11-S27]]'
+  - '[[2026-08-05-modelo-parity-rollup-W04-P11-summary]]'
   - '[[2026-08-05-modelo-parity-rollup-denominator-research]]'
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
+  - '[[2026-08-05-modelo-parity-rollup-m100-2021-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-m100-2022-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-plan]]'
+  - '[[2026-08-05-modelo-parity-rollup-remediation-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s02-projection-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s02-review-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s03-review-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s06-review-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s07-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s08-consumer-projection-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s08-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s09-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s10-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s11-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s12-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s13-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s15-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-boundary-guard-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-oracle-code-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-tranche-review-audit]]'
 ---
 
@@ -40,11 +78,26 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 
 ### audit
 
+- `2026-08-05-modelo-parity-rollup-m100-2021-audit` - 2026-08-05-modelo-parity-rollup-m100-2021-audit
+- `2026-08-05-modelo-parity-rollup-m100-2022-audit` - 2026-08-05-modelo-parity-rollup-m100-2022-audit
+- `2026-08-05-modelo-parity-rollup-remediation-review-audit` - `modelo-parity-rollup` audit: `Modelo parity rollup remediation review`
+- `2026-08-05-modelo-parity-rollup-s02-projection-audit` - 2026-08-05-modelo-parity-rollup-s02-projection-audit
 - `2026-08-05-modelo-parity-rollup-s02-review-audit` - `modelo-parity-rollup` audit: `S02 conformance comparator review`
 - `2026-08-05-modelo-parity-rollup-s03-review-audit` - `modelo-parity-rollup` audit: `S03 classification census review`
 - `2026-08-05-modelo-parity-rollup-s06-review-audit` - 2026-08-05-modelo-parity-rollup-s06-review-audit
 - `2026-08-05-modelo-parity-rollup-s07-review-audit` - 2026-08-05-modelo-parity-rollup-s07-review-audit
+- `2026-08-05-modelo-parity-rollup-s08-consumer-projection-audit` - 2026-08-05-modelo-parity-rollup-s08-consumer-projection-audit
 - `2026-08-05-modelo-parity-rollup-s08-review-audit` - 2026-08-05-modelo-parity-rollup-s08-review-audit
+- `2026-08-05-modelo-parity-rollup-s09-review-audit` - 2026-08-05-modelo-parity-rollup-s09-review-audit
+- `2026-08-05-modelo-parity-rollup-s10-review-audit` - 2026-08-05-modelo-parity-rollup-s10-review-audit
+- `2026-08-05-modelo-parity-rollup-s11-review-audit` - 2026-08-05-modelo-parity-rollup-s11-review-audit
+- `2026-08-05-modelo-parity-rollup-s12-review-audit` - 2026-08-05-modelo-parity-rollup-s12-review-audit
+- `2026-08-05-modelo-parity-rollup-s13-review-audit` - 2026-08-05-modelo-parity-rollup-s13-review-audit
+- `2026-08-05-modelo-parity-rollup-s15-review-audit` - 2026-08-05-modelo-parity-rollup-s15-review-audit
+- `2026-08-05-modelo-parity-rollup-s16-s18-boundary-guard-review-audit` - 2026-08-05-modelo-parity-rollup-s16-s18-boundary-guard-review-audit
+- `2026-08-05-modelo-parity-rollup-s16-s18-oracle-code-review-audit` - `modelo-parity-rollup` audit: `S16 S18 oracle code review`
+- `2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit` - `modelo-parity-rollup` audit: `S16 S18 third SOL adjudication`
+- `2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit` - `modelo-parity-rollup` audit: `Modelo parity rollup semantic decision boundary`
 - `2026-08-05-modelo-parity-rollup-tranche-review-audit` - `modelo-parity-rollup` audit: `Luna Max parity tranche code review`
 
 ### exec
@@ -58,6 +111,25 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 - `2026-08-05-modelo-parity-rollup-W01-P04-S06` - 2026-08-05-modelo-parity-rollup-W01-P04-S06
 - `2026-08-05-modelo-parity-rollup-W01-P05-S07` - 2026-08-05-modelo-parity-rollup-W01-P05-S07
 - `2026-08-05-modelo-parity-rollup-W01-P05-S08` - 2026-08-05-modelo-parity-rollup-W01-P05-S08
+- `2026-08-05-modelo-parity-rollup-W01-P05-S09` - 2026-08-05-modelo-parity-rollup-W01-P05-S09
+- `2026-08-05-modelo-parity-rollup-W01-P06-S10` - 2026-08-05-modelo-parity-rollup-W01-P06-S10
+- `2026-08-05-modelo-parity-rollup-W01-P06-S11` - 2026-08-05-modelo-parity-rollup-W01-P06-S11
+- `2026-08-05-modelo-parity-rollup-W01-P06-S12` - 2026-08-05-modelo-parity-rollup-W01-P06-S12
+- `2026-08-05-modelo-parity-rollup-W01-P07-S13` - 2026-08-05-modelo-parity-rollup-W01-P07-S13
+- `2026-08-05-modelo-parity-rollup-W01-P07-S15` - 2026-08-05-modelo-parity-rollup-W01-P07-S15
+- `2026-08-05-modelo-parity-rollup-W03-P08-S16` - Adjudicate M100 0150 against the 2025 profile and applicable legal evidence
+- `2026-08-05-modelo-parity-rollup-W03-P08-S17` - Adjudicate M100 0613 against monthly facts, profile capability, and applicable legal evidence
+- `2026-08-05-modelo-parity-rollup-W03-P08-S18` - Adjudicate M100 1481 against Modelo 131 relation and aggregation semantics
+- `2026-08-05-modelo-parity-rollup-W04-P09-S19` - Modelo parity rollup S19 schema and reverse invariant closure
+- `2026-08-05-modelo-parity-rollup-W04-P09-S20` - Modelo parity rollup S20 failure tests for formula wiring
+- `2026-08-05-modelo-parity-rollup-W04-P09-S21` - Modelo parity rollup S21 focused M100 conformance verification
+- `2026-08-05-modelo-parity-rollup-W04-P10-S22` - Modelo parity rollup S22 construct evidence closure
+- `2026-08-05-modelo-parity-rollup-W04-P10-S23` - Modelo parity rollup S23 canonical handoff closure
+- `2026-08-05-modelo-parity-rollup-W04-P10-S24` - Modelo parity rollup S24 handoff applicability and provenance tests
+- `2026-08-05-modelo-parity-rollup-W04-P11-S25` - Record exact oracle enrollment only for certified coordinate and payload mappings
+- `2026-08-05-modelo-parity-rollup-W04-P11-S26` - Modelo parity rollup S26 full conformance, coverage, oracle, and audit gates
+- `2026-08-05-modelo-parity-rollup-W04-P11-S27` - Modelo parity rollup S27 final parity closure report
+- `2026-08-05-modelo-parity-rollup-W04-P11-summary` - `modelo-parity-rollup` P11 summary
 
 ### plan
 
@@ -66,3 +138,7 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 ### research
 
 - `2026-08-05-modelo-parity-rollup-denominator-research` - `modelo-parity-rollup` research: `Modelo revision parity denominator and bounded campaign`
+- `2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research` - `modelo-parity-rollup` research: `S16 0150 rental oracle addendum`
+- `2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research` - 2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research
+- `2026-08-05-modelo-parity-rollup-s16-s18-evidence-research` - modelo-parity-rollup research: M100 2025 semantic evidence tranche
+- `2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research` - `modelo-parity-rollup` research: `S18 1481 activity oracle addendum`

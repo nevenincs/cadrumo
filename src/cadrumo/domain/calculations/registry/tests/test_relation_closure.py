@@ -21,6 +21,7 @@ from .._relations import (
 from .._schema import ModeloDefinition, ModeloRevision
 from .._schema_surfaces import RelationDefinition
 from .._validate import RegistryValidator
+from .._validate_relation_sources import validate_slot_source_hygiene
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -437,6 +438,26 @@ def test_registry_validator_rejects_relation_targeted_previous_filing_binding() 
         RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_modelo),
         )
+
+
+def test_slot_hygiene_rejects_non_wallet_relation_reusing_wallet_binding() -> None:
+    """A wallet binding cannot exempt a second relation from the collision gate."""
+    modelos, _catalogues = _committed_tree()
+    modelo = _modelo(modelos, "303")
+    revision = modelo.revisions["2009-y-siguientes"]
+    wallet_relation = next(
+        relation for relation in revision.relations if relation.id == "modelo-303-rel-self-compensacion-anteriores"
+    )
+    reused_relation = wallet_relation.model_copy(update={"id": "modelo-303-rel-reused-wallet-binding"})
+    mutated_revision = revision.model_copy(update={"relations": (*revision.relations, reused_relation)})
+    mutated_modelo = _with_revision(modelo, mutated_revision)
+
+    failures = validate_slot_source_hygiene(
+        (mutated_modelo,),
+        {mutated_modelo.id: mutated_modelo},
+    )
+
+    assert any("non-wallet relation target_binding" in failure for failure in failures)
 
 
 def test_relation_definition_requires_dependency_role() -> None:

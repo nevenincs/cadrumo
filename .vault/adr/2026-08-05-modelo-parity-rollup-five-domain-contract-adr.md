@@ -14,8 +14,9 @@ related:
   - "[[2026-06-03-modelo-export-evidence-parity-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-07-01-modelo-131-eo-modulos-engine-adr]]"
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]'
 ---
-
 # `modelo-parity-rollup` adr: `Five-domain modelo revision parity ledger and bounded execution` | (**status:** `accepted`)
 
 ## Problem Statement

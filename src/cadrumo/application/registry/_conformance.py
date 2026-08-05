@@ -100,6 +100,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
+from functools import partial
 from pathlib import Path
 from typing import Literal
 
@@ -358,24 +359,25 @@ def _compare_dictionary_layout(
 ) -> DictionaryLayoutCasillaComparison:
     """Measure one layout, keeping unsupported and unavailable sources visible."""
     source_ref = None if layout.dictionary_source_ref is None else str(layout.dictionary_source_ref)
-    common = {
-        "layout_id": str(layout.id),
-        "layout_format": layout.format.value,
-        "registry_casilla_count": len(registry_ids),
-        "registry_internal_only_count": registry_internal_only_count,
-        "printed_form_membership": printed_form_status,
-        "xsd_only_attributes": xsd_status,
-        "dictionary_source_ref": source_ref,
-    }
+    # Bound as a partial rather than splatted from a dict: the shared fields stay
+    # declared once, and every call below is still checkable against the model.
+    measured = partial(
+        DictionaryLayoutCasillaComparison,
+        layout_id=str(layout.id),
+        layout_format=layout.format.value,
+        registry_casilla_count=len(registry_ids),
+        registry_internal_only_count=registry_internal_only_count,
+        printed_form_membership=printed_form_status,
+        xsd_only_attributes=xsd_status,
+        dictionary_source_ref=source_ref,
+    )
     if layout.format is not _ExportLayoutFormat.XML_DICTIONARY:
-        return DictionaryLayoutCasillaComparison(
-            **common,
+        return measured(
             identity_measurement="unsupported",
             diagnostic="dictionary comparator supports only xml_dictionary layouts",
         )
     if layout.dictionary_source_ref is None:
-        return DictionaryLayoutCasillaComparison(
-            **common,
+        return measured(
             identity_measurement="unmeasured",
             diagnostic="xml_dictionary layout has no dictionary source reference",
         )
@@ -386,8 +388,7 @@ def _compare_dictionary_layout(
             sources=snapshot.sources,
         )
     except (_RegistryValidationError, OSError) as exc:
-        return DictionaryLayoutCasillaComparison(
-            **common,
+        return measured(
             identity_measurement="unmeasured",
             parser_exposed_attributes=_XML_DICTIONARY_PARSER_ATTRIBUTES,
             unmeasured_attributes=_UNMEASURED_DICTIONARY_ATTRIBUTES,
@@ -395,8 +396,7 @@ def _compare_dictionary_layout(
         )
 
     dictionary_ids = frozenset(str(entry.casilla_id) for entry in entries if entry.casilla_id is not None)
-    return DictionaryLayoutCasillaComparison(
-        **common,
+    return measured(
         identity_measurement="measured",
         dictionary_entry_count=len(entries),
         dictionary_casilla_count=len(dictionary_ids),

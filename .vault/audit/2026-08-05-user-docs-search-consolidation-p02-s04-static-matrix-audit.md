@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a7528610c9f19dc5c2df97ff0c894d12af21a6fa38616de6ffa4c67041878a41'
+body_hash: 'sha256:5d778b55adf12513ed0fcb467eb849af924099abf5bc4410058084275d51d095'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -143,6 +143,10 @@ reviewed as part of this remediation. The shared-worktree unrelated WIP remains 
 The two previously recorded deferred follow-ons, `vocabulary-source-provenance` and
 `token-coverage-evidence`, remain **LOW** and belong to the later P02.S05-P02.S07
 integration/licence/evaluation work; they do not reopen the four remediated findings.
+
+### assembled-input-identity | low | PASS: source handoff fingerprints are revalidated
+
+The `Rung2CompilationInputs` boundary now recomputes canonical vocabulary and query-token fingerprints and requires both to match the embedded `Rung2InputProvenance` before the provider-backed compiler receives the assembled inputs. This closes accidental mismatch between the authoritative input assembly and its stamped identity without claiming that a provider artifact or measured matrix exists. The vocabulary-source and token-coverage evidence gates remain open as previously recorded.
 
 ## Recommendations
 

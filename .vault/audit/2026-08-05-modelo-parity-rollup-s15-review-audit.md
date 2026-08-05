@@ -28,4 +28,3 @@ The eight focused worked-example projection tests now reach the real validated a
 ## Recommendations
 
 Close S15 with the exact boundary: the integration structural suite passes 3 tests and the focused runtime projection lane passes 8 tests. Keep the portfolio-level and deferred semantic coverage limits visible; these gates do not prove complete numeric parity for every Modelo 100 casilla.
-

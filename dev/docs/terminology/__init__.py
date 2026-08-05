@@ -29,6 +29,7 @@ from ._concept_cards import (
     TermAlias,
     project_concept_cards,
 )
+from ._jcs import CANONICAL_JSON_CONTRACT, CanonicalJsonError, canonical_json_bytes
 from ._content_manifest import (
     RAW_BYTE_MANIFEST_SCHEMA_VERSION,
     RawByteManifest,
@@ -75,6 +76,7 @@ from ._rung2_bridge import (
     BRIDGE_SCHEMA_VERSION,
     BUNDLE_SCHEMA_VERSION,
     BridgeCompilationError,
+    RECORD_MANIFEST_SCHEMA_VERSION,
     RecordManifest,
     RecordManifestEntry,
     Rung2SearchBundle,
@@ -183,6 +185,7 @@ from ._wrangle import (
 __all__ = [
     "BRIDGE_SCHEMA_VERSION",
     "BUNDLE_SCHEMA_VERSION",
+    "CANONICAL_JSON_CONTRACT",
     "DEFAULT_MAX_RESULTS",
     "DEFAULT_MAX_SERIALIZED_BYTES",
     "DEFAULT_RELATIVE_COSINE_THRESHOLDS",
@@ -200,6 +203,7 @@ __all__ = [
     "BridgeCompilationError",
     "CasillaProjectionStats",
     "CasillaSearchRecord",
+    "CanonicalJsonError",
     "ChunkHit",
     "CliOptionRecord",
     "CliProjectionStats",
@@ -240,6 +244,7 @@ __all__ = [
     "RawByteManifestError",
     "RecordManifest",
     "RecordManifestEntry",
+    "RECORD_MANIFEST_SCHEMA_VERSION",
     "RelativeCosineThresholds",
     "ResolutionResult",
     "ResolvedTarget",
@@ -280,6 +285,7 @@ __all__ = [
     "build_rung2_compilation_inputs",
     "build_rung2_search_bundle",
     "canonical_query_tokens",
+    "canonical_json_bytes",
     "canonical_vocabulary",
     "canonical_vocabulary_bytes",
     "compile_and_write_rung2_search_bundle",

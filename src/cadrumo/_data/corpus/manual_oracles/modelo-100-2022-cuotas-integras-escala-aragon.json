@@ -1,0 +1,18 @@
+{
+  "modelo": "100",
+  "filing_year": 2022,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m100-2022-cuotas-integras-escala-aragon",
+  "raw_evidence_locator": "corpus/manuals/renta/2022/part1/source.pdf.extracted.md#L37742-L37785",
+  "notes": "AEAT Manual practico de Renta 2022, Parte 1, Capitulo 15 (Calculo del impuesto: determinacion de las cuotas integras), 'Ejemplo practico: calculo de las cuotas integras estatal y autonomica' de don A.B.C., residente en la Comunidad Autonoma de Aragon. Givens quoted verbatim (L37745-L37748): base liquidable general 23.900, base liquidable del ahorro 2.800, minimo personal y familiar 5.550. The 2022 manual states the state and Aragon general scales both produce 2.667,75 at this base (L37753-L37765), both minimum-scale subtotals are 527,25 (L37767-L37771), both cuota integra general values are 2.140,50 (L37774-L37776), both ahorro gravamen values are 266, and both final cuota integra values are 2.406,50 (L37778-L37784). The 2022 registry keeps 0511 and 0512 as manual casillas, so the real-behavior scenario supplies both at 5.550,00 and neutral manual family components 0515-0518 at zero; it does not import the 2024 computed/profile chain.",
+  "expected_by_casilla_id": {
+    "0519": "5550.00",
+    "0520": "5550.00",
+    "0528": "2667.75",
+    "0529": "2667.75",
+    "0532": "2140.50",
+    "0533": "2140.50",
+    "0545": "2406.50",
+    "0546": "2406.50"
+  }
+}

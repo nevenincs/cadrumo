@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c11159d94773a0c341558fb6570bc15d49b9610ceb479b34ef016ad1a9f6b02'
+body_hash: 'sha256:67d52ef331dd4d47527729d871d7888201f3e06cddd6120028f88222de2cd9d0'
 step_id: 'S15'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -59,3 +59,9 @@ Static verification only: RAG grounding, Ruff, basedpyright, `git diff --check`,
 RAG review found a stale test description that still documented the removed file-level first-provision fallback. Commit `26d0dfce9f` now gives the example an explicit `iva.toml` source range (lines 1-20), asserts the resolved legal id, and documents the fail-closed behavior for absent, invalid, or multi-table ranges.
 
 Static verification only: RAG grounding, Ruff, basedpyright, and `git diff --check` passed. Tests, builds, sweeps, reindexing, and deployment remain deferred.
+
+### 2026-08-05 source continuation: fail closed on an empty legal projection
+
+Fresh vaultspec-rag grounding over the injector, legal projection, and all-kind materialisation gate identified a remaining source-level omission: the injector already refused a skipped CLI projection but could continue if the registry-backed legal projection returned no records. The materializer now raises `SearchInjectionError` before record injection when the decided legal projection is empty. This preserves the fifth `LEGAL` kind as a mandatory source surface; it does not replace the generated-page, parity, build, or runtime gates owned by P05.S14-S17.
+
+Static evidence only: vaultspec-rag grounding, AST parsing, and focused diff checks. No tests, builds, Pagefind runs, generated artifacts, live probes, reindexing, deployment, or runtime acceptance were run.

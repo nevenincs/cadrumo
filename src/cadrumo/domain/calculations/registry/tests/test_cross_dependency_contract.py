@@ -26,6 +26,7 @@ from .._schema import (
 )
 from .._validate import RegistryValidator
 from .._validate_relation_periods import select_relation_source_revisions
+from .._validate_relation_sources import is_iva_wallet_owned_relation_target
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -278,6 +279,8 @@ def test_relation_target_bindings_mirror_source_contract() -> None:
                     binding=bindings[relation.target_binding],
                     relation=relation,
                     scope=f"{modelo.id}/{revision.id}/{relation.id}",
+                    modelo_id=str(modelo.id),
+                    revision_id=str(revision.id),
                 )
 
 
@@ -286,6 +289,8 @@ def _assert_relation_binding_mirrors_source(
     binding: DataBindingDefinition,
     relation: RelationDefinition,
     scope: str,
+    modelo_id: str,
+    revision_id: str,
 ) -> None:
     """Verify a relation's target binding mirrors the relation's source contract.
 
@@ -308,7 +313,12 @@ def _assert_relation_binding_mirrors_source(
     # documented exception is the iva-wallet-owned M303 compensación binding,
     # which stays ``previous_filing`` (resolved pre-mesh by the iva-wallet gate,
     # ruling D3).
-    _iva_wallet_owned = binding.id == "modelo-303-compensacion-pendiente-anteriores"
+    _iva_wallet_owned = is_iva_wallet_owned_relation_target(
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+        relation_id=str(relation.id),
+        target_binding=str(binding.id),
+    )
     assert binding.source == ("previous_filing" if _iva_wallet_owned else "relation_prefill"), scope
     assert selector_modelo == relation.source_modelo, scope
     assert selector_source_casilla_ids == (relation.source_casilla_id,), scope

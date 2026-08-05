@@ -10,6 +10,8 @@ related:
   - '[[2026-05-28-schema-hardening-continuity-conformance-research]]'
   - '[[2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research]]'
   - '[[2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research]]'
+  - '[[2026-08-05-schema-hardening-aeip-event-keyed-continuity-research]]'
+  - '[[2026-08-05-schema-hardening-compiled-casilla-order-research]]'
 ---
 # `schema-hardening` adr: Canonical semantic-atom layer for modelo registry | (**status:** `accepted`)
 

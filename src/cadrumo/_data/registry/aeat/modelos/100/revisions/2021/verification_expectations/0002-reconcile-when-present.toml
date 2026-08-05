@@ -9,6 +9,7 @@
 [[revisions."2021".verification_expectations]]
 id = "modelo-100-2021-reconcile-when-present"
 computed_casilla_ids = []
+externally_grounded_casilla_ids = ["0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",
@@ -35,6 +36,7 @@ reconcile_when_present_casilla_ids = [
     "0221",
     "0222",
     "0223",
+    "0224",
     "0226",
     "0231",
     "0235",
@@ -82,9 +84,15 @@ reconcile_when_present_casilla_ids = [
     "0505",
     "0513",
     "0514",
+    "0519",
+    "0520",
     "0527",
     "0528",
+    "0529",
     "0530",
+    "0531",
+    "0532",
+    "0533",
     "0534",
     "0535",
     "0536",
@@ -95,6 +103,8 @@ reconcile_when_present_casilla_ids = [
     "0541",
     "0542",
     "0543",
+    "0545",
+    "0546",
     "0547",
     "0548",
     "0550",

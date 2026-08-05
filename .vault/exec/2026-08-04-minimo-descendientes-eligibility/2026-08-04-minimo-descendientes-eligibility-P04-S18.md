@@ -5,45 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e8c043dd444c6a863201bfa505c8b43e6f14f3eaa98f5483db32b37b6dbbfa88'
+body_hash: 'sha256:d34cf606b9306b7753830451acb8836428ffe778b4a6e1f2c67bc56ff254d74f'
 step_id: 'S18'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace minimo-descendientes-eligibility with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S18 and 2026-08-04-minimo-descendientes-eligibility-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name and ## Scope
-
-- `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
-- `src/cadrumo/application/modelo/_profile_binding.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name
 

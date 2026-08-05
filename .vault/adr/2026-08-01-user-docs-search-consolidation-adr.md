@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4bc5a35f074d3a08f3cf4aee91b6d1275f0f7a19cb1a86d770229eacb9d9df5'
+body_hash: 'sha256:71915cd45ae6b347ac52be2178672a1eb6a6cc428149df000cb09291b4d2d352'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -244,3 +244,65 @@ Before matrix compilation or artifact acceptance, the implementation and gate MU
 P02.S26 must be completed before P02.S06 and before any Rung-2 artifact can be accepted. The provider adapter, metadata schema, compiler, Python acceptance, and browser-visible provenance must be updated together after the manifest evidence is available. Until then, the existing source seams remain disabled/fail-closed and all Rung-2, runtime, and deployment acceptance rows remain open.
 
 This amendment is architecture authority only. It authorizes the subsequent source implementation of the manifest contract, but not tests, builds, model downloads, matrix generation, Pagefind/runtime probes, generated-artifact release, live sweeps, reindexing, or deployment.
+
+## Update 9 (2026-08-05): Diseño hits require validated individual locators
+
+The deterministic casilla enrollment research and the one-time SOL-high architecture review settle the remaining ambiguity at the RAG-to-target boundary. This is a refinement of the existing fail-closed target contract, not a new search surface or a relaxation of registry authority.
+
+### Decision
+
+Registry-backed casillas remain exhaustively projected from the validated registry authority and resolve through their canonical `(modelo, casilla.id)` identity. A non-TOML Diseño hit may resolve to a `CASILLA` record only when the hit carries a validated individual locator that maps uniquely to one registry casilla for the applicable revision. A modelo-only path, missing locator, ambiguous locator, unreadable locator, or locator without registry parity MUST return `NO_TARGET_ENTITY`; it MUST NOT select a representative or first record.
+
+Full Diseño coverage remains a separate, off-load-path, non-blocking contract. It is not required to establish deterministic registry enrollment or to close this consolidation.
+
+### Consequences
+
+The current fail-closed resolver behavior is intentional and remains the acceptance baseline. Future Diseño locator work is deferred until an official source locator/parser contract exists. That work, if authorized, must define revision-aware identity, provenance preservation, unique mapping, ambiguity rejection, and parity against the validated registry projection. No source-only heuristic may infer a casilla from a modelo-level Diseño hit.
+
+This amendment does not authorize a fresh RAG sweep, reindexing, test run, build, generated artifact, runtime probe, model download, artifact release, or deployment.
+
+## Update 10 (2026-08-05): Cross-runtime canonical JSON and nested self-attestation
+
+P02.S25 exposes a cross-runtime integrity gap: Python currently hashes parsed JSON values with its own serializer while the browser validates the outer bundle shape and hash links without independently reproducing every nested digest. This amendment defines the one canonical byte contract required before nested self-attestation is implemented. It refines the accepted Rung-2 artifact boundary; it does not authorize artifact generation or release.
+
+### Decision
+
+Adopt `cadrumo-jcs-utf8-lf-v1`: RFC 8785 JSON Canonicalization Scheme semantics followed by exactly one LF byte. The contract is shared by Python build tooling and the browser validator; there is no second serializer or compatibility path.
+
+### Admissible values
+
+- Values are I-JSON values with unique object keys.
+- Strings are valid Unicode without lone surrogates and are not normalized during serialization.
+- Integers are restricted to the safe binary64 domain `[-9007199254740991, 9007199254740991]`.
+- Non-integral numbers are finite IEEE-754 binary64 values. NaN, infinities, negative zero, unsafe integers, and values outside existing schema bounds are rejected.
+- Matrix scales retain the stricter existing requirement of exact binary32 representability.
+
+### Canonical bytes
+
+- Object keys are recursively sorted by unsigned UTF-16 code units; array order is preserved.
+- Numbers use JCS/ECMAScript shortest-round-trip spelling.
+- Strings use JCS escaping: lowercase control escapes and escaped quote/backslash, with other valid Unicode emitted unescaped.
+- No BOM or inter-token whitespace is emitted.
+- Bytes are strict UTF-8 followed by exactly one terminal `0x0A`; no other trailing bytes are allowed.
+- Every serialized-byte field counts the complete canonical representation, including that terminal LF.
+
+### Hash scopes
+
+- Matrix `artifact_sha256`: canonical matrix excluding its own `artifact_sha256` and `serialized_bytes`.
+- Record manifest `records_sha256`: canonical ordered `records` array.
+- Each bridge target list `targets_sha256`: canonical ordered `targets` array for that bridge entry.
+- Bridge `artifact_sha256`: canonical bridge excluding its own hash and size fields.
+- Bundle `artifact_sha256`: canonical bundle excluding its own hash and size fields, including all nested hashes and provenance.
+- Browser configuration `bundle_sha256`: SHA-256 of the complete canonical bundle bytes, including the terminal LF.
+
+### Golden vectors and independent verification
+
+A language-neutral committed vector corpus MUST cover RFC 8785 numeric edges, safe-integer boundaries and rejection cases, control escaping, multilingual and non-BMP Unicode, composed/decomposed strings, lone-surrogate rejection, nested arrays/objects, terminal-LF bytes, and every hash scope above with expected bytes and digests. Python and JavaScript consumers MUST reproduce every vector independently without invoking one another. Any mismatch, unsupported value, invalid encoding, missing hash, stale size, or unknown version fails closed and leaves Pagefind authoritative.
+
+### Versioning and migration
+
+The matrix, record-manifest, bridge, bundle, and browser-config schema versions increment respectively from 3 to 4, 1 to 2, 1 to 2, 2 to 3, and v1 to v2. Old hashes are not translated or accepted; artifacts are regenerated under the new contract. No dual canonicalization path or compatibility reader is permitted.
+
+### Consequences
+
+P02.S25 remains open until this amendment is accepted, the canonicalizer and nested self-attestation are implemented, and independent Python/JavaScript verification is authorized and passes. The amendment does not authorize tests, builds, model downloads, matrix generation, live RAG sweeps, reindexing, generated artifacts, Pagefind/runtime probes, artifact release, or deployment.

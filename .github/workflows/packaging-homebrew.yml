@@ -25,6 +25,30 @@ permissions:
   contents: read
 
 jobs:
+  # The acquisition matrix spans macOS ARM64 and Linux ARM64, both of which live
+  # on the second build host and were both offline on 2026-08-05. Without this,
+  # dispatching the lane queues silently. See dev/ci/runner_queue_watchdog.py.
+  runner-queue-watchdog:
+    name: Cadrumo / runner queue watchdog
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "900"
+        run: python3 dev/ci/runner_queue_watchdog.py
+
   # Single-creator topology: exactly ONE job creates the run's evidence draft
   # (drafts reserve no tag ref, so concurrent creates across the matrix would
   # mint duplicates — cli/cli#4270); the matrix legs are upload-only.

@@ -434,8 +434,10 @@ from ._relations import (
     resolve_relation_values_from_observations,
 )
 from ._validate_relation_sources import (
-    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
+    is_iva_wallet_owned_relation_target,
+    iva_wallet_owned_binding_ids_for_revision,
+    iva_wallet_owned_relation_targets_for_revision,
 )
 from ._remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
@@ -582,7 +584,6 @@ __all__ = [
     "CENSO_MODELO_SERVICE_OWNER",
     "GROI_ORACLE_ID",
     "INVOICE_BINDING_SOURCE_KINDS",
-    "IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS",
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
@@ -925,8 +926,11 @@ __all__ = [
     "inventory_workbook_coverage",
     "invoice_binding_requirements",
     "is_active_censo_modelo",
+    "is_iva_wallet_owned_relation_target",
     "is_registry_id",
     "iter_modelo_applicability_rules",
+    "iva_wallet_owned_binding_ids_for_revision",
+    "iva_wallet_owned_relation_targets_for_revision",
     "load_bundled_external_oracle_inventory",
     "load_catalogue_file",
     "load_convenio_authority",

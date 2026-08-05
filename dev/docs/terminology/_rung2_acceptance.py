@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 from hashlib import sha256
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -32,11 +32,13 @@ __all__ = [
     "Rung2AcceptanceError",
     "Rung2AcceptanceEvidence",
     "Rung2BrowserConfig",
+    "RUNG2_CONFIG_SCHEMA_VERSION",
     "validate_rung2_browser_config",
 ]
 
 _SHA256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 _BUNDLE_URL = Annotated[str, StringConstraints(min_length=1)]
+RUNG2_CONFIG_SCHEMA_VERSION: Final[str] = "cadrumo.docs-search.rung2-config.v2"
 
 
 class Rung2AcceptanceError(ValueError):
@@ -88,7 +90,7 @@ class Rung2BrowserConfig(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal["cadrumo.docs-search.rung2-config.v1"]
+    schema_version: Literal["cadrumo.docs-search.rung2-config.v2"]
     enabled: Literal[True]
     normalization_version: str = Field(min_length=1)
     bundle_url: _BUNDLE_URL
