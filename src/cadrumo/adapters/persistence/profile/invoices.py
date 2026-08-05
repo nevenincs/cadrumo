@@ -6,7 +6,11 @@ encrypted byte object via
 :class:`~adapters.persistence.storage.SecureObjectRepository` at
 ``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass` using
 an :class:`~adapters.persistence.storage.Envelope` wrapper; no plaintext
-invoice row, JSON catalogue, or envelope file lands on disk.
+invoice row, JSON catalogue, or envelope file lands on disk. The
+Envelope-wrapping mechanic itself is owned by
+:class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+(``_secure_enveloped_document.py``); this class retains only the invoice
+bucket-ownership guard, which the shared kernel has no domain knowledge of.
 
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`. It lives in
@@ -20,11 +24,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
 from ..storage import INVOICE_CATALOGUE_NAMESPACE
+from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:
     from ..storage import SecureObjectRepository, SecureObjectWrite
@@ -64,7 +67,10 @@ class InvoiceCatalogueRepository:
     persists it, and :meth:`to_secure_object_write` exposes the same write for
     transaction/event co-commit paths. This class exposes the concrete load/save
     implementation behind
-    :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`.
+    :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`, composing
+    :class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+    for the shared envelope/exists/load/save mechanic and retaining only the
+    invoice-specific bucket-ownership guard.
     """
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
@@ -82,9 +88,15 @@ class InvoiceCatalogueRepository:
             )
         if objects is not None:
             self._objects = objects
-            return
-        self._bucket_id = _resolve_invoice_bucket_id(bucket_id)
-        self._objects = _secure_objects_for_bucket(self._bucket_id)
+        else:
+            self._bucket_id = _resolve_invoice_bucket_id(bucket_id)
+            self._objects = _secure_objects_for_bucket(self._bucket_id)
+        self._storage = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=INVOICE_CATALOGUE_NAMESPACE,
+            model_type=InvoiceCatalogue,
+            empty_document=InvoiceCatalogue,
+        )
 
     @property
     def bucket_id(self) -> str | None:
@@ -93,7 +105,7 @@ class InvoiceCatalogueRepository:
 
     def exists(self) -> bool:
         """Return whether an invoice catalogue has been persisted."""
-        return self._objects.exists(_INVOICE_NAMESPACE, _INVOICE_OBJECT_KEY)
+        return self._storage.exists()
 
     def _assert_catalogue_bucket(self, catalogue: InvoiceCatalogue, *, direction: str) -> None:
         """Refuse a catalogue carrying an invoice attributed to another bucket.
@@ -151,33 +163,7 @@ class InvoiceCatalogueRepository:
                 If the envelope schema version is higher than the consumer
                 supports.
         """
-        from ..storage import Envelope, inner_envelope_version_is_current
-
-        record = self._objects.load(
-            _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
-            expected_class=_INVOICE_CATALOGUE_SENSITIVITY,
-            max_supported_version=_INVOICE_CATALOGUE_VERSION,
-        )
-        if record is None:
-            _log.debug("no invoice catalogue in database, returning empty")
-            return InvoiceCatalogue()
-        envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not _INVOICE_CATALOGUE_SENSITIVITY:
-            from ..storage import ClassificationError
-
-            raise ClassificationError(
-                f"invoice catalogue has classification {envelope.classification}; "
-                f"consumer expected {_INVOICE_CATALOGUE_SENSITIVITY}",
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _INVOICE_CATALOGUE_VERSION):
-            from ..storage import EnvelopeVersionError
-
-            raise EnvelopeVersionError(
-                f"invoice catalogue is at version {envelope.schema_version}; "
-                f"consumer supports up to {_INVOICE_CATALOGUE_VERSION}",
-            )
-        catalogue = envelope.payload
+        catalogue = self._storage.load()
         self._assert_catalogue_bucket(catalogue, direction="read from")
         return catalogue
 
@@ -194,23 +180,8 @@ class InvoiceCatalogueRepository:
         Args:
             catalogue: The :class:`InvoiceCatalogue` to persist.
         """
-        from ..storage import Envelope
-
         self._assert_catalogue_bucket(catalogue, direction="saved through")
-        envelope = Envelope[InvoiceCatalogue](
-            schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_INVOICE_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        self._objects.save(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=_INVOICE_CATALOGUE_SENSITIVITY,
-            schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        self._storage.save(catalogue)
         _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
 
     def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
@@ -224,25 +195,10 @@ class InvoiceCatalogueRepository:
         Args:
             catalogue: The :class:`InvoiceCatalogue` to serialise.
         """
-        from ..storage import Envelope, SecureObjectWrite
-
         # The co-commit path is a WRITE like save(); leaving it unchecked would
         # leave the transaction/event route as the way a foreign row still gets in.
         self._assert_catalogue_bucket(catalogue, direction="saved through")
-        envelope = Envelope[InvoiceCatalogue](
-            schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_INVOICE_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        return SecureObjectWrite(
-            namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
-            classification=_INVOICE_CATALOGUE_SENSITIVITY,
-            schema_version=_INVOICE_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        return self._storage.to_secure_object_write(catalogue)
 
 
 __all__ = [
