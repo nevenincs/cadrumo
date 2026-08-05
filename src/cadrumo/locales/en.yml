@@ -894,13 +894,6 @@ application:
       calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
         does not exceed the EUR %{threshold} threshold required by RD 1065/2007 art.
         31.1.
-      calculate_maternidad_meses_two_authorities: '--meses-trabajo-con-hijo-menor-3
-        was supplied while the active profile already declares meses_madre_trabajo
-        on its descendiente records. One authority per filing: either drop the flag
-        and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO
-        with `aeat config profile descendiente remove <index>` then `add` to restate
-        the row without it -- `descendiente add` alone only appends and cannot edit
-        a declared row.'
       calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all
         be supplied together.
       calculate_relation_unknown: '--relation %{key} does not match any relation id
@@ -2760,21 +2753,6 @@ cli:
           económica) casilla %{casilla} (LIRPF arts. 86-89).'
         m210_gross_income_source_help: 'Modelo 210 [5] authority: manual (default)
           or Spanish-source ledger aggregation.'
-        meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child qualified
-          for the Art. 81 LIRPF maternity deduction -- under 3, or an adopcion/acogimiento
-          inside its age-independent entry-date window -- and was in the family unit.
-          Format: HIJO_ID=MESES. Repeatable per child. HIJO_ID is a free label (e.g.
-          0, 1, ''laia''). Computes sum(min(MESES x 100, 1200)) and injects into casilla
-          0611. Example: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3
-          1=6 -> 0611 = 1800. Only for profiles that declare no descendants: when
-          the active profile already declares MESES_TRABAJO through `aeat config profile
-          descendiente add`, those records carry the months and this option is refused.'
-        meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requires
-          HIJO_ID=MESES format; received: {spec}.'
-        meses_trabajo_hijo_not_integer: 'MESES in --meses-trabajo-con-hijo-menor-3
-          must be an integer 0–12; received: {spec}.'
-        meses_trabajo_hijo_out_of_range: 'MESES in --meses-trabajo-con-hijo-menor-3
-          must be 0–12; received {meses} in: {spec}.'
         missing_binding_guidance: '%{base} Supply the value with --binding KEY=VALUE
           on this command, or run `%{discover}` to list every binding the calculation
           still needs.'

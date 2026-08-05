@@ -283,7 +283,6 @@ def _drive_wizard_calculation(
             row=None,
             borrador_snapshot_id=None,
             prestacion_inss_exenta=None,
-            meses_trabajo_con_hijo_menor_3=None,
             rescate_plan_pensiones_capital=None,
             rescate_plan_pensiones_aportaciones_pre_2007=None,
             rescate_plan_pensiones_aportaciones_totales=None,

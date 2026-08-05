@@ -355,18 +355,23 @@ def test_a_child_over_the_rentas_ceiling_contributes_nothing(
 
 
 # ---------------------------------------------------------------------------
-# One authority per filing.
+# S34: one authority, permanently -- the calculate-time flag is retired.
 # ---------------------------------------------------------------------------
 
 
-def test_the_flag_and_the_declared_records_together_are_refused(
-    runtime_profile: TestRuntimeProfile,
-) -> None:
-    """Two channels for one figure is the defect this campaign spent its length removing.
+def test_the_calculate_time_flag_no_longer_exists(runtime_profile: TestRuntimeProfile) -> None:
+    """``--meses-trabajo-con-hijo-menor-3`` is retired outright, not merely reconciled.
 
-    The calculate-time flag carries a free-form hijo id that no descendant record
-    answers to, so the two cannot be reconciled -- and silently preferring either
-    would substitute one operator's number for the other's without saying so.
+    The flag was a second, unvalidated authority over casilla 0611: a
+    free-form hijo id no descendant record answered to, never checked against
+    cohabitation, the rentas ceiling, or the Art. 61 norma 2ª own-return rule
+    the profile path applies. The prior Step made the two channels mutually
+    refuse each other; this one removes the second channel, because a
+    refusal still CONTAINS a two-authority hazard rather than eliminating it.
+    Supplying the retired flag must fail Click's own option parsing -- an
+    unrecognised option -- before the command body, and the profile-declared
+    figure must be completely unaffected by its presence on the command line
+    once Click has rejected the invocation.
     """
     _seed_natural_person_profile(runtime_profile)
     _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
@@ -374,43 +379,15 @@ def test_the_flag_and_the_declared_records_together_are_refused(
     exit_code, output = _calculate("--meses-trabajo-con-hijo-menor-3", "0=12")
 
     assert exit_code != 0, output
-    assert "meses_madre_trabajo" in output
-    # `descendiente add` only appends and cannot clear a declared row; the
-    # refusal must point at an editing route that actually can.
-    assert "descendiente remove" in output
+    assert "meses-trabajo-con-hijo-menor-3" in output.lower()
 
 
-def test_the_flag_alone_still_reaches_the_casilla(runtime_profile: TestRuntimeProfile) -> None:
-    """A profile declaring no months leaves the flag as the sole authority, unchanged."""
+def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: TestRuntimeProfile) -> None:
+    """With the flag gone, the descendiente-declared figure reaches 0611 unaided."""
     _seed_natural_person_profile(runtime_profile)
-    _declare(_MELLIZO_BIRTH)
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
 
-    exit_code, output = _calculate("--meses-trabajo-con-hijo-menor-3", "0=12")
+    exit_code, output = _calculate()
 
     assert exit_code == 0, output
     assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
-
-
-def test_a_withheld_declaration_and_the_flag_together_are_also_refused(
-    runtime_profile: TestRuntimeProfile,
-) -> None:
-    """The silent branch: a wholly-withheld profile declaration must not let the flag win quietly.
-
-    This descendant is over three, so every one of its declared months is
-    withheld (``pairs`` is empty) -- but the profile still DECLARES real
-    months. Keying the refusal on the post-eligibility-filter ``pairs``
-    instead of the pre-filter ``declares_meses`` let this exact case fall
-    through: no refusal (``pairs`` was falsy) and no advisory (the flag's
-    presence suppressed it), so the operator's declared record silently lost
-    to the flag with nothing said. Same shape as
-    ``test_the_flag_and_the_declared_records_together_are_refused`` above, one
-    limb over.
-    """
-    _seed_natural_person_profile(runtime_profile)
-    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=12")
-
-    exit_code, output = _calculate("--meses-trabajo-con-hijo-menor-3", "0=12")
-
-    assert exit_code != 0, output
-    assert "meses_madre_trabajo" in output
-    assert "descendiente remove" in output

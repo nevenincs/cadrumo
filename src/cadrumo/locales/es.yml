@@ -992,13 +992,6 @@ application:
       calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
         %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
         art. 31.1.
-      calculate_maternidad_meses_two_authorities: 'Se ha indicado --meses-trabajo-con-hijo-menor-3
-        mientras el perfil activo ya declara meses_madre_trabajo en sus registros
-        de descendiente. Una sola autoridad por declaracion: prescinde de la opcion
-        y deja que los registros declarados aporten los meses del art. 81.1, o elimina
-        MESES_TRABAJO con `aeat config profile descendiente remove <index>` y despues
-        `add` para volver a declarar la fila sin el -- `descendiente add` por si sola
-        solo anade filas y no puede editar una fila ya declarada.'
       calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
         deben indicarse juntos.
       calculate_relation_unknown: '--relation %{key} no coincide con ninguna relation
@@ -1212,6 +1205,7 @@ application:
         abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      calculate_maternidad_meses_two_authorities: 'Se ha indicado --meses-trabajo-con-hijo-menor-3 mientras el perfil activo ya declara meses_madre_trabajo en sus registros de descendiente. Una sola autoridad por declaracion: prescinde de la opcion y deja que los registros declarados aporten los meses del art. 81.1, o elimina MESES_TRABAJO con `aeat config profile descendiente remove <index>` y despues `add` para volver a declarar la fila sin el -- `descendiente add` por si sola solo anade filas y no puede editar una fila ya declarada.'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -1615,6 +1609,9 @@ application:
       registration_label_blank: El nombre del perfil no puede estar vacío.
       registration_passphrase_too_short: La contraseña debe tener al menos {minimum_length}
         caracteres.
+      repository_classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
+        está registrado con sensibilidad %{expected}, pero la clasificación del registro
+        almacenado es %{classification}.
       repository_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al
         bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad
         de perfil.
@@ -1628,7 +1625,6 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
-      repository_classification_mismatch: 'El espacio de nombres de objeto seguro %{namespace} está registrado con sensibilidad %{expected}, pero la clasificación del registro almacenado es %{classification}.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -2335,7 +2331,7 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: 'Token de periodo: 0A anual, 1T-4T trimestres, 01-12 meses; para
-          modelos censales (036) usa alta, modificación o baja.'
+          modelos censales (036) usa alta, modificacion o baja.'
         relation_input_channel: "%{binding_id}\talimentada por la relación %{relation_id}\t\
           use --relation %{relation_id}=VALUE"
         relation_input_guidance: Algunas vinculaciones siguientes se alimentan de
@@ -2370,7 +2366,7 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         number_help: Filtrar casillas por número impreso o id canónico (p. ej. 0596).
         period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
           o baja.'
         required_help: Mostrar solo las casillas marcadas como obligatorias
       compare:
@@ -2407,7 +2403,7 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_error: 'Error de registro: %{message}'
         period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
           o baja.'
         period_token_invalid: '--period ''%{period}'' no es un token de periodo válido
           para el modelo %{modelo}. Tokens válidos: %{tokens}.'
@@ -2462,13 +2458,13 @@ cli:
           de un modelo específico.
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
           o baja.'
       history:
         modelo_help: Código de modelo (p. ej. 100, 303)
         period_help: 'Filtro opcional de periodo con el token de revisión del modelo:
           0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa
-          alta, modificación o baja.'
+          alta, modificacion o baja.'
         year_help: Filtro opcional de ejercicio de presentación
       history_help: Muestra la auditoría cronológica del ciclo de vida de un modelo
       iva_wallet:
@@ -2611,7 +2607,7 @@ cli:
       readiness:
         modelo_help: Código de modelo (p. ej. 303).
         period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
           o baja.'
         revision_help: Identificador de revisión del registro.
         year_help: Ejercicio de presentación.
@@ -2649,7 +2645,7 @@ cli:
           de la vivienda por actividad económica).
         period_help: 'Token de periodo usado para resolver la revisión del modelo:
           0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa
-          alta, modificación o baja.'
+          alta, modificacion o baja.'
         section_ledger: derivadas_del_libro_de_movimientos
         section_optional: casillas_opcionales_manuales
         section_profile: derivadas_del_perfil
@@ -2988,22 +2984,6 @@ cli:
           de atribución (actividad económica) de su Modelo 100 (arts. 86-89 LIRPF).'
         m210_gross_income_source_help: 'Autoridad de la [5] del Modelo 210: manual
           (predeterminada) o agregación de libro mayor de fuente española.'
-        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo cumplía
-          los requisitos de la deducción por maternidad del art. 81 LIRPF -- menor
-          de 3 años, o una adopción/acogimiento dentro de su ventana de fecha de entrada,
-          con independencia de la edad -- y estaba en la unidad familiar. Formato:
-          HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador libre
-          (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES x 100, 1200)) e inyecta
-          en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3
-          1=6 -> 0611 = 1800. Solo para perfiles que no declaran descendientes: si
-          el perfil activo ya declara MESES_TRABAJO con `aeat config profile descendiente
-          add`, esos registros aportan los meses y esta opción se rechaza.'
-        meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requiere
-          formato HIJO_ID=MESES; se recibió: {spec}.'
-        meses_trabajo_hijo_not_integer: 'MESES en --meses-trabajo-con-hijo-menor-3
-          debe ser un entero 0–12; se recibió: {spec}.'
-        meses_trabajo_hijo_out_of_range: 'MESES en --meses-trabajo-con-hijo-menor-3
-          debe estar entre 0 y 12; se recibió {meses} en: {spec}.'
         missing_binding_guidance: '%{base} Aporta el valor con --binding KEY=VALUE
           en este comando, o ejecuta `%{discover}` para ver todos los bindings que
           el cálculo todavía necesita.'
@@ -3038,7 +3018,7 @@ cli:
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
           el cálculo.
         period_help: 'Token de periodo de la unidad: 0A anual, 1T-4T trimestres, 01-12
-          meses; para modelos censales (036) usa alta, modificación o baja.'
+          meses; para modelos censales (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no es un token de periodo válido
           para el modelo %{modelo}. --year y --period se componen por separado: pasa
           --year %{year} para el ejercicio fiscal y uno de los tokens de periodo declarados
@@ -3229,6 +3209,7 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo cumplía los requisitos de la deducción por maternidad del art. 81 LIRPF -- menor de 3 años, o una adopción/acogimiento dentro de su ventana de fecha de entrada, con independencia de la edad -- y estaba en la unidad familiar. Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador libre (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES x 100, 1200)) e inyecta en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6 -> 0611 = 1800. Solo para perfiles que no declaran descendientes: si el perfil activo ya declara MESES_TRABAJO con `aeat config profile descendiente add`, esos registros aportan los meses y esta opción se rechaza.'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye

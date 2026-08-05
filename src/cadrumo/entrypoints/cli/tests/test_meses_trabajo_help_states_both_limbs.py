@@ -4,12 +4,18 @@ Art. 81.1 grants the deducción por maternidad to a child under three AND,
 independently of age, to an adopción/acogimiento inside its own entry-date
 window (:meth:`~domain.contribuyente.DescendantInfo.art_81_1_entry_window_meses`).
 Before this module, every operator-facing description of the
-``MESES_TRABAJO`` question -- the guided wizard's prompt and help, and the
-calculate-time ``--meses-trabajo-con-hijo-menor-3`` flag's help -- scoped the
-question to "the child under three" alone. An operator answering exactly as
-asked entered ``0`` for a five-year-old adoptee and received nothing: the
+``MESES_TRABAJO`` question -- the guided wizard's prompt and help -- scoped
+the question to "the child under three" alone. An operator answering exactly
+as asked entered ``0`` for a five-year-old adoptee and received nothing: the
 entry-date window was reachable only by an operator who contradicted the
 prompt.
+
+A third surface this module originally covered, the calculate-time
+``--meses-trabajo-con-hijo-menor-3`` flag's own help text, was RETIRED
+outright rather than re-scoped (S34): the flag was a second, unvalidated
+authority over casilla 0611 with a free-form hijo id no descendant record
+answered to, and the active profile's descendiente records are now the sole
+source. Its help key and coverage here went with it.
 
 These are pure locale-catalogue checks: no registry snapshot, no CLI
 invocation, no calculate path. Grounded on STRUCTURE (does the copy mention
@@ -30,7 +36,6 @@ _LOCALES = ("en", "es", "ca", "hu")
 _KEYS = (
     "wizard.setup.descendientes.meses-madre-trabajo.prompt",
     "wizard.setup.descendientes.meses-madre-trabajo.help",
-    "cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help",
 )
 
 #: A marker proving the copy names the entry-date route, one recognisable
