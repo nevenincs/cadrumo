@@ -391,3 +391,186 @@ def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: Te
 
     assert exit_code == 0, output
     assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
+
+
+# ---------------------------------------------------------------------------
+# S38: the relación axis has no member for a grandchild or a judicial-guarda
+# minor, so a contributing descendant recorded under the default relación is
+# disclosed rather than silently trusted.
+# ---------------------------------------------------------------------------
+
+
+def test_a_contributing_descendant_under_the_default_relacion_is_disclosed(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The representability gap S37 researched, reaching every already-stored record.
+
+    The relación axis cannot express a grandchild/other-consanguinidad
+    descendant or a minor under judicial guarda y custodia -- both mínimo-
+    eligible under Art. 58.1 and excluded from Art. 81.1 by the same manual --
+    so a filer with either child has no truthful value but the ordinary
+    default, indistinguishable at the stored fact from a true hijo. This case
+    IS a true hijo, and the advisory still fires: the application cannot tell
+    the difference from the fact alone, which is the whole point.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
+    assert "maternidad_ambiguous_relacion" in _advisory_kinds(output)
+
+    messages = _advisory_messages(output, source_kind="maternidad_ambiguous_relacion")
+    assert messages, "the ambiguous-relación advisory must carry a rendered message"
+    assert "grandchild" in messages[0] or "consanguinidad" in messages[0]
+    assert "guarda y custodia" in messages[0]
+    assert "descendiente remove" in messages[0]
+
+
+def test_the_advisory_names_every_contributing_descendant_under_the_default(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Both mellizos are under the default relación and both are named."""
+    _seed_natural_person_profile(runtime_profile)
+    _declare(
+        f"{_MELLIZO_BIRTH},MESES_TRABAJO=12",
+        f"{_MELLIZO_BIRTH},MESES_TRABAJO=12",
+    )
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    messages = _advisory_messages(output, source_kind="maternidad_ambiguous_relacion")
+    assert messages
+    assert "0" in messages[0] and "1" in messages[0]
+
+
+def test_an_adopted_contributing_descendant_is_not_disclosed(runtime_profile: TestRuntimeProfile) -> None:
+    """An explicitly-stated relación never triggers the advisory, whether entitling or not.
+
+    Art. 81.1 admits ``ADOPTADO`` outright, but the advisory's scope is
+    narrower than "is this relación entitled": it is "is this relación
+    STATED", because an explicit adopción record already answers the
+    hijo-or-not question the ordinary default cannot. Asking it anyway would
+    be noise for an operator who already resolved the ambiguity.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},RELACION=adoptado,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert "maternidad_ambiguous_relacion" not in _advisory_kinds(output)
+
+
+def test_a_tutela_contributing_descendant_is_not_disclosed(runtime_profile: TestRuntimeProfile) -> None:
+    """Tutela is likewise explicitly stated, so it is unambiguous even though entitled."""
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert "maternidad_ambiguous_relacion" not in _advisory_kinds(output)
+
+
+def test_a_withheld_descendant_under_the_default_relacion_is_not_disclosed(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The advisory names a contributing figure at risk, not every default-relación row.
+
+    An over-three descendant contributes nothing regardless of relación, so
+    there is no money at risk for the ambiguity to threaten. Asking here would
+    be noise on top of the withheld advisory this case already raises.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert "maternidad_meses_withheld" in _advisory_kinds(output)
+    assert "maternidad_ambiguous_relacion" not in _advisory_kinds(output)
+
+
+def test_a_temporal_acogimiento_contributing_nothing_is_not_disclosed(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """A stated, non-entitling relación is unambiguous even though it also contributes nothing."""
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},RELACION=acogimiento_temporal,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("0")
+    assert "maternidad_ambiguous_relacion" not in _advisory_kinds(output)
+
+
+# ---------------------------------------------------------------------------
+# S38, the other half: the same disclosure at the point the operator declares
+# the row, not only at calculate time.
+# ---------------------------------------------------------------------------
+
+
+def _descendiente_add_result(*specs: str):
+    flags: list[str] = []
+    for spec in specs:
+        flags.extend(("--descendiente", spec))
+    return invoke_cached_cli(["--format", "json", "config", "profile", "descendiente", "add", *flags])
+
+
+def test_declaring_working_months_under_the_default_relacion_is_disclosed_immediately(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """An operator actively declaring the row is told at that moment, not only on the next calculate."""
+    _seed_natural_person_profile(runtime_profile)
+
+    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+
+    assert result.exit_code == 0, result.output
+    notices = unwrap_envelope_notices(result.output)
+    matching = [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
+    assert matching, f"expected the ambiguous-relación notice; got {notices}"
+    assert "guarda y custodia" in matching[0]["message"]
+    assert matching[0]["context"] == {"indices": "0"}
+
+
+def test_declaring_working_months_with_an_explicit_relacion_is_not_disclosed(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """A stated relación resolves the ambiguity at declaration, same as at calculate time."""
+    _seed_natural_person_profile(runtime_profile)
+
+    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=12")
+
+    assert result.exit_code == 0, result.output
+    notices = unwrap_envelope_notices(result.output)
+    assert not [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
+
+
+def test_declaring_no_working_months_is_not_disclosed(runtime_profile: TestRuntimeProfile) -> None:
+    """The default relación alone is not the trigger; nothing is at risk without declared months."""
+    _seed_natural_person_profile(runtime_profile)
+
+    result = _descendiente_add_result(_MELLIZO_BIRTH)
+
+    assert result.exit_code == 0, result.output
+    notices = unwrap_envelope_notices(result.output)
+    assert not [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
+
+
+def test_only_the_newly_added_ambiguous_rows_are_named(runtime_profile: TestRuntimeProfile) -> None:
+    """A later `add` call does not re-disclose an earlier row it did not touch."""
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},RELACION=tutela,MESES_TRABAJO=12")
+
+    result = _descendiente_add_result(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12")
+
+    assert result.exit_code == 0, result.output
+    notices = unwrap_envelope_notices(result.output)
+    matching = [n for n in notices if n["code"] == "config.profile.descendiente.ambiguous_relacion"]
+    assert matching
+    assert matching[0]["context"] == {"indices": "1"}

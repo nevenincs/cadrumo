@@ -3698,6 +3698,7 @@ cli:
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
+        ambiguous_relacion_advisory: 'descendent %{indices} declara meses_madre_trabajo sota la relacio no indicada. El manual concedeix el minim pero exclou la deduccio per maternitat de l''art. 81.1 per a un net o altre descendent per consanguinitat diferent d''un fill, o un menor sota guarda i custodia judicial -- la dada emmagatzemada no permet distingir-lo d''un fill real. Confirmeu que aquest descendent es un fill, o indiqueu la relacio real amb RELACION=.'
       duplicate_display_name_help: Nom visible del nou perfil (per defecte l''id de
         destinació)
       duplicate_help: Copiar un perfil sota un id i nom visibles nous

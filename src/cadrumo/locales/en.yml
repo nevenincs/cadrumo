@@ -3442,6 +3442,7 @@ cli:
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
+        ambiguous_relacion_advisory: 'descendiente %{indices} declares meses_madre_trabajo under the unstated relación. The manual grants the mínimo but excludes the Art. 81.1 deducción por maternidad for a grandchild/other consanguinidad descendant, or a minor under judicial guarda y custodia -- the stored fact cannot distinguish either from a true hijo. Confirm this descendant is a hijo, or state the actual relación with RELACION=.'
       duplicate_display_name_help: Display name for the new profile (defaults to the
         target id)
       duplicate_help: Copy a profile under a new id and display name

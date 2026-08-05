@@ -3645,6 +3645,7 @@ cli:
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
         remove_index_help: Az eltávolítandó leszármazott 0-alapú indexe.
+        ambiguous_relacion_advisory: 'descendiente %{indices} meses_madre_trabajo erteket deklaral a meg nem adott relacio alatt. A kezikonyv megadja a minimumot, de kizarja a 81.1. cikk szerinti anyasagi levonast egy unoka vagy mas, gyermektol elutero egyenesagi leszarmazott, vagy birosagi hatarozattal gondozasba vett kiskoru eseten -- a tarolt teny nem kulonbozteti meg oket egy valodi gyermektol. Erositse meg, hogy ez a leszarmazott gyermek, vagy adja meg a tenyleges relaciot a RELACION= mezovel.'
       duplicate_display_name_help: 'Az új profil megjelenítési neve (alapértelmezés:
         a célazonosító).'
       duplicate_help: Profil másolása új azonosítóra és megjelenítési névre.

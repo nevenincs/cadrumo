@@ -39,6 +39,7 @@ from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
     M347_THRESHOLD_EUR,
+    DescendantRelacion,
     M210GrossIncomeSourceMode,
     Modelo,
     RescateType,
@@ -63,7 +64,7 @@ from ...domain.calculations.registry import (
     revision_date_binding_ids,
     validate_registry_text_scalar,
 )
-from ...domain.contribuyente import compute_deduccion_maternidad_0611
+from ...domain.contribuyente import compute_deduccion_maternidad_0611, descendant_list_from_facts
 from ...domain.modelos import (
     CalculationRevision,
     Dt12WindowEligibility,
@@ -94,6 +95,7 @@ _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
 _MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_inexpressible"
+_MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
 _DECLARANTE_SELECTOR_SEMANTIC_ROLE = "irpf_toma_datos_declarante_selector"
@@ -828,6 +830,97 @@ def _maternidad_cotizaciones_ceiling_advisory(
     )
 
 
+def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: frozenset[str]) -> frozenset[str]:
+    """*contributing_hijo_ids* whose stored ``relacion`` is the unstated default.
+
+    Reads the active profile's descendiente records directly through the same
+    canonical reconstruction (:func:`~domain.contribuyente.descendant_list_from_facts`)
+    every other consumer of this fact set uses, rather than adding a field to
+    :class:`~application.modelo._profile_binding.MaternidadMesesResolution`: this
+    module already owns loading the profile record for
+    :func:`_resolved_maternidad_meses`, and the question this asks — which
+    contributing descendant's relación is unstated — is orthogonal to the
+    months resolution that function answers.
+
+    ``DESCENDIENTE`` is the ONLY ambiguous value. The AEAT manual positively
+    documents, for Art. 58.1, a grandchild or other descendant by consanguinidad
+    other than a child as a literal "descendiente", and a minor held under
+    guarda y custodia by judicial resolución as a third assimilated category
+    distinct from tutela and acogimiento — both mínimo-eligible, and both
+    excluded from Art. 81.1 by the same manual, in terms, across every served
+    filing year. The relación axis has no member for either population today
+    (a representability decision recorded separately), so a filer with either
+    child has no truthful value but ``DESCENDIENTE`` to record — and that is
+    also the value a filer with a genuine hijo gets by never being asked, since
+    the fact is never written for the default even when the operator typed it
+    explicitly. The two cases are indistinguishable at the stored fact; every
+    other :class:`~cadrumo.core.DescendantRelacion` member names a relationship
+    the manual resolves unambiguously and is excluded from this check.
+
+    Returns the empty set when *contributing_hijo_ids* is empty, without
+    loading the profile at all — this question only has cost for a filing that
+    already has months to lose.
+    """
+    if not contributing_hijo_ids:
+        return frozenset()
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ._work_lifecycle import get_work_unit
+
+    unit = get_work_unit(work_unit_id)
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
+    except ProfileNotFoundError:
+        return frozenset()
+    facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    descendientes = descendant_list_from_facts(facts)
+    return frozenset(
+        hijo_id
+        for hijo_id in contributing_hijo_ids
+        if hijo_id.isdigit()
+        and int(hijo_id) < len(descendientes)
+        and descendientes[int(hijo_id)].relacion is DescendantRelacion.DESCENDIENTE
+    )
+
+
+def _maternidad_ambiguous_relacion_advisory(
+    ambiguous_hijo_ids: frozenset[str],
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic | None:
+    """Advise when a contributing descendant's relación cannot rule out an Art. 81.1 exclusion.
+
+    Non-blocking rather than a refusal that withholds the figure or demands an
+    explicit override flag before calculating. The overwhelming majority of
+    descendientes recorded under the default relación genuinely are a hijo, and
+    calculate is a draft step an operator iterates on repeatedly before verify
+    and export — a repeated refusal on every recalculation of the ordinary case
+    would obstruct the majority for the sake of a minority this application
+    cannot itself distinguish. The Notice channel this advisory rides is the
+    operator harness's own structured, machine-readable surface (never a
+    scrolled terminal line an autonomous operator might miss), matching the
+    established shape of every other unmodelled-eligibility-condition advisory
+    on this same casilla (the cotizaciones ceiling above, and the DT 12ª
+    antiquity condition elsewhere): disclose rather than silently grant, and
+    disclose rather than silently block a filer this application cannot prove
+    is wrong.
+    """
+    if not ambiguous_hijo_ids:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND,
+        message=(
+            f"descendiente {', '.join(sorted(ambiguous_hijo_ids))} contributes to the Art. 81.1 "
+            "deducción por maternidad under the unstated relación. The manual grants the mínimo but "
+            "excludes the deducción for a grandchild/other consanguinidad descendant, or a minor "
+            "under judicial guarda y custodia -- the stored fact cannot distinguish either from a "
+            "true hijo. Confirm this descendant is a hijo, or correct it with `aeat config profile "
+            "descendiente remove <index>` then `add`."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
 def _maternidad_meses_withheld_advisory(
     withheld: tuple[str, ...],
     casilla_id: CasillaId,
@@ -1067,6 +1160,10 @@ def apply_calculation_shortcut_inputs(
             _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
             _maternidad_cotizaciones_ceiling_advisory(
                 maternidad.declares_meses and maternidad.cotizaciones_ceiling_inexpressible,
+                maternidad_casilla_id,
+            ),
+            _maternidad_ambiguous_relacion_advisory(
+                _ambiguous_relacion_hijo_ids(work_unit_id, frozenset(hijo_id for hijo_id, _ in maternidad.pairs)),
                 maternidad_casilla_id,
             ),
         ):

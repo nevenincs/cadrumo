@@ -56,6 +56,7 @@ if TYPE_CHECKING:
 
     from ....adapters.inbound.tui import FormChoice, FormFieldKind, FormPage
     from ....application.workflow import ProfileBucketPointer
+    from ....core.json_contract import Notice
 
 descendiente_app = typer.Typer(
     name="descendiente",
@@ -184,6 +185,66 @@ def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
     from ....domain.contribuyente import serialise_guarderia_mensual
 
     return serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales) or "-"
+
+
+def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset: int) -> tuple[int, ...]:
+    """Indices, in the combined set, of newly-added rows this Step's advisory targets.
+
+    Fires only for a row BOTH declaring real working months AND left at the
+    unstated default relación — the same narrow conjunction
+    :func:`~application.modelo._calculate_input._ambiguous_relacion_hijo_ids`
+    checks at calculate time. Checked here too, immediately at declaration,
+    because an operator actively answering questions is better served by
+    disclosure at the point they typed the figure than by discovering it only
+    on the next calculate; the calculate-time check remains the one that
+    reaches an already-stored row, including one declared before this notice
+    existed at all.
+
+    ``DESCENDIENTE`` is the only ambiguous value: the AEAT manual positively
+    documents a grandchild or other descendant by consanguinidad other than a
+    child, and a minor held under judicial guarda y custodia, as mínimo-
+    eligible under Art. 58.1 while excluding both from the Art. 81.1 deducción
+    by name — and the relación axis has no member for either today, so
+    neither can be stated even by an operator who knows the distinction
+    matters. Every other relación this flag accepts is unambiguous by
+    construction, whether or not it is entitled.
+    """
+    from ....core import DescendantRelacion
+
+    return tuple(
+        index_offset + position
+        for position, row in enumerate(new_rows)
+        if row.meses_madre_trabajo_2024 > 0 and row.relacion is DescendantRelacion.DESCENDIENTE
+    )
+
+
+def _ambiguous_relacion_notice(ambiguous_indices: tuple[int, ...]) -> Notice:
+    """Advisory notice for :func:`_ambiguous_relacion_indices`.
+
+    Routed through the locale catalogues, unlike the calculate-time sibling in
+    ``_calculate_input.py``: every other operator-facing string this module
+    emits is a translated key (the flag help, every refusal), so this notice
+    follows the surface it actually reaches rather than the diagnostic layer's
+    own (deliberately untranslated) convention.
+    """
+    from .._modelo_rendering import advisory_notice
+
+    ids = ", ".join(str(index) for index in ambiguous_indices)
+    return advisory_notice(
+        "config.profile.descendiente.ambiguous_relacion",
+        tr(
+            "cli.config.profile.descendiente.ambiguous_relacion_advisory",
+            indices=ids,
+            default=(
+                "descendiente %{indices} declares meses_madre_trabajo under the unstated relación. "
+                "The manual grants the mínimo but excludes the Art. 81.1 deducción por maternidad for "
+                "a grandchild/other consanguinidad descendant, or a minor under judicial guarda y "
+                "custodia -- the stored fact cannot distinguish either from a true hijo. Confirm this "
+                "descendant is a hijo, or state the actual relación with RELACION=."
+            ),
+        ),
+        context={"indices": ids},
+    )
 
 
 def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[str]:
@@ -544,6 +605,7 @@ def descendiente_add(
         added=len(new_rows),
         total=len(combined),
     )
+    ambiguous_indices = _ambiguous_relacion_indices(new_rows, index_offset=len(existing))
     _emit_envelope(
         ctx,
         command="config.profile.descendiente.add",
@@ -554,6 +616,7 @@ def descendiente_add(
             f"total\t{len(combined)}",
             *_descendiente_row_lines(combined),
         ),
+        notices=[_ambiguous_relacion_notice(ambiguous_indices)] if ambiguous_indices else None,
     )
 
 
