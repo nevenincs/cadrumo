@@ -3640,6 +3640,44 @@ required_text = [
     "1.200 euros anuales",
 ]
 
+[legal."ley-35-2006:art-81-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a81"
+document_id = "BOE-A-2006-20764"
+article = "81.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81"
+published_at = 2006-11-29
+effective_from = 2018-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-05
+reviewed_by = "agent-authored from bundled ley-35-2006.html#a81; operator to re-stamp"
+notes = "LIRPF art 81.2: the guarderia increment's ANNUAL CAP. The deduccion por maternidad of apartado 1 may be increased 'hasta en 1.000 euros adicionales' where the contribuyente paid gastos de custodia for a child under three at an authorised guarderia or centro de educacion infantil. This entry grounds the 1.000-euro FIGURE specifically, which the parent ley-35-2006:art-81 entry does not pin -- that entry's required_text covers the 1.200-euro maternidad cap of apartado 1, a different figure for a different concept. CORPUS CHOICE, deliberate: this cites the bundled CONSOLIDATED ley-35-2006.html, not the per-article ley-35-2006-art-81.html excerpt the parent entry uses. That excerpt is a two-vintage hybrid and is tracked as its own open defect; grounding a new figure on it would inherit the problem. The apartado also fixes the turning-three extension ('los gastos incurridos con posterioridad al cumplimiento de dicha edad hasta el mes anterior a aquel en el que pueda comenzar el segundo ciclo de educacion infantil') and the complete-months condition on qualifying spend. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a81; operator to confirm and re-stamp."
+required_text = [
+    "se podrá incrementar hasta en 1.000 euros adicionales",
+    "siempre que se hayan producido por meses completos",
+]
+
+[legal."ley-35-2006:art-81-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a81"
+document_id = "BOE-A-2006-20764"
+article = "81.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81"
+published_at = 2006-11-29
+effective_from = 2018-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-05
+reviewed_by = "agent-authored from bundled ley-35-2006.html#a81; operator to re-stamp"
+notes = "LIRPF art 81.3 third paragraph: how the apartado 2 increment is PRORATED and BOUNDED. Read this before assuming the proration is a manual gloss -- it is statutory, and an earlier reading of this campaign wrongly attributed it to the AEAT manual alone. The clause states three things the calculation depends on. It is proportional to 'el numero de meses en que se cumplan de forma simultanea los requisitos de los apartados 1 y 2', so the month basis is an INTERSECTION of the two apartados rather than either alone. It carves out the under-three condition for the turning-three extension months ('salvo el relativo a que sea menor de tres anios en los meses a los que se refiere el segundo parrafo del apartado 2'). And it caps the result at 'el importe total del gasto efectivo no subvencionado satisfecho en dicho periodo a la guarderia o centro educativo EN RELACION CON ESE HIJO' -- per child by its own words, which is the authority for bounding the increment per descendant rather than over the household. The apartado's FIRST paragraph prorates the apartado 1 deduccion and is a different rule for a different figure; do not conflate them. AGENT-AUTHORED, grounded in the bundled authoritative consolidated ley-35-2006.html#a81; operator to confirm and re-stamp."
+required_text = [
+    "El incremento de la deducción previsto en el apartado 2 anterior se calculará de forma proporcional al número de meses en que se cumplan de forma simultánea",
+    "tendrá como límite el importe total del gasto efectivo no subvencionado",
+]
+
 [legal."ley-35-2006:art-81-bis"]
 evidence_tier = "legal_authority"
 authority = "boe"

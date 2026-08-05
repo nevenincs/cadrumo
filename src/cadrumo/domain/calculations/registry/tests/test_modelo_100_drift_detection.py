@@ -215,6 +215,12 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 #:   the 2024 cuota chain.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
     {
+        # Art. 81.2 guardería annual cap. Authored ahead of its consumer on
+        # purpose: the figure previously existed only as an inline literal
+        # inside the 0613 formula, which the application layer cannot read,
+        # and the per-child proration is computed there. This entry goes when
+        # the injector that resolves it lands.
+        "renta-2024-guarderia-incremento-cap-anual",
         "renta-2024-minimo-ascendientes-mayor-65-2024",
         "renta-2024-minimo-ascendientes-mayor-75-2024",
         "renta-2024-minimo-contribuyente-edad-65-74-2024",
