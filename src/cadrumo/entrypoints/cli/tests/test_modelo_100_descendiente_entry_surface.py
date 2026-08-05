@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile import UserProfileLifecycleRepository
-from ....domain.calculations.registry import FormulaExpression, RegistrySnapshot, resolve_parameter
+from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -376,10 +376,16 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     claim being made is the one an operator can check.
 
     The child turns three in April, so Art. 81.2 admits only the months after
-    the birthday. The expected figure is the arithmetic of the declared months
-    themselves (three months at 200), capped by the registry's own per-child
-    ceiling — never a re-derivation of the 0613 formula, which is why the cap
-    term and the cotización are pinned high enough not to bind.
+    the birthday: May, June and July. Art. 81.3 then prorates the annual ceiling
+    across exactly those three months, and the mother qualified in all twelve so
+    the overlap is the guardería side outright.
+
+    The expected figure is three twelfths of the registry's own annual ceiling,
+    read from the parameter rather than restated. It is BELOW the 600 those
+    three months cost, and that is the whole point: the ceiling is prorated, not
+    flat. Before this formula consumed the prorated value the answer here was
+    the full 600 — the declared spend passed through untouched because the only
+    ceiling in its way was ``1 x 1.000``, which no month rule ever reduced.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -387,7 +393,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200",
+            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -425,8 +431,12 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     assert calc_result.exit_code == 0, calc_result.output
     calc_payload = _payload(calc_result.output)
 
-    # Only May, June and July fall after the April birthday: 3 x 200.
-    assert Decimal(str(calc_payload["casilla_values"]["0613"])) == Decimal("600.00")
+    # Only May, June and July fall after the April birthday, so Art. 81.3
+    # prorates the annual ceiling to three twelfths of it. The 600 those months
+    # actually cost is above that ceiling and is therefore NOT what is granted.
+    assert Decimal(str(calc_payload["casilla_values"]["0613"])) == (_registry_guarderia_cap_anual() / 12 * 3).quantize(
+        Decimal("0.01"),
+    )
 
 
 def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_silent(
@@ -474,6 +484,212 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
     assert "GASTOS_GUARDERIA_MENSUAL" in fired[0]["message"]
 
 
+def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The AEAT manual's own worked increase, driven end to end through the CLI.
+
+    The Manual Práctico Renta 2024 works this case and PRINTS the answer:
+    "1.000 euros ÷ 12 meses x 2 meses) = 166,67", stated as that child's own
+    "Límite del incremento". The expected figure here is that printed number,
+    not a re-derivation of the formula under test — the registry parameter is
+    cross-checked against it rather than substituted for it, so a formula that
+    prorated wrongly cannot drag the expectation along with it
+    (`no-tautological-calculation-tests`).
+
+    The mother qualified in four months and the guardería was paid in two, so
+    Art. 81.3's simultaneity intersection is two months and the annual ceiling
+    is prorated to two twelfths.
+
+    This is the assertion the whole change exists for. The previous formula
+    capped at a flat ``hijos x 1.000`` with no month rule anywhere in it, so
+    this same taxpayer received 1.000 — an over-grant of 833,33 on a figure the
+    manual states outright. The cotización is pinned high enough not to bind, so
+    what is measured here is the proration and nothing else.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=5:1145;6:1145,MESES_TRABAJO=4",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+
+    # The manual's printed figure.
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
+    # The registry ceiling agrees with the manual's arithmetic. Asserted
+    # separately so a drifted parameter is named as such rather than showing up
+    # as a wrong casilla with no indication of which input moved.
+    assert (_registry_guarderia_cap_anual() / 12 * 2).quantize(Decimal("0.01")) == Decimal("166.67")
+    # The spend on record is far above it, so the ceiling is what bound — not
+    # the spend happening to be small.
+    assert Decimal("2290") > Decimal("166.67")
+
+
+def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """A zero increase for want of Art. 81.1 months must say so.
+
+    Art. 81.3 prorates by the months both requirements hold at once, so a
+    mother with no qualifying months on record yields no overlap and no
+    increase. The arithmetic is right, but the field defaults to zero and the
+    record cannot tell "declared none" from "never asked" — so the taxpayer
+    sees real spend stored and nothing granted, with no way to know which
+    happened (`no-silent-under-declaration`).
+
+    This is a state the previous formula could not reach: it ignored the
+    mother's months entirely, so closing the over-grant is what created the
+    need for this disclosure, and the two land together.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            # Real spend, child under three all year, and NO MESES_TRABAJO.
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA_MENSUAL=1-6:200",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
+
+    fired = [
+        n
+        for n in unwrap_envelope_notices(calc_result.output)
+        if n.get("context", {}).get("source_kind") == "guarderia_madre_meses_undeclared"
+    ]
+    assert len(fired) == 1, f"the zero must be explained to the operator; notices were {fired}"
+    assert "MESES_TRABAJO" in fired[0]["message"]
+
+
+def test_a_partial_overlap_discloses_that_the_simultaneity_is_approximated(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The Art. 81.3 intersection is an upper bound, and the operator is told where.
+
+    The guardería side is a month map; the mother's side is only a count. So the
+    engine takes the smaller of the two, which is the largest overlap those
+    facts admit rather than the overlap itself. Exact whenever either side
+    covers the year — and an over-statement when both are partial and the spans
+    do not coincide, which is this profile.
+
+    Pinned end to end because the disclosure is the only thing standing between
+    an approximated figure and a taxpayer who believes it was measured.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            # Four qualifying months for the mother, two months of nursery, and
+            # nothing on record saying WHICH four.
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=4",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+    # Two months of overlap assumed, so two twelfths of the ceiling.
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
+
+    fired = [
+        n
+        for n in unwrap_envelope_notices(calc_result.output)
+        if n.get("context", {}).get("source_kind") == "guarderia_simultaneity_approximated"
+    ]
+    assert len(fired) == 1, f"the approximation must be disclosed; notices were {fired}"
+
+
+def test_a_full_year_mother_is_not_told_the_overlap_was_approximated(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Positive control for the advisory above: it must be able to STAY SILENT.
+
+    Where the mother qualified in every month the intersection is the guardería
+    side outright, so nothing is approximated and there is nothing to disclose.
+    Without this, an advisory that fired unconditionally would satisfy the test
+    above while training the operator to ignore it.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2022-03-01,GASTOS_GUARDERIA_MENSUAL=9:400;10:400,MESES_TRABAJO=12",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("166.67")
+
+    fired = [
+        n
+        for n in unwrap_envelope_notices(calc_result.output)
+        if n.get("context", {}).get("source_kind") == "guarderia_simultaneity_approximated"
+    ]
+    assert fired == [], f"nothing is approximated for a full-year mother; got {fired}"
+
+
 def test_the_flag_refuses_both_spend_shapes_for_one_child(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
@@ -501,11 +717,11 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
 ) -> None:
     """The mother's SS cotizaciones is a real term of the cap, and it must BIND.
 
-    Art. 81.2 caps the increase at ``min(gastos_reales, hijos x 1.000,
-    cotizaciones_ss_madre)``. A test that only ever lets the spend term win would
-    pass against a formula that dropped the cotizaciones argument entirely, so
-    this pins the case where cotizaciones is the smallest of the three and is
-    therefore what the operator receives.
+    Art. 81.2 caps the increase at ``min(incremento_prorrateado,
+    cotizaciones_ss_madre)``. A test that only ever lets the prorated increase
+    win would pass against a formula that dropped the cotizaciones argument
+    entirely, so this pins the case where cotizaciones is the smaller of the two
+    and is therefore what the operator receives.
 
     This assertion previously existed only against a domain-layer method that
     duplicated the formula in Python and had no production consumer. Deleting
@@ -514,7 +730,7 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
     the same change as the deletion, never after it.
 
     The expected figure is the cotizaciones input itself, not a re-derivation of
-    the formula: the whole claim is that the smallest term is what comes out.
+    the formula: the whole claim is that the smaller term is what comes out.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -522,9 +738,10 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            # Spend of 2.400 across a child under three all year, so the spend
-            # term is 2400 and the population term is 1 x 1000 = 1000.
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400",
+            # Spend of 2.400 across a child under three all year, against a
+            # mother qualifying all year, so the prorated increase is the full
+            # 1.000 annual ceiling and the cotizaciones below is smaller.
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -550,12 +767,20 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
 def test_the_population_term_binds_the_0613_cap(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """The per-child ceiling is the other term that must be able to win.
+    """The prorated increase is the other term that must be able to win.
 
-    With spend and cotizaciones both above it, the result is the population
-    count times the registry's own per-child ceiling. Pinned for the same reason
-    as the cotizaciones case: a formula that dropped this argument would still
-    satisfy every test in which the spend term happened to be smallest.
+    With spend and cotizaciones both above it, the result is the registry's own
+    annual ceiling — this child is under three and in the guardería for the
+    whole period, and the mother qualified in every month, so Art. 81.3 prorates
+    twelve twelfths of it and the full ceiling is what remains. Pinned for the
+    same reason as the cotizaciones case: a formula that dropped this argument
+    would still satisfy every test in which the spend term happened to be
+    smallest.
+
+    The mother's months are declared here and were not before. They are a term
+    of the proration, so omitting them now means zero months of overlap and a
+    zero increase; the old flat ceiling ignored them entirely, which is the
+    over-grant this formula was changed to close.
     """
     _seed_natural_person_profile(runtime_profile)
 
@@ -563,7 +788,7 @@ def test_the_population_term_binds_the_0613_cap(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400",
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400,MESES_TRABAJO=12",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -582,38 +807,33 @@ def test_the_population_term_binds_the_0613_cap(
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
 
-    # One eligible child, so the population term is the registry's per-child
-    # ceiling once. Read from the registry rather than restated here.
-    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == _registry_guarderia_per_child_cap()
+    # One eligible child in the guardería all year against a mother who
+    # qualified all year, so the proration keeps the whole annual ceiling.
+    # Read from the registry rather than restated here.
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == _registry_guarderia_cap_anual()
 
 
-def _registry_guarderia_per_child_cap() -> Decimal:
-    """The Art. 81.2 per-child ceiling as the live 0613 formula carries it.
+def _registry_guarderia_cap_anual(year: int = 2024) -> Decimal:
+    """The Art. 81.2 annual per-child ceiling as the registry parameter carries it.
 
-    Read off the formula rather than restated, so a revision that moved the
+    Read from the parameter rather than restated, so a revision that moved the
     ceiling moves this expectation with it instead of reddening a test that was
     right about the law and stale about the figure.
+
+    It used to be read off a ``literal`` inside the 0613 formula expression.
+    That literal is gone: Art. 81.3 prorates the ceiling per child and this
+    schema has no per-descendant fold, so the fold moved to the application
+    layer and the ceiling had to become a parameter that layer can resolve — a
+    literal buried in a formula expression is registry data no other layer can
+    read.
     """
     from ....core.resources import resources
 
-    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
-    formula = next(f for f in snapshot.revision.formulas if f.target_casilla_id == "0613")
-    literals = _literals_in(formula.expression)
-    assert len(literals) == 1, f"expected exactly one literal in the 0613 formula; found {literals}"
-    return Decimal(literals[0])
-
-
-def _literals_in(node: FormulaExpression) -> list[str]:
-    """Collect every ``literal`` value in a compiled formula expression tree.
-
-    Walks the typed :class:`FormulaExpression` the registry compiles to, not a
-    raw mapping: reading the TOML shape instead would make this assert against
-    the authoring form rather than the one the engine evaluates.
-    """
-    found = [] if node.literal is None else [str(node.literal)]
-    for child in node.args:
-        found.extend(_literals_in(child))
-    return found
+    snapshot: RegistrySnapshot = resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+    by_id = {p.id: p for p in snapshot.revision.parameters}
+    return resolve_parameter(
+        by_id[f"renta-{year}-guarderia-incremento-cap-anual"], {"filing_period": date(year, 12, 31)}
+    )
 
 
 # ---------------------------------------------------------------------------
