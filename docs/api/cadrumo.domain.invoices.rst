@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.domain.invoices._decomposition
    cadrumo.domain.invoices._enums
    cadrumo.domain.invoices._errors
    cadrumo.domain.invoices._ids

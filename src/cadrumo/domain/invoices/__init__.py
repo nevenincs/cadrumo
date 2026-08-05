@@ -36,10 +36,20 @@ plaintext invoice row, JSON catalogue, or envelope file is the durable store.
 Callers must import public objects from ``cadrumo.domain.invoices`` and must not
 reach into the private underscore modules inside this package.
 
+Records are classified for calculation use by :func:`decompose_invoice` and
+:func:`partition_invoices`, which yield either the euro components of the
+canonical identity (``total = taxable_base + cuota``; ``cash = total -
+retención``) or the typed :class:`InvoiceDecompositionDefect` reasons that
+exclude the record. An excluded record stays in the catalogue and must be
+surfaced to the operator rather than dropped.
+
 See Also:
     :class:`Invoice`
         Strict frozen invoice record that carries identity, totals, payment,
         bucket, tax-substrate, and linked-transaction facts.
+    :func:`decompose_invoice`
+        The decomposition contract separating usable records from
+        excluded-but-visible ones.
     :class:`InvoiceCatalogue`
         Frozen aggregate persisted as the encrypted invoice catalogue.
     :class:`InvoiceCatalogueRepositoryProtocol`
@@ -81,6 +91,15 @@ from ..iva import (
     invoice_line_to_iva_observation,
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ._decomposition import (
+    INVOICE_DECOMPOSITION_DEFECT_GUIDANCE,
+    InvoiceComponents,
+    InvoiceDecomposition,
+    InvoiceDecompositionDefect,
+    InvoiceDecompositionPartition,
+    decompose_invoice,
+    partition_invoices,
+)
 from ._ids import InvoiceId
 from ._protocols import InvoiceCatalogueRepositoryProtocol
 from ._service import (
@@ -96,10 +115,15 @@ from ._validators import validate_country_code, validate_iva_number
 # isort: on
 
 __all__ = [
+    "INVOICE_DECOMPOSITION_DEFECT_GUIDANCE",
     "Invoice",
     "InvoiceCatalogue",
     "InvoiceCatalogueError",
     "InvoiceCatalogueRepositoryProtocol",
+    "InvoiceComponents",
+    "InvoiceDecomposition",
+    "InvoiceDecompositionDefect",
+    "InvoiceDecompositionPartition",
     "InvoiceError",
     "InvoiceId",
     "InvoiceLine",
@@ -114,6 +138,7 @@ __all__ = [
     "PaymentStatus",
     "ReconciliationSuggestion",
     "classify_invoice_line_for_iva",
+    "decompose_invoice",
     "derive_invoice_id",
     "find_invoice",
     "find_unmatched",
@@ -122,6 +147,7 @@ __all__ = [
     "iva_rate_percentage",
     "link_transaction",
     "numeric_iva_rate_percentages",
+    "partition_invoices",
     "suggest_reconciliations",
     "validate_country_code",
     "validate_iva_number",
