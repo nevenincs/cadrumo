@@ -178,11 +178,10 @@ class DescendantInfo(BaseModel):
         field. Permitted only on an
         :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` record.
 
-        This is a RE-ANCHORING rather than a rename of the retired
-        ``adoption_date``: that field was documented as the adoption's
-        *finalisation*, while Art. 58.2 anchors on the *inscription*. Where a
-        profile previously carried a finalisation date the two can differ, and
-        the inscription is the one the statute counts from.
+        The date is the INSCRIPTION in the Registro Civil, which is what Art.
+        58.2 counts from — not the adoption's *finalisation*. The two can fall
+        in different periods, so the distinction is load-bearing rather than
+        terminological.
     acogimiento_resolucion_date
         The Art. 58.2 entry event for an acogimiento: the date of the FIRST
         ENTITLING resolución — preadoptivo or permanente, the two shapes the
@@ -789,21 +788,18 @@ class DescendantInfo(BaseModel):
         and the adopción/acogimiento entry months together, clipped so that no
         month precedes the entry event.
 
-        The clip is the correction to an over-grant this method shipped. The
-        under-three limb runs from the BIRTH month for every relación, including
-        an adopted one, so unioning the limbs granted a mother the months before
-        the child was hers. A child born in January and adopted in October
-        yielded a full twelve months where three are due.
+        The clip is load-bearing. The under-three limb runs from the BIRTH month
+        for every relación, including an adopted one, so an unclipped union
+        reaches the months before the child was the taxpayer's: a child born in
+        January and adopted in October yields a full twelve where three are due.
 
-        The reasoning that produced that union is worth stating because it was
-        plausible and wrong. It was argued from an infant adopted in October,
-        on the claim that neither limb alone reaches twelve — but that infant's
-        under-three limb IS twelve, so the case showed the union merely equalling
-        the wider limb and proved nothing. The union exceeds the wider limb only
-        in a year containing both the entry month and the third-birthday month,
-        and the single month that distinguishes them falls before the entry
-        event. The union therefore differed from the alternative only where it
-        was wrong.
+        An unclipped union is defensible only on a case that does not
+        discriminate — an infant adopted in October, argued from the claim that
+        neither limb alone reaches twelve. That infant's under-three limb IS
+        twelve, so the union merely equals the wider limb there. The union
+        exceeds the wider limb only in a year containing both the entry month
+        and the third-birthday month, and the single month distinguishing them
+        falls before the entry event.
 
         Clipping is written as a clip rather than as "return the entry window",
         which is what it currently reduces to: with the anchor never earlier than
@@ -938,9 +934,9 @@ class DescendantInfo(BaseModel):
 
         That window is :meth:`maternidad_eligible_meses`, which carries both of
         the article's limbs and the clip that keeps a month from preceding the
-        entry event. It is asked here rather than recomposed, because the union
-        used to be assembled inline at this call site and that is where the
-        over-grant lived.
+        entry event. It is asked for rather than recomposed here: the window is
+        one rule with one owner, and a second assembly of it at a call site
+        drifts from the first without any gate noticing.
 
         The relación gate is SEPARATE from the mínimo test and runs first. Both
         are necessary and neither implies the other: Art. 58.1 assimilates
@@ -1045,12 +1041,13 @@ class DescendantInfo(BaseModel):
         period. That is an approximation and is the one place this method
         returns a number the operator did not evidence. It is chosen over the
         two alternatives on the grounds that it invents nothing: assuming twelve
-        would reinstate the flat cap this proration exists to remove, and
-        refusing outright would convert a live over-grant into a live
-        under-grant for what is likely the commonest declaration shape. The
-        approximation is disclosed to the operator rather than presented as a
-        measured result, and the exact fix — month identity on the Art. 81.1
-        side — is tracked separately.
+        reinstates the flat cap this proration exists to remove, and refusing
+        outright drops the increment entirely for what is likely the commonest
+        declaration shape. The approximation is disclosed to the operator rather
+        than presented as a measured result. It stops being an approximation
+        once the Art. 81.1 side stores WHICH months the mother qualified rather
+        than how many, which is a persisted-shape change this method cannot make
+        on its own.
 
         Returns ``0`` for a non-cohabiting descendant and for a child past the
         period they turn three, matching the spend method's own zeroes.
@@ -1125,10 +1122,10 @@ class DescendantInfo(BaseModel):
 
         Wider than :meth:`is_eligible_menor_tres`, which tests age under three at
         year end and is the Art. 81.1 maternidad population. The guardería
-        increase additionally reaches the period the child TURNS three, which is
-        the largest under-grant this campaign measured: it is a full birth cohort
-        rather than a minority case, and it reduces cuota directly rather than
-        the base.
+        increase additionally reaches the period the child TURNS three. Getting
+        that boundary wrong costs a full birth cohort rather than a minority
+        case, and the increase reduces cuota directly rather than the base, so
+        the error lands on tax owed at full value.
 
         The authority is explicit that the increase is not gated on the
         maternidad deduction's own eligibility — where the child turns three in
@@ -1330,10 +1327,10 @@ class RentaFamilyProfile(BaseModel):
     descendant until that attribution lands.
 
     Suppressing them all is the under-granting direction, which is the safe one
-    and the direction this campaign's defaults rest on, but it is a real
-    narrowing: a filer paying anualidades for one child and supporting another
-    outside any court order loses the second child's assimilation too. The
-    calculate path discloses that rather than leaving it silent.
+    to default to, but it is a real narrowing: a filer paying anualidades for one
+    child and supporting another outside any court order loses the second child's
+    assimilation too. The calculate path discloses that rather than leaving it
+    silent.
 
     A declared ``0`` is an answer meaning none are paid and does NOT suppress;
     only a positive amount does. ``None`` means the question was never put.
@@ -1341,18 +1338,12 @@ class RentaFamilyProfile(BaseModel):
     cotizaciones_ss_madre_2024: int = Field(default=0, ge=0)
     """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
 
-    Used as the statutory ceiling on the Art. 81.2 guardería incremento, applied
-    to the household total AFTER the per-child proration
-    (:meth:`RentaFamilyProfile.incremento_guarderia_0613`): each child
-    contributes ``min(cap_anual / 12 × meses, su gasto)``, those contributions
-    are summed, and this figure caps the sum.
-
-    Do not read it as one term of a flat household-wide
-    ``min(gasto, hijos × cap_anual, cotizaciones)``. That shape was the defect:
-    it granted a child in the guardería two months the same ceiling as one there
-    all year, and it let one child's unused ceiling absorb another's excess
-    spend. The annual cap itself is a registry ``money`` parameter, never a
-    literal here (`aeat-schema-central-config`).
+    The statutory ceiling on the Art. 81.2 guardería incremento, applied to the
+    household total after the per-child proration
+    (:meth:`RentaFamilyProfile.incremento_guarderia_0613` computes each child's
+    own ``min(cap_anual / 12 × meses, su gasto)`` and sums them; this figure caps
+    that sum). The annual cap is a registry ``money`` parameter resolved by the
+    caller, never a literal here (`aeat-schema-central-config`).
 
     Default ``0`` (cap not declared; guardería incremento will be zero).
     """
@@ -1520,10 +1511,12 @@ class RentaFamilyProfile(BaseModel):
         side and an upper bound on the other, and it over-states only when the
         two spans do not overlap — a mother qualifying January to April against
         nursery paid September to October. That residual is disclosed to the
-        operator rather than presented as measured, and the exact fix, month
-        identity on the Art. 81.1 side, is tracked separately. It is adopted
-        because the alternative is leaving a flat per-child cap that over-grants
-        every mid-year birth and every partial-year enrolment outright.
+        operator rather than presented as measured. It stops being an
+        approximation once the Art. 81.1 side stores WHICH months the mother
+        qualified rather than how many, which is a persisted-shape change beyond
+        this method. The bound is preferred to a flat per-child cap, which
+        over-grants every mid-year birth and every partial-year enrolment
+        outright.
 
         *cap_anual* is a registry ``money`` parameter the caller resolves per
         filing year; this method performs no euro-figure lookup of its own
