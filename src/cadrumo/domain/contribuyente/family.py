@@ -1076,11 +1076,16 @@ class DescendantInfo(BaseModel):
         for the whole twelve.
 
         TOTAL over every input rather than correct only where it happens to be
-        called. The one caller today reaches it under an "under three at
-        year-end" guard, where "alive" and "alive and under three" coincide, so
-        a version that simply returned twelve would have been indistinguishable
-        in production -- and wrong for a five-year-old the moment anything else
-        asked. It is public precisely so an operator-facing advisory can cite
+        called, and it was made so BECAUSE A SECOND CALLER WAS DESIGNED FOR --
+        not because the first was wrong. The first caller reaches it under an
+        "under three at year-end" guard, where "alive" and "alive and under
+        three" coincide, so a version that simply returned twelve was correct
+        there and indistinguishable in production. Reachability is a snapshot,
+        though: "no defect, nothing can call it that way" holds only until
+        something does, and here the something was already specified. The
+        second caller is an advisory that QUOTES this count to the operator as
+        the basis it prorated by, so the wrong number would have been shown as
+        an explanation rather than merely computed. It is public precisely so an operator-facing advisory can cite
         the months it prorated by, and a figure quoted to a taxpayer has to be
         one they can reproduce from their own child's age. A docstring narrower
         than the method's reachable inputs is how that stops being true.
