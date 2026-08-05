@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00831"
 number = "00831"
-label = "Deducc. para incentivar determ.actividades - Total - Deducción pendiente/generada [00831]"
 section = ["deducc_para_incentivar_determ_actividades", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_actividades_total_pendiente"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00832"
 number = "00832"
-label = "Deducc. para incentivar determ.actividades - Total - Pendiente de aplicación en periodos futuros [00832]"
 section = ["deducc_para_incentivar_determ_actividades", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_suma_pendiente"

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0875"
 number = "0875"
-label = "Por adquisición de libros de texto y material escolar"
 section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
 semantic_role = "irpf_deduccion_aragon_libros_texto"
 continuidad_id = "irpf-deduccion-aragon-libros-texto"

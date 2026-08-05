@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02914"
 number = "02914"
-label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, DA 70.4 Ley 31/2022 [02914]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02915"
 number = "02915"
-label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letra C DA 70.4 Ley 31/2022 [02915]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02917"
 number = "02917"
-label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Pendiente de materializar RIIB al final de período [02917]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"

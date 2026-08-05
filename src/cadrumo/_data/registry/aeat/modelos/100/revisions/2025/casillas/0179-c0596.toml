@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0596"
 number = "0596"
-label = "Por rendimientos del trabajo"
 section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
 semantic_role = "irpf_retencion_trabajo"
 input_kind = "bound"

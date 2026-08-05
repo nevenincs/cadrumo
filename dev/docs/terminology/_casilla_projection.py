@@ -184,17 +184,20 @@ def _is_later(candidate: _RevisionCasilla, incumbent: _RevisionCasilla) -> bool:
 
 def _build_record(entry: _RevisionCasilla, source_revisions: tuple[str, ...]) -> CasillaSearchRecord:
     casilla = entry.casilla
-    descriptions: dict[OutputLanguage, str] = {OutputLanguage.ES: casilla.label}
+    descriptions: dict[OutputLanguage, str] = {OutputLanguage.ES: casilla.get_label(OutputLanguage.ES.value)}
     for locale, language in _LOCALE_TO_LANGUAGE.items():
-        localized = casilla.localized_labels.get(locale)
-        if localized:
-            descriptions[language] = localized
+        descriptions[language] = casilla.get_label(locale)
+    localized_help = {
+        language.value: help_text
+        for language in OutputLanguage
+        if (help_text := casilla.get_help(language.value)) is not None
+    }
     return CasillaSearchRecord(
         kind=SearchRecordKind.CASILLA,
         descriptions=descriptions,
         modelo=entry.modelo,
         casilla_id=casilla.id,
-        localized_help=dict(casilla.localized_help),
+        localized_help=localized_help,
         data_type=casilla.data_type,
         input_kind=casilla.input_kind,
         required=casilla.required,

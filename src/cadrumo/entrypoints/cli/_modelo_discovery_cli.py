@@ -33,7 +33,7 @@ from ...application.modelo import (
     registry_support_matrix,
 )
 from ...core import NON_REGISTRY_MODELOS, Modelo, Period, TaxDomain, resolve_active_bucket_id
-from ...core.i18n import output_language, tr
+from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import (
     InputKind,
@@ -363,7 +363,6 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                     ),
                 },
             )
-        lang = output_language()
         result = ModeloCasillasResult(
             modelo=report.code,
             revision=report.revision,
@@ -374,11 +373,10 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                     number=row.number,
                     input_kind=row.input_kind,
                     required=bool(row.required),
-                    label=row.localized_labels.get(lang, row.label),
+                    label=row.label,
+                    help_text=row.help_text,
                     legal_refs=tuple(row.legal_refs),
                     source_refs=tuple(row.source_refs),
-                    localized_labels=dict(row.localized_labels),
-                    localized_help=dict(row.localized_help),
                 )
                 for row in report.rows
             ],
@@ -389,8 +387,8 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                 *[
                     (
                         f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t"
-                        f"{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}\t"
-                        f"{row.localized_help.get(lang) or '-'}\t"
+                        f"{str(row.required).lower()}\t{row.label}\t"
+                        f"{row.help_text or '-'}\t"
                         f"{', '.join(row.legal_refs)}\t"
                         f"{', '.join(row.source_refs)}"
                     )
@@ -401,10 +399,7 @@ def _register_casillas_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             lines = [
                 "casilla_id\tnumber\tinput\trequired\tlabel",
                 *[
-                    (
-                        f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t"
-                        f"{str(row.required).lower()}\t{row.localized_labels.get(lang, row.label)}"
-                    )
+                    (f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}")
                     for row in report.rows
                 ],
             ]
@@ -456,8 +451,7 @@ def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             return registry_casilla(modelo, casilla_id, period=period, as_of=_as_of(as_of))
 
         report = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
-        lang = output_language()
-        label = report.localized_labels.get(lang, report.label)
+        label = report.label
         result = ModeloCasillaResult(
             modelo=report.code,
             revision=report.revision,
@@ -466,8 +460,7 @@ def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             casilla_id=report.casilla_id,
             number=report.number,
             label=label,
-            localized_labels=dict(report.localized_labels),
-            localized_help=dict(report.localized_help),
+            help_text=report.help_text,
             section=tuple(report.section),
             data_type=report.data_type,
             input_kind=str(report.input_kind),
@@ -493,7 +486,7 @@ def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             f"binding\t{report.binding or '-'}",
             f"formula_id\t{report.formula_id or '-'}",
         ]
-        help_text = report.localized_help.get(lang)
+        help_text = report.help_text
         if help_text:
             lines.append(f"help\t{help_text}")
         if report.formula_expression is not None:
@@ -501,12 +494,11 @@ def _register_casilla_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
         _emit_envelope(ctx, command="modelo.casilla", result=result, lines=lines)
 
 
-def _data_inventory_casilla_payload(entry: DataInventoryCasilla, *, lang: str) -> DataInventoryCasillaPayload:
+def _data_inventory_casilla_payload(entry: DataInventoryCasilla) -> DataInventoryCasillaPayload:
     return DataInventoryCasillaPayload(
         casilla_id=entry.casilla_id,
         number=entry.number,
-        label=entry.localized_labels.get(lang, entry.label),
-        localized_labels=dict(entry.localized_labels),
+        label=entry.label,
         legal_refs=entry.legal_refs,
         source_refs=entry.source_refs,
         binding_id=entry.binding_id,
@@ -514,12 +506,12 @@ def _data_inventory_casilla_payload(entry: DataInventoryCasilla, *, lang: str) -
     )
 
 
-def _data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, ...], *, lang: str) -> list[str]:
+def _data_inventory_section_lines(title: str, rows: tuple[DataInventoryCasilla, ...]) -> list[str]:
     if not rows:
         return [f"{title}\t(none)"]
     lines = [f"{title}\t{len(rows)}"]
     for entry in rows:
-        label = entry.localized_labels.get(lang, entry.label)
+        label = entry.label
         suffix = f"\t({entry.binding_source})" if entry.binding_source else ""
         lines.append(f"  {entry.number}\t{label}{suffix}")
     return lines
@@ -555,20 +547,15 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             )
 
         checklist = _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
-        lang = output_language()
         result = ModeloRequiresResult(
             modelo=checklist.modelo,
             revision=checklist.revision_id,
             filing_year=checklist.filing_year,
             period=checklist.period,
-            required_manual=[_data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.required_manual],
-            optional_manual=[_data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.optional_manual],
-            ledger_derivable=[
-                _data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.ledger_derivable
-            ],
-            profile_derivable=[
-                _data_inventory_casilla_payload(entry, lang=lang) for entry in checklist.profile_derivable
-            ],
+            required_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.required_manual],
+            optional_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.optional_manual],
+            ledger_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable],
+            profile_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable],
             unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
             profile_checked=checklist.profile_checked,
         )
@@ -580,22 +567,18 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             *_data_inventory_section_lines(
                 tr("cli.app.modelo.requires.section_required", default="required_manual"),
                 checklist.required_manual,
-                lang=lang,
             ),
             *_data_inventory_section_lines(
                 tr("cli.app.modelo.requires.section_optional", default="optional_manual"),
                 checklist.optional_manual,
-                lang=lang,
             ),
             *_data_inventory_section_lines(
                 tr("cli.app.modelo.requires.section_ledger", default="ledger_derivable"),
                 checklist.ledger_derivable,
-                lang=lang,
             ),
             *_data_inventory_section_lines(
                 tr("cli.app.modelo.requires.section_profile", default="profile_derivable"),
                 checklist.profile_derivable,
-                lang=lang,
             ),
         ]
         notices = _requires_notices(checklist)

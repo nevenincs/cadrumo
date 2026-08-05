@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00860"
 number = "00860"
-label = "Deducciones inversión Canarias - Activos fijos 2012 - Deducción pendiente/generada [00860]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2012"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00861"
 number = "00861"
-label = "Deducciones inversión Canarias - Activos fijos 2012 - Aplicado en esta liquidación [00861]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2012"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00862"
 number = "00862"
-label = "Deducciones inversión Canarias - Activos fijos 2012 - Pendiente de aplicación en periodos futuros [00862]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2012"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_pendiente"

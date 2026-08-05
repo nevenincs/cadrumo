@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1587"
 number = "1587"
-label = "Valor de transmisión destinado a constituir una renta vitalicia"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_gp_renta_vitalicia"
 continuidad_id = "irpf-re-atrib-gp-renta-vitalicia"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0072"
 number = "0072"
-label = "Inmueble afecto a actividades económicas"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_afecto_actividades_economicas_flag"

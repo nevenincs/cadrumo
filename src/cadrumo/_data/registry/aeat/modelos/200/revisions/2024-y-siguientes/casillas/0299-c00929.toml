@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00929"
 number = "00929"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2025(*) - Base deducción [00929]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2025"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_periodo"

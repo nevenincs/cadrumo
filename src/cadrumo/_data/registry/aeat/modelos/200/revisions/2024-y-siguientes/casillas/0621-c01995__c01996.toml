@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01995"
 number = "01995"
-label = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Aumento - Saldo pendiente a principio de ejercicio [01995]"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_participaciones_dt16_saldo_inicial_neto"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01996"
 number = "01996"
-label = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Aumento - Correciones del ejercicio - Permanentes [01996]"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_participaciones_dt16_permanente_aumento"

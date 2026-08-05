@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0808"
 number = "0808"
-label = "Importe aplicado en el ejercicio"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones_aplicado_ejercicio_anterior"
 semantic_role_cardinality = "intentional_singleton"

@@ -24,23 +24,27 @@ from datetime import date
 
 import pytest
 
-from ....core import NON_REGISTRY_MODELOS, Modelo, RevisionReviewStatus
+from ....core import NON_REGISTRY_MODELOS, ExportLayoutFormat, Modelo, RevisionReviewStatus
 from ....core.access_gate import AuthorizationState
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
     ModeloDefinition,
     RegistryExternalGroundingAudit,
+    ValidatedRegistryAuthority,
     build_classification_coherence_audit,
     build_external_grounding_audit,
     load_bundled_external_oracle_inventory,
     load_registry_tree,
+    xml_dictionary_entries,
 )
+from ....domain.calculations.registry import bundled_authority as load_bundled_authority
 from .. import (
     RegistryApplicationInputError,
     RegistryConformanceProfile,
     audit_bundled_registry_conformance,
     build_registry_conformance_profile,
 )
+from .._conformance import AnnualCasillaPopulationComparison, compare_annual_casilla_population
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,6 +60,35 @@ _MINIMUM_COMPOSED_REVISIONS = 60
 #: makes the latest-revision scope question observable at all.
 _GROUNDED_MODELO = "303"
 _MULTI_REVISION_MODELO = "100"
+
+# Independent census captured from the bundled year-specific AEAT dictionaries
+# and the current registry declarations. These anchors make the comparator test
+# a measured divergence rather than deriving every expected value from the
+# production parser at assertion time.
+_M100_REGISTRY_CASILLA_COUNTS = {
+    2020: 1531,
+    2021: 1693,
+    2022: 1852,
+    2023: 1929,
+    2024: 2093,
+    2025: 2238,
+}
+_M100_DICTIONARY_CASILLA_COUNTS = {
+    2020: 1531,
+    2021: 1693,
+    2022: 1852,
+    2023: 1929,
+    2024: 2062,
+    2025: 2205,
+}
+_M100_IDENTITY_DIVERGENCE_COUNTS = {
+    2020: 0,
+    2021: 0,
+    2022: 0,
+    2023: 0,
+    2024: 31,
+    2025: 33,
+}
 
 
 @pytest.fixture(scope="module")
@@ -75,6 +108,12 @@ def degraded_profile() -> RegistryConformanceProfile:
 def validated_profile() -> RegistryConformanceProfile:
     """The bundled profile composed through the validating registry authority."""
     return audit_bundled_registry_conformance()
+
+
+@pytest.fixture(scope="module")
+def registry_authority() -> ValidatedRegistryAuthority:
+    """The real validated authority used for annual dictionary comparisons."""
+    return load_bundled_authority()
 
 
 def _compose(
@@ -444,6 +483,82 @@ def test_declared_axis_census_reaches_the_profile(degraded_profile: RegistryConf
     for usage in degraded_profile.declared_axis_usage:
         assert usage.declaration_count <= usage.population
         assert usage.status in {"exercised", "unused"}
+
+
+@pytest.mark.parametrize("filing_year", range(2020, 2026))
+def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
+    registry_authority: ValidatedRegistryAuthority,
+    filing_year: int,
+) -> None:
+    """The comparator measures each law-selected M100 dictionary independently."""
+    snapshot = registry_authority.snapshot("100", filing_year=filing_year, period="0A")
+    comparison = compare_annual_casilla_population(snapshot, source_root=registry_authority.source_root)
+
+    assert isinstance(comparison, AnnualCasillaPopulationComparison)
+    assert comparison.modelo == "100"
+    assert comparison.filing_year == filing_year
+    assert comparison.period == "0A"
+    assert comparison.law_selected_revision == str(filing_year)
+    assert comparison.identity_measurement == "measured"
+    assert comparison.printed_form_membership == "unsupported"
+    assert comparison.xsd_only_attributes == "unsupported"
+    assert comparison.printed_form_source_refs == (f"boe-modelo-100-{filing_year}-form",)
+    assert comparison.xsd_source_refs == (f"aeat-dr-100-{filing_year}-xsd",)
+
+    dictionary_layout = next(
+        layout for layout in snapshot.revision.export_layouts if layout.format is ExportLayoutFormat.XML_DICTIONARY
+    )
+    assert len(comparison.layout_comparisons) == len(snapshot.revision.export_layouts)
+    layout_comparison = next(item for item in comparison.layout_comparisons if item.layout_id == dictionary_layout.id)
+    assert layout_comparison.layout_format == ExportLayoutFormat.XML_DICTIONARY.value
+    assert layout_comparison.identity_measurement == "measured"
+    assert layout_comparison.printed_form_membership == "unsupported"
+    assert layout_comparison.xsd_only_attributes == "unsupported"
+    assert layout_comparison.dictionary_source_ref == f"aeat-dr-100-{filing_year}-dictionary"
+    assert layout_comparison.parser_exposed_attributes == ("field_id", "path", "data_type", "casilla_id")
+    assert "data_type" in layout_comparison.unmeasured_attributes
+    assert layout_comparison.registry_casilla_count == _M100_REGISTRY_CASILLA_COUNTS[filing_year]
+    assert layout_comparison.dictionary_casilla_count == _M100_DICTIONARY_CASILLA_COUNTS[filing_year]
+    assert comparison.identity_divergence_count == _M100_IDENTITY_DIVERGENCE_COUNTS[filing_year]
+
+    entries = xml_dictionary_entries(
+        dictionary_layout,
+        source_root=registry_authority.source_root,
+        sources=snapshot.sources,
+    )
+    dictionary_ids = {str(entry.casilla_id) for entry in entries if entry.casilla_id is not None}
+    registry_ids = {str(casilla.id) for casilla in snapshot.revision.casillas if not casilla.internal_only}
+    assert layout_comparison.dictionary_entry_count == len(entries)
+    assert layout_comparison.dictionary_casilla_count == len(dictionary_ids)
+    assert set(layout_comparison.missing_casilla_ids) == registry_ids - dictionary_ids
+    assert set(layout_comparison.extra_casilla_ids) == dictionary_ids - registry_ids
+    assert comparison.missing_casilla_ids == layout_comparison.missing_casilla_ids
+    assert comparison.extra_casilla_ids == layout_comparison.extra_casilla_ids
+
+
+def test_annual_casilla_comparison_retains_unmeasured_when_source_root_is_unavailable(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    """A declared layout without its parser source is not reported as a clean result."""
+    snapshot = registry_authority.snapshot("100", filing_year=2025, period="0A")
+
+    comparison = compare_annual_casilla_population(snapshot)
+    dictionary_layout = next(
+        layout for layout in snapshot.revision.export_layouts if layout.format is ExportLayoutFormat.XML_DICTIONARY
+    )
+    layout_comparison = next(item for item in comparison.layout_comparisons if item.layout_id == dictionary_layout.id)
+
+    assert comparison.identity_measurement == "unmeasured"
+    assert layout_comparison.identity_measurement == "unmeasured"
+    assert layout_comparison.dictionary_entry_count is None
+    assert layout_comparison.dictionary_casilla_count is None
+    assert layout_comparison.missing_casilla_ids == ()
+    assert layout_comparison.extra_casilla_ids == ()
+    assert layout_comparison.parser_exposed_attributes == ("field_id", "path", "data_type", "casilla_id")
+    assert layout_comparison.diagnostic is not None
+    assert "requires source_root" in layout_comparison.diagnostic
+    assert comparison.printed_form_membership == "unsupported"
+    assert comparison.xsd_only_attributes == "unsupported"
 
 
 def test_a_modelo_absent_from_the_classification_audit_is_refused(

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0284"
 number = "0284"
-label = "Ingresos a cuenta"
 section = ["toma_datos_ampliada", "gp_premios", "juegos"]
 semantic_role = "irpf_ganancia_premios_juegos_ingresos_cuenta"
 continuidad_id = "irpf-ganancia-premios-juegos-ingresos-cuenta"

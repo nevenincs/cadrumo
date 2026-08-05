@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01935"
 number = "01935"
-label = "Deducciones I+D+i excluidas de límite - Información adicional para el cálculo de límites de deducciones - Grupo mercantil (sólo para entidades que hayan marcado la clave 00039 de caracteres de la d..."
 section = ["deducciones_i_d_i_excluidas_de_limite", "informacion_adicional_para_el_calculo_de_limites_d"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_info_adicional"

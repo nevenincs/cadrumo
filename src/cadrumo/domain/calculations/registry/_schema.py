@@ -8,6 +8,7 @@ generated output envelopes.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Annotated, Literal
@@ -153,6 +154,8 @@ __all__ = [
     "CasillaDefinition",
     "CasillaFieldKind",
     "CasillaFieldKindValue",
+    "CasillaProducerInventory",
+    "CasillaProducerProvenance",
     "ConstructDefinition",
     "ConvenioAuthority",
     "DataBindingDefinition",
@@ -210,6 +213,7 @@ __all__ = [
 ]
 
 from ._convenio import ConvenioAuthority
+from ._modelo_localization import resolve_modelo_localization
 from ._schema_base import (
     GOVERNANCE_STAMP,
     MANIFEST_ONLY,
@@ -977,6 +981,76 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
+type CasillaProducerKind = Literal["formula", "manual", "upstream", "relation", "informational"]
+
+
+@dataclass(frozen=True, slots=True)
+class CasillaProducerProvenance:
+    """One lossless producer path for a revision-local casilla.
+
+    The record retains the real schema declarations instead of copying or
+    flattening their legal/source provenance.  A relation-backed binding emits
+    one record per relation declaration, so distinct relation ids and their
+    independent provenance remain visible even when they target the same
+    binding and casilla.
+    """
+
+    casilla: CasillaDefinition
+    producer_kind: CasillaProducerKind
+    reason: str
+    formula: FormulaDefinition | None = None
+    binding: DataBindingDefinition | None = None
+    relation: RelationDefinition | None = None
+
+    @property
+    def producer_legal_refs(self) -> tuple[LegalRefId, ...]:
+        """Return the existing legal refs on this path's producer declaration."""
+        if self.relation is not None:
+            return tuple(self.relation.legal_refs)
+        if self.binding is not None:
+            return tuple(self.binding.legal_refs)
+        if self.formula is not None:
+            return tuple(self.formula.legal_refs)
+        if self.producer_kind in {"manual", "informational"}:
+            return tuple(self.casilla.legal_refs)
+        return ()
+
+    @property
+    def producer_source_refs(self) -> tuple[SourceRefId, ...]:
+        """Return the existing source refs on this path's producer declaration."""
+        if self.relation is not None:
+            return tuple(self.relation.source_refs)
+        if self.binding is not None:
+            return tuple(self.binding.source_refs)
+        if self.formula is not None:
+            return tuple(self.formula.source_refs)
+        if self.producer_kind in {"manual", "informational"}:
+            return tuple(self.casilla.source_refs)
+        return ()
+
+
+@dataclass(frozen=True, slots=True)
+class CasillaProducerInventory:
+    """Revision-local inventory of casilla producers and declarations.
+
+    Formula targets are indexed in both directions without collapsing duplicate
+    declarations.  The ``producer_kind_by_casilla`` and
+    ``producer_reason_by_casilla`` maps keep intentional non-formula rows
+    visible: manual rows are operator-supplied, bound rows are upstream
+    producers, and relation-prefill bindings are cross-model handoffs.  Their
+    legal/source provenance remains on the casilla and binding definitions;
+    this inventory only names the declared production path and its reason.
+    """
+
+    formula_ids_by_target: Mapping[CasillaId, tuple[FormulaId, ...]]
+    formula_ids_by_id: Mapping[FormulaId, tuple[FormulaDefinition, ...]]
+    formula_ids_by_casilla: Mapping[CasillaId, tuple[FormulaId, ...]]
+    computed_casilla_ids: frozenset[CasillaId]
+    producer_kind_by_casilla: Mapping[CasillaId, CasillaProducerKind]
+    producer_reason_by_casilla: Mapping[CasillaId, str]
+    producer_provenance_by_casilla: Mapping[CasillaId, tuple[CasillaProducerProvenance, ...]]
+
+
 class ModeloRevision(RegistryModel):
     """A single versioned form layout and calculation ruleset for one modelo.
 
@@ -996,7 +1070,7 @@ class ModeloRevision(RegistryModel):
     """
 
     id: RevisionId
-    label: str | None = None
+    localization_key: str = Field(min_length=1, exclude=True, repr=False)
     valid_from: date
     valid_to: Annotated[date | None, MANIFEST_ONLY] = None
     period_selector: PeriodSelector
@@ -1050,6 +1124,170 @@ class ModeloRevision(RegistryModel):
             raise RegistryValidationError("revision valid_to must be on or after valid_from")
         return self
 
+    def get_label(self, locale: str) -> str | None:
+        """Resolve the optional revision label from the shared catalogue."""
+        return resolve_modelo_localization((self.localization_key,), locale=locale, required=False)
+
+    @property
+    def label(self) -> str | None:
+        """Return the optional official-Spanish revision label."""
+        return self.get_label("es")
+
+    def producer_inventory(self) -> CasillaProducerInventory:
+        """Return the typed producer/declaration inventory for this revision.
+
+        Formula ids are retained as tuples in every index so an invalid
+        duplicate cannot be hidden by a last-write-wins dictionary.  A
+        non-formula casilla is classified from its existing typed declaration:
+        ``manual`` is operator input, ordinary ``bound`` rows are upstream
+        values, and ``relation_prefill`` rows are relation handoffs.  These
+        classifications are descriptive; validation still owns whether a
+        formula direction is closed.
+        """
+        formulas_by_target: dict[CasillaId, list[FormulaId]] = {}
+        formulas_by_id: dict[FormulaId, list[FormulaDefinition]] = {}
+        for formula in self.formulas:
+            formulas_by_target.setdefault(formula.target_casilla_id, []).append(formula.id)
+            formulas_by_id.setdefault(formula.id, []).append(formula)
+
+        formula_declarations_by_casilla: dict[CasillaId, list[FormulaId]] = {}
+        bindings_by_id = {binding.id: binding for binding in self.bindings}
+        relations_by_binding: dict[BindingId, list[RelationDefinition]] = {}
+        for relation in self.relations:
+            relations_by_binding.setdefault(relation.target_binding, []).append(relation)
+        computed_casilla_ids: set[CasillaId] = set()
+        producer_kind_by_casilla: dict[CasillaId, CasillaProducerKind] = {}
+        producer_reason_by_casilla: dict[CasillaId, str] = {}
+        producer_provenance_by_casilla: dict[CasillaId, list[CasillaProducerProvenance]] = {}
+
+        for casilla in self.casillas:
+            if casilla.input_kind is InputKind.COMPUTED:
+                computed_casilla_ids.add(casilla.id)
+
+            if casilla.formula is not None:
+                formula_declarations_by_casilla.setdefault(casilla.id, []).append(casilla.formula)
+                producer_kind_by_casilla[casilla.id] = "formula"
+                producer_reason_by_casilla[casilla.id] = (
+                    f"deterministic formula producer declaration {casilla.formula!r}"
+                )
+                formula_declarations = formulas_by_id.get(casilla.formula, ())
+                if formula_declarations:
+                    for formula in formula_declarations:
+                        producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                            CasillaProducerProvenance(
+                                casilla=casilla,
+                                producer_kind="formula",
+                                reason=producer_reason_by_casilla[casilla.id],
+                                formula=formula,
+                            ),
+                        )
+                else:
+                    producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                        CasillaProducerProvenance(
+                            casilla=casilla,
+                            producer_kind="formula",
+                            reason=producer_reason_by_casilla[casilla.id],
+                        ),
+                    )
+            elif casilla.input_kind is InputKind.COMPUTED:
+                producer_kind_by_casilla[casilla.id] = "formula"
+                producer_reason_by_casilla[casilla.id] = "computed casilla requires a deterministic formula producer"
+                producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                    CasillaProducerProvenance(
+                        casilla=casilla,
+                        producer_kind="formula",
+                        reason=producer_reason_by_casilla[casilla.id],
+                    ),
+                )
+            elif casilla.input_kind is InputKind.MANUAL:
+                producer_kind_by_casilla[casilla.id] = "manual"
+                producer_reason_by_casilla[casilla.id] = (
+                    "manual production is intentional operator-supplied input; "
+                    "casilla legal_refs/source_refs remain its provenance"
+                )
+                producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                    CasillaProducerProvenance(
+                        casilla=casilla,
+                        producer_kind="manual",
+                        reason=producer_reason_by_casilla[casilla.id],
+                    ),
+                )
+            elif casilla.input_kind is InputKind.BOUND:
+                binding = bindings_by_id.get(casilla.binding) if casilla.binding is not None else None
+                if binding is not None and binding.source is BindingSourceKind.RELATION_PREFILL:
+                    producer_kind_by_casilla[casilla.id] = "relation"
+                    producer_reason_by_casilla[casilla.id] = (
+                        f"relation production uses binding {binding.id!r} with source {binding.source.value!r}"
+                    )
+                    relation_declarations = relations_by_binding.get(binding.id, ())
+                    if relation_declarations:
+                        for relation in relation_declarations:
+                            producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                                CasillaProducerProvenance(
+                                    casilla=casilla,
+                                    producer_kind="relation",
+                                    reason=producer_reason_by_casilla[casilla.id],
+                                    binding=binding,
+                                    relation=relation,
+                                ),
+                            )
+                    else:
+                        producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                            CasillaProducerProvenance(
+                                casilla=casilla,
+                                producer_kind="relation",
+                                reason=producer_reason_by_casilla[casilla.id],
+                                binding=binding,
+                            ),
+                        )
+                elif binding is not None:
+                    producer_kind_by_casilla[casilla.id] = "upstream"
+                    producer_reason_by_casilla[casilla.id] = (
+                        f"upstream production uses binding {binding.id!r} with source {binding.source.value!r}"
+                    )
+                    producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                        CasillaProducerProvenance(
+                            casilla=casilla,
+                            producer_kind="upstream",
+                            reason=producer_reason_by_casilla[casilla.id],
+                            binding=binding,
+                        ),
+                    )
+                else:
+                    producer_kind_by_casilla[casilla.id] = "upstream"
+                    producer_reason_by_casilla[casilla.id] = (
+                        "upstream production is declared by input_kind='bound' but its binding declaration is missing"
+                    )
+                    producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                        CasillaProducerProvenance(
+                            casilla=casilla,
+                            producer_kind="upstream",
+                            reason=producer_reason_by_casilla[casilla.id],
+                        ),
+                    )
+            else:
+                producer_kind_by_casilla[casilla.id] = "informational"
+                producer_reason_by_casilla[casilla.id] = (
+                    "informational casilla is intentionally not a calculation producer"
+                )
+                producer_provenance_by_casilla.setdefault(casilla.id, []).append(
+                    CasillaProducerProvenance(
+                        casilla=casilla,
+                        producer_kind="informational",
+                        reason=producer_reason_by_casilla[casilla.id],
+                    ),
+                )
+
+        return CasillaProducerInventory(
+            formula_ids_by_target={key: tuple(value) for key, value in formulas_by_target.items()},
+            formula_ids_by_id={key: tuple(value) for key, value in formulas_by_id.items()},
+            formula_ids_by_casilla={key: tuple(value) for key, value in formula_declarations_by_casilla.items()},
+            computed_casilla_ids=frozenset(computed_casilla_ids),
+            producer_kind_by_casilla=producer_kind_by_casilla,
+            producer_reason_by_casilla=producer_reason_by_casilla,
+            producer_provenance_by_casilla={key: tuple(value) for key, value in producer_provenance_by_casilla.items()},
+        )
+
     @model_validator(mode="after")
     def _validate_governance_stamp(self) -> ModeloRevision:
         """Bind the reviewer identity to the claim that a review happened."""
@@ -1091,8 +1329,8 @@ fragment can otherwise supply a revision's legal grounding while
 
 class ModeloDefinition(RegistryModel):
     id: ModeloId
-    title: str
-    official_name: str
+    title_localization_key: str = Field(min_length=1, exclude=True, repr=False)
+    official_name_localization_key: str = Field(min_length=1, exclude=True, repr=False)
     tax_domain: Annotated[TaxDomain, BeforeValidator(lambda v: TaxDomain(v) if isinstance(v, str) else v)]
     cadence: Literal["monthly", "quarterly", "annual", "ad_hoc", "profile_based"]
     jurisdiction: Literal["ES-AEAT"]
@@ -1102,6 +1340,28 @@ class ModeloDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     revisions: Mapping[RevisionId, ModeloRevision]
+
+    def get_title(self, locale: str) -> str:
+        """Resolve the Modelo title from the shared catalogue."""
+        resolved = resolve_modelo_localization((self.title_localization_key,), locale=locale, required=True)
+        assert resolved is not None
+        return resolved
+
+    def get_official_name(self, locale: str) -> str:
+        """Resolve the official Modelo name from the shared catalogue."""
+        resolved = resolve_modelo_localization((self.official_name_localization_key,), locale=locale, required=True)
+        assert resolved is not None
+        return resolved
+
+    @property
+    def title(self) -> str:
+        """Return the strict official-Spanish Modelo title."""
+        return self.get_title("es")
+
+    @property
+    def official_name(self) -> str:
+        """Return the strict official-Spanish Modelo name."""
+        return self.get_official_name("es")
 
     def has_capability(self, name: ModeloFilingCapability) -> bool:
         """Return whether this modelo declares the given capability."""

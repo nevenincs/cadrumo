@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01509"
 number = "01509"
-label = "Liquidación III - Base imponible - - Rentas que no limitan compensación de bases imponibles - Rentas correspondientes a la reversión de deterioros (DT 16ª.8 LIS) - Disminuciones [01509]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_liquidacion_iii_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01510"
 number = "01510"
-label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Rentas correspondientes a la reversión de deterioros cooperativas (a nivel cuota) (DT 16ª.8 LIS) - Disminuciones [01510]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_reversion_deterioro"

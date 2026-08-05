@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00907"
 number = "00907"
-label = "Rég. cooperativas - Detalle compensación cuotas. 2013 Pendiente aplicación al principio del periodo [00907]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2013_pendiente_aplicac"]
 data_type = "money"
 semantic_role = "is_cooperativa_compensacion_cuotas"

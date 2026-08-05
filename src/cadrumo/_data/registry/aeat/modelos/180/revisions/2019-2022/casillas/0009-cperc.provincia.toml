@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.provincia"
 number = "76-77"
-label = "Codigo provincia del domicilio del perceptor"
 section = ["perceptor", "identificacion"]
 data_type = "province_code"
 semantic_role = "payee_province"

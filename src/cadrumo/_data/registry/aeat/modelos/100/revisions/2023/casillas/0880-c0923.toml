@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0923"
 number = "0923"
-label = "Por contribuyentes con discapacidad y mayores de 65 años"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_discapacidad_mayores_65"
 continuidad_id = "irpf-deduccion-canarias-discapacidad-mayores-65"

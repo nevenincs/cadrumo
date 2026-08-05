@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00079"
 number = "00079"
-label = "Entidad ZEC en consolidación fiscal [00079]"
 section = ["entidad_zec_en_consolidacion_fiscal"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

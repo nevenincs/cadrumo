@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0191"
 number = "0191"
-label = "Gastos de manutención del contribuyente (artículo 30.2.5ª.c de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_gastos_manutencion_contribuyente"
 input_kind = "bound"

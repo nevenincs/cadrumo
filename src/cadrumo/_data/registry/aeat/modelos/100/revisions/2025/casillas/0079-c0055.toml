@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0055"
 number = "0055"
-label = "Reducciones de rendimientos del capital mobiliario de base general"
 section = ["rendimientos_capital_mobiliario", "base_general"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_general_reduccion"

@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.referencia-catastral"
 number = "115-134"
-label = "Referencia catastral del inmueble arrendado"
 section = ["perceptor", "inmueble"]
 data_type = "text"
 semantic_role = "payee_inmueble_referencia_catastral"

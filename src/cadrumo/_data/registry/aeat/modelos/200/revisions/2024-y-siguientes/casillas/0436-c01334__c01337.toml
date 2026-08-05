@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01334"
 number = "01334"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i insuf. cuota - Araba/Álava [01334]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_i_d_i_insuf_cuota"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_idi"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01335"
 number = "01335"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i insuf. cuota - Gipuzkoa [01335]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_i_d_i_insuf_cuota"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_idi"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01336"
 number = "01336"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i insuf. cuota - Bizkaia [01336]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_i_d_i_insuf_cuota"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_idi"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01337"
 number = "01337"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones I+D+i insuf. cuota - Navarra [01337]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_i_d_i_insuf_cuota"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_idi"

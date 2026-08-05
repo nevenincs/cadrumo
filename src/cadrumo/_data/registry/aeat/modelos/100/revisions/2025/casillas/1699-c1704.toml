@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1704"
 number = "1704"
-label = "Por aportaciones a los fondos propios de entidades que desarrollen actividades económicas (casilla [2148] del anexo B.14)"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_aportaciones_fondos_propios"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

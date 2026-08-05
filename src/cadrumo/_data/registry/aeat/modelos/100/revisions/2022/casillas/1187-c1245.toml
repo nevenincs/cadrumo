@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1245"
 number = "1245"
-label = "Contribuyente titular"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_general_res"]
 data_type = "text"
 semantic_role = "irpf_toma_datos_declarante_selector"

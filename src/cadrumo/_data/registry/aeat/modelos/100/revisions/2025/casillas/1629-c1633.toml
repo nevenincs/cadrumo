@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1633"
 number = "1633"
-label = "Valor de transmisión"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_valor_transmision"
 continuidad_id = "irpf-ganancia-otros-valor-transmision"

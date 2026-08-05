@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1566"
 number = "1566"
-label = "Minoraciones aplicables"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_cap_mob_minoraciones"
 continuidad_id = "irpf-re-atrib-cap-mob-minoraciones"

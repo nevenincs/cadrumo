@@ -1,7 +1,0 @@
-[labels]
-"decl.ejercicio" = "Exercici a què es refereix l'autoliquidació"
-"decl.periodo" = "Període de la declaració"
-"iva.exterior.cuota-total" = "Total de quota d'IVA repercutida del Règim exterior (suma de quotes per destinació)"
-"iva.exterior.de.services-cuota" = "Quota d'IVA repercutit a la destinació DE — serveis prestats (Règim exterior)"
-
-[help]

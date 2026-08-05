@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "2041"
 number = "2041"
-label = "Importe abonado 1"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_guarderia_importe_1"
 continuidad_id = "irpf-deduccion-canarias-guarderia-importe-1"

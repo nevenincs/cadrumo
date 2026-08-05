@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0331"
 number = "0331"
-label = "Valor de adquisición global de los valores transmitidos"
 section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
 semantic_role = "irpf_ganancia_acciones_valor_adquisicion_global"
 continuidad_id = "irpf-ganancia-acciones-valor-adquisicion-global"

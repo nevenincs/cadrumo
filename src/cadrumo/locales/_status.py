@@ -14,10 +14,8 @@ Namespace-exempted keys are likewise outside it; their count is surfaced
 per catalogue so the exempted surface stays visible rather than silently
 unreportable.
 
-The modelo schema-local side of the same report reuses
-:meth:`~cadrumo.locales._modelo_manager.ModeloLocaleManager.coverage_records`,
-which applies the equivalent partition through
-:func:`~cadrumo.locales._modelo_manager.classify_modelo_locale_leaf`.
+Modelo schema keys participate in this same partition through the shared
+catalogue scanner; there is no second Modelo-local reporting path.
 """
 
 from __future__ import annotations

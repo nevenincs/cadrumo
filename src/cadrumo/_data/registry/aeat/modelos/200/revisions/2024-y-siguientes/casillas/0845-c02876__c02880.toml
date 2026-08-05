@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02876"
 number = "02876"
-label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02876]"
 section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deuda_tributaria_ajd_itp_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02877"
 number = "02877"
-label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02877]"
 section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deuda_tributaria_ajd_itp_temporaria_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02878"
 number = "02878"
-label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02878]"
 section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deuda_tributaria_ajd_itp_temporaria_anteriores_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02879"
 number = "02879"
-label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02879]"
 section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deuda_tributaria_ajd_itp_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02880"
 number = "02880"
-label = "Deuda tributaria de actos jurídicos documentados (ITP y AJD) (art. 15 m) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02880]"
 section = ["deuda_tributaria_de_actos_juridicos_documentados_i", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deuda_tributaria_ajd_itp_saldo_final_neto"

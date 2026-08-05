@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0337"
 number = "0337"
-label = "Pérdidas patrimoniales. Importe obtenido"
 section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
 semantic_role = "irpf_perdida_acciones_importe_obtenido"
 continuidad_id = "irpf-perdida-acciones-importe-obtenido"

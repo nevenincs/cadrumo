@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1411"
 number = "1411"
-label = "Gasto 1: NIF de quién prestó el servicio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_gasto_proveedor_nif"

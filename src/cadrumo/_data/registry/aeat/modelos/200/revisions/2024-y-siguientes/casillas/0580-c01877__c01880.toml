@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01877"
 number = "01877"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones extranjeras en Canarias - Araba/Álava [01877]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_deducciones_cinematograficas"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01878"
 number = "01878"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones extranjeras en Canarias - Gipuzkoa [01878]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_cinematografica"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01879"
 number = "01879"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones extranjeras en Canarias - Bizkaia [01879]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_cinematografica"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01880"
 number = "01880"
-label = "Tributación conjunta Estado y Adm.Forales - Abono deducciones producciones extranjeras en Canarias - Navarra [01880]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "abono_deducciones_producciones_extranjeras_en_cana"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_abono_cinematografica"

@@ -19,9 +19,9 @@ it does not generate an artifact, invoke a provider, or enable a browser tier.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterable
 from hashlib import sha256
-import json
 from pathlib import Path
 from typing import Annotated, Final, Literal
 

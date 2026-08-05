@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0312"
 number = "0312"
-label = "Importe global de las transmisiones efectuadas en 2023"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 semantic_role = "irpf_ganancia_fondos_valor_transmision_global"
 continuidad_id = "irpf-ganancia-fondos-valor-transmision-global"

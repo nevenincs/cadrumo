@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1852"
 number = "1852"
-label = "Por acogimiento de personas o familias ucranianas desplazadas con motivo del conflicto armado en su país"
 section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
 semantic_role = "irpf_deduccion_aragon_acogimiento_ucrania"
 continuidad_id = "irpf.deduccion-autonomica.aragon.acogimiento-ucrania"

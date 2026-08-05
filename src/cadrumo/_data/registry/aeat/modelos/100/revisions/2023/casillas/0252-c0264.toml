@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0264"
 number = "0264"
-label = "Retenciones e ingresos a cuenta imputados"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
 semantic_role = "irpf_re_aie_retenciones_imputadas"
 continuidad_id = "irpf-re-aie-retenciones-imputadas"

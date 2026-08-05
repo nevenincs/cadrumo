@@ -14,8 +14,8 @@ from pathlib import Path
 from cadrumo.core.external_constants import OutputLanguage
 
 from ..legal_reference import (
-    LegalReferenceError,
     LegalProvisionRecord,
+    LegalReferenceError,
     load_legal_provisions,
     render_legal_reference,
 )

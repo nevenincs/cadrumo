@@ -1,5 +1,4 @@
 [revisions."2003-y-siguientes"]
-label = "Modelo 840 ejercicios 2003 y siguientes (Orden HAC/2572/2003)"
 valid_from = 2003-09-19
 period_selector = { year_from = 2003, periods = ["0A"] }
 legal_refs = [

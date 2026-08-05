@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0512"
 number = "0512"
-label = "Parte autonómica: Mínimo del contribuyente. Importe"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_contribuyente_autonomico"
 input_kind = "computed"

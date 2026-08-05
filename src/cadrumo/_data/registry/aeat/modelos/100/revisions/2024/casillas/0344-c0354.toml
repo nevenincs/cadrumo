@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0354"
 number = "0354"
-label = "Suma de ganancias patrimoniales derivadas de transmisiones de derechos de suscripción (suma de las casillas [0351])"
 section = ["resultados", "gp_derechos_res"]
 semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
 input_kind = "computed"

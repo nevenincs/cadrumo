@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1978"
 number = "1978"
-label = "NIF"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "nif"
 semantic_role = "irpf_feac_entidad_nif"

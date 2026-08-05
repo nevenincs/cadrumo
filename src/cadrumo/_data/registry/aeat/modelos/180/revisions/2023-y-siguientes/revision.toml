@@ -1,6 +1,5 @@
 [revisions.2023-y-siguientes]
 id = "2023-y-siguientes"
-label = "Orden HAP/1732/2014 actualizada por Orden HFP/1284/2023"
 valid_from = 2023-01-01
 period_selector = { year_from = 2023, periods = ["0A"] }
 legal_refs = [

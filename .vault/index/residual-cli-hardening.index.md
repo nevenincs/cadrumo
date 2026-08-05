@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#residual-cli-hardening'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:422529a7b9f0045da581403ecd49d33c43cc1c6d0dc4f01503049ce41ec64b4e'
 related:

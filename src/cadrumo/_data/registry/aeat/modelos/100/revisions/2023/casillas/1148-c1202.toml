@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1202"
 number = "1202"
-label = "Importe total de las primas de seguro satisfechas con derecho a la deducción"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_eps"]
 semantic_role = "irpf_eps_primas_seguro_deducibles_total"
 legal_refs = ["ley-35-2006:art-77"]

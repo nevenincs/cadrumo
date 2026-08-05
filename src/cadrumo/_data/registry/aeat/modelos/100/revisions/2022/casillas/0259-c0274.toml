@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0274"
 number = "0274"
-label = "Cantidad a imputar"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_derechos_imagen"]
 semantic_role = "irpf_re_imagen_cantidad_imputar"
 continuidad_id = "irpf-re-imagen-cantidad-imputar"

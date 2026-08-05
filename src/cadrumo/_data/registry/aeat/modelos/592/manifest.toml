@@ -1,7 +1,5 @@
 [modelo]
 id = "592"
-title = "Impuesto especial sobre envases de plástico no reutilizables — autoliquidación"
-official_name = "Modelo 592. Impuesto especial sobre los envases de plástico no reutilizables. Autoliquidación."
 tax_domain = "plastico"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

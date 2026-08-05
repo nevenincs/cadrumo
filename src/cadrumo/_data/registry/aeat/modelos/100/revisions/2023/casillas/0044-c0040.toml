@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0040"
 number = "0040"
-label = "Rendimiento neto reducido"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
 input_kind = "computed"
 formula = "renta-2023-capital-mobiliario-ahorro-rendimiento-neto-reducido"

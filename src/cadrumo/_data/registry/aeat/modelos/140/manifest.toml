@@ -1,7 +1,5 @@
 [modelo]
 id = "140"
-title = "IRPF deducción por maternidad — solicitud de abono anticipado"
-official_name = "Modelo 140. Impuesto sobre la Renta de las Personas Físicas. Deducción por maternidad. Solicitud de abono anticipado."
 tax_domain = "irpf"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

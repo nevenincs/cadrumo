@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0922"
 number = "0922"
-label = "Por nacimiento o adopción de hijos"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_nacimiento_adopcion"
 continuidad_id = "irpf-deduccion-canarias-nacimiento-adopcion"

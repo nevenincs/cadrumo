@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1842"
 number = "1842"
-label = "Ganancia patrimonial no exenta"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_no_exenta_sin_reduccion"
 continuidad_id = "irpf-ganancia-inmueble-no-exenta-sin-reduccion"

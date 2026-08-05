@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0399"
 number = "0399"
-label = "Importe de la ganancia patrimonial que procede imputar a 2021"
 section = ["toma_datos_ampliada", "gp_reinversion"]
 semantic_role = "irpf_ganancia_reinversion_imputable"
 continuidad_id = "irpf-ganancia-reinversion-imputable"

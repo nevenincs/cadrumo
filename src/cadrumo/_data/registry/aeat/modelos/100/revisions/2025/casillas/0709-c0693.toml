@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0693"
 number = "0693"
-label = "Importe del resultado a ingresar de su declaración (casilla [0670]) cuya suspensión se solicita"
 section = ["resultados", "compensacion_conyuges_res"]
 semantic_role = "irpf_compensacion_conyuges_ingresar_suspendido"
 continuidad_id = "irpf-compensacion-conyuges-ingresar-suspendido"

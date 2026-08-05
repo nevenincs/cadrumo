@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1392"
 number = "1392"
-label = "Número de orden del inmueble"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"
 semantic_role = "irpf_inmueble_numero_orden"

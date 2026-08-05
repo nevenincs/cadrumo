@@ -26,7 +26,6 @@
 [[revisions."2023-y-siguientes".casillas]]
 id = "modulos-iva-epigrafe"
 number = "modulos-iva-epigrafe"
-label = "Epígrafe IAE de la actividad en régimen simplificado de IVA (módulos)"
 section = ["iva", "regimen_simplificado"]
 data_type = "text"
 semantic_role = "iva_rs_modulos_epigrafe_iae"
@@ -38,7 +37,6 @@ source_refs = ["boe-orden-hac-1347-2024-iva-authority"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "modulos-iva-1-unidades"
 number = "modulos-iva-1-unidades"
-label = "Módulo 1 (Personal empleado): número de unidades"
 section = ["iva", "regimen_simplificado"]
 data_type = "decimal"
 semantic_role = "iva_rs_modulos_1_unidades"
@@ -53,7 +51,6 @@ source_refs = ["boe-orden-hac-1347-2024-iva-authority"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "modulos-iva-2-unidades"
 number = "modulos-iva-2-unidades"
-label = "Módulo 2 (unidad actividad-específica: distancia recorrida, carga vehículos o superficie del local): número de unidades"
 section = ["iva", "regimen_simplificado"]
 data_type = "decimal"
 semantic_role = "iva_rs_modulos_2_unidades"
@@ -68,7 +65,6 @@ source_refs = ["boe-orden-hac-1347-2024-iva-authority"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "modulos-iva-3-unidades"
 number = "modulos-iva-3-unidades"
-label = "Módulo 3 (unidad actividad-específica: consumo de energía eléctrica u otra): número de unidades"
 section = ["iva", "regimen_simplificado"]
 data_type = "decimal"
 semantic_role = "iva_rs_modulos_3_unidades"
@@ -83,7 +79,6 @@ source_refs = ["boe-orden-hac-1347-2024-iva-authority"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "modulos-iva-cuota-devengada"
 number = "modulos-iva-cuota-devengada"
-label = "Cuota devengada por operaciones corrientes (Σ unidades módulo × cuota devengada anual por unidad)"
 section = ["iva", "regimen_simplificado"]
 data_type = "money"
 semantic_role = "iva_rs_modulos_cuota_devengada"
@@ -98,7 +93,6 @@ source_refs = ["boe-orden-hac-1347-2024-iva-authority"]
 [[revisions."2023-y-siguientes".casillas]]
 id = "modulos-iva-cuota-derivada"
 number = "modulos-iva-cuota-derivada"
-label = "Cuota derivada del régimen simplificado (mayor de cuota devengada neta de deducibles/forfait, o cuota mínima)"
 section = ["iva", "regimen_simplificado"]
 data_type = "money"
 semantic_role = "iva_rs_modulos_cuota_derivada"

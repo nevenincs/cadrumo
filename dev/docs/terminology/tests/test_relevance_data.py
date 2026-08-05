@@ -247,7 +247,8 @@ def test_every_target_resolves_in_the_current_build(
                     )
                 elif target.target != expected_target:
                     unresolved.append(
-                        f"{mapping.query!r} -> {target.record_id} target {target.target!r}, expected {expected_target!r}",
+                        f"{mapping.query!r} -> {target.record_id} target {target.target!r}, "
+                        f"expected {expected_target!r}",
                     )
                 continue
             if target.surface == "legal" or target.target.startswith("https://www.boe.es/"):

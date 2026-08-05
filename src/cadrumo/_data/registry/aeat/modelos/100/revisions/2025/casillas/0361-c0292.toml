@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0292"
 number = "0292"
-label = "En metálico"
 section = ["toma_datos_ampliada", "gp_premios", "juegos_pub"]
 semantic_role = "irpf_ganancia_premios_juegos_pub_metalico"
 continuidad_id = "irpf-ganancia-premios-juegos-pub-metalico"

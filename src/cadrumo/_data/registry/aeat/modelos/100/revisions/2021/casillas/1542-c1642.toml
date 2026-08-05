@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1642"
 number = "1642"
-label = "Ganancia exenta por reinversión en rentas vitalicias"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_exenta_renta_vitalicia"
 continuidad_id = "irpf-ganancia-otros-exenta-renta-vitalicia"

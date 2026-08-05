@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0076"
 number = "0076"
-label = "Número de días en que el inmueble ha sido su vivienda habitual en 2024"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"
 semantic_role = "irpf_inmueble_dias_vivienda_habitual"

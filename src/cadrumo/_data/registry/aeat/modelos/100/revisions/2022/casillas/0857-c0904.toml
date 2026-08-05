@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0904"
 number = "0904"
-label = "Por donaciones, cesiones de uso o contratos de comodato y convenios de colaboración, relativos al mecenazgo deportivo"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 semantic_role = "irpf_deduccion_baleares_mecenazgo_deportivo"
 continuidad_id = "irpf-deduccion-baleares-mecenazgo-deportivo"

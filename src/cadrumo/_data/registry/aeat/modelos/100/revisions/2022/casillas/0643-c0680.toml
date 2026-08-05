@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0680"
 number = "0680"
-label = "Resultado de la declaración complementaria"
 section = ["resultados", "regularizacion_res"]
 data_type = "decimal"
 semantic_role = "irpf_regularizacion_complementaria_resultado"

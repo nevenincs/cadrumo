@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.retenciones"
 number = "97-109"
-label = "Retenciones e ingresos a cuenta del perceptor"
 section = ["perceptor", "renta"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0327"
 number = "0327"
-label = "Denominación de los valores transmitidos (entidad emisora)"
 section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
 data_type = "text"
 semantic_role = "irpf_ganancia_acciones_denominacion"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "PH18"
 number = "*74"
-label = "Hijos menores de 18 anos en la unidad familiar"
 section = ["datos_identificativos", "hijos"]
 data_type = "boolean"
 semantic_role = "irpf_hijos_menores_unidad_familiar_flag"

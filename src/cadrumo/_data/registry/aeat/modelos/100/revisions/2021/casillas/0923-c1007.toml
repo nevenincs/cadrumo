@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1007"
 number = "1007"
-label = "Por donaciones a determinadas entidades en beneficio del medio ambiente, la conservación del patrimonio natural y de custodia del territorio"
 section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
 semantic_role = "irpf_deduccion_catalunya_donaciones_medio_ambiente"
 continuidad_id = "irpf-deduccion-catalunya-donaciones-medio-ambiente"

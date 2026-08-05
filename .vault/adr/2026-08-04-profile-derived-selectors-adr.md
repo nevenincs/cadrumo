@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#profile-derived-selectors'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:b9205bf2f56bc17cf1fadc241a2fd43cf5e7ea87b1d7800579d90e41b73756b0'
+body_hash: 'sha256:309fef92b50938558965098db510991233abd14809b6d8d625739b84253de561'
 related:
   - "[[2026-08-04-profile-derived-selectors-research]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
@@ -191,7 +191,6 @@ to ignore it. The narrow derived-scoped advisory covers the sub-class where ever
 real. A related standing defect — a casilla that hard-fails because a declared operator
 field has no entry surface — is left exactly as loud as it is today and needs its own
 record, together with the entry-surface work for the eligibility inputs.
-
 
 AMENDMENT: a clear is exempt from the refusal.
 

@@ -1,4 +1,4 @@
-"""Hard gate: no test file may sit outside every declared pytest lane.
+"""Hard gate: no TEST may sit outside every declared pytest lane.
 
 An unreachable test is worse than a missing one. It reports nothing while
 looking like coverage, so its rot is invisible until somebody happens to read
@@ -6,10 +6,17 @@ it. That state is not hypothetical here: the fourteen channel-generator tests
 sat in it long enough for two independent breakages to accumulate, and the
 author of the second had no signal at all.
 
+The unit of the finding is the TEST, not the file. A file-level verdict is both
+too noisy and too quiet at once, and this repository has one file proving each
+half: ``test_secure_sql.py`` was reported entirely unreachable because a single
+``os_keychain`` test dragged the flattened marker set out of every lane (too
+noisy), while the genuine defect underneath -- that one test really is selected
+by no lane -- is invisible to any model that answers only "does SOME test in
+this file run" (too quiet). Reporting per test resolves both.
+
 No stored baseline and no allowlist. The worklist is recomputed from the tree on
-every run, so coverage can only ratchet up: a new test directory outside every
-lane fails immediately rather than being absorbed into an accepted set that
-nobody revisits.
+every run, so coverage can only ratchet up: a new test outside every lane fails
+immediately rather than being absorbed into an accepted set that nobody revisits.
 """
 
 from __future__ import annotations
@@ -20,11 +27,12 @@ import pytest
 
 from dev.ci.lane_reachability import (
     Lane,
+    analyse_reachability,
     declared_lanes,
     discover_test_files,
     expression_selects,
-    markers_in,
-    unreachable_test_files,
+    marker_sets_in,
+    tracked_test_files,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -32,24 +40,142 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _ROOT: Path = Path(__file__).resolve().parents[3]
 
 
-def test_every_test_file_is_selected_by_some_declared_lane() -> None:
+def _synthetic_repository(root: Path, *, lane: str) -> None:
+    """Write a minimal tree carrying one declared lane and no tests yet."""
+    (root / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (root / "justfile").write_text(f"check:\n    {lane}\n", encoding="utf-8")
+
+
+def _write_test(path: Path, body: str) -> None:
+    """Write a test module, creating its parents."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8")
+
+
+def test_every_test_is_selected_by_some_declared_lane() -> None:
     """The gate itself. Hard-cut: no baseline, no allowlist, no exceptions."""
-    unreachable = unreachable_test_files(_ROOT)
-    assert unreachable == (), (
-        "these test files are selected by no declared lane, so nothing runs them:\n  " + "\n  ".join(unreachable)
+    report = analyse_reachability(_ROOT)
+
+    assert report.unreachable == (), (
+        "these tests are selected by no declared lane, so nothing runs them:\n  "
+        + "\n  ".join(entry.describe() for entry in report.unreachable)
+        + "\n\nEither add a lane that names the path AND accepts the marker, or "
+        "change the marker. A test nobody runs reads as coverage and is not."
     )
 
 
-def test_the_repository_declares_lanes_at_all() -> None:
+def test_the_gate_measured_a_real_corpus() -> None:
     """A parser that found nothing would report perfect coverage.
 
-    This is the gate's own failure mode: zero lanes means every file is
-    unreachable, but zero *files* would make the gate pass vacuously. Both sides
-    are pinned so a broken parser cannot read as a clean tree.
+    This is the gate's own failure mode: zero lanes means every test is
+    unreachable, but zero *analysed files* would make the gate pass vacuously.
+    Both sides are pinned so a broken reader cannot read as a clean tree.
     """
+    report = analyse_reachability(_ROOT)
     lanes = declared_lanes(_ROOT)
+
     assert len(lanes) > 10, "lane discovery collapsed; the gate would be measuring nothing"
-    assert len(discover_test_files(_ROOT)) > 100, "test discovery collapsed; the gate would pass vacuously"
+    assert report.analysed > 1000, f"only {report.analysed} files analysed; the reader has stopped matching"
+    assert len(report.skipped) < report.analysed // 10, (
+        f"{len(report.skipped)} tracked files were unreadable against {report.analysed} analysed; "
+        "that is mass-skip, not a peer mid-edit"
+    )
+
+
+def test_tracked_discovery_ignores_untracked_scratch(tmp_path: Path) -> None:
+    """Discovery is git-backed, and the real tree is the control.
+
+    Many agents work this tree at once. An untracked path is a peer's
+    uncommitted work that no lane could name and CI will never see, so counting
+    it would red a SHARED gate on private state whose only remedies are both
+    wrong: wire an uncommitted path into a lane, or delete a peer's work.
+    """
+    tracked = tracked_test_files(_ROOT)
+    assert len(tracked) > 1000, "tracked discovery collapsed"
+
+    scratch = _ROOT / "dev" / "ci" / "tests" / "test_untracked_scratch_probe.py"
+    assert scratch not in tracked, "an untracked probe path must never be discovered"
+
+    # The same filter over an on-disk walk would have to see it if it existed.
+    assert all(path.name.startswith("test_") for path in tracked)
+
+
+def test_a_planted_orphan_reds_the_gate(tmp_path: Path) -> None:
+    """Anti-tautology, against an injectable root rather than the real tree.
+
+    Without this the gate could pass because its discovery is broken rather than
+    because the tree is clean, and those two outcomes look identical.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    unit_module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_{name}() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", unit_module.format(name="a"))
+
+    clean = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert clean.unreachable == ()
+    assert clean.analysed == 1
+
+    _write_test(tmp_path / "outside" / "tests" / "test_orphan.py", unit_module.format(name="b"))
+
+    dirty = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert [entry.path for entry in dirty.unreachable] == ["outside/tests/test_orphan.py"]
+    assert [entry.test for entry in dirty.unreachable] == ["test_b"]
+
+
+def test_a_marker_only_exclusion_also_reds_the_gate(tmp_path: Path) -> None:
+    """The half a path-only model would miss, proven separately."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    # In the lane's path, but carrying a marker the lane's expression rejects.
+    _write_test(
+        tmp_path / "src" / "tests" / "test_serial_only.py",
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.integration, pytest.mark.serial]\n\n\n"
+        "def test_c() -> None:\n    assert True\n",
+    )
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert [entry.path for entry in report.unreachable] == ["src/tests/test_serial_only.py"]
+
+
+def test_one_excluded_test_does_not_condemn_its_reachable_siblings(tmp_path: Path) -> None:
+    """The false positive that motivated per-test granularity, pinned.
+
+    This is the exact shape of ``src/cadrumo/tests/test_secure_sql.py``: module
+    marked ``unit``, one test additionally marked ``os_keychain``, and every
+    lane excluding that marker. Flattening the file's markers into one set makes
+    the WHOLE file read as unreachable while its unit siblings run daily.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m 'unit and not os_keychain'")
+    _write_test(
+        tmp_path / "src" / "tests" / "test_mixed.py",
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.unit]\n\n\n"
+        "def test_ordinary() -> None:\n    assert True\n\n\n"
+        "@pytest.mark.os_keychain\ndef test_needs_keychain() -> None:\n    assert True\n",
+    )
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+
+    # The excluded test is reported; its sibling is not, and the file is not.
+    assert [entry.test for entry in report.unreachable] == ["test_needs_keychain"]
+    assert report.affected_files() == ("src/tests/test_mixed.py",)
+
+
+def test_an_unreadable_tracked_file_is_skipped_not_reported(tmp_path: Path) -> None:
+    """A peer staging a deletion must not read as an orphaned test.
+
+    ``git ls-files`` lists a path the working tree no longer holds while a peer
+    stages its removal. Treating that as "no tests, therefore unreachable" would
+    red a shared gate on another agent's in-flight work; treating it as unmarked
+    would be worse still. It is counted, not judged.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    absent = tmp_path / "src" / "tests" / "test_deleted_by_a_peer.py"
+
+    report = analyse_reachability(tmp_path, files=[absent])
+
+    assert report.unreachable == ()
+    assert report.skipped == ("src/tests/test_deleted_by_a_peer.py",)
+    assert report.analysed == 0
 
 
 def test_marker_and_path_are_both_required() -> None:
@@ -97,52 +223,36 @@ def test_expression_evaluation_is_structural_not_substring(
     assert expression_selects(expression, frozenset(markers)) is selected
 
 
-def test_markers_are_collected_from_decorators_as_well_as_pytestmark(tmp_path: Path) -> None:
-    """A file with only per-test decorators is not an unmarked file."""
-    module = tmp_path / "test_decorated.py"
+def test_markers_are_collected_per_test_from_every_scope(tmp_path: Path) -> None:
+    """Module, class, and function markers all reach the test that carries them."""
+    module = tmp_path / "test_scopes.py"
     module.write_text(
-        "import pytest\n\n\n@pytest.mark.integration\ndef test_thing() -> None:\n    assert True\n",
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.integration]\n\n\n"
+        "@pytest.mark.serial\n"
+        "class TestGroup:\n"
+        "    @pytest.mark.slow\n"
+        "    def test_inner(self) -> None:\n        assert True\n\n\n"
+        "def test_outer() -> None:\n    assert True\n",
         encoding="utf-8",
     )
-    assert "integration" in markers_in(module)
+
+    resolved = marker_sets_in(module)
+    assert resolved is not None
+    by_name = {entry.test: entry.markers for entry in resolved}
+
+    assert by_name["test_inner"] == frozenset({"integration", "serial", "slow"})
+    assert by_name["test_outer"] == frozenset({"integration"})
 
 
-def test_a_planted_orphan_reds_the_gate(tmp_path: Path) -> None:
-    """Anti-tautology, against an injectable root rather than the real tree.
+def test_marker_sets_distinguish_absent_from_testless(tmp_path: Path) -> None:
+    """None means unreadable; an empty tuple means read and holding no tests.
 
-    Without this the gate could pass because its discovery is broken rather than
-    because the tree is clean, and those two outcomes look identical.
+    Collapsing the two is what would let a peer's staged deletion be reported as
+    a file whose tests nothing runs.
     """
-    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
-    (tmp_path / "justfile").write_text("check:\n    pytest -q src -m unit\n", encoding="utf-8")
+    empty = tmp_path / "test_no_tests.py"
+    empty.write_text("import pytest\n\npytestmark = [pytest.mark.unit]\n", encoding="utf-8")
 
-    covered = tmp_path / "src" / "tests"
-    covered.mkdir(parents=True)
-    (covered / "test_covered.py").write_text(
-        "import pytest\n\npytestmark = [pytest.mark.unit]\n",
-        encoding="utf-8",
-    )
-    assert unreachable_test_files(tmp_path) == ()
-
-    orphan = tmp_path / "outside" / "tests"
-    orphan.mkdir(parents=True)
-    (orphan / "test_orphan.py").write_text(
-        "import pytest\n\npytestmark = [pytest.mark.unit]\n",
-        encoding="utf-8",
-    )
-    assert unreachable_test_files(tmp_path) == ("outside/tests/test_orphan.py",)
-
-
-def test_a_marker_only_exclusion_also_reds_the_gate(tmp_path: Path) -> None:
-    """The half a path-only model would miss, proven separately."""
-    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
-    (tmp_path / "justfile").write_text("check:\n    pytest -q src -m unit\n", encoding="utf-8")
-
-    covered = tmp_path / "src" / "tests"
-    covered.mkdir(parents=True)
-    # In the lane's path, but carrying a marker the lane's expression rejects.
-    (covered / "test_serial_only.py").write_text(
-        "import pytest\n\npytestmark = [pytest.mark.integration, pytest.mark.serial]\n",
-        encoding="utf-8",
-    )
-    assert unreachable_test_files(tmp_path) == ("src/tests/test_serial_only.py",)
+    assert marker_sets_in(empty) == ()
+    assert marker_sets_in(tmp_path / "test_never_written.py") is None

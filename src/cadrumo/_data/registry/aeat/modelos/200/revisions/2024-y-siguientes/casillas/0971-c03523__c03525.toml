@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03523"
 number = "03523"
-label = "Deducc. para incentivar determ.actividades - 2025: Barcelona Mobile World Capital (MW) - Deducción pendiente/generada [03523]"
 section = ["deducc_para_incentivar_determ_actividades", "2025_barcelona_mobile_world_capital_mw"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_evento_especial"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03524"
 number = "03524"
-label = "Deducc. para incentivar determ.actividades - 2025: Barcelona Mobile World Capital (MW) - Aplicado en esta liquidación [03524]"
 section = ["deducc_para_incentivar_determ_actividades", "2025_barcelona_mobile_world_capital_mw"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_aplicado_periodo"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03525"
 number = "03525"
-label = "Deducc. para incentivar determ.actividades - 2025: Barcelona Mobile World Capital (MW) - Pendiente de aplicación en periodos futuros [03525]"
 section = ["deducc_para_incentivar_determ_actividades", "2025_barcelona_mobile_world_capital_mw"]
 data_type = "money"
 semantic_role = "is_deduccion_eventos_especiales_pendiente"

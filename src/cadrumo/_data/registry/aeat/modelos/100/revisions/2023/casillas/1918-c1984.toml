@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1984"
 number = "1984"
-label = "Valor de adquisición del elemento patrimonial transmitido (valor de adquisición a efectos fiscales)"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 semantic_role = "irpf_feac_valor_adquisicion_elemento"
 continuidad_id = "irpf-feac-valor-adquisicion-elemento"

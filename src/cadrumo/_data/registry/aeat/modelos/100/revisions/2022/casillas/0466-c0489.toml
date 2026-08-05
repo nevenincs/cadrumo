@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0489"
 number = "0489"
-label = "Aportaciones y contribuciones realizadas en 2022 con derecho a reducción"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_deportistas"]
 semantic_role = "irpf_red_deportistas_aportaciones_contribuciones"
 continuidad_id = "irpf-red-deportistas-aportaciones-contribuciones"

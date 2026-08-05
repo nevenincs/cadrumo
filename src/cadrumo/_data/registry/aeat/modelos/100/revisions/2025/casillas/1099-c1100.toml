@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1100"
 number = "1100"
-label = "Por donaciones de bienes integrantes del Patrimonio Cultural Valenciano"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_donaciones_patrimonio_cultural"
 continuidad_id = "irpf-deduccion-c-valenciana-donaciones-patrimonio-cultural"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0372"
 number = "0372"
-label = "Importe a percibir"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_importe_percibir_3"
 continuidad_id = "irpf-ganancia-otros-importe-percibir-3"

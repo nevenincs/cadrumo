@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1988"
 number = "1988"
-label = "Ganancia patrimonial diferida (Capítulo VII del Título VII de la Ley del Impuesto sobre Sociedades)"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 semantic_role = "irpf_feac_ganancia_patrimonial_diferida"
 continuidad_id = "irpf-feac-ganancia-patrimonial-diferida"

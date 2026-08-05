@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0403"
 number = "0403"
-label = "NIF de la sociedad emisora o fondo de inversión"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 data_type = "nif"
 semantic_role = "irpf_fondo_inversion_nif"

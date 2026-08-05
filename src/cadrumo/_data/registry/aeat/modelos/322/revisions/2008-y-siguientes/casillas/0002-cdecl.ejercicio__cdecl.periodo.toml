@@ -1,7 +1,6 @@
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la autoliquidacion"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-322-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo mensual (01..12)"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1580"
 number = "1580"
-label = "Reducción aplicable (artículo 32.1 y D.T. 25.ª de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "decimal"
 semantic_role = "irpf_re_atrib_act_eco_reduccion_32_1"

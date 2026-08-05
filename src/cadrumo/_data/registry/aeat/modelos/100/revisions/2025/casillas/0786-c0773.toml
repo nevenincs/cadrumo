@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0773"
 number = "0773"
-label = "Para compensar los gastos de desplazamiento y permanencia de nuevos residentes en Cantabria"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes"
 semantic_role_cardinality = "intentional_singleton"

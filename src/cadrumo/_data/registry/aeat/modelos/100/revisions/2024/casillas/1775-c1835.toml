@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1835"
 number = "1835"
-label = "Ganancia exenta por reinversión en vivienda habitual"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_exenta_reinversion_vivienda"
 continuidad_id = "irpf-ganancia-inmueble-exenta-reinversion-vivienda"

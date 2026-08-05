@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1103"
 number = "1103"
-label = "Por donaciones destinadas al fomento de la Lengua Valenciana"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_donaciones_lengua_valenciana"
 continuidad_id = "irpf-deduccion-c-valenciana-donaciones-lengua-valenciana"

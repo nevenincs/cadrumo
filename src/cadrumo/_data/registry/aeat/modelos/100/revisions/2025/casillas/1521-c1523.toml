@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1523"
 number = "1523"
-label = "Rendimiento base producto"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 input_kind = "computed"
 formula = "renta-2025-eo-agraria-rendimiento-base-raices-tuberculos-forrajes"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1799"
 number = "1799"
-label = "Código País/Country code"
 section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
 data_type = "country_code"
 semantic_role = "irpf_compensacion_conyuges_nosepa_pais_codigo"

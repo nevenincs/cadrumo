@@ -2,7 +2,6 @@
 id = "decl.total-perceptores"
 number = "136-144"
 form_number = "01"
-label = "Numero total de perceptores"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_perceptores_count"

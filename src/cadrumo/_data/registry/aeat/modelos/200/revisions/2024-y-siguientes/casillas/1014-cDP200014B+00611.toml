@@ -2,7 +2,6 @@
 id = "DP200014B:00611"
 number = "00611"
 segmento = "DP200014B"
-label = "Liquidación IV - Pagos fraccionados/Cuota diferencial - Cuota diferencial - Estado [00611]"
 section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]
 data_type = "money"
 semantic_role = "is_liquidacion_iv_cuota_diferencial"

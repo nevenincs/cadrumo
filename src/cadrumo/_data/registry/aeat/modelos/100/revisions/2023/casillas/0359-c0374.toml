@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0374"
 number = "0374"
-label = "Pérdida patrimonial pendiente  de imputación"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_perdida_otros_pendiente_3"
 continuidad_id = "irpf-perdida-otros-pendiente-3"

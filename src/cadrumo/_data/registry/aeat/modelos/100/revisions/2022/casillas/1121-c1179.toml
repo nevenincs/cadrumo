@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1179"
 number = "1179"
-label = "Importe total de la deducción"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ides"]
 semantic_role = "irpf_deduccion_autonomica_otro_importe"
 continuidad_id = "irpf-deduccion-autonomica-otro-importe"

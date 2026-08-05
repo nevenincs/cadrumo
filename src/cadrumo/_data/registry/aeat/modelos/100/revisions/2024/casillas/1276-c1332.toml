@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1332"
 number = "1332"
-label = "Contribuyente con derecho a reducción"
 section = ["resultados", "anexo_c_res", "excesos_sistemas_prevision_social_personas_disc_parientes_res"]
 data_type = "text"
 semantic_role = "irpf_anexo_c_reductor_contribuyente_codigo"

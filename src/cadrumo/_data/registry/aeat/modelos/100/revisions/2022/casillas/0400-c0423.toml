@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0423"
 number = "0423"
-label = "Suma de pérdidas patrimoniales ([1609] + [0325] + [0340] + [1813] + [1844] + [0355] + [0385] + [0396])"
 section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
 semantic_role = "irpf_integracion_gyp_ahorro_suma_perdidas"
 input_kind = "computed"

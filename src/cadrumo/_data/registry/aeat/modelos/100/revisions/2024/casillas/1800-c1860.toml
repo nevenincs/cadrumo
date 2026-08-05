@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1860"
 number = "1860"
-label = "Último año  de cobro"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 data_type = "text"
 semantic_role = "irpf_ganancia_cripto_ultimo_anio_cobro"

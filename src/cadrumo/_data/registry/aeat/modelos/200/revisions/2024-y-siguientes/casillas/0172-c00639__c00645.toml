@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00639"
 number = "00639"
-label = "Estado de cambios patrimonio neto (III) - SALDO, FINAL DEL EJERCICIO - Resultado del ejercicio [00639]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_final_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00640"
 number = "00640"
-label = "Estado de cambios patrimonio neto (III) - SALDO, FINAL DEL EJERCICIO - Dividendo a cuenta [00640]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_final_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00641"
 number = "00641"
-label = "Estado de cambios patrimonio neto (III) - SALDO, FINAL DEL EJERCICIO - Otros instrumentos patrimonio neto [00641]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_final_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00642"
 number = "00642"
-label = "Estado de cambios patrimonio neto (III) - SALDO, FINAL DEL EJERCICIO - Ajustes por cambios de valor [00642]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_final_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00643"
 number = "00643"
-label = "Estado de cambios patrimonio neto (III) - SALDO, FINAL DEL EJERCICIO - Ajustes en patrimonio neto [00643]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_final_importe"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00644"
 number = "00644"
-label = "Estado de cambios patrimonio neto (III) - SALDO, FINAL DEL EJERCICIO - Subvenciones, donaciones y legados recibidos [00644]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_final_importe"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00645"
 number = "00645"
-label = "Estado de cambios patrimonio neto (III) - SALDO, FINAL DEL EJERCICIO - Total [00645]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_final_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_final_importe"

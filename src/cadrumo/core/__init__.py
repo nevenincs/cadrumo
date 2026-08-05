@@ -109,6 +109,10 @@ from ._credentials import (
     character_class_count,
 )
 from ._declaracion_idioma import DeclaracionIdioma
+from ._descendant_relacion import (
+    ART_58_2_ENTITLING_RELACIONES,
+    DescendantRelacion,
+)
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._fts_query import fts_or_group
@@ -158,10 +162,6 @@ from ._post_filing_event import (
     PostFilingEventKind,
     classify_post_filing_event_kind,
     post_filing_event_is_actionable,
-)
-from ._descendant_relacion import (
-    ART_58_2_ENTITLING_RELACIONES,
-    DescendantRelacion,
 )
 from ._profile_session import ProfileSessionRefusalReason
 from ._prorrata_exclusions import (
@@ -278,9 +278,9 @@ __all__: list[str] = [
     "AEAT_CSV_MIN_LENGTH",
     "AEAT_CSV_PATTERN",
     "ANTHROPIC_EXTRA",
+    "ART_58_2_ENTITLING_RELACIONES",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
-    "ART_58_2_ENTITLING_RELACIONES",
     "BROWSER_EXTRA",
     "COMPATIBILITY_REGIME",
     "DEFAULT_WRITE_PROVENANCE",

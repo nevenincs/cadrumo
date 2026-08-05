@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1015"
 number = "1015"
-label = "Por compra de material escolar"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_material_escolar"
 continuidad_id = "irpf-deduccion-extremadura-material-escolar"

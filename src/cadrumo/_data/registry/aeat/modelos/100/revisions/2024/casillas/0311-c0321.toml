@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0321"
 number = "0321"
-label = "Pérdidas patrimoniales"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 semantic_role = "irpf_perdida_fondos_importe"
 continuidad_id = "irpf-perdida-fondos-importe"

@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0005"
 number = "0005"
-label = "Ingresos a cuenta"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 semantic_role = "irpf_rendimiento_trabajo_especie_ingreso_cuenta"
 legal_refs = ["ley-35-2006:art-17"]

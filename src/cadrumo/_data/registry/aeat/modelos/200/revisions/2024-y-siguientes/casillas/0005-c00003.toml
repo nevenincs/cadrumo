@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00003"
 number = "00003"
-label = "Sociedad de inversión de capital variable o fondo de inversión de carácter financiero [00003]"
 section = ["sociedad_de_inversion_de_capital_variable_o_fondo"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

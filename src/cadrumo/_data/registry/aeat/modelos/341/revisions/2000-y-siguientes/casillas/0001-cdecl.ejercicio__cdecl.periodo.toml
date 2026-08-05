@@ -6,7 +6,6 @@
 [[revisions."2000-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la autoliquidación"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -18,7 +17,6 @@ source_refs = ["enrolled-modelo-341-procedure"]
 [[revisions."2000-y-siguientes".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo de liquidación al que se refiere la autoliquidación"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_declaracion"

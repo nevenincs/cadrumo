@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0224"
 number = "0224"
-label = "Rendimiento neto de actividades economicas en estimacion directa"
 section = ["rendimientos_actividades_economicas"]
 semantic_role = "irpf_ed_rdto_neto_previo_reduccion"
 input_kind = "computed"

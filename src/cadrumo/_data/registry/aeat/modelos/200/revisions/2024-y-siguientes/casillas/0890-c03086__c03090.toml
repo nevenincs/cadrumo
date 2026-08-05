@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03086"
 number = "03086"
-label = "Unión temporal de empresas, ajustes del art. 45.1 LIS - Disminución - Correcciones del ejercicio - Permanentes [03086]"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03087"
 number = "03087"
-label = "Unión temporal de empresas, ajustes del art. 45.1 LIS - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03087]"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_ajuste_art451_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03088"
 number = "03088"
-label = "Unión temporal de empresas, ajustes del art. 45.1 LIS - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03088]"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_ajuste_art451_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03089"
 number = "03089"
-label = "Unión temporal de empresas, ajustes del art. 45.1 LIS - Disminución - Saldo pendiente a principio de ejercicio [03089]"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_ajuste_art451_disminucion"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03090"
 number = "03090"
-label = "Unión temporal de empresas, ajustes del art. 45.1 LIS - Disminución - Saldo pendiente a fin de ejercicio [03090]"
 section = ["union_temporal_de_empresas_ajustes_del_art_45_1_li", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_ajuste_art451_disminucion"

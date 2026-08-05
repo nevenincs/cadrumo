@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1477"
 number = "1477"
-label = "Gastos extraordinarios por circunstancias excepcionales"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_gastos_extraordinarios"
 continuidad_id = "irpf-eo-gastos-extraordinarios"

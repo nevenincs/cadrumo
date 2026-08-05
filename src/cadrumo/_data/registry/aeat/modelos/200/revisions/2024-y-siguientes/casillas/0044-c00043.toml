@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00043"
 number = "00043"
-label = "Obligación información DT 5ª RIS [00043]"
 section = ["obligacion_informacion_dt_5a_ris"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

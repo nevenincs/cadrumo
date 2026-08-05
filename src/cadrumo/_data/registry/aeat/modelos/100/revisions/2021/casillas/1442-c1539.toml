@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1539"
 number = "1539"
-label = "Rendimiento neto minorado"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_rdto_neto_minorado"

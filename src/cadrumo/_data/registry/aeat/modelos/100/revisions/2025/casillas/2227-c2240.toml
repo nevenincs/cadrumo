@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2240"
 number = "2240"
-label = "Por la adquisición de libros de texto y material escolar"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_libros_texto"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

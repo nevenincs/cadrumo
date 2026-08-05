@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01763"
 number = "01763"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2024 - Deducción pendiente/generada [01763]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"

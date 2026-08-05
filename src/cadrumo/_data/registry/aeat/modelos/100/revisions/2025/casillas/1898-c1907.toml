@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1907"
 number = "1907"
-label = "Código del municipio:"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_castilla_la_mancha_municipio_codigo"

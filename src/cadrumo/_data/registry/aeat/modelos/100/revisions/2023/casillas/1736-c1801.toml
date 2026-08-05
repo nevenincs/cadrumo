@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1801"
 number = "1801"
-label = "Imputación temporal: marque una \"X\" cuando opte por el criterio de operaciones a plazos o con precio aplazado (Cumplimente el anexo C.1)"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 data_type = "boolean"
 semantic_role = "irpf_ganancia_cripto_imputacion_plazos"

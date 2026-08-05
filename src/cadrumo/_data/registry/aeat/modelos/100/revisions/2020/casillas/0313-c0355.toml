@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0355"
 number = "0355"
-label = "Suma de pérdidas patrimoniales derivadas de transmisiones de derechos de suscripción (suma de las casillas [0353])"
 section = ["resultados", "gp_derechos_res"]
 semantic_role = "irpf_gyp_derechos_suscripcion_suma_perdidas"
 input_kind = "computed"

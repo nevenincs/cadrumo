@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01225"
 number = "01225"
-label = "Rég. cooperativas - Detalle compensación cuotas. 2024 Pendiente aplicación al principio del periodo [01225]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
 data_type = "money"
 semantic_role = "is_cooperativa_compensacion_cuotas"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01226"
 number = "01226"
-label = "Rég. cooperativas - Detalle compensación cuotas. 2024 Pendiente aplicación en períodos futuros [01226]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2024_pendiente_aplicac"]
 data_type = "money"
 semantic_role = "is_cooperativa_compensacion_cuotas"

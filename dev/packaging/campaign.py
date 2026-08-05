@@ -23,8 +23,8 @@ Profiles mirror the two workflow aggregates:
   workflow; it exists here so the lane registry is the one source of truth
   for what each profile proves.
 
-The lane registry is conformance-pinned by ``tests/test_campaign.py`` so the
-profiles cannot silently drift from the per-lane ``just`` recipes.
+This registry is the single authority for what each profile proves; the
+profiles below are the only supported lane groupings.
 """
 
 from __future__ import annotations
@@ -234,7 +234,9 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     # Fail before any wheel or venv work if a git-tracked shipped data file is
-    # missing from the worktree (seconds; runs in every profile, quick included).
+    # missing from the worktree (seconds). Runs in every profile that reaches
+    # here; a carried quick proof returns above, which is safe because a missing
+    # tracked file dirties the proof scope and suppresses the carry.
     _run_step([sys.executable, "-m", "dev.packaging.source_preflight"], repo_root, "source-preflight")
 
     _run_step(

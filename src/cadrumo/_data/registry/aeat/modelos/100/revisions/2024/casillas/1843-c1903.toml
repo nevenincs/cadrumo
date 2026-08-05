@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1903"
 number = "1903"
-label = "Resto ganancia patrimonial  pendiente de imputación"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_ganancia_pendiente_resto"
 continuidad_id = "irpf-ganancia-inmueble-ganancia-pendiente-resto"

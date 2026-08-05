@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0244"
 number = "0244"
-label = "Marque con una \"X\" si otro contribuyente tiene derecho respecto del cónyuge con discapacidad, a la deducción por descendiente o ascendiente con discapacidad a cargo"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
 data_type = "boolean"
 semantic_role = "irpf_conyuge_discapacidad_otro_contribuyente_flag"

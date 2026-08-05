@@ -27,10 +27,11 @@ See Also:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from ...core import Period
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
+from ...core.i18n import output_language
 from ...domain.calculations.registry import (
     BindingId,
     CasillaId,
@@ -49,7 +50,6 @@ class DataInventoryCasilla:
     casilla_id: CasillaId
     number: str
     label: str
-    localized_labels: dict[str, str] = field(default_factory=dict)
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()
     binding_id: BindingId | None = None
@@ -140,8 +140,7 @@ def data_inventory_checklist(
         entry = DataInventoryCasilla(
             casilla_id=casilla.id,
             number=casilla.number,
-            label=casilla.label,
-            localized_labels=dict(casilla.localized_labels),
+            label=casilla.get_label(output_language()),
             legal_refs=tuple(casilla.legal_refs),
             source_refs=tuple(casilla.source_refs),
             binding_id=casilla.binding,

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0209"
 number = "0209"
-label = "Por familia monoparental"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_familia_monoparental"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-familia-monoparental"

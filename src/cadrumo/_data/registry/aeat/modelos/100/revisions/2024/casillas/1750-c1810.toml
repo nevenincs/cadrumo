@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1810"
 number = "1810"
-label = "Ganancia exenta por reinversión en rentas vitalicias"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_exenta_renta_vitalicia"
 continuidad_id = "irpf-ganancia-cripto-exenta-renta-vitalicia"

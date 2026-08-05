@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1466"
 number = "1466"
-label = "Minoración por incentivo al empleo"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_minoracion_empleo"
 continuidad_id = "irpf-eo-minoracion-empleo"

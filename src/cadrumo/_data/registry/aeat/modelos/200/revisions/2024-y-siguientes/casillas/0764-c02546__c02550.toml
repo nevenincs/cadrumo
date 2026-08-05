@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02546"
 number = "02546"
-label = "Ajustes por rentas derivadas de operaciones con quita o espera (art. 11.13 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02546]"
 section = ["ajustes_por_rentas_derivadas_de_operaciones_con_qu", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_rentas_operaciones_quita_espera_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02547"
 number = "02547"
-label = "Ajustes por rentas derivadas de operaciones con quita o espera (art. 11.13 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02547]"
 section = ["ajustes_por_rentas_derivadas_de_operaciones_con_qu", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_rentas_operaciones_quita_espera_temporaria_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02548"
 number = "02548"
-label = "Ajustes por rentas derivadas de operaciones con quita o espera (art. 11.13 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02548]"
 section = ["ajustes_por_rentas_derivadas_de_operaciones_con_qu", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_rentas_operaciones_quita_espera_temporaria_anteriores_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02549"
 number = "02549"
-label = "Ajustes por rentas derivadas de operaciones con quita o espera (art. 11.13 LIS) - Disminución - Saldo pendiente a principio de ejercicio [02549]"
 section = ["ajustes_por_rentas_derivadas_de_operaciones_con_qu", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_rentas_operaciones_quita_espera_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02550"
 number = "02550"
-label = "Ajustes por rentas derivadas de operaciones con quita o espera (art. 11.13 LIS) - Disminución - Saldo pendiente a fin de ejercicio [02550]"
 section = ["ajustes_por_rentas_derivadas_de_operaciones_con_qu", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_rentas_operaciones_quita_espera_saldo_final"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DECFAL"
 number = "*21"
-label = "Primer declarante fecha de fallecimiento"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
 semantic_role = "irpf_declarante_fecha_fallecimiento"

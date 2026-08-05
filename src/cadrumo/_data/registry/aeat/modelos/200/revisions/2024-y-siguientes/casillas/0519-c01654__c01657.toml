@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01654"
 number = "01654"
-label = "Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Araba/Álava [01654]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_resultado"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01655"
 number = "01655"
-label = "Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Gipuzkoa [01655]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01656"
 number = "01656"
-label = "Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Bizkaia [01656]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01657"
 number = "01657"
-label = "Tributación conjunta Estado y Adm.Forales - Resultado incluido en el 1er fraccionamiento de art. 19.1 LIS - Navarra [01657]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "resultado_incluido_en_el_1er_fraccionamiento_de_ar"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_fraccionamiento_y_rectificativa"

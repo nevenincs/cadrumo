@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1707"
 number = "1707"
-label = "Por gastos de traslado por razón de estudios en municipios afectados por riesgo de despoblamiento en Cantabria"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_traslado_estudios"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

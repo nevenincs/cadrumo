@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0226"
 number = "0226"
-label = "Rendimiento neto reducido"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 data_type = "decimal"
 semantic_role = "irpf_ed_rdto_neto_reducido"

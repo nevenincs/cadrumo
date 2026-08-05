@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02087"
 number = "02087"
-label = "Deducc. para incentivar determ.actividades - 2017 Suma deducciones Cap. IV Tit. VI Ley 43/95, RDLeg. 4/2004 y LIS (excepto I+D+i y TAP) - Pendiente de aplicación en periodos futuros [02087]"
 section = ["deducc_para_incentivar_determ_actividades", "2017_suma_deducciones_cap_iv_tit_vi_ley_43_95_rdle"]
 data_type = "money"
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"

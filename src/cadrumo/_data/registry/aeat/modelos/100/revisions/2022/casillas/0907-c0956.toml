@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0956"
 number = "0956"
-label = "Por obras de mejora generada en 2022 a deducir en los 2 años siguientes"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_obras_mejora_generado_ejercicio_pendiente"
 legal_refs = ["ley-35-2006:art-77"]

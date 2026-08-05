@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0485"
 number = "0485"
-label = "Importe de la pensión o anualidad satisfecha en 2025 por decisión judicial"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_pensiones_compensatorias_alimentos"]
 semantic_role = "irpf_red_pensiones_compensatorias_importe"
 legal_refs = ["ley-35-2006:art-55", "orden-hac-277-2026:art-3"]

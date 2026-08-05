@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0325"
 number = "0325"
-label = "Suma de pérdidas patrimoniales derivadas de transmisiones o reembolsos de acciones o participaciones de instituciones de inversión colectiva o SOCIMI (suma de las casillas [0322])"
 section = ["resultados", "gp_fondos_res"]
 semantic_role = "irpf_gyp_renta_fija_suma_perdidas"
 input_kind = "computed"

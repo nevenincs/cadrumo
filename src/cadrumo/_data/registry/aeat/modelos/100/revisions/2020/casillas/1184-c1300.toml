@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1300"
 number = "1300"
-label = "Contribuyente con derecho a reducción"
 section = ["resultados", "anexo_c_res", "exceso_seguros_colectivos_dependencia_res"]
 data_type = "text"
 semantic_role = "irpf_anexo_c_reductor_contribuyente_codigo"

@@ -139,7 +139,7 @@ commits this campaign's own founding defect -- a name re-typed instead of
 read from its declaration, mirrored as a name MATCHED instead of ANCHORED.
 Measured on the production set once anchor resolution replaced name
 matching: 2 of 6 raw matches were a different tree entirely
-(``locales/_modelo_manager.py``'s ``manifest.toml`` roots at
+(``domain/calculations/registry/_loader.py``'s ``manifest.toml`` roots at
 ``bundled_path("registry", "aeat")``, the bundled calculation-registry
 tree, not the taxonomy's own bucket ``manifest.toml`` at
 ``<root>/buckets/<bucket_id>/manifest.toml``) -- a 33% false-positive rate a
@@ -619,7 +619,7 @@ def _top_level_div_chains(scope_node: ast.AST) -> list[ast.BinOp]:
 #: Method names that continue a path-composition chain the way a ``/`` operator
 #: does. AEAT production code composes almost exclusively with ``.joinpath()``,
 #: never ``/`` -- a ``/``-only chain walk sees none of it, which is exactly how
-#: the ``_modelo_manager.py`` false positive stayed invisible to a naive
+#: the registry-loader false positive stayed invisible to a naive
 #: literal grep: the site was never a division chain to begin with.
 #: ``with_suffix``/``with_name`` are also included: ``envelope_path.with_suffix(
 #: ".lock")`` derives a new path from its receiver exactly like ``.joinpath()``
@@ -723,7 +723,7 @@ def vocabulary_literal_sites(revision: str, *, scope: str = "production") -> lis
         revision: Git revision to read; pin it, never pass a moving name.
         scope: One of :data:`SCOPES`. A vocabulary-matching literal can be a
             scanner false positive in either scope -- the
-            ``_modelo_manager.py`` ``bundled_path()`` case that motivated this
+            registry-loader ``bundled_path()`` case that motivated this
             function is a PRODUCTION site, not a test one.
 
     A chain is a candidate only when at least one of its literal segments

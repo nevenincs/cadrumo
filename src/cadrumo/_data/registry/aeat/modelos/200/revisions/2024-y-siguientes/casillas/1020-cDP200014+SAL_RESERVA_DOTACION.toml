@@ -2,7 +2,6 @@
 id = "DP200014:SAL_RESERVA_DOTACION"
 number = "SAL_RESERVA_DOTACION"
 segmento = "DP200014"
-label = "Liquidación III - Base Imponible - Sociedades Laborales - Reserva especial dotación Ley 44/2015 Art. 14 [SAL_RESERVA_DOTACION]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_sal_reserva_especial_dotacion"

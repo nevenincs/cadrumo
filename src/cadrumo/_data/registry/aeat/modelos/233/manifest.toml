@@ -1,7 +1,5 @@
 [modelo]
 id = "233"
-title = "Gastos en guarderías o centros de educación infantil autorizados (informativa anual)"
-official_name = "Modelo 233. Declaración informativa por gastos en guarderías o centros de educación infantil autorizados."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

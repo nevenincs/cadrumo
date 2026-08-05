@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0263"
 number = "0263"
-label = "Deducción por doble imposición internacional (base imputada)"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
 semantic_role = "irpf_re_aie_deduccion_doble_imposicion"
 continuidad_id = "irpf-re-aie-deduccion-doble-imposicion"

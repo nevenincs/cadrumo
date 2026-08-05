@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1577"
 number = "1577"
-label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
 section = ["rendimientos_actividades_economicas"]
 semantic_role = "irpf_rendimiento_act_eco_atribuido_rdto_neto"
 input_kind = "informational"

@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0302"
 number = "0302"
-label = "Ganancias patrimoniales obtenidas por los vecinos en 2021 como consecuencia de aprovechamientos forestales en montes públicos"
 section = ["toma_datos_ampliada", "gp_premios", "otras"]
 semantic_role = "irpf_ganancia_premios_aprovechamiento_forestal"
 continuidad_id = "irpf-ganancia-premios-aprovechamiento-forestal"

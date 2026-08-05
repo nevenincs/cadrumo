@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1131"
 number = "1131"
-label = "NIF de la entidad 1 de nueva o reciente creación"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enc"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_nueva_empresa_entidad_nif"

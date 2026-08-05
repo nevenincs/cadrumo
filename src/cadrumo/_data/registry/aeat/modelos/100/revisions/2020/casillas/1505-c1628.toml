@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1628"
 number = "1628"
-label = "Referencia catastral 1"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 data_type = "text"
 semantic_role = "irpf_gp_elemento_referencia_catastral_1"

@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1365"
 number = "1365"
-label = "Ejercicio 2015: Aplicado en esta  declaración"
 section = ["resultados", "anexo_c_res", "excesos_deportistas_res"]
 semantic_role = "irpf_anexo_c_exceso_deportistas_aplicado"
 legal_refs = ["ley-35-2006:da-11"]

@@ -1,7 +1,6 @@
 [[revisions.2023-2024.casillas]]
 id = "50"
 number = "50"
-label = "Mod. 40.3 LIS B2 — Dotaciones art. 11.12 LIS (cooperativas)"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_b2_dotaciones_art_11_12_coop"

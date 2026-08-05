@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0925"
 number = "0925"
-label = "Por familia numerosa"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_familia_numerosa"
 continuidad_id = "irpf-deduccion-canarias-familia-numerosa"

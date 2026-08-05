@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0959"
 number = "0959"
-label = "Por discapacidad de ascendientes o descendientes"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_discapacidad_familiar"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-discapacidad-familiar"

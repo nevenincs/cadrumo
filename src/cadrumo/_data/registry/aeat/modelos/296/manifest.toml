@@ -1,7 +1,5 @@
 [modelo]
 id = "296"
-title = "IRNR resumen anual de retenciones e ingresos a cuenta"
-official_name = "Modelo 296. Impuesto sobre la Renta de no Residentes. No residentes sin establecimiento permanente. Declaración anual de retenciones e ingresos a cuenta."
 tax_domain = "irnr"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1271"
 number = "1271"
-label = "Contribuyente titular"
 section = ["resultados", "anexo_c_res", "rdtos_cm_negativos_res"]
 data_type = "text"
 semantic_role = "irpf_toma_datos_declarante_selector"

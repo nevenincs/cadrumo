@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1554"
 number = "1554"
-label = "Reducciones de rendimientos generados en más de 2 años u obtenidos de forma   notoriamente irregular (artículo 32.1 y D.T 25ª de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_reduccion_irregulares"

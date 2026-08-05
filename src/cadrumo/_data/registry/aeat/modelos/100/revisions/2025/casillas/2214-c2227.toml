@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2227"
 number = "2227"
-label = "Importe global de las transmisiones efectuadas en 2025"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 semantic_role = "irpf_ganancia_fondos_coti_valor_transmision_global"
 semantic_role_cardinality = "intentional_singleton"

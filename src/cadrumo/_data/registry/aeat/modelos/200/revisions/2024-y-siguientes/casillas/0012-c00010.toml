@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00010"
 number = "00010"
-label = "Entidad dependiente de grupo fiscal [00010]"
 section = ["entidad_dependiente_de_grupo_fiscal"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

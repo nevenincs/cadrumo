@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.situacion-inmueble"
 number = "114"
-label = "Situacion del inmueble"
 section = ["perceptor", "inmueble"]
 data_type = "text"
 semantic_role = "payee_inmueble_situacion"

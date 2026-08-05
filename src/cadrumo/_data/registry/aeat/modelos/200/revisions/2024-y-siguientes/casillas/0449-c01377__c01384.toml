@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01377"
 number = "01377"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Base deducción [01377]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01378"
 number = "01378"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe generado/pendiente principio periodo [01378]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt37_1_generado"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01379"
 number = "01379"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe aplicado [01379]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt1_periodo"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01380"
 number = "01380"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2023 - Importe pendiente [01380]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt1_pendiente"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01381"
 number = "01381"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Base deducción [01381]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt2_base"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01382"
 number = "01382"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe generado/pendiente principio periodo [01382]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt2_generado_pendiente_apertura"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01383"
 number = "01383"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe aplicado [01383]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt2_periodo"
@@ -85,7 +78,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01384"
 number = "01384"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2023 - Importe pendiente [01384]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt2_pendiente"

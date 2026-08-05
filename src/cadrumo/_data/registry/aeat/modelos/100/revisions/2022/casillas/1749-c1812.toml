@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1812"
 number = "1812"
-label = "Ganancia no exenta imputable a 2022"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_no_exenta_imputable"
 input_kind = "computed"

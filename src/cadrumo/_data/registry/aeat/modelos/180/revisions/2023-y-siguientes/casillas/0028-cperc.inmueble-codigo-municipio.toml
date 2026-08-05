@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.inmueble-codigo-municipio"
 number = "316-320"
-label = "Codigo de municipio del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "municipality_code"
 semantic_role = "payee_inmueble_codigo_municipio"

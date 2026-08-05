@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "declarante-nif"
 number = "tipo1.9-17"
-label = "NIF del declarante"
 section = ["registro_declarante", "identificacion"]
 data_type = "nif"
 semantic_role = "m345_declarante_nif"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
 number = "tipo1.5-8"
-label = "Ejercicio de declaracion"
 section = ["registro_declarante", "identificacion"]
 data_type = "year"
 semantic_role = "m345_ejercicio_declaracion"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-345-2025", "aeat-modelo-345-deadlines", "boe-modelo-345-
 [[revisions."2025".casillas]]
 id = "declarante-razon-social"
 number = "tipo1.18-57"
-label = "Apellidos y nombre o razon social del declarante"
 section = ["registro_declarante", "identificacion"]
 data_type = "name"
 semantic_role = "m345_declarante_razon_social"
@@ -41,7 +38,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "total-declarados"
 number = "tipo1.136-144"
-label = "Numero total de declarados"
 section = ["registro_declarante", "resumen"]
 data_type = "integer"
 semantic_role = "m345_total_declarados"
@@ -53,7 +49,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "importe-total-aportaciones"
 number = "tipo1.145-159"
-label = "Importe total de las aportaciones"
 section = ["registro_declarante", "resumen"]
 data_type = "money"
 semantic_role = "m345_importe_total_aportaciones"
@@ -65,7 +60,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "declarado-nif"
 number = "tipo2.18-26"
-label = "NIF del declarado"
 section = ["registro_declarado", "identificacion"]
 data_type = "nif"
 semantic_role = "m345_declarado_nif"
@@ -77,7 +71,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
 number = "tipo2.36-75"
-label = "Apellidos y nombre del declarado"
 section = ["registro_declarado", "identificacion"]
 data_type = "name"
 semantic_role = "m345_declarado_nombre"
@@ -89,7 +82,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "anio-nacimiento"
 number = "tipo2.76-79"
-label = "Ano de nacimiento"
 section = ["registro_declarado", "identificacion"]
 data_type = "year"
 semantic_role = "m345_anio_nacimiento"
@@ -101,7 +93,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "codigo-provincia"
 number = "tipo2.80-81"
-label = "Codigo provincia"
 section = ["registro_declarado", "domicilio"]
 data_type = "text"
 semantic_role = "m345_codigo_provincia"
@@ -113,7 +104,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "clave"
 number = "tipo2.82"
-label = "Clave"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
 semantic_role = "m345_clave"
@@ -134,7 +124,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "subclave"
 number = "tipo2.83-84"
-label = "Subclave"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
 semantic_role = "m345_subclave"
@@ -155,7 +144,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "beneficiario-nif"
 number = "tipo2.85-93"
-label = "NIF del beneficiario persona con discapacidad"
 section = ["registro_declarado", "beneficiario"]
 data_type = "nif"
 semantic_role = "m345_beneficiario_nif"
@@ -167,7 +155,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "importe"
 number = "tipo2.94-106"
-label = "Importe"
 section = ["registro_declarado", "aportaciones"]
 data_type = "money"
 semantic_role = "m345_importe"
@@ -179,7 +166,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "datos-adicionales-claves-abc"
 number = "tipo2.107-160"
-label = "Datos adicionales para las claves A, B y C"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
 required = false
@@ -190,7 +176,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order", "boe-modelo-345-
 [[revisions."2025".casillas]]
 id = "plan-pensiones-denominacion"
 number = "tipo2.107-146"
-label = "Denominacion del plan de pensiones"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
 semantic_role = "m345_plan_pensiones_denominacion"
@@ -203,7 +188,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "fondo-pensiones-numero-registro"
 number = "tipo2.147-151"
-label = "Numero de registro del fondo de pensiones"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "text"
 semantic_role = "m345_fondo_pensiones_numero_registro"
@@ -216,7 +200,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "fondo-pensiones-nif"
 number = "tipo2.152-160"
-label = "NIF del fondo de pensiones"
 section = ["registro_declarado", "datos_adicionales", "claves_abc"]
 data_type = "nif"
 semantic_role = "m345_fondo_pensiones_nif"
@@ -229,7 +212,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "entidad-aseguradora-nif"
 number = "tipo2.161-169"
-label = "NIF de la entidad aseguradora"
 section = ["registro_declarado", "datos_adicionales", "clave_d"]
 data_type = "nif"
 semantic_role = "m345_entidad_aseguradora_nif"
@@ -242,7 +224,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "datos-adicionales-clave-i"
 number = "tipo2.170-189"
-label = "Datos adicionales para la clave I"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "integer"
 required = false
@@ -253,7 +234,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "pias-fecha-primera-prima"
 number = "tipo2.170-177"
-label = "Fecha de pago de la primera prima"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "date"
 semantic_role = "m345_pias_fecha_primera_prima"
@@ -265,7 +245,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "pias-importe-acumulado"
 number = "tipo2.178-189"
-label = "Importe acumulado PIAS"
 section = ["registro_declarado", "datos_adicionales", "clave_i"]
 data_type = "money"
 semantic_role = "m345_pias_importe_acumulado"
@@ -278,7 +257,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-base-order"]
 [[revisions."2025".casillas]]
 id = "datos-adicionales-clave-m"
 number = "tipo2.190-270"
-label = "Datos adicionales para la clave M"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
 required = false
@@ -289,7 +267,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 [[revisions."2025".casillas]]
 id = "pepp-denominacion"
 number = "tipo2.190-229"
-label = "Denominacion del PEPP"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
 semantic_role = "m345_pepp_denominacion"
@@ -302,7 +279,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 [[revisions."2025".casillas]]
 id = "pepp-numero-inscripcion"
 number = "tipo2.230-269"
-label = "Numero de inscripcion del PEPP"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
 semantic_role = "m345_pepp_numero_inscripcion"
@@ -315,7 +291,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 [[revisions."2025".casillas]]
 id = "pepp-cuenta-subcuenta"
 number = "tipo2.270"
-label = "Cuenta/subcuenta"
 section = ["registro_declarado", "datos_adicionales", "clave_m"]
 data_type = "text"
 semantic_role = "m345_pepp_cuenta_subcuenta"
@@ -328,7 +303,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 [[revisions."2025".casillas]]
 id = "rendimientos-trabajo-superiores-60000"
 number = "tipo2.271"
-label = "Rendimientos integros del trabajo superiores a 60000 euros"
 section = ["registro_declarado", "datos_adicionales"]
 data_type = "text"
 semantic_role = "m345_rendimientos_trabajo_superiores_60000"
@@ -349,7 +323,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "empleador-nif"
 number = "tipo2.272-280"
-label = "NIF del empleador promotor o tomador"
 section = ["registro_declarado", "empleador"]
 data_type = "nif"
 semantic_role = "m345_empleador_nif"
@@ -361,7 +334,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 [[revisions."2025".casillas]]
 id = "empleador-nombre"
 number = "tipo2.281-320"
-label = "Apellidos y nombre o razon social del empleador"
 section = ["registro_declarado", "empleador"]
 data_type = "name"
 semantic_role = "m345_empleador_nombre"
@@ -373,7 +345,6 @@ source_refs = ["aeat-dr-345-2025", "boe-modelo-345-2023-amendment-hfp-528"]
 [[revisions."2025".casillas]]
 id = "devoluciones-excesos"
 number = "tipo2.321"
-label = "Devoluciones o reintegros por excesos de aportaciones"
 section = ["registro_declarado", "aportaciones"]
 data_type = "text"
 semantic_role = "m345_devoluciones_excesos"

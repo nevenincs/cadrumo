@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0225"
 number = "0225"
-label = "Reducciones de rendimientos irregulares"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 data_type = "decimal"
 semantic_role = "irpf_ed_reduccion_rendimientos_irregulares"

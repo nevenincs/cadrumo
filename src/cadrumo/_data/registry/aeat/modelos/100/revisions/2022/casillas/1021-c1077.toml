@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1077"
 number = "1077"
-label = "Por adquisición de vehiculos eléctricos nuevos"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_vehiculos_electricos"
 legal_refs = ["ley-35-2006:art-77"]

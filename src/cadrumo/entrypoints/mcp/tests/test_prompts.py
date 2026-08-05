@@ -151,8 +151,7 @@ def test_server_get_prompt_orientation_embeds_the_rules() -> None:
         embedded = [
             resource.text
             for message in result.messages
-            if message.content.type == "resource"
-            and hasattr(resource := message.content.resource, "text")
+            if message.content.type == "resource" and hasattr(resource := message.content.resource, "text")
         ]
         assert operator_rules_text() in embedded
 

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2163"
 number = "2163"
-label = "Importe generado en 2024 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1"
 semantic_role_cardinality = "intentional_singleton"

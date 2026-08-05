@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "ECIVIL"
 number = "*06-09"
-label = "Primer declarante estado civil a 31/12/2025"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
 semantic_role = "irpf_declarante_estado_civil"

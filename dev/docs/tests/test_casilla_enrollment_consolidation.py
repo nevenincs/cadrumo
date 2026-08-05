@@ -80,8 +80,8 @@ def m130_casilla_15(
         ("ca", OutputLanguage.CA),
         ("hu", OutputLanguage.HU),
     ):
-        assert record.descriptions[language] == source_casilla.localized_labels[locale]
-        assert record.localized_help[locale] == source_casilla.localized_help[locale]
+        assert record.descriptions[language] == source_casilla.get_label(locale)
+        assert record.localized_help[locale] == source_casilla.get_help(locale)
     return record
 
 

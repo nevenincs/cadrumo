@@ -2,7 +2,6 @@
 id = "DP200014B:00605"
 number = "00605"
 segmento = "DP200014B"
-label = "Liquidación IV - Pagos fraccionados/Cuota diferencial - Pagos fraccionados - 3er. pago fraccionado - Estado [00605]"
 section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]
 data_type = "money"
 semantic_role = "is_liquidacion_iv_pago_fraccionado_tercero"

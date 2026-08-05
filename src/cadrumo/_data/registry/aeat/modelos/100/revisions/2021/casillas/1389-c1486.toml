@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1486"
 number = "1486"
-label = "Actividad realizada. Clave"
 data_type = "integer"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_clave_actividad"

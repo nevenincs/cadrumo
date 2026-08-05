@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2011"
 number = "2011"
-label = "Destinadas a los enfermos de ELA y sus familiares"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_ela"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

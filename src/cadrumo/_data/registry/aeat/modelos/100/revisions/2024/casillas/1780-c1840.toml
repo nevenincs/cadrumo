@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1840"
 number = "1840"
-label = "Ganancia patrimonial reducida no exenta ( [1836] - [1839] )"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_reducida_no_exenta_dt9"
 input_kind = "computed"

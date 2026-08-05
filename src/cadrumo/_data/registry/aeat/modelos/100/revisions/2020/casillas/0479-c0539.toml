@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0539"
 number = "0539"
-label = "Aplicación de la escala autonómica del Impuesto al importe de la casilla [0524]. Importe resultante: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_minimo_ahorro_autonomico"
 input_kind = "computed"

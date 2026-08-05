@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0382"
 number = "0382"
-label = "Si no tiene NIF, marque con una \"X\""
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 data_type = "boolean"
 semantic_role = "irpf_red_prevision_social_empleador_nif_extranjero_flag"

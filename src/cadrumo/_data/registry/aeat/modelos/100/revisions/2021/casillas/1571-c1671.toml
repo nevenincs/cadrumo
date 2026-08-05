@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1671"
 number = "1671"
-label = "Contribuyente titular"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"
 semantic_role = "irpf_toma_datos_declarante_selector"

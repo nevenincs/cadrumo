@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1808"
 number = "1808"
-label = "Pérdida patrimonial imputable a 2022"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_perdida_cripto_imputable_ejercicio"
 continuidad_id = "irpf-perdida-cripto-imputable-ejercicio"

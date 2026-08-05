@@ -1,7 +1,5 @@
 [modelo]
 id = "714"
-title = "Impuesto sobre el Patrimonio (declaración anual)"
-official_name = "Modelo 714. Impuesto sobre el Patrimonio. Declaración."
 tax_domain = "patrimonio"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0031"
 number = "0031"
-label = "Rendimientos procedentes de la transmisión, amortización o reembolso de otros activos financieros (*) (Salvo que deban consignarse en la casilla [0034])"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_otros_activos_financieros"

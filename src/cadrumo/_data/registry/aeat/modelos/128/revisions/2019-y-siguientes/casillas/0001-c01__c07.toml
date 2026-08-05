@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "01"
 number = "01"
-label = "Numero de perceptores"
 section = ["liquidacion", "retenciones_ingresos_cuenta"]
 data_type = "integer"
 semantic_role = "capital_seguros_perceptores_1"
@@ -15,7 +14,6 @@ source_refs = ["boe-modelo-128-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "02"
 number = "02"
-label = "Base de retenciones e ingresos a cuenta"
 section = ["liquidacion", "retenciones_ingresos_cuenta"]
 data_type = "money"
 semantic_role = "capital_seguros_base_1"
@@ -29,7 +27,6 @@ source_refs = ["boe-modelo-128-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
 number = "03"
-label = "Retenciones e ingresos a cuenta"
 section = ["liquidacion", "retenciones_ingresos_cuenta"]
 data_type = "money"
 semantic_role = "capital_seguros_retenciones"
@@ -41,7 +38,6 @@ source_refs = ["boe-modelo-128-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "04"
 number = "04"
-label = "Numero de perceptores adicional"
 section = ["liquidacion", "retenciones_ingresos_cuenta"]
 data_type = "integer"
 semantic_role = "capital_seguros_perceptores_2"
@@ -55,7 +51,6 @@ source_refs = ["boe-modelo-128-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "05"
 number = "05"
-label = "Base de retenciones e ingresos a cuenta adicional"
 section = ["liquidacion", "retenciones_ingresos_cuenta"]
 data_type = "money"
 semantic_role = "capital_seguros_base_2"
@@ -69,7 +64,6 @@ source_refs = ["boe-modelo-128-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "06"
 number = "06"
-label = "Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y periodo"
 section = ["liquidacion", "complementaria"]
 data_type = "money"
 semantic_role = "anteriores_declaraciones_resultado_ingresar"
@@ -81,7 +75,6 @@ source_refs = ["boe-modelo-128-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "07"
 number = "07"
-label = "Resultado a ingresar"
 section = ["liquidacion", "resultado"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"

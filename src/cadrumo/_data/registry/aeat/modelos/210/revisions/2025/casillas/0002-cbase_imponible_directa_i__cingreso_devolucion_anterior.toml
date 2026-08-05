@@ -26,7 +26,6 @@
 [[revisions."2025".casillas]]
 id = "base_imponible_directa_i"
 number = "4"
-label = "Base imponible (210 I)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_base_imponible_directa_i"
@@ -42,7 +41,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "exencion_dividendos"
 number = "6"
-label = "Exención aplicada dividendos (límite anual 1.500 euros) (210 R)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_exencion_dividendos"
@@ -57,7 +55,6 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 [[revisions."2025".casillas]]
 id = "ganancia_valor_transmision"
 number = "9"
-label = "Adquisición. Valor de transmisión (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_ganancia_valor_transmision"
@@ -69,7 +66,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "ganancia_valor_adquisicion"
 number = "10"
-label = "Adquisición. Valor de adquisición (actualizado) (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_ganancia_valor_adquisicion"
@@ -81,7 +77,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "ganancia_diferencia"
 number = "11"
-label = "Adquisición. Diferencia (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_ganancia_diferencia"
@@ -93,7 +88,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "ganancia_importe"
 number = "12"
-label = "Adquisición. Ganancia (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_ganancia_importe"
@@ -105,7 +99,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "mejora_valor_transmision"
 number = "13"
-label = "Mejora o 2ª adquisición. Valor de transmisión (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_mejora_valor_transmision"
@@ -117,7 +110,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "mejora_valor_adquisicion"
 number = "14"
-label = "Mejora o 2ª adquisición. Valor de adquisición (actualizado) (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_mejora_valor_adquisicion"
@@ -129,7 +121,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "mejora_diferencia"
 number = "15"
-label = "Mejora o 2ª adquisición. Diferencia (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_mejora_diferencia"
@@ -141,7 +132,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "mejora_ganancia"
 number = "16"
-label = "Mejora o 2ª adquisición. Ganancia (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_mejora_ganancia"
@@ -153,7 +143,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "base_imponible_ganancias_h"
 number = "17"
-label = "Base imponible ([12]+[16]) (210 H)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_base_imponible_ganancias_h"
@@ -168,7 +157,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "base_imponible_directa_g"
 number = "18"
-label = "Base imponible (210 G)"
 section = ["determinacion_base_imponible"]
 data_type = "money"
 semantic_role = "irnr_base_imponible_directa_g"
@@ -184,7 +172,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "exenciones_ley_irnr_indicador"
 number = "19"
-label = "Exenciones Ley IRNR, excepto dividendos (límite anual 1.500 euros)"
 section = ["liquidacion"]
 data_type = "integer"
 semantic_role = "irnr_exenciones_ley_irnr_indicador"
@@ -197,7 +184,6 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5
 [[revisions."2025".casillas]]
 id = "convenio_indicador"
 number = "20"
-label = "Convenio"
 section = ["liquidacion"]
 data_type = "integer"
 semantic_role = "irnr_convenio_indicador"
@@ -210,7 +196,6 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5
 [[revisions."2025".casillas]]
 id = "deduccion_donativos"
 number = "23"
-label = "Deducción por donativos"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_deduccion_donativos"
@@ -223,7 +208,6 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 [[revisions."2025".casillas]]
 id = "cuota_ley_irnr"
 number = "24"
-label = "Cuota Ley IRNR ([22]-[23])"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_ley_irnr"
@@ -236,7 +220,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "porcentaje_convenio"
 number = "25"
-label = "Porcentaje Convenio (%)"
 section = ["liquidacion"]
 data_type = "ratio"
 semantic_role = "irnr_porcentaje_convenio"
@@ -249,7 +232,6 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["trlirnr-rdleg-5
 [[revisions."2025".casillas]]
 id = "limite_convenio"
 number = "26"
-label = "Límite Convenio"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_limite_convenio"
@@ -262,7 +244,6 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 [[revisions."2025".casillas]]
 id = "reduccion_convenio"
 number = "27"
-label = "Reducción por Convenio ([24]-[26])"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_reduccion_convenio"
@@ -275,7 +256,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "cuota_integra_reducida"
 number = "28"
-label = "Cuota íntegra reducida ([24]-[27])"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_integra_reducida"
@@ -288,7 +268,6 @@ source_refs = ["aeat-modelo-210-procedure", "boe-modelo-210-diseno-registro-2011
 [[revisions."2025".casillas]]
 id = "ingreso_devolucion_anterior"
 number = "30"
-label = "Ingreso/Devolución anterior (exclusivamente autoliquidación complementaria)"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_ingreso_devolucion_anterior"

@@ -7,7 +7,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "08"
 number = "08"
-label = "Base de retenciones e ingresos a cuenta. Rentas dinerarias"
 section = ["rentas_dinerarias"]
 data_type = "money"
 semantic_role = "irnr_retencion_base_dineraria"
@@ -19,7 +18,6 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "09"
 number = "09"
-label = "Base de retenciones e ingresos a cuenta. Rentas en especie"
 section = ["rentas_especie"]
 data_type = "money"
 semantic_role = "irnr_retencion_base_especie"
@@ -31,7 +29,6 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "10"
 number = "10"
-label = "Base de retenciones e ingresos a cuenta. Total"
 section = ["totales"]
 data_type = "money"
 semantic_role = "irnr_retencion_base_total"
@@ -44,7 +41,6 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "11"
 number = "11"
-label = "Retenciones e ingresos a cuenta. Rentas dinerarias"
 section = ["rentas_dinerarias"]
 data_type = "money"
 semantic_role = "irnr_retencion_cuota_dineraria"
@@ -56,7 +52,6 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "12"
 number = "12"
-label = "Retenciones e ingresos a cuenta. Rentas en especie"
 section = ["rentas_especie"]
 data_type = "money"
 semantic_role = "irnr_retencion_cuota_especie"
@@ -68,7 +63,6 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "13"
 number = "13"
-label = "Retenciones e ingresos a cuenta. Total"
 section = ["totales"]
 data_type = "money"
 semantic_role = "irnr_retencion_cuota_total"
@@ -81,7 +75,6 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "20"
 number = "20"
-label = "Resultados a ingresar de anteriores declaraciones por el mismo concepto, ejercicio y período"
 section = ["totales"]
 data_type = "money"
 semantic_role = "irnr_retencion_resultados_anteriores"
@@ -93,7 +86,6 @@ source_refs = ["boe-modelo-216-form-layout"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "21"
 number = "21"
-label = "Resultado a ingresar"
 section = ["totales"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"

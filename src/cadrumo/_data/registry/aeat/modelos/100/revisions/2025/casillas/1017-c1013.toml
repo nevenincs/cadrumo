@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1013"
 number = "1013"
-label = "Por acogimiento de menores"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_acogimiento_menores"
 continuidad_id = "irpf-deduccion-extremadura-acogimiento-menores"

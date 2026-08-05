@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00429"
 number = "00429"
-label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Resultado del ejercicio [00429]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00430"
 number = "00430"
-label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Dividendo a cuenta [00430]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00431"
 number = "00431"
-label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Otros instrumentos patrimonio neto [00431]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00432"
 number = "00432"
-label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Ajustes por cambios de valor [00432]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00433"
 number = "00433"
-label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Ajustes en patrimonio neto [00433]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00434"
 number = "00434"
-label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Subvenciones, donaciones y legados recibidos [00434]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00435"
 number = "00435"
-label = "Estado de cambios patrimonio neto (III) - Saldo ajustado, inicio del ejercicio - Total [00435]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "saldo_ajustado_inicio_del_ejercicio"]
 data_type = "money"
 semantic_role = "is_ecpn_saldo_ajustado_inicio_importe"

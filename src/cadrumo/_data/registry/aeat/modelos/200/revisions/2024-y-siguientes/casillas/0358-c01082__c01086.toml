@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01082"
 number = "01082"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Base deducción [01082]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01083"
 number = "01083"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe generado/pendiente principio periodo [01083]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt37_1_generado"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01084"
 number = "01084"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe aplicado [01084]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt1_periodo"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01085"
 number = "01085"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2022 - Importe pendiente [01085]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt1_pendiente"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01086"
 number = "01086"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Base deducción [01086]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt2_base"

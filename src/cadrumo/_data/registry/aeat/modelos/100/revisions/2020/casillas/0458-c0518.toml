@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0518"
 number = "0518"
-label = "Parte autonómica: Mínimo por discapacidad. Importe"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_discapacidad_autonomico"
 continuidad_id = "irpf-minimo-discapacidad-autonomico"

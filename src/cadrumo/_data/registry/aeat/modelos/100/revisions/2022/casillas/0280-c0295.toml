@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0295"
 number = "0295"
-label = "Ingr. a cuenta  repercutidos"
 section = ["toma_datos_ampliada", "gp_premios", "juegos_pub"]
 semantic_role = "irpf_ganancia_premios_juegos_pub_ingresos_cuenta_repercutidos"
 continuidad_id = "irpf-ganancia-premios-juegos-pub-ingresos-cuenta-repercutidos"

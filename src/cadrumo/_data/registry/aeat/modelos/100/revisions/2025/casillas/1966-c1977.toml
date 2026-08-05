@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1977"
 number = "1977"
-label = "Tipo de elemento patrimonial transmitido (1: Acciones o participaciones; 2: Bienes Inmuebles; 3: Otros elementos patrimoniales)"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "text"
 semantic_role = "irpf_feac_tipo_elemento_patrimonial_transmitido"

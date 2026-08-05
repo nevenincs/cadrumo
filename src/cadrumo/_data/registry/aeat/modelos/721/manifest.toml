@@ -1,7 +1,5 @@
 [modelo]
 id = "721"
-title = "Monedas virtuales en el extranjero (informativa anual)"
-official_name = "Modelo 721. Declaración informativa sobre monedas virtuales situadas en el extranjero."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

@@ -2,7 +2,6 @@
 id = "DP200014B:00599"
 number = "00599"
 segmento = "DP200014B"
-label = "Liquidación IV - Cuota del ejercicio a ingresar o a devolver - Cuota del ejercicio a ingresar o a devolver - Estado [00599]"
 section = ["liquidacion", "cuota_a_ingresar"]
 data_type = "money"
 semantic_role = "is_resultado_ingresar_o_devolver"

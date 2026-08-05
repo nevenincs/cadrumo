@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1471"
 number = "1471"
-label = "3. Índice corrector de temporada"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_temporada"
 continuidad_id = "irpf-eo-indice-corrector-temporada"

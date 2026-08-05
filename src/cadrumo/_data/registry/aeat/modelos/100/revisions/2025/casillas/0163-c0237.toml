@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0237"
 number = "0237"
-label = "Reduccion por rendimientos de actividades artisticos obtenidos de manera excepcional"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_reduccion_rendimientos_artisticos_excepcionales"
 legal_refs = ["ley-35-2006:da-60"]

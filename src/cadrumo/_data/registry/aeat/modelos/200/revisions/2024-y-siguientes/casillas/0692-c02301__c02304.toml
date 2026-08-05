@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02301"
 number = "02301"
-label = "Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección permanente (excluidas las correcciones por IS y por I..."
 section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
 data_type = "money"
 semantic_role = "is_correccion_detalle_correcciones_resultado_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02302"
 number = "02302"
-label = "Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección permanente (excluidas las correcciones por IS y por I..."
 section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
 data_type = "money"
 semantic_role = "is_correccion_detalle_correcciones_resultado_permanente_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02303"
 number = "02303"
-label = "Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección temporaria con origen en el ejercicio - Aumentos [02303]"
 section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
 data_type = "money"
 semantic_role = "is_correccion_detalle_resultado_temporaria_aumento"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02304"
 number = "02304"
-label = "Detalle correcciones resultado pérdidas y ganancias - Correcciones al resultado de la cuenta de pérdidas y ganancias del ejercicio - Corrección temporaria con origen en el ejercicio - Disminuciones..."
 section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "correcciones_al_resultado_de_la_cuenta_de_perdidas"]
 data_type = "money"
 semantic_role = "is_correccion_detalle_correcciones_resultado_temporaria_ejercicio_disminucion"

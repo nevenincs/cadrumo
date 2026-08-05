@@ -13,7 +13,6 @@
 id = "DP200014:00550"
 number = "00550"
 segmento = "DP200014"
-label = "Liquidación III - Base imponible - Base imponible antes de la compensación de bases imponibles negativas [00550]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_liquidacion_iii_base_imponible_previa"

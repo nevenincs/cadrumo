@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0975"
 number = "0975"
-label = "Por alquiler de vivienda habitual para contribuyentes menores de 36 años (se traslada este importe a la casilla [1130] del anexo B.6)"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_arrendamiento_jovenes"
 legal_refs = ["ley-35-2006:art-77"]

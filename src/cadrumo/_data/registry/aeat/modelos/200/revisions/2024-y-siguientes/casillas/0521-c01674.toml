@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01674"
 number = "01674"
-label = "Cambio de residencia a Estados miembros de la Unión Europea o EEE (art. 19.1 LIS) - Aumento - Correcciones del ejercicio - Permanentes [01674]"
 section = ["cambio_de_residencia_a_estados_miembros_de_la_unio", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_cambio_residencia_ue_eee_art19_permanente_aumento"

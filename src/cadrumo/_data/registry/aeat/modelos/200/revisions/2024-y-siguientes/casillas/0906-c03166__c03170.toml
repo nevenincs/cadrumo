@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03166"
 number = "03166"
-label = "Hidrocarburos: Amortización de inversiones intangibles y gastos de investigación (art. 99 LIS) - Disminución - Correcciones del ejercicio - Permanentes [03166]"
 section = ["hidrocarburos_amortizacion_de_inversiones_intangib", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03167"
 number = "03167"
-label = "Hidrocarburos: Amortización de inversiones intangibles y gastos de investigación (art. 99 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03167]"
 section = ["hidrocarburos_amortizacion_de_inversiones_intangib", "disminucion"]
 data_type = "money"
 semantic_role = "is_hidrocarburos_amortizacion_intangibles_correccion_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03168"
 number = "03168"
-label = "Hidrocarburos: Amortización de inversiones intangibles y gastos de investigación (art. 99 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03168]"
 section = ["hidrocarburos_amortizacion_de_inversiones_intangib", "disminucion"]
 data_type = "money"
 semantic_role = "is_hidrocarburos_amortizacion_intangibles_correccion_ejercicio_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03169"
 number = "03169"
-label = "Hidrocarburos: Amortización de inversiones intangibles y gastos de investigación (art. 99 LIS) - Disminución - Saldo pendiente a principio de ejercicio [03169]"
 section = ["hidrocarburos_amortizacion_de_inversiones_intangib", "disminucion"]
 data_type = "money"
 semantic_role = "is_hidrocarburos_amortizacion_intangibles_saldo_pendiente_disminucion"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03170"
 number = "03170"
-label = "Hidrocarburos: Amortización de inversiones intangibles y gastos de investigación (art. 99 LIS) - Disminución - Saldo pendiente a fin de ejercicio [03170]"
 section = ["hidrocarburos_amortizacion_de_inversiones_intangib", "disminucion"]
 data_type = "money"
 semantic_role = "is_hidrocarburos_amortizacion_intangibles_saldo_pendiente_disminucion"

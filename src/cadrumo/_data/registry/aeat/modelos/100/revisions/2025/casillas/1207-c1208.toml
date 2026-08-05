@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1208"
 number = "1208"
-label = "Referencia catastral 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_ref_cat"]
 data_type = "text"
 semantic_role = "irpf_anexo_b_eficiencia_energetica_referencia_catastral"

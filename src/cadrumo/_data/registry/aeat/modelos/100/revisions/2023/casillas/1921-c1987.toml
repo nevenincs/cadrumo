@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1987"
 number = "1987"
-label = "Fecha de la operación (fecha de inscripción de la escritura pública en que se documenta la operación en el Registro Mercantil)"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "text"
 semantic_role = "irpf_feac_fecha_operacion"

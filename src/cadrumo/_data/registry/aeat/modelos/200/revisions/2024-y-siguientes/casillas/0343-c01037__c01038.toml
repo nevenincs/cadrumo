@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01037"
 number = "01037"
-label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Aplicación del límite del art.11.12 LIS a las perdidas por deterioro del art. 13.1 LIS y provisiones y gastos - Disminuciones [01037]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_base_imponible_cooperativa_ajuste"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 id = "01038"
 number = "01038"
 segmento = "DP200014"
-label = "Liquidación III - Base imponible - Incremento por incumplimiento reserva de nivelación [01038]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_incumplimiento"

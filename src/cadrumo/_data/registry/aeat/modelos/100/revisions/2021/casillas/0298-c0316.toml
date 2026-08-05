@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0316"
 number = "0316"
-label = "Ganancias patrimoniales"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 semantic_role = "irpf_ganancia_fondos_ganancia"
 continuidad_id = "irpf-ganancia-fondos-ganancia"

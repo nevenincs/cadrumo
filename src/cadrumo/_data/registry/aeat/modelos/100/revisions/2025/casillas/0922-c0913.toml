@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0913"
 number = "0913"
-label = "Por donaciones a entidades del tercer sector"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 semantic_role = "irpf_deduccion_baleares_donaciones_tercer_sector"
 continuidad_id = "irpf-deduccion-baleares-donaciones-tercer-sector"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03595"
 number = "03595"
-label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2025(*) - Importe minoración B.I. periodo/pendiente adicionar inicio periodo [03595]"
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_adicion_pendiente"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03596"
 number = "03596"
-label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2025(*) - Importe adicionado base imponible en periodo [03596]"
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_adicion_realizada"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03597"
 number = "03597"
-label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2025(*) - Importe integrado en la declaración por incumplimiento de requisitos [03597]"
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_incumplimiento"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03598"
 number = "03598"
-label = "Reserva de nivelación - Reducción base imponible - Ejercicio generación 2025(*) - Importe pendiente adicionar en periodos futuros [03598]"
 section = ["reserva_de_nivelacion", "reduccion_base_imponible"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_adicion_pendiente"

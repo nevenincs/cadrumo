@@ -2,7 +2,6 @@
 id = "DP200026:00625"
 number = "00625"
 segmento = "DP200026"
-label = "Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes tributación - Admón.del Estado [00625]"
 section = ["tributacion_conjunta_estado_adm_forales", "calculo_porcentajes_tributacion"]
 data_type = "decimal"
 semantic_role = "is_tributacion_conjunta_porcentaje_estado"

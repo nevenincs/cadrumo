@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.inmueble-numero-casa"
 number = "193-197"
-label = "Numero de casa del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_numero_casa"

@@ -1,6 +1,5 @@
 [revisions.2019-2022]
 id = "2019-2022"
-label = "Orden HAP/1732/2014, ejercicios 2019 a 2022"
 valid_from = 2019-01-01
 valid_to = 2022-12-31
 period_selector = { year_from = 2019, year_to = 2022, periods = ["0A"] }

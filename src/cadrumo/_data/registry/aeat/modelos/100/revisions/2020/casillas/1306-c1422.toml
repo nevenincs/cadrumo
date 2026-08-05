@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1422"
 number = "1422"
-label = "Mejora 1: NIF de quién realizó la obra o servicio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_mejora_proveedor_nif"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00062"
 number = "00062"
-label = "Reg.fiscal de operac.de aportación de activos a sdades. para la gestión de activos (ley 8/2012) [00062]"
 section = ["reg_fiscal_de_operac_de_aportacion_de_activos_a_sd"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0048"
 number = "0048"
-label = "Propiedad intelectual cuando el contribuyente no sea autor"
 section = ["rendimientos_capital_mobiliario", "base_general"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor"

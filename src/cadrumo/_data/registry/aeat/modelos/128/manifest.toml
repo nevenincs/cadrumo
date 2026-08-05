@@ -1,7 +1,5 @@
 [modelo]
 id = "128"
-title = "Retenciones e ingresos a cuenta - rentas de capital mobiliario de operaciones de capitalizacion y contratos de seguro"
-official_name = "Modelo 128. Retenciones e ingresos a cuenta. Rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion y de contratos de seguro de vida o invalidez."
 tax_domain = "cross_tax"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

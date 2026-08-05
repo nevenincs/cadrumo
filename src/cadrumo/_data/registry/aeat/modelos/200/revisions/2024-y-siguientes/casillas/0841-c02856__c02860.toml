@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02856"
 number = "02856"
-label = "Pérdidas por deterioro de valores repr. de partic. en el capital o fondos propios (art. 15 k) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02856]"
 section = ["perdidas_por_deterioro_de_valores_repr_de_partic_e", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_valores_participaciones_entidades_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02857"
 number = "02857"
-label = "Pérdidas por deterioro de valores repr. de partic. en el capital o fondos propios (art. 15 k) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02857]"
 section = ["perdidas_por_deterioro_de_valores_repr_de_partic_e", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_valores_participaciones_entidades_temporaria_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02858"
 number = "02858"
-label = "Pérdidas por deterioro de valores repr. de partic. en el capital o fondos propios (art. 15 k) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02..."
 section = ["perdidas_por_deterioro_de_valores_repr_de_partic_e", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_valores_participaciones_entidades_temporaria_anteriores_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02859"
 number = "02859"
-label = "Pérdidas por deterioro de valores repr. de partic. en el capital o fondos propios (art. 15 k) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02859]"
 section = ["perdidas_por_deterioro_de_valores_repr_de_partic_e", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_valores_participaciones_entidades_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02860"
 number = "02860"
-label = "Pérdidas por deterioro de valores repr. de partic. en el capital o fondos propios (art. 15 k) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02860]"
 section = ["perdidas_por_deterioro_de_valores_repr_de_partic_e", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_valores_participaciones_entidades_saldo_final"

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1044"
 number = "1044"
-label = "Por gastos educativos"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_gastos_educativos"
 continuidad_id = "irpf-deduccion-madrid-gastos-educativos"

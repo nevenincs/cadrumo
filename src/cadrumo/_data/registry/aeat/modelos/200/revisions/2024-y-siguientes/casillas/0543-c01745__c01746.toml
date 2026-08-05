@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01745"
 number = "01745"
-label = "Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [01745]"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2022"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01746"
 number = "01746"
-label = "Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [01746]"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2022"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_importe"

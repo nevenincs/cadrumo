@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2019"
 number = "2019"
-label = "Fecha de efectos título de familia numerosa"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_madrid_familia_numerosa_fecha_titulo"

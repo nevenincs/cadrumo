@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0562"
 number = "0562"
-label = "Por alquiler de la vivienda habitual. Régimen transitorio (traslade el importe de esta misma casilla del anexo A.1): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_alquiler_vivienda_habitual_estatal"
 input_kind = "computed"

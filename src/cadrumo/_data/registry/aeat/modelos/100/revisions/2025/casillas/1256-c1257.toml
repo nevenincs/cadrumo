@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1257"
 number = "1257"
-label = "Saldo negativo de las ganancias y pérdidas imputables a 2025, a integrar en la base imponible general, pendientes de compensación en los 4 ejercicios siguientes (casillas [0421] - [0433] )"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_general_res"]
 semantic_role = "irpf_anexo_c_saldo_neg_gyp_general_generado"
 input_kind = "computed"

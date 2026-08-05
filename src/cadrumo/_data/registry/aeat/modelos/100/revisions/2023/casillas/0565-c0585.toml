@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0585"
 number = "0585"
-label = "Cuota líquida estatal incrementada  ( [0585] = [0570] + [0568] + [0582] + [0572] + [0573] + [0574] + [0576] ): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_liquida_estatal_incrementada"
 input_kind = "computed"

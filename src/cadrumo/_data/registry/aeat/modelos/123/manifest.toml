@@ -1,7 +1,5 @@
 [modelo]
 id = "123"
-title = "Retenciones sobre capital mobiliario"
-official_name = "Retenciones e ingresos a cuenta del IRPF, Impuesto sobre Sociedades e IRNR establecimientos permanentes. Determinados rendimientos del capital mobiliario o determinadas rentas."
 tax_domain = "cross_tax"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

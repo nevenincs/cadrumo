@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "presentation-code"
 number = "PresentationHeader.PresentationCode"
-label = "Codigo de presentacion"
 section = ["cabecera_presentacion"]
 data_type = "text"
 semantic_role = "m289_presentation_code"
@@ -13,7 +12,6 @@ source_refs = ["aeat-modelo-289-webservice", "aeat-modelo-289-xsd-wsdl"]
 [[revisions."2025".casillas]]
 id = "declarante-nif"
 number = "PresentationHeader.NationalTIN"
-label = "NIF del declarante"
 section = ["cabecera_presentacion"]
 data_type = "nif"
 semantic_role = "irpf_declarante_nif"
@@ -25,7 +23,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl"]
 [[revisions."2025".casillas]]
 id = "receiving-country"
 number = "PresentationHeader.ReceivingCountry"
-label = "Pais receptor"
 section = ["cabecera_presentacion"]
 data_type = "country_code"
 semantic_role = "m289_receiving_country"
@@ -37,7 +34,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl"]
 [[revisions."2025".casillas]]
 id = "message-type"
 number = "PresentationHeader.MessageType"
-label = "Tipo de mensaje"
 section = ["cabecera_presentacion"]
 data_type = "text"
 semantic_role = "m289_message_type"
@@ -49,7 +45,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-modelo-289-2025-amendment-hac-14
 [[revisions."2025".casillas]]
 id = "message-type-indic"
 number = "PresentationHeader.MessageTypeIndic"
-label = "Indicador de tipo de mensaje"
 section = ["cabecera_presentacion"]
 data_type = "text"
 semantic_role = "m289_message_type_indic"
@@ -61,7 +56,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-modelo-289-2025-amendment-hac-14
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
 number = "PresentationHeader.Year"
-label = "Ejercicio de declaracion"
 section = ["cabecera_presentacion"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -73,7 +67,6 @@ source_refs = ["aeat-modelo-289-procedure", "aeat-modelo-289-xsd-wsdl", "boe-mod
 [[revisions."2025".casillas]]
 id = "presentation-type"
 number = "PresentationHeader.PresentationType"
-label = "Tipo de presentacion"
 section = ["cabecera_presentacion"]
 data_type = "text"
 semantic_role = "m289_presentation_type"
@@ -85,7 +78,6 @@ source_refs = ["aeat-modelo-289-webservice", "aeat-modelo-289-xsd-wsdl"]
 [[revisions."2025".casillas]]
 id = "data-quality"
 number = "PresentationHeader.DataQuality"
-label = "Indicador de calidad de datos"
 section = ["cabecera_presentacion"]
 data_type = "text"
 semantic_role = "m289_data_quality"
@@ -97,7 +89,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-modelo-289-2025-amendment-hac-14
 [[revisions."2025".casillas]]
 id = "reporting-fi-id"
 number = "CrsBody.ReportingFI.IN"
-label = "Identificador de la institucion financiera comunicante"
 section = ["institucion_financiera_comunicante"]
 data_type = "text"
 semantic_role = "m289_reporting_fi_id"
@@ -109,7 +100,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "reporting-fi-name"
 number = "CrsBody.ReportingFI.Name"
-label = "Nombre de la institucion financiera comunicante"
 section = ["institucion_financiera_comunicante"]
 data_type = "name"
 semantic_role = "m289_reporting_fi_name"
@@ -121,7 +111,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "account-number"
 number = "CrsBody.ReportingGroup.AccountReport.AccountNumber"
-label = "Numero de cuenta"
 section = ["cuenta_financiera"]
 data_type = "text"
 semantic_role = "m289_account_number"
@@ -133,7 +122,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "account-holder-residence-country"
 number = "CrsBody.ReportingGroup.AccountReport.AccountHolder.ResCountryCode"
-label = "Pais de residencia fiscal del titular"
 section = ["titular_cuenta"]
 data_type = "country_code"
 semantic_role = "m289_account_holder_residence_country"
@@ -145,7 +133,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "account-holder-tin"
 number = "CrsBody.ReportingGroup.AccountReport.AccountHolder.TIN"
-label = "NIF del titular de la cuenta"
 section = ["titular_cuenta"]
 data_type = "nif"
 semantic_role = "m289_account_holder_tin"
@@ -157,7 +144,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "account-holder-name"
 number = "CrsBody.ReportingGroup.AccountReport.AccountHolder.Name"
-label = "Nombre del titular de la cuenta"
 section = ["titular_cuenta"]
 data_type = "name"
 semantic_role = "m289_account_holder_name"
@@ -169,7 +155,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "account-balance"
 number = "CrsBody.ReportingGroup.AccountReport.AccountBalance"
-label = "Saldo o valor de la cuenta"
 section = ["cuenta_financiera"]
 data_type = "money"
 semantic_role = "m289_account_balance"
@@ -181,7 +166,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "payment-type"
 number = "CrsBody.ReportingGroup.AccountReport.Payment.Type"
-label = "Tipo de pago"
 section = ["cuenta_financiera", "pagos"]
 data_type = "text"
 semantic_role = "m289_payment_type"
@@ -193,7 +177,6 @@ source_refs = ["aeat-modelo-289-xsd-wsdl", "boe-rd-1021-2015"]
 [[revisions."2025".casillas]]
 id = "payment-amount"
 number = "CrsBody.ReportingGroup.AccountReport.Payment.PaymentAmnt"
-label = "Importe del pago"
 section = ["cuenta_financiera", "pagos"]
 data_type = "money"
 semantic_role = "m289_payment_amount"

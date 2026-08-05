@@ -1,7 +1,6 @@
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.general"
 number = "iva.anual.repercutido.general"
-label = "Cuota IVA repercutido al tipo general (21%) - anual"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_general"
@@ -15,7 +14,6 @@ export_refs = ["modelo-390-page-02-casilla-general"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.reducido"
 number = "iva.anual.repercutido.reducido"
-label = "Cuota IVA repercutido al tipo reducido (10%) - anual"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_reducido"
@@ -29,7 +27,6 @@ export_refs = ["modelo-390-page-02-casilla-reducido"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.super-reducido"
 number = "iva.anual.repercutido.super-reducido"
-label = "Cuota IVA repercutido al tipo super-reducido (4%) - anual"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_super_reducido"
@@ -43,7 +40,6 @@ export_refs = ["modelo-390-page-02-casilla-super-reducido"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.soportado.interiores"
 number = "iva.anual.soportado.interiores"
-label = "Cuota IVA soportado en operaciones interiores corrientes - anual"
 section = ["iva", "anual", "deducible"]
 data_type = "money"
 semantic_role = "iva_cuota_soportada_interiores"
@@ -62,7 +58,6 @@ export_refs = ["modelo-390-page-03-casilla-soportado-interiores"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.soportado.importaciones"
 number = "iva.anual.soportado.importaciones"
-label = "Cuota IVA soportado deducible en importaciones de bienes corrientes - anual"
 section = ["iva", "anual", "deducible"]
 data_type = "money"
 semantic_role = "iva_cuota_soportada_importaciones"
@@ -76,7 +71,6 @@ export_refs = ["modelo-390-page-03-casilla-soportado-importaciones"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.regularizacion-prorrata-definitiva"
 number = "522"
-label = "Regularizacion por aplicacion del porcentaje definitivo de prorrata - anual"
 section = ["iva", "anual", "deducible"]
 data_type = "money"
 semantic_role = "iva_anual_regularizacion_prorrata_definitiva"
@@ -89,7 +83,6 @@ export_refs = ["modelo-390-page-04-casilla-522"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.regularizacion-bienes-inversion"
 number = "63"
-label = "Regularizacion de inversiones - anual"
 section = ["iva", "anual", "deducible"]
 data_type = "money"
 semantic_role = "iva_anual_regularizacion_bienes_inversion"
@@ -103,7 +96,6 @@ export_refs = ["modelo-390-page-04-casilla-63"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.autorepercutido.intracomunitaria"
 number = "iva.anual.autorepercutido.intracomunitaria"
-label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias - anual"
 section = ["iva", "anual", "inversion_sujeto_pasivo"]
 data_type = "money"
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
@@ -121,7 +113,6 @@ export_refs = ["modelo-390-page-02-casilla-autorepercutido-intracomunitaria"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.recargo.general"
 number = "iva.anual.repercutido.recargo.general"
-label = "Recargo de equivalencia tipo 5.2pct - Cuota devengada anual"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_recargo_equivalencia_general"
@@ -135,7 +126,6 @@ export_refs = ["modelo-390-page-02b-casilla-recargo-general"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.recargo.reducido"
 number = "iva.anual.repercutido.recargo.reducido"
-label = "Recargo de equivalencia tipo 1.4pct - Cuota devengada anual"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_recargo_equivalencia_reducido"
@@ -156,7 +146,6 @@ export_refs = ["modelo-390-page-02b-casilla-recargo-reducido"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.repercutido.recargo.super-reducido"
 number = "iva.anual.repercutido.recargo.super-reducido"
-label = "Recargo de equivalencia tipo 0.5pct - Cuota devengada anual"
 section = ["iva", "anual", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_recargo_equivalencia_super_reducido"
@@ -174,7 +163,6 @@ export_refs = ["modelo-390-page-02b-casilla-recargo-super-reducido"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.reconciliacion.devengada-303"
 number = "iva.anual.reconciliacion.devengada-303"
-label = "Cuota devengada anual reconciliada desde los cuatro Modelos 303 trimestrales"
 section = ["iva", "anual", "reconciliacion"]
 data_type = "money"
 semantic_role = "iva_anual_reconciliacion_devengada_303"
@@ -187,7 +175,6 @@ source_refs = ["aeat-dr-390-2025"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.reconciliacion.deducible-303"
 number = "iva.anual.reconciliacion.deducible-303"
-label = "Cuota deducible anual reconciliada desde los cuatro Modelos 303 trimestrales"
 section = ["iva", "anual", "reconciliacion"]
 data_type = "money"
 semantic_role = "iva_anual_reconciliacion_deducible_303"
@@ -200,7 +187,6 @@ source_refs = ["aeat-dr-390-2025"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.reconciliacion.resultado-303"
 number = "iva.anual.reconciliacion.resultado-303"
-label = "Resultado anual reconciliado desde los cuatro Modelos 303 trimestrales"
 section = ["iva", "anual", "reconciliacion"]
 data_type = "money"
 semantic_role = "iva_anual_reconciliacion_resultado_303"
@@ -218,7 +204,6 @@ source_refs = ["aeat-dr-390-2025"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.reconciliacion.devengada-simplificado-303"
 number = "79"
-label = "IVA devengado regimen simplificado - Total cuota resultante (anual desde Modelo 303 4T)"
 section = ["iva", "anual", "regimen_simplificado"]
 data_type = "money"
 semantic_role = "iva_anual_reconciliacion_devengada_simplificado_303"
@@ -232,7 +217,6 @@ export_refs = ["modelo-390-page-06-casilla-simplificado-total"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.compensacion-ultimo-periodo-97"
 number = "97"
-label = "Resultado declaracion-liquidacion ultimo periodo - A compensar"
 section = ["iva", "anual", "resultado_liquidaciones"]
 data_type = "money"
 semantic_role = "iva_anual_compensacion_ultimo_periodo"
@@ -247,7 +231,6 @@ export_refs = ["modelo-390-page-06-casilla-97"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.compensacion-generada-ejercicio-no-97"
 number = "662"
-label = "Cuotas pendientes de compensacion generadas en el ejercicio y distintas de las incluidas en la casilla 97"
 section = ["iva", "anual", "resultado_liquidaciones"]
 data_type = "money"
 semantic_role = "iva_anual_compensacion_generada_ejercicio"
@@ -267,7 +250,6 @@ export_refs = ["modelo-390-page-06-casilla-662"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.cuota-devengada-total"
 number = "iva.anual.cuota-devengada-total"
-label = "Total cuota IVA devengada anual (repercutido + autorepercutido)"
 section = ["iva", "anual", "totales"]
 data_type = "money"
 semantic_role = "iva_anual_cuota_devengada_total"
@@ -284,7 +266,6 @@ export_refs = ["modelo-390-page-02-casilla-total-cuota-devengada"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.cuota-deducible-total"
 number = "iva.anual.cuota-deducible-total"
-label = "Total cuota IVA deducible anual (soportado + autorepercutido)"
 section = ["iva", "anual", "totales"]
 data_type = "money"
 semantic_role = "iva_anual_cuota_deducible_total"
@@ -301,7 +282,6 @@ export_refs = ["modelo-390-page-04-casilla-total-cuota-deducible"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.resultado-regimen-general"
 number = "iva.anual.resultado-regimen-general"
-label = "Resultado anual del regimen general (cuota devengada - cuota deducible)"
 section = ["iva", "anual", "totales"]
 data_type = "money"
 semantic_role = "iva_anual_resultado_regimen_general"

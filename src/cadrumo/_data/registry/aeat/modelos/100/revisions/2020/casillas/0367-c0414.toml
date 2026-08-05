@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0414"
 number = "0414"
-label = "DECLARANTE: Nº de operaciones"
 section = ["toma_datos_ampliada", "regimen_especial"]
 data_type = "integer"
 semantic_role = "irpf_re_especial_tfi_declarante_num_operaciones"

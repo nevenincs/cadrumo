@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0328"
 number = "0328"
-label = "Importe global de las transmisiones efectuadas en 2019"
 section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
 semantic_role = "irpf_ganancia_acciones_valor_transmision_global"
 continuidad_id = "irpf-ganancia-acciones-valor-transmision-global"

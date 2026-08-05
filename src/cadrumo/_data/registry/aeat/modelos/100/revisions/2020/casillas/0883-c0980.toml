@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0980"
 number = "0980"
-label = "Deducción para el fomento de emprendimiento (se traslada este importe a la casilla [1136] del anexo B.7)"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_fomento_emprendimiento"
 legal_refs = ["ley-35-2006:art-77"]

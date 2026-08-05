@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1980"
 number = "1980"
-label = "Denominación social"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "text"
 semantic_role = "irpf_feac_entidad_receptora_denominacion"

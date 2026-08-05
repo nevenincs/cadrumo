@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0892"
 number = "0892"
-label = "Para familias monoparentales"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_familia_monoparental"
 continuidad_id = "irpf-deduccion-asturias-familia-monoparental"

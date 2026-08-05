@@ -1,7 +1,5 @@
 [modelo]
 id = "303"
-title = "IVA. Autoliquidación (trimestral)"
-official_name = "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación."
 tax_domain = "iva"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

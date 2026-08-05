@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1014"
 number = "1014"
-label = "Por partos múltiples"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_partos_multiples"
 continuidad_id = "irpf-deduccion-extremadura-partos-multiples"

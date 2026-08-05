@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0960"
 number = "0960"
-label = "Para contribuyentes mayores de 75 años"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_mayores_75"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-mayores-75"

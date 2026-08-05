@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00012"
 number = "00012"
-label = "SOCIMI [00012]"
 section = ["socimi"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1933"
 number = "1933"
-label = "Cantidades satisfechas desde el 30 de junio de 2023 (respecto de cada instalación) (*) (**)"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
 semantic_role = "irpf_deduccion_vehiculo_electrico_cantidades_satisfechas"
 continuidad_id = "irpf-deduccion-vehiculo-electrico-cantidades-satisfechas"

@@ -1,7 +1,5 @@
 [modelo]
 id = "231"
-title = "Declaracion de informacion pais por pais"
-official_name = "Modelo 231. Declaracion informativa. Declaracion de informacion pais por pais (CBC/DAC4)."
 tax_domain = "is"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

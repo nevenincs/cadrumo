@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1162"
 number = "1162"
-label = "Código del municipio:"
 data_type = "integer"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_arrendamiento_municipio_codigo"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1053"
 number = "1053"
-label = "Por donativos para la protección del patrimonio cultural de la Región de Murcia o promoción de actividades  culturales, artísticas, sociales, científico-tecnológicas y medioambientales"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_donaciones_patrimonio_cultura"
 legal_refs = ["ley-35-2006:art-77"]

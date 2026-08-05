@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-correctness-campaign'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:8a00cb8ab33324072fbc4279c2de2ce20403258d81eacb06f2fa7d1cd5c19c3e'
 related:

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00674"
 number = "00674"
-label = "Rég. cooperativas - Detalle compensación cuotas. 2000 Aplicado en esta liquidación [00674]"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2000_aplicado_en_esta"]
 data_type = "money"
 semantic_role = "is_cooperativa_compensacion_cuotas"

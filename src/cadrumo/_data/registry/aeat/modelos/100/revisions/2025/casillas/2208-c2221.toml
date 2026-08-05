@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2221"
 number = "2221"
-label = "Identificación de la cuenta"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
 data_type = "text"
 semantic_role = "irpf_anexo_b_account_identifier"

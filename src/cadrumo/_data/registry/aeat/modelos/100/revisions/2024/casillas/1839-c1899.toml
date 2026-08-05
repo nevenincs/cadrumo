@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1899"
 number = "1899"
-label = "Importe a percibir"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_importe_percibir_4"
 continuidad_id = "irpf-ganancia-inmueble-importe-percibir-4"

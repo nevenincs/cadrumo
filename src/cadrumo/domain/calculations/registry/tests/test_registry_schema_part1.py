@@ -269,8 +269,6 @@ def test_modelo_file_rejects_casilla_binding_id_collision(tmp_path: Path) -> Non
         """
 [modelo]
 id = "999"
-title = "Collision fixture"
-official_name = "Collision fixture"
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -286,7 +284,6 @@ source_refs = ["aeat-manual"]
 [[revisions."2025".casillas]]
 id = "01"
 number = "01"
-label = "Canonical owner"
 section = ["test"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]

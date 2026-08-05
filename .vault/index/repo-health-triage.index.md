@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#repo-health-triage'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:f8d8cf403292d3b72b2c3f79713eacdca286c6f3c89c08495b0edad63b877ddb'
 related:

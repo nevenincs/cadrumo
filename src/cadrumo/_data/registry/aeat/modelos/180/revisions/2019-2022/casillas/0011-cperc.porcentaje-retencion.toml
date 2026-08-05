@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.porcentaje-retencion"
 number = "93-96"
-label = "Porcentaje de retencion aplicado"
 section = ["perceptor", "renta"]
 data_type = "text"
 semantic_role = "porcentaje_retencion"

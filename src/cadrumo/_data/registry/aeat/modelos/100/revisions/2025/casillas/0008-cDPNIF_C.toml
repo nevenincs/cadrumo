@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "DPNIF_C"
 number = "*13"
-label = "Conyuge NIF"
 section = ["datos_identificativos", "conyuge"]
 data_type = "nif"
 semantic_role = "spouse_nif"

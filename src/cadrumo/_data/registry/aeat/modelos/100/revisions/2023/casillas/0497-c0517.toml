@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0517"
 number = "0517"
-label = "Parte estatal: Mínimo por discapacidad. Importe"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_discapacidad_estatal"
 continuidad_id = "irpf-minimo-discapacidad-estatal"

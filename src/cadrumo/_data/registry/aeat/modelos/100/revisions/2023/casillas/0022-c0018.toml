@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0018"
 number = "0018"
-label = "Suma de rendimientos netos previos (suma de las casillas [0017])"
 section = ["resultados", "rdto_trabajo_res"]
 input_kind = "computed"
 formula = "renta-2023-trabajo-suma-rendimientos-netos-previos"

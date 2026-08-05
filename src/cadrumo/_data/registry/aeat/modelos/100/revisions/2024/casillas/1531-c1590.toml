@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1590"
 number = "1590"
-label = "Ganancias exentas por reinversión  de rentas vitalicias"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_gp_exentas_reinversion_vitalicia"
 continuidad_id = "irpf-re-atrib-gp-exentas-reinversion-vitalicia"

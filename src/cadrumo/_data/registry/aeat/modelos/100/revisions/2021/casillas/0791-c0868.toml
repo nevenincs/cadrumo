@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0868"
 number = "0868"
-label = "Por adopción internacional de niños"
 section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
 semantic_role = "irpf_deduccion_aragon_adopcion_internacional"
 continuidad_id = "irpf-deduccion-aragon-adopcion-internacional"

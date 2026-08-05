@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1498"
 number = "1498"
-label = "Índice"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"

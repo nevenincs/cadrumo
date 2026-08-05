@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00743"
 number = "00743"
-label = "Detalle compensación bases imponibles negativas - 2007 - Pendiente aplicación a principio del período/generada en el período [00743]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2007"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"

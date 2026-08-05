@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02147"
 number = "02147"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - Total - Pendiente de aplicación en períodos futuros [02147]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_total"

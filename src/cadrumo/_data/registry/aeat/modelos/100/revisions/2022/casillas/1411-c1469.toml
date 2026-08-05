@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1469"
 number = "1469"
-label = "1. Índice corrector especial"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_especial"
 continuidad_id = "irpf-eo-indice-corrector-especial"

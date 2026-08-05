@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03532"
 number = "03532"
-label = "Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2025 - Deducción pendiente/generada [03532]"
 section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2025"]
 data_type = "money"
 semantic_role = "is_deduccion_autoridades_portuarias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03533"
 number = "03533"
-label = "Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2025 - Aplicado en esta liquidación [03533]"
 section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2025"]
 data_type = "money"
 semantic_role = "is_deduccion_autoridades_portuarias_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03534"
 number = "03534"
-label = "Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2025 - Pendiente de aplicación en períodos futuros [03534]"
 section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2025"]
 data_type = "money"
 semantic_role = "is_deduccion_autoridades_portuarias_importe"

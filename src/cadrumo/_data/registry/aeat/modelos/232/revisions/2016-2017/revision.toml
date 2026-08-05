@@ -1,5 +1,4 @@
 [revisions."2016-2017"]
-label = "Modelo 232 ejercicios 2016-2017 (Orden HFP/816/2017 v13)"
 valid_from = 2016-01-01
 valid_to = 2017-12-31
 period_selector = { years = [2016, 2017], periods = ["0A"] }

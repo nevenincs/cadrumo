@@ -2,7 +2,6 @@
 [[revisions."2019-2023".casillas]]
 id = "01"
 number = "01"
-label = "Numero de perceptores"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "integer"
 semantic_role = "perceptor_count"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 [[revisions."2019-2023".casillas]]
 id = "02"
 number = "02"
-label = "Base de retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 [[revisions."2019-2023".casillas]]
 id = "03"
 number = "03"
-label = "Retenciones e ingresos a cuenta"
 section = ["retenciones_ingresos_cuenta"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
@@ -43,7 +40,6 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 [[revisions."2019-2023".casillas]]
 id = "04"
 number = "04"
-label = "Ingresos de ejercicios anteriores"
 section = ["periodificacion"]
 data_type = "money"
 semantic_role = "ingresos_ejercicios_anteriores"
@@ -56,7 +52,6 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 [[revisions."2019-2023".casillas]]
 id = "05"
 number = "05"
-label = "Regularizacion"
 section = ["periodificacion"]
 data_type = "money"
 semantic_role = "regularizacion"
@@ -69,7 +64,6 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 [[revisions."2019-2023".casillas]]
 id = "06"
 number = "06"
-label = "Suma de retenciones y regularizacion"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "suma_retenciones_regularizacion"
@@ -83,7 +77,6 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 [[revisions."2019-2023".casillas]]
 id = "07"
 number = "07"
-label = "Resultado de anteriores autoliquidaciones"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "resultado_anteriores_autoliquidaciones"
@@ -96,7 +89,6 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2019-2023-v13-form-text
 [[revisions."2019-2023".casillas]]
 id = "08"
 number = "08"
-label = "Resultado a ingresar"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"

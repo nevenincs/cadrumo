@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0561"
 number = "0561"
-label = "Por rentas obtenidas en Ceuta o Melilla (traslade los importes de estas mismas casillas del anexo A.2): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_ceuta_melilla_autonomica"
 input_kind = "computed"

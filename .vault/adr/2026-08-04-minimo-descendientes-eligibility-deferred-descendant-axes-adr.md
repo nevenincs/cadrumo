@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a8ea61c6b6c26db6e1898c86fbcad9bae0d4d1fc7be5e988cfd00a68c5d7a67a'
+body_hash: 'sha256:22172ce3912b7da0f2321cd4eb4e228bebc211dc77af1b9cd9d8149a25dc7270'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -144,7 +144,6 @@ itself. That is the same class as a gate whose prose argued against its own scop
 fixed in the decimal campaign - documentation a reader will act on, describing a mechanism that
 has moved. Worth correcting in whichever change next touches that plan.
 
-
 ### The spend window's upper bound: grounded, and it is regional
 
 The design review flagged the window's upper bound as REASONED and unverified — it read the
@@ -181,7 +180,6 @@ different reason: require the monthly map for the turning-three year, and where 
 cannot be determined, grant nothing for that child-year with a visible advisory rather than
 guessing a boundary. That errs toward under-grant, keeps the error visible, and does not bake
 a regional guess into a filed figure.
-
 
 ### The regional-table blocker is DISSOLVED: the determination is not ours to make
 
@@ -231,7 +229,6 @@ the question, instead of to a figure we computed and they cannot verify.
 retired as a precondition and should not be built. What remains is the shape, the entry
 surface, the birthday bound and the caps — all unblocked.
 
-
 ### Grounding for the maternidad decision: it is not the binary the row poses
 
 Recorded as decision input, not as the decision. Three Steps wait on whether the Art. 81.1
@@ -270,7 +267,6 @@ follows the birth, the month in which the thirty-day contribution period complet
 additional amount, making that single month materially larger than the ordinary monthly
 figure. Nothing in the current path expresses it. Direction is under-grant, and it belongs in
 whichever Step takes the maternidad work rather than being discovered afterwards.
-
 
 ### DECISION: the maternidad months are a hybrid, and the split follows the authority
 
@@ -316,7 +312,6 @@ direction is under-grant.
 **Reversible on evidence rather than on preference.** The decision rests on the authority's own
 definition of the qualifying child. If that definition is read differently — with a source —
 the first clause falls and the other two stand independently.
-
 
 ## Amendment: a design review corrected all four decisions, and refuted one
 
@@ -420,4 +415,3 @@ cycle may begin. Monthly primaries keep the persisted shape independent of that
 determination; every pre-split shape bakes an unverified answer into stored data.
 
 That grounding is now a precondition of the engine work and is recorded as unresolved.
-

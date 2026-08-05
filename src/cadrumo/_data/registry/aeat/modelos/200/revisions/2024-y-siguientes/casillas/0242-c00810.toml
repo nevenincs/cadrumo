@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00810"
 number = "00810"
-label = "Deducc. para incentivar determ.actividades - 2015 Investigación y desarrollo - Aplicado en esta liquidación [00810]"
 section = ["deducc_para_incentivar_determ_actividades", "2015_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"

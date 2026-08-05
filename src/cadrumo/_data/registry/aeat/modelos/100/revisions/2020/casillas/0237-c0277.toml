@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0277"
 number = "0277"
-label = "Denominación de la Institución de Inversión Colectiva"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_institu_inversion_colectiva"]
 data_type = "text"
 semantic_role = "irpf_re_iic_denominacion"

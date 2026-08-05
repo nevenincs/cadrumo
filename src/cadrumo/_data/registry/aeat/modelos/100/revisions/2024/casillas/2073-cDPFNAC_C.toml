@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DPFNAC_C"
 number = "*15"
-label = "Conyuge fecha de nacimiento"
 section = ["datos_identificativos", "conyuge"]
 data_type = "text"
 semantic_role = "spouse_birth_date"

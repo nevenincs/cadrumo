@@ -12,8 +12,6 @@ related:
   - "[[2026-06-28-product-packaging-research]]"
 ---
 
-
-
 # `packaging-smoke-architecture` audit: `smoke lane marginal proof, flake tolerance, and evidence proportionality`
 
 ## Scope

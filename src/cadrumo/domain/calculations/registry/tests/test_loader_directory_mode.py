@@ -30,9 +30,6 @@ from .._loader import (
     load_registry_tree,
 )
 from ._loader_directory_mode_support import (
-    _COMPLETENESS_CASILLA_0001,
-    _COMPLETENESS_CASILLA_0002,
-    _MAX_LOCALE_TOML_FRAGMENT_LINES,
     _MAX_SINGLE_FILE_MODELO_LINES,
     _MAX_TOML_FRAGMENT_LINES,
     _MAX_TOML_ROW_CHARS,
@@ -42,15 +39,13 @@ from ._loader_directory_mode_support import (
     _committed_modelo_sources_by_id,
     _committed_modelo_toml_paths,
     _committed_modelos_dir,
-    _committed_non_locale_toml_paths_by_fragment_revision,
-    _committed_non_locale_toml_paths_by_modelo_id,
+    _committed_toml_paths_by_fragment_revision,
+    _committed_toml_paths_by_modelo_id,
     _committed_registry_modelos,
     _minimal_fragment_revision_layout,
     _split_single_file_modelo_text,
     _standard_manifest_text,
     _standard_revision_preamble_text,
-    _write_locale_fragment,
-    _write_minimal_localized_modelo,
     _write_standard_manifest,
 )
 
@@ -129,7 +124,7 @@ def test_directory_mode_rejects_manifest_with_revisions_table(tmp_path: Path) ->
     target = tmp_path / "bad_manifest"
     target.mkdir()
     (target / "manifest.toml").write_text(
-        '[modelo]\nid = "999"\nlabel = "test"\n[revisions."2025"]\n',
+        '[modelo]\nid = "999"\ntax_domain = "iva"\n[revisions."2025"]\n',
         encoding="utf-8",
     )
     (target / "revisions").mkdir()
@@ -142,7 +137,7 @@ def test_directory_mode_rejects_revision_file_with_modelo_table(tmp_path: Path) 
 
     target = tmp_path / "bad_revision"
     target.mkdir()
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\nlabel = "test"\n', encoding="utf-8")
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntax_domain = "iva"\n', encoding="utf-8")
     (target / "revisions").mkdir()
     (target / "revisions" / "2025.toml").write_text(
         '[modelo]\nid = "999"\n[revisions."2025"]\n',
@@ -157,7 +152,7 @@ def test_directory_mode_rejects_duplicate_revision_ids_across_files(tmp_path: Pa
 
     target = tmp_path / "duplicate_rev"
     target.mkdir()
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\nlabel = "test"\n', encoding="utf-8")
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntax_domain = "iva"\n', encoding="utf-8")
     (target / "revisions").mkdir()
     rev_text = '[revisions."2025"]\n[[revisions."2025".casillas]]\nid = "0001"\n'
     (target / "revisions" / "a.toml").write_text(rev_text, encoding="utf-8")
@@ -234,7 +229,6 @@ def test_directory_mode_loads_plain_revision_file_layout(tmp_path: Path) -> None
 [[revisions."2025".casillas]]
 id = "0001"
 number = "1"
-label = "Base"
 section = ["liquidacion"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -253,7 +247,6 @@ source_refs = ["aeat-manual"]
 [[revisions."2025".casillas]]
 id = "0001"
 number = "1"
-label = "Base"
 section = ["liquidacion"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -278,7 +271,6 @@ def test_directory_mode_rejects_malformed_casilla_id_before_locale_key_authority
 [[revisions."2025".casillas]]
 id = "bad key"
 number = "1"
-label = "Base"
 section = ["liquidacion"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -296,8 +288,6 @@ def test_single_file_mode_rejects_ambiguous_casilla_identity_during_load(tmp_pat
         """
 [modelo]
 id = "999"
-title = "Ambiguous casilla identity test"
-official_name = "Ambiguous casilla identity test"
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -313,7 +303,6 @@ source_refs = ["aeat-manual"]
 [[revisions."2025".casillas]]
 id = "01"
 number = "99"
-label = "Canonical owner"
 section = ["test"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -322,7 +311,6 @@ source_refs = ["aeat-manual"]
 id = "DPX:01"
 number = "01"
 segmento = "DPX"
-label = "Colliding display token"
 section = ["test"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -346,7 +334,6 @@ def test_directory_mode_rejects_ambiguous_casilla_identity_during_load(tmp_path:
 [[revisions."2025".casillas]]
 id = "01"
 number = "99"
-label = "Canonical owner"
 section = ["test"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -355,7 +342,6 @@ source_refs = ["aeat-manual"]
 id = "DPX:01"
 number = "01"
 segmento = "DPX"
-label = "Colliding display token"
 section = ["test"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -381,7 +367,7 @@ def test_directory_mode_rejects_no_revisions(tmp_path: Path) -> None:
 
     target = tmp_path / "no_revs"
     target.mkdir()
-    (target / "manifest.toml").write_text('[modelo]\nid = "999"\nlabel = "test"\n', encoding="utf-8")
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\ntax_domain = "iva"\n', encoding="utf-8")
     with pytest.raises(RegistryLoadError, match="no revisions found"):
         load_modelo_directory(target)
 
@@ -596,8 +582,6 @@ def test_discovery_rejects_single_file_and_directory_layout_collision(tmp_path: 
         """
 [modelo]
 id = "999"
-title = "Collision test"
-official_name = "Collision test"
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -618,8 +602,6 @@ source_refs = ["aeat-manual"]
         """
 [modelo]
 id = "999"
-title = "Collision test"
-official_name = "Collision test"
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -655,27 +637,26 @@ def test_registry_tree_cache_invalidates_when_single_file_becomes_directory_insi
     single_file.write_text(
         _standard_manifest_text("Cache invalidation before")
         + "\n"
-        + _standard_revision_preamble_text()
-        + 'label = "before"\n',
+        + _standard_revision_preamble_text(source_ref="cache-before"),
         encoding="utf-8",
     )
 
     clear_fingerprint_cache()
     first_modelos, _first_catalogues = load_registry_tree(registry_root)
     first_by_id = {modelo.id: modelo for modelo in first_modelos}
-    assert first_by_id["999"].revisions["2025"].label == "before"
+    assert first_by_id["999"].revisions["2025"].source_refs == ("cache-before",)
 
     single_file.unlink()
     fragmented = modelos_dir / "999"
     _build_directory_layout(
         fragmented,
         manifest_text=_standard_manifest_text("Cache invalidation after"),
-        revision_files={"revision.toml": _standard_revision_preamble_text() + 'label = "after"\n'},
+        revision_files={"revision.toml": _standard_revision_preamble_text(source_ref="cache-after")},
     )
 
     second_modelos, _second_catalogues = load_registry_tree(registry_root)
     second_by_id = {modelo.id: modelo for modelo in second_modelos}
-    assert second_by_id["999"].revisions["2025"].label == "after"
+    assert second_by_id["999"].revisions["2025"].source_refs == ("cache-after",)
     assert (modelos_dir / "999.toml").exists() is False
     assert (modelos_dir / "999" / "manifest.toml").is_file()
 
@@ -687,8 +668,7 @@ def test_stale_discovered_single_file_reports_typed_disappearance(tmp_path: Path
     source_path.write_text(
         _standard_manifest_text("Disappearing source")
         + "\n"
-        + _standard_revision_preamble_text()
-        + 'label = "before"\n',
+        + _standard_revision_preamble_text(source_ref="disappearing-source"),
         encoding="utf-8",
     )
     source = ModeloSource(
@@ -779,8 +759,8 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
     """Discovery exposes all TOML fragments that participate in a directory revision."""
 
     checked: list[str] = []
-    paths_by_modelo_id = _committed_non_locale_toml_paths_by_modelo_id()
-    paths_by_fragment_revision = _committed_non_locale_toml_paths_by_fragment_revision()
+    paths_by_modelo_id = _committed_toml_paths_by_modelo_id()
+    paths_by_fragment_revision = _committed_toml_paths_by_fragment_revision()
     for source in _committed_modelo_sources():
         if source.layout != "directory":
             continue
@@ -799,33 +779,6 @@ def test_committed_directory_source_inventory_lists_every_revision_fragment_toml
     assert checked, "at least one committed directory revision must be discovered"
 
 
-def test_locale_translation_fragments_merge_by_language_directory(tmp_path: Path) -> None:
-    """Locale directories allow large reviewable language fragments."""
-
-    revision_dir = _write_minimal_localized_modelo(tmp_path / "localized", ("0001", "0002"))
-    locales_dir = revision_dir / "locales"
-    _write_locale_fragment(locales_dir, "en", "001-labels.toml", '[labels]\n"0001" = "One"\n')
-    _write_locale_fragment(locales_dir, "en", "002-help.toml", '[help]\n"0002" = "Two help"\n')
-
-    modelo = load_modelo_directory(tmp_path / "localized")
-    casillas = {casilla.id: casilla for casilla in modelo.revisions["2025"].casillas}
-
-    assert casillas[_COMPLETENESS_CASILLA_0001].localized_labels == {"en": "One"}
-    assert casillas[_COMPLETENESS_CASILLA_0002].localized_help == {"en": "Two help"}
-
-
-def test_locale_translation_fragments_reject_duplicate_keys(tmp_path: Path) -> None:
-    """Fragmented locale tables must remain unambiguous."""
-
-    revision_dir = _write_minimal_localized_modelo(tmp_path / "localized", ("0001",))
-    locales_dir = revision_dir / "locales"
-    _write_locale_fragment(locales_dir, "en", "001-labels.toml", '[labels]\n"0001" = "One"\n')
-    _write_locale_fragment(locales_dir, "en", "002-labels.toml", '[labels]\n"0001" = "Uno"\n')
-
-    with pytest.raises(RegistryValidationError, match="Duplicate 'en' locale translation keys"):
-        load_modelo_directory(tmp_path / "localized")
-
-
 def test_committed_registry_toml_files_stay_reviewable() -> None:
     """Registry TOML files must not regress toward monolithic artifacts."""
 
@@ -841,12 +794,8 @@ def test_committed_registry_toml_files_stay_reviewable() -> None:
             oversized_single_file_modelos.append(
                 f"{relative_path}: {len(lines)} lines > {_MAX_SINGLE_FILE_MODELO_LINES}",
             )
-        # Locale catalogues are CLI-managed aggregate translation surfaces (one
-        # file per language, never hand-split) and get a wider documented cap;
-        # structural calculation fragments stay under the tighter gate.
-        fragment_cap = _MAX_LOCALE_TOML_FRAGMENT_LINES if "/locales/" in relative_path else _MAX_TOML_FRAGMENT_LINES
-        if len(lines) > fragment_cap:
-            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {fragment_cap}")
+        if len(lines) > _MAX_TOML_FRAGMENT_LINES:
+            oversized_fragments.append(f"{relative_path}: {len(lines)} lines > {_MAX_TOML_FRAGMENT_LINES}")
         for line_number, line in enumerate(lines, start=1):
             if len(line) <= _MAX_TOML_ROW_CHARS:
                 continue

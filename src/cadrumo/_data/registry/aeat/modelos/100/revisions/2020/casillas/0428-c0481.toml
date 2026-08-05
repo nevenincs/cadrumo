@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0481"
 number = "0481"
-label = "Total con derecho a reducción"
 section = ["resultados", "red_base_imponible_res"]
 semantic_role = "irpf_reduccion_patrimonio_protegido_total"
 continuidad_id = "irpf-reduccion-patrimonio-protegido-total"

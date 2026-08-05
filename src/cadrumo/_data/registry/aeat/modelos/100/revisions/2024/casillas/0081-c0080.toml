@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0080"
 number = "0080"
-label = "Número de días en que ha tenido este uso: Bien inmueble afecto a actividades económicas"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"
 semantic_role = "irpf_inmueble_dias_afecto_actividades_economicas"

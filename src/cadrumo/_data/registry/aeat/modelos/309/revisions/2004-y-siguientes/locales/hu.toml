@@ -1,8 +1,0 @@
-[labels]
-"decl.ejercicio" = "Az adóbevallás vonatkozási éve"
-"decl.tipo-trigger" = "Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági szabályozás / egyenértékűségi felár / végrehajtási eljárás)"
-"iva.autorepercutido.intracomunitaria" = "Önmagával szemben áthárított HÉA közösségi beszerzések esetén (új közlekedési eszközök stb.)"
-"iva.cuota-no-periodica-total" = "Nem időszakos HÉA összesen (önmagával szemben áthárított + felár előzetesen felszámított)"
-"iva.soportado.recargo-equivalencia" = "Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi felár keretében (utasoknak járó visszatérítés)"
-
-[help]

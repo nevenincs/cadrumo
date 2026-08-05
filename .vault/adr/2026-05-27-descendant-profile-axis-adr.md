@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#descendant-profile-axis'
 date: '2026-05-27'
-modified: '2026-08-04'
-body_hash: 'sha256:afc60b8b0d4408d10be18c768415b3b2f60e8cd813b0141094c150835a9ffc40'
+modified: '2026-08-05'
+body_hash: 'sha256:d51dde9f5a6cf9ee9a42eb759fb14dae75d43127e3ec24bef3d912673b8545a8'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
@@ -112,9 +112,7 @@ the per-child disability grade required by Art. 60.
 - Locale keys for `DescendantInfo` fields and wizard prompts added across
   es/en/ca/hu.
 
-
 ## D6 — Amendment 2026-08-04: the axis under-describes the law, and this record is why
-
 
 Added after a campaign corrected a live under-grant that traces to this document rather
 than to the code implementing it. The implementation was faithful to the rule **as stated
@@ -185,4 +183,3 @@ where the law allows three.
 The replacement axis and its sequencing are decided in the record named above. What belongs
 here is only the correction: **D2.1 is superseded on the entry-date field and on the absence
 of a relationship kind**, and D1's single-year framing is why both looked sufficient.
-

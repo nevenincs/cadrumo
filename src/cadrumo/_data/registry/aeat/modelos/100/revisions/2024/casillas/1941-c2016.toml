@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "2016"
 number = "2016"
-label = "Código Cuenta de Cotización:"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_madrid_empleada_hogar_ccc"

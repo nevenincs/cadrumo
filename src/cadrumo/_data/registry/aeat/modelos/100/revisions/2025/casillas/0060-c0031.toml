@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0031"
 number = "0031"
-label = "Rendimientos de otros activos financieros"
 section = ["rendimientos_capital_mobiliario", "base_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_otros_activos_financieros"

@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1070"
 number = "1070"
-label = "Código del municipio:"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_la_rioja_municipio_codigo"

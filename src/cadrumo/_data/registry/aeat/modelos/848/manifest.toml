@@ -1,7 +1,5 @@
 [modelo]
 id = "848"
-title = "Comunicación del importe neto de la cifra de negocios a efectos del IAE"
-official_name = "Modelo 848. Comunicación del importe neto de la cifra de negocios. Impuesto sobre Actividades Económicas."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

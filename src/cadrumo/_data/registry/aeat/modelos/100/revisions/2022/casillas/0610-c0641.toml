@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0641"
 number = "0641"
-label = "NIF del arrendador 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_ctrd"]
 data_type = "nif"
 semantic_role = "irpf_arrendador_nif"

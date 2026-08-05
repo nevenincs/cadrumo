@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0872"
 number = "0872"
-label = "Por inversión en acciones de entidades que cotizan en el segmento de empresas en expansión del Mercado Alternativo Bursátil (se traslada este importe a la casilla [1142] del anexo B.8)"
 section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
 semantic_role = "irpf_deduccion_aragon_inversion_entidades_cotizadas"
 legal_refs = ["ley-35-2006:art-77"]

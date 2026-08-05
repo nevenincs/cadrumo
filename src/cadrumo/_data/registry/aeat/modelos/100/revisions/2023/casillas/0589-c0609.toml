@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0609"
 number = "0609"
-label = "Total pagos a cuenta: (suma de las casillas [0592] + [0593] + [0594] + [0596] a [0606] )"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
 semantic_role = "irpf_total_pagos_cuenta"
 input_kind = "computed"

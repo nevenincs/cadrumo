@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0201"
 number = "0201"
-label = "Por residencia habitual en zonas rurales"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_residencia_zonas_rurales"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-residencia-zonas-rurales"

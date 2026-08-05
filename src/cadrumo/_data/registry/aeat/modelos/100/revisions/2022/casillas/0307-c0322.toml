@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0322"
 number = "0322"
-label = "Pérdidas patrimoniales imputables a 2022"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 semantic_role = "irpf_perdida_fondos_importe_computable"
 continuidad_id = "irpf-perdida-fondos-importe-computable"

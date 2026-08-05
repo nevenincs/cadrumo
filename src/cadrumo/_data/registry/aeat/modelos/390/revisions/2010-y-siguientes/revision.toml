@@ -1,5 +1,4 @@
 [revisions."2010-y-siguientes"]
-label = "Modelo 390 ejercicios 2010 y siguientes (Orden EHA/3111/2009, modificada por sucesivas ordenes incluida HAP/2373/2014)"
 valid_from = 2010-01-01
 period_selector = { year_from = 2010, periods = ["0A"] }
 legal_refs = [

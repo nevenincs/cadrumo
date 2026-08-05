@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "PCTMINASDLG"
 number = "*93"
-label = "Ascendiente clave discapacidad"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "text"
 semantic_role = "irpf_ascendiente_clave_discapacidad"

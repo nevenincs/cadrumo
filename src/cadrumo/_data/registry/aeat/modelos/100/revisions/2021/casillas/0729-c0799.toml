@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0799"
 number = "0799"
-label = "Importe de la deducción"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_importe_general"
 continuidad_id = "irpf-deduccion-castilla-y-leon-importe-general"

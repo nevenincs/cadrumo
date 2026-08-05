@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1168"
 number = "1168"
-label = "Para fomentar el ejercicio físico y la práctica deportiva(importe de la casilla [2122] del anexo B.14)"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_ejercicio_fisico"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

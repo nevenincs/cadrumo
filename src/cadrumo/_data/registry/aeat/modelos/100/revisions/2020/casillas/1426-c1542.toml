@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1542"
 number = "1542"
-label = "3. Por cultivos realizados en tierras arrendadas"
 data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_tierras_arrendadas"

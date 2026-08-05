@@ -1,7 +1,5 @@
 [modelo]
 id = "840"
-title = "Impuesto sobre Actividades Económicas (declaración censal)"
-official_name = "Modelo 840. Declaración del Impuesto sobre Actividades Económicas (alta, variación, baja)."
 tax_domain = "iae"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

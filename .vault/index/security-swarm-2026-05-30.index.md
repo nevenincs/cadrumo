@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#security-swarm-2026-05-30'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:e89afd7ba0eec217c886e7424666031f66bcf6ff9a2744d6dcdb009ed33baa5f'
 related:

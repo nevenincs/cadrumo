@@ -1,7 +1,6 @@
 [[revisions."2018-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "2.devengo.ejercicio"
-label = "Ejercicio de devengo"
 section = ["declarante", "devengo"]
 data_type = "year"
 semantic_role = "filing_year"

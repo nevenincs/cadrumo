@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0480"
 number = "0480"
-label = "Aportaciones realizadas en 2023 al patrimonio protegido de la persona con discapacidad"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_patrimonio_protegido_discapacidad"]
 semantic_role = "irpf_red_patrimonio_protegido_discapacidad_aportaciones"
 continuidad_id = "irpf-red-patrimonio-protegido-discapacidad-aportaciones"

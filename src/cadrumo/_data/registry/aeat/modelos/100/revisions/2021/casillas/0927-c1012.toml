@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1012"
 number = "1012"
-label = "Por cuidado de familiares con discapacidad"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_cuidado_familiares_discapacidad"
 continuidad_id = "irpf-deduccion-extremadura-cuidado-familiares-discapacidad"

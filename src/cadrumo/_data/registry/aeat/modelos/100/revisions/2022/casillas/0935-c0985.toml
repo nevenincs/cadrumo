@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0985"
 number = "0985"
-label = "Por familia numerosa"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_familia_numerosa"
 continuidad_id = "irpf-deduccion-castilla-y-leon-familia-numerosa"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03321"
 number = "03321"
-label = "Operaciones a plazos (DT 1ª LIS) - Aumento - Correcciones del ejercicio - Permanentes [03321]"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_dt1_permanente_aumento"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03322"
 number = "03322"
-label = "Operaciones a plazos (DT 1ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03322]"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_dt1_temporaria_ejercicio_aumento"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03323"
 number = "03323"
-label = "Operaciones a plazos (DT 1ª LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03323]"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_dt1_temporaria_anteriores_aumento"
@@ -43,7 +40,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03324"
 number = "03324"
-label = "Operaciones a plazos (DT 1ª LIS) - Aumento - Saldo pendiente a principio de ejercicio [03324]"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_inicial"
@@ -55,7 +51,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03325"
 number = "03325"
-label = "Operaciones a plazos (DT 1ª LIS) - Aumento - Saldo pendiente a fin de ejercicio [03325]"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_dt1_saldo_final"

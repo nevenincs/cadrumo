@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1826"
 number = "1826"
-label = "Valor de transmisión ([1911] - [1912])"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_valor_transmision"
 input_kind = "computed"

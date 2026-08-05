@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03286"
 number = "03286"
-label = "Cooperativas: Fondo de reserva obligatorio (Ley 20/1990) - Disminución - Correcciones del ejercicio - Permanentes [03286]"
 section = ["cooperativas_fondo_de_reserva_obligatorio_ley_20_1", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_cooperativas_fondo_reserva_obligatorio_permanente_disminucion"

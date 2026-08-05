@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1544"
 number = "1544"
-label = "5. Por actividades de agricultura ecológica"
 data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_ecologica"

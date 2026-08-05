@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00065"
 number = "00065"
-label = "Bonificación personal investigador (RD 475/2014) [00065]"
 section = ["bonificacion_personal_investigador_rd_475_2014"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

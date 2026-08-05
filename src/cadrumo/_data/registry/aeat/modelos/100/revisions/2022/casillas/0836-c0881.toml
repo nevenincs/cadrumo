@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0881"
 number = "0881"
-label = "Por gastos de guardería de hijos menores de 3 años"
 section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
 semantic_role = "irpf_deduccion_aragon_guarderia"
 continuidad_id = "irpf-deduccion-aragon-guarderia"

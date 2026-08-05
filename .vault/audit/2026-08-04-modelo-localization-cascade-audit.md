@@ -3,31 +3,12 @@ tags:
   - '#audit'
   - '#modelo-localization-cascade'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c58d239122f51ab9304b78d797544c1d4c5997706cbeaa101e22ad443f04998'
+body_hash: 'sha256:cc057d7902ed8d0eab3cbda3bcd6150afd95682052c2e1c21b7a89eba4056ccb'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace modelo-localization-cascade with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `modelo-localization-cascade` audit: `implementation safety and intent`
 
@@ -40,15 +21,6 @@ classification, strict records, real behavior tests, and the explicit boundary
 against production mutation.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### implementation safety and intent | {level} | {summary}
-
-     followed by a paragraph carrying the detail. implementation safety and intent is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### source-contract | low | No actionable safety or intent findings
 
@@ -151,3 +123,54 @@ before cutover. The current plan has not yet gained a dedicated user-profile
 phase. Sol must amend the architecture-owned plan before later emitter or parity
 steps can claim campaign completeness; this S18 implementation intentionally
 does not absorb that scope.
+
+### locale-key-grammar | medium | Migration coordinates must not become a second public key syntax
+
+The accepted cascade ADR originally called slash-delimited occurrence paths
+canonical localization keys, while the established locale subsystem and the
+in-flight user-profile schema localization work derive dotted semantic keys,
+enrol them in the shared locale-key scanner, author them through the shared
+locale CLI, and resolve them through the shared renderer. The disposable
+migration consequently sealed deterministic slash-delimited values in a field
+named `canonical_key`. Those values are sound source coordinates, but emitting
+them as runtime keys would fork the localization grammar and bypass the
+standard locale-key universe.
+
+The governing ADR has been amended in place: Modelo catalogues remain physically
+owned beneath each Modelo root, production keys use the dotted
+`modelo.schema.*` family, unsafe identity segments use one reversible codec, and
+the already sealed slash values remain immutable migration evidence translated
+only at emission. No production or migration code was changed by this
+reconciliation.
+
+Before emitter work begins, amend the in-flight plan so the S03/S05
+`canonical_key` field is described as a migration occurrence address and the
+emission phase derives and records a separate standardized dotted target key.
+Keep existing source-manifest hashes stable; do not rename or rewrite sealed
+records merely for terminology. Add parity gates proving every emitted Modelo
+key is discoverable by the shared locale manager, resolves through the shared
+renderer, contains no Spanish source prose, and contains no slash-delimited
+migration address.
+
+### locale-storage-retirement | high | The prior root-storage reconciliation is superseded
+
+The preceding locale-key finding correctly separates migration coordinates from
+standardized dotted keys, but its statement that target catalogues remain
+physically beneath each Modelo root is no longer authoritative. The operator has
+clarified that every Modelo-local locale file is legacy storage. The target is
+the existing shared runtime catalogue family, not a second TOML-backed provider.
+
+The governing ADR now requires atomic per-Modelo enrollment. A Modelo may lose
+its legacy files only after its full key universe is enrolled in the shared
+locale schema and Spanish-source, translation, revision, rendering, export, and
+facade parity have passed against the sealed old behavior. The same scoped
+cutover then deletes both Modelo-root and revision-local locale files and removes
+localized schema text. Mixed ownership is allowed only between Modelos while the
+campaign is incomplete; an enrolled Modelo may never read both layouts.
+
+The team lead must update the in-flight plan before emission: target the shared
+catalogues through the standard locale CLI, add a per-Modelo enrollment
+certificate and deletion gate, reject both `<modelo>/locales/**` and
+`<modelo>/revisions/**/locales/**` after enrollment, and make final closure
+delete the legacy reader, `ModeloLocaleManager`, and legacy Modelo locale
+commands. Existing source-manifest seals remain unchanged.

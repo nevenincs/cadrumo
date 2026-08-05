@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "38"
 number = "38"
-label = "Mod. 40.3 LIS — TOTAL correcciones — Aumentos"
 section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_total_correcciones_aumentos"

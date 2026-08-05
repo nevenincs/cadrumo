@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01331"
 number = "01331"
-label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Cuota íntegra previa después de la reserva de nivelación [01331]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_cuota_integra_previa"

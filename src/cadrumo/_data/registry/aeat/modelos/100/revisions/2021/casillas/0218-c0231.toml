@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0231"
 number = "0231"
-label = "Suma de rendimientos netos reducidos de las actividades económicas en estimación directa (suma de las casillas [0226])"
 section = ["resultados", "reg_estima_directa_res"]
 input_kind = "computed"
 formula = "renta-2021-estimacion-directa-total-rendimiento-neto-reducido"

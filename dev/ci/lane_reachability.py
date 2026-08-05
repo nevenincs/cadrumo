@@ -20,15 +20,36 @@ Two precisions the naive version gets wrong:
 flag, and this repository's workflows use it that way. Reading a commit subject
 as a marker expression yields nonsense that happens to parse.
 
-*A file's markers are module-level and per-test.* Collecting only
-``pytestmark`` would call a file unmarked when its tests carry their own
-decorators, and unmarked files match narrow expressions they should not.
+*Markers are per-test, and must not be flattened into one set per file.*
+Collecting only ``pytestmark`` would call a file unmarked when its tests carry
+their own decorators. But unioning module-level and per-test markers into a
+single set is just as wrong in the other direction, and it produced a real false
+positive: ``src/cadrumo/tests/test_secure_sql.py`` is module-marked ``unit`` and
+carries ONE test decorated ``os_keychain``, and every lane excludes
+``os_keychain`` -- so the flattened set matched no lane and the whole file read
+as unreachable while most of its tests run in the unit lane every day. The unit
+of reachability is therefore the TEST: a test is reachable when some lane covers
+its file and selects its own effective markers (module, class, and function
+decorators combined), and a file is unreachable only when NONE of its tests is.
+
+Reporting per test rather than per file is not just precision, it is the finding
+the file-level view destroys. Underneath that false positive sat a real hole --
+no lane names ``test_secure_sql.py`` for ``os_keychain``, so that one test never
+runs anywhere -- and a per-file model that stopped flagging the file would have
+closed the false positive and buried the defect with it.
+
+Discovery reads git-TRACKED files. This repository is worked by many agents at
+once, so an untracked path is a peer's uncommitted scratch that CI will never
+see, and a tracked path may be momentarily absent from disk while a peer stages
+a deletion. Neither is a coverage defect, and both would red a shared gate.
+Unreadable tracked files are skipped and counted rather than assumed unmarked,
+because assuming unmarked would report a peer's in-flight deletion as an orphan.
 
 See Also:
     :func:`declared_lanes`
         Every lane the repository declares, from config, recipes, and workflows.
-    :func:`unreachable_test_files`
-        The gate's finding: files no declared lane can select.
+    :func:`analyse_reachability`
+        The gate's finding: individual tests no declared lane can select.
 """
 
 from __future__ import annotations
@@ -36,6 +57,8 @@ from __future__ import annotations
 import ast
 import re
 import shlex
+import shutil
+import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -50,6 +73,52 @@ _PRUNED: Final[frozenset[str]] = frozenset(
 
 #: Where lane declarations live. Anything else is not a lane.
 _WORKFLOW_DIR: Final[str] = ".github/workflows"
+
+
+@dataclass(frozen=True, slots=True)
+class TestMarkers:
+    """One test and the effective markers pytest resolves for it."""
+
+    test: str
+    markers: frozenset[str]
+
+
+@dataclass(frozen=True, slots=True)
+class UnreachableTest:
+    """One test no declared lane can select, named so the remedy is decidable."""
+
+    path: str
+    test: str
+    markers: frozenset[str]
+
+    def describe(self) -> str:
+        """Return a one-line report naming the test and why it is held out."""
+        markers = ", ".join(sorted(self.markers)) or "no markers"
+        return f"{self.path}::{self.test} [{markers}]"
+
+
+@dataclass(frozen=True, slots=True)
+class ReachabilityReport:
+    """The reachability finding plus the corpus it was computed over.
+
+    ``analysed`` and ``skipped`` exist so the gate can refuse a vacuous pass: an
+    empty ``unreachable`` means nothing if the reader parsed nothing, and a
+    reader that silently stopped matching is the false-green this whole module
+    is built to refuse.
+    """
+
+    unreachable: tuple[UnreachableTest, ...]
+    analysed: int
+    skipped: tuple[str, ...]
+
+    def affected_files(self) -> tuple[str, ...]:
+        """Return every file holding at least one unreachable test.
+
+        Deliberately NOT "files where no test is selectable": that weaker
+        question is what hid the ``os_keychain`` hole, because the file also
+        held reachable tests and so never appeared.
+        """
+        return tuple(sorted({entry.path for entry in self.unreachable}))
 
 
 @dataclass(frozen=True, slots=True)
@@ -177,38 +246,93 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
     return tuple(resolved)
 
 
-def markers_in(path: Path) -> frozenset[str]:
-    """Return every marker the file applies, module-level and per-test.
+def _marker_name(node: ast.AST) -> str | None:
+    """Return the NAME of a ``pytest.mark.NAME`` node, called or bare."""
+    target = node.func if isinstance(node, ast.Call) else node
+    if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Attribute) and target.value.attr == "mark":
+        return target.attr
+    return None
 
-    Both are collected because a file whose tests carry their own decorators has
-    no ``pytestmark``, and calling it unmarked would match it against narrow
-    expressions it cannot actually satisfy.
+
+def _module_markers(tree: ast.Module) -> frozenset[str]:
+    """Return the module-level ``pytestmark`` markers every test inherits."""
+    found: set[str] = set()
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets):
+            continue
+        values = node.value.elts if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
+        for value in values:
+            name = _marker_name(value)
+            if name is not None:
+                found.add(name)
+    return frozenset(found)
+
+
+def marker_sets_in(path: Path) -> tuple[TestMarkers, ...] | None:
+    """Return each test's EFFECTIVE markers, or None when the file is unreadable.
+
+    Effective means module-level ``pytestmark`` plus any enclosing class's
+    decorators plus the test function's own -- the set pytest itself resolves.
+    Per test, never unioned across the file: one ``os_keychain`` test must not
+    make its unit-marked siblings read as unreachable.
+
+    Args:
+        path: The test module to read.
+
+    Returns:
+        One entry per discovered test, or None when the file cannot be read.
+        None is distinct from an empty tuple: absent (a peer staging a
+        deletion) is not the same finding as present-with-no-tests.
     """
     try:
         tree = ast.parse(path.read_text(encoding=_UTF_8, errors="replace"))
-    except (SyntaxError, ValueError):
-        return frozenset()
-    found: set[str] = set()
+    except (SyntaxError, ValueError, OSError):
+        return None
 
-    def _name(node: ast.AST) -> None:
-        # pytest.mark.NAME, optionally called with arguments.
-        target = node.func if isinstance(node, ast.Call) else node
-        if (
-            isinstance(target, ast.Attribute)
-            and isinstance(target.value, ast.Attribute)
-            and target.value.attr == "mark"
-        ):
-            found.add(target.attr)
+    found: list[TestMarkers] = []
 
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "pytestmark" for t in node.targets):
-            values = node.value.elts if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
-            for value in values:
-                _name(value)
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            for decorator in node.decorator_list:
-                _name(decorator)
-    return frozenset(found)
+    def _walk(body: list[ast.stmt], inherited: frozenset[str]) -> None:
+        for node in body:
+            own = (
+                frozenset(name for name in (_marker_name(d) for d in node.decorator_list) if name is not None)
+                if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+                else frozenset()
+            )
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith("test"):
+                found.append(TestMarkers(test=node.name, markers=inherited | own))
+            elif isinstance(node, ast.ClassDef):
+                _walk(node.body, inherited | own)
+
+    _walk(tree.body, _module_markers(tree))
+    return tuple(found)
+
+
+def tracked_test_files(root: Path) -> tuple[Path, ...]:
+    """Return every git-TRACKED test module, repository-relative.
+
+    Tracked rather than on-disk: an untracked file is a peer's uncommitted work
+    that no lane could name and CI will never see, so counting it would red a
+    shared gate on private state. Field-validated -- a peer's staged deletion of
+    a whole test package arrived while this was in use and the gate correctly
+    stayed quiet.
+    """
+    git = shutil.which("git")
+    if git is None:
+        message = "git is not on PATH, so tracked-file discovery cannot run"
+        raise RuntimeError(message)
+    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
+        [git, "ls-files"],
+        cwd=root,
+        capture_output=True,
+        check=True,
+    )
+    return tuple(
+        Path(entry)
+        for entry in completed.stdout.decode(_UTF_8).split("\n")
+        if entry.endswith(".py") and Path(entry).name.startswith("test_")
+    )
 
 
 def expression_selects(expression: str | None, markers: frozenset[str]) -> bool:
@@ -255,13 +379,42 @@ def discover_test_files(root: Path) -> tuple[Path, ...]:
     return tuple(sorted(found))
 
 
-def unreachable_test_files(root: Path, *, lanes: Iterable[Lane] | None = None) -> tuple[str, ...]:
-    """Return repository-relative test files no declared lane can select."""
+def analyse_reachability(
+    root: Path,
+    *,
+    lanes: Iterable[Lane] | None = None,
+    files: Iterable[Path] | None = None,
+) -> ReachabilityReport:
+    """Return every test no declared lane can select, with its corpus size.
+
+    Args:
+        root: The repository root the lanes and paths are relative to.
+        lanes: Declared lanes; read from ``root`` when omitted.
+        files: Repository-relative test modules; git-tracked discovery when
+            omitted. Injectable so the anti-tautology proofs can drive a
+            synthetic tree that is not a git repository.
+
+    Returns:
+        The unreachable tests, the number of files successfully analysed, and
+        the tracked files that could not be read.
+    """
     resolved = tuple(lanes) if lanes is not None else declared_lanes(root)
-    unreachable: list[str] = []
-    for path in discover_test_files(root):
-        relative = path.relative_to(root).as_posix()
-        markers = markers_in(path)
-        if not any(lane.covers(relative) and expression_selects(lane.marker_expression, markers) for lane in resolved):
-            unreachable.append(relative)
-    return tuple(unreachable)
+    candidates = tuple(files) if files is not None else tracked_test_files(root)
+
+    unreachable: list[UnreachableTest] = []
+    skipped: list[str] = []
+    analysed = 0
+
+    for path in candidates:
+        relative = (path.relative_to(root) if path.is_absolute() else path).as_posix()
+        tests = marker_sets_in(root / relative)
+        if tests is None:
+            skipped.append(relative)
+            continue
+        analysed += 1
+        covering = [lane for lane in resolved if lane.covers(relative)]
+        for entry in tests:
+            if not any(expression_selects(lane.marker_expression, entry.markers) for lane in covering):
+                unreachable.append(UnreachableTest(path=relative, test=entry.test, markers=entry.markers))
+
+    return ReachabilityReport(unreachable=tuple(unreachable), analysed=analysed, skipped=tuple(skipped))

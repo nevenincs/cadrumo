@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1039"
 number = "1039"
-label = "Por nacimiento o adopción de hijos"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 input_kind = "computed"
 formula = "renta-2025-deduccion-madrid-nacimiento-adopcion"

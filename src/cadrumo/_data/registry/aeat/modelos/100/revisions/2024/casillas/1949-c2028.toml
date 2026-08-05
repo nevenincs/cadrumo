@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "2028"
 number = "2028"
-label = "Precio de adquisición/cantidades invertidas"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_precio"
 semantic_role_cardinality = "intentional_singleton"

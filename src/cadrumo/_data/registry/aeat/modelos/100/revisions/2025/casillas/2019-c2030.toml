@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2030"
 number = "2030"
-label = "Por inversiones de nuevos contribuyentes procedentes del extranjero"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_nuevos_contribuyentes_extranjero"
 continuidad_id = "irpf-deduccion-madrid-nuevos-contribuyentes-extranjero"

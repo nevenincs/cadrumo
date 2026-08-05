@@ -1,7 +1,5 @@
 [modelo]
 id = "151"
-title = "IRPF régimen especial de trabajadores desplazados (impatriados, Beckham)"
-official_name = "Modelo 151. Declaración del IRPF para contribuyentes del Régimen especial aplicable a los trabajadores desplazados a territorio español."
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

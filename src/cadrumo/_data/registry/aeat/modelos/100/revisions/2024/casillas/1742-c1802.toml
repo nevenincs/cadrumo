@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1802"
 number = "1802"
-label = "Denominación de la moneda virtual que se transmite (bitcoins, ethereum, tether, Binance Coin, USD Coin, XRP, Cardano, Solana, terra, avalanche, etc)"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 data_type = "text"
 semantic_role = "irpf_ganancia_cripto_denominacion"

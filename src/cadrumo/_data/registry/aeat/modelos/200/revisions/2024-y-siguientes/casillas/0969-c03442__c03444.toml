@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03442"
 number = "03442"
-label = "Deducc. para incentivar determ.actividades - 2024 Innovación tecnológica (IT) - Deducción pendiente/generada [03442]"
 section = ["deducc_para_incentivar_determ_actividades", "2024_innovacion_tecnologica_it"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_innovacion_tecnologica"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03443"
 number = "03443"
-label = "Deducc. para incentivar determ.actividades - 2024 Innovación tecnológica (IT) - Aplicado en esta liquidación [03443]"
 section = ["deducc_para_incentivar_determ_actividades", "2024_innovacion_tecnologica_it"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_innovacion_tecnologica"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03444"
 number = "03444"
-label = "Deducc. para incentivar determ.actividades - 2024 Innovación tecnológica (IT) - Pendiente de aplicación en periodos futuros [03444]"
 section = ["deducc_para_incentivar_determ_actividades", "2024_innovacion_tecnologica_it"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_innovacion_pendiente"

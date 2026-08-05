@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "01"
 number = "01"
-label = "Ingresos"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "irpf_pf_ingresos"
@@ -18,7 +17,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "02"
 number = "02"
-label = "Gastos"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "irpf_pf_gastos"
@@ -35,7 +33,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
 number = "03"
-label = "Rendimiento neto"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "irpf_pf_rendimiento_neto"
@@ -60,7 +57,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "04"
 number = "04"
-label = "Importe del pago fraccionado"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "irpf_pf_importe"
@@ -75,7 +71,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "05"
 number = "05"
-label = "Pagos fraccionados anteriores"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "pago_fraccionado_previo"
@@ -95,7 +90,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "06"
 number = "06"
-label = "Retenciones e ingresos a cuenta"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
@@ -109,7 +103,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "07"
 number = "07"
-label = "Resultado parcial apartado I"
 section = ["actividades_economicas_estimacion_directa"]
 data_type = "money"
 semantic_role = "irpf_pf_resultado_parcial_directa"
@@ -123,7 +116,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "08"
 number = "08"
-label = "Volumen de ingresos del trimestre"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 data_type = "money"
 semantic_role = "irpf_pf_volumen_ingresos_trimestre"
@@ -136,7 +128,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "09"
 number = "09"
-label = "Importe del pago fraccionado"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 data_type = "money"
 semantic_role = "irpf_pf_importe"
@@ -151,7 +142,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "10"
 number = "10"
-label = "Retenciones e ingresos a cuenta"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
@@ -165,7 +155,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "11"
 number = "11"
-label = "Resultado parcial apartado II"
 section = ["actividades_agricolas_ganaderas_forestales_pesqueras"]
 data_type = "money"
 semantic_role = "irpf_pf_resultado_parcial_agraria"
@@ -179,7 +168,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "12"
 number = "12"
-label = "Suma de resultados parciales"
 section = ["total_liquidacion_trimestral"]
 data_type = "money"
 semantic_role = "irpf_pf_suma_resultados_parciales"
@@ -193,7 +181,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "13"
 number = "13"
-label = "Minoracion por rendimientos netos"
 section = ["total_liquidacion_trimestral"]
 data_type = "money"
 semantic_role = "irpf_pf_minoracion_rendimientos"
@@ -207,7 +194,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "14"
 number = "14"
-label = "Neto tras minoracion"
 section = ["total_liquidacion_trimestral"]
 data_type = "money"
 semantic_role = "irpf_pf_neto_tras_minoracion"
@@ -221,7 +207,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "15"
 number = "15"
-label = "Resultados negativos de trimestres anteriores"
 section = ["resultados_negativos_trimestres_anteriores"]
 data_type = "money"
 semantic_role = "irpf_pf_resultados_negativos_anteriores"
@@ -236,7 +221,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "16"
 number = "16"
-label = "Deduccion por inversion en vivienda habitual"
 section = ["deduccion_inversion_vivienda_habitual"]
 data_type = "money"
 semantic_role = "deduccion_vivienda_habitual"
@@ -249,7 +233,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "17"
 number = "17"
-label = "Diferencia"
 section = ["resultado_final"]
 data_type = "money"
 semantic_role = "irpf_pf_diferencia"
@@ -263,7 +246,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "18"
 number = "18"
-label = "Resultado a ingresar de autoliquidaciones anteriores"
 section = ["resultado_final"]
 data_type = "money"
 semantic_role = "resultado_anteriores_autoliquidaciones"
@@ -276,7 +258,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "19"
 number = "19"
-label = "Resultado final"
 section = ["resultado_final"]
 data_type = "money"
 semantic_role = "irpf_pf_resultado_final"
@@ -301,7 +282,6 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"
-label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 17)"
 section = ["computed_carry_forward"]
 data_type = "money"
 semantic_role = "irpf_pf_saldo_negativo_fin_periodo"

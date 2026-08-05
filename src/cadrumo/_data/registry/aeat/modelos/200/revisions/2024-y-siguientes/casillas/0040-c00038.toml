@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00038"
 number = "00038"
-label = "Entidad dedicada al arrend. viviendas [00038]"
 section = ["entidad_dedicada_al_arrend_viviendas"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

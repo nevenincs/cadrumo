@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0400"
 number = "0400"
-label = "Suma de imputación a 2021 de ganancias patrimoniales acogidas a diferimiento por reinversión(suma de las casillas [0399] )"
 section = ["resultados", "gp_reinversion_res"]
 semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
 input_kind = "computed"

@@ -1,7 +1,6 @@
 [[revisions."2016-2017".casillas]]
 id = "decl.cnae"
 number = "2.devengo.cnae"
-label = "C.N.A.E. de la actividad principal"
 section = ["declarante", "devengo"]
 data_type = "text"
 semantic_role = "actividad_cnae"

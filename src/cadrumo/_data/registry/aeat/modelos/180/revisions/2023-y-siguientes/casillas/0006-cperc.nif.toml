@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.nif"
 number = "18-26"
-label = "NIF del perceptor"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
 semantic_role = "payee_nif"

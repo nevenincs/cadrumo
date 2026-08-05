@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02831"
 number = "02831"
-label = "Gastos derivados de la extinción de la relación laboral o mercantil (art. 15 i) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02831]"
 section = ["gastos_derivados_de_la_extincion_de_la_relacion_la", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_gastos_extincion_relacion_laboral_art15i_permanente_aumento"

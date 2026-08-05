@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0973"
 number = "0973"
-label = "Por cantidades donadas para el fomento de la investigación, el desarrollo y la innovación"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_donaciones_idi"
 continuidad_id = "irpf-deduccion-castilla-y-leon-donaciones-idi"

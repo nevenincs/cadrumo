@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0935"
 number = "0935"
-label = "Por donaciones a entidades sin ánimo de lucro"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_donaciones_entidades_sin_animo"
 continuidad_id = "irpf-deduccion-canarias-donaciones-entidades-sin-animo"

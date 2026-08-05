@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00040"
 number = "00040"
-label = "Grupo fiscal - Claves 00009 ó 00010 - Nº de grupo fiscal [00040]"
 section = ["grupo_fiscal", "claves_00009_o_00010"]
 data_type = "text"
 semantic_role = "is_grupo_fiscal_numero"

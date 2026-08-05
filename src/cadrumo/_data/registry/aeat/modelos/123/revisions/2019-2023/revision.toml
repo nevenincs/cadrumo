@@ -1,5 +1,4 @@
 [revisions."2019-2023"]
-label = "Orden EHA/3435/2007, ejercicios 2019 a 2023"
 valid_from = 2019-01-01
 valid_to = 2023-12-31
 period_selector = { year_from = 2019, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }

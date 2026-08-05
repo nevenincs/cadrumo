@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00941"
 number = "00941"
-label = "Reversión por deterioro de valores representativos - Dotaciones pendientes de integración a principio del período [00941]"
 section = ["reversion_por_deterioro_de_valores_representativos", "dotaciones_pendientes_de_integracion_a_principio_d"]
 data_type = "money"
 semantic_role = "is_correccion_reversion_deterioro_valores_saldo_inicial"

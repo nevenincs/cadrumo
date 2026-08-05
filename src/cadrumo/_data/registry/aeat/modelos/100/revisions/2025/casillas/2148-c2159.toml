@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2159"
 number = "2159"
-label = "Si no tiene referencia catastral, marque con una 'X' esta casilla"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 data_type = "boolean"
 semantic_role = "irpf_deduccion_murcia_sin_referencia_catastral_flag"

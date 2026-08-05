@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1898"
 number = "1898"
-label = "Año de imputación"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "year"
 semantic_role = "irpf_ganancia_inmueble_anio_imputacion_4"

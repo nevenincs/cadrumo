@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2225"
 number = "2225"
-label = "NIF de la sociedad o fondo de inversión"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 data_type = "nif"
 semantic_role = "irpf_fondo_inversion_nif"

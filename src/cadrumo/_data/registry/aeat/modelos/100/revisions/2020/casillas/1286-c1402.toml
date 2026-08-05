@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1402"
 number = "1402"
-label = "Gasto 4: Importe del gasto"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "money"
 semantic_role = "irpf_inmueble_gasto_reparacion_importe"

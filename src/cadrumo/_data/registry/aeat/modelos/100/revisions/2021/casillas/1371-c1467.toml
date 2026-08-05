@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1467"
 number = "1467"
-label = "Minoración por incentivos a la inversión"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_minoracion_inversion"
 continuidad_id = "irpf-eo-minoracion-inversion"

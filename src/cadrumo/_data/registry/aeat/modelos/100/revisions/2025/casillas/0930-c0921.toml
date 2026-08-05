@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0921"
 number = "0921"
-label = "Para fomentar el ejercicio físico y la práctica deportiva (importe de la casilla [2122] del Anexo B.14)"
 section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
 semantic_role = "irpf_deduccion_andalucia_ejercicio_fisico"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

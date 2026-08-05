@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0471"
 number = "0471"
-label = "N.º de identificación fiscal (NIF) de la persona con discapacidad partícipe, mutualista o asegurada"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_discapacidad"]
 data_type = "nif"
 semantic_role = "irpf_discapacitado_nif"

@@ -479,7 +479,7 @@ def test_a_write_primitive_called_directly_on_the_chain_is_also_caught() -> None
 #
 # The scanner that measured the S78 residual matched taxonomy-vocabulary
 # segment names WITHOUT resolving their chain's root -- the exact defect this
-# campaign was chartered against, and the reason `_modelo_manager.py`'s two
+# campaign was chartered against, and the reason the registry loader's two
 # `bundled_path("registry", "aeat")`-rooted ``manifest.toml`` sites (a
 # different tree than the taxonomy's own bucket ``manifest.toml``, anchored
 # at `storage_root`) were reported as candidates. These tests reproduce that
@@ -565,10 +565,10 @@ def _vocabulary_classification(source: str) -> str:
     return classify(origin, local_params=set(), module_params=set())
 
 
-def test_the_modelo_manager_manifest_false_positive_is_classified_out_of_tree() -> None:
+def test_the_bundled_registry_manifest_false_positive_is_classified_out_of_tree() -> None:
     """Reproduces the exact real defect: a bundled-registry ``manifest.toml`` resolves to ``fixture``, not ``taxonomy``.
 
-    The real site (``locales/_modelo_manager.py``): ``modelo_dir =
+    The real site (the registry loader): ``modelo_dir =
     self._contained_path("modelos", modelo_id)`` where ``self.registry_root =
     bundled_path("registry", "aeat")``, then
     ``modelo_dir.joinpath("manifest.toml")``. Minimised to the two-hop shape

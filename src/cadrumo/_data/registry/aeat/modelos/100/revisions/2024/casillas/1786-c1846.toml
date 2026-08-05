@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1846"
 number = "1846"
-label = "Suma de ganancias patrimoniales derivadas de transmisiones de inmuebles y derechos reales sobre inmuebles afectos a actividades económicas (suma de las casillas [1843])"
 section = ["resultados", "gp_otros_inmuebles_res"]
 semantic_role = "irpf_gyp_actividades_economicas_suma_ganancias"
 input_kind = "computed"

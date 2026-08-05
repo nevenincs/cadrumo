@@ -13,7 +13,6 @@
 [[revisions."2021-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la declaracion"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -25,7 +24,6 @@ source_refs = ["aeat-modelo-714-procedure"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo (anual, 0A)"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
@@ -37,7 +35,6 @@ source_refs = ["aeat-modelo-714-procedure"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.base-imponible"
 number = "patrimonio.base-imponible"
-label = "Base imponible (patrimonio neto)"
 section = ["liquidacion", "base"]
 data_type = "money"
 semantic_role = "patrimonio_base_imponible"
@@ -49,7 +46,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.base-liquidable"
 number = "patrimonio.base-liquidable"
-label = "Base liquidable (base imponible menos reducciones, art. 28)"
 section = ["liquidacion", "base"]
 data_type = "money"
 semantic_role = "patrimonio_base_liquidable"
@@ -61,7 +57,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.cuota-integra"
 number = "29"
-label = "Liquidacion - Cuota integra (escala art. 30)"
 section = ["liquidacion", "cuota"]
 data_type = "money"
 semantic_role = "patrimonio_cuota_integra"
@@ -74,7 +69,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.limite-conjunto"
 number = "33"
-label = "Liquidacion - Limite conjunto de cuotas del IP y del IRPF (60%, art. 31)"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_limite_conjunto"
@@ -87,7 +81,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.irpf-bases-imponibles"
 number = "30"
-label = "Liquidacion - Suma de las bases imponibles del IRPF"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_irpf_bases_imponibles"
@@ -100,7 +93,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.dividendos-no-irpf"
 number = "31"
-label = "Liquidacion - Dividendos y participaciones en beneficios no integrados en el IRPF"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_dividendos_no_irpf"
@@ -112,7 +104,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.base-ahorro-excluida"
 number = "32"
-label = "Liquidacion - Parte de la base imponible del ahorro del IRPF excluida del limite conjunto"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_base_ahorro_excluida"
@@ -124,7 +115,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.irpf-cuotas-integras"
 number = "34"
-label = "Liquidacion - Cuotas integras del IRPF"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_irpf_cuotas_integras"
@@ -137,7 +127,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.irpf-cuotas-excluidas-base-ahorro"
 number = "35"
-label = "Liquidacion - Parte de las cuotas integras del IRPF correspondiente a la base del ahorro excluida"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_irpf_cuotas_excluidas_base_ahorro"
@@ -149,7 +138,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.cuota-integra-susceptible-limitacion"
 number = "36"
-label = "Liquidacion - Parte de la cuota integra del Impuesto sobre el Patrimonio susceptible de limitacion"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_cuota_integra_susceptible_limitacion"
@@ -161,7 +149,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.suma-cuotas-limite"
 number = "37"
-label = "Liquidacion - Suma de cuotas a efectos del limite conjunto"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_suma_cuotas_limite"
@@ -174,7 +161,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.exceso-limite-conjunto"
 number = "38"
-label = "Liquidacion - Exceso del limite conjunto"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_exceso_limite_conjunto"
@@ -187,7 +173,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.reduccion-limite-80"
 number = "39"
-label = "Liquidacion - 80% de la cuota integra del Impuesto sobre el Patrimonio (suelo reduccion, art. 31)"
 section = ["liquidacion", "limite"]
 data_type = "money"
 semantic_role = "patrimonio_reduccion_limite_ochenta"
@@ -200,7 +185,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.total-cuota-integra"
 number = "40"
-label = "Liquidacion - Total cuota integra"
 section = ["liquidacion", "cuota"]
 data_type = "money"
 semantic_role = "patrimonio_total_cuota_integra"
@@ -213,7 +197,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.cuota-minorada"
 number = "45"
-label = "Liquidacion - Cuota minorada"
 section = ["liquidacion", "cuota"]
 data_type = "money"
 semantic_role = "patrimonio_cuota_minorada"
@@ -225,7 +208,6 @@ source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "patrimonio.cuota-a-ingresar"
 number = "55"
-label = "Liquidacion - Cuota a ingresar"
 section = ["liquidacion", "resultado"]
 data_type = "money"
 semantic_role = "patrimonio_cuota_a_ingresar"

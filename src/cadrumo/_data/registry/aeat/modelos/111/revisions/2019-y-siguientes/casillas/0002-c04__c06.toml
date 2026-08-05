@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "04"
 number = "04"
-label = "Rendimientos del trabajo en especie numero de perceptores"
 section = ["trabajo_especie"]
 data_type = "integer"
 semantic_role = "perceptor_count"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "05"
 number = "05"
-label = "Rendimientos del trabajo en especie valor de percepciones"
 section = ["trabajo_especie"]
 data_type = "money"
 semantic_role = "valor_percepciones_especie"
@@ -27,7 +25,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "06"
 number = "06"
-label = "Rendimientos del trabajo en especie importe de ingresos a cuenta"
 section = ["trabajo_especie"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

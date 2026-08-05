@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00039"
 number = "00039"
-label = "Entidad que forma parte de un grupo mercantil (art. 42 del Cód. Comercio) [00039]"
 section = ["entidad_que_forma_parte_de_un_grupo_mercantil_art"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

@@ -1,5 +1,4 @@
 [revisions."2025-y-siguientes"]
-label = "Modelo 151 ejercicios 2025 y siguientes (régimen impatriados; escala general plana 24/47 art. 93.2.e.1º + escala del ahorro art. 93.2.e.2º redacción vigente Ley 7/2024)"
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["0A"] }
 legal_refs = [

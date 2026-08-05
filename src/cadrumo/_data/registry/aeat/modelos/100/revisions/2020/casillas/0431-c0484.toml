@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0484"
 number = "0484"
-label = "Marque una \"X\" si en la casilla [0483] ha consignado un NIF de otro País"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_pensiones_comensatorias_alimentos"]
 data_type = "boolean"
 semantic_role = "irpf_red_pensiones_compensatorias_receptor_nif_extranjero_flag"

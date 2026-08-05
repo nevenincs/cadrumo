@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00149"
 number = "00149"
-label = "Balance: Activo (II) - Activo - Deudores comerciales y otras cuentas a cobrar [00149]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00150"
 number = "00150"
-label = "Balance: Activo (II) - Activo - Clientes por ventas y prestaciones de servicios [00150]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00151"
 number = "00151"
-label = "Balance: Activo (II) - Activo - Clientes por ventas y prestaciones de servicios - Clientes por ventas y prestaciones de servicios a largo plazo [00151]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00152"
 number = "00152"
-label = "Balance: Activo (II) - Activo - Clientes por ventas y prestaciones de servicios - Clientes por ventas y prestaciones de servicios a corto plazo [00152]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00153"
 number = "00153"
-label = "Balance: Activo (II) - Activo - Clientes empresas del grupo y asociadas [00153]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00154"
 number = "00154"
-label = "Balance: Activo (II) - Activo - Deudores varios [00154]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00155"
 number = "00155"
-label = "Balance: Activo (II) - Activo - Personal [00155]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -85,7 +78,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00156"
 number = "00156"
-label = "Balance: Activo (II) - Activo - Activos por impuesto corriente [00156]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -97,7 +89,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00157"
 number = "00157"
-label = "Balance: Activo (II) - Activo - Otros créditos con las Administraciones Públicas [00157]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -109,7 +100,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00158"
 number = "00158"
-label = "Balance: Activo (II) - Activo - Accionistas (socios) por desembolsos exigidos [00158]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -121,7 +111,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00159"
 number = "00159"
-label = "Balance: Activo (II) - Activo - Otros deudores [00159]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -133,7 +122,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00160"
 number = "00160"
-label = "Balance: Activo (II) - Activo - Inversiones en empresas del grupo y asociadas a corto plazo [00160]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -145,7 +133,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00161"
 number = "00161"
-label = "Balance: Activo (II) - Activo - Instrumentos de patrimonio [00161]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -157,7 +144,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00162"
 number = "00162"
-label = "Balance: Activo (II) - Activo - Créditos a empresas [00162]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -169,7 +155,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00163"
 number = "00163"
-label = "Balance: Activo (II) - Activo - Valores representativos de deuda [00163]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -181,7 +166,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00164"
 number = "00164"
-label = "Balance: Activo (II) - Activo - Derivados [00164]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -193,7 +177,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00165"
 number = "00165"
-label = "Balance: Activo (II) - Activo - Otros activos financieros [00165]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -205,7 +188,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00166"
 number = "00166"
-label = "Balance: Activo (II) - Activo - Otras inversiones [00166]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -217,7 +199,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00167"
 number = "00167"
-label = "Balance: Activo (II) - Activo - Resto [00167]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -229,7 +210,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00168"
 number = "00168"
-label = "Balance: Activo (II) - Activo - Inversiones financieras a corto plazo [00168]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -241,7 +221,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00169"
 number = "00169"
-label = "Balance: Activo (II) - Activo - Instrumentos de patrimonio [00169]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -253,7 +232,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00170"
 number = "00170"
-label = "Balance: Activo (II) - Activo - Créditos a empresas [00170]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -265,7 +243,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00171"
 number = "00171"
-label = "Balance: Activo (II) - Activo - Valores representativos de deuda [00171]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -277,7 +254,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00172"
 number = "00172"
-label = "Balance: Activo (II) - Activo - Derivados [00172]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -289,7 +265,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00173"
 number = "00173"
-label = "Balance: Activo (II) - Activo - Otros activos financieros [00173]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -301,7 +276,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00174"
 number = "00174"
-label = "Balance: Activo (II) - Activo - Otras inversiones [00174]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -313,7 +287,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00175"
 number = "00175"
-label = "Balance: Activo (II) - Activo - Resto [00175]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -325,7 +298,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00176"
 number = "00176"
-label = "Balance: Activo (II) - Activo - Periodificaciones a corto plazo [00176]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -337,7 +309,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00177"
 number = "00177"
-label = "Balance: Activo (II) - Activo - Efectivo y otros activos líquidos equivalentes [00177]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -349,7 +320,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00178"
 number = "00178"
-label = "Balance: Activo (II) - Activo - Tesorería [00178]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -361,7 +331,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00179"
 number = "00179"
-label = "Balance: Activo (II) - Activo - Otros activos líquidos equivalentes [00179]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"
@@ -373,7 +342,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00180"
 number = "00180"
-label = "Balance: Activo (II) - Activo - TOTAL ACTIVO [00180]"
 section = ["balance_activo_ii", "activo"]
 data_type = "money"
 semantic_role = "is_balance_activo_importe"

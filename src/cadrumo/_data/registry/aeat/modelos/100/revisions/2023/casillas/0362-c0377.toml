@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0377"
 number = "0377"
-label = "Ganancia patrimonial pendiente  de imputación"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_ganancia_pendiente_4"
 continuidad_id = "irpf-ganancia-otros-ganancia-pendiente-4"

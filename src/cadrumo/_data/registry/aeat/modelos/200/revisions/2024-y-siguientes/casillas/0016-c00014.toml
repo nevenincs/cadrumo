@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00014"
 number = "00014"
-label = "Agrupación europea de interés económico [00014]"
 section = ["agrupacion_europea_de_interes_economico"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

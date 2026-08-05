@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00474"
 number = "00474"
-label = "Tributación conjunta Estado y Adm.Forales - Cuota diferencial - Araba/Álava [00474]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "cuota_diferencial"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_cuota_diferencial"

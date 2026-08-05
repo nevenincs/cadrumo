@@ -3,53 +3,14 @@ tags:
   - '#exec'
   - '#canonical-storage-management'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:45174c5582a11cff5b4886fb0998381b928c235b897dad0d6f7c4e04a88f6479'
+body_hash: 'sha256:3029f5280fedaec30d1d51959ec13858f9b684df08de82a3406f704f998c8bf7'
 step_id: 'S116'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
   - "[[2026-08-03-canonical-storage-management-W05-P22-S115]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S116 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Extend the W05.P22.S115 dormancy-assertion procedure to the other eight rotation-plan entries selfaudit found sharing the same declared-consumer signal (FINANCIAL_TRANSACTIONS, INVOICES, USAGE_RATIOS, SUBMISSIONS, SUBMISSIONS_AMENDMENTS, SUBMISSIONS_AMENDMENT_RESULTS, FILING_HISTORY, WORKFLOW_RUNS), checking each entry's consumer_module individually rather than inheriting the all-twelve-share-one-consumer generalisation, and writing an accessor-routed persist-then-assert-absent test for every entry with a real writer and ## Scope
-
-- `src/cadrumo/adapters/persistence/profile/tests/test_transactions_repository_roundtrip.py`
-- `src/cadrumo/adapters/persistence/profile/tests/test_invoices_secure_storage_roundtrip.py`
-- `src/cadrumo/domain/usage_ratios/tests/test_service.py`
-- `src/cadrumo/adapters/persistence/storage/tests/test_submission_repository.py`
-- `src/cadrumo/domain/filing/tests/test_amendment_roundtrip.py`
-- `src/cadrumo/application/filing/tests/test_history_repository_roundtrip.py`
-- `src/cadrumo/application/workflow/tests/test_run_persistence_roundtrip.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Extend the W05.P22.S115 dormancy-assertion procedure to the other eight rotation-plan entries selfaudit found sharing the same declared-consumer signal (FINANCIAL_TRANSACTIONS, INVOICES, USAGE_RATIOS, SUBMISSIONS, SUBMISSIONS_AMENDMENTS, SUBMISSIONS_AMENDMENT_RESULTS, FILING_HISTORY, WORKFLOW_RUNS), checking each entry's consumer_module individually rather than inheriting the all-twelve-share-one-consumer generalisation, and writing an accessor-routed persist-then-assert-absent test for every entry with a real writer
 

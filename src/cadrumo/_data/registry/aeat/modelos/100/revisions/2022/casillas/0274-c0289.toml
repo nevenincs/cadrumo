@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0289"
 number = "0289"
-label = "Suma de pérdidas patrimoniales derivadas de estos juegos (suma de las casillas [0287] )"
 section = ["resultados", "gp_premios_res", "juegos_res"]
 semantic_role = "irpf_gyp_juegos_suma_perdidas"
 input_kind = "computed"

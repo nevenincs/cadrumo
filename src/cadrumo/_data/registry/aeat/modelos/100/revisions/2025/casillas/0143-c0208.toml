@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0208"
 number = "0208"
-label = "Amortizacion del inmovilizado material"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_amortizacion_inmovilizado_material"
 input_kind = "bound"

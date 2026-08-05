@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00932"
 number = "00932"
-label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Rentas correspondientes a la reversión de las pérdidas por deterioro de valores representativos de la participación en el capital o..."
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_base_imponible_cooperativa_ajuste"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00866"
 number = "00866"
-label = "Liquidación IV - Rectificación - Estado [00866]"
 section = ["liquidacion_iv", "rectificacion"]
 data_type = "money"
 semantic_role = "is_liquidacion_iv_resultado_misc"

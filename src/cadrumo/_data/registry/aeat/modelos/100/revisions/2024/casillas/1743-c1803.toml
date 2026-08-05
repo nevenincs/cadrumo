@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1803"
 number = "1803"
-label = "Identificación de lo recibido a cambio. Clave tipo de contraprestación"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 data_type = "text"
 semantic_role = "irpf_ganancia_cripto_tipo_contraprestacion_clave"

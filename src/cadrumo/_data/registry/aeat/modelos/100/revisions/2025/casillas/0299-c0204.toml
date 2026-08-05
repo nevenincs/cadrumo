@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0204"
 number = "0204"
-label = "Por adquisición o rehabilitación de la vivienda habitual en zonas rurales"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_vivienda_zonas_rurales"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-vivienda-zonas-rurales"

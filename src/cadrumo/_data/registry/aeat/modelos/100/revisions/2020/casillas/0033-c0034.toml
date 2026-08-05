@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0034"
 number = "0034"
-label = "Rendimientos de capital mobiliario derivados de valores de deuda subordinada o de participaciones preferentes"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_deuda_subordinada_preferentes"

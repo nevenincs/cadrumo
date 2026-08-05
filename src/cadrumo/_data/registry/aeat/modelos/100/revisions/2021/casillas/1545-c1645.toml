@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1645"
 number = "1645"
-label = "Ganancia no exenta ( [1640] - [1641] - [1642] - [1643] - [1644] )"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_no_exenta"
 input_kind = "computed"

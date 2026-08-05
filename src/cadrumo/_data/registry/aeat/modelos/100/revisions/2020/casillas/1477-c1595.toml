@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1595"
 number = "1595"
-label = "Ganancias patrimoniales reducidas no exentas imputables a 2020"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_gp_reducidas_no_exentas_imputables"
 continuidad_id = "irpf-re-atrib-gp-reducidas-no-exentas-imputables"

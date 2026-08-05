@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1880"
 number = "1880"
-label = "Contribuyente titular"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "text"
 semantic_role = "irpf_ganancia_inmueble_titular_b"

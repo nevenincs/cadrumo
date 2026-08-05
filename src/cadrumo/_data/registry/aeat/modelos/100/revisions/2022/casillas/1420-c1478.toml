@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1478"
 number = "1478"
-label = "Otras percepciones empresariales"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_otras_percepciones"
 continuidad_id = "irpf-eo-otras-percepciones"

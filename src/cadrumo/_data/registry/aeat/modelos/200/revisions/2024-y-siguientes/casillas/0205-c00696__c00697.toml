@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00696"
 number = "00696"
-label = "Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Deducción pendiente/generada [00696]"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00697"
 number = "00697"
-label = "Deducc. Disposic.Transit. 24ª.7 LIS - Deducc. DT 24ª.7 LIS 2023 - Aplicado en esta liquidación [00697]"
 section = ["deducc_disposic_transit_24a_7_lis", "deducc_dt_24a_7_lis_2023"]
 data_type = "money"
 semantic_role = "is_deduccion_reinversion_beneficios_dt24a7_periodo"

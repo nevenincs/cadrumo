@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2243"
 number = "2243"
-label = "Referencia castastral 4"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "text"
 semantic_role = "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4"

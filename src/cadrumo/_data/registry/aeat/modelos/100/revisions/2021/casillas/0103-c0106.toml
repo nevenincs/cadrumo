@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0106"
 number = "0106"
-label = "Gastos de reparación y conservación correspondientes al ejercicio 2021 (Desglose en el anexo D, cumplimentación voluntaria)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_gastos_reparacion_conservacion"
 continuidad_id = "irpf-inmueble-gastos-reparacion-conservacion"

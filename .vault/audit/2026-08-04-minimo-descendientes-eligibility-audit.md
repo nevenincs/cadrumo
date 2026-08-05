@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:81285f4f46e40558c9a1a4ff835095739f169fceed3efb341646b70e56950090'
+body_hash: 'sha256:9da14c0ebb30974636650cf6363016bb3cea693750e965ffb02df479e48d660e'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -97,7 +97,6 @@ duplicate-authority outcome the canonical-home discipline exists to prevent. The
 handover line on the legal entry's own notes, where the next author will actually be looking,
 rather than in an audit they may never open.
 
-
 ### 5. MEDIUM — the three new descendiente pages are traversed and never answered
 
 Raised in a follow-up pass after the four above, and reproduced independently by the
@@ -130,7 +129,6 @@ produces the value. This campaign has now produced two defects in exactly that s
 collector that existed and was merely unexercised, and a refusal test that could not
 discriminate its own guard — which is why an unexercised surface here is not treated as
 merely a coverage number.
-
 
 ### 6. MEDIUM — the flag-help gate guards one of two strings describing the same surface
 
@@ -178,7 +176,6 @@ about the assumption rather than hiding it, advertising a split between both.
 Carried to the follow-up as a note rather than implemented, on the same principle as the other
 residuals: a statute-widening change does not belong inside a closing campaign.
 
-
 ## Verified clean
 
 The three claims flagged as most at risk before the review all hold.
@@ -202,7 +199,6 @@ campaign does not have the shape the discipline warns about.
 the spouse-record signal, shared-custody-remains-one-trigger, and anualidades sharing the same
 predicate.
 
-
 **The thresholds were re-measured per revision, not inferred from the gate.** Every one of
 the twelve parameters exists and carries the expected figure in all six revisions, read
 through the validated authority. That live probe was worth running rather than trusting the
@@ -221,7 +217,6 @@ commit twelve minutes earlier, which is the load-bearing half of the claim and j
 decision to decline the repair. Agent-level attribution within that is not recoverable — one
 shared git identity means author metadata distinguishes nothing — and is immaterial to the
 judgement, which rested on cross-campaign ownership.
-
 
 **The operator-facing copy for the three new facts was audited against the predicate in all
 four catalogues, and the hypothesis that prompted the audit was wrong in the useful
@@ -247,7 +242,6 @@ Hungarian strings — the legal qualifiers, the two-part rule, the entitlement f
 choice mapping — not whether the phrasing reads naturally to a native speaker. That needs a
 speaker, not a probe, and is not claimed.
 
-
 ## The live legal cross-check
 
 The campaign's grounding record admitted no live source was consulted for the two threshold
@@ -271,7 +265,6 @@ modelling would have silently destroyed. It was not modelled that way.
 
 An undeclared rentas figure excludes nothing, which is the fail-open direction; the advisory
 that fires in exactly that state is what keeps it visible rather than silent.
-
 
 ### Second pass: the two deferred amounts, cross-checked before anyone authors a parameter
 
@@ -314,7 +307,6 @@ None of these three is expressible today, and together they raise the norma 4ª 
 above the flat-amount framing it carried when it was sized — it is not one figure but an
 interaction with the supplement, the window and the autonomic table.
 
-
 ## The defect this review's finding-class predicted
 
 Recorded because it is the campaign's most consequential find and it arrived through the
@@ -339,7 +331,6 @@ the one party positioned to find the bug. It was found anyway, by writing the te
 trusting the read.
 
 ## Residuals carried forward
-
 
 Unchanged from the ADR's own deferrals, and tracked in the consolidated open-work plan rather
 than here: the three unmodelled Art. 58/61 conditions, all of which under-grant and therefore
@@ -379,7 +370,6 @@ alongside it. Should the membership modelling ever land, it must decide whether 
 becomes the source, and note that it distinguishes registered from unregistered pareja de
 hecho while the article does not — so both must count as partnered, or an unregistered couple
 over-grants.
-
 
 ## One predicate, four divergent legal tests — the canonicalization the other fixes wait on
 
@@ -436,7 +426,6 @@ guardería increment is governed by Art. 81.2, not Art. 81 bis. The implementing
 docstrings say *bis* and misdirected two separate passes into citing the wrong statute; the
 registry formula's own legal references were correct throughout.
 
-
 ## The Art. 58.2 supplement: attempted, stopped at the boundary, and why that was right
 
 Added after the review, when acting on one of its own residuals surfaced a defect the
@@ -492,14 +481,12 @@ is not required, and a foster carer has no correct field for either today; and p
 predicates rather than one shared test. Whether Art. 81 bis carries its own adoption clause
 is unread — if it does, the count is four statutes rather than three.
 
-
 ## Assessment
 
 The review ran before closure was declared, which is the gate. Four items, none blocking, and
 the one that could not be left was the artefact contradiction — with a Step unticked and a
 record contradicting itself, the campaign could not be assessed from its own artefacts, which
 is the condition the discipline names. That is resolved.
-
 
 ## Recommendations
 
@@ -532,4 +519,3 @@ two concepts collide rather than where they are the same thing — two help stri
 predicate serving five statutes, two decimal contracts, and two genuinely different articles
 sharing a name, one of them spelled differently in a fourth language. Match on the subject,
 never on the string.
-

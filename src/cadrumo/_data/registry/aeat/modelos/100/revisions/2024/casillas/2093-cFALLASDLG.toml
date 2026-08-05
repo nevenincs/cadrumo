@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "FALLASDLG"
 number = "*95"
-label = "Ascendiente fecha de fallecimiento"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "text"
 semantic_role = "irpf_ascendiente_fecha_fallecimiento"

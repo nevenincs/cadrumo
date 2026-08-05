@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1591"
 number = "1591"
-label = "Ganancia exenta por reinversión en entidades de nueva o reciente creación"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_gp_exentas_reinversion_nuevas"
 continuidad_id = "irpf-re-atrib-gp-exentas-reinversion-nuevas"

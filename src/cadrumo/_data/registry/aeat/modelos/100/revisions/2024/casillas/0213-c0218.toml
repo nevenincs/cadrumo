@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0218"
 number = "0218"
-label = "Suma ( [0181] a [0195] + [0198] a [0200] + [0202] + [0203] + [0205] + [0206] + [0208] + [0227] + [0214] a [0217] )"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_suma_gastos_previos"
 input_kind = "computed"

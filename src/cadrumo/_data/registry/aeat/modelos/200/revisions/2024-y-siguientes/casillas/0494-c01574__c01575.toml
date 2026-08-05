@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01574"
 number = "01574"
-label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Aumentos [0..."
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
 semantic_role = "is_correcciones_aumentos"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01575"
 number = "01575"
-label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Disminucion..."
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
 semantic_role = "is_correcciones_disminuciones"

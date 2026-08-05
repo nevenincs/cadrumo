@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0071"
 number = "0071"
-label = "Vivienda en la que, en los casos de separación o divorcio, residen los hijos y/o el excónyuge"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_uso_residencia_separacion"

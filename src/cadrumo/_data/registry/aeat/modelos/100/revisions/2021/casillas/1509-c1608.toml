@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1608"
 number = "1608"
-label = "Suma de ganancias patrimoniales derivadas de transmisiones (a integrar en la B.I. del ahorro), atribuidas  (suma de las casillas [1595] )"
 section = ["resultados", "regimenes_especiales_res", "re_at_rentas_res"]
 semantic_role = "irpf_re_atrib_suma_gp_transmision_ahorro"
 input_kind = "computed"

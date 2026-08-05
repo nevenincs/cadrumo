@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02757"
 number = "02757"
-label = "Deducciones I+D+i excluidas de límite - 2023 Investigación y desarrollo - Aplicado en esta liquidación [02757]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2023_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02758"
 number = "02758"
-label = "Deducciones I+D+i excluidas de límite - 2023 Investigación y desarrollo - Importe abonado por insuficiencia de cuota [02758]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2023_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"

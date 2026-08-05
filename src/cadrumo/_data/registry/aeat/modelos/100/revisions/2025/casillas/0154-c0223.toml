@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0223"
 number = "0223"
-label = "Total gastos deducibles en estimacion directa simplificada"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_total_gastos_deducibles_simplificada"
 input_kind = "computed"

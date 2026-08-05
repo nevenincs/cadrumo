@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1224"
 number = "1224"
-label = "Ejercicio 2025. Intereses de los capitales invertidos en la adquisición o mejora del inmueble y gastos de reparación y conservación (traslade el importe de la casilla [0108] )"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_gastos_financiacion_ejercicio"
 input_kind = "computed"

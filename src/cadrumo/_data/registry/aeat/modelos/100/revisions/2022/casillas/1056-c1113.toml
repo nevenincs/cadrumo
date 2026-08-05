@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1113"
 number = "1113"
-label = "Por cantidades destinadas a abonos culturales"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_abonos_culturales"
 continuidad_id = "irpf-deduccion-c-valenciana-abonos-culturales"

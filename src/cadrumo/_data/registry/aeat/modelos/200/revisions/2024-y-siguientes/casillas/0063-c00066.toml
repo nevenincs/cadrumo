@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00066"
 number = "00066"
-label = "Entidad patrimonial [00066]"
 section = ["entidad_patrimonial"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

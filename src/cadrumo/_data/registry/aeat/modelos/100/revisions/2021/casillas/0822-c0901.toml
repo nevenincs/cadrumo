@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0901"
 number = "0901"
-label = "Por donaciones a determinadas entidades destinadas a la investigación, el desarrollo científico o tecnológico, o a la innovación"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 semantic_role = "irpf_deduccion_baleares_donaciones_investigacion"
 continuidad_id = "irpf-deduccion-baleares-donaciones-investigacion"

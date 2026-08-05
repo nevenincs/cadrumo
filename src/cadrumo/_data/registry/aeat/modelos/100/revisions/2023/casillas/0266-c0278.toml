@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0278"
 number = "0278"
-label = "Importe de la imputación"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_institu_inversion_colectiva"]
 semantic_role = "irpf_re_iic_imputacion_importe"
 continuidad_id = "irpf-re-iic-imputacion-importe"

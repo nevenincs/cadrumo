@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0929"
 number = "0929"
-label = "Referencia catastral 1"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_canarias_referencia_catastral_1"

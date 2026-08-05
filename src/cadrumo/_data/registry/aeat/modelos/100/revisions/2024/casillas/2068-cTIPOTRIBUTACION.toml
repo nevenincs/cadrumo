@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "TIPOTRIBUTACION"
 number = "*04"
-label = "Tipo de tributacion"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
 semantic_role = "irpf_tipo_tributacion"

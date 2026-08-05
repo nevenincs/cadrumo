@@ -164,8 +164,6 @@ review_status = "reviewed"
 _MINIMAL_MANIFEST_TOML = """\
 [modelo]
 id = "999"
-title = "Cache invalidation test modelo"
-official_name = "Cache invalidation test modelo"
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -175,7 +173,6 @@ source_refs = ["test-source-001"]
 
 _MINIMAL_REVISION_TOML_TEMPLATE = """\
 [revisions."2025"]
-label = "{label}"
 valid_from = 2025-01-01
 period_selector = {{ year_from = 2025, periods = ["0A"] }}
 legal_refs = ["test-ley-001:art-1"]
@@ -193,7 +190,6 @@ source_refs = ["test-source-002"]
 [[revisions."2025".casillas]]
 id = "01"
 number = "01"
-label = "Test casilla"
 section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
@@ -346,7 +342,6 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(tmp
 id = "DPX:01"
 number = "01"
 segmento = "DPX"
-label = "Colliding display token"
 section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
@@ -403,7 +398,6 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(tmp_path: 
 id = "DPX:01"
 number = "01"
 segmento = "DPX"
-label = "Segment qualified owner"
 section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]

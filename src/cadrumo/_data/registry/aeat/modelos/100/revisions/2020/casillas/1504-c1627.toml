@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1627"
 number = "1627"
-label = "Situación. Clave"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 data_type = "text"
 semantic_role = "irpf_gp_elemento_situacion_clave"

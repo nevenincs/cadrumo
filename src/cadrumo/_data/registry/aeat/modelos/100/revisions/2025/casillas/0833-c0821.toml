@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0821"
 number = "0821"
-label = "Por gastos ocasionados al trasladar la residencia habitual a un municipio afectado por riesgo de despoblamiento en Cantabria por motivos laborales por cuenta ajena o por cuenta propia"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_traslado_municipio_riesgo"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

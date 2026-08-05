@@ -1,9 +1,6 @@
 """Shared TOML-table narrowing helper for the registry loader family.
 
-Extracted so both :mod:`~domain.calculations.registry._loader` and
-:mod:`~domain.calculations.registry._loader_locales` can narrow a parsed
-TOML value to a string-keyed table without importing each other (avoiding a
-runtime import cycle between the compiler and the locale-merge submodule).
+Kept as the single narrowing helper used by the registry compiler family.
 """
 
 from __future__ import annotations
@@ -14,8 +11,7 @@ from typing import cast
 def as_toml_table(value: object) -> dict[str, object] | None:
     """Narrow a parsed TOML value to a string-keyed table, or ``None``.
 
-    The original dictionary identity is preserved because locale-fragment
-    merging updates the compiled table in place. Every key is validated
+    The original dictionary identity is preserved and every key is validated
     before the deserialization-boundary type is restored.
     """
     if not isinstance(value, dict):

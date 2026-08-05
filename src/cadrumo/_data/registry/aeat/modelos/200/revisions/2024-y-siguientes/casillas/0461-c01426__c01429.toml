@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01426"
 number = "01426"
-label = "Deducciones I+D+i excluidas de límite - 2016 Investigación y desarrollo - Deducción pendiente/generada [01426]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2016_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01427"
 number = "01427"
-label = "Deducciones I+D+i excluidas de límite - 2016 Investigación y desarrollo - Deducción reducida [01427]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2016_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01428"
 number = "01428"
-label = "Deducciones I+D+i excluidas de límite - 2016 Investigación y desarrollo - Aplicado en esta liquidación [01428]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2016_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01429"
 number = "01429"
-label = "Deducciones I+D+i excluidas de límite - 2016 Investigación y desarrollo - Importe abonado por insuficiencia de cuota [01429]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2016_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"

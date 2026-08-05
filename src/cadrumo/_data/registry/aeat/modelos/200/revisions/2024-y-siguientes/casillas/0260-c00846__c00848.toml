@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00846"
 number = "00846"
-label = "Deducciones doble imposición interna RDLeg. 4/2004 - DI interna 2008 - 2025 - Deducción pendiente [00846]"
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2008"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_rdleg_detalle"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00847"
 number = "00847"
-label = "Deducciones doble imposición interna RDLeg. 4/2004 - DI interna 2008 - Aplicado en esta liquidación [00847]"
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2008"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_rdleg_detalle"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00848"
 number = "00848"
-label = "Deducciones doble imposición interna RDLeg. 4/2004 - DI interna 2008 - Pendiente aplic en períodos futuros [00848]"
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2008"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_rdleg_pendiente"

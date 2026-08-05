@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-parity-oracle'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:22dcb2219116a555daececfe68ac1153a728016c2a2db06860f9ae697727a13c'
 related:

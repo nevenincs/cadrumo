@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1975"
 number = "1975"
-label = "Si no tiene NIF,marque con una \"X\""
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "boolean"
 semantic_role = "irpf_feac_entidad_transmitida_sin_nif_flag"

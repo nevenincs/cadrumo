@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1959"
 number = "1959"
-label = "Por cantidades satisfechas en determinados gastos de salud"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_gastos_salud"
 continuidad_id = "irpf-deduccion-c-valenciana-gastos-salud"

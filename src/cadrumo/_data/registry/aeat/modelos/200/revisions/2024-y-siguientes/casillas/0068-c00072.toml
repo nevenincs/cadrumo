@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00072"
 number = "00072"
-label = "Extinción de entidad [00072]"
 section = ["extincion_de_entidad"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

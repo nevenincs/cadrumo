@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1766"
 number = "1766"
-label = "Demanda energética de calefacción y refrigeración posterior"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 semantic_role = "irpf_deduccion_eficiencia_energetica_demanda_posterior"
 continuidad_id = "irpf-deduccion-eficiencia-energetica-demanda-posterior"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0169"
 number = "0169"
-label = "Si para la imputación temporal de los rendimientos opta por la aplicación del criterio de cobros y pagos, consigne una \"X\""
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "boolean"
 semantic_role = "irpf_ed_cobros_pagos_flag"

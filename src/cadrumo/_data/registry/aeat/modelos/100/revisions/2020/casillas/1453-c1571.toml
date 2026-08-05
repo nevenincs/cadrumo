@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1571"
 number = "1571"
-label = "Rendimiento neto atribuido por la entidad"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "decimal"
 semantic_role = "irpf_re_atrib_rdto_neto_entidad"

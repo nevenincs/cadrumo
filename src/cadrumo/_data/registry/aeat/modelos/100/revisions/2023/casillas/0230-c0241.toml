@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0241"
 number = "0241"
-label = "Nombre"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
 data_type = "text"
 semantic_role = "irpf_conyuge_discapacidad_nombre"

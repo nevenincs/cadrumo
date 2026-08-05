@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1787"
 number = "1787"
-label = "Ciudad/City"
 section = ["resultados", "regularizacion_res", "rectnosepa"]
 data_type = "nif"
 semantic_role = "irpf_compensacion_conyuges_banco_ciudad"

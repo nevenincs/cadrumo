@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1120"
 number = "1120"
-label = "Importe de la deducción"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_vivienda_nacimiento_adopcion_importe"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

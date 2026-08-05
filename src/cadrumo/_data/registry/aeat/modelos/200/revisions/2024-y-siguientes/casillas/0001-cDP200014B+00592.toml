@@ -2,7 +2,6 @@
 id = "DP200014B:00592"
 number = "00592"
 segmento = "DP200014B"
-label = "Liquidación IV - Otras deducciones - Cuota líquida [00592]"
 section = ["liquidacion", "cuota_liquida"]
 data_type = "money"
 semantic_role = "is_cuota_liquida"

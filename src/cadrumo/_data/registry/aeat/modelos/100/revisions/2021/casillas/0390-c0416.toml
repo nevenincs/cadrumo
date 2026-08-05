@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0416"
 number = "0416"
-label = "CONYUGE: Nº de operaciones"
 section = ["toma_datos_ampliada", "regimen_especial"]
 data_type = "integer"
 semantic_role = "irpf_re_especial_tfi_conyuge_num_operaciones"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0222"
 number = "0222"
-label = "Provisiones deducibles y gastos de dificil justificacion"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_provisiones_gastos_dificil_justificacion"
 input_kind = "computed"

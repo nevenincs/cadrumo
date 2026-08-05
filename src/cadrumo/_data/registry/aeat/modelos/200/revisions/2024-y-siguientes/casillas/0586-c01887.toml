@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01887"
 number = "01887"
-label = "Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Compensación de bases imponibles negativas períodos anteriores de la parte de base imponible régimen ..."
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_liquidacion_iii_importe"

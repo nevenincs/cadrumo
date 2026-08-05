@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:26e512b12730d817f5379ac16289a10d67c762288cb25f6207c6a929510a5edc'
+body_hash: 'sha256:253d9340a879911bc3e99c4c45799d9ca5782ce09eee3059dd5ece2a036c6f95'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P03-S12]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S13]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S14]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S15]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S16]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S17]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S19]]'
@@ -69,6 +70,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface
 - `2026-08-04-minimo-descendientes-eligibility-P04-S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche
 - `2026-08-04-minimo-descendientes-eligibility-P04-S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades
+- `2026-08-04-minimo-descendientes-eligibility-P04-S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one, BLOCKED on S21 because nothing on the calculate path reads a descendant record for maternidad, so the predicate would land with no consumer and rebuild the dead shape S19 removed
 - `2026-08-04-minimo-descendientes-eligibility-P04-S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin
 - `2026-08-04-minimo-descendientes-eligibility-P04-S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit
 - `2026-08-04-minimo-descendientes-eligibility-P04-S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record

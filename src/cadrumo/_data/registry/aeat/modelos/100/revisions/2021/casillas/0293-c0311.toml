@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0311"
 number = "0311"
-label = "NIF de la sociedad o fondo de inversión"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 data_type = "nif"
 semantic_role = "irpf_fondo_inversion_nif"

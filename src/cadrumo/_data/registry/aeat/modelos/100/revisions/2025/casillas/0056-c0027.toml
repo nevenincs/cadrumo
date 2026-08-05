@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0027"
 number = "0027"
-label = "Intereses de cuentas, depositos y activos financieros en general"
 section = ["rendimientos_capital_mobiliario", "base_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_intereses_cuentas"

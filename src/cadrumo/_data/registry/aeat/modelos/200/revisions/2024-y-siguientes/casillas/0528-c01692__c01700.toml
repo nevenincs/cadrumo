@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01692"
 number = "01692"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones a una misma entidad. - Deducción pendiente/generada [0..."
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01693"
 number = "01693"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones a una misma entidad. - Aplicado en esta liquidación [0..."
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01694"
 number = "01694"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2015 a 2025 sin reiteración de donaciones a una misma entidad. - Pendiente de aplicación en peri..."
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01695"
 number = "01695"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2015 a 2025 con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01..."
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01696"
 number = "01696"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2015 a 2025 con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01..."
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01697"
 number = "01697"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2015 a 2025 con reiteración de donaciones a una misma entidad - Pendiente de aplicación en perio..."
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01698"
 number = "01698"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Total - Deducción pendiente/generada [01698]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -85,7 +78,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01699"
 number = "01699"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Total - Aplicado en esta liquidación [01699]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -97,7 +89,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01700"
 number = "01700"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Total - Pendiente de aplicación en periodos futuros [01700]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"

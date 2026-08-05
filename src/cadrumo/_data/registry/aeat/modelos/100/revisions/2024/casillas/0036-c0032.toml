@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0032"
 number = "0032"
-label = "Rendimientos procedentes de contratos de seguro de vida o invalidez y de operaciones de capitalización"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_seguros_capitalizacion"

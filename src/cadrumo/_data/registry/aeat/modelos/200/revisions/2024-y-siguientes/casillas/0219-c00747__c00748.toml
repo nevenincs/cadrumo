@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00747"
 number = "00747"
-label = "Detalle compensación bases imponibles negativas - 2007 - Aplicado en esta liquidación [00747]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2007"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00748"
 number = "00748"
-label = "Detalle compensación bases imponibles negativas - 2007 - Pendiente aplicación en períodos futuros [00748]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2007"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"

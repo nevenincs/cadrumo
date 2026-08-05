@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1043"
 number = "1043"
-label = "Por arrendamiento de vivienda habitual (importe de la casilla [1130] del anexo B.11)"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_arrendamiento_vivienda"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

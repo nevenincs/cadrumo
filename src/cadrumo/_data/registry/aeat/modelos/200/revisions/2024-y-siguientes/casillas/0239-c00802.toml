@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00802"
 number = "00802"
-label = "Deducciones inversión Canarias - Inversiones Canarias 2017 - Aplicado en esta liquidación [00802]"
 section = ["deducciones_inversion_canarias", "inversiones_canarias_2017"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"

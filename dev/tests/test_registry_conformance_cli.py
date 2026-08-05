@@ -41,6 +41,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from typer.testing import CliRunner
 
 from cadrumo.application.registry import (
@@ -53,6 +54,7 @@ from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     REVISION_GOVERNANCE_FIELDS,
     UnattributedOraclePayload,
+    bundled_authority,
     load_bundled_external_oracle_inventory,
     load_modelo_directory,
 )
@@ -67,8 +69,11 @@ from ..registry.conformance._stamp import (
 )
 from ..registry.conformance.cli import app
 from ..registry.conformance.manager import (
+    COORDINATE_CLASSIFICATIONS,
     NOT_MEASURED,
     ConformanceBaseline,
+    ConformanceCoordinate,
+    ConformanceCoordinateMatrix,
     ConformanceProgressFloors,
     ConformanceReport,
     baseline_path,
@@ -163,6 +168,108 @@ def test_report_exits_zero_and_renders_a_row_for_every_composed_revision() -> No
     assert len(rows) >= floors.composed_revisions
     assert result.stdout.startswith("summary registry_validated=true ")
     assert "warning rows=0" not in result.stdout
+
+
+def test_report_json_keeps_the_finite_annual_matrix_separate_from_the_portfolio() -> None:
+    """The real report exposes only the provisional D2025 coordinate today."""
+    result = CliRunner().invoke(app, ["report", "--json"])
+
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    matrix = payload["annual_matrix"]
+    assert payload["modelo_count"] > len(matrix["coordinates"])
+    assert payload["revision_count"] > len(matrix["coordinates"])
+    assert len(matrix["coordinates"]) == 1
+    assert matrix["coordinates"] == [
+        {
+            "modelo": "100",
+            "filing_year": 2025,
+            "period": "0A",
+            "law_selected_revision": "2025",
+            "classification": "not_yet_measured",
+            "provisional": True,
+        },
+    ]
+    assert set(matrix["classification_census"]) == set(COORDINATE_CLASSIFICATIONS)
+    assert matrix["classification_census"]["not_yet_measured"] == 1
+    assert sum(matrix["classification_census"].values()) == len(matrix["coordinates"])
+
+
+def test_annual_matrix_revision_is_read_from_the_validated_authority() -> None:
+    """The coordinate carries the authority's revision, not a free override."""
+    report = load_conformance_report(validate=True)
+    assert report.annual_matrix is not None
+    coordinate = report.annual_matrix.coordinates[0]
+    snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
+
+    assert (coordinate.modelo, coordinate.filing_year, coordinate.period) == ("100", 2025, "0A")
+    assert coordinate.law_selected_revision == snapshot.revision.id
+    assert coordinate.law_selected_revision == "2025"
+
+
+def test_degraded_report_does_not_claim_validated_annual_coordinates(
+    degraded_report: ConformanceReport,
+) -> None:
+    """The degraded screen keeps the coordinate axis explicitly unmeasured."""
+    assert degraded_report.annual_matrix is None
+    assert "annual_matrix registry_validated=false measured=false coordinates=n/a" in render_report(degraded_report)
+
+
+def test_annual_matrix_rejects_an_incomplete_classification_census() -> None:
+    """Every supported classification must remain visible, including zeroes."""
+    coordinate = ConformanceCoordinate(
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        law_selected_revision="2025",
+        classification="not_yet_measured",
+        provisional=True,
+    )
+
+    with pytest.raises(ValidationError, match="must name every supported disposition exactly once"):
+        ConformanceCoordinateMatrix(
+            coordinates=(coordinate,),
+            classification_census={"not_yet_measured": 1},
+        )
+
+
+def test_annual_matrix_rejects_a_census_count_that_does_not_match_coordinates() -> None:
+    """The census must equal the enumerated population, not merely name its keys."""
+    coordinate = ConformanceCoordinate(
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        law_selected_revision="2025",
+        classification="not_yet_measured",
+        provisional=True,
+    )
+    census: dict[str, int] = dict.fromkeys(COORDINATE_CLASSIFICATIONS, 0)
+
+    with pytest.raises(ValidationError, match="classification census does not match the enumerated coordinates"):
+        ConformanceCoordinateMatrix(
+            coordinates=(coordinate,),
+            classification_census=census,
+        )
+
+
+def test_annual_matrix_rejects_duplicate_exact_coordinates() -> None:
+    """The finite denominator cannot count one exact coordinate twice."""
+    coordinate = ConformanceCoordinate(
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        law_selected_revision="2025",
+        classification="not_yet_measured",
+        provisional=True,
+    )
+    census: dict[str, int] = dict.fromkeys(COORDINATE_CLASSIFICATIONS, 0)
+    census["not_yet_measured"] = 2
+
+    with pytest.raises(ValidationError, match="annual coordinate is duplicated"):
+        ConformanceCoordinateMatrix(
+            coordinates=(coordinate, coordinate),
+            classification_census=census,
+        )
 
 
 def test_report_json_is_strict_and_keeps_an_absent_claim_as_null(validated_report: ConformanceReport) -> None:

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1609"
 number = "1609"
-label = "Suma de pérdidas patrimoniales derivadas de transmisiones (a integrar en la B.I. del ahorro), atribuidas  (suma de las casillas [1596] )"
 section = ["resultados", "regimenes_especiales_res", "re_at_rentas_res"]
 semantic_role = "irpf_re_atrib_suma_gp_perdidas_ahorro"
 input_kind = "computed"

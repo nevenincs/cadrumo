@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03291"
 number = "03291"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Correcciones del ejercicio - Permanentes [03291]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_ric_permanente"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03292"
 number = "03292"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03292]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03293"
 number = "03293"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03293]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03294"
 number = "03294"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Saldo pendiente a principio de ejercicio [03294]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03295"
 number = "03295"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Aumento - Saldo pendiente a fin de ejercicio [03295]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_reserva_inversiones_canarias_aumento"

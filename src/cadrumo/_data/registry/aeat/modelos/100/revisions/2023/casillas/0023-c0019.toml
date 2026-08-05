@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0019"
 number = "0019"
-label = "Otros gastos deducibles (*)"
 section = ["resultados", "rdto_trabajo_res"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_trabajo_gasto_otros"

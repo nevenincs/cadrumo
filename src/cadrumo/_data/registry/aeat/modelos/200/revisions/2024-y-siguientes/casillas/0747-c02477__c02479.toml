@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02477"
 number = "02477"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe generado/pendiente principio periodo [02477]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02478"
 number = "02478"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe aplicado [02478]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt2_periodo"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02479"
 number = "02479"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 2 LIS) - 2022 - Importe pendiente [02479]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2022"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_dt2_pendiente"

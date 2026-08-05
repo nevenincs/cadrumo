@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1018"
 number = "1018"
-label = "Para contribuyentes viudos"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_viudos"
 continuidad_id = "irpf-deduccion-extremadura-viudos"

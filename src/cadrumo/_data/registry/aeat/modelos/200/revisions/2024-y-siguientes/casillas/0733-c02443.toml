@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02443"
 number = "02443"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Pendiente de aplicación en períodos futuros [02443]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0990"
 number = "0990"
-label = "Por cuidado de hijos menores"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_cuidado_hijos_menores"
 continuidad_id = "irpf-deduccion-castilla-y-leon-cuidado-hijos-menores"

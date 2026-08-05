@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.total-perceptores"
 number = "136-144"
-label = "Número total de perceptores"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_perceptores_count"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.base-total"
 number = "145-159"
-label = "Base retenciones e ingresos a cuenta total"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"
@@ -28,7 +26,6 @@ source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.retenciones-total"
 number = "160-174"
-label = "Retenciones e ingresos a cuenta total"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

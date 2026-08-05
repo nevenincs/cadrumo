@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0890"
 number = "0890"
-label = "Por partos múltiples o por dos o más adopciones constituidas en la misma fecha"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_partos_multiples"
 continuidad_id = "irpf-deduccion-asturias-partos-multiples"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0401"
 number = "0401"
-label = "Si se trata de un contribuyente que ha transmitido intervivos las acciones o participaciones, marque esta casilla (sólo contribuyentes que hayan cambiado su residencia a otro Estado Miembro de la U..."
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 data_type = "boolean"
 semantic_role = "irpf_g4_re_transmision_intervivos_flag"

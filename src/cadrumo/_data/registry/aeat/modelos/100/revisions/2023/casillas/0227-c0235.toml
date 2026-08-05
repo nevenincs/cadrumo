@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0235"
 number = "0235"
-label = "Rendimiento neto reducido total de las actividades económicas en estimación directa ( [0231] - [0232] - [0233] - [0234] )"
 section = ["resultados", "reg_estima_directa_res"]
 input_kind = "computed"
 formula = "renta-2023-estimacion-directa-rendimiento-neto-reducido-total"

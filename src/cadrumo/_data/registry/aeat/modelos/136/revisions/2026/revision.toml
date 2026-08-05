@@ -1,5 +1,4 @@
 [revisions."2026"]
-label = "Modelo 136 ejercicio 2026 (Orden HAP/70/2013 y Orden HAC/763/2018)"
 valid_from = 2026-01-01
 period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = [

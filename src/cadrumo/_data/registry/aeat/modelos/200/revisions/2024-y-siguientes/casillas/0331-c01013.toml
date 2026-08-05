@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01013"
 number = "01013"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2024 - Deducción pendiente [01013]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2024"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_detalle"

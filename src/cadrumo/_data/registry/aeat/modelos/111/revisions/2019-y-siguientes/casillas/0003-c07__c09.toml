@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "07"
 number = "07"
-label = "Rendimientos de actividades economicas dinerarios numero de perceptores"
 section = ["actividades_economicas_dinerario"]
 data_type = "integer"
 semantic_role = "perceptor_count"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "08"
 number = "08"
-label = "Rendimientos de actividades economicas dinerarios importe de percepciones"
 section = ["actividades_economicas_dinerario"]
 data_type = "money"
 semantic_role = "importe_percepciones_dinerario"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "09"
 number = "09"
-label = "Rendimientos de actividades economicas dinerarios importe de retenciones"
 section = ["actividades_economicas_dinerario"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02354"
 number = "02354"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Deducción pendiente/generada [02354]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02355"
 number = "02355"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2024 - Aplicado en esta liquidación [02355]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"

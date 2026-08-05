@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00094"
 number = "00094"
-label = "Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Aumento - Saldo pendiente a principio de ejercicio [00094]"
 section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "aumento"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00095"
 number = "00095"
-label = "Reserva para inversiones en Illes Balears (DA 70ª Ley 31/2022) - Aumento - Correcciones del ejercicio - Permanentes [00095]"
 section = ["reserva_para_inversiones_en_illes_balears_da_70a_l", "aumento"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"

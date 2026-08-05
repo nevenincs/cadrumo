@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0357"
 number = "0357"
-label = "Contribuyente titular"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 data_type = "text"
 semantic_role = "irpf_ganancia_otros_titular"

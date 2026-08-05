@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0424"
 number = "0424"
-label = "Si la diferencia ( [0422] - [0423] ) es positiva"
 section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
 semantic_role = "irpf_integracion_gyp_ahorro_saldo_positivo"
 input_kind = "computed"

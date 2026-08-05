@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00081"
 number = "00081"
-label = "Filial grupo multinacional o grupo nacional de gran magnitud [00081]"
 section = ["filial_grupo_multinacional_o_grupo_nacional_de_gra"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

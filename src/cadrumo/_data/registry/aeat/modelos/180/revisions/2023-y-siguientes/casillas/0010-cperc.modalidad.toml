@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.modalidad"
 number = "78"
-label = "Modalidad de renta o rendimiento"
 section = ["perceptor", "renta"]
 data_type = "text"
 semantic_role = "payee_modalidad_renta"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02631"
 number = "02631"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Aumento - Correcciones del ejercicio - Permanentes [02631]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_aumento"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02632"
 number = "02632"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02632]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_aumento"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02633"
 number = "02633"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02633]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_aumento"
@@ -43,7 +40,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02634"
 number = "02634"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Aumento - Saldo pendiente a principio de ejercicio [02634]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_saldo_inicial"
@@ -55,7 +51,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02635"
 number = "02635"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Aumento - Saldo pendiente a fin de ejercicio [02635]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_saldo_final"

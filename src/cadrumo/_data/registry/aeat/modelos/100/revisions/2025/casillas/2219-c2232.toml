@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2232"
 number = "2232"
-label = "Ganancias patrimoniales no exentas ( [2230] - [2231] )"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 semantic_role = "irpf_ganancia_fondos_coti_ganancia_no_exenta"
 input_kind = "computed"

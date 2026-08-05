@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01345"
 number = "01345"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - Total - Pendiente aplic. en períodos futuros [01345]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_total"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01346"
 number = "01346"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - Total - Deducción generada [01346]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01347"
 number = "01347"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - Total - Pendiente aplic. en períodos futuros [01347]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_total"

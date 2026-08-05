@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00966"
 number = "00966"
-label = "Deducc. para incentivar determ.actividades - 2013 Suma deducciones - Deducción pendiente/generada [00966]"
 section = ["deducc_para_incentivar_determ_actividades", "2013_suma_deducciones"]
 data_type = "money"
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00967"
 number = "00967"
-label = "Deducc. para incentivar determ.actividades - 2013 Suma deducciones - Aplicado en esta liquidación [00967]"
 section = ["deducc_para_incentivar_determ_actividades", "2013_suma_deducciones"]
 data_type = "money"
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00968"
 number = "00968"
-label = "Deducc. para incentivar determ.actividades - 2013 Suma deducciones - Pendiente de aplicación en periodos futuros [00968]"
 section = ["deducc_para_incentivar_determ_actividades", "2013_suma_deducciones"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_suma_pendiente"

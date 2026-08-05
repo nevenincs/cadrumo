@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0701"
 number = "0701"
-label = "Importe que, en su caso, pudiera resultar a devolver como consecuencia de la rectificación"
 section = ["resultados", "calculo_impuesto_res"]
 semantic_role = "irpf_resultado_rectificacion_devolucion"
 legal_refs = ["ley-35-2006:art-97", "orden-hac-277-2026:art-3"]

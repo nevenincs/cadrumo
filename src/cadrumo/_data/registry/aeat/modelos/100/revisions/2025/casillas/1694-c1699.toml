@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1699"
 number = "1699"
-label = "NIF de la persona contratada, residencia o Centro de día 1"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_autonomica_empleada_hogar_nif"

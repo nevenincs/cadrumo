@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1073"
 number = "1073"
-label = "Por adopción o nacimiento"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_adopcion_nacimiento"
 continuidad_id = "irpf-deduccion-murcia-adopcion-nacimiento"

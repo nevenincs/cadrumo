@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1577"
 number = "1577"
-label = "Rendimiento neto (estimación directa normal y estimación objetiva)/ Rendimiento neto previo (estimación directa simplificada)"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "decimal"
 semantic_role = "irpf_re_at_rdto_neto_estimacion_directa_objetiva"

@@ -1,7 +1,5 @@
 [modelo]
 id = "604"
-title = "Impuesto sobre las Transacciones Financieras — autoliquidación"
-official_name = "Modelo 604. Impuesto sobre las Transacciones Financieras. Autoliquidación."
 tax_domain = "itf"
 cadence = "monthly"
 jurisdiction = "ES-AEAT"

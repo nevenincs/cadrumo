@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0896"
 number = "0896"
-label = "Por adquisición de libros de texto y material escolar"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_libros_texto"
 continuidad_id = "irpf-deduccion-asturias-libros-texto"

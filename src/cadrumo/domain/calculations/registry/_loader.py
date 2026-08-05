@@ -18,7 +18,6 @@ from typing import Literal, get_args, get_origin
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core import freeze_toml, read_toml
-from . import _loader_locales
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._loader_cache import (
@@ -27,6 +26,12 @@ from ._loader_cache import (
     is_bundled_registry_root,
     registry_disk_cache_enabled,
     toml_file_fingerprint,
+)
+from ._modelo_localization import (
+    casilla_continuity_locale_key,
+    casilla_occurrence_locale_key,
+    modelo_locale_key,
+    revision_locale_key,
 )
 from ._schema import (
     REVISION_GOVERNANCE_FIELDS,
@@ -196,7 +201,11 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         raw_revision_table = _as_toml_table(raw_revision)
         if raw_revision_table is None:
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
-        payload: dict[str, object] = {"id": revision_id, **raw_revision_table}
+        payload = _enroll_revision_localization(
+            modelo_id=str(modelo_id_for_context),
+            revision_id=revision_id,
+            raw_revision=raw_revision_table,
+        )
         try:
             revision = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
@@ -209,7 +218,14 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
         )
         revisions[revision_id] = revision
     try:
-        return ModeloDefinition.model_validate({**modelo_table, "revisions": revisions})
+        return ModeloDefinition.model_validate(
+            {
+                **modelo_table,
+                "title_localization_key": modelo_locale_key(str(modelo_id_for_context), "title"),
+                "official_name_localization_key": modelo_locale_key(str(modelo_id_for_context), "official_name"),
+                "revisions": revisions,
+            }
+        )
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
 
@@ -227,6 +243,41 @@ def _raise_on_ambiguous_revision_identity(
         raise RegistryValidationError(
             "registry revision identity is ambiguous:\n" + "\n".join(f" - {failure}" for failure in failures),
         )
+
+
+def _enroll_revision_localization(
+    *,
+    modelo_id: str,
+    revision_id: str,
+    raw_revision: Mapping[str, object],
+) -> dict[str, object]:
+    """Attach derived locale identities without copying presentation values."""
+    payload: dict[str, object] = {
+        "id": revision_id,
+        **raw_revision,
+        "localization_key": revision_locale_key(modelo_id, revision_id),
+    }
+    raw_casillas = raw_revision.get("casillas")
+    if not isinstance(raw_casillas, (list, tuple)):
+        return payload
+
+    casillas: list[dict[str, object]] = []
+    for raw_casilla in raw_casillas:
+        casilla = _as_toml_table(raw_casilla)
+        if casilla is None:
+            casillas.append(dict(raw_casilla) if isinstance(raw_casilla, Mapping) else {"value": raw_casilla})
+            continue
+        casilla_id = casilla.get("id")
+        if not isinstance(casilla_id, str):
+            casillas.append(dict(casilla))
+            continue
+        keys = [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, "label")]
+        continuidad_id = casilla.get("continuidad_id")
+        if isinstance(continuidad_id, str):
+            keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, "label"))
+        casillas.append({**casilla, "localization_keys": tuple(keys)})
+    payload["casillas"] = tuple(casillas)
+    return payload
 
 
 def load_modelo_directory(directory: Path) -> ModeloDefinition:
@@ -290,28 +341,6 @@ def _load_modelo_directory_cached(
 ) -> ModeloDefinition:
     del fingerprints
     resolved = Path(directory)
-    manifest_data = _load_modelo_manifest(resolved)
-    merged_revisions = _load_modelo_revisions(resolved)
-    if not merged_revisions:
-        raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
-    _loader_locales.apply_locales(resolved, merged_revisions)
-    merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
-    return _build_modelo_definition_from_data(resolved, merged)
-
-
-def load_modelo_directory_without_locales(resolved: Path) -> ModeloDefinition:
-    """Load a directory-mode :class:`ModeloDefinition` without applying locale TOML.
-
-    Composes the same manifest/revisions/build steps as
-    :func:`load_modelo_directory` but skips
-    :func:`~cadrumo.domain.calculations.registry._loader_locales.apply_locales`,
-    for callers (the schema-local locale-authoring CLI) that must read the
-    raw Spanish schema before any translation overlay is injected.
-
-    Raises:
-        RegistryLoadError: If the manifest is missing, malformed, or no
-            revisions are found under ``resolved/revisions``.
-    """
     manifest_data = _load_modelo_manifest(resolved)
     merged_revisions = _load_modelo_revisions(resolved)
     if not merged_revisions:

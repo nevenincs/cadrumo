@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0305"
 number = "0305"
-label = "Importe pérdidas"
 section = ["toma_datos_ampliada", "gp_premios", "otras"]
 semantic_role = "irpf_perdida_premios_otras"
 continuidad_id = "irpf-perdida-premios-otras"

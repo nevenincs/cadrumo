@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0845"
 number = "0845"
-label = "Importe total de las deducciones por incentivos y estímulos a la inversión empresarial que se aplican en esta declaración (suma de las casillas [0706] + [0707] + [0752] a [0762] + [0764] a [0769] +..."
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deducciones_incentivos_inversion_total"
 input_kind = "computed"

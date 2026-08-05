@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0609"
 number = "0609"
-label = "Total pagos a cuenta"
 section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
 semantic_role = "irpf_total_pagos_cuenta"
 input_kind = "computed"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0340"
 number = "0340"
-label = "Suma de pérdidas patrimoniales derivadas de transmisiones de acciones negociadas (suma de las casillas [0338])"
 section = ["resultados", "gp_acciones_res"]
 semantic_role = "irpf_gyp_acciones_suma_perdidas"
 input_kind = "computed"

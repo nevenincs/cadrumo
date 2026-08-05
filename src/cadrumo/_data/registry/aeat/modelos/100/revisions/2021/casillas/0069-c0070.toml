@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0070"
 number = "0070"
-label = "Vivienda habitual en 2021"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_vivienda_habitual_flag"

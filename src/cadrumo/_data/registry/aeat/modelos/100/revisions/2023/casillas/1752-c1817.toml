@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1817"
 number = "1817"
-label = "Tipo de elemento patrimonial. Clave (I: Inmueble en propiedad O= otros derechos reales sobre bienes inmuebles)"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "text"
 semantic_role = "irpf_ganancia_inmueble_tipo_elemento_clave"

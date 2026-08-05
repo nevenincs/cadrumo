@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1885"
 number = "1885"
-label = "Referencia castastral 3"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "text"
 semantic_role = "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_3"

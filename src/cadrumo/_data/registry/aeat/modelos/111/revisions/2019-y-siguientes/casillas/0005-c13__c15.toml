@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "13"
 number = "13"
-label = "Premios dinerarios numero de perceptores"
 section = ["premios_dinerario"]
 data_type = "integer"
 semantic_role = "perceptor_count"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "14"
 number = "14"
-label = "Premios dinerarios importe de percepciones"
 section = ["premios_dinerario"]
 data_type = "money"
 semantic_role = "importe_percepciones_dinerario"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "15"
 number = "15"
-label = "Premios dinerarios importe de retenciones"
 section = ["premios_dinerario"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

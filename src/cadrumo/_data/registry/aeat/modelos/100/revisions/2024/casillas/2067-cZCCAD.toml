@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "ZCCAD"
 number = "*03"
-label = "Comunidad Autonoma de residencia"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
 semantic_role = "irpf_comunidad_autonoma_residencia"

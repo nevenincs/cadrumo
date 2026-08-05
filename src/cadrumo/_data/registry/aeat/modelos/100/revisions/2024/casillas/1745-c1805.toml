@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1805"
 number = "1805"
-label = "Valor de transmisión destinado a constituir una renta vitalicia"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_valor_transmision_renta_vitalicia"
 continuidad_id = "irpf-ganancia-cripto-valor-transmision-renta-vitalicia"

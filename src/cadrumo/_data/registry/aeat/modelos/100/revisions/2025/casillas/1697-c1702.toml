@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1702"
 number = "1702"
-label = "Por destinar cantidades a paliar los daños materiales sobre la vivienda habitual derivados del temporal"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_danos_vivienda_dana"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

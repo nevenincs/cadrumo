@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0511"
 number = "0511"
-label = "Parte estatal: Mínimo del contribuyente. Importe"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_contribuyente_estatal"
 legal_refs = ["ley-35-2006:art-56"]

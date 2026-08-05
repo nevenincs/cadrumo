@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00796"
 number = "00796"
-label = "Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - Intereses y retorno obligatorio de las aportaciones al capital social y de otros fondos calificados con características de deuda (coo..."
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 data_type = "money"
 semantic_role = "is_pyg_importe"

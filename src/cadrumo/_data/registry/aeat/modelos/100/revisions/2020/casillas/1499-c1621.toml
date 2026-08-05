@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1621"
 number = "1621"
-label = "NIF de la entidad en atribución de rentas, o Número de Identificación en el país de residencia en el caso de entidades no residentes"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "text"
 semantic_role = "irpf_re_atrib_entidad_nif_alt"

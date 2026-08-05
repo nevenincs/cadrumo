@@ -1,7 +1,5 @@
 [modelo]
 id = "143"
-title = "IRPF deducciones familia numerosa/discapacidad — solicitud de abono anticipado"
-official_name = "Modelo 143. Impuesto sobre la Renta de las Personas Físicas. Deducciones por familia numerosa, por ascendiente con dos hijos o por personas con discapacidad a cargo. Solicitud de abono anticipado."
 tax_domain = "irpf"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

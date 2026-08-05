@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#repo-health-diagnostics'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
 body_hash: 'sha256:0499cae624dcd0ee43fa190ec5a4bde950810c33dc52b0a77db3ab7fc2338fe2'
 related:

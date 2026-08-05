@@ -1,5 +1,4 @@
 [revisions."2010-y-siguientes"]
-label = "Modelo 361 ejercicios 2010 y siguientes (Orden EHA/789/2010)"
 valid_from = 2010-04-01
 period_selector = { year_from = 2010, periods = ["AD-HOC"] }
 orden_aplicabilidad = ["orden-eha-789-2010:art-7"]

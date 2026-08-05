@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP_APENOM_D"
 number = "*02"
-label = "Primer declarante apellidos y nombre"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
 semantic_role = "irpf_declarante_nombre"

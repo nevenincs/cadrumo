@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0595"
 number = "0595"
-label = "Cuota resultante de la autoliquidacion"
 section = ["resultado_declaracion"]
 semantic_role = "irpf_cuota_resultante_autoliquidacion"
 input_kind = "computed"

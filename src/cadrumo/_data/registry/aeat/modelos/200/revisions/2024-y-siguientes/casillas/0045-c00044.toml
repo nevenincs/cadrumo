@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00044"
 number = "00044"
-label = "Contribuyente que genera deducciones del art. 36.1 y 36.3 LIS con financiación realizada por otros contribuyentes [00044]"
 section = ["contribuyente_que_genera_deducciones_del_art_36_1"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

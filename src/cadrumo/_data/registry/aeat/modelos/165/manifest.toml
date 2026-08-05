@@ -1,7 +1,5 @@
 [modelo]
 id = "165"
-title = "Certificaciones a socios de entidades de nueva o reciente creación (informativa anual)"
-official_name = "Modelo 165. Declaración informativa de certificaciones individuales emitidas a los socios o partícipes de entidades de nueva o reciente creación."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

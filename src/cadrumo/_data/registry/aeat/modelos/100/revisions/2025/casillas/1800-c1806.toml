@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1806"
 number = "1806"
-label = "Valor de adquisición"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_valor_adquisicion"
 continuidad_id = "irpf-ganancia-cripto-valor-adquisicion"

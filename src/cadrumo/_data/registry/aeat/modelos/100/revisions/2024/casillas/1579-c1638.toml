@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1638"
 number = "1638"
-label = "Pérdida patrimonial obtenida: diferencia ( [1633] - [1637] ) negativa"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_perdida_otros_obtenida"
 input_kind = "computed"

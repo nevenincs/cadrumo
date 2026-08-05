@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0921"
 number = "0921"
-label = "Por donaciones en metálico a descendientes o adoptados menores de 35 años para la adquisición o rehabilitación de su primera vivienda habitual"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_donacion_descendientes"
 legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26"]

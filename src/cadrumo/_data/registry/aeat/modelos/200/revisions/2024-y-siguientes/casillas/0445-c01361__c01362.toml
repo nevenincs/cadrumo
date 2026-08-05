@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01361"
 number = "01361"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2023 - Deducción pendiente [01361]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2023"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_detalle"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01362"
 number = "01362"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2023 - Tipo gravamen período generación [01362]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2023"]
 data_type = "decimal"
 semantic_role = "is_deduccion_di_internacional_tipo_gravamen_periodo_generacion"

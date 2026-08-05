@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01457"
 number = "01457"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2023 - 2025 Deducción pendiente [01457]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2023"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_detalle"

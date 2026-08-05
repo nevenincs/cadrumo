@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "03"
 number = "03"
-label = "Mod. 40.2 LIS — A ingresar"
 section = ["liquidacion", "modalidad_40_2_lis"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_2_a_ingresar"

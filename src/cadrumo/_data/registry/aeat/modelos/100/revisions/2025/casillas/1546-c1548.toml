@@ -3,7 +3,6 @@ id = "1548"
 input_kind = "computed"
 formula = "renta-2025-eo-agraria-rendimiento-neto-modulos"
 number = "1548"
-label = "Rendimiento neto de módulos"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_rdto_neto_modulos"

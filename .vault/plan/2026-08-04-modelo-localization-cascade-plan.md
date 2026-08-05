@@ -3,24 +3,14 @@ tags:
   - '#plan'
   - '#modelo-localization-cascade'
 date: '2026-08-04'
-modified: '2026-08-04'
-body_hash: 'sha256:bb47fbdd396c6675dc7e1defad31690d2b719344d594177ea1c06ea64ab114ed'
+modified: '2026-08-05'
+body_hash: 'sha256:d03326fe2d52666e00a53d3da77686b301aa1386e937d3f83b8a7aec1b58f931'
 tier: L3
 related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
   - '[[2026-08-04-modelo-localization-cascade-research]]'
   - '[[2026-08-04-modelo-localization-cascade-migration-feasibility-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `modelo-localization-cascade` plan
 

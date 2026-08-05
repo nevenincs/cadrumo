@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1967"
 number = "1967"
-label = "Año en el que se percibe la retribución en especie"
 section = ["toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c"]
 semantic_role = "irpf_retrib_especie_anio_percepcion"
 continuidad_id = "irpf-retrib-especie-anio-percepcion"

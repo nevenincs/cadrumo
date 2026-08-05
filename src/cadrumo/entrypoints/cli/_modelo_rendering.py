@@ -21,11 +21,10 @@ import re as _re
 
 from ...application.modelo import (
     ModeloWorkDeadlinePosture,
-    ResultSummaryRow,
     calculation_result_summary,
     modelo_work_deadline_posture,
 )
-from ...core.i18n import output_language, tr
+from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import BooleanBindingEncodedValue
 from ...domain.modelos import CalculationRevision, CalculationRevisionState, Modelo184MemberRow
@@ -566,16 +565,11 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
     )
 
 
-def _result_summary_row_label(row: ResultSummaryRow, language: str) -> str:
-    return row.localized_labels.get(language, row.label)
-
-
 def result_summary_lines(rev) -> list[str]:
     """Return the headline-result summary block for a calculation revision."""
     summary = calculation_result_summary(rev)
     if summary is None or not summary.rows:
         return []
-    language = output_language()
     header = tr(
         "cli.app.modelo.work.result_summary_header",
         default="result summary  %{modelo} %{year} %{period}",
@@ -585,7 +579,7 @@ def result_summary_lines(rev) -> list[str]:
     )
     lines = [header, "role\tcasilla\tvalue\tlabel"]
     for row in summary.rows:
-        label = _result_summary_row_label(row, language)
+        label = row.label
         lines.append(f"{row.role}\t{row.casilla_id}\t{row.value}\t{label}")
     return lines
 
@@ -599,14 +593,12 @@ def result_summary_payload(rev) -> tuple[ResultSummaryRowPayload, ...]:
     summary = calculation_result_summary(rev)
     if summary is None:
         return ()
-    language = output_language()
     return tuple(
         ResultSummaryRowPayload(
             role=row.role,
             casilla_id=row.casilla_id,
             value=str(row.value),
-            label=_result_summary_row_label(row, language),
-            localized_labels=dict(row.localized_labels),
+            label=row.label,
         )
         for row in summary.rows
     )

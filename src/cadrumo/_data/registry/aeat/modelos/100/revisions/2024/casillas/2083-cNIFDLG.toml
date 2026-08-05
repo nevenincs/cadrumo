@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "NIFDLG"
 number = "*75"
-label = "Hijo o descendiente NIF"
 section = ["datos_identificativos", "hijos", "hijo"]
 data_type = "nif"
 semantic_role = "irpf_descendiente_nif"

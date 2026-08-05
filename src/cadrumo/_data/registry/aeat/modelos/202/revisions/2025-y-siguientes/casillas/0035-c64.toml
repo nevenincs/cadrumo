@@ -1,7 +1,6 @@
 [[revisions.2025-y-siguientes.casillas]]
 id = "64"
 number = "64"
-label = "Mod. 40.3 LIS B2 — Base a tipo 4"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_b2_base_tipo_4"

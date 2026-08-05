@@ -1,7 +1,6 @@
 [[revisions."esquema-exterior".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la autoliquidación"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-exterior".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo de la declaración"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-exterior".casillas]]
 id = "iva.exterior.de.services-cuota"
 number = "iva.exterior.de.services-cuota"
-label = "Cuota IVA repercutido al destino DE — servicios prestados (Esquema Exterior)"
 section = ["iva", "exterior", "destino_de"]
 data_type = "money"
 semantic_role = "iva_oss_exterior_servicios_destino_cuota"
@@ -38,7 +35,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-exterior".casillas]]
 id = "iva.exterior.cuota-total"
 number = "iva.exterior.cuota-total"
-label = "Total cuota IVA repercutida del Esquema Exterior (suma de cuotas por destino)"
 section = ["iva", "exterior", "totales"]
 data_type = "money"
 semantic_role = "iva_oss_exterior_cuota_total"

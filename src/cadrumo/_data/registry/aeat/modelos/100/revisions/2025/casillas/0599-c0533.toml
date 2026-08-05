@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0533"
 number = "0533"
-label = "Cuotas correspondientes a la base liquidable general: ( [0532] = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_base_liquidable_general_autonomico"
 input_kind = "computed"

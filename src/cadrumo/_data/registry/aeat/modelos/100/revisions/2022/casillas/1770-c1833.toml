@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1833"
 number = "1833"
-label = "Ganancia patrimonial obtenida: diferencia ( [1826] - [1830] ) positiva"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_obtenida"
 input_kind = "computed"

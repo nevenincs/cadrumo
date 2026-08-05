@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1479"
 number = "1479"
-label = "Rendimiento neto de la actividad"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_actividad_rdto_neto_actividad"

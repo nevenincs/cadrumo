@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0483"
 number = "0483"
-label = "N.º de identificación fiscal (NIF) de la persona que recibe cada pensión o anualidad"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_pensiones_compensatorias_alimentos"]
 data_type = "nif"
 semantic_role = "irpf_reduccion_pension_compensatoria_receptor_nif"

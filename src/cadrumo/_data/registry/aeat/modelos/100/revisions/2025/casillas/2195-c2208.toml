@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2208"
 number = "2208"
-label = "NIF/NIE del arrendador 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
 data_type = "text"
 semantic_role = "irpf_arrendador_nif_o_id_extranjero"

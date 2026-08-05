@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1783"
 number = "1783"
-label = "Código/Code SWIFT/BIC"
 section = ["resultados", "regularizacion_res", "rectnosepa"]
 data_type = "text"
 semantic_role = "irpf_rectnosepa_swift_bic"

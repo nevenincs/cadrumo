@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0060"
 number = "0060"
-label = "Suma de rendimientos reducidos del capital mobiliario a integrar en la base imponible general ( suma de las casillas [0056] )"
 section = ["resultados", "rdto_capital_mobiliario_res", "rdto_capital_mobiliario_general_res"]
 input_kind = "computed"
 formula = "renta-2021-capital-mobiliario-general-suma-rendimientos-reducidos"

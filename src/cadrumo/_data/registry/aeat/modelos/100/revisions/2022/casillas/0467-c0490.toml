@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0490"
 number = "0490"
-label = "Total con derecho a reducción"
 section = ["resultados", "red_base_imponible_res"]
 semantic_role = "irpf_reduccion_mutualidad_deportistas_total"
 continuidad_id = "irpf-reduccion-mutualidad-deportistas-total"

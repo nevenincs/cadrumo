@@ -1,5 +1,4 @@
 [revisions."2024-y-siguientes"]
-label = "Modelo 379 ejercicios 2024 y siguientes (Orden HFP/1415/2023)"
 valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-hfp-1415-2023:art-1"]

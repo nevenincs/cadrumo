@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2056"
 number = "2056"
-label = "De cuotas satisfechas a organizaciones profesionales agrarias"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_cuotas_organizaciones_agrarias"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

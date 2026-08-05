@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1985"
 number = "1985"
-label = "Fecha de adquisición del elemento patrimonial transmitido"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "text"
 semantic_role = "irpf_feac_fecha_adquisicion_elemento"

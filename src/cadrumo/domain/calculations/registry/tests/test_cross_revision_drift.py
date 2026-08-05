@@ -226,8 +226,6 @@ def _write_continuity_modelo_directory(
         """
 [modelo]
 id = "999"
-title = "Continuity test"
-official_name = "Continuity test"
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -247,7 +245,6 @@ source_refs = ["aeat-manual"]
 [[revisions."2024".casillas]]
 id = "0700"
 number = "700"
-label = "Old base"
 section = ["test"]
 data_type = "money"
 continuidad_id = "base"
@@ -283,7 +280,6 @@ source_refs = ["aeat-manual"]
 [[revisions."2025".casillas]]
 id = "0700"
 number = "700"
-label = "New base"
 section = ["test"]
 data_type = "money"
 continuidad_id = "base"

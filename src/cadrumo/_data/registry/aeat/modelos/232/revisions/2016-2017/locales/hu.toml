@@ -1,6 +1,0 @@
-[labels]
-"decl.cnae" = "A főtevékenység NACE-kódja"
-"decl.ejercicio" = "Az esedékesség éve"
-"decl.tipo-ejercicio" = "Üzleti év típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál rövidebb)"
-
-[help]

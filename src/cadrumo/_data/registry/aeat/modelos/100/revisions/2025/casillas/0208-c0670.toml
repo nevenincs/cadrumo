@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0670"
 number = "0670"
-label = "Resultado de la declaracion"
 section = ["resultado_declaracion"]
 data_type = "decimal"
 semantic_role = "irpf_resultado_declaracion"

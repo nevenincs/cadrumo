@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2247"
 number = "2247"
-label = "Nº de colegiado / Código Numérico Personal del médico:"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_la_rioja_medico_colegiado"

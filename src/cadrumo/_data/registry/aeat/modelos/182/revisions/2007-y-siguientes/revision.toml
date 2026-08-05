@@ -1,5 +1,4 @@
 [revisions."2007-y-siguientes"]
-label = "Modelo 182 ejercicios 2007 y siguientes (Orden EHA/3021/2007)"
 valid_from = 2007-10-12
 period_selector = { year_from = 2007, periods = ["0A"] }
 legal_refs = [

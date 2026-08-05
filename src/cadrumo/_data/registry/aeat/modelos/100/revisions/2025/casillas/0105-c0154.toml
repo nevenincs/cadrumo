@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0154"
 number = "0154"
-label = "Rendimiento neto reducido del capital inmobiliario"
 section = ["rendimientos_capital_inmobiliario"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_inmobiliario_rendimiento_neto_reducido"

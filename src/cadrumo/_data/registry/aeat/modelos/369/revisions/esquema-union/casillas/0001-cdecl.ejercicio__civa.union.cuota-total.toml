@@ -1,7 +1,6 @@
 [[revisions."esquema-union".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la autoliquidacion"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-union".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo de la declaracion"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-union".casillas]]
 id = "iva.union.de.services-cuota"
 number = "iva.union.de.services-cuota"
-label = "Cuota IVA OSS Unión al destino DE — servicios prestados (LIVA art 163 unvicies)"
 section = ["iva", "union", "destino_de"]
 data_type = "money"
 semantic_role = "iva_oss_union_servicios_destino_de_cuota"
@@ -40,7 +37,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-union".casillas]]
 id = "iva.union.fr.services-cuota"
 number = "iva.union.fr.services-cuota"
-label = "Cuota IVA OSS Unión al destino FR — servicios prestados (LIVA art 163 unvicies)"
 section = ["iva", "union", "destino_fr"]
 data_type = "money"
 semantic_role = "iva_oss_union_servicios_destino_fr_cuota"
@@ -55,7 +51,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-union".casillas]]
 id = "iva.union.de.goods-distance-cuota"
 number = "iva.union.de.goods-distance-cuota"
-label = "Cuota IVA OSS Unión al destino DE — ventas a distancia + interfaces electrónicas"
 section = ["iva", "union", "destino_de"]
 data_type = "money"
 semantic_role = "iva_oss_union_goods_destino_cuota"
@@ -68,7 +63,6 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-union".casillas]]
 id = "iva.union.cuota-total"
 number = "iva.union.cuota-total"
-label = "Total cuota IVA repercutida del Esquema Unión (suma cross-destination, cross-flow)"
 section = ["iva", "union", "totales"]
 data_type = "money"
 semantic_role = "iva_oss_union_cuota_total"

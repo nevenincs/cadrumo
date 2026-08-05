@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1787"
 number = "1787"
-label = "Ciudad/City"
 section = ["resultados", "regularizacion_res", "rectnosepa"]
 data_type = "text"
 semantic_role = "irpf_rectnosepa_banco_ciudad"

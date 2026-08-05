@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01586"
 number = "01586"
-label = "Liquidación IV - Resultado de la autoliquidación - Estado [01586]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
 semantic_role = "is_liquidacion_iv_resultado_misc"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01587"
 number = "01587"
-label = "Liquidación IV - Resultado de la autoliquidación - D. Forales/Navarra [01587]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
 semantic_role = "is_liquidacion_iv_importe"

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1816"
 number = "1816"
-label = "Imputación temporal: marque una \"X\" cuando opte por el criterio de operaciones a plazos o con precio aplazado (Cumplimente el anexo C.1)"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_ganancia_inmueble_imputacion_plazos"

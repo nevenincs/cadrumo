@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02407"
 number = "02407"
-label = "Tributación conjunta Estado y Adm.Forales - Discrepancia de criterio administrativo para determinados supuestos de autoliquidación rectificativa que no deban incluirse en otras casillas - Bizkaia [..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "discrepancia_de_criterio_administrativo_para_deter"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_estado_forales_rectificacion_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02408"
 number = "02408"
-label = "Tributación conjunta Estado y Adm.Forales - Discrepancia de criterio administrativo para determinados supuestos de autoliquidación rectificativa que no deban incluirse en otras casillas - Navarra [..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "discrepancia_de_criterio_administrativo_para_deter"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_discrepancia"

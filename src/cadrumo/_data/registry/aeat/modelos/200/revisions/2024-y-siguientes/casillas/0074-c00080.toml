@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00080"
 number = "00080"
-label = "Uniones, federaciones y confederaciones de cooperativas [00080]"
 section = ["uniones_federaciones_y_confederaciones_de_cooperat"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

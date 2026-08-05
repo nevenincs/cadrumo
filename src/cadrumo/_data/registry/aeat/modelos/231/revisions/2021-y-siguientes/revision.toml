@@ -1,5 +1,4 @@
 [revisions."2021-y-siguientes"]
-label = "Modelo 231 ejercicios 2021 y siguientes (Orden HAC/1285/2020)"
 valid_from = 2021-01-01
 period_selector = { year_from = 2021, periods = ["0A"] }
 orden_aplicabilidad = ["orden-hac-1285-2020:art-primero-anexo"]

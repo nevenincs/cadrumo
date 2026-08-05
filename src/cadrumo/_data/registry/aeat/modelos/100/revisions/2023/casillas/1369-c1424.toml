@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1424"
 number = "1424"
-label = "Mejora 2: Fecha de la realización de la mejora"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_mejora_fecha"

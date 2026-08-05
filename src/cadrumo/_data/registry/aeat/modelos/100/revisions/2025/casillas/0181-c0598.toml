@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0598"
 number = "0598"
-label = "Por arrendamientos de inmuebles urbanos"
 section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
 semantic_role = "irpf_retencion_arrendamientos_inmuebles_urbanos"
 input_kind = "computed"

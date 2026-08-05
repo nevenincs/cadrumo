@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1484"
 number = "1484"
-label = "Rendimiento neto reducido total de las actividades económicas (excepto agrícolas, ganaderas y forestales) en estimación objetiva ( [1482] - [1483])"
 section = ["resultados", "reg_estima_obj_res"]
 input_kind = "computed"
 formula = "renta-2021-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total"

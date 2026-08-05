@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0221"
 number = "0221"
-label = "Diferencia entre ingresos y gastos previos"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 data_type = "decimal"
 semantic_role = "irpf_ed_diferencia_ingresos_gastos_previos"

@@ -1,7 +1,6 @@
 [[revisions."2026".casillas]]
 id = "declarante-nif"
 number = "declarante.nif"
-label = "Numero de identificacion fiscal (NIF)"
 section = ["declarante", "datos_identificacion"]
 data_type = "nif"
 semantic_role = "m136_declarante_nif"
@@ -15,7 +14,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "declarante-nombre"
 number = "declarante.nombre"
-label = "Apellidos y nombre o razon social"
 section = ["declarante", "datos_identificacion"]
 data_type = "name"
 semantic_role = "m136_declarante_nombre"
@@ -27,7 +25,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "fecha-cobro-premio"
 number = "devengo.fecha-cobro-premio"
-label = "Fecha de cobro del premio"
 section = ["devengo"]
 data_type = "date"
 semantic_role = "m136_fecha_cobro_premio"
@@ -39,7 +36,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "ejercicio-declaracion"
 number = "devengo.ejercicio"
-label = "Ejercicio"
 section = ["devengo"]
 data_type = "year"
 semantic_role = "m136_ejercicio_declaracion"
@@ -53,7 +49,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "periodo-declaracion"
 number = "devengo.periodo"
-label = "Periodo"
 section = ["devengo"]
 data_type = "period_code"
 semantic_role = "m136_periodo_declaracion"
@@ -67,7 +62,6 @@ source_refs = ["boe-modelo-136-base-order", "boe-modelo-136-current-form", "boe-
 [[revisions."2026".casillas]]
 id = "provincia-residencia-irpf"
 number = "declarante.provincia-residencia-irpf"
-label = "Codigo de la provincia de residencia habitual del contribuyente IRPF"
 section = ["declarante", "residencia"]
 data_type = "province_code"
 semantic_role = "m136_provincia_residencia_irpf"
@@ -79,7 +73,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "organizador-denominacion"
 number = "loteria.organizador.denominacion"
-label = "Denominacion o razon social del organismo o entidad organizadora"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "name"
 semantic_role = "m136_organizador_denominacion"
@@ -91,7 +84,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "organizador-pais"
 number = "loteria.organizador.pais"
-label = "Pais del organismo o entidad organizadora"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "text"
 semantic_role = "m136_organizador_pais"
@@ -103,7 +95,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "organizador-codigo-pais"
 number = "loteria.organizador.codigo-pais"
-label = "Codigo pais del organismo o entidad organizadora"
 section = ["loteria_apuesta_premiada", "organizador"]
 data_type = "country_code"
 semantic_role = "m136_organizador_codigo_pais"
@@ -115,7 +106,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "loteria-apuesta-denominacion"
 number = "loteria.denominacion"
-label = "Denominacion de la loteria o apuesta"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "text"
 semantic_role = "m136_loteria_apuesta_denominacion"
@@ -127,7 +117,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "fecha-celebracion"
 number = "loteria.fecha-celebracion"
-label = "Fecha de celebracion"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "date"
 semantic_role = "m136_fecha_celebracion"
@@ -139,7 +128,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "precio-unitario"
 number = "loteria.precio-unitario"
-label = "Precio unitario"
 section = ["loteria_apuesta_premiada", "identificacion"]
 data_type = "money"
 semantic_role = "m136_precio_unitario"
@@ -151,7 +139,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "01"
 number = "01"
-label = "Importe del premio obtenido por el boleto, cupon o apuesta premiado"
 section = ["liquidacion", "premio"]
 data_type = "money"
 semantic_role = "m136_importe_premio_total"
@@ -163,7 +150,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "02"
 number = "02"
-label = "Importe o valor del premio que corresponde individualmente al declarante"
 section = ["liquidacion", "premio"]
 data_type = "money"
 semantic_role = "m136_importe_premio_declarante"
@@ -175,7 +161,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "03"
 number = "03"
-label = "Cuantia exenta del gravamen especial"
 section = ["liquidacion", "exencion"]
 data_type = "money"
 semantic_role = "m136_cuantia_exenta_gravamen"
@@ -187,7 +172,6 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 [[revisions."2026".casillas]]
 id = "04"
 number = "04"
-label = "Base imponible"
 section = ["liquidacion", "base"]
 data_type = "money"
 semantic_role = "m136_base_imponible_gravamen"
@@ -200,7 +184,6 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 [[revisions."2026".casillas]]
 id = "05"
 number = "05"
-label = "Cuota del gravamen especial"
 section = ["liquidacion", "cuota"]
 data_type = "money"
 semantic_role = "m136_cuota_gravamen_especial"
@@ -213,7 +196,6 @@ source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-f
 [[revisions."2026".casillas]]
 id = "06"
 number = "06"
-label = "Resultados a ingresar de anteriores autoliquidaciones por el mismo concepto y correspondientes al mismo premio"
 section = ["liquidacion", "complementaria"]
 data_type = "money"
 semantic_role = "m136_resultados_anteriores_mismo_premio"
@@ -225,7 +207,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "07"
 number = "07"
-label = "Resultado a ingresar"
 section = ["liquidacion", "resultado"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"
@@ -239,7 +220,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "autoliquidacion-complementaria"
 number = "complementaria.marca"
-label = "Autoliquidacion complementaria"
 section = ["complementaria"]
 data_type = "boolean"
 semantic_role = "m136_autoliquidacion_complementaria"
@@ -251,7 +231,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "justificante-anterior"
 number = "complementaria.justificante-anterior"
-label = "Numero de justificante identificativo de la autoliquidacion anterior"
 section = ["complementaria"]
 data_type = "text"
 semantic_role = "m136_justificante_anterior"
@@ -263,7 +242,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "09"
 number = "09"
-label = "Importe ingresado a favor del Tesoro Publico"
 section = ["ingreso"]
 data_type = "money"
 semantic_role = "m136_importe_ingresado"
@@ -276,7 +254,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "forma-pago"
 number = "ingreso.forma-pago"
-label = "Forma de pago"
 section = ["ingreso"]
 data_type = "text"
 semantic_role = "m136_forma_pago"
@@ -289,7 +266,6 @@ source_refs = ["boe-modelo-136-current-form", "boe-modelo-136-current-form-text"
 [[revisions."2026".casillas]]
 id = "iban"
 number = "ingreso.iban"
-label = "Codigo IBAN"
 section = ["ingreso"]
 data_type = "iban"
 semantic_role = "m136_codigo_iban"

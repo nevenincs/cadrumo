@@ -1,7 +1,5 @@
 [modelo]
 id = "186"
-title = "Nacimientos y defunciones (Registro Civil) (informativa mensual)"
-official_name = "Modelo 186. Declaración informativa de nacimientos y defunciones."
 tax_domain = "informative"
 cadence = "monthly"
 jurisdiction = "ES-AEAT"

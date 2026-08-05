@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0405"
 number = "0405"
-label = "Valor de transmisión de las acciones o participaciones (sólo en caso de transmisión intervivos de los valores)"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 semantic_role = "irpf_g4_re_valor_transmision_acciones"
 continuidad_id = "irpf-g4-re-valor-transmision-acciones"

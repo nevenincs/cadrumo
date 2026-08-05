@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0916"
 number = "0916"
-label = "Por donaciones con finalidad ecológica"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_donativos_ecologicos"
 continuidad_id = "irpf-deduccion-canarias-donativos-ecologicos"

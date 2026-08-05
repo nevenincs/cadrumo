@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0342"
 number = "0342"
-label = "Denominación de los derechos de suscripción transmitidos (entidad emisora)"
 section = ["toma_datos_ampliada", "gp_derechos", "entidad_derecho"]
 data_type = "text"
 semantic_role = "irpf_ganancia_derechos_denominacion"

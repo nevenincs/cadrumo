@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01230"
 number = "01230"
-label = "Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones al resultado contable referidos al grupo fiscal - Aumentos [01230]"
 section = ["liquidacion_i", "resultado_de_la_cuenta_de_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_correcciones_resultado_contable_grupo_fiscal_aumento"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01231"
 number = "01231"
-label = "Liquidación I - Resultado de la cuenta de pérdidas y ganancias - Correcciones al impuesto contable referidos al grupo fiscal - Disminuciones [01231]"
 section = ["liquidacion_i", "resultado_de_la_cuenta_de_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_correcciones_impuesto_grupo_fiscal_disminucion"

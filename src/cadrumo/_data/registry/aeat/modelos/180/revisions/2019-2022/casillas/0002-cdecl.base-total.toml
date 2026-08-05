@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "decl.base-total"
 number = "145-160"
-label = "Base retenciones e ingresos a cuenta total"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"

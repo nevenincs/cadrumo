@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00036"
 number = "00036"
-label = "Sociedad de garantía recíproca o de reafianzamiento [00036]"
 section = ["sociedad_de_garantia_reciproca_o_de_reafianzamient"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

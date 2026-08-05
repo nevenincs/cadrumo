@@ -2,7 +2,6 @@
 id = "decl.numero-operadores"
 number = "138-146"
 form_number = "01"
-label = "Numero total de operadores intracomunitarios"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "intracomunitario_numero_operadores"
@@ -17,7 +16,6 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 id = "decl.importe-operaciones"
 number = "147-161"
 form_number = "02"
-label = "Importe de las operaciones intracomunitarias"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "intracomunitario_importe_operaciones"
@@ -32,7 +30,6 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 id = "decl.numero-rectificaciones"
 number = "162-170"
 form_number = "03"
-label = "Numero total de operadores intracomunitarios con rectificaciones"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "intracomunitario_numero_rectificaciones"
@@ -47,7 +44,6 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 id = "decl.importe-rectificaciones"
 number = "171-185"
 form_number = "04"
-label = "Importe de las rectificaciones"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "intracomunitario_importe_rectificaciones"
@@ -63,7 +59,6 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.codigo-pais"
 number = "76-77"
-label = "Codigo pais del operador comunitario"
 section = ["operador", "identificacion"]
 data_type = "country_code"
 semantic_role = "operador_codigo_pais"
@@ -75,7 +70,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.nif-comunitario"
 number = "78-92"
-label = "NIF del operador comunitario"
 section = ["operador", "identificacion"]
 data_type = "nif_iva"
 semantic_role = "intracomunitario_nif_iva"
@@ -87,7 +81,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.apellidos-razon-social"
 number = "93-132"
-label = "Apellidos y nombre o razon social del operador intracomunitario"
 section = ["operador", "identificacion"]
 data_type = "text"
 semantic_role = "intracomunitario_operador_nombre"
@@ -99,7 +92,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.clave-operacion"
 number = "133"
-label = "Clave de operacion intracomunitaria"
 section = ["operador", "operacion"]
 data_type = "text"
 semantic_role = "intracomunitario_clave_operacion"
@@ -111,7 +103,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.base-imponible"
 number = "134-146"
-label = "Base imponible o importe de la operacion intracomunitaria"
 section = ["operador", "operacion"]
 data_type = "money"
 semantic_role = "base_intracomunitaria"
@@ -126,7 +117,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "rect.ejercicio-rectificado"
 number = "147-150"
-label = "Ejercicio rectificado"
 section = ["rectificacion", "periodo"]
 data_type = "year"
 semantic_role = "intracomunitario_rectificacion_ejercicio"
@@ -138,7 +128,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "rect.periodo-rectificado"
 number = "151-152"
-label = "Periodo rectificado"
 section = ["rectificacion", "periodo"]
 data_type = "period_code"
 semantic_role = "periodo_rectificado"
@@ -150,7 +139,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "rect.base-rectificada"
 number = "153-165"
-label = "Base imponible o importes rectificados"
 section = ["rectificacion", "importe"]
 data_type = "money"
 semantic_role = "base_intracomunitaria"
@@ -163,7 +151,6 @@ source_refs = ["aeat-dr-349-2020-current"]
 [[revisions."2020-y-siguientes".casillas]]
 id = "rect.base-anterior"
 number = "166-178"
-label = "Base imponible declarada anteriormente"
 section = ["rectificacion", "importe"]
 data_type = "money"
 semantic_role = "base_intracomunitaria"

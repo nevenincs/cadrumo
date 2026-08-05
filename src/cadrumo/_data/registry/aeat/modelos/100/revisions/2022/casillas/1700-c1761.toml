@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1761"
 number = "1761"
-label = "Hijo/Hija 5 (*): Si no tiene NIF o NIE, marque con una \"X\""
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
 semantic_role = "irpf_descendiente_adicional_nif_ausente_flag"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0995"
 number = "0995"
-label = "Por gastos veterinarios derivados de la adquisición de animales de compañía o de la tenencia de perros de asistencia"
 section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
 semantic_role = "irpf_deduccion_andalucia_gastos_veterinarios"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00913"
 number = "00913"
-label = "Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento requisitos SOCIMI - Araba/Álava [00913]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "incremento_por_incumplimiento_requisitos_socimi"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_incremento"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00914"
 number = "00914"
-label = "Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento requisitos SOCIMI - Gipuzkoa [00914]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "incremento_por_incumplimiento_requisitos_socimi"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_incremento"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00915"
 number = "00915"
-label = "Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento requisitos SOCIMI - Bizkaia [00915]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "incremento_por_incumplimiento_requisitos_socimi"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_incremento"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00916"
 number = "00916"
-label = "Tributación conjunta Estado y Adm.Forales - Incremento por incumplimiento requisitos SOCIMI - Navarra [00916]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "incremento_por_incumplimiento_requisitos_socimi"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_incremento"

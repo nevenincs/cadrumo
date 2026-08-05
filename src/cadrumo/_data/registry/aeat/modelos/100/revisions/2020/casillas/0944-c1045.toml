@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1045"
 number = "1045"
-label = "Para familias con dos o más descendientes e ingresos reducidos"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_dos_mas_descendientes_ingresos_reducidos"
 continuidad_id = "irpf-deduccion-madrid-dos-mas-descendientes-ingresos-reducidos"

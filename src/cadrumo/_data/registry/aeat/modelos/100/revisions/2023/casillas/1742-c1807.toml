@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1807"
 number = "1807"
-label = "Pérdida patrimonial obtenida: diferencia ( [1804] - [1806] ) negativa"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_perdida_cripto_obtenida"
 input_kind = "computed"

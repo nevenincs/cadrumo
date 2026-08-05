@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#decimal-notation-under-declaration'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:bb7cde74cb3c6a04763c3c4481316b1e80c1b846aa68549516a6eac07f553a64'
+body_hash: 'sha256:cb2aa77c3782f416a78236318311660406f8895e3d78e130e09b47efa48e948e'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
@@ -74,7 +74,6 @@ A coordination hazard applies: a peer campaign is mid-refactor consolidating dec
 parsing onto the canonical helpers, which is exactly the code that owns this. The remedy
 may belong inside that work rather than beside it.
 
-
 ### Measured since: the blast radius resolves, and the second site is not where it looked
 
 **The leaf parser is closed and the gate now sees its layer.** The descendiente flag routes
@@ -133,7 +132,6 @@ operator-typed. That requires the profile write boundary to distinguish an opera
 from an application reload, which it currently does not. That is a boundary design decision
 rather than a parser change, and it should be recorded before it is built.
 
-
 ## The decision this needs
 
 The remedy is a product decision as much as a technical one, and it should be made
@@ -166,7 +164,6 @@ an invalid integer rather than saying the field takes whole euros. The sibling g
 is integer-only too, so this is a consistent design rather than an oversight, and that one
 feeds a proportional deduction rather than a threshold test, so rounding there loses cents
 without flipping an outcome.
-
 
 ## Closed, and the residuals the call-site gate exposed
 
@@ -228,4 +225,3 @@ That is the boundary of the whole exercise. Canonicalization establishes one hom
 **concept**, not a merge of every site that looks alike — and the discriminator is whether
 the specific case carries meaning the general authority discards. A postcode is not a
 decimal.
-

@@ -1,7 +1,5 @@
 [modelo]
 id = "280"
-title = "Declaracion informativa anual de Planes de Ahorro a Largo Plazo"
-official_name = "Modelo 280. Declaracion informativa anual de Planes de Ahorro a Largo Plazo."
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

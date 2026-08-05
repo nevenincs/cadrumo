@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0247"
 number = "0247"
-label = "Último mes completo de 2023 en que estuvo vigente el matrimonio"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
 data_type = "integer"
 semantic_role = "irpf_conyuge_discapacidad_matrimonio_mes_fin"

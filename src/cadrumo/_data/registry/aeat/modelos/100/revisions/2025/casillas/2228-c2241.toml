@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2241"
 number = "2241"
-label = "Por las ayudas recibidas por las personas afectadas por la talidomida en España durante el período 1950-1985"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_ayudas_talidomida"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

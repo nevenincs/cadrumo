@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "HIJOSUE"
 number = "*88"
-label = "Hijos o descendientes UE o EEE"
 section = ["datos_identificativos", "hijos"]
 data_type = "boolean"
 semantic_role = "irpf_hijos_residentes_ue_eee_flag"

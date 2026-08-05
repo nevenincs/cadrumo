@@ -183,7 +183,7 @@ _SECTION_CHECKLIST_HINTS: dict[str, str] = {
 def _locale_toml_stub(revision_id: str, language: str) -> str:
     return (
         f'# Scaffolded schema-local "{language}" locale stub for revision "{revision_id}".\n'
-        "# Do NOT hand-edit: use `python -m cadrumo.locales modelo scaffold/set` "
+        "# Do NOT hand-edit: use `python -m cadrumo.locales scaffold/set` "
         "(modelo-locales-cli-authority),\n"
         "# checklist item 10. This placeholder exists only so the directory is discoverable;\n"
         "# the locale CLI owns its content.\n"

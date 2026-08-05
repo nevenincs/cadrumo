@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "28"
 number = "28"
-label = "Mod. 40.3 LIS — Retenciones e ingresos a cuenta sobre ingresos del periodo computado"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

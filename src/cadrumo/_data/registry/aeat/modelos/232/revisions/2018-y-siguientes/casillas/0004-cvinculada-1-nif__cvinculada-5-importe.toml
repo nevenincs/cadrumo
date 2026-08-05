@@ -2,7 +2,6 @@
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-nif"
 number = "3.vinculada.1.nif"
-label = "Related party 1: NIF / NIE / CIF"
 section = ["vinculadas", "1"]
 data_type = "nif"
 semantic_role = "related_party_nif_1"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-fjo"
 number = "3.vinculada.1.fjo"
-label = "Related party 1: Foreign national identification"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_fjo_1"
@@ -28,7 +26,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-razon-social"
 number = "3.vinculada.1.razon-social"
-label = "Related party 1: Business name"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_name_1"
@@ -41,7 +38,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-reservado-nombre"
 number = "3.vinculada.1.reservado-nombre"
-label = "Related party 1: Reserved field"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_reserved_1"
@@ -54,7 +50,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-tipo-vinculacion"
 number = "3.vinculada.1.tipo-vinculacion"
-label = "Related party 1: Type of relationship"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_tipo_vinculacion_1"
@@ -67,7 +62,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-provincia-pais"
 number = "3.vinculada.1.provincia-pais"
-label = "Related party 1: Province or country"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_location_1"
@@ -80,7 +74,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-tipo-operacion"
 number = "3.vinculada.1.tipo-operacion"
-label = "Related party 1: Type of transaction"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_tipo_operacion_1"
@@ -93,7 +86,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-ingreso-pago"
 number = "3.vinculada.1.ingreso-pago"
-label = "Related party 1: Income/payment indicator"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_ingreso_pago_1"
@@ -106,7 +98,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-metodo-valoracion"
 number = "3.vinculada.1.metodo-valoracion"
-label = "Related party 1: Valuation method"
 section = ["vinculadas", "1"]
 data_type = "text"
 semantic_role = "related_party_metodo_1"
@@ -119,7 +110,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-1-importe"
 number = "3.vinculada.1.importe"
-label = "Related party 1: Amount"
 section = ["vinculadas", "1"]
 data_type = "money"
 semantic_role = "related_party_importe_1"
@@ -132,7 +122,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-nif"
 number = "3.vinculada.2.nif"
-label = "Related party 2: NIF / NIE / CIF"
 section = ["vinculadas", "2"]
 data_type = "nif"
 semantic_role = "related_party_nif_2"
@@ -145,7 +134,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-fjo"
 number = "3.vinculada.2.fjo"
-label = "Related party 2: Foreign national identification"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_fjo_2"
@@ -158,7 +146,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-razon-social"
 number = "3.vinculada.2.razon-social"
-label = "Related party 2: Business name"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_name_2"
@@ -171,7 +158,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-reservado-nombre"
 number = "3.vinculada.2.reservado-nombre"
-label = "Related party 2: Reserved field"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_reserved_2"
@@ -184,7 +170,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-tipo-vinculacion"
 number = "3.vinculada.2.tipo-vinculacion"
-label = "Related party 2: Type of relationship"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_tipo_vinculacion_2"
@@ -197,7 +182,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-provincia-pais"
 number = "3.vinculada.2.provincia-pais"
-label = "Related party 2: Province or country"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_location_2"
@@ -210,7 +194,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-tipo-operacion"
 number = "3.vinculada.2.tipo-operacion"
-label = "Related party 2: Type of transaction"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_tipo_operacion_2"
@@ -223,7 +206,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-ingreso-pago"
 number = "3.vinculada.2.ingreso-pago"
-label = "Related party 2: Income/payment indicator"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_ingreso_pago_2"
@@ -236,7 +218,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-metodo-valoracion"
 number = "3.vinculada.2.metodo-valoracion"
-label = "Related party 2: Valuation method"
 section = ["vinculadas", "2"]
 data_type = "text"
 semantic_role = "related_party_metodo_2"
@@ -249,7 +230,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-2-importe"
 number = "3.vinculada.2.importe"
-label = "Related party 2: Amount"
 section = ["vinculadas", "2"]
 data_type = "money"
 semantic_role = "related_party_importe_2"
@@ -262,7 +242,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-nif"
 number = "3.vinculada.3.nif"
-label = "Related party 3: NIF / NIE / CIF"
 section = ["vinculadas", "3"]
 data_type = "nif"
 semantic_role = "related_party_nif_3"
@@ -275,7 +254,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-fjo"
 number = "3.vinculada.3.fjo"
-label = "Related party 3: Foreign national identification"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_fjo_3"
@@ -288,7 +266,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-razon-social"
 number = "3.vinculada.3.razon-social"
-label = "Related party 3: Business name"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_name_3"
@@ -301,7 +278,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-reservado-nombre"
 number = "3.vinculada.3.reservado-nombre"
-label = "Related party 3: Reserved field"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_reserved_3"
@@ -314,7 +290,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-tipo-vinculacion"
 number = "3.vinculada.3.tipo-vinculacion"
-label = "Related party 3: Type of relationship"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_tipo_vinculacion_3"
@@ -327,7 +302,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-provincia-pais"
 number = "3.vinculada.3.provincia-pais"
-label = "Related party 3: Province or country"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_location_3"
@@ -340,7 +314,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-tipo-operacion"
 number = "3.vinculada.3.tipo-operacion"
-label = "Related party 3: Type of transaction"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_tipo_operacion_3"
@@ -353,7 +326,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-ingreso-pago"
 number = "3.vinculada.3.ingreso-pago"
-label = "Related party 3: Income/payment indicator"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_ingreso_pago_3"
@@ -366,7 +338,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-metodo-valoracion"
 number = "3.vinculada.3.metodo-valoracion"
-label = "Related party 3: Valuation method"
 section = ["vinculadas", "3"]
 data_type = "text"
 semantic_role = "related_party_metodo_3"
@@ -379,7 +350,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-3-importe"
 number = "3.vinculada.3.importe"
-label = "Related party 3: Amount"
 section = ["vinculadas", "3"]
 data_type = "money"
 semantic_role = "related_party_importe_3"
@@ -392,7 +362,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-nif"
 number = "3.vinculada.4.nif"
-label = "Related party 4: NIF / NIE / CIF"
 section = ["vinculadas", "4"]
 data_type = "nif"
 semantic_role = "related_party_nif_4"
@@ -405,7 +374,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-fjo"
 number = "3.vinculada.4.fjo"
-label = "Related party 4: Foreign national identification"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_fjo_4"
@@ -418,7 +386,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-razon-social"
 number = "3.vinculada.4.razon-social"
-label = "Related party 4: Business name"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_name_4"
@@ -431,7 +398,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-reservado-nombre"
 number = "3.vinculada.4.reservado-nombre"
-label = "Related party 4: Reserved field"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_reserved_4"
@@ -444,7 +410,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-tipo-vinculacion"
 number = "3.vinculada.4.tipo-vinculacion"
-label = "Related party 4: Type of relationship"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_tipo_vinculacion_4"
@@ -457,7 +422,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-provincia-pais"
 number = "3.vinculada.4.provincia-pais"
-label = "Related party 4: Province or country"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_location_4"
@@ -470,7 +434,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-tipo-operacion"
 number = "3.vinculada.4.tipo-operacion"
-label = "Related party 4: Type of transaction"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_tipo_operacion_4"
@@ -483,7 +446,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-ingreso-pago"
 number = "3.vinculada.4.ingreso-pago"
-label = "Related party 4: Income/payment indicator"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_ingreso_pago_4"
@@ -496,7 +458,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-metodo-valoracion"
 number = "3.vinculada.4.metodo-valoracion"
-label = "Related party 4: Valuation method"
 section = ["vinculadas", "4"]
 data_type = "text"
 semantic_role = "related_party_metodo_4"
@@ -509,7 +470,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-4-importe"
 number = "3.vinculada.4.importe"
-label = "Related party 4: Amount"
 section = ["vinculadas", "4"]
 data_type = "money"
 semantic_role = "related_party_importe_4"
@@ -522,7 +482,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-nif"
 number = "3.vinculada.5.nif"
-label = "Related party 5: NIF / NIE / CIF"
 section = ["vinculadas", "5"]
 data_type = "nif"
 semantic_role = "related_party_nif_5"
@@ -535,7 +494,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-fjo"
 number = "3.vinculada.5.fjo"
-label = "Related party 5: Foreign national identification"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_fjo_5"
@@ -548,7 +506,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-razon-social"
 number = "3.vinculada.5.razon-social"
-label = "Related party 5: Business name"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_name_5"
@@ -561,7 +518,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-reservado-nombre"
 number = "3.vinculada.5.reservado-nombre"
-label = "Related party 5: Reserved field"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_reserved_5"
@@ -574,7 +530,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-tipo-vinculacion"
 number = "3.vinculada.5.tipo-vinculacion"
-label = "Related party 5: Type of relationship"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_tipo_vinculacion_5"
@@ -587,7 +542,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-provincia-pais"
 number = "3.vinculada.5.provincia-pais"
-label = "Related party 5: Province or country"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_location_5"
@@ -600,7 +554,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-tipo-operacion"
 number = "3.vinculada.5.tipo-operacion"
-label = "Related party 5: Type of transaction"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_tipo_operacion_5"
@@ -613,7 +566,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-ingreso-pago"
 number = "3.vinculada.5.ingreso-pago"
-label = "Related party 5: Income/payment indicator"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_ingreso_pago_5"
@@ -626,7 +578,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-metodo-valoracion"
 number = "3.vinculada.5.metodo-valoracion"
-label = "Related party 5: Valuation method"
 section = ["vinculadas", "5"]
 data_type = "text"
 semantic_role = "related_party_metodo_5"
@@ -639,7 +590,6 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".casillas]]
 id = "vinculada-5-importe"
 number = "3.vinculada.5.importe"
-label = "Related party 5: Amount"
 section = ["vinculadas", "5"]
 data_type = "money"
 semantic_role = "related_party_importe_5"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01066"
 number = "01066"
-label = "Deducc. para incentivar determ.actividades - 2014 Investigación y desarrollo - Deducción pendiente/generada [01066]"
 section = ["deducc_para_incentivar_determ_actividades", "2014_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01067"
 number = "01067"
-label = "Deducc. para incentivar determ.actividades - 2014 Investigación y desarrollo - Aplicado en esta liquidación [01067]"
 section = ["deducc_para_incentivar_determ_actividades", "2014_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01068"
 number = "01068"
-label = "Deducc. para incentivar determ.actividades - 2014 Investigación y desarrollo - Pendiente de aplicación en periodos futuros [01068]"
 section = ["deducc_para_incentivar_determ_actividades", "2014_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_investigacion_pendiente"

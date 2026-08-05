@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03543"
 number = "03543"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025(*) Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [03543]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03544"
 number = "03544"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [03544]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03545"
 number = "03545"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [03545]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03546"
 number = "03546"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025(*) - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [03546]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03547"
 number = "03547"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [03547]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03548"
 number = "03548"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [03548]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03549"
 number = "03549"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025 Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [03549]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -85,7 +78,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03550"
 number = "03550"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025 Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [03550]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -97,7 +89,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03551"
 number = "03551"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [03551]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -109,7 +100,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03552"
 number = "03552"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025 - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [03552]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -121,7 +111,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03553"
 number = "03553"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025 - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [03553]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -133,7 +122,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03554"
 number = "03554"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2025 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [03554]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"

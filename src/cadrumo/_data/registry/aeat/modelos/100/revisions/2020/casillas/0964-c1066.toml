@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1066"
 number = "1066"
-label = "Por cantidades invertidas en obras de adecuación de vivienda habitual para personas con discapacidad"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_adecuacion_vivienda_discapacidad"
 continuidad_id = "irpf-deduccion-la-rioja-adecuacion-vivienda-discapacidad"

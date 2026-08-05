@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:abfb2aa78d8053086e06ae13190a27ccb509ac6f233bfe4a1831eeb525c075f1'
+body_hash: 'sha256:8c88e58e7d54a78e1e74e34fce41162a5127bc2364d014a18f8a9bfc12fe06c7'
 related:
   - "[[2026-08-04-modelo-100-casilla-implementation-audit]]"
   - "[[2026-07-28-conformance-cli-first-conformance-measurement-audit]]"
@@ -72,6 +72,29 @@ An exact enrollment tranche is therefore safe when it only records an already-pr
 
 The research does not decide the project-wide acceptance threshold, finite annual matrix, oracle-enrollment storage contract, or the producer semantics for M100 `0150`, `0613`, and `1481`. Those decisions belong in the roll-up ADR and its focused addenda.
 
+### The first portfolio measurement makes the gaps explicit
+
+The live conformance reads classify the 90-row baseline as follows:
+
+| Axis | Measured result | Denominator |
+|---|---:|---:|
+| Schema parity | 0 exact annual-coordinate comparisons | 90 revisions |
+| Formula/provenance closure presence | 52 rows with `calc_grade` | 90 revisions |
+| Required legal/source/layout evidence floor | 90 rows without a required-tier gap | 90 revisions |
+| Cross-model handoff parity | 0 joined canonical-path comparisons | 90 revisions |
+| Behavioral independent checking | 59 independently checked `(revision, casilla)` pairs | 1,261 reconciled pairs |
+
+The same reads report 39 revisions with no reconciliation claim, 24 bundled oracle payloads with zero unattributed payloads and zero unmatched payloads, and all 90 governance rows pending review. These figures distinguish “not measured” from “failed”; they do not authorize filling any gap. The reproducible commands are `uv run --no-sync python -m dev.registry.conformance report --json`, `coverage --json`, and `audit --check`. Exact renderer and audit entrypoints are `src/cadrumo/application/registry/_conformance.py:317`, `src/cadrumo/application/registry/_conformance.py:715`, `src/cadrumo/domain/calculations/registry/_external_grounding.py:442`, and `src/cadrumo/domain/calculations/registry/_external_grounding.py:465`.
+
+The safe oracle review found no additional enrollment candidate that could be certified from the evidence inspected without a fuller exact mapping pass. Existing evidenced paths include M100 2020 and 2024 manual-oracle tests for `0012/0017/0022/0025`, M200 2024 tests for `00562/00592/00611`, and dedicated manual-oracle paths for M303/M353/M390 whose canonical casilla lists still require extraction. These are existing evidence, not new claims. Any later enrollment belongs in the owning revision’s `verification_expectations/*.toml` and may add only `externally_grounded_casilla_ids`.
+
+### The first bounded oracle enrollment tranche is now live
+
+After the initial 59-of-1,261 baseline, the exact evidence pass certified M100 exercise 2024, period `0A`, revision `2024` casillas `0513` and `0514` from the bundled AEAT Manual worked-example payloads for the Asturias and Rioja scenarios. The declaration changed only the existing `externally_grounded_casilla_ids` set; no producer, payload, formula, profile, relation, or legal interpretation changed. The Valencian payload continues to ground `0513` only and leaves `0514` and the unmodelled `6550` case deferred.
+
+The current live reads therefore report 61 independently checked casillas out of 1,261, 61 declared grounding claims, 24 bundled payloads, zero unattributed payloads, zero unmatched evidence, 90 of 90 required legal/source/layout evidence-floor rows, and a passing conformance audit. The real verification boundary is 7 casilla-wiring tests, 87 conformance CLI tests, and 3 external-grounding integration tests; full-project pytest and full-project typing remain unverified.
+
+The annual matrix remains intentionally small: one provisional D2025 coordinate classified `not_yet_measured`. No trustworthy year-specific official-layout comparator was found in the repository, and construct-level selector/producer evidence remains unprojected because its contract is not yet defined.
 ## Sources
 
 - `src/cadrumo/domain/calculations/registry/_coverage.py:103`

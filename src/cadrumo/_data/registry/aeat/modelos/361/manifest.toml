@@ -1,7 +1,5 @@
 [modelo]
 id = "361"
-title = "Solicitud de devolucion del IVA a determinados no establecidos en el TAI ni en la Comunidad"
-official_name = "Modelo 361. Solicitud de devolucion del IVA a determinados empresarios o profesionales no establecidos en el territorio de aplicacion del Impuesto, ni en la Comunidad, Islas Canarias, Ceuta o Melilla."
 tax_domain = "iva"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

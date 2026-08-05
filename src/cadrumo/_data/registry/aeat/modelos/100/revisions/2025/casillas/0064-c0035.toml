@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0035"
 number = "0035"
-label = "Rendimientos de Planes de Ahorro a Largo Plazo"
 section = ["rendimientos_capital_mobiliario", "base_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_palp"

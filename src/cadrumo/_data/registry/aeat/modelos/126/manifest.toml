@@ -1,7 +1,5 @@
 [modelo]
 id = "126"
-title = "Retenciones e ingresos a cuenta - rendimientos del capital mobiliario de cuentas en instituciones financieras"
-official_name = "Modelo 126. Retenciones e ingresos a cuenta. Rendimientos del capital mobiliario derivados de la contraprestacion de toda clase de cuentas en instituciones financieras."
 tax_domain = "cross_tax"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

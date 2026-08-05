@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0700"
 number = "0700"
-label = "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695] de la declaración)"
 section = ["resultados", "ingreso_devolucion_res"]
 data_type = "decimal"
 semantic_role = "resultado_ingresar_o_devolver_irpf"

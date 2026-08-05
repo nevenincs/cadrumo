@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03243"
 number = "03243"
-label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativa: Devolución acordada/compensada - Total [03243]"
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
 data_type = "money"
 semantic_role = "is_conversion_aid_rectificativa"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03244"
 number = "03244"
-label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativa: Devolución acordada/compensada - Estado [03244]"
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
 data_type = "money"
 semantic_role = "is_conversion_aid_rectificativa"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03245"
 number = "03245"
-label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa - Rectificativa: Devolución acordada/compensada - D. Forales/Nav..."
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "rectificativa"]
 data_type = "money"
 semantic_role = "is_conversion_aid_rectificativa"

@@ -1,7 +1,5 @@
 [modelo]
 id = "379"
-title = "Declaracion informativa sobre pagos transfronterizos"
-official_name = "Modelo 379. Declaracion informativa sobre pagos transfronterizos (CESOP)."
 tax_domain = "iva"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

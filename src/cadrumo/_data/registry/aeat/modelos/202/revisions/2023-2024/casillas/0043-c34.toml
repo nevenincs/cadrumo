@@ -1,7 +1,6 @@
 [[revisions.2023-2024.casillas]]
 id = "34"
 number = "34"
-label = "Mod. 40.3 LIS — Cantidad a ingresar (mayor de claves [32] y [33])"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_cantidad_a_ingresar"

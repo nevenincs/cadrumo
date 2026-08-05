@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0034"
 number = "0034"
-label = "Rendimientos derivados de deuda subordinada o participaciones preferentes"
 section = ["rendimientos_capital_mobiliario", "base_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_deuda_subordinada_preferentes"

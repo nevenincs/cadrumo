@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1958"
 number = "1958"
-label = "Importe generado en 2023 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_autoconsumo_generado_pendiente_2"
 semantic_role_cardinality = "intentional_singleton"

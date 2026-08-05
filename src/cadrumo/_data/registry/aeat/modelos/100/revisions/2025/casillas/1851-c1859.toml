@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1859"
 number = "1859"
-label = "Nº total años  de cobro pendiente"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 data_type = "integer"
 semantic_role = "irpf_ganancia_cripto_anios_cobro_total"

@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0567"
 number = "0567"
-label = "Por obras de mejora de la eficiencia energética de viviendas (traslade el importe de estas mismas casillas del anexo A.2): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_eficiencia_energetica_viviendas"
 input_kind = "computed"

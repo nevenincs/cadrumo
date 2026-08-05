@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0432"
 number = "0432"
-label = "Saldo neto de los rendimientos a integrar en la base imponible general y de las imputaciones de renta"
 section = ["resultados", "base_imponible_res"]
 input_kind = "computed"
 formula = "renta-2022-saldo-neto-rendimientos-base-imponible-general"

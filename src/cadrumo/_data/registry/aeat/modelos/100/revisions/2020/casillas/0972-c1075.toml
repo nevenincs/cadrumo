@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1075"
 number = "1075"
-label = "Por cada hijo de 0 a 3 años por gastos en escuelas infantiles o centros de educación infantil de cualquier municipio de la Rioja"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_escuelas_infantiles_0_3"
 continuidad_id = "irpf-deduccion-la-rioja-escuelas-infantiles-0-3"

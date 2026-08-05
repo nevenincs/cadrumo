@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0353"
 number = "0353"
-label = "Pérdidas patrimoniales. Importe computable"
 section = ["toma_datos_ampliada", "gp_derechos", "entidad_derecho"]
 semantic_role = "irpf_perdida_derechos_importe_computable"
 continuidad_id = "irpf-perdida-derechos-importe-computable"

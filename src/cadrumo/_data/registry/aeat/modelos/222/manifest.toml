@@ -1,7 +1,5 @@
 [modelo]
 id = "222"
-title = "IS pago fraccionado régimen de consolidación fiscal (grupos)"
-official_name = "Modelo 222. Impuesto sobre Sociedades. Régimen de consolidación fiscal. Pago fraccionado."
 tax_domain = "is"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0437"
 number = "0437"
-label = "Excesos pendientes de reducir procedentes de los ejercicios 2020 a 2024"
 section = ["resultados", "red_base_imponible_res"]
 semantic_role = "irpf_reduccion_prevision_social_excesos_pendientes"
 legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]

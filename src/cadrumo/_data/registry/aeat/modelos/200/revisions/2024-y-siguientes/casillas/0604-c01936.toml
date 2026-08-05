@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01936"
 number = "01936"
-label = "Rég. especial reserva inversiones Illes Balears - RIIB 2023 - Integrado en BI por incumplimiento de requisitos [01936]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2023"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"

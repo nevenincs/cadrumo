@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "01"
 number = "01"
-label = "Rendimientos del trabajo dinerarios numero de perceptores"
 section = ["trabajo_dinerario"]
 data_type = "integer"
 semantic_role = "perceptor_count"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "02"
 number = "02"
-label = "Rendimientos del trabajo dinerarios importe de percepciones"
 section = ["trabajo_dinerario"]
 data_type = "money"
 semantic_role = "importe_percepciones_dinerario"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
 number = "03"
-label = "Rendimientos del trabajo dinerarios importe de retenciones"
 section = ["trabajo_dinerario"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

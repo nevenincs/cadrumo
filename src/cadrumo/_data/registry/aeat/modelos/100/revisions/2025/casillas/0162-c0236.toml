@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0236"
 number = "0236"
-label = "Reduccion de rendimientos acogidos al regimen fiscal del acontecimiento XXXVII Copa America Barcelona"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 data_type = "decimal"
 semantic_role = "irpf_ed_reduccion_copa_america"

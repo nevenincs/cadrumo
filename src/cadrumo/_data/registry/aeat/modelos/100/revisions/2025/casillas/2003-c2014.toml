@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2014"
 number = "2014"
-label = "Importe generado en 2024 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1"
 semantic_role_cardinality = "intentional_singleton"

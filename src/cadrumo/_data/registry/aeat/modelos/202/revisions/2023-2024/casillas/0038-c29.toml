@@ -1,7 +1,6 @@
 [[revisions.2023-2024.casillas]]
 id = "29"
 number = "29"
-label = "Mod. 40.3 LIS — Volumen operaciones en Territorio Comun (%)"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "decimal"
 semantic_role = "is_pf_mod_40_3_volumen_territorio_comun_pct"

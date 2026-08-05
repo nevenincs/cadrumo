@@ -21,14 +21,15 @@ from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
-from ._registry_scanner import scan_profile_schema_keys, scan_registry_keys
+from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
-type LocaleNode = str | dict[str, "LocaleNode"]
+type LocaleNode = str | dict[str, "LocaleNode"] | None
 
 _log = get_logger(__name__)
 _YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
 _INTENTIONAL_IDENTICAL_FILENAME = "_intentional_identical.json"
+_MISSING_LOCALE_LEAF = object()
 
 
 def _load_intentional_identical(path: Path) -> dict[str, dict[str, object]]:
@@ -192,6 +193,7 @@ class LocaleManager:
         keys.update(get_registered_keys())
         keys.update(scan_registry_keys())
         keys.update(scan_profile_schema_keys())
+        keys.update(scan_modelo_schema_keys())
         return keys
 
     def get_codebase_namespaces(self) -> set[str]:
@@ -394,6 +396,31 @@ class LocaleManager:
             _append_yaml_leaf(locale_path, parts, value)
         return locale_path
 
+    def set_locale_values(self, locale: str, values: dict[str, str | None]) -> Path:
+        """Set a validated batch of leaves with one atomic catalogue rewrite.
+
+        ``None`` is reserved for an explicitly absent optional Modelo-schema
+        translation.  It keeps inter-locale key parity without fabricating text;
+        the Modelo resolver then applies its Spanish-source fallback policy.
+        """
+        locale_path = self._locale_path(locale)
+        data = self.load_locale(locale_path)
+        for dotted_key, raw_value in sorted(values.items()):
+            parts = dotted_key.split(".")
+            if not dotted_key or any(not part for part in parts):
+                raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+            if raw_value is None:
+                if not dotted_key.startswith("modelo.schema."):
+                    raise LocaleError(f"Only Modelo schema keys may carry an absent locale value: {dotted_key!r}")
+                value: LocaleNode = None
+            else:
+                if not raw_value.strip():
+                    raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
+                value = normalise_product_identity_references(raw_value)
+            _set_nested_leaf(data, dotted_key, value)
+        _rewrite_locale_mapping(locale_path, data)
+        return locale_path
+
     def allow_identical(self, locale: str, dotted_key: str, reason: str) -> Path:
         """Record one key as deliberately identical to English, with a reason.
 
@@ -468,7 +495,7 @@ def _audit_locale_file(
     violations = tuple(
         LocaleScalarViolation(locale_file, key, type(value).__name__)
         for key, value in sorted(leaves.items())
-        if not isinstance(value, str)
+        if not isinstance(value, str) and not (value is None and key.startswith("modelo.schema."))
     )
     return LocaleFileAudit(
         locale_file=locale_file,
@@ -517,18 +544,18 @@ def _collect_required_leaves(
     resolved: dict[str, LocaleNode] = {}
     for key in keys:
         leaf = _resolve_leaf(existing_data, key.split("."))
-        resolved[key] = leaf if leaf is not None else key
+        resolved[key] = key if leaf is _MISSING_LOCALE_LEAF else leaf
     return resolved
 
 
-def _resolve_leaf(existing_data: dict[str, LocaleNode], parts: list[str]) -> LocaleNode | None:
-    """Walk ``parts`` through ``existing_data`` and return the leaf value, or None."""
+def _resolve_leaf(existing_data: dict[str, LocaleNode], parts: list[str]) -> LocaleNode | object:
+    """Walk ``parts`` and distinguish an authored null from a missing leaf."""
     curr: LocaleNode = existing_data
     for part in parts:
         if not isinstance(curr, dict) or part not in curr:
-            return None
+            return _MISSING_LOCALE_LEAF
         curr = curr[part]
-    return None if isinstance(curr, dict) else curr
+    return _MISSING_LOCALE_LEAF if isinstance(curr, dict) else curr
 
 
 def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
@@ -731,9 +758,9 @@ def _preferred_newline(lines: list[str], fallback_index: int) -> str:
     return "\n"
 
 
-def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str]:
+def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str | None]:
     """Return leaf locale values keyed by dotted path."""
-    flattened: dict[str, str] = {}
+    flattened: dict[str, str | None] = {}
     for key, value in mapping.items():
         path = f"{prefix}.{key}" if prefix else str(key)
         if isinstance(value, dict):

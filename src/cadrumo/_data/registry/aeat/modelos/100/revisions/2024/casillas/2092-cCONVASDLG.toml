@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "CONVASDLG"
 number = "*94"
-label = "Ascendiente convivencia con varios descendientes"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "integer"
 semantic_role = "irpf_ascendiente_convivencia_descendientes"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0917"
 number = "0917"
-label = "Por donaciones para la rehabilitación o conservación del patrimonio histórico de Canarias"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_donaciones_patrimonio_historico"
 continuidad_id = "irpf-deduccion-canarias-donaciones-patrimonio-historico"

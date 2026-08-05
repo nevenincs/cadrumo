@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0706"
 number = "0706"
-label = "Importe de los pagos realizados en el ejercicio al promotor o al constructor:"
 section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
 semantic_role = "irpf_vivienda_habitual_pagos_promotor_importe"
 legal_refs = ["ley-35-2006:dt-18"]

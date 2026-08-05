@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00031"
 number = "00031"
-label = "Entidades de capital-riesgo [00031]"
 section = ["entidades_de_capital_riesgo"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

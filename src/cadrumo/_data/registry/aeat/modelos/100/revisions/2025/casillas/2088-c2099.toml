@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2099"
 number = "2099"
-label = "NIF prestador del servicio médico o sanitario 8"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_enf"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_autonomica_servicio_medico_nif"

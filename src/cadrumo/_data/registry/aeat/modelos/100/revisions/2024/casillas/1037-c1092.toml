@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1092"
 number = "1092"
-label = "Por primera adquisición de su vivienda habitual por contribuyentes de edad igual o inferior a 35 años"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_vivienda_primera_adquisicion"
 continuidad_id = "irpf-deduccion-c-valenciana-vivienda-primera-adquisicion"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1813"
 number = "1813"
-label = "Suma de pérdidas patrimoniales derivadas de transmisiones de monedas virtuales (suma de las casillas [1808])"
 section = ["resultados", "gp_otros_criptomonedas_res"]
 semantic_role = "irpf_gyp_cripto_suma_perdidas"
 input_kind = "computed"

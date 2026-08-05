@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02249"
 number = "02249"
-label = "Deducciones I+D+i excluidas de límite - 2019 Innovación tecnológica - Deducción pendiente/generada [02249]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2019_innovacion_tecnologica"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_innovacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02250"
 number = "02250"
-label = "Deducciones I+D+i excluidas de límite - 2019 Innovación tecnológica - Deducción reducida [02250]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2019_innovacion_tecnologica"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_innovacion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02251"
 number = "02251"
-label = "Deducciones I+D+i excluidas de límite - 2019 Innovación tecnológica - Aplicado en esta liquidación [02251]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2019_innovacion_tecnologica"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_innovacion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02252"
 number = "02252"
-label = "Deducciones I+D+i excluidas de límite - 2019 Innovación tecnológica - Importe abonado por insuficiencia de cuota [02252]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2019_innovacion_tecnologica"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_innovacion"

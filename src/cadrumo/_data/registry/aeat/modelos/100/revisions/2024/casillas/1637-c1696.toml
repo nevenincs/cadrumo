@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1696"
 number = "1696"
-label = "Ejercicio 2022: Aplicado en esta  declaración"
 section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
 semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_aplicado"
 legal_refs = ["ley-35-2006:da-50"]

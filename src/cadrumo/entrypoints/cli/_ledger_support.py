@@ -9,6 +9,7 @@ id resolution. Mutation emitters validate their result through the supplied
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import Protocol
 
@@ -50,6 +51,8 @@ def _emit_update_result(
     command: str,
     result_cls: type[OutputSchema],
     notices: list[Notice] | None = None,
+    prepend_lines: Sequence[str] = (),
+    extra_lines: Sequence[str] = (),
 ) -> None:
     """Emit the canonical single-transaction ledger mutation result.
 
@@ -57,6 +60,15 @@ def _emit_update_result(
     (``cli-notices-are-the-only-diagnostic-channel``); mutation verbs pass any
     non-blocking advisory here rather than re-modelling it as a bespoke result
     field.
+
+    ``prepend_lines`` and ``extra_lines`` carry the text a verb needs around the
+    five quintet lines -- a ``reaffirmed`` marker ahead of them, an
+    idempotent-noop or prorrata note after them. They exist so a verb with
+    something extra to say still emits the quintet from here: without them the
+    only way to add a line was to rebuild the whole payload and call
+    :func:`_emit_envelope` directly, which is how two verbs ended up
+    hand-maintaining a copy of the shape this function owns. The same idiom as
+    ``_emit_llm_single_classify``'s ``extra_lines``.
     """
     transaction_payload = ledger_transaction_payload(result_transaction)
     review_status = ledger_transaction_review_status(result_transaction)
@@ -74,11 +86,13 @@ def _emit_update_result(
         command=command,
         result=result,
         lines=[
+            *prepend_lines,
             f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
             f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
             f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+            *extra_lines,
         ],
         notices=notices,
     )

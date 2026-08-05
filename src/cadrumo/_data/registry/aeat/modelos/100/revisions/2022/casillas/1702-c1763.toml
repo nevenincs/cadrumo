@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1763"
 number = "1763"
-label = "Para mitigar el impacto de la inflación en la adquisición de productos básicos en 2022"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_actividad_economica_importe"
 legal_refs = ["ley-35-2006:art-77"]

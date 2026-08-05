@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03627"
 number = "03627"
-label = "Rég. especial reserva inversiones Canarias - RIC 2025 - Integrado en BI por incumplimiento de requisitos [03627]"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03628"
 number = "03628"
-label = "Rég. especial reserva inversiones Canarias - RIC 2025 - Pendiente de materializar RIC al final de período [03628]"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2025"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_importe"

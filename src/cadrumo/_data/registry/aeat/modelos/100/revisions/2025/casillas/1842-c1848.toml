@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1848"
 number = "1848"
-label = "Por el cuidado de descendientes o adoptados de hasta 25 años de edad"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_cuidado_descendientes"
 continuidad_id = "irpf-deduccion-asturias-cuidado-descendientes"

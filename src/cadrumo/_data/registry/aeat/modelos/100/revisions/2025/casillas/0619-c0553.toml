@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0553"
 number = "0553"
-label = "Por donativos y otras aportaciones (importes de estas casillas del anexo A.1): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_donativos_autonomica"
 input_kind = "computed"

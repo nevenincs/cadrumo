@@ -1,5 +1,4 @@
 [revisions."2024-y-siguientes"]
-label = "Orden HAC/56/2024, ejercicios 2024 y siguientes"
 valid_from = 2024-01-01
 period_selector = { year_from = 2024, periods = ["1T", "2T", "3T", "4T"] }
 orden_aplicabilidad = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]

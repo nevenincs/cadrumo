@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1448"
 number = "1448"
-label = "Nº de unidades"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_modulo_num_unidades"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0073"
 number = "0073"
-label = "A disposición de sus titulares"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_a_disposicion_flag"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1762"
 number = "1762"
-label = "Hijo/Hija 1 (*): NIF/NIE del pagador de las anualidades"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
 semantic_role = "irpf_anualidades_alimentos_pagador_nif"

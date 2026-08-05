@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2233"
 number = "2233"
-label = "Pérdidas patrimoniales"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 semantic_role = "irpf_perdida_fondos_coti_importe"
 semantic_role_cardinality = "intentional_singleton"

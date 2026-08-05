@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0280"
 number = "0280"
-label = "Suma de imputaciones de rentas por la participación en instituciones de inversión Colectiva constituidas en paraisos fiscales (suma de las casillas [0278])"
 section = ["resultados", "regimenes_especiales_res", "re_institu_inversion_colectiva_res"]
 semantic_role = "irpf_re_iic_suma_imputaciones"
 input_kind = "computed"

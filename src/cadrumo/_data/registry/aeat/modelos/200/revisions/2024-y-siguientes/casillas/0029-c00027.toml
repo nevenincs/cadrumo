@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00027"
 number = "00027"
-label = "Base imponible negativa o cero [00027]"
 section = ["base_imponible_negativa_o_cero"]
 data_type = "decimal"
 semantic_role = "base_imponible_negativa_is"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0933"
 number = "0933"
-label = "Por contribuyentes desempleados"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_desempleados"
 continuidad_id = "irpf-deduccion-canarias-desempleados"

@@ -73,7 +73,7 @@ from ...application.modelo import (
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ...core.i18n import output_language, tr
+from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import InputKind, RegistrySnapshotError, RegistryValidationError
 from ...domain.user_profile import ProfileNotFoundError
@@ -398,15 +398,14 @@ def _outstanding_wizard_steps(unit: WorkUnit) -> tuple[_WizardStep, ...]:
         period=unit.period.registry_token,
         input_kind=InputKind.MANUAL,
     )
-    lang = output_language()
     casilla_steps = tuple(
         _WizardStep(
             channel="casilla",
             key=row.casilla_id,
             casilla_id=row.casilla_id,
             number=row.number,
-            label=row.localized_labels.get(lang, row.label),
-            help_text=row.localized_help.get(lang),
+            label=row.label,
+            help_text=row.help_text,
             legal_refs=tuple(row.legal_refs),
             source_refs=tuple(row.source_refs),
         )

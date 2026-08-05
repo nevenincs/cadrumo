@@ -97,10 +97,9 @@ class CasillaSearchRecord(SearchRecordBase):
     Built from registry snapshots, never hand-curated. Identity is
     ``(modelo, casilla_id)``, deduplicated across revisions. ``number`` and
     ``segmento`` are retained only as reviewed AEAT display/export metadata.
-    The localised descriptions are the registry casilla ``label`` (es
-    invariant) plus per-revision ``localized_labels`` (en / ca / hu) where
-    authored -- conforming to the official casilla descriptions. The
-    registry definition contract is carried alongside them: localized help,
+    The localised descriptions are resolved from the canonical shared
+    catalogue for every supported output language. The registry definition
+    contract is carried alongside them: localized help,
     value shape, input kind, requiredness, and the canonical binding/formula
     identities. The ``legal_refs`` / ``source_refs`` provenance is carried
     verbatim from the casilla definition (the calculation-grounding contract).

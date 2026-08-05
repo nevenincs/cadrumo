@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03106"
 number = "03106"
-label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Disminución - Correcciones del ejercicio - Pe..."
 section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03107"
 number = "03107"
-label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Disminución - Correcciones del ejercicio - Te..."
 section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_renta_exenta_colaboracion_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03108"
 number = "03108"
-label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Disminución - Correcciones del ejercicio - Te..."
 section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_renta_exenta_colaboracion_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03109"
 number = "03109"
-label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Disminución - Saldo pendiente a principio de ..."
 section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_renta_exenta_colaboracion_disminucion"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03110"
 number = "03110"
-label = "Unión temporal de empresas, ajustes por rentas exentas por participar en el extranjero en fórmulas de colaboración análogas a las UTE (art. 45.2 LIS) - Disminución - Saldo pendiente a fin de ejerci..."
 section = ["union_temporal_de_empresas_ajustes_por_rentas_exen", "disminucion"]
 data_type = "money"
 semantic_role = "is_ute_renta_exenta_colaboracion_disminucion"

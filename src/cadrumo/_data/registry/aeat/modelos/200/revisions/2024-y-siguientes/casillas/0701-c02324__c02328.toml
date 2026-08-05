@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02324"
 number = "02324"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2020 - Deducción pendiente [02324]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2020"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_detalle"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02325"
 number = "02325"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2020 - Tipo gravamen período generación [02325]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2020"]
 data_type = "decimal"
 semantic_role = "is_deduccion_di_internacional_tipo_gravamen_periodo_generacion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02326"
 number = "02326"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2020 - 2025 Deducción pendiente [02326]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2020"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_detalle"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02327"
 number = "02327"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2020 - Aplicado en esta liquidación [02327]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2020"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_detalle"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02328"
 number = "02328"
-label = "Deducciones doble imposición internacional LIS - DI internacional 2020 - Pendiente aplic. en períodos futuros [02328]"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2020"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_pendiente"

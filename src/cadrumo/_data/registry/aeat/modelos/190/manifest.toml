@@ -1,7 +1,5 @@
 [modelo]
 id = "190"
-title = "Resumen anual de retenciones del trabajo y actividades"
-official_name = "Modelo 190. Declaración Informativa. Retenciones e ingresos a cuenta. Rendimientos del trabajo y de actividades económicas, premios y determinadas ganancias patrimoniales e imputaciones de rentas. Resumen anual."
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

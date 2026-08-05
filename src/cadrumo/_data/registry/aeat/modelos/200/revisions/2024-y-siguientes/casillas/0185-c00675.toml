@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00675"
 number = "00675"
-label = "Detalle compensación bases imponibles negativas - 2014 - Aplicado en esta liquidación [00675]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2014"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"

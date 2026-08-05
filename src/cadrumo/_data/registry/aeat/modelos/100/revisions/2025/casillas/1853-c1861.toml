@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1861"
 number = "1861"
-label = "Año de imputación"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 data_type = "year"
 semantic_role = "irpf_ganancia_cripto_anio_imputacion_1"

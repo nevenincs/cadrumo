@@ -5,7 +5,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01"
 number = "01"
-label = "Numero de rentas dividendos y participaciones"
 section = ["numero_rentas", "dividendos_participaciones"]
 data_type = "integer"
 semantic_role = "numero_rentas_dividendos"
@@ -18,7 +17,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02"
 number = "02"
-label = "Numero de rentas resto"
 section = ["numero_rentas", "resto_rentas"]
 data_type = "integer"
 semantic_role = "numero_rentas_resto"
@@ -31,7 +29,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03"
 number = "03"
-label = "Numero de rentas total"
 section = ["numero_rentas", "total"]
 data_type = "integer"
 semantic_role = "numero_rentas_total"
@@ -45,7 +42,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "04"
 number = "04"
-label = "Base dividendos y participaciones"
 section = ["base_retenciones", "dividendos_participaciones"]
 data_type = "money"
 semantic_role = "base_rentas_dividendos"
@@ -58,7 +54,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "05"
 number = "05"
-label = "Base resto de rentas"
 section = ["base_retenciones", "resto_rentas"]
 data_type = "money"
 semantic_role = "base_rentas_resto"
@@ -71,7 +66,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "06"
 number = "06"
-label = "Base total"
 section = ["base_retenciones", "total"]
 data_type = "money"
 semantic_role = "base_rentas_total"
@@ -85,7 +79,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "07"
 number = "07"
-label = "Retenciones dividendos y participaciones"
 section = ["retenciones_ingresos_cuenta", "dividendos_participaciones"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
@@ -99,7 +92,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "08"
 number = "08"
-label = "Retenciones resto de rentas"
 section = ["retenciones_ingresos_cuenta", "resto_rentas"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
@@ -113,7 +105,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "09"
 number = "09"
-label = "Retenciones total"
 section = ["retenciones_ingresos_cuenta", "total"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
@@ -128,7 +119,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "10"
 number = "10"
-label = "Ingresos de ejercicios anteriores"
 section = ["periodificacion"]
 data_type = "money"
 semantic_role = "ingresos_ejercicios_anteriores"
@@ -141,7 +131,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "11"
 number = "11"
-label = "Regularizacion"
 section = ["periodificacion"]
 data_type = "money"
 semantic_role = "regularizacion"
@@ -154,7 +143,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "12"
 number = "12"
-label = "Suma de retenciones y regularizacion"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "suma_retenciones_regularizacion"
@@ -168,7 +156,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "13"
 number = "13"
-label = "Resultado de anteriores autoliquidaciones"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "resultado_anteriores_autoliquidaciones"
@@ -181,7 +168,6 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "14"
 number = "14"
-label = "Resultado a ingresar"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"

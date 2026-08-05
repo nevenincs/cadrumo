@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0160"
 number = "0160"
-label = "9. Índice corrector de producción de mejillón en batea"
 data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_corrector_mejillon_batea"

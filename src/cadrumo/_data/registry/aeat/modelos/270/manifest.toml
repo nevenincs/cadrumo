@@ -1,7 +1,5 @@
 [modelo]
 id = "270"
-title = "Resumen anual de retenciones del gravamen especial sobre premios de loterías"
-official_name = "Modelo 270. Resumen anual de retenciones e ingresos a cuenta. Gravamen especial sobre los premios de determinadas loterías y apuestas."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

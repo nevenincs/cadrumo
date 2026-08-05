@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02780"
 number = "02780"
-label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2024 - Importe reserva a dotar [02780]"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_dotacion"

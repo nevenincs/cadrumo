@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00369"
 number = "00369"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2024 Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [00369]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"

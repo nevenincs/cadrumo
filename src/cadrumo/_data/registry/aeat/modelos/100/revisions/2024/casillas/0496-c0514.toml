@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0514"
 number = "0514"
-label = "Parte autonómica: Mínimo por descendientes. Importe"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_descendientes_autonomico"
 input_kind = "computed"

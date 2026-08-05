@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1789"
 number = "1789"
-label = "Código País/Country code"
 section = ["resultados", "regularizacion_res", "rectnosepa"]
 data_type = "text"
 semantic_role = "irpf_rectnosepa_pais_codigo"

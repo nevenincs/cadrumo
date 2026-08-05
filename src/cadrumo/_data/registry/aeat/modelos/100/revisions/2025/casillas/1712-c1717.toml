@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1717"
 number = "1717"
-label = "Importe generado en 2025 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero_pendiente"
 semantic_role_cardinality = "intentional_singleton"

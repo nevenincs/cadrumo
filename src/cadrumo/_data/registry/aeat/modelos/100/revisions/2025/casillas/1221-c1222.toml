@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1222"
 number = "1222"
-label = "Ejercicio 2024: Aplicado en esta  declaración"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_gastos_aplicados_declaracion"
 legal_refs = ["ley-35-2006:art-23", "orden-hac-277-2026:art-3"]

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0536"
 number = "0536"
-label = "Aplicación de la escala general y autonómica del Impuesto al importe de la casilla [0510]. Importes resultantes: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_base_ahorro_estatal"
 input_kind = "computed"

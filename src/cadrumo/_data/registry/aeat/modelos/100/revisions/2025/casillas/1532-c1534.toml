@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1534"
 number = "1534"
-label = "Índice"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_indice"

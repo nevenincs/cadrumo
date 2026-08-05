@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0970"
 number = "0970"
-label = "Por contribuyentes con discapacidad"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_discapacidad"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

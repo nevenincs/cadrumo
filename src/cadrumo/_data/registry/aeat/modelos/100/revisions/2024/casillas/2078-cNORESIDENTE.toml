@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "NORESIDENTE"
 number = "*25"
-label = "Conyuge no residente no contribuyente IRPF"
 section = ["datos_identificativos", "conyuge"]
 data_type = "boolean"
 semantic_role = "spouse_non_resident_irpf"

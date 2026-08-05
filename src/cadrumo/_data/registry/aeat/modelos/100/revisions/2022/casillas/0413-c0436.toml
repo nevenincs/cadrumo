@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0436"
 number = "0436"
-label = "Saldos netos negativos de rendimientos de capital mobiliario imputables a 2022, a integrar en la base del ahorro, con el límite del 25 por 100 de [0424](*) (traslade el importe de la casilla [0430]..."
 section = ["resultados", "base_imponible_res"]
 semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_ahorro_pendiente_reduccion"
 input_kind = "computed"

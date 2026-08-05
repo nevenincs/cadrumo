@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0343"
 number = "0343"
-label = "Importe global de las transmisiones efectuadas en 2019"
 section = ["toma_datos_ampliada", "gp_derechos", "entidad_derecho"]
 semantic_role = "irpf_ganancia_derechos_valor_transmision_global"
 continuidad_id = "irpf-ganancia-derechos-valor-transmision-global"

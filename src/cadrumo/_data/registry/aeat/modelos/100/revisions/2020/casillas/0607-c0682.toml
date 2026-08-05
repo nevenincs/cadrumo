@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0682"
 number = "0682"
-label = "Devoluciones solicitadas a la Agencia Tributaria como consecuencia de la tramitación de anteriores autoliquidaciones correspondientes al ejercicio 2020"
 section = ["resultados", "regularizacion_res"]
 semantic_role = "irpf_regularizacion_devolucion_autoliquidaciones_anteriores"
 continuidad_id = "irpf.regularizacion.devoluciones-solicitadas-ejercicio"

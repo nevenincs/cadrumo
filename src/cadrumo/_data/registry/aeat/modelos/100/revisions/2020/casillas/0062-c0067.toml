@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0067"
 number = "0067"
-label = "Urbana"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_naturaleza_urbana"

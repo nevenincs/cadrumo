@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1549"
 number = "1549"
-label = "Reducción de carácter general (sólo si el importe de la casilla [1548] es > 0)"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 input_kind = "computed"
 formula = "renta-2025-eo-agraria-reduccion-general"

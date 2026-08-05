@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00007"
 number = "00007"
-label = "Imputación en base imponible rentas positivas art. 100 LIS [00007]"
 section = ["imputacion_en_base_imponible_rentas_positivas_art"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

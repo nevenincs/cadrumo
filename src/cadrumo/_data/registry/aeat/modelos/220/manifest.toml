@@ -1,7 +1,5 @@
 [modelo]
 id = "220"
-title = "IS autoliquidación anual régimen de consolidación fiscal (grupos)"
-official_name = "Modelo 220. Impuesto sobre Sociedades. Régimen de consolidación fiscal. Declaración."
 tax_domain = "is"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

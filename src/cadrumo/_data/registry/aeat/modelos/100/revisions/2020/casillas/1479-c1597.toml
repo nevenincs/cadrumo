@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1597"
 number = "1597"
-label = "Atribución de retenciones de rendimientos de capital mobiliario"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_retenciones_cap_mob"
 continuidad_id = "irpf-re-atrib-retenciones-cap-mob"

@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.nif-representante-legal"
 number = "27-35"
-label = "NIF del representante legal del perceptor"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
 semantic_role = "payee_representative_nif"

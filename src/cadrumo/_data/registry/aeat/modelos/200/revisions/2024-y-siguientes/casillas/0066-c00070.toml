@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00070"
 number = "00070"
-label = "Compensación bases imponibles negativas para entidades de nueva creación (art. 26.3 LIS) [00070]"
 section = ["compensacion_bases_imponibles_negativas_para_entid"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

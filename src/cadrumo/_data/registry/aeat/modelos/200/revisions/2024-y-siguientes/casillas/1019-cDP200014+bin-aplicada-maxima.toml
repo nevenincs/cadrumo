@@ -12,7 +12,6 @@
 id = "DP200014:bin-aplicada-maxima"
 number = "DP200014:bin-aplicada-maxima"
 segmento = "DP200014"
-label = "Liquidación III - Base imponible - Compensación BIN máxima aplicable (límite art. 26.1 LIS) [interno]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_liquidacion_iii_compensacion_bin_maxima"

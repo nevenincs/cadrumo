@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0497"
 number = "0497"
-label = "Por aportaciones a la mutualidad de previsión social de deportistas profesionales. Importe de la casilla [0490] que se aplica"
 section = ["resultados", "base_liquidable_res"]
 semantic_role = "irpf_reduccion_mutualidad_deportistas_aplicada"
 continuidad_id = "irpf-reduccion-mutualidad-deportistas-aplicada"

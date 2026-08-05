@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2158"
 number = "2158"
-label = "Referencia catastral"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_murcia_infraestructuras_referencia_catastral"

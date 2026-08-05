@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02636"
 number = "02636"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02636]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_permanente_disminucion"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02637"
 number = "02637"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02637]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_ejercicio_disminucion"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02638"
 number = "02638"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02638]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_temporaria_anteriores_disminucion"
@@ -43,7 +40,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02639"
 number = "02639"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Disminución - Saldo pendiente a principio de ejercicio [02639]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_saldo_inicial"
@@ -55,7 +51,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02640"
 number = "02640"
-label = "Libertad de amortización con mantenimiento de empleo (RDL 6/2010 y DT 13ª.2 LIS) - Disminución - Saldo pendiente a fin de ejercicio [02640]"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_mantenimiento_empleo_saldo_final"
