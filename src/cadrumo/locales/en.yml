@@ -894,6 +894,11 @@ application:
       calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
         does not exceed the EUR %{threshold} threshold required by RD 1065/2007 art.
         31.1.
+      calculate_maternidad_meses_two_authorities: '--meses-trabajo-con-hijo-menor-3
+        was supplied while the active profile already declares meses_madre_trabajo
+        on its descendiente records. One authority per filing: either drop the flag
+        and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO
+        from the records with `aeat config profile descendiente add`.'
       calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all
         be supplied together.
       calculate_relation_unknown: '--relation %{key} does not match any relation id
@@ -2760,7 +2765,10 @@ cli:
           3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
           Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
           sum(min(MESES × 100, 1200)) and injects into casilla 0611. Example: --meses-trabajo-con-hijo-menor-3
-          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Only for profiles
+          that declare no descendants: when the active profile already declares MESES_TRABAJO
+          through `aeat config profile descendiente add`, those records carry the
+          months and this option is refused.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requires
           HIJO_ID=MESES format; received: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESES in --meses-trabajo-con-hijo-menor-3

@@ -635,6 +635,37 @@ class DescendantInfo(BaseModel):
             return False
         return self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES
 
+    def maternidad_contributing_meses(self, filing_year: int) -> int:
+        """Art. 81.1 months this descendant contributes to the deducción in *filing_year*.
+
+        The split between what the operator supplies and what the engine applies
+        follows the statute rather than a design preference, and the two halves
+        must not re-derive each other.
+
+        The EMPLOYMENT months are the operator's and stay so:
+        ``meses_madre_trabajo_2024`` records whether the mother held contributory
+        or assistance unemployment benefit at the birth, or Social Security /
+        mutualidad registration with the contributed period the article requires.
+        That is her employment history, which this application does not hold and
+        must not infer. It is separately reported to the authority by its own
+        informative return, so the declared figure is checkable against a record
+        the authority already holds.
+
+        The CHILD-side condition is the engine's, because the authority defines
+        the qualifying child as one "con derecho a la aplicación del mínimo por
+        descendientes" — a condition that already exists, already runs, and
+        already governs this same descendant in the same calculation. Asserting
+        it a second time would create a second authority for a question the
+        record already answers.
+
+        Returns ``0`` for a descendant outside the Art. 81.1 population, so
+        months declared against an ineligible child contribute nothing rather
+        than reaching the casilla unchecked.
+        """
+        if not self.is_eligible_menor_tres(filing_year):
+            return 0
+        return self.meses_madre_trabajo_2024
+
     def guarderia_contributing_spend(self, filing_year: int) -> int:
         """Art. 81.2 guardería spend this descendant contributes in *filing_year*.
 
@@ -1059,6 +1090,33 @@ class RentaFamilyProfile(BaseModel):
         the monthly map could be declared and contribute nothing.
         """
         return sum(d.guarderia_contributing_spend(filing_year) for d in self.descendientes)
+
+    def meses_maternidad_por_descendiente(self, filing_year: int) -> tuple[tuple[str, int], ...]:
+        """The Art. 81.1 ``(hijo_id, meses)`` pairs this profile contributes in *filing_year*.
+
+        Pairs :meth:`DescendantInfo.maternidad_contributing_meses` with the
+        descendant's index, which is the identifier every other descendiente
+        surface addresses a child by — the ``list`` renderer, the ``remove``
+        verb, and the fact paths themselves. The deducción's own per-hijo cap
+        then applies over these pairs rather than over a collapsed total, so a
+        second child can never absorb a first child's unused months.
+
+        Aggregates through the canonical record rather than summing the stored
+        facts directly. The guardería path was broken for exactly one release by
+        a second loop that read the raw fact under its own inline age test: the
+        two diverged the moment the record learned a month rule, and a taxpayer
+        could declare spend, see it stored, and receive nothing. One aggregation
+        path per value is the lesson, and this is that path for Art. 81.1.
+
+        Omits descendants contributing zero months, so an ineligible child and
+        one whose mother declared no employment months are both simply absent
+        rather than carrying a zero pair into the deducción.
+        """
+        return tuple(
+            (str(index), meses)
+            for index, descendant in enumerate(self.descendientes)
+            if (meses := descendant.maternidad_contributing_meses(filing_year)) > 0
+        )
 
     def guarderia_needs_monthly_detail_indices(self, filing_year: int) -> tuple[int, ...]:
         """Indices whose declared spend contributes nothing only because of its shape."""

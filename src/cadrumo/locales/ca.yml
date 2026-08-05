@@ -986,6 +986,11 @@ application:
       calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
         que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
         31.1.
+      calculate_maternidad_meses_two_authorities: 'S''ha indicat --meses-trabajo-con-hijo-menor-3
+        mentre el perfil actiu ja declara meses_madre_trabajo als seus registres de
+        descendent. Una sola autoritat per declaracio: prescindeix de l''opcio i deixa
+        que els registres declarats aportin els mesos de l''art. 81.1, o elimina MESES_TRABAJO
+        dels registres amb `aeat config profile descendiente add`.'
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
         s'han d'indicar juntes.
       calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
@@ -2964,7 +2969,9 @@ cli:
           de 3 anys era a la unitat familiar (Art. 81 LIRPF deducció maternitat).
           Format: FILL_ID=MESOS. Repetible per cada fill. FILL_ID és un identificador
           lliure (p. ex. 0, 1, ''laia''). Es calcula sum(min(MESOS × 100, 1200)) i
-          s''injecta a la casella 0611.'
+          s''injecta a la casella 0611. Només per a perfils que no declaren descendents:
+          si el perfil actiu ja declara MESES_TRABAJO amb `aeat config profile descendiente
+          add`, aquests registres aporten els mesos i aquesta opció es rebutja.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requereix
           format FILL_ID=MESOS; s''ha rebut: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESOS a --meses-trabajo-con-hijo-menor-3

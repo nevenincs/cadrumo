@@ -16,11 +16,15 @@ cases went with it, keeping the ones above, which drive the function the
 calculate path actually calls.
 
 Two of the retired cases asserted ELIGIBILITY -- that a child over three, or one
-not cohabiting, contributes nothing. They are not replaced here because the live
-path has no counterpart to replace them against: it consumes an
-operator-supplied list of (hijo, meses) pairs and performs no filtering of its
-own. That asymmetry is a real observation about the maternidad path rather than
-a gap in this module, and it is recorded where design questions go.
+not cohabiting, contributes nothing. They had no counterpart to run against while
+the live path consumed an operator-supplied list of (hijo, meses) pairs and
+performed no filtering of its own. It now reads the descendant records instead,
+and the child-side condition is the engine's: the authority grants the deduction
+"por cada hijo hasta que el menor alcance los tres anos de edad" to women "que
+tengan derecho a la aplicacion del minimo por descendientes". So those cases are
+restored below against
+:meth:`~domain.contribuyente.DescendantInfo.maternidad_contributing_meses`, which
+is where that filtering now lives.
 """
 
 from __future__ import annotations
@@ -159,3 +163,68 @@ class TestCLIHelpers:
         r6 = compute_deduccion_maternidad_0611([("0", 6)])
         r12 = compute_deduccion_maternidad_0611([("0", 12)])
         assert r12 - r6 == 600
+
+
+# ---------------------------------------------------------------------------
+# The engine's half of the hybrid: which descendant contributes its months.
+# ---------------------------------------------------------------------------
+
+
+class TestMaternidadContributingMeses:
+    """The child-side condition Art. 81.1 delegates to the mínimo por descendientes.
+
+    Restores the two eligibility cases the retired profile method carried, now
+    against the predicate the calculate path actually consults.
+    """
+
+    def test_an_eligible_child_contributes_its_declared_months(self) -> None:
+        assert _hijo_menor_3(9).maternidad_contributing_meses(2024) == 9
+
+    def test_a_child_over_three_contributes_nothing(self) -> None:
+        """Art. 81.1 runs only "hasta que el menor alcance los tres años de edad"."""
+        assert _hijo_no_menor_3().maternidad_contributing_meses(2024) == 0
+
+    def test_a_non_cohabiting_child_contributes_nothing(self) -> None:
+        """The mínimo por descendientes the deduction keys on needs the household limb."""
+        child = DescendantInfo(
+            birth_date=date(2022, 6, 1),
+            convive_con_contribuyente=False,
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert child.maternidad_contributing_meses(2024) == 0
+
+    def test_an_eligible_child_with_no_declared_months_contributes_nothing(self) -> None:
+        """The employment months stay the operator's: absent means none, never inferred."""
+        assert _hijo_menor_3(0).maternidad_contributing_meses(2024) == 0
+
+
+class TestMesesMaternidadPorDescendiente:
+    """The profile-level pairing the calculate path feeds to the deducción."""
+
+    def test_pairs_carry_the_descendant_index_as_the_hijo_id(self) -> None:
+        from ..family import RentaFamilyProfile
+
+        profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(12), _hijo_menor_3(6)))
+
+        assert profile.meses_maternidad_por_descendiente(2024) == (("0", 12), ("1", 6))
+
+    def test_ineligible_descendants_are_omitted_but_do_not_shift_the_indices(self) -> None:
+        """A withheld child must not renumber the ones after it.
+
+        The index is the identifier every other descendiente surface addresses a
+        child by, so a compacted list would report months against the wrong
+        record in any diagnostic that names one.
+        """
+        from ..family import RentaFamilyProfile
+
+        profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6)))
+
+        assert profile.meses_maternidad_por_descendiente(2024) == (("1", 6),)
+
+    def test_a_profile_with_no_contributing_descendants_pairs_nothing(self) -> None:
+        from ..family import RentaFamilyProfile
+
+        profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(),))
+
+        assert profile.meses_maternidad_por_descendiente(2024) == ()

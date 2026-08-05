@@ -992,6 +992,11 @@ application:
       calculate_m347_threshold_not_met: La contraparte %{nif} del modelo 347 suma
         %{total}, que no supera el umbral de %{threshold} EUR exigido por el RD 1065/2007
         art. 31.1.
+      calculate_maternidad_meses_two_authorities: 'Se ha indicado --meses-trabajo-con-hijo-menor-3
+        mientras el perfil activo ya declara meses_madre_trabajo en sus registros
+        de descendiente. Una sola autoridad por declaracion: prescinde de la opcion
+        y deja que los registros declarados aporten los meses del art. 81.1, o elimina
+        MESES_TRABAJO de los registros con `aeat config profile descendiente add`.'
       calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
         deben indicarse juntos.
       calculate_relation_unknown: '--relation %{key} no coincide con ninguna relation
@@ -2989,7 +2994,10 @@ cli:
           Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador
           libre (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES × 100, 1200)) e
           inyecta en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12
-          --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+          --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Solo para perfiles que
+          no declaran descendientes: si el perfil activo ya declara MESES_TRABAJO
+          con `aeat config profile descendiente add`, esos registros aportan los meses
+          y esta opción se rechaza.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requiere
           formato HIJO_ID=MESES; se recibió: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESES en --meses-trabajo-con-hijo-menor-3

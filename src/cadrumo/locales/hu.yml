@@ -921,6 +921,12 @@ application:
         %{fetch_gated}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere összesen %{total},
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR küszöböt.
+      calculate_maternidad_meses_two_authorities: 'A --meses-trabajo-con-hijo-menor-3
+        kapcsolot akkor adta meg, amikor az aktiv profil mar deklaral meses_madre_trabajo
+        erteket a leszarmazotti nyilvantartasaiban. Bevallasonkent egyetlen forras
+        lehet: vagy hagyja el a kapcsolot, es a deklaralt nyilvantartasok adjak a
+        81.1. cikk szerinti honapokat, vagy torolje a MESES_TRABAJO erteket a nyilvantartasokbol
+        az `aeat config profile descendiente add` paranccsal.'
       calculate_pension_inputs_incomplete: A nyugdíjterv kiváltási adatait együtt
         kell megadni.
       calculate_relation_unknown: '--relation %{key} egyik relation azonosítónak sem
@@ -2905,7 +2911,11 @@ cli:
           Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként ismételhető. A GYERMEK_AZONOSÍTÓ
           szabad felirat (pl. 0, 1, "laia"). Kiszámítja: összeg(min(HÓNAPOK × 100;
           1200)) és befecskendezi a 0611-es mezőbe. Példa: --meses-trabajo-con-hijo-menor-3
-          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Csak olyan profilokhoz,
+          amelyek nem deklarálnak leszármazottat: ha az aktív profil már deklarál
+          MESES_TRABAJO értéket az `aeat config profile descendiente add` paranccsal,
+          akkor azok a nyilvántartások adják a hónapokat, és ez a kapcsoló elutasításra
+          kerül.'
         meses_trabajo_hijo_bad_format: 'A --meses-trabajo-con-hijo-menor-3 GYERMEK_AZONOSÍTÓ=HÓNAPOK
           formátumot igényel; kapott: {spec}.'
         meses_trabajo_hijo_not_integer: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3

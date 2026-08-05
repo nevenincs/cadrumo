@@ -63,7 +63,7 @@ from ...domain.calculations.registry import (
     revision_date_binding_ids,
     validate_registry_text_scalar,
 )
-from ...domain.contribuyente import compute_deduccion_maternidad_0611
+from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, compute_deduccion_maternidad_0611
 from ...domain.modelos import (
     CalculationRevision,
     Dt12WindowEligibility,
@@ -90,6 +90,7 @@ from ._semantic_role_resolution import (
 _AUTOCONSUMO_PROMOTOR_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base"
 _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
+_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
 _DECLARANTE_SELECTOR_SEMANTIC_ROLE = "irpf_toma_datos_declarante_selector"
@@ -719,6 +720,111 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
     return resolve_registry_snapshot_for_work_unit(unit).revision
 
 
+def _declared_descendientes_for_work_unit(work_unit_id: str) -> tuple[int, tuple[DescendantInfo, ...]]:
+    """Return the work unit's filing year and the descendants its profile declares.
+
+    One reader for both Art. 81.1 questions — which months contribute, and which
+    declared months contribute nothing — because two readers of the same facts is
+    how the guardería half came to have a second aggregation path that diverged
+    from the canonical record the moment that record learned a month rule.
+
+    Returns an empty descendant tuple when the bucket has no profile yet,
+    mirroring the silent-absent handling profile-sourced bindings already apply.
+    """
+    from ...domain.contribuyente import descendant_list_from_facts
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from ._work_lifecycle import get_work_unit
+
+    unit = get_work_unit(work_unit_id)
+    filing_year = resolve_registry_snapshot_for_work_unit(unit).filing_year
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
+    except ProfileNotFoundError:
+        return filing_year, ()
+    facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    return filing_year, descendant_list_from_facts(facts)
+
+
+def _maternidad_casilla_id(work_unit_id: str) -> CasillaId | None:
+    """The Art. 81.1 deducción casilla for this work unit, or ``None`` when the modelo has none.
+
+    The gate on the whole derived-maternidad block. Resolving the role rather
+    than testing the modelo id keeps the derivation registry-driven: a revision
+    that declares the role gets the derived months with no code edit, and every
+    modelo that does not is left untouched — including its profile read, which
+    would otherwise run on every calculation of every modelo.
+    """
+    from ._semantic_role_resolution import casilla_id_for_unique_revision_semantic_role
+    from ._work_lifecycle import get_work_unit
+
+    try:
+        return casilla_id_for_unique_revision_semantic_role(
+            _revision_for_work_unit(work_unit_id),
+            _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE,
+            modelo_id=str(get_work_unit(work_unit_id).modelo),
+        )
+    except AmbiguousSemanticRoleCasillaError:
+        return None
+
+
+def _profile_declared_maternidad_meses(
+    filing_year: int,
+    descendientes: tuple[DescendantInfo, ...],
+) -> tuple[tuple[str, int], ...]:
+    """Return the Art. 81.1 ``(hijo_id, meses)`` pairs the active profile declares.
+
+    Asks the canonical family record which months contribute, so the engine
+    applies the child-side eligibility it already holds while the operator keeps
+    the employment months only they can know.
+
+    Before this path existed the fact was written by three surfaces, declared in
+    the user-profile schema, and read by nothing that calculates: an operator who
+    declared the months through the documented entry surface received nothing,
+    and the surface said otherwise. Declared-and-unconsumed is worse than absent,
+    because absent reads as an omission while declared reads to any inspector as
+    wired.
+    """
+    if not descendientes:
+        return ()
+    return RentaFamilyProfile(descendientes=descendientes).meses_maternidad_por_descendiente(filing_year)
+
+
+def _maternidad_meses_withheld_advisory(
+    filing_year: int,
+    descendientes: tuple[DescendantInfo, ...],
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic | None:
+    """Advise when declared maternidad months contribute nothing on eligibility grounds.
+
+    The one state where a taxpayer declared real months, sees them stored, and
+    receives nothing — and nothing about the computed value says why. Art. 81.1
+    reaches only a child "con derecho a la aplicación del mínimo por
+    descendientes" under three, so months declared against an older or
+    non-cohabiting descendant are correctly withheld; withholding them SILENTLY
+    is what this reports.
+    """
+    withheld = tuple(
+        str(index)
+        for index, descendant in enumerate(descendientes)
+        if descendant.meses_madre_trabajo_2024 > 0 and descendant.maternidad_contributing_meses(filing_year) == 0
+    )
+    if not withheld:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
+        message=(
+            f"descendiente {', '.join(withheld)} declares meses_madre_trabajo but contributes no "
+            "Art. 81.1 deducción por maternidad: the deduction reaches only a cohabiting descendant "
+            "under three at the devengo date. Correct the birth date or the cohabitation answer with "
+            "`aeat config profile descendiente add` if the descendant does qualify."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
 def _validated_binding_input_channel(
     key: str,
     revision: ModeloRevision,
@@ -895,8 +1001,31 @@ def apply_calculation_shortcut_inputs(
             prestacion_inss_exenta
         )
 
-    if meses_trabajo_con_hijo_menor_3:
-        deduccion = compute_deduccion_maternidad_0611(list(meses_trabajo_con_hijo_menor_3))
+    maternidad_casilla_id = _maternidad_casilla_id(work_unit_id)
+    declared_meses: tuple[tuple[str, int], ...] = ()
+    if maternidad_casilla_id is not None:
+        filing_year, descendientes = _declared_descendientes_for_work_unit(work_unit_id)
+        declared_meses = _profile_declared_maternidad_meses(filing_year, descendientes)
+        if meses_trabajo_con_hijo_menor_3 and declared_meses:
+            raise ModeloCalculateShortcutInputError(
+                "--meses-trabajo-con-hijo-menor-3 was supplied while the active profile already declares "
+                "meses_madre_trabajo on its descendiente records. One authority per filing: either drop "
+                "the flag and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO "
+                "from the records with `aeat config profile descendiente add`.",
+                translated_message="application.modelo.errors.calculate_maternidad_meses_two_authorities",
+            )
+        if not meses_trabajo_con_hijo_menor_3:
+            withheld_advisory = _maternidad_meses_withheld_advisory(
+                filing_year,
+                descendientes,
+                maternidad_casilla_id,
+            )
+            if withheld_advisory is not None:
+                advisories.append(withheld_advisory)
+
+    maternidad_meses = meses_trabajo_con_hijo_menor_3 or declared_meses
+    if maternidad_meses:
+        deduccion = compute_deduccion_maternidad_0611(list(maternidad_meses))
         resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
             deduccion
         )
