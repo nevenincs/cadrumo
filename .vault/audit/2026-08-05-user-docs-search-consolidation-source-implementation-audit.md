@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e137c0d400ccef79f96330bfe098a350c484609654ddaa124f7a1f636ba1d0be'
+body_hash: 'sha256:cdbb69ae8cdb717b04c08fb7c77ac790c67230efd80304beb70b6c136d827a55'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -118,6 +118,12 @@ The accepted ADR Update 8 now defines the missing byte semantics. Source impleme
 `ModelMetadata` now carries the required whole-model snapshot root. `PotionModel2VecProvider` requires provider, complete model-snapshot, tokenizer-vocabulary, and tokenizer-configuration manifests and verifies their role, pinned identity, roots, local bytes, and tokenizer-to-snapshot coverage before importing `model2vec` or calling `from_pretrained`. The browser matrix validator requires the embedded model snapshot root as part of the hash-covered model metadata.
 
 This is source-level remediation of the caller-only hash gap, not artifact acceptance. The actual provider distribution/model/tokenizer manifests, package version, model snapshot, quantization measurements, and held-out evidence are still absent and must be supplied under P02.S26/P02.S06 before any matrix can compile or ship. No tests, builds, model downloads, generated artifacts, Pagefind/runtime probes, live sweeps, reindexing, or deployment were run. Static Ruff, basedpyright, AST, Node syntax, and diff checks passed.
+
+## 2026-08-05 formal review boundary and provider-import ordering
+
+The formal reviewer did not issue PASS because concurrent shared-worktree WIP made the working-tree view unsafe for review; the committed object `a0dc2c47bf` remains the review target. No finding was reported against the manifest controls. A source-only follow-up `351d3cb935` now binds the provider manifest repository to the pinned provider package and checks the installed package version through importlib metadata before importing `model2vec`; manifest verification remains first.
+
+The source acceptance boundary remains honest: no artifact or runtime acceptance is claimed, and P02.S26/P02.S06 stay open until real provider/model/tokenizer evidence and the authorized gates exist. No tests, builds, downloads, generated artifacts, probes, sweeps, reindexing, or deployment were run.
 
 ## 2026-08-05 browser-hash parity disposition
 
