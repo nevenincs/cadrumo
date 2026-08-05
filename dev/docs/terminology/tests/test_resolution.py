@@ -121,18 +121,26 @@ def test_normatives_target_uses_generated_legal_reference_and_preserves_permalin
 
 
 def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None:
-    """A legal catalogue TOML resolves to a legal-grounding target.
+    """An unambiguous legal-table range resolves to a legal-grounding target.
 
-    The file declares many provisions under ``[legal."<id>"]`` headers; the
-    resolver discovers the catalogue-known ids it declares and resolves to the
-    first as the representative legal-grounding link.
+    The source range identifies the first ``[legal."<id>"]`` table in this
+    catalogue file. The resolver uses that source evidence to select the
+    provision; it never chooses a representative when a range is absent,
+    invalid, or overlaps multiple tables.
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    out = resolver.resolve(_hit("src/cadrumo/_data/registry/aeat/legal/iva.toml"))
+    out = resolver.resolve(
+        _hit(
+            "src/cadrumo/_data/registry/aeat/legal/iva.toml",
+            line_start=1,
+            line_end=20,
+        ),
+    )
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
     assert out.record.kind.value == "legal"
+    assert out.record.metadata.legal_id == "orden-eha-789-2010:art-1"
     assert out.record.target.startswith("_generated/legal/")
     assert ".html" in out.record.target
     assert out.record.metadata.legal_permalink
