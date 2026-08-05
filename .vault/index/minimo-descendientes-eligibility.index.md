@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#minimo-descendientes-eligibility'
-date: '2026-08-04'
-modified: '2026-08-04'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a75fc96b8690c3bd88b8bcb369a47aa3108a1ef0d7ee7eddca84e4f257cc8c7'
+body_hash: 'sha256:9cd00986a9c1612b54f1f91021d72bc6657defe5fa7b2dfc81c88a49198f9d7f'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P03-S12]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S13]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S14]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S16]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S17]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
@@ -64,6 +65,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface
 - `2026-08-04-minimo-descendientes-eligibility-P04-S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche
 - `2026-08-04-minimo-descendientes-eligibility-P04-S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades
+- `2026-08-04-minimo-descendientes-eligibility-P04-S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin
 
 ### plan
 
