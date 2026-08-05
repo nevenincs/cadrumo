@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c7a0e6c55a85d212cce485a668c1b51a227311650598b5a59c032f31cdd27e6'
+body_hash: 'sha256:7a95f0fcc7ee17d33f4b41d4b2d4f749d5a2cade640c6116db775198f03ab07e'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]"
 ---
-
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #audit) and one feature tag.
      Replace minimo-descendientes-eligibility with a kebab-case feature tag, e.g. #foo-bar.
@@ -89,6 +88,46 @@ would separate them does not exist for plans. A feature whose single plan is bei
 executed by another agent would also be a poor place to append, since the two campaigns
 would then share one document and one completion percentage.
 
+### corrected-row-strands-its-record-heading | medium | A Step Record's heading is machine-filled at scaffold time and has no re-sync verb
+
+A Step Record's level-one heading and its Scope block are machine-filled from the
+originating Step row when the record is scaffolded. The row can legitimately change
+afterwards, through the owning `vault plan step edit` verb, and nothing re-syncs the
+record. There is no verb that would: the scaffold verb creates, and re-running it on an
+existing record is not the shape of the need.
+
+That leaves a stale heading on every record whose row is later corrected, and the residue
+is worse than an ordinary stale string because of what a heading is. It is the first line
+a reader meets, it is phrased as an instruction because Step rows are phrased as
+instructions, and it sits above a closed row that now says something different. A reader
+who trusts headings — which is the ordinary reader, for the same reason rows outrank prose
+— takes it as live.
+
+Encountered concretely here. The `S16` row carried a BLOCKED clause naming a per-comunidad
+regional table, which was retired on measurement before the Step was executed. The row was
+corrected before the row was checked, as its own closing condition required. The record's
+heading still names the retired blocker, so the artefact recording that the table must not
+be built opens with a line instructing a reader to build it.
+
+The interim taken here was to leave the machine-filled fields untouched, because the
+template forbids hand-filling them and a hand-written heading is exactly the value that
+could later lie without anyone able to tell, and to open the Description by stating that
+the heading preserves the row text as it stood at scaffold time and is not a live
+instruction. That is the same shape as every other correction this campaign made well:
+preserve the stale text, say what it is, rather than tidying it away and losing the record
+that it changed.
+
+It generalises past this campaign. Any plan that corrects a row after its record is
+scaffolded hits it, and correcting a row after execution is not an unusual event — it is
+what happens whenever a Step's stated blocker turns out not to apply, which is a normal
+outcome of executing the Step rather than a planning error.
+
+The smallest fix in the existing vocabulary would be a re-sync on the owning verb, so that
+`vault plan step edit` offers to update the machine-filled fields of any record already
+bound to that Step, or a `--resync` flag on the exec verb that refreshes heading and Scope
+from the current row without touching authored prose. Either keeps the fields
+machine-owned, which is the property that makes them trustworthy.
+
 ## Impact
 
 Nothing is broken and no data is at risk. The cost is that an ADR authored with a topic
@@ -99,6 +138,13 @@ for first are all either forbidden or destructive: hand-editing frontmatter, `--
 an existing plan or an existing exec record, or authoring a duplicate ADR under the new tag
 purely to satisfy the gate. That last one is the most tempting and the most damaging,
 because it manufactures a second decision record for a decision that already has one.
+
+`corrected-row-strands-its-record-heading` puts no data at risk either, and its cost is
+different in kind. The other finding costs an author time at authoring time, and the author
+is present to absorb it. This one costs a READER accuracy at reading time, and the reader
+is by definition not the person who knows the heading is stale. It is the cheaper finding
+to fix and the more expensive one to leave, because a stale instruction is acted on rather
+than merely stumbled over.
 
 ## Recommendations
 
@@ -125,7 +171,18 @@ Whichever is chosen, the file-exists error on a second plan scaffold should stop
 `--force` as its only hint. Overwriting an existing plan is almost never what the author
 wants, and here the correct action was structurally elsewhere.
 
-Recorded as a finding rather than promoted to a rule, deliberately: codification is retired
-in this project, and this is a tooling limitation rather than a discipline for authors to
-absorb. It is worth carrying upstream to the vaultspec-core repository rather than living
-only here.
+The re-sync recommendation for `corrected-row-strands-its-record-heading` is stated with
+that finding rather than repeated here, because it is one change to one verb and has no
+alternatives worth ranking. It goes upstream with the rest.
+
+Recorded as findings rather than promoted to rules, deliberately: codification is retired
+in this project, and these are tooling limitations rather than disciplines for authors to
+absorb. They are worth carrying upstream to the vaultspec-core repository rather than
+living only here.
+
+A note on this document's own title, which names the first finding only and has now
+outgrown it. It was left rather than renamed: the stem is cited by the feature index and by
+the exec records, and renaming a document to widen its title is a larger change than the
+finding it would accommodate. Whoever carries these upstream should read the title as the
+originating finding rather than the full contents, which is the same reading the stale Step
+Record heading asks for and the same reason it was left in place.
