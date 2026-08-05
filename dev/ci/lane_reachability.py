@@ -45,11 +45,30 @@ a deletion. Neither is a coverage defect, and both would red a shared gate.
 Unreadable tracked files are skipped and counted rather than assumed unmarked,
 because assuming unmarked would report a peer's in-flight deletion as an orphan.
 
+TWO QUESTIONS ARE ASKED, not one, and the second exists because the first has
+blind spots. The per-test question ("does some lane select this test") is the
+powerful one. The path-level question ("does any lane's scope name this file at
+all") is cheap and weaker, and it is retained deliberately because the per-test
+model cannot see two input classes:
+
+* A ``test_*.py`` holding NO test functions. There are no tests to be
+  unreachable, so the per-test model reports nothing however orphaned the file.
+* A tracked file absent from disk, which cannot be read and so yields no tests.
+
+Both classes are EMPTY in this tree today -- 0 testless modules of 182 tracked
+under ``dev/`` at the time of writing -- but empty is not the same claim as
+impossible, and a consolidation that conflates them is how a gate silently
+sheds a capability. The path-level check is a few lines and costs nothing at
+runtime; dropping it during the merge would have been a regression wearing a
+consolidation's clothes, which is the same shape as the ``os_keychain`` hole
+this module was corrected to expose.
+
 See Also:
     :func:`declared_lanes`
         Every lane the repository declares, from config, recipes, and workflows.
     :func:`analyse_reachability`
-        The gate's finding: individual tests no declared lane can select.
+        The gate's finding: individual tests no declared lane can select, plus
+        the files no lane names at all.
 """
 
 from __future__ import annotations
@@ -108,6 +127,7 @@ class ReachabilityReport:
     """
 
     unreachable: tuple[UnreachableTest, ...]
+    unnamed: tuple[str, ...]
     analysed: int
     skipped: tuple[str, ...]
 
@@ -402,19 +422,33 @@ def analyse_reachability(
     candidates = tuple(files) if files is not None else tracked_test_files(root)
 
     unreachable: list[UnreachableTest] = []
+    unnamed: list[str] = []
     skipped: list[str] = []
     analysed = 0
 
     for path in candidates:
         relative = (path.relative_to(root) if path.is_absolute() else path).as_posix()
+        covering = [lane for lane in resolved if lane.covers(relative)]
+
+        # The path-level question, asked BEFORE the file is read so it still
+        # holds for the two inputs the per-test model is blind to: a module with
+        # no test functions, and a tracked file absent from disk. Both classes
+        # are empty today; neither is impossible.
+        if not covering:
+            unnamed.append(relative)
+
         tests = marker_sets_in(root / relative)
         if tests is None:
             skipped.append(relative)
             continue
         analysed += 1
-        covering = [lane for lane in resolved if lane.covers(relative)]
         for entry in tests:
             if not any(expression_selects(lane.marker_expression, entry.markers) for lane in covering):
                 unreachable.append(UnreachableTest(path=relative, test=entry.test, markers=entry.markers))
 
-    return ReachabilityReport(unreachable=tuple(unreachable), analysed=analysed, skipped=tuple(skipped))
+    return ReachabilityReport(
+        unreachable=tuple(unreachable),
+        unnamed=tuple(unnamed),
+        analysed=analysed,
+        skipped=tuple(skipped),
+    )
