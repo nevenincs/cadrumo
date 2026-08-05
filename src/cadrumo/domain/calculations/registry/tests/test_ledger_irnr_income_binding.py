@@ -10,8 +10,8 @@ grounds it in the committed M210 ``2025`` registry revision, whose sole
 ``rendimientos_integros`` per TRLIRNR art. 13.1 / art. 24. It also serves as
 the F15 regression net for this family's refactor onto the shared
 :func:`~....registry._ledger_binding_resolution.resolve_ledger_family_binding_values`
-skeleton. :func:`unsupported_ledger_irnr_income_observations` coverage
-follows in the sibling commit that routes it through
+skeleton, and :func:`unsupported_ledger_irnr_income_observations`'s
+matching refactor onto
 :func:`~....registry._ledger_binding_resolution.unsupported_ledger_family_observations`.
 """
 
@@ -27,6 +27,7 @@ from .. import (
     CasillaId,
     build_snapshot,
     resolve_ledger_irnr_income_aggregation_binding_values,
+    unsupported_ledger_irnr_income_observations,
     validate_ledger_irnr_income_aggregation_binding_definition,
     validated_casilla_id,
 )
@@ -102,3 +103,26 @@ def test_resolver_sums_matching_casilla_and_excludes_other_casilla() -> None:
     assert resolved[binding.id] != first + second + off_casilla_amount, (
         "an observation routed to another casilla must not feed rendimientos_integros"
     )
+
+
+def test_unsupported_flags_non_zero_income_routed_to_no_binding() -> None:
+    """A non-zero gross income whose target_casilla_id matches no binding is surfaced."""
+    revision = _modelo_210_snapshot().revision
+
+    routed = _IrnrIncomeObservation(target_casilla_id=_M210_RENDIMIENTOS_CASILLA, gross_income_amount=Decimal("500"))
+    unrouted = _IrnrIncomeObservation(target_casilla_id=_M210_OTHER_CASILLA, gross_income_amount=Decimal("120"))
+
+    result = unsupported_ledger_irnr_income_observations(revision, (routed, unrouted))
+
+    assert result == (unrouted,)
+
+
+def test_unsupported_does_not_flag_zero_gross_income() -> None:
+    """A zero-income observation routed to no binding must NOT false-fire."""
+    revision = _modelo_210_snapshot().revision
+
+    zero_unrouted = _IrnrIncomeObservation(target_casilla_id=_M210_OTHER_CASILLA, gross_income_amount=Decimal("0"))
+
+    result = unsupported_ledger_irnr_income_observations(revision, (zero_unrouted,))
+
+    assert result == ()

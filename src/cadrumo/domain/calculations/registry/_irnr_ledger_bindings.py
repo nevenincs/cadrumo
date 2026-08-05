@@ -1,12 +1,14 @@
 """Modelo 210 explicit-IRNR ledger binding contract.
 
 The selected :class:`ModeloRevision` declares the bindings this module
-validates and resolves. The resolver delegates its filter/aggregate
-skeleton to
-:func:`~.registry._ledger_binding_resolution.resolve_ledger_family_binding_values`,
+validates and resolves. The resolver and its fail-closed screen delegate
+their filter/aggregate skeleton to
+:func:`~.registry._ledger_binding_resolution.resolve_ledger_family_binding_values`
+and :func:`~.registry._ledger_binding_resolution.unsupported_ledger_family_observations`,
 the shape shared by every ledger-aggregation family; this module supplies
-only the M210 selector, its ``target_casilla_id`` match predicate, and the
-single-fact ``gross_income_amount`` aggregation.
+only the M210 selector, its ``target_casilla_id`` match predicate, the
+single-fact ``gross_income_amount`` aggregation, and the zero-amount
+false-fire guard.
 """
 
 from __future__ import annotations
@@ -24,7 +26,10 @@ from ._binding_selector_utils import invariant_diagnostics, selector_against_mod
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
-from ._ledger_binding_resolution import resolve_ledger_family_binding_values
+from ._ledger_binding_resolution import (
+    resolve_ledger_family_binding_values,
+    unsupported_ledger_family_observations,
+)
 from ._schema import DataBindingDefinition, ModeloRevision
 
 __all__ = [
@@ -154,6 +159,13 @@ def unsupported_ledger_irnr_income_observations(
 ) -> tuple[IrnrIncomeObservationProtocol, ...]:
     """Return non-zero M210 observations no declared source binding consumes.
 
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the ``target_casilla_id`` match predicate
+    (reused from the resolver's ``_irnr_income_build_matcher``) and a
+    zero-``gross_income_amount`` false-fire guard. No ``extra_exclusion``.
+
     Args:
         revision: The :class:`ModeloRevision` whose bindings determine support.
         observations: Selected M210 gross-income observations to inspect.
@@ -164,13 +176,11 @@ def unsupported_ledger_irnr_income_observations(
     Raises:
         RegistryValidationError: If a declared binding has a malformed selector.
     """
-    supported = frozenset(
-        _irnr_ledger_income_selector(binding).target_casilla_id
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION
-    )
-    return tuple(
-        observation
-        for observation in observations
-        if observation.gross_income_amount != Decimal("0") and observation.target_casilla_id not in supported
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
+        parse_selector=_irnr_ledger_income_selector,
+        build_matcher=_irnr_income_build_matcher,
+        is_declarable=lambda observation: observation.gross_income_amount != Decimal("0"),
     )
