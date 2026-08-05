@@ -30,7 +30,12 @@ See Also:
     :mod:`~._retenciones`
         The observation type, the aggregators, and the source-kind taxonomy.
     :mod:`~._retencion_observations_repository`
-        The encrypted per-perceptor store this projection feeds.
+        The encrypted per-perceptor store this projection feeds through
+        ``persist_retencion_observations``, the one shared write path every
+        producer calls.
+    :class:`~cadrumo.domain.iva.IvaRetencionRole`
+        The declared per-(category, kind) role this module routes on, rather
+        than re-deriving the direction from the invoice kind.
 """
 
 from __future__ import annotations
@@ -45,7 +50,7 @@ from pydantic import BaseModel, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...domain.iva import InvoiceKind
+from ...domain.iva import IvaRetencionRole, iva_category_components
 from ._errors import AggregationValidationError
 from ._retenciones import RetencionObservation, RetencionScheme
 
@@ -65,12 +70,23 @@ class InvoiceRetencionProjectionDefect(StrEnum):
     invoice itself -- the record stays in the catalogue and stays editable.
     """
 
-    NOT_A_RECEIVED_INVOICE = "not_a_received_invoice"
-    """The invoice is issued, so its retención is the taxpayer's credit.
+    NOT_A_RETENEDOR_LIABILITY = "not_a_retenedor_liability"
+    """The Axis-A role for this invoice is not a liability the taxpayer owes.
 
-    Routing it here would declare the taxpayer as retenedor for money withheld
+    Most often the invoice is issued, so its retención is the taxpayer's
+    CREDIT: routing it here would declare them retenedor for money withheld
     FROM them, inverting the direction of a tax liability. It is not a missing
-    figure; it belongs to the income side and is already carried there.
+    figure; it belongs to the income side and is already carried there. The
+    same member covers a (category, kind) pair whose role is ``NONE`` or
+    ``UNKNOWN`` -- neither is a liability this store may assert.
+    """
+
+    IVA_TREATMENT_UNDECLARED = "iva_treatment_undeclared"
+    """No IVA category is declared, so the retención role cannot be read.
+
+    The role is per ``(category, kind)`` pair, so without a category there is
+    no row to consult and the direction of the amount is unknown. Guessing it
+    from the kind alone is exactly the re-derivation this module refuses.
     """
 
     NO_RETENCION_DECLARED = "no_retencion_declared"
@@ -97,9 +113,12 @@ class InvoiceRetencionProjectionDefect(StrEnum):
 
 INVOICE_RETENCION_DEFECT_GUIDANCE: Final[Mapping[InvoiceRetencionProjectionDefect, str]] = MappingProxyType(
     {
-        InvoiceRetencionProjectionDefect.NOT_A_RECEIVED_INVOICE: (
+        InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY: (
             "an issued invoice's retención is a credit against the pago fraccionado, "
             "already carried by the renta income ledger; it does not belong to the retenedor store"
+        ),
+        InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED: (
+            "declare the invoice's IVA treatment (iva_category) so the retención role can be read"
         ),
         InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED: (
             "record the withheld amount on the invoice if the supplier's factura shows a retención"
@@ -242,9 +261,20 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]
 
     Accumulating rather than short-circuiting, so an operator fixing a record
     sees everything wrong with it in one pass.
+
+    The direction test reads the Axis-A ``retencion_role`` rather than
+    re-deriving it from the invoice kind. The role is declared per
+    ``(category, kind)`` pair and validated against that kind at authoring
+    time, so consulting it keeps one definition of whose money a retención is;
+    a local ``kind is RECEIVED`` test would be a second, unvalidated copy of
+    the same fact, free to drift from the table the rest of the engine reads.
     """
-    if invoice.kind is not InvoiceKind.RECEIVED:
-        yield InvoiceRetencionProjectionDefect.NOT_A_RECEIVED_INVOICE
+    if invoice.iva_category is None:
+        yield InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED
+    elif iva_category_components(invoice.iva_category, invoice.kind).retencion_role is not (
+        IvaRetencionRole.TAXPAYER_LIABILITY
+    ):
+        yield InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY
     if invoice.retention_amount is None or invoice.retention_amount == Decimal("0"):
         yield InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED
     if invoice.counterparty_country != _SPANISH_COUNTRY_CODE:

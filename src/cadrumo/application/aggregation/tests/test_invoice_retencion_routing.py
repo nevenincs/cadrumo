@@ -19,17 +19,23 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, Period
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, iva_category_components
+from ....tests.secure_sql import isolated_runtime_profile
 from .._invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjectionDefect,
     project_received_invoice_retencion,
     route_invoice_retenciones,
+)
+from .._retencion_observations_repository import (
+    RetencionObservationRepository,
+    persist_retencion_observations,
 )
 from .._retenciones import RetencionObservation, RetencionScheme, aggregate_retenciones_111
 
@@ -49,6 +55,7 @@ def _invoice(
     tax_id: str = "B12345674",
     currency: str = "EUR",
     fx_rate: str | None = None,
+    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL_21,
 ) -> Invoice:
     subtotal = Decimal(base)
     rate = iva_rate_percentage(IvaRate.RATE_21)
@@ -75,7 +82,7 @@ def _invoice(
             "currency": currency,
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": category,
             "retention_rate": None if retention_rate is None else Decimal(retention_rate),
             "retention_amount": None if retention_amount is None else Decimal(retention_amount),
             "fx_rate": None if fx_rate is None else Decimal(fx_rate),
@@ -124,7 +131,7 @@ def test_an_issued_invoice_never_enters_the_retenedor_store() -> None:
     )
 
     assert not projection.is_routed
-    assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RECEIVED_INVOICE,)
+    assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
 
 
 def test_an_invoice_declaring_no_retencion_routes_nothing() -> None:
@@ -193,7 +200,7 @@ def test_defects_accumulate_so_one_pass_shows_everything_wrong() -> None:
     )
 
     assert projection.defects == (
-        InvoiceRetencionProjectionDefect.NOT_A_RECEIVED_INVOICE,
+        InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,
         InvoiceRetencionProjectionDefect.NO_RETENCION_DECLARED,
         InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER,
     )
@@ -257,3 +264,76 @@ def test_the_scheme_is_supplied_never_inferred_from_the_invoice() -> None:
     assert economica.observation is not None
     assert profesional.observation.scheme is RetencionScheme.PROFESSIONAL
     assert economica.observation.scheme is RetencionScheme.ECONOMIC_ACTIVITY
+
+
+def test_routed_retencion_lands_in_the_existing_encrypted_store(tmp_path: Path) -> None:
+    """The liability reaches the real store, read back through the real read path.
+
+    Asserting that the projection returned an observation proves only that this
+    module ran. What the step actually claims is that a received invoice becomes
+    a row in the ONE per-perceptor store the committed Modelo 111 bindings read,
+    so the assertion is on the store's contents after the shared write helper
+    persisted them -- no second store, no second write path.
+    """
+    period = Period.from_year_and_code(2026, "1T")
+    routing = route_invoice_retenciones(((_invoice(), _PROFESIONAL),))
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        persist_retencion_observations(
+            modelo="111",
+            filing_year=period.filing_year,
+            period=period,
+            observations=routing.observations,
+        )
+        stored = RetencionObservationRepository().load_observations("111", period)
+
+    assert len(stored) == 1
+    assert stored[0].retencion_amount == Decimal("150.00")
+    assert stored[0].taxable_base == Decimal("1000.00")
+    assert stored[0].source_kind is BindingSourceKind.PAYABLE_INVOICE
+    assert stored[0].scheme is _PROFESIONAL
+
+
+def test_an_excluded_invoice_leaves_the_store_empty(tmp_path: Path) -> None:
+    """The negative control: an issued invoice contributes no stored liability.
+
+    Without this the store test above would pass just as happily if the
+    projection routed everything it was handed.
+    """
+    period = Period.from_year_and_code(2026, "1T")
+    routing = route_invoice_retenciones(((_invoice(kind=InvoiceKind.ISSUED), _PROFESIONAL),))
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        persist_retencion_observations(
+            modelo="111",
+            filing_year=period.filing_year,
+            period=period,
+            observations=routing.observations,
+        )
+        stored = RetencionObservationRepository().load_observations("111", period)
+
+    assert routing.observations == ()
+    assert stored == ()
+    assert routing.excluded[0].defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
+
+
+def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> None:
+    """A received invoice whose declared pair yields no liability still does not route.
+
+    An invoice the taxpayer RECEIVED under a category whose Axis-A row gives no
+    retenedor liability must be excluded even though its kind is RECEIVED. A
+    ``kind is RECEIVED`` shortcut would route it, which is precisely the
+    re-derivation the module refuses; this case is what separates the two
+    implementations.
+    """
+    received_no_liability = _invoice(category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)
+    role = iva_category_components(
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        InvoiceKind.RECEIVED,
+    ).retencion_role
+
+    projection = project_received_invoice_retencion(received_no_liability, scheme=_PROFESIONAL)
+
+    assert role is not IvaRetencionRole.TAXPAYER_LIABILITY
+    assert received_no_liability.kind is InvoiceKind.RECEIVED
+    assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
