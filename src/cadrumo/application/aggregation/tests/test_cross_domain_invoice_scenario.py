@@ -189,7 +189,9 @@ def test_a_grounded_invoice_reconciles_across_income_retenciones_and_iva() -> No
     """All three projections agree about one invoice, and agree with the paper.
 
     Income takes the IVA-exclusive base (ingresos integros, since IVA
-    repercutido is collected for Hacienda per PGC NRV 12.a/14.a). Retenciones
+    repercutido is collected for Hacienda -- a reading of PGC NRV 12.a/14.a,
+    which is NOT bundled, so it is cited authority rather than corpus text this
+    repo can re-verify). Retenciones
     recovers the 150 the payer withheld, by inference from gross minus cash.
     IVA sees the 210 cuota. Each is asserted against the invoice figure, and the
     three are then asserted to reconcile to the same total, which is the

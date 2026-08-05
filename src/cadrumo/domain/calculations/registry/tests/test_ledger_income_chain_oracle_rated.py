@@ -19,8 +19,15 @@ The invoice is one ordinary Spanish professional service::
 **Where every expected figure comes from, and why none of it is the engine.**
 The 1000 is the base imponible the invoice states; the bundled AEAT Modelo 130
 instructions define casilla 01 as the "ingresos integros fiscalmente
-computables", and the IVA repercutido is not an ingreso of the issuer (PGC
-NRV 12.a/14.a), so 1000 is the published measure and 1210 is not. The 150 is
+computables", and the IVA repercutido is not an ingreso of the issuer, so 1000
+is the published measure and 1210 is not. That last step rests on PGC NRV
+12.a/14.a, which is NOT in the bundled corpus: it is a reading of cited
+authority, not bundled text this repo can re-verify. Retrieval was attempted
+against the BOE consolidated API for RD 1514/2007 and returned 404 on every
+endpoint tried, so the gap is recorded rather than papered over. The assertions
+below do not depend on it -- the bundled Modelo 130 instructions already name
+casilla 01 as the ingresos integros, and the accounting norm only explains WHY
+the cuota is excluded. The 150 is
 the RIRPF art. 95.1 general rate applied to those ingresos integros -- the
 bundled consolidated text of RD 439/2007 art. 95 reads "15 por ciento sobre los
 ingresos integros satisfechos", and the rate itself is read here from the
