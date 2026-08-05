@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a052e0c602fc95d4011d761c2c5090ee9fec2cc85f90d969549efc502cf46daf'
+body_hash: 'sha256:31f4dfd5844f1b4a83656ecade16d46a0595ca5e90861dbfca75d56e4eafbc4d'
 related: []
 ---
 
@@ -308,6 +308,37 @@ merely tidier, it is the only one of the two that keeps an operator-identifying 
 out of public surfaces. This strengthens the case for renaming the machine-led
 registrations, though it does not change the cost — a rename is still a
 deregister/re-register cycle and still the operator's call.
+
+### duplicate-task-needs-elevation | medium | The redundant WSL launcher cannot be disabled without an elevated session
+
+Actioning the duplicate-launcher hazard was attempted under explicit operator authority
+and is **blocked on privilege, not on judgement**. The scheduled task lives in the root
+task folder; modifying it requires an elevated session, and the agent session runs
+unelevated. Both `Disable-ScheduledTask` and `schtasks /change /disable` return access
+denied. The task's state was re-read after each attempt and is unchanged, so the failed
+attempts altered nothing.
+
+No privilege escalation was attempted. Acquiring rights the session was not granted, on
+an operator's own machine, is not within the authority to action a finding.
+
+The pre-state was captured and confirms the duplication precisely: the task is enabled
+with a logon trigger and runs the same runner directory that a systemd unit inside WSL
+already owns, where a listener has been serving for over a day, with the registration
+online and idle. The remedy remains a one-line elevated `Disable-ScheduledTask`,
+reversible with `Enable-ScheduledTask`, and it interrupts nothing that is serving
+because systemd holds the live listener.
+
+### superseded-duplicate-already-inert | low | The second duplicate task is confirmed superseded and already in its correct end state
+
+The disabled cadrumo runner task was checked rather than assumed. It carries an action
+and trigger type identical to the live, named task for the same runner, is already
+disabled, and its task-info records that it has never run at all — a never-run result
+code and a null last-run timestamp, not a failure.
+
+So it is genuinely superseded, genuinely inert, and its correct end state is the one it
+is already in. Deleting it would need the same elevation the item above lacks, and
+would buy nothing: a disabled never-run task consumes no resource and cannot fire.
+Recording it as known-superseded is the complete remedy, and is cheaper than deletion.
 
 ## Recommendations
 
