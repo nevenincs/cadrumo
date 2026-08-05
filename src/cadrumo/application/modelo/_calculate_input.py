@@ -804,10 +804,19 @@ def _maternidad_meses_withheld_advisory(
 
     The one state where a taxpayer declared real months, sees them stored, and
     receives nothing — and nothing about the computed value says why. Art. 81.1
-    reaches only a child under three "con derecho a la aplicación del mínimo por
-    descendientes", so months declared against a descendant that predicate
-    excludes are correctly withheld; withholding them SILENTLY is what this
-    reports.
+    reaches a child under three "con derecho a la aplicación del mínimo por
+    descendientes" OR one inside the age-independent adopción/acogimiento
+    entry-date window
+    (:meth:`~domain.contribuyente.DescendantInfo.art_81_1_entry_window_meses`),
+    so months declared against a descendant BOTH limbs exclude are correctly
+    withheld; withholding them SILENTLY is what this reports.
+
+    The remedy must not name the birth date as the fix for every withheld
+    case. The entry-date limb reaches an over-three adopción or acogimiento by
+    a recorded ``INSCRIPCION``/``ACOGIMIENTO`` date, not by age — so the real
+    gap for that population is a missing entry date, and a message that only
+    ever suggests the birth date steers that filer toward altering a fact
+    that was already correct.
     """
     if not withheld:
         return None
@@ -816,11 +825,11 @@ def _maternidad_meses_withheld_advisory(
         source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
         message=(
             f"descendiente {', '.join(withheld)} declares meses_madre_trabajo but contributes no "
-            "Art. 81.1 deducción por maternidad: the deduction reaches only a descendant under three "
-            "who also holds the mínimo por descendientes, so cohabitation, the Art. 58.1 rentas "
-            "ceiling and the Art. 61 norma 2ª own-return rule all apply. Correct the birth date, the "
-            "cohabitation answer or the rentas figure with `aeat config profile descendiente add` if "
-            "the descendant does qualify."
+            "Art. 81.1 deducción por maternidad: it reaches a child under three OR one inside the "
+            "age-independent adopción/acogimiento entry-date window, subject to cohabitation, rentas "
+            "and own-return. An over-three adopción/acogimiento with no recorded entry date is "
+            "withheld for a missing INSCRIPCION or ACOGIMIENTO date, not a birth date. Record it, or "
+            "correct cohabitation or rentas, with `aeat config profile descendiente add`."
         ),
         casilla_id=casilla_id,
     )
