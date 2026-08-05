@@ -27,6 +27,7 @@ from dev.packaging._smoke_common import (
     expected_wheel_data_paths,
     find_repo_root,
     install_wheel,
+    record_proof,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
@@ -104,6 +105,7 @@ def _assert_complete_wheel_cohort(
         raise SystemExit(
             f"command wheel companion pins must be exact: expected {expected_pins!r}, got {exact_pins!r}",
         )
+    record_proof("complete exact-version three-wheel cohort")
     return root_version
 
 
@@ -176,6 +178,7 @@ def main(argv: list[str] | None = None) -> int:
         storage_root=work_dir / "tax-oracle-state",
         work_dir=work_dir / "outside-checkout",
     )
+    record_proof("installed grounded Modelo 200 tax-work oracle")
     tax_evidence_path = work_dir / "installed-tax-oracle.json"
     tax_evidence_path.write_text(
         json.dumps(tax_evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -183,7 +186,11 @@ def main(argv: list[str] | None = None) -> int:
         newline="\n",
     )
 
-    checks = [
+    # The contract this form promises. It is checked against what actually
+    # recorded itself: a declared claim with no recorded assertion refuses the
+    # run, and the manifest is written from the recorded set, never from this
+    # declaration.
+    declared = [
         "wheel tracked shipped-data payload",
         "wheel metadata dependency surface",
         "complete exact-version three-wheel cohort",
@@ -195,7 +202,7 @@ def main(argv: list[str] | None = None) -> int:
         "installed grounded Modelo 200 tax-work oracle",
     ]
     if not args.skip_export_checks:
-        checks.insert(0, "frozen dependency exports")
+        declared.insert(0, "frozen dependency exports")
     manifest = write_smoke_manifest(
         work_dir,
         lane="core-wheel",
@@ -206,7 +213,7 @@ def main(argv: list[str] | None = None) -> int:
             "installed_tax_oracle": relative_manifest_path(work_dir, tax_evidence_path),
             "venv": relative_manifest_path(work_dir, venv),
         },
-        checks=tuple(checks),
+        declared=tuple(declared),
         details={
             "cohort_version": cohort_version,
             "python": args.python,

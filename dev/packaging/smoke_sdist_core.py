@@ -13,6 +13,7 @@ from ._smoke_common import (
     assert_installed_data,
     create_pip_venv,
     install_targets_with_pip,
+    record_proof,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
@@ -51,6 +52,8 @@ def _assert_sdist_contains_expected_data(sdist: Path, expected: set[str]) -> Non
         raise SystemExit(
             f"root sdist leaked {len(leaked)} companion-owned corpus binaries; first ten: {leaked[:10]!r}",
         )
+    record_proof("tracked shipped-data source preflight")
+    record_proof("sdist tracked shipped-data payload")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -115,19 +118,19 @@ def main(argv: list[str] | None = None) -> int:
     assert_attachment_and_llm_surfaces(work_dir, venv_path)
     assert_cli_smoke(work_dir, venv_path)
 
-    checks = [
+    declared = [
         "tracked shipped-data source preflight",
         "sdist tracked shipped-data payload",
         "stdlib venv creation",
-        "plain pip sdist install",
-        "pip check",
+        "exact local cohort install with pip",
+        "pip dependency check",
         "installed bundled data resources",
         "attachment storage round-trip",
         "core LLM missing-extra boundary",
         "installed CLI config/profile smoke",
     ]
     if not args.skip_export_checks:
-        checks.insert(0, "frozen dependency exports")
+        declared.insert(0, "frozen dependency exports")
     manifest = write_smoke_manifest(
         work_dir,
         lane="sdist-core",
@@ -137,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
             "venv": relative_manifest_path(work_dir, venv_path),
         },
-        checks=tuple(checks),
+        declared=tuple(declared),
         details={"cohort_version": cohort.version, "python": args.python},
     )
 

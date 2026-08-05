@@ -39,12 +39,19 @@ from typing import Any, Final
 from dev.packaging._command import CommandResult, run_command
 from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
 from dev.packaging._distribution_names import normalise_distribution_name
+from dev.packaging._proof_ledger import (
+    ProofContractError,
+    record_proof,
+    recorded_proofs,
+    reset_proof_ledger,
+)
 from dev.packaging.evidence import PackagingSmokeManifest
 from dev.packaging.python_cohort import digest_install_target
 
 __all__ = [
     "TRACKED_DATA_ROOTS",
     "DependencySurfaces",
+    "ProofContractError",
     "assert_attachment_and_llm_surfaces",
     "assert_cadrumo_version_output",
     "assert_cli_smoke",
@@ -66,9 +73,12 @@ __all__ = [
     "isolated_product_env",
     "optional_extra_registry",
     "pyproject_surfaces",
+    "record_proof",
+    "recorded_proofs",
     "relative_manifest_path",
     "require_executable",
     "requirement_name",
+    "reset_proof_ledger",
     "resolve_work_dir",
     "run_checked",
     "tracked_source_data_paths",
@@ -79,6 +89,7 @@ __all__ = [
     "wheel_metadata",
     "write_smoke_manifest",
 ]
+
 
 _UTF_8: Final[str] = "utf-8"
 _REPRESENTATIVE_DATA_LEAVES = (
@@ -435,6 +446,7 @@ def assert_optional_extra_registry_matches_pyproject(repo_root: Path) -> None:
     )
     if missing_aggregate:
         raise SystemExit(f"pyproject all extra is missing capability extras: {missing_aggregate!r}")
+    record_proof("optional extra registry matches pyproject")
 
 
 def wheel_metadata(wheel: Path) -> tuple[list[str], set[str]]:
@@ -578,6 +590,7 @@ def assert_wheel_contains_tracked_data(repo_root: Path, wheel: Path, expected: s
             "wheel data payload differs from the tracked runtime set: "
             f"missing={_format_path_sample(missing)}, unexpected={_format_path_sample(unexpected)}"
         )
+    record_proof("wheel tracked shipped-data payload")
 
 
 def assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> None:
@@ -603,6 +616,7 @@ def assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> Non
     leaked_dev = sorted(surfaces.dev_only_names & all_requires)
     if leaked_dev:
         raise SystemExit(f"dev-only dependencies leaked into wheel metadata: {leaked_dev!r}")
+    record_proof("wheel metadata dependency surface")
 
 
 def _export_names(output: str, *, repo_root: Path | None = None) -> set[str]:
@@ -685,6 +699,7 @@ def validate_frozen_exports(repo_root: Path, uv: str) -> None:
         | surfaces.dev_active_names
         | _DEV_PRESENT_NAMES,
     )
+    record_proof("frozen dependency exports")
 
 
 def venv_bin_dir(venv_path: Path) -> Path:
@@ -812,6 +827,8 @@ def install_wheel(
         cwd=repo_root,
     )
     run_checked([uv, "pip", "check", "--python", str(venv_python_path(venv_path))], cwd=repo_root)
+    record_proof("fresh uv virtualenv install")
+    record_proof("pip dependency check")
     return venv_path
 
 
@@ -849,6 +866,7 @@ def create_pip_venv(work_dir: Path, python_executable: str) -> Path:
         raise SystemExit(
             f"pip venv interpreter {version.stdout.strip()!r} does not match requested {python_executable!r}"
         )
+    record_proof("stdlib venv creation")
     return venv_path
 
 
@@ -872,6 +890,8 @@ def install_targets_with_pip(
         cwd=work_dir,
     )
     run_checked([str(python), "-m", "pip", "check"], cwd=work_dir)
+    record_proof("exact local cohort install with pip")
+    record_proof("pip dependency check")
 
 
 def _json_payload(output: str) -> dict[str, Any]:
@@ -920,6 +940,7 @@ print(root)
     runtime_root = work_dir / "installed-data-state"
     env = isolated_product_env(runtime_root)
     run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
+    record_proof("installed bundled data resources")
 
 
 def assert_attachment_and_llm_surfaces(work_dir: Path, venv_path: Path) -> None:
@@ -1012,6 +1033,8 @@ print("attachment-and-llm-surfaces-ok")
         "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'import-state.db').as_posix()}",
     }
     run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
+    record_proof("attachment storage round-trip")
+    record_proof("core LLM missing-extra boundary")
 
 
 def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
@@ -1094,6 +1117,7 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     result = ready_payload.get("result", {})
     if ready_payload.get("status") != "success" or result.get("ok") is not True or result.get("issues") != []:
         raise SystemExit(f"opted-out config check did not pass cleanly: {ready_payload!r}")
+    record_proof("installed CLI config/profile smoke")
 
 
 def resolve_work_dir(repo_root: Path, requested: str | None, *, prefix: str = "core") -> Path:
@@ -1125,17 +1149,37 @@ def write_smoke_manifest(
     *,
     lane: str,
     artifacts: dict[str, str],
-    checks: tuple[str, ...],
+    declared: tuple[str, ...],
     details: dict[str, Any] | None = None,
 ) -> Path:
-    """Write a machine-readable record for one successful packaging smoke run."""
+    """Write the record for one successful run, deriving its checks from the ledger.
+
+    ``declared`` is the contract the form promises to satisfy. The written
+    ``checks`` are the RECORDED proofs, never the declaration, so a claim cannot
+    appear unless its assertion ran. A declared claim that was never recorded
+    raises :class:`ProofContractError` before anything is written.
+
+    :class:`PackagingSmokeManifest` is unchanged — ``checks`` keeps its name,
+    type and schema, so every existing evidence row stays valid and readable.
+    Only the provenance of the value changes, from a hand-written literal to a
+    derived record.
+
+    Raises:
+        ProofContractError: On a declared claim with no recorded assertion.
+    """
+    recorded = recorded_proofs()
+    unperformed = [claim for claim in declared if claim not in recorded]
+    if unperformed:
+        raise ProofContractError(
+            f"{lane}: declared proofs never executed: {unperformed!r}; recorded this run: {list(recorded)!r}",
+        )
     manifest = PackagingSmokeManifest(
         ok=True,
         lane=lane,
         completed_at=datetime.now(UTC),
         work_dir=str(work_dir.resolve()),
         artifacts=artifacts,
-        checks=tuple(checks),
+        checks=recorded,
         details=details or None,
     )
     path = work_dir / "packaging-smoke-manifest.json"

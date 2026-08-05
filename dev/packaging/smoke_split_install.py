@@ -29,6 +29,7 @@ from pathlib import Path
 from ._smoke_common import (
     create_pip_venv,
     isolated_product_env,
+    record_proof,
     relative_manifest_path,
     resolve_work_dir,
     run_checked,
@@ -89,6 +90,7 @@ def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
         cwd=work_dir,
         env=isolated_product_env(work_dir / "clean-verify-state"),
     )
+    record_proof("registry verify runs byte-exact clean")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -116,6 +118,7 @@ def main(argv: list[str] | None = None) -> int:
     wheel = cohort.root_wheel
     data_wheels = list(cohort.companion_wheels)
     print("using supplied immutable Python cohort", flush=True)
+    record_proof("supplied immutable Python cohort")
 
     print("creating stdlib venv and installing the complete three-wheel cohort", flush=True)
     venv_path = create_pip_venv(work_dir, args.python)
@@ -133,6 +136,7 @@ def main(argv: list[str] | None = None) -> int:
         cwd=work_dir,
         env=isolated_product_env(work_dir / "cohort-import-state"),
     )
+    record_proof("joined companion namespace resolves the complete corpus")
     _assert_registry_verify_runs_clean(work_dir, venv_path)
 
     manifest = write_smoke_manifest(
@@ -151,10 +155,10 @@ def main(argv: list[str] | None = None) -> int:
         # consumes a prebuilt cohort and never enters the build path, so
         # claiming them would record a proof that did not run. The installed
         # tax oracle is likewise claimed by the `core` lane that runs it.
-        checks=(
+        declared=(
             "supplied immutable Python cohort",
             "stdlib venv creation",
-            "all three local wheels install in one pip transaction",
+            "exact local cohort install with pip",
             "pip dependency check",
             "all installed origins and digests match the supplied cohort",
             "root metadata declares both exact mandatory companion requirements",

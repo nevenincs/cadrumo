@@ -18,6 +18,7 @@ from packaging.requirements import Requirement
 from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
 from dev.packaging._distribution_names import normalise_distribution_name
 from dev.packaging._hashing import sha256_path
+from dev.packaging._proof_ledger import record_proof
 
 _UTF_8: Final[str] = "utf-8"
 _MANIFEST_NAME: Final[str] = "python-cohort.json"
@@ -623,6 +624,9 @@ def assert_installed_cohort(
             f"installed root metadata lost companion pins: {requirements!r}",
         )
     _verify_direct_urls(document.get("direct_urls"), cohort, root_artifact)
+    record_proof("all installed origins and digests match the supplied cohort")
+    record_proof("root metadata declares both exact mandatory companion requirements")
+    record_proof("all three installed distributions share one version")
     return document
 
 
