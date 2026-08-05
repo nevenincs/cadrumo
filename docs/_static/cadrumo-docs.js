@@ -502,7 +502,7 @@
       throw new Error("Rung-2 matrix schema or model dimension mismatch");
     }
     var model = rung2Object(matrix.model, "Rung-2 matrix.model");
-    rung2Keys(model, ["repository", "revision", "spdx_license", "dimension", "provider", "tokenizer"], "Rung-2 matrix.model");
+    rung2Keys(model, ["repository", "revision", "spdx_license", "dimension", "model_snapshot_sha256", "provider", "tokenizer"], "Rung-2 matrix.model");
     if (model.repository !== RUNG2_MODEL_REPOSITORY || model.revision !== RUNG2_MODEL_REVISION ||
         model.spdx_license !== RUNG2_MODEL_LICENSE || model.dimension !== RUNG2_DIMENSION) {
       throw new Error("Rung-2 model provenance mismatch");
@@ -510,6 +510,7 @@
     rung2RequiredString(model, "repository", "Rung-2 matrix.model");
     if (!RUNG2_HEX40.test(model.revision)) throw new Error("Rung-2 model revision is not immutable");
     rung2Integer(model.dimension, 1, Number.MAX_SAFE_INTEGER, "Rung-2 model.dimension");
+    rung2Hex(model.model_snapshot_sha256, "Rung-2 model.model_snapshot_sha256");
     var provider = rung2Object(model.provider, "Rung-2 matrix.model.provider");
     rung2Keys(provider, ["package", "version", "source_sha256"], "Rung-2 matrix.model.provider");
     rung2RequiredString(provider, "package", "Rung-2 matrix.model.provider");

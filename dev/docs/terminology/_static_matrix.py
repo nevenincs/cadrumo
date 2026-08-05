@@ -134,7 +134,12 @@ class TokenizerProvenance(BaseModel):
 
 
 class ModelMetadata(BaseModel):
-    """Immutable model and implementation provenance for matrix rows."""
+    """Immutable model and implementation provenance for matrix rows.
+
+    ``model_snapshot_sha256`` is the root of the reviewed raw-byte manifest for
+    the complete local model snapshot.  It is separate from tokenizer role
+    hashes because tokenizer bytes do not attest the embedding weights.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -142,6 +147,7 @@ class ModelMetadata(BaseModel):
     revision: Annotated[str, StringConstraints(min_length=40, max_length=40)]
     spdx_license: Literal["MIT", "Apache-2.0"]
     dimension: int = Field(gt=0, le=8192)
+    model_snapshot_sha256: _Sha256
     provider: ProviderProvenance
     tokenizer: TokenizerProvenance
 

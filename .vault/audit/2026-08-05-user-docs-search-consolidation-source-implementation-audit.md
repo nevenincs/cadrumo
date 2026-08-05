@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ded4b0e4e82fc40bc2c34939d2ef36279cccf43f4bc13d80d52ada0563d7922b'
+body_hash: 'sha256:e137c0d400ccef79f96330bfe098a350c484609654ddaa124f7a1f636ba1d0be'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -110,6 +110,14 @@ Adding a deterministic package/model manifest or tokenizer-file convention now w
 ### disposition
 
 Record this as a bounded R8 follow-up: first amend the accepted ADR/schema with the exact provider package/model byte manifest and tokenizer vocabulary/config byte semantics, then implement independent verification before matrix compilation or artifact acceptance. P02.S06 and the related Rung-2 acceptance rows remain open. No tests, builds, model downloads, matrix generation, browser probes, or deployment were run.
+
+## 2026-08-05 R8 raw-byte manifest source implementation
+
+The accepted ADR Update 8 now defines the missing byte semantics. Source implementation adds a strict `RawByteManifestV1` primitive with exact raw-byte SHA-256 entries, canonical compact sorted-key UTF-8 root hashing, explicit reviewed path membership, POSIX non-escaping path validation, duplicate/case-collision rejection, symlink rejection, and strict local verification of missing, changed, or unexpected files.
+
+`ModelMetadata` now carries the required whole-model snapshot root. `PotionModel2VecProvider` requires provider, complete model-snapshot, tokenizer-vocabulary, and tokenizer-configuration manifests and verifies their role, pinned identity, roots, local bytes, and tokenizer-to-snapshot coverage before importing `model2vec` or calling `from_pretrained`. The browser matrix validator requires the embedded model snapshot root as part of the hash-covered model metadata.
+
+This is source-level remediation of the caller-only hash gap, not artifact acceptance. The actual provider distribution/model/tokenizer manifests, package version, model snapshot, quantization measurements, and held-out evidence are still absent and must be supplied under P02.S26/P02.S06 before any matrix can compile or ship. No tests, builds, model downloads, generated artifacts, Pagefind/runtime probes, live sweeps, reindexing, or deployment were run. Static Ruff, basedpyright, AST, Node syntax, and diff checks passed.
 
 ## 2026-08-05 browser-hash parity disposition
 

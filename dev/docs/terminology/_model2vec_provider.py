@@ -7,10 +7,10 @@ directory.  A repository identifier, URL, missing path, unknown token, special
 token, or truncated sequence is refused rather than turned into an implicit
 download or a lossy row.
 
-The caller supplies the complete, hash-stamped :class:`ModelMetadata`.  This
-adapter verifies the ratified model identity and installed package version, but
-does not invent provider, tokenizer, revision, licence, or content hashes.
-Those values remain part of the measured artifact acceptance evidence.
+The caller supplies the complete, hash-stamped :class:`ModelMetadata` and the
+reviewed local raw-byte manifests that substantiate its content hashes.  The
+manifests are verified before the optional provider import or model loader is
+reached; no content hash is accepted as caller-only attestation.
 """
 
 from __future__ import annotations
@@ -21,8 +21,9 @@ import struct
 from collections.abc import Sequence
 from importlib import metadata as importlib_metadata
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, cast
 
+from ._content_manifest import RawByteManifest, RawByteManifestError, verify_raw_byte_manifest
 from ._static_matrix import (
     EmbeddingObservation,
     MatrixCompilationError,
@@ -46,6 +47,10 @@ POTION_MODEL_REVISION: Final[str] = "e7421cd79c75fc506b88bb75723ae0a234994720"
 POTION_MODEL_LICENSE: Final[str] = "MIT"
 POTION_MODEL_DIMENSION: Final[int] = 256
 _MODEL2VEC_PACKAGE: Final[str] = "model2vec"
+_PROVIDER_MANIFEST_ROLE: Final[str] = "provider-source"
+_MODEL_MANIFEST_ROLE: Final[str] = "model-snapshot"
+_TOKENIZER_VOCABULARY_ROLE: Final[str] = "tokenizer-vocabulary"
+_TOKENIZER_CONFIG_ROLE: Final[str] = "tokenizer-configuration"
 
 
 class PotionModel2VecProvider(StaticEmbeddingProvider):
@@ -54,15 +59,34 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
     Construction is intentionally explicit and fail-closed.  The model path
     must already exist as a directory, and the metadata must name the exact
     model revision/licence/dimension selected by the ADR.  The provider package
-    version is checked against the installed environment; its source hash and
-    the tokenizer hashes are accepted only as caller-supplied provenance fields
-    on ``metadata`` and are not silently fabricated here.
+    version is checked against the installed environment.  Every provider,
+    model, and tokenizer role must have explicit local manifest evidence before
+    the provider package is imported.
     """
 
-    def __init__(self, *, model_path: Path, metadata: ModelMetadata) -> None:
+    def __init__(
+        self,
+        *,
+        model_path: Path,
+        metadata: ModelMetadata,
+        provider_root: Path,
+        provider_manifest: RawByteManifest,
+        model_manifest: RawByteManifest,
+        tokenizer_vocabulary_manifest: RawByteManifest,
+        tokenizer_config_manifest: RawByteManifest,
+    ) -> None:
         self._model_path = _require_local_model_path(model_path)
         self._metadata = ModelMetadata.model_validate(metadata)
         _validate_potion_metadata(self._metadata)
+        _verify_content_manifests(
+            metadata=self._metadata,
+            provider_root=provider_root,
+            provider_manifest=provider_manifest,
+            model_root=self._model_path,
+            model_manifest=model_manifest,
+            tokenizer_vocabulary_manifest=tokenizer_vocabulary_manifest,
+            tokenizer_config_manifest=tokenizer_config_manifest,
+        )
 
         model2vec = _import_model2vec()
         _require_installed_package_version(self._metadata)
@@ -141,7 +165,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
         if not isinstance(raw_ids, (list, tuple)) or not raw_ids:
             raise MatrixCompilationError(f"provider produced no model tokens for {text!r}")
         try:
-            token_ids = tuple(int(token_id) for token_id in raw_ids)
+            token_ids = tuple(int(token_id) for token_id in cast(Sequence[Any], raw_ids))
         except (TypeError, ValueError) as exc:
             raise MatrixCompilationError(f"provider returned invalid token ids for {text!r}") from exc
         if any(token_id < 0 for token_id in token_ids):
@@ -160,9 +184,12 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
             )
         except Exception as exc:  # encoding errors are provider-boundary failures
             raise MatrixCompilationError(f"embedding failed for {text!r}: {exc}") from exc
-        if not isinstance(sequences, Sequence) or len(sequences) != 1:
+        if not isinstance(sequences, Sequence):
             raise MatrixCompilationError(f"provider returned an invalid token sequence for {text!r}")
-        rows = sequences[0]
+        typed_sequences = cast(Sequence[Sequence[Any]], sequences)
+        if len(typed_sequences) != 1:
+            raise MatrixCompilationError(f"provider returned an invalid token sequence for {text!r}")
+        rows = typed_sequences[0]
         try:
             row_count = len(rows)
         except TypeError as exc:
@@ -178,7 +205,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
         vectors: list[tuple[float, ...]] = []
         for row in rows:
             try:
-                values = tuple(_as_float32(value, text=text) for value in row)
+                values = tuple(_as_float32(value, text=text) for value in cast(Sequence[Any], row))
             except (TypeError, ValueError) as exc:
                 raise MatrixCompilationError(f"provider returned an invalid vector for {text!r}") from exc
             if len(values) != self._metadata.dimension:
@@ -197,7 +224,88 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
         return token_ids, tuple(pooled)
 
 
-def _require_local_model_path(model_path: Path) -> Path:
+def _verify_content_manifests(
+    *,
+    metadata: ModelMetadata,
+    provider_root: Path,
+    provider_manifest: RawByteManifest,
+    model_root: Path,
+    model_manifest: RawByteManifest,
+    tokenizer_vocabulary_manifest: RawByteManifest,
+    tokenizer_config_manifest: RawByteManifest,
+) -> None:
+    """Verify all local content roots before importing the optional provider."""
+    _verify_manifest(
+        root=provider_root,
+        manifest=provider_manifest,
+        role=_PROVIDER_MANIFEST_ROLE,
+        expected_sha256=metadata.provider.source_sha256,
+    )
+    _verify_manifest(
+        root=model_root,
+        manifest=model_manifest,
+        role=_MODEL_MANIFEST_ROLE,
+        repository=metadata.repository,
+        revision=metadata.revision,
+        expected_sha256=metadata.model_snapshot_sha256,
+    )
+    _verify_manifest(
+        root=model_root,
+        manifest=tokenizer_vocabulary_manifest,
+        role=_TOKENIZER_VOCABULARY_ROLE,
+        repository=metadata.tokenizer.repository,
+        revision=metadata.tokenizer.revision,
+        expected_sha256=metadata.tokenizer.vocabulary_sha256,
+        reject_unexpected=False,
+    )
+    _verify_manifest(
+        root=model_root,
+        manifest=tokenizer_config_manifest,
+        role=_TOKENIZER_CONFIG_ROLE,
+        repository=metadata.tokenizer.repository,
+        revision=metadata.tokenizer.revision,
+        expected_sha256=metadata.tokenizer.config_sha256,
+        reject_unexpected=False,
+    )
+    model_entries = {
+        entry.relative_path: (entry.byte_length, entry.sha256) for entry in model_manifest.entries
+    }
+    for role_manifest in (tokenizer_vocabulary_manifest, tokenizer_config_manifest):
+        for entry in role_manifest.entries:
+            if model_entries.get(entry.relative_path) != (entry.byte_length, entry.sha256):
+                raise MatrixCompilationError(
+                    f"{role_manifest.role} entry {entry.relative_path!r} is not covered by the model snapshot"
+                )
+
+
+def _verify_manifest(
+    *,
+    root: Path,
+    manifest: RawByteManifest,
+    role: str,
+    expected_sha256: str,
+    repository: str | None = None,
+    revision: str | None = None,
+    reject_unexpected: bool = True,
+) -> None:
+    """Check one role, its metadata root, and its local bytes."""
+    if manifest.role != role:
+        raise MatrixCompilationError(f"manifest role {manifest.role!r} does not satisfy {role!r}")
+    if repository is not None and manifest.repository != repository:
+        raise MatrixCompilationError(
+            f"{role} manifest repository {manifest.repository!r} does not match {repository!r}"
+        )
+    if revision is not None and manifest.revision != revision:
+        raise MatrixCompilationError(f"{role} manifest revision does not match the pinned revision")
+    if manifest.manifest_sha256 != expected_sha256:
+        raise MatrixCompilationError(f"{role} manifest root does not match the metadata provenance")
+    try:
+        verify_raw_byte_manifest(root, manifest, reject_unexpected=reject_unexpected)
+    except (RawByteManifestError, ValueError) as exc:
+        raise MatrixCompilationError(f"{role} manifest verification failed: {exc}") from exc
+
+
+def _require_local_model_path(model_path: object) -> Path:
     """Reject remote identifiers and missing model directories before loading."""
     if not isinstance(model_path, Path):
         raise MatrixCompilationError("Model2Vec model_path must be a pathlib.Path")
@@ -257,7 +365,7 @@ def _validate_potion_metadata(metadata: ModelMetadata) -> None:
 def _as_float32(value: object, *, text: str) -> float:
     """Round one provider component to binary32 and reject non-finite values."""
     try:
-        numeric = float(value)
+        numeric = float(cast(Any, value))
         rounded = struct.unpack("<f", struct.pack("<f", numeric))[0]
     except (OverflowError, TypeError, ValueError, struct.error) as exc:
         raise MatrixCompilationError(f"provider vector for {text!r} is not float32-representable") from exc
