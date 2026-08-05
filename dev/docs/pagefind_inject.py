@@ -69,6 +69,10 @@ _RELEVANCE_RELPATH = Path("src") / "cadrumo" / "_data" / "terminology" / "releva
 _SORT_SCALE = 1_000_000
 
 
+class SearchInjectionError(RuntimeError):
+    """Raised when committed search inputs cannot prove a full corpus."""
+
+
 @dataclass(frozen=True)
 class InjectionStats:
     """Counts from a record-injection run, per kind and per language."""
@@ -123,8 +127,10 @@ def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     ``ranking_weight``) -- the exact shape ``dev.docs.terminology.sweep``
     writes and ``test_relevance_data`` validates. A record id that several
     query terms resolved to keeps its STRONGEST weight (the best term that
-    surfaced it). Absent or unparseable file yields an empty map -- the
-    injection then uses base weights only.
+    surfaced it). An absent file yields an empty map and the injection uses
+    base weights only. A present but unparseable file raises
+    :class:`SearchInjectionError`, so a build cannot silently publish an index
+    with an unreviewed relevance input.
 
     Args:
         repo_root: Repository root holding the relevance file.
@@ -138,8 +144,8 @@ def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     try:
         result = SweepResult.model_validate_json(path.read_text(encoding=_UTF_8))
     except (OSError, ValidationError) as exc:
-        logger.warning("relevance file present but not a valid sweep result: %s (%s)", path, exc)
-        return {}
+        logger.error("relevance file present but not a valid sweep result: %s (%s)", path, exc)
+        raise SearchInjectionError(f"committed relevance file is invalid: {path}") from exc
     weights: dict[str, float] = {}
     for mapping in result.mappings:
         for target in mapping.targets:
@@ -217,6 +223,15 @@ def materialise_search_records(repo_root: Path | None = None) -> SearchRecordPro
         cli_options=materialised.cli_options,
         cli_skipped_reason=materialised.cli_skipped_reason,
     )
+
+
+def _require_complete_projection(materialised: _Materialised) -> None:
+    """Reject an incomplete authoritative projection before Pagefind writes."""
+    if materialised.cli_skipped_reason is not None:
+        raise SearchInjectionError(
+            "cannot inject an incomplete search corpus because the CLI projection "
+            f"was skipped: {materialised.cli_skipped_reason}"
+        )
 
 
 def _effective_weight(record: SearchRecord, relevance: dict[str, float]) -> float:
@@ -447,10 +462,10 @@ def build_record_injector(
     Returns:
         An async callback suitable for ``build_search_index(..., inject=...)``.
     """
-    relevance = load_relevance_weights(repo_root)
-
     async def _inject(index: PagefindIndex) -> None:
         materialised = _materialise_records(repo_root)
+        _require_complete_projection(materialised)
+        relevance = load_relevance_weights(repo_root)
         if sample_per_kind is not None:
             materialised = _bounded_to_sample(materialised, sample_per_kind)
         stats = await _inject_records(index, materialised, relevance, language)

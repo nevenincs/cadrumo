@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:cdbb69ae8cdb717b04c08fb7c77ac790c67230efd80304beb70b6c136d827a55'
+body_hash: 'sha256:38da12af13f8cb70ebd86b0369cf037cf70981bd6c226d2a56c3d0f0cdcdbe53'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -63,6 +63,14 @@ Malformed relevance data can become empty boosts, and CLI projection exceptions 
 ### acceptance-boundary | low | Source contracts do not constitute artifact or release evidence
 
 The matrix/provider/bridge/browser/legal/casilla source seams are directionally aligned, but the plan rows remain unaccepted. The current source review cannot prove the pinned model artifact, content hashes, quantization drift, held-out recall, locale parity, generated targets, or live behavior.
+
+## 2026-08-05 RAG-grounded Pagefind narrowing remediation
+
+A fresh vaultspec-rag search over `dev/docs/pagefind_inject.py` confirmed that the authoritative projection reports a skipped CLI projection while the ordinary Pagefind injector previously continued with concepts, casillas, legal provisions, and pages. The same source contract treats the committed relevance file as optional only when absent; a present but malformed sweep file must not silently become an unreviewed base-weight build.
+
+The source seam now raises `SearchInjectionError` before Pagefind writes when the CLI projection is incomplete, and raises the same error when a present relevance file fails `SweepResult` validation or cannot be read. An absent relevance file retains the documented deterministic base-weight fallback. Relevance loading is deferred into the injection callback so a missing vendored Pagefind still reaches its existing unavailable-backend boundary first.
+
+Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, and diff checks. No tests, builds, Pagefind/runtime probes, generated artifacts, live sweeps, reindexing, model downloads, or deployment were run. This is source remediation only; the deployment-parity and record-corpus acceptance rows remain open.
 
 ## Recommendations
 
