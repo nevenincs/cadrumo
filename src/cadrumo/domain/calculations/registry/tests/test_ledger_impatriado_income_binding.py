@@ -16,6 +16,7 @@ dispatch reads ``gross_amount`` unconditionally, ignoring a declared
 ``ingresos_integros_sum``) and serves as part of the F15 regression net for
 this family's refactor onto the shared
 :func:`~....registry._ledger_binding_resolution.resolve_ledger_family_binding_values`
+/ :func:`~....registry._ledger_binding_resolution.unsupported_ledger_family_observations`
 skeleton.
 """
 
@@ -31,6 +32,7 @@ from .. import (
     CasillaId,
     build_snapshot,
     resolve_ledger_impatriado_income_aggregation_binding_values,
+    unsupported_ledger_impatriado_income_observations,
     validated_casilla_id,
 )
 from ._registry_schema_support import _committed_modelo
@@ -41,6 +43,10 @@ _IMPATRIADO_BINDING = "modelo-151-impatriado-base-liquidable-general"
 _M151_BASE_CASILLA: CasillaId = validated_casilla_id(
     "impatriado.base-liquidable-general",
     surface="_M151_BASE_CASILLA",
+)
+_M151_OTHER_CASILLA: CasillaId = validated_casilla_id(
+    "impatriado.cuota-integra-general",
+    surface="_M151_OTHER_CASILLA",
 )
 
 
@@ -110,3 +116,43 @@ def test_gross_income_sum_fact_reads_gross_amount_unconditionally() -> None:
     assert resolved[gross_binding.id] != Decimal("1500.00"), (
         "gross_income_sum must not fall back to the ingresos_integros_sum base-preferring behaviour"
     )
+
+
+def test_unsupported_flags_non_zero_income_routed_to_no_binding() -> None:
+    """A non-zero declarable income whose target_casilla_id matches no binding is surfaced."""
+    revision = _modelo_151_snapshot().revision
+
+    routed = _ImpatriadoIncomeObservation(
+        target_casilla_id=_M151_BASE_CASILLA,
+        gross_amount=Decimal("1000.00"),
+        taxable_base_amount=None,
+    )
+    unrouted = _ImpatriadoIncomeObservation(
+        target_casilla_id=_M151_OTHER_CASILLA,
+        gross_amount=Decimal("500.00"),
+        taxable_base_amount=None,
+    )
+
+    result = unsupported_ledger_impatriado_income_observations(revision, (routed, unrouted))
+
+    assert result == (unrouted,)
+
+
+def test_unsupported_does_not_flag_zero_declarable_amount() -> None:
+    """A zero-declarable observation routed to no binding must NOT false-fire.
+
+    ``declarable`` is ``max(gross_amount, taxable_base_amount)`` when a base
+    is declared; both are zero here, so the observation contributes nothing
+    whether or not it is routed.
+    """
+    revision = _modelo_151_snapshot().revision
+
+    zero_unrouted = _ImpatriadoIncomeObservation(
+        target_casilla_id=_M151_OTHER_CASILLA,
+        gross_amount=Decimal("0.00"),
+        taxable_base_amount=Decimal("0.00"),
+    )
+
+    result = unsupported_ledger_impatriado_income_observations(revision, (zero_unrouted,))
+
+    assert result == ()
