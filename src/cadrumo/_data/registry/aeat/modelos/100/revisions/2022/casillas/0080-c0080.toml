@@ -5,5 +5,6 @@ label = "Número de días en que ha tenido este uso: Bien inmueble afecto a acti
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"
 semantic_role = "irpf_inmueble_dias_afecto_actividades_economicas"
+continuidad_id = "irpf-inmueble-dias-afecto-actividades-economicas"
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]

@@ -5,5 +5,6 @@ label = "Código del municipio"
 data_type = "integer"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_arrendamiento_municipio_codigo"
+continuidad_id = "irpf-deduccion-la-rioja-arrendamiento-municipio-codigo"
 legal_refs = ["ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]

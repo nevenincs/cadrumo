@@ -75,7 +75,7 @@ _MIN_DIRECTORIES = 40
 # batch). Modelos absent from this mapping carry zero. Lower an entry in the
 # same commit that grounds the chains; the gate prints the replacement literal.
 _UNGROUNDED_BASELINE: dict[str, int] = {
-    "100": 2101,
+    "100": 1508,
     "123": 8,
     "131": 10,
     "151": 1,
