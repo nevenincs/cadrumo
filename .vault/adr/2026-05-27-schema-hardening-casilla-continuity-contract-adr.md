@@ -3,15 +3,15 @@ tags:
   - '#adr'
   - '#schema-hardening'
 date: '2026-05-27'
-modified: '2026-07-17'
-body_hash: 'sha256:f6c0e375594d5eeb7b1bfcaa5f5db9fe27918228db4c25fdc4fd0c45307496b4'
+modified: '2026-08-05'
+body_hash: 'sha256:6da50a9ba8f9edbbd9e317c47d1ad1099f65860e20893eb56451b9b057fe4729'
 related:
   - '[[2026-05-27-schema-hardening-casilla-continuity-contract-research]]'
   - '[[2026-05-27-schema-hardening-m100-revision-drift-research]]'
   - '[[2026-05-20-registry-casilla-identity-research]]'
   - '[[2026-05-19-modelo-registry-fragment-architecture-adr]]'
+  - '[[2026-08-05-modelo-localization-cascade-gapped-continuity-chain-notation-research]]'
 ---
-
 # `schema-hardening` adr: `casilla-continuity-evolution-contract` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -144,6 +144,40 @@ can claim corpus-wide continuity coverage only after every repeated-id drift
 has either a continuity/evolution decision or a repurposing/retirement
 decision. That completeness gate requires separate rollout evidence and must
 not be inferred from `continuidad_validation = "strict"` alone.
+
+**Amendment (2026-08-05) -- a continuity chain is contiguous, and that is now
+enforced.** A chain may not skip a revision and resume: a `continuidad_id`
+present, absent, then present again asserts one legal concept running across a
+period in which the modelo itself declares the concept does not exist, and no
+`legal_refs` can ground that claim. An intermittent concept - the recurring
+shape is a regional catch-all bucket a comunidad legislates only in some years,
+of which M100 casilla `1082` "Otras deducciones" (La Rioja, present 2020 and
+2024, absent 2021-2023) is the worked example - is therefore modelled as two
+chains, each grounded in the norm that actually granted it. This settles the
+open question the taxonomy raised by omission: the evolution kinds fixed by D2
+gain no suspended/resumed member, because a suspension would encode legal
+continuity across years no norm established, which `aeat-safety-legal-gates`
+forbids. A `successor_of` link between the two chains is likewise rejected: it
+either traverses, and is a suspension under another name, or it does not, and is
+this amendment with a breadcrumb. Note that a chain already spans a casilla-id
+change, since `continuidad_id` is read independently of `casilla.id`, so an
+id-change link would solve a problem the schema does not have. The accepted cost
+is that the two chains carry their own localized values, duplicating a
+translation where the wording survives the gap; the corpus census sizing this
+found exactly one such casilla registry-wide, and any presentation-layer
+deduplication is the localization cascade's to decide, not a continuity claim.
+
+D3's enforcement is extended accordingly. `retired` ends a chain permanently was
+prose the validator did not check - it confirmed a chain left at the declared
+revision pair but never that it stayed gone, so a retired-then-resurrected chain
+loaded clean, as did a chain whose disappearance boundary fell between two
+advisory revisions. The contiguity policy in
+`_validate_cross_revision_contiguity.py` reads chain presence across the
+validity-ordered revisions and refuses a non-contiguous chain whenever any
+revision in its span is strict, pointing the author at the new grounded
+`continuidad_id`. Revisions sharing a validity window are variant schemas of one
+period, not a temporal gap, and are excluded. This is a surface-scoped gate like
+the rest of D3, not the corpus-wide completeness gate above.
 
 ### D4 - Keep template expansion downstream
 
