@@ -154,7 +154,12 @@ from ._rung2_compiler import (
     compile_project_rung2_search_bundle,
     compile_rung2_search_bundle,
 )
-from ._rung2_inputs import Rung2CompilationInputs, Rung2InputError, build_rung2_compilation_inputs
+from ._rung2_inputs import (
+    Rung2CompilationInputs,
+    Rung2InputError,
+    Rung2InputProvenance,
+    build_rung2_compilation_inputs,
+)
 from ._legal_projection import LegalSearchRecord, project_legal_search_records
 from ._wrangle import (
     STRONG_SIGNAL_SCORE_FLOOR,
@@ -176,6 +181,7 @@ __all__ = [
     "Rung2CompilationError",
     "Rung2InputError",
     "Rung2CompilationInputs",
+    "Rung2InputProvenance",
     "build_rung2_compilation_inputs",
     "compile_and_write_rung2_search_bundle",
     "compile_project_rung2_search_bundle",
