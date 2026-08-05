@@ -287,22 +287,25 @@ def resolve_ledger_oss_aggregation_binding_values(
     )
 
 
+def _oss_is_declarable(observation: OssIossLedgerObservation) -> bool:
+    return observation.base_amount != Decimal("0") or observation.iva_amount != Decimal("0")
+
+
 def unsupported_ledger_oss_observations(
     revision: ModeloRevision,
     observations: Iterable[OssIossLedgerObservation],
 ) -> tuple[OssIossLedgerObservation, ...]:
     """Return the :class:`OssIossLedgerObservation` rows no binding on ``revision`` can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_oss_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_iva_observations`. An observation whose
-    regime/destination/rate/direction/transaction-kind tuple matches no
-    ``ledger_oss_aggregation`` binding has its base/cuota silently dropped — a
-    modelling gap, not a legitimate zero.
-
-    False-fire guard: an observation carrying neither base nor IVA (both zero)
-    contributes nothing whether or not it is routed and is excluded; only a
-    non-zero declarable OSS line reaching no binding is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the compound regime/destination/rate/
+    direction/transaction-kind match predicate (reused from the resolver's
+    ``_oss_build_matcher``, so the ``transaction_kinds`` set is built once
+    per binding rather than once per (observation, binding) pair) and a
+    false-fire guard excluding an observation carrying neither base nor IVA
+    (both zero). No ``extra_exclusion``.
 
     Args:
         revision: The :class:`ModeloRevision` whose OSS bindings define the
@@ -313,25 +316,14 @@ def unsupported_ledger_oss_observations(
         Tuple of observations whose non-zero base/cuota is selected by no
         ``ledger_oss_aggregation`` binding.
     """
-    selectors = tuple(
-        _ledger_oss_selector(binding)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_OSS_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        parse_selector=_ledger_oss_selector,
+        build_matcher=_oss_build_matcher,
+        is_declarable=_oss_is_declarable,
     )
-    unsupported: list[OssIossLedgerObservation] = []
-    for observation in observations:
-        if observation.base_amount == Decimal("0") and observation.iva_amount == Decimal("0"):
-            continue
-        if not any(
-            observation.regime is selector.regime
-            and observation.destination_member_state is selector.destination_member_state
-            and observation.rate_kind is selector.rate_kind
-            and observation.invoice_direction is selector.invoice_direction
-            and observation.transaction_kind in set(selector.transaction_kinds)
-            for selector in selectors
-        ):
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 # Ledger IVA aggregation source bindings (cross-modelo IVA roll-out).
