@@ -43,7 +43,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodKind
+from ...core import Modelo, Period
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
@@ -56,8 +56,8 @@ from ...domain.transactions import (
 )
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
-from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._grouping import fold_casilla_observations
+from ._errors import AggregationValidationError, t
+from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation
 from ._renta_business_eligibility import renta_expense_business_proportion
 
@@ -196,10 +196,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     # Only the cumulative in-window subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
     # reported uniformly as ``OUTSIDE_PERIOD``.
-    resolved_period = _resolve_quarterly_period(period)
-    cumulative_start = date(resolved_period.filing_year, 1, 1)
-    cumulative_end = resolved_period.end_date
-    partition = repository.partition_by_date_range(cumulative_start, cumulative_end)
+    window = cumulative_year_to_date_window(period)
+    partition = repository.partition_by_date_range(window.start, window.end)
     result = aggregate_renta_gasto_ledger(partition.in_window, bucket_id=bucket_id, period=period)
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -229,9 +227,7 @@ def aggregate_renta_gasto_ledger(
     from Jan 1 of the period's year through the last day of the declared quarter
     (RD 439/2007 art. 110.2).
     """
-    resolved_period = _resolve_quarterly_period(period)
-    cumulative_start = date(resolved_period.filing_year, 1, 1)
-    cumulative_end = resolved_period.end_date
+    window = cumulative_year_to_date_window(period)
 
     observations: list[RentaGastoObservation] = []
     issues: list[RentaGastoLedgerAggregationIssue] = []
@@ -241,8 +237,8 @@ def aggregate_renta_gasto_ledger(
             continue
         outcome = _classify_gasto_transaction(
             transaction,
-            cumulative_start=cumulative_start,
-            cumulative_end=cumulative_end,
+            cumulative_start=window.start,
+            cumulative_end=window.end,
         )
         if outcome is None:
             continue
@@ -251,23 +247,14 @@ def aggregate_renta_gasto_ledger(
         else:
             observations.append(outcome)
 
-    casilla_aggregation = _gasto_casilla_aggregation(resolved_period, observations)
+    casilla_aggregation = _gasto_casilla_aggregation(window.period, observations)
     return RentaGastoLedgerAggregation(
         modelo=Modelo.M130.value,
-        period=resolved_period,
+        period=window.period,
         observations=tuple(observations),
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
     )
-
-
-def _resolve_quarterly_period(period: Period) -> Period:
-    if period.kind is not PeriodKind.QUARTERLY:
-        raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.quarterly_period_required"),
-            context={"period": str(period)},
-        )
-    return period
 
 
 def _classify_gasto_transaction(

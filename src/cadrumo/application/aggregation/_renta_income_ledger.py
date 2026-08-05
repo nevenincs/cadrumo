@@ -60,7 +60,7 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._grouping import fold_casilla_observations
+from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
@@ -200,10 +200,8 @@ def aggregate_renta_income_ledger_from_repositories(
     # Only the cumulative in-window subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
     # reported uniformly as ``OUTSIDE_PERIOD``.
-    resolved_period = _resolve_quarterly_period(period)
-    cumulative_start = date(resolved_period.filing_year, 1, 1)
-    cumulative_end = resolved_period.end_date
-    partition = repository.partition_by_date_range(cumulative_start, cumulative_end)
+    window = cumulative_year_to_date_window(period)
+    partition = repository.partition_by_date_range(window.start, window.end)
     result = aggregate_renta_income_ledger(partition.in_window, bucket_id=bucket_id, period=period)
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -235,11 +233,7 @@ def aggregate_renta_income_ledger(
     implementing the year-to-date accumulation rule for IRPF pagos
     fraccionados (RD 439/2007 art. 110.2).
     """
-    resolved_period = _resolve_quarterly_period(period)
-    # Cumulative start: Jan 1 of the fiscal year.
-    cumulative_start = date(resolved_period.filing_year, 1, 1)
-    # Cumulative end: last day of the declared quarter.
-    cumulative_end = resolved_period.end_date
+    window = cumulative_year_to_date_window(period)
 
     observations: list[RentaIncomeObservation] = []
     issues: list[RentaIncomeLedgerAggregationIssue] = []
@@ -249,8 +243,8 @@ def aggregate_renta_income_ledger(
             continue
         outcome = _classify_income_transaction(
             transaction,
-            cumulative_start=cumulative_start,
-            cumulative_end=cumulative_end,
+            cumulative_start=window.start,
+            cumulative_end=window.end,
         )
         if outcome is None:
             continue
@@ -259,10 +253,10 @@ def aggregate_renta_income_ledger(
         else:
             observations.append(outcome)
 
-    casilla_aggregation = _income_casilla_aggregation(resolved_period, observations)
+    casilla_aggregation = _income_casilla_aggregation(window.period, observations)
     return RentaIncomeLedgerAggregation(
         modelo=Modelo.M130.value,
-        period=resolved_period,
+        period=window.period,
         observations=tuple(observations),
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
@@ -377,16 +371,6 @@ def _m100_income_casilla_aggregation(
         period=period,
         amount_fn=_computable_income_amount,
     )
-
-
-def _resolve_quarterly_period(period: Period) -> Period:
-    resolved = period
-    if resolved.kind is not PeriodKind.QUARTERLY:
-        raise AggregationPeriodError(
-            t("aggregation.renta_ledger.errors.quarterly_period_required"),
-            context={"period": str(resolved)},
-        )
-    return resolved
 
 
 def _classify_income_transaction(
