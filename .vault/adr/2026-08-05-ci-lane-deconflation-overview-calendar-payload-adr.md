@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:318b12cbd7be26107d9ee6cae9ca1eff1f60bac3771e5f46c1a1b159afa5be8e'
+body_hash: 'sha256:385fdee55d84a40e8446841d6c97449eada45bd82daf412d3a4ddd5a277217b0'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
@@ -274,3 +274,18 @@ being sufficient — though it would be rendering a title the server has never g
 the input schemas such clients build forms from have never carried one. And no authoritative
 specification statement on titles in output schemas was located, so the SDK's behaviour is
 the evidence here, not the spec text.
+
+### The two title censuses reconcile exactly; the disagreement was grouping
+
+Two independent counts of the same 117 titles were reported as 102 plus 15 and as 104 plus
+13, and the difference looked like a measurement discrepancy worth recording as unresolved.
+It is not one. Measured: 102 property titles auto-derived from their key, 2 property titles
+carrying a model name (`result` and `error`), and 13 definition titles identical to their
+definition key. 102 + 2 + 13 = 117.
+
+The first count grouped by DERIVABILITY, folding the two model-named titles in with the
+definition titles as "not auto-derived". The second grouped by LOCATION, folding them in with
+the properties. Both are correct and both describe the same partition. Recorded because an
+unreconciled count in a decision record invites a later reader to re-measure, and because it
+is the same lesson this record already carries about orphaned definitions: two measurements
+that disagree usually differ in their setup rather than in the fact they measure.
