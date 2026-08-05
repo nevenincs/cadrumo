@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:1aea3199423dc0cbd87e8ed8a13c87ac48d67c7326bec08841e1712ab716d41c'
+body_hash: 'sha256:ded4b0e4e82fc40bc2c34939d2ef36279cccf43f4bc13d80d52ada0563d7922b'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -98,6 +98,18 @@ The `casilla-locale-fallback` finding is therefore source-remediated at the cens
 RAG confirmed that the browser already requires each semantic bridge target list to be non-increasing by ranking weight and UTF-8 record-id order on ties, while the Python `SemanticBridgeEntry` validator checked only uniqueness and `targets_sha256`. The Python validator now enforces the same deterministic ordering. Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, and diff checks. No tests or artifact loading were run.
 
 The `bridge-order-parity` finding is source-remediated; the browser nested-content hash parity finding remains open and no acceptance row is closed by this source-only change.
+
+## 2026-08-05 R8 provider/tokenizer content-attestation disposition
+
+### r8-content-attestation | high, deferred | Provenance fields are not independently verifiable from the current contract
+
+The RAG-grounded source review and LUNA MAX implementation review confirm that `PotionModel2VecProvider` validates the selected local model identity, revision, package versions, dimension, tokenizer interface, and normalization shape, but does not independently derive or verify `ProviderProvenance.source_sha256`, `TokenizerProvenance.vocabulary_sha256`, or `TokenizerProvenance.config_sha256`. The current schema and ADR identify these as required content attestations but do not define the exact byte set, canonicalization, or authoritative local files for each digest.
+
+Adding a deterministic package/model manifest or tokenizer-file convention now would invent a new provenance contract and could attest the wrong bytes. The existing model artifact has not been downloaded or inspected under the no-model-download boundary. No source edit was therefore made.
+
+### disposition
+
+Record this as a bounded R8 follow-up: first amend the accepted ADR/schema with the exact provider package/model byte manifest and tokenizer vocabulary/config byte semantics, then implement independent verification before matrix compilation or artifact acceptance. P02.S06 and the related Rung-2 acceptance rows remain open. No tests, builds, model downloads, matrix generation, browser probes, or deployment were run.
 
 ## 2026-08-05 browser-hash parity disposition
 
