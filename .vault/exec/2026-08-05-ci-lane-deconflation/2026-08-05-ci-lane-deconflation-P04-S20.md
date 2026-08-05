@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2eacb86f94ab20de3b30b3bce69305a2064ef26c33236c2c6d41a3c720f3f134'
+body_hash: 'sha256:4d3128c1ccca6a51465f862dcd2fa966107188e6d0ec4a1545e2653abf28b29d'
 step_id: 'S20'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -84,3 +84,20 @@ The row's framing generalises past this instance: a baseline that only ever decr
 ratchet, and admitting new debt to it inverts the mechanism rather than accommodating it. The
 question "is this debt legitimate" has to be answered before the baseline is touched, because
 touching the baseline is what makes the question unanswerable afterwards.
+
+### The judgement is evidenced, not inferred from the change's shape
+
+Asked to confirm whether the row's judgement half actually happened or only its mechanical
+half, the distinguishing evidence is what the commit did NOT touch:
+
+    git show dd9e6b3504 --numstat | grep baseline   ->  no match
+    dev/import_hygiene_baseline.json at HEAD        ->  "sites": []
+
+The baseline was never opened. What the commit did instead was promote
+`resolve_maternidad_meses` into the owning package's public `__all__` and repoint the two
+reaching tests at it — the resolution `service-imports-via-top-level-reexports` prescribes,
+where promotion is a precondition of the consuming change rather than a follow-up.
+
+So both halves of the row are satisfied: the debt was judged illegitimate, and the judgement is
+readable from the artefact rather than only from its author. Had the debt been admitted, the
+baseline's sites list would carry the two entries and the facade would be unchanged.

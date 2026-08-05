@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:aa088dad53bf81c88a812b70cdd37f0b69526bc2f9d3509c5b5f6c496184a1f1'
+body_hash: 'sha256:1c3cf6fd5ba9eea303a2a6ba910748aaa3c746cadf7fb8bd7fa6b1801492772a'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -46,7 +46,7 @@ The two new lanes both failed their first real execution and their fixes are unv
 Enrolling the integration suite and the dev tooling gates exposed accumulated rot that had never been visible. These rows close it and lift the two non-blocking guards. A guard left non-blocking indefinitely becomes decorative, so each carries the condition for flipping it.
 
 - [ ] `P02.S06` - Close the entrypoints CLI integration failures, measured at 18 across 8 modules with 138 passing, and regenerate the set from two intersected runs rather than one; `src/cadrumo/entrypoints/cli/tests`.
-- [ ] `P02.S07` - Move the overview.calendar bulk payload to a resource_link, it is 20589 characters against an 18000 budget and raising the budget defeats the gate; `src/cadrumo/entrypoints/mcp`.
+- [ ] `P02.S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock; `src/cadrumo/entrypoints/mcp`.
 - [ ] `P02.S08` - Measure the dev tooling gates at a clean HEAD, the local count of 55 is contaminated because 32 belong to an uncommitted peer legal entry and the true figure is nearer 23; `dev/audit, dev/deploy, dev/env, dev/registry, dev/docs`.
 - [ ] `P02.S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass; `.github/workflows/ci-full.yml`.
 - [ ] `P02.S10` - Flip continue-on-error off the integration serial step once one runner execution is observed, its build branch producing three wheels and three sdists has never been watched; `.github/workflows/ci-full.yml`.
