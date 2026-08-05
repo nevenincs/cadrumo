@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#schema-hardening'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f3cc0fc560af2d7f0bdfa3607ef9d5c7a1d254e739651eb4ddb533486dd862b1'
+body_hash: 'sha256:313e8fbcd04a0972419aa10fca9628bccfb2f5face65daf53c5406b1892d3663'
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]'
@@ -461,6 +461,8 @@ related:
   - '[[2026-06-04-registry-reviewability-gate-code-review-audit]]'
   - '[[2026-06-04-registry-reviewability-gate-headroom-audit]]'
   - '[[2026-06-04-registry-validator-baseline-audit]]'
+  - '[[2026-08-05-schema-hardening-aeip-event-keyed-continuity-research]]'
+  - '[[2026-08-05-schema-hardening-compiled-casilla-order-research]]'
 ---
 
 # `schema-hardening` feature index
@@ -939,3 +941,5 @@ Auto-generated index of all documents tagged with `#schema-hardening`.
 - `2026-05-28-schema-hardening-m100-continuity-inventory-research` - `schema-hardening` research: `m100-continuity-inventory`
 - `2026-06-02-schema-hardening-m100-label-legal-continuity-candidate-research` - `schema-hardening` research: `m100 label-and-legal-reference continuity candidate`
 - `2026-06-02-schema-hardening-m100-legal-ref-continuity-candidate-research` - `schema-hardening` research: `m100 legal-reference-only continuity candidate`
+- `2026-08-05-schema-hardening-aeip-event-keyed-continuity-research` - `schema-hardening` research: `AEIP anexo-A event-keyed continuity`
+- `2026-08-05-schema-hardening-compiled-casilla-order-research` - `schema-hardening` research: `Is compiled casilla order load-bearing`
