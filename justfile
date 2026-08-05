@@ -410,19 +410,51 @@ test-integration:
     @uv run --no-sync pytest -q -m "integration and not serial and not os_keychain"
     @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
 
+# THIS FILE IS THE SOLE DECLARATION SITE FOR EVERY `dev/` TEST LANE.
+#
+# The list used to be declared three times -- ci.yml named four directories,
+# `test-dev-tooling` named nine, `docs-check` named two -- and the workflow's
+# set overlapped the justfile's by NOTHING. No single place answered "what runs
+# under dev/", so fifteen of sixteen directories were covered only by the
+# accident of three independently maintained lists. The workflow now invokes
+# `test-dev-ci` instead of restating paths, so a `dev/` lane is declared here or
+# nowhere. Declare a new one in a recipe below; never inline paths into a
+# workflow, which puts the answer back in two places.
+#
+# `src/cadrumo/tests/test_dev_tree_lane_coverage.py` proves the union of these
+# recipes covers every tracked `dev/**/test_*.py`, and fails when a new test
+# directory lands that no lane names.
+
 # Run the dev/ tooling gates that no other lane reaches. `testpaths` in
-# pyproject names only `src/cadrumo` plus one packaging file, and CI's dev step
-# names only dev/ci, dev/packaging, dev/quality, and dev/release -- so these ten
+# pyproject names only `src/cadrumo` plus one packaging file, so these
 # directories were collected by NOTHING and 19 of their tests had been failing
 # unobserved, including the duplication-disposition gate and the whole shipped
 # documentation-search corpus. The marker expression is stated explicitly for
 # the reason `packaging-smoke-preflight-tests` states it: these directories are
 # mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
-# deselect the integration contracts and still exit zero. Coverage is guarded by
-# `src/cadrumo/tests/test_dev_tree_lane_coverage.py`, which fails when a new
-# test directory appears under `dev/` that no lane names.
+# deselect the integration contracts and still exit zero.
 test-dev-tooling:
-    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/newmodelo/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/newmodelo/tests dev/registry/migration/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+
+# Run the dev-tree workflow/tooling conformance gates that CI runs per-push
+# (workflow structural pins, evidence-transport conformance, shard-plugin
+# partition proof). ci.yml calls THIS recipe, so the paths and the marker
+# expression live in one place and the lane is reproducible locally -- it was
+# previously inline in the workflow and could not be run by hand at all.
+#
+# The marker expression is explicit for the same reason as `test-dev-tooling`:
+# the default addopts' `-m unit` deselects the integration-marked workflow pins
+# and still exits zero. `not serial` leaves the installed-oracles pass to the
+# packaging campaign that builds its cohort.
+#
+# -n 8, never -n auto: the workstation's 24 logical CPUs are shared by THREE
+# runners (win + wsl + wsl-2); worst-case co-residency is 3 jobs, so each lane
+# gets 24/3 (machine-aware sizing, .github/ci-control-plane.md). The dev tree
+# carries real install/harness tests that legitimately run 300-900 s, so this
+# raises the per-test ceiling above the product suite's 300 s ini default
+# (slowest product test: 58.7 s measured); 900 s still kills a wedge in minutes.
+test-dev-ci:
+    @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a

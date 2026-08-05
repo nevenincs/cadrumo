@@ -11,6 +11,7 @@ import yaml
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci.yml"
+_JUSTFILE = Path(__file__).resolve().parents[3] / "justfile"
 _PROHIBITED_AEAT_PRODUCT_FORMS = (
     (
         "python-import",
@@ -64,19 +65,40 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     assert "uv run --no-sync aeat app registry verify" in static_commands
     assert "uv run --no-sync aeat app registry audit-oracles" in static_commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
-    # The dev-tree workflow/tooling conformance gates run per-push here: the
-    # default `-m unit` addopts deselects the integration-marked workflow
-    # pins from the packaging preflight invocation, so this is their home.
-    # Explicit -n 8, never -n auto: three runners share the machine
-    # (machine-aware sizing, test_machine_aware_load.py).
-    assert (
-        'pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)"'
-        " dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests" in static_commands
-    )
+    # The dev-tree workflow/tooling conformance gates run per-push here, via the
+    # `test-dev-ci` recipe. The workflow names the recipe and the recipe owns the
+    # paths, because the justfile is the sole declaration site for every `dev/`
+    # lane; the substance of the invocation is pinned in the recipe, below.
+    assert "just test-dev-ci" in static_commands
 
     unit = document["jobs"]["cadrumo-unit"]
     unit_commands = "\n".join(str(step.get("run", "")) for step in unit["steps"])
     assert "uv run pytest --durations=50 -n 8" in unit_commands
+
+
+def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> None:
+    """The workflow names a recipe, so the recipe is where the pin has to bite.
+
+    Delegating the step to `just test-dev-ci` moves the paths and the marker
+    expression out of the workflow, which is the point -- the justfile is the
+    sole declaration site for every `dev/` lane. But a pin that only checked the
+    workflow says "a recipe is invoked" and nothing about what it does, so
+    emptying the recipe would pass it while running no gates at all. This asserts
+    the substance at its new home.
+
+    Explicit -n 8, never -n auto: three runners share the machine (machine-aware
+    sizing, test_machine_aware_load.py). The marker expression is explicit
+    because the default `-m unit` addopts deselects the integration-marked
+    workflow pins and still exits zero.
+    """
+    recipe = next(
+        (line for line in _JUSTFILE.read_text(encoding="utf-8").splitlines() if "dev/ci/tests" in line),
+        None,
+    )
+    assert recipe is not None, "no justfile line names dev/ci/tests; the delegated lane has no home"
+    assert 'pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)"' in recipe
+    for directory in ("dev/ci/tests", "dev/packaging/tests", "dev/quality/tests", "dev/release/tests"):
+        assert directory in recipe, f"the delegated lane no longer reaches {directory}"
 
 
 def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
