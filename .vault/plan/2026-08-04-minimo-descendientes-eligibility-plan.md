@@ -3,15 +3,14 @@ tags:
   - '#plan'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-04'
-body_hash: 'sha256:762777896d822162d22ca944e0833530a33485d4432f79fa5b324c093b456394'
+modified: '2026-08-05'
+body_hash: 'sha256:e60c1b3c8b29daea0cb54a5c390cb942a33aa66dd43e196bf0a08cd9fffb4e96'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
 ---
-
 # `minimo-descendientes-eligibility` plan
 
 ## Description
@@ -64,6 +63,9 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [ ] `P04.S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one; `src/cadrumo/domain/contribuyente/family.py`.
 - [ ] `P04.S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin; `src/cadrumo/domain/contribuyente/family.py`.
 - [x] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
+- [ ] `P04.S18` - Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/modelo/_profile_binding.py`.
+- [ ] `P04.S19` - Retire or enroll the RentaFamilyProfile guarderia increment property, which duplicates registry formula 0181 in Python and has no production consumer, so it is today either dead code or a second calculation authority; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py`.
+- [ ] `P04.S20` - Translate the model-level refusals reaching the descendiente add verb, which surface as raw pydantic tracebacks because the handler catches only the answer-type error, so the entry-date coherence refusals this campaign shipped are the ones landing untranslated; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 
 ## Parallelization
 
@@ -83,26 +85,67 @@ adoption clause can carry the date-scoped window it actually has rather than bor
 the Art. 58.2 period-scoped one. The two genuinely diverge, and one predicate serving
 both would silently apply one statute's window to the other's deduction.
 
-`P04.S16` is BLOCKED and must not be started. The Art. 81.2 increase extends into the
-period the child turns three, for spend incurred after the birthday and up to the month
-before the second cycle of infant education may begin. That upper bound is a
-per-comunidad regional determination rather than a fixed calendar month, grounded
-against the live authority on 2026-08-04, so neither the persisted shape nor the engine
-can hard-code one. Every pre-split shape would bake an unverified answer into stored
-data. The blocker is the regional table, not the modelling, and it is a larger
-precondition than the governing ADR originally recorded.
+`P04.S16` was BLOCKED on a per-comunidad regional table and no longer is. The row's own
+text still carries that clause and is stale; this paragraph is the correction, and the
+blocker must not be reinstated from reading the row. The Art. 81.2 increase extends into
+the period the child turns three, for spend incurred after the birthday and up to the
+month before the second cycle of infant education may begin, and that upper bound is a
+per-comunidad determination rather than a fixed calendar month. The earlier reading
+followed correctly from the statute and the tax authority alone, and it was still the
+wrong question: the informative return reporting childcare custody is filed EXCLUSIVELY
+by the centre, which is required to apply its own region's calendar and report the
+resulting months. So the determination is a third party's legal obligation, the figure a
+taxpayer holds already encodes it, and re-deriving it here would compute from a calendar
+this application does not hold an answer that could contradict the return the authority
+already has. The regional table is RETIRED as a precondition and must not be built.
 
-`P04.S17` is BLOCKED and must not be started. It is REOPENED from retired. The ADR
+`P04.S16` has since landed in two commits and is awaiting code review, which is why the
+row is still open. The first shipped the persisted shape and the engine month rules and
+declared itself incomplete by design, because nothing could write the field. The second
+shipped the entry surface and, necessarily, the fix for a second aggregation path found
+while building it: the derived-facts injector summed the annual spend fact under its own
+inline age test and never read the canonical record, so the whole domain half had no
+production consumer. Without that fix the entry surface would have been worse than the
+gap it closes, because a taxpayer following the new advisory would have moved their
+figure onto the monthly map and received nothing.
+
+`P04.S17` was BLOCKED on per-child attribution of anualidades and has landed at the
+staged boundary the ADR names, so the row is closed and its own BLOCKED clause is
+likewise stale. It is REOPENED from retired. The ADR
 retired the dependencia assimilation on the reasoning that the statutory carve-out for
 judicial anualidades removes the one common household shape and that no reachable case
 could be constructed, and both halves were refuted against the live authority: the
 carve-out turns on anualidades actually being SATISFIED rather than on the regime being
 available, and the authority states the no-custody non-paying supporter as entitled in
-terms. The blocker is per-child attribution of anualidades. The staged boundary the ADR
-names is to assimilate only where the filer declares none at all, which errs toward
-under-grant with a visible advisory. Whoever takes it must sweep the existing
-incompatibility injector in the same change, because landing one half of an
-incompatibility pair is this campaign's most frequently repeated defect.
+terms. The staged boundary the ADR names, and the one that shipped, is to assimilate
+only where the filer declares no anualidades at all, which errs toward under-grant with
+a visible advisory. Per-child attribution remains unbuilt, so the suppression is still
+profile-wide rather than per-child. The existing incompatibility injector was swept in
+the same change, because landing one half of an incompatibility pair is this campaign's
+most frequently repeated defect.
+
+`P04.S18`, `P04.S19` and `P04.S20` all came out of executing `S16` and are open and
+unblocked. None may be folded back into `S16`: each is a separate load-bearing change,
+and bundling any of them with a fix that was already inverting a live under-grant is the
+risk the relocation discipline exists to refuse.
+
+`S18` is the one with a hard shape requirement. The derived path and its binding are
+named for the menor-de-tres population while carrying the guardería one, which is wider
+by exactly the turning-three period, and the mismatch is now LOAD-BEARING because that
+count is the cap term. It is a naming lie of the same class as a docstring asserting a
+property the code lacks, which was this campaign's most repeated failure, and the only
+reason it was not corrected in place is blast radius. The rename must land as ONE atomic
+commit: the schema pattern, the binding TOML, the formula reference, the injector and
+every M100 test fixture that supplies the binding id by name share one index and one
+commit, with a clean collect-only observed immediately before it. Splitting it leaves
+the tree uncollectable in between.
+
+`S19` and `S20` are independent of `S18` and of each other. `S19` must decide rather
+than defer: a derived property duplicating a registry formula in Python with no
+production consumer is either dead code to delete or a second authority to enroll, and
+leaving it as the third state is what this campaign has spent its time removing. `S20`
+is operator-facing and self-inflicted, because the untranslated refusals reaching that
+verb are the entry-date coherence rules this Phase itself shipped.
 
 ## Verification
 
@@ -141,8 +184,35 @@ wherever nothing is lost: a descendant already under three, one the statute excl
 from the limb, one not cohabiting, and one over 25 with no discapacidad.
 
 `S15` is complete when the Art. 81.1 window is date-scoped and a test shows it diverging
-from the Art. 58.2 period-scoped window for the same child. `S16` and `S17` are complete
-only when their named blockers are cleared first, and neither may be closed by narrowing
-its scope to the unblocked part: the ADR records both at full scope deliberately, and a
-campaign that narrows its own completion criterion reads as rigour while leaving the gap
-open.
+from the Art. 58.2 period-scoped window for the same child.
+
+The rule that governed `S16` and `S17` stands and is restated because both have now been
+closed against it: neither could be closed by narrowing its scope to the unblocked part,
+because a campaign that narrows its own completion criterion reads as rigour while
+leaving the gap open. Each was closed by the blocker ceasing to apply on measurement,
+not by scope reduction. `S17`'s blocker still stands in part and its staged boundary is
+recorded above rather than quietly redefined as the whole rule.
+
+`S16` is verified by a proof that the declared map ARRIVES, not merely that it persists,
+because the layer between the two is where it was broken. The end-to-end gate drives the
+real CLI: declare a child turning three in April with monthly spend spanning the
+birthday, calculate, and the guardería casilla resolves to the post-birthday months
+alone. Nothing in that expectation re-derives the registry formula: the figure is the
+arithmetic of the fixture's own declared months. The second aggregation path was
+measured rather than argued, by replaying the superseded algorithm in process with no
+tracked file mutated, which showed a monthly-only child yielding zero against a record
+holding real spend, a turning-three child yielding a zero cap population, and the annual
+path unchanged. Any later change to that injector re-runs that replay rather than
+reasoning about coverage. The persisted-shape change carries a fact-boundary round-trip
+plus an anti-tautology proof that four separately corrupted stored maps each REFUSE
+rather than reading as undeclared, which is the dangerous fallback: an empty map in the
+turning-three period withholds the whole increase.
+
+`S18` is complete only as one atomic commit, and its verification is the collect-only
+gate observed clean immediately before that commit rather than after. A partial rename
+is the failure mode, so a green suite on a split landing is not evidence. `S19` is
+complete when the duplicate property is either deleted or given a production consumer,
+and explicitly not when it is merely documented. `S20` is complete when a malformed
+entry-date coherence flag reaches the operator as a translated refusal in all four
+catalogues rather than a traceback, proven through the real CLI rather than by calling
+the parser.
