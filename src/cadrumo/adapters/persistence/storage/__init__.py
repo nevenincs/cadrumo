@@ -25,6 +25,10 @@ The public surface is grouped by contract:
   layer-one row gate ``ensure_schema_version_readable`` is deliberately absent
   from this facade: it is a ceiling, and advertising it here would offer
   layer-two callers the wrong contract.
+- Inner-envelope classification contract — :func:`inner_envelope_classification_is_expected`,
+  the version predicate's non-raising sibling, applied to the ``classification``
+  of the :class:`Envelope` inside a decrypted payload against the caller's own
+  declared :class:`SensitivityClass`.
 - Encryption substrate — :class:`Envelope`, :class:`CipherEnvelope`,
   :class:`EncryptedBlobStore`, :class:`SecretStore`, :func:`get_secret_store`
   (the route-canonical store factory), :class:`MasterKeyProvider`, and the
@@ -174,7 +178,7 @@ from ._rotation import (
     rotate_blob_stores,
     rotate_master_key,
 )
-from ._schema_lineage import inner_envelope_version_is_current
+from ._schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
 from ._storage_path_definitions import (
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_AUDIT_DIRNAME,
@@ -543,6 +547,7 @@ __all__ = [
     "get_secret_store",
     "get_sessionmaker",
     "has_active_bucket_session",
+    "inner_envelope_classification_is_expected",
     "inner_envelope_version_is_current",
     "inspect_bucket_storage_runtime",
     "inspect_storage_runtime",
