@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e1b3a8e5e7f0d95773de2802bea7d17475320ea50de6deca849f2c549ef52805'
+body_hash: 'sha256:2032bcb1a21dd36285aaf06b37254674535ba423b4efea80bf2b147d205792e5'
 step_id: 'S39'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -67,9 +67,10 @@ replaces the tranche only.
 FOR WHOEVER WIRES THE ASCENDIENTES MINIMO. Article 61 norma 4a fixes both
 figures in ONE sentence: 2.400 EUR for a descendiente and 1.150 EUR for an
 ascendiente. The legal entry `ley-35-2006:art-61-norma-4` is already written as
-the single authority for both. Cite it and add the 1.150 figure beside the
-existing parameter. Do NOT mint a second legal entry for the same clause - one
-clause, one authority. The entry's own notes repeat this instruction.
+the single authority for both. Cite it and mint a SIBLING parameter under an
+ascendientes stem for the 1.150 figure -- not a second value on the
+descendientes parameter, whose id is descendientes-specific. One clause, one
+legal authority, two parameters. The entry's own notes repeat this instruction.
 
 Three findings the Step as written did not carry, each grounded in the bundled
 manuals rather than reasoned:
