@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:5417f7c55d5c56ea7e410b610495e601ff755cc016446e32e4767c0ee49a576f'
+body_hash: 'sha256:ea9b025da51e2f8e1914d06c02144802a6222a0010bdb50277312908bcbbb03b'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -62,8 +62,8 @@ Declare which components an invoice of each IVA category actually has, as regist
 Let exempt invoices recover their retencion by relaxing the inference precondition to category-determinable cuota, keeping the registry max-rate bound and never inverting a rate from cash. Give the invoice record its decomposition contract so a partial declaration is excluded but visible.
 
 - [ ] `P03.S11` - Relax the withheld-inference precondition to category-determinable cuota so exempt invoices recover their retencion, keeping the registry max-rate bound; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
-- [ ] `P03.S12` - Add the invoice retencion consistency validator, holding retencion outside the grand total; `src/cadrumo/domain/transactions`.
-- [ ] `P03.S13` - Add the partial-invoice decomposition contract so an ungrounded record is excluded but visible rather than silently dropped; `src/cadrumo/domain/transactions`.
+- [x] `P03.S12` - Add the invoice retencion consistency validator, holding retencion outside the grand total; `src/cadrumo/domain/transactions`.
+- [x] `P03.S13` - Add the partial-invoice decomposition contract so an ungrounded record is excluded but visible rather than silently dropped; `src/cadrumo/domain/transactions`.
 - [ ] `P03.S20` - Route received-invoice retencion into the existing per-perceptor store behind retenciones_aggregation, never a second parallel retencion path; `src/cadrumo/application/aggregation`.
 
 ### Phase `P04` - Verify severity escalation
