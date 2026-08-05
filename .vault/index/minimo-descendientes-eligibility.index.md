@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f6a9d239206d74da0e9ad5e5b3b9ea2c7cf2eb1e348b9f1305157e8b9f779730'
+body_hash: 'sha256:dcb4b17b78eabe1f3266621c1692f5579ba2580975307cfa08bf5c5edda51686'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -43,6 +43,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S34]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S35]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S36]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S37]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S38]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S39]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -110,6 +111,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S34` - Retire the calculate-time maternidad flag so casilla 0611 has one authority, because the flag carries a free-form hijo id that no descendant record answers to and is today reconciled only by a mutual refusal, which contains the two-authority hazard without removing it, and the refusal is what currently blocks 0611 from becoming registry-computed like its 0613 sibling
 - `2026-08-04-minimo-descendientes-eligibility-P04-S35` - Close the 0611 registry-computed question as a measured non-defect rather than implementing it, because 0613 is a flat-rate-times-count formula whose cap never varies per child while 0611 after the increment has a per-child varying cap, so the two casillas do not share a rule shape and parity was never achievable, and the only route to genuine registry computation is a new aggregation primitive applying a conditional per-row cap whose entire value is auditability since the figure is already correct
 - `2026-08-04-minimo-descendientes-eligibility-P04-S36` - Restore the erased typing in the prorrata advisory fixtures
+- `2026-08-04-minimo-descendientes-eligibility-P04-S37` - 2026-08-04-minimo-descendientes-eligibility-P04-S37
 - `2026-08-04-minimo-descendientes-eligibility-P04-S38` - Advise or confirm at the point working months are declared that the child is a hijo rather than a grandchild or a minor under judicial guarda, because the ordinary predicate never reads relacion so both populations compute correctly for Art. 58.1 and 58.2 while only Art. 81.1 over-grants, and the over-grant additionally requires declared months, so that narrow conjunction reaches every already-stored record which no new enum member can do
 - `2026-08-04-minimo-descendientes-eligibility-P04-S39` - Model both limbs of the fallecimiento rule in one slice
 
