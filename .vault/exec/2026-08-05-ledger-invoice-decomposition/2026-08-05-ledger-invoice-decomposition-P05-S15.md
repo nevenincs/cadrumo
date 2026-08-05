@@ -5,44 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:5d5b4db17ab4af15fb5c910a6432b417be34b7c77035c05bcc36ba9ba152e563'
+body_hash: 'sha256:46ef99524ee7d95c3bebb8645b9acbb0b516c38bdb7f9cc76a54f136ac8ff1ce'
 step_id: 'S15'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ledger-invoice-decomposition with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S15 and 2026-08-05-ledger-invoice-decomposition-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test
 
@@ -52,10 +19,37 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Add `src/cadrumo/domain/calculations/registry/tests/test_ledger_income_chain_oracle_rated.py` driving one rated professional invoice through all three links of the income chain.
+- Build the row as a real `Transaction` and run the production classifier rather than hand-building an observation, so the grounding marker and the withholding derivation are set where production sets them.
+- Read the resolved value of the three committed Modelo 130 income bindings, which no prior test did for a row that started as an invoice.
+- Ground casilla 01 on the invoice's own base imponible, the measure the bundled AEAT Modelo 130 instructions call the ingresos integros fiscalmente computables.
+- Ground the retencion on the RIRPF art. 95.1 general rate read from the registry parameter catalogue, applied to the base that article names, never on the engine's own gross-minus-cash route.
+- State the two invoice identities as their own gate so a later edit to one figure reddens at the source instead of silently re-grounding the module.
+- Exclude the two wrong retencion bases explicitly: the IVA-inclusive total, and a rate inverted off the cash.
+- Pin the base-absent branch as the rated case's error direction, which runs opposite to the exempt one.
 
 ## Outcome
 
+Landed as commit `e5a88bb5e8` (1 file, +308, 0 deletions).
+
+Raw counts, serial runs (`-n 0`): the module alone 7 passed, 0 failed, 0 skipped; with its exempt sibling 14 passed, 0 failed, 0 skipped.
+
+The independent cross-check is the substance of the step. The engine derives a withholding one way only, as declared invoice gross minus cash received, and never applies a rate; the expectation arrives from the statutory rate on the statutory base. Two unrelated routes landing on the same 150 is what makes the figure grounded rather than self-confirming. Had the module recomputed 1210 minus 1060 it would have agreed with the engine by construction whatever the engine did.
+
+The base-absent half records a direction nothing previously watched. With the substrate unrecorded, casilla 01 receives the banked 1060 rather than the 1000 ingresos integros, because the IVA collected on Hacienda's behalf outweighs the retencion withheld. The taxpayer therefore over-declares income by 60 while the 150 credit disappears, roughly 210 worse off on one invoice, and both movements are visible only because the ungrounded screen fires.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The bundled manual-oracle corpus could NOT be used for this step, and the reason is structural rather than a matter of effort. The grounding honesty gate requires every casilla carrying an `expected_by_casilla_id` figure to be `input_kind = "computed"` and enrolled in a verification contract; Modelo 130 casilla 01 is `input_kind = "bound"`, so bundling a payload naming it would raise an `oracle_casilla_not_computed` finding and redden that gate. The corpus mechanism is scoped to computed casillas by construction and cannot express a grounding claim about a bound one. Reported to the coordinator as a finding rather than worked around: the alternatives are to make casilla 01 computed, or to widen the gate, and both are registry decisions well outside a test step.
+
+What replaced it is the same discipline through a different authority. The published figure is the invoice's own base imponible, whose status as the casilla 01 measure is stated in the bundled AEAT Modelo 130 instructions corpus, and the statutory rate is the registry parameter carrying its own BOE citation and review stamp. Neither is engine output, which is the property the step's no-tautology mandate actually asks for.
+
+### Mutation proofs
+
+Run in process by rebinding the registry fact aggregator, so no broken state ever existed in the working tree. Three regressions, each reddening the value gates rather than passing vacuously:
+
+- Sum the gross amount unconditionally: 3 of 7 gates red.
+- Sum only the declared base, dropping the cash fallback: 2 of 7 red.
+- Apply the retencion rate to the IVA-inclusive total instead of the base: 2 of 7 red.
+
+The four gates that stay green under all three are the arithmetic identity, the statutory-rate premise, and the two advisory-screen assertions, none of which reads a resolved binding value. That is the expected partition rather than a coverage gap.
