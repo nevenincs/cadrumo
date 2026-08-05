@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,6 +10,7 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
+from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span
@@ -239,3 +240,73 @@ def test_period_code_casilla_override_refuses_a_malformed_token(tmp_path: Path) 
     message = str(exc_info.value)
     assert "period_code" in message
     assert "9Q" in message
+
+
+# ---------------------------------------------------------------------------
+# The pre-2023 cotizaciones ceiling withholds the deduccion outright, so the
+# ambiguous-relacion advisory -- which only ever names a descendant that
+# CONTRIBUTES months -- has nothing to name. This locks the INTERACTION rather
+# than re-proving either half: `resolve_maternidad_meses` already proves
+# `pairs == ()` for a ceilinged year regardless of relacion
+# (`test_maternidad_cotizaciones_ceiling.py`), and the ambiguous-relacion check
+# reads its candidate set from exactly that field.
+# ---------------------------------------------------------------------------
+
+_MATERNIDAD_BUCKET_ID = "20000000-0000-4000-8000-000000000611"
+_MATERNIDAD_CEILINGED_FILING_YEAR = 2022
+_MATERNIDAD_CASILLA_ID: CasillaId = validated_casilla_id("0611", surface="_MATERNIDAD_CASILLA_ID")
+
+
+def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_everything(
+    tmp_path: Path,
+) -> None:
+    """A default-relacion descendant contributing declared months to a pre-2023 filing.
+
+    The descendant's relacion is the unstated default -- exactly the state the
+    ambiguous-relacion advisory exists to disclose -- but the filing year predates
+    2023, when Art. 81.1 was still capped at a cotizaciones figure this application
+    cannot express. The deduccion is withheld entirely for that reason, so there is
+    nothing left for the relacion ambiguity to threaten: only the cotizaciones
+    advisory fires, never the ambiguous-relacion one.
+    """
+    period = Period.from_year_and_code(_MATERNIDAD_CEILINGED_FILING_YEAR, "0A")
+    snapshot = resources().modelos.authority.snapshot(
+        "100",
+        filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
+        period=period.registry_token,
+    )
+    child = DescendantInfo(
+        birth_date=date(_MATERNIDAD_CEILINGED_FILING_YEAR - 1, 6, 1),
+        meses_madre_trabajo_2024=12,
+    )
+    descendant_overrides = dict(descendant_facts_from_list((child,)))
+
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_MATERNIDAD_BUCKET_ID):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_MATERNIDAD_BUCKET_ID,
+                overrides=descendant_overrides,
+            ),
+        )
+        work_unit = create_work_unit(
+            bucket_id=_MATERNIDAD_BUCKET_ID,
+            modelo="100",
+            filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
+            period=period,
+            revision_id=snapshot.revision.id,
+            clock=datetime(2026, 8, 5, 12, 0, tzinfo=UTC),
+        )
+        bundle = build_work_calculate_input_bundle(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_overrides={},
+            binding_overrides={},
+            relation_overrides={},
+            detail_rows=(),
+            borrador_snapshot_id=None,
+        )
+
+    assert _MATERNIDAD_CASILLA_ID not in bundle.casilla_inputs
+    source_kinds = {diagnostic.source_kind for diagnostic in bundle.shortcut_diagnostics}
+    assert "maternidad_cotizaciones_ceiling_inexpressible" in source_kinds
+    assert "maternidad_ambiguous_relacion" not in source_kinds

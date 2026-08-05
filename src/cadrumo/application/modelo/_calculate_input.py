@@ -820,11 +820,11 @@ def _maternidad_cotizaciones_ceiling_advisory(
         source_kind=_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND,
         message=(
             "the active profile declares meses_madre_trabajo but this filing year predates 2023, when "
-            "the Art. 81.1 deducción por maternidad was still capped at the mother's Social Security "
-            "cotizaciones devengadas in the period. This application holds no cotizaciones figure for "
-            "filing years before 2024, so the cap cannot be applied and the deducción is withheld "
-            "rather than granted un-capped. Compute it by hand as min(months x 100, 1200, cotizaciones "
-            "devengadas) and enter the result with `--casilla` if you are filing this year."
+            "Art. 81.1 was still capped at the mother's Social Security cotizaciones devengadas in the "
+            "period. This application holds no cotizaciones figure for years before 2024, so the cap "
+            "cannot be applied and the deducción is withheld rather than granted un-capped. Compute it "
+            "by hand as min(months x 100, 1200, cotizaciones devengadas) and enter the result with "
+            "`--casilla` if filing this year."
         ),
         casilla_id=casilla_id,
     )
