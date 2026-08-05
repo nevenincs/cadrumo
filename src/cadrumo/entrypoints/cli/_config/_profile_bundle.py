@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
@@ -96,8 +96,34 @@ def _resolve_import_passphrase(secrets_stdin: bool) -> str:
 
 
 if TYPE_CHECKING:
-    from ....application.user_profile import ProfileBundleExportReconcileFailure, ProfileBundleExportResult
+    from ....application.user_profile import (
+        ProfileBundleExportPurpose,
+        ProfileBundleExportReconcileFailure,
+        ProfileBundleExportResult,
+        ProfileBundleExportTransport,
+    )
     from ....domain.user_profile import UserProfilePortableExport, UserProfileRecord
+    from .._config_payloads import ConfigProfileExportReconcileFailurePayload
+
+
+class _ExportResultProjection(TypedDict):
+    """The field set ``ConfigProfileExportResult`` and its SAR sibling share.
+
+    Declared rather than inferred so the two ``**`` unpacks below stay
+    checkable: a plain ``dict[str, object]`` makes every field ``object`` at
+    the call site and hides a drift between the projection and either result
+    class until runtime.
+    """
+
+    profile_id: str
+    display_name: str
+    out: str
+    schema_version: int
+    purpose: ProfileBundleExportPurpose
+    transport: ProfileBundleExportTransport
+    data_categories: list[str]
+    excluded_data_categories: list[str]
+    reconcile_failures: list[ConfigProfileExportReconcileFailurePayload]
 
 
 def register_profile_bundle_commands(
@@ -276,7 +302,7 @@ def _reconcile_failure_notices(
     )
 
 
-def _export_result_projection_fields(export: ProfileBundleExportResult) -> dict[str, object]:
+def _export_result_projection_fields(export: ProfileBundleExportResult) -> _ExportResultProjection:
     """Project the shared result fields of a written profile-bundle export.
 
     ``config profile export`` and ``config profile subject-access-request``
