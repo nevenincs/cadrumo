@@ -64,6 +64,39 @@ def test_every_test_is_selected_by_some_declared_lane() -> None:
     )
 
 
+def test_no_test_file_sits_outside_every_lane_path() -> None:
+    """The path-level half, retained because the per-test half is blind to two inputs.
+
+    A module with no test functions, and a tracked file absent from disk, both
+    yield no tests -- so the per-test question reports nothing however orphaned
+    they are. Both classes are empty today and neither is impossible, which is
+    exactly why this is a gate and not a comment.
+    """
+    report = analyse_reachability(_ROOT)
+
+    assert report.unnamed == (), (
+        "these test files sit outside every lane's path scope, so no marker "
+        "expression could ever reach them:\n  " + "\n  ".join(report.unnamed)
+    )
+
+
+def test_the_path_check_catches_what_the_per_test_check_cannot(tmp_path: Path) -> None:
+    """The blind spot, proven rather than asserted.
+
+    A ``test_*.py`` holding no test functions is invisible to the per-test
+    model -- there is nothing to report unreachable. Without the path-level
+    question, consolidating onto the stronger model would have dropped this
+    finding silently, and nobody would have noticed for a long time.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    _write_test(tmp_path / "outside" / "tests" / "test_no_tests_at_all.py", "HELPER = 1\n")
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+
+    assert report.unreachable == (), "a testless module offers no test to call unreachable"
+    assert report.unnamed == ("outside/tests/test_no_tests_at_all.py",)
+
+
 def test_the_gate_measured_a_real_corpus() -> None:
     """A parser that found nothing would report perfect coverage.
 

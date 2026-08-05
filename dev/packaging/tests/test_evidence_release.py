@@ -30,6 +30,7 @@ from dev.packaging.evidence_release import (
     main,
     parse_evidence_tag,
     plan_evidence_gc,
+    run_gh_with_retry,
     verify_downloaded_assets,
     write_manifest,
 )
@@ -599,3 +600,67 @@ class TestLeakSweep:
         assert "build-log.txt" in err
         (cohort / "build-log.txt").write_text("built from a clean checkout\n", encoding="utf-8")
         assert main(["leak-sweep", "--directory", str(attach), "--directory", str(cohort)]) == 0
+
+
+class TestGhRetryClassification:
+    """The transport retry must retry transport, and only transport.
+
+    Every case below drives a REAL subprocess through the same code path
+    production uses: ``run_gh_with_retry`` takes the executable explicitly, so
+    a stand-in that fails on demand is injection, not simulation.
+    """
+
+    @staticmethod
+    def _counting_script(counter: Path, *, body: str) -> list[str]:
+        """Return argv for a stand-in that records each invocation, then acts."""
+        return [
+            "-c",
+            "import sys;from pathlib import Path;"
+            f"c=Path(r'{counter}');"
+            "n=int(c.read_text()) + 1 if c.exists() else 1;"
+            "c.write_text(str(n));" + body,
+        ]
+
+    def test_deterministic_auth_failure_is_not_retried(self, tmp_path: Path) -> None:
+        """A 403 fails identically every time, so it must surface on attempt one."""
+        counter = tmp_path / "calls.txt"
+        argv = self._counting_script(
+            counter,
+            body="sys.stderr.write('HTTP 403: Bad credentials');sys.exit(1)",
+        )
+        with pytest.raises(EvidenceReleaseError, match="403"):
+            run_gh_with_retry(sys.executable, argv)
+        assert counter.read_text() == "1", "a deterministic authorization failure must not be retried"
+
+    def test_transient_failure_is_retried_and_can_succeed(self, tmp_path: Path) -> None:
+        """An unrecognised failure stays retryable, so a flaky transport recovers."""
+        counter = tmp_path / "calls.txt"
+        argv = self._counting_script(
+            counter,
+            body=("sys.exit(0) if n >= 2 else (sys.stderr.write('502 Bad Gateway'), sys.exit(1))"),
+        )
+        run_gh_with_retry(sys.executable, argv)
+        assert counter.read_text() == "2", "the second attempt should have succeeded"
+
+    def test_timeout_is_retried_rather_than_escaping(self, tmp_path: Path) -> None:
+        """A timeout is the MOST retryable failure; it must not escape uncaught.
+
+        Before this classification landed, ``subprocess.TimeoutExpired`` was
+        neither caught nor converted, so the one class most worth retrying got
+        zero retries and surfaced as a raw subprocess error.
+        """
+        counter = tmp_path / "calls.txt"
+        argv = self._counting_script(counter, body="import time;time.sleep(5)")
+        with pytest.raises(EvidenceReleaseError, match="timed out"):
+            run_gh_with_retry(sys.executable, argv, timeout_seconds=1)
+        assert counter.read_text() == "3", "every attempt should have been made before failing closed"
+
+    def test_exhaustion_still_surfaces_the_underlying_error(self, tmp_path: Path) -> None:
+        """Retrying never launders: the last real diagnostic reaches the caller."""
+        counter = tmp_path / "calls.txt"
+        argv = self._counting_script(
+            counter,
+            body="sys.stderr.write('connection reset by peer');sys.exit(1)",
+        )
+        with pytest.raises(EvidenceReleaseError, match="connection reset by peer"):
+            run_gh_with_retry(sys.executable, argv)

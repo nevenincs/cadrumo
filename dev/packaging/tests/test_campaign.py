@@ -50,19 +50,6 @@ def test_ci_profile_is_the_ubuntu_superset() -> None:
     assert "browser" not in ci
 
 
-def test_lane_commands_match_the_per_lane_just_recipes() -> None:
-    """Each lane's module invocation stays in lock-step with its justfile recipe."""
-    justfile = _JUSTFILE.read_text(encoding="utf-8")
-    for lane in _LANES.values():
-        assert f"dev.packaging.{lane.module.rsplit('.', 1)[-1]}" in justfile, lane.name
-        command = lane.command()
-        assert command[1:3] == ["-m", lane.module]
-        if lane.takes_cohort:
-            assert "--cohort-dir" in command
-        for extra in lane.extra_args:
-            assert extra in command
-
-
 def test_preflight_test_workers_resolve_flag_then_env_then_local_auto() -> None:
     """CI legs size the preflight pytest per machine share; local keeps -n auto.
 

@@ -14,6 +14,7 @@ export CADRUMO_LOCAL_STORAGE_ROOT := env_var_or_default(
 )
 
 # List available recipes.
+[group('meta')]
 default:
     @just --list
 
@@ -22,6 +23,8 @@ default:
 # Full bootstrap for a fresh clone or worktree: additively install deps,
 # install vaultspec, provision env/.env. Avoid `uv sync` here because shared
 # Windows worktrees can hold long-lived executable locks under `.venv/Scripts`.
+[doc('Full bootstrap for a fresh clone or worktree: install deps, install vaultspec, provision env/.env.')]
+[group('bootstrap')]
 bootstrap:
     just install
     uv run --no-sync vaultspec-core install --upgrade
@@ -33,31 +36,42 @@ bootstrap:
 # capability posture, with the exact fix for any gap. Exits non-zero when an
 # opted-in capability has a missing dependency. This is the product-side
 # "is my workstation ready" check (the dev-toolchain probe is `just env-doctor`).
+[doc('Verify the workstation is ready: external dependency availability plus the active profile capability posture.')]
+[group('bootstrap')]
 doctor:
     uv run --no-sync aeat config check
 
 # Provision the optional external dependencies a fresh workstation needs for the
 # capability surfaces: the Playwright browser binary now; Ollama + the vision model
 # are guided by `just doctor` (run `ollama pull <model>` per its remediation rows).
+[doc('Provision the optional external dependencies a fresh workstation needs: the Playwright browser binary now.')]
+[group('bootstrap')]
 provision: env-playwright
     @echo "Playwright Chromium + chrome channel provisioned (verify with 'just playwright-doctor'). For on-host LLM vision, run 'ollama serve' and 'ollama pull qwen2.5vl:3b' (see 'just doctor')."
 
 # Additively install runtime, workbook, and dev dependencies into the current
 # venv. This is intentionally not an exact sync: it repairs missing packages and
 # editable metadata without removing locked executables from other agents.
+[doc('Additively install runtime, workbook, and dev dependencies into the current venv.')]
+[group('bootstrap')]
 [windows]
 install:
     uv pip install --python .venv/Scripts/python.exe --editable ".[workbook-windows]" --group dev
 
+[doc('Additively install runtime, workbook, and dev dependencies into the current venv.')]
+[group('bootstrap')]
 [unix]
 install:
     uv pip install --python .venv/bin/python --editable ".[workbook-windows]" --group dev
 
 # Alias for `install` — explicit name for CI clarity without exact pruning.
+[group('bootstrap')]
 sync:
     just install
 
 # Workstation CLI prerequisites for non-Python audit recipes.
+[doc('Workstation CLI prerequisites for non-Python audit recipes.')]
+[group('bootstrap')]
 [windows]
 workstation-tools:
     #!pwsh
@@ -77,6 +91,8 @@ workstation-tools:
         }
     }
 
+[doc('Workstation CLI prerequisites for non-Python audit recipes.')]
+[group('bootstrap')]
 [unix]
 workstation-tools:
     #!/usr/bin/env bash
@@ -91,6 +107,8 @@ workstation-tools:
 # ── Environment Setup and Doctor ─────────────────────────────────────────────
 
 # Copy env/.env.example → env/.env if the latter is missing. No-op otherwise.
+[doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
+[group('environment')]
 [unix]
 env-setup:
     #!/usr/bin/env bash
@@ -106,6 +124,8 @@ env-setup:
         echo "Created env/.env from env/.env.example."
     fi
 
+[doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
+[group('environment')]
 [windows]
 env-setup:
     #!pwsh
@@ -122,6 +142,7 @@ env-setup:
     }
 
 # Verify the local venv and workstation provide the full audit toolchain and RAG status.
+[group('environment')]
 env-doctor: env-playwright
     uv run --no-sync python -c "import cadrumo; print(cadrumo.__file__)"
     uv run --no-sync ruff --version
@@ -137,10 +158,14 @@ env-doctor: env-playwright
     just env-pip-check
     -just check-rag
 
+[doc('Verify installed packages satisfy their declared dependency constraints.')]
+[group('environment')]
 [windows]
 env-pip-check:
     uv pip check --python .venv/Scripts/python.exe
 
+[doc('Verify installed packages satisfy their declared dependency constraints.')]
+[group('environment')]
 [unix]
 env-pip-check:
     uv pip check --python .venv/bin/python
@@ -156,6 +181,8 @@ env-pip-check:
 # typically needs root/apt access; a non-root Linux box may need
 # `google-chrome-stable` pre-installed by an administrator, or rerun this
 # recipe with elevation. Verify the result with `just playwright-doctor`.
+[doc('Provision both Playwright browser channels the codebase needs (Chromium and the chrome channel).')]
+[group('environment')]
 env-playwright:
     uv run --no-sync playwright install chromium
     uv run --no-sync playwright install chrome
@@ -166,46 +193,59 @@ env-playwright:
 # real headless launch-and-close of that channel (never hardcodes "chrome" —
 # reads the live setting) and prints the exact remediation command on failure.
 # Exits non-zero when the environment cannot satisfy the configured channel.
+[doc('Verify the local environment is provisioned with the configured Playwright browser channel and its dependencies.')]
+[group('environment')]
 playwright-doctor:
     uv run --no-sync python -m dev.env.playwright_doctor
 
 # Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
+[group('environment')]
 env-rag-start:
     uv run --no-sync vaultspec-rag server start --updates --port 8766
 
 # Stop the background vaultspec-rag HTTP service daemon.
+[group('environment')]
 env-rag-stop:
     uv run --no-sync vaultspec-rag server stop
 
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
 # Verify code style using ruff check. Silent on success; lists violations on failure.
+[group('static-checks')]
 check-style:
     @uv run --no-sync python -m dev.quality.quiet ruff check .
 
 # Verify code format using ruff format --check. Silent on success; lists drift on failure.
+[group('static-checks')]
 check-format:
     @uv run --no-sync python -m dev.quality.quiet ruff format --check .
 
 # Verify type correctness with ty (full src) and pyrefly (strict domain + application).
 # Wrapper emits a signal-only summary grouped by rule and file; silent on success.
+[doc('Verify type correctness with ty, pyrefly, and basedpyright. Silent on success.')]
+[group('static-checks')]
 check-types:
     @uv run --no-sync python -m dev.quality.types
 
 # Verify import structure and hexagonal boundaries. Silent on success.
+[group('static-checks')]
 check-imports:
     @uv run --no-sync python -m dev.quality.quiet lint-imports
 
 # Verify that all test modules only use relative imports. Silent on success.
+[group('static-checks')]
 check-relative-imports:
     @uv run --no-sync python -m dev.quality.relative_imports
 
 # Verify dependency declarations for drift or unused packages. Silent on success.
+[group('static-checks')]
 check-dependencies:
     @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo --known-first-party cadrumo --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
+[doc('Cheap dependency-surface preflight: verify pyproject, optional-extra registry, and frozen exports.')]
+[group('packaging')]
 packaging-smoke-dependencies:
     @uv run --no-sync python -m dev.packaging.dependency_surface
 
@@ -215,92 +255,48 @@ packaging-smoke-dependencies:
 # `dev/packaging/tests` is mixed-marker: inheriting the default `-m 'unit and
 # ...'` expression from pyproject silently deselected every integration
 # contract in it -- including the modules named for the packaging-smoke, Scoop,
-# Homebrew, and Docker workflows this recipe gates as a dependency of
-# `packaging-smoke-linux` and `packaging-smoke-docker` -- and still exited zero.
+# Homebrew, and Docker workflows the campaign driver (`dev.packaging.campaign`)
+# runs this preflight ahead of -- and still exited zero.
 # The excluded `serial` tests are not dropped silently: the installed-oracle
 # cohort is owned by `packaging-smoke-installed-oracles`, and the serving-path
 # benchmark by the `-m perf` lane in `.github/workflows/ci-full.yml`. Guarded by
 # `dev/packaging/tests/test_preflight_recipe_selection.py`.
+[doc('Verify the packaging preflight command contracts (dependency surface, source data, Docker/Scoop/Homebrew workflows).')]
+[group('packaging')]
 packaging-smoke-preflight-tests:
     @uv run --no-sync pytest -q -m "unit or (integration and not serial)" dev/packaging/tests
 
 # Cheap source-data preflight: fail before wheel, venv, or Docker work if a
 # git-tracked shipped data file has been deleted from the worktree.
+[doc('Cheap source-data preflight: fail before wheel, venv, or Docker work if a shipped data file was deleted.')]
+[group('packaging')]
 packaging-smoke-source:
     @uv run --no-sync python -m dev.packaging.source_preflight
 
 # Operator-run: regenerate the committed AEAT manual PDF corpus-text sidecars
 # after a corpus PDF changes. The sidecars are load-bearing for registry
 # evidence validation, so re-run this and commit the regenerated JSON.
+[doc('Operator-run: regenerate the committed AEAT manual PDF corpus-text sidecars after a corpus PDF changes.')]
+[group('mutations')]
 regenerate-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text
 
 # Freshness gate: fail (without writing) when any committed corpus-text sidecar
 # is stale or missing against its source PDF.
+[doc('Freshness gate: fail when any committed corpus-text sidecar is stale or missing against its source PDF.')]
+[group('static-checks')]
 check-corpus-text:
     @uv run --no-sync python -m dev.corpus.extract_manual_corpus_text --check
 
 # Construct the temporary Python wheel cohort once for the current smoke campaign.
 # The immutable release-cohort builder replaces this transitional constructor.
+[doc('Construct the temporary Python wheel cohort once for the current smoke campaign.')]
+[group('packaging')]
 packaging-build-python-cohort: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.python_cohort build --output var/packaging-smoke-cohort/python
 
-# Consume the supplied wheel cohort, validate dependency surfaces, install into
-# a fresh venv, and run the installed grounded tax-work oracle.
-packaging-smoke-core: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_core --cohort-dir var/packaging-smoke-cohort/python
-
-# Build the wheel, create a stdlib venv, install with plain pip, and run the
-# same installed core CLI/resource/attachment/LLM smoke checks.
-packaging-smoke-pip-core: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_pip_core --cohort-dir var/packaging-smoke-cohort/python
-
-# Build the source distribution, inspect bundled data, install it with plain
-# pip in a stdlib venv, and run the same installed core smoke checks.
-packaging-smoke-sdist-core: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_sdist_core --cohort-dir var/packaging-smoke-cohort/python
-
-# Build the wheel, install cadrumo[all] with plain pip in a stdlib venv, and
-# verify every capability-gated optional Python package imports.
-packaging-smoke-extras: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_extras --cohort-dir var/packaging-smoke-cohort/python
-
-# Create a fresh uv project environment from the frozen lock with all extras
-# and all dependency groups, then verify developer tools and imports start.
-packaging-smoke-dev: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_dev
-
-# Build the command-bearing wheel plus both mandatory cadrumo-data-* wheels,
-# install the exact three-wheel cohort, and prove byte-identical source verification.
-packaging-smoke-split: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_split_install --cohort-dir var/packaging-smoke-cohort/python
-
-# Build the wheel, install it with the browser extra, provision Chromium in an
-# isolated Playwright cache, and run the no-secret browser health check.
-packaging-smoke-browser: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_browser --cohort-dir var/packaging-smoke-cohort/python
-
-# Linux/container browser smoke: also install host browser dependencies.
-packaging-smoke-browser-linux: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_browser --cohort-dir var/packaging-smoke-cohort/python --with-deps
-
-# Linux host release-artifact smoke gates.
-packaging-smoke-linux: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser-linux
-
-# Build the wheel, mount only the wheel/probe into python:3.13-slim, and run
-# the installed core CLI/resource smoke with pip inside Linux.
-packaging-smoke-docker-core: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_docker --cohort-dir var/packaging-smoke-cohort/python
-
-# Build the wheel, install cadrumo[browser] in python:3.13-slim, provision
-# Chromium with Linux system dependencies, and run browser health.
-packaging-smoke-docker-browser: packaging-build-python-cohort
-    @uv run --no-sync python -m dev.packaging.smoke_docker --cohort-dir var/packaging-smoke-cohort/python --browser
-
-# Fresh Linux image release-artifact smoke gates.
-packaging-smoke-docker: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-docker-core packaging-smoke-docker-browser
-
 # Run both installed public transports against the exact built cohort.
+[group('packaging')]
 packaging-smoke-installed-oracles: packaging-build-python-cohort
     @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
 
@@ -309,79 +305,90 @@ packaging-smoke-installed-oracles: packaging-build-python-cohort
 # concurrently (bounded pool; lanes are disk-disjoint), then the serial
 # installed-oracles pass — same proofs as the former serial aggregate at a
 # fraction of the wall time (the Windows leg measured 26.3 min serial).
+[doc('Local release-artifact smoke gates that do not need host package-manager access (portable profile).')]
+[group('packaging')]
 packaging-smoke:
     @uv run --no-sync python -m dev.packaging.campaign --profile portable
 
 # One CI invocation keeps every artifact and oracle lane on the same cohort bytes.
+[group('packaging')]
 packaging-smoke-ci:
     @uv run --no-sync python -m dev.packaging.campaign --profile ci
 
 # Per-push quick probe: cohort built once plus the single installed core smoke.
 # Deliberately minimal (ten-minute per-push budget); every other flavor lane is
 # a release-campaign proof carried by `packaging-smoke` / `packaging-smoke-ci`.
+[doc('Per-push quick probe: cohort built once plus the single installed core smoke check.')]
+[group('packaging')]
 packaging-quick:
     @uv run --no-sync python -m dev.packaging.campaign --profile quick --skip-preflight
 
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile).
+[group('devcontainer')]
 devcontainer-build:
     docker build -t cadrumo-devcontainer -f Dockerfile .
 
 # Verify the dev image installs cleanly and its pre-baked toolchain works:
 # the editable install imports, the unit suite collects, and Playwright
 # Chromium launches headless with no further provisioning.
+[doc('Verify the dev image installs cleanly and its pre-baked toolchain (imports, unit collection, Playwright) works.')]
+[group('devcontainer')]
 devcontainer-test: devcontainer-build
     docker run --rm cadrumo-devcontainer bash -lc "python -c 'import cadrumo; print(cadrumo.__file__)' && python -m pytest --collect-only -q -m unit && python -m playwright install --dry-run chromium"
 
-# Verify codebase security posture using semgrep scans.
-[unix]
+# Verify codebase security posture using semgrep scans. Single command, no
+# platform-specific preamble needed, so one recipe covers both shells.
+[doc('Verify codebase security posture using semgrep scans.')]
+[group('static-checks')]
 check-security:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/cadrumo
-
-[windows]
-check-security:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/cadrumo
+    @uvx --from semgrep==1.168.0 semgrep scan --quiet --config auto src/cadrumo
 
 # Check if the RAG service daemon is running.
+[group('static-checks')]
 check-rag:
     @uv run --no-sync vaultspec-rag server status --port 8766
 
 # Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
+[group('static-checks')]
 check-semantic:
     @uv run --no-sync python -m dev.audit.semantic
 
 # Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
+[group('static-checks')]
 check-pre-commit:
     @uv run --no-sync python -m dev.quality.quiet uv run --no-sync prek run --all-files
 
 # Excludes check-pre-commit (re-runs ruff + ty) and the local-only RAG/semantic checks.
 # Run every fast static gate to completion; report only failures; silent on full pass.
+[group('static-checks')]
 check-all:
     @uv run --no-sync python -m dev.quality.suite
 
 # ── Code mutations (Write) ──────────────────────────────────────────────────
 
 # Auto-repair every lint violation that carries a safe fix (ruff check --fix).
+[group('mutations')]
 fix-style:
     @uv run --no-sync ruff check --fix .
 
 # Auto-sort imports only (ruff I-rule safe fixes).
+[group('mutations')]
 fix-imports:
     @uv run --no-sync ruff check --select I --fix .
 
 # Auto-format all python source files (ruff format).
+[group('mutations')]
 fix-format:
     @uv run --no-sync ruff format .
 
 # Action every automatically-fixable issue in one pass: safe lint fixes then formatting.
+[group('mutations')]
 fix-all: fix-style fix-format
 
 # Trigger incremental vector re-indexing via the loopback service.
+[group('mutations')]
 fix-rag:
     @uv run --no-sync vaultspec-rag index --type all --port 8766
 
@@ -390,14 +397,17 @@ fix-rag:
 pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
+[group('testing')]
 test-ratchets:
     @uv run --no-sync pytest -q -p no:cacheprovider -rs src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
+[group('testing')]
 test-unit:
     @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the unit test suite serially for reruns after a parallel failure.
+[group('testing')]
 test-unit-serial:
     @uv run --no-sync pytest -q -rs -n0 -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
@@ -406,6 +416,8 @@ test-unit-serial:
 # tests alone with no workers (-n0). The serial lane exists because a handful of
 # tests mutate process-global state (the master-key-provider singleton) and
 # flake under `-n auto` interleaving while passing cleanly in isolation.
+[doc('Run the integration suite in two lanes: parallel xdist, then the isolation-sensitive serial tests alone.')]
+[group('testing')]
 test-integration:
     @uv run --no-sync pytest -q -m "integration and not serial and not os_keychain"
     @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
@@ -433,6 +445,8 @@ test-integration:
 # the reason `packaging-smoke-preflight-tests` states it: these directories are
 # mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
 # deselect the integration contracts and still exit zero.
+[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, registry, docs subsystems).')]
+[group('testing')]
 test-dev-tooling:
     @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/newmodelo/tests dev/registry/migration/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
 
@@ -453,6 +467,8 @@ test-dev-tooling:
 # carries real install/harness tests that legitimately run 300-900 s, so this
 # raises the per-test ceiling above the product suite's 300 s ini default
 # (slowest product test: 58.7 s measured); 900 s still kills a wedge in minutes.
+[doc('Run the dev-tree workflow/tooling conformance gates that CI runs per-push.')]
+[group('testing')]
 test-dev-ci:
     @uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests
 
@@ -468,6 +484,8 @@ test-dev-ci:
 # whole before reading a pass as evidence; `just check-rag` reports status, and a
 # section count far below the tracked file count means the answers are worthless
 # even though nothing errored.
+[doc('Enrol the tests that query the resident vaultspec-rag search service (held out of every other lane).')]
+[group('testing')]
 test-resident-service:
     @uv run --no-sync pytest -q -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests
 
@@ -475,11 +493,14 @@ test-resident-service:
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
 # says nothing about the ~3k integration tests; this is the recipe to reach for
 # before claiming a suite is clean.
+[doc('Run both the unit and integration lanes in sequence and report them separately.')]
+[group('testing')]
 test-both-lanes:
     @just test-unit
     @just test-integration
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
+[group('testing')]
 test-integration-serial:
     @uv run --no-sync pytest -q -m "integration and serial and not perf and not os_keychain" -n0
 
@@ -497,14 +518,18 @@ test-integration-serial:
 # having had its key removed by a peer worker mid-test. That reads as a custody
 # failure and is really a collision. Serial is not a speed compromise here, it is
 # the only correct way to exercise a shared external store.
+[doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
+[group('testing')]
 test-os-keychain:
     uv run --no-sync pytest -q -rs -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py
 
 # Run the live test suite. Quiet progress; failures shown.
+[group('testing')]
 test-live:
     @uv run --no-sync pytest -q -m aeat_live
 
 # Run the produce, verify, and export end-to-end smoke tests.
+[group('testing')]
 test-smoke:
     uv run --no-sync pytest src/cadrumo/application/modelo/tests/test_file_flow_calculation.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_file_flow_filing.py src/cadrumo/application/modelo/tests/test_export.py -v
 
@@ -512,14 +537,20 @@ test-smoke:
 # than `unit`, so the default `-m 'unit'` in addopts must be overridden here or
 # this lane selects nothing; the explicit path also overrides the addopts
 # --ignore that keeps the directory out of the default lane.
+[doc('Run the LibreOffice workbook parity tests (external_tool marker, outside the default unit lane).')]
+[group('testing')]
 test-workbook-parity:
     uv run --no-sync pytest -m external_tool src/cadrumo/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
 
 # Run the unit test suite with coverage report and fail-under check. Quiet progress.
+[doc('Run the unit test suite with a coverage report and a fail-under check.')]
+[group('testing')]
 [unix]
 test-coverage:
     @uv run --no-sync pytest -q --cov=cadrumo --cov-report=term-missing --cov-fail-under=60
 
+[doc('Run the unit test suite with a coverage report and a fail-under check.')]
+[group('testing')]
 [windows]
 test-coverage:
     #!pwsh
@@ -530,10 +561,12 @@ test-coverage:
 # ── Advisory audits ──────────────────────────────────────────────────────────
 
 # List every ty + pyrefly diagnostic verbatim (advisory; always exits 0).
+[group('audits')]
 audit-types:
     @uv run --no-sync python -m dev.quality.types --full
 
 # Run complexity audits for production code.
+[group('audits')]
 audit-complexity:
     @uv run --no-sync python -m dev.audit.complexity
 
@@ -541,12 +574,16 @@ audit-complexity:
 # false positives (contract-fixed signature params); see its docstring.
 # src/cadrumo is named explicitly because a positional whitelist path
 # overrides (not merges with) the config `paths`.
+[doc('Scan for dead code, clearing individually-justified false positives via the whitelist.')]
+[group('audits')]
 audit-dead-code:
     @uv run --no-sync vulture --config pyproject.toml src/cadrumo dev/vulture_whitelist.py
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 # The runner owns the jscpd invocation AND its parsing, so this recipe and the
 # health report's duplication dimension cannot drift apart or disagree.
+[doc('Scan for copy-paste code duplication; aggregate line count plus a capped clone list.')]
+[group('audits')]
 audit-duplication:
     @uv run --no-sync python -m dev.audit.duplication
 
@@ -554,15 +591,19 @@ audit-duplication:
 # text-mode reader. This is a screen and always exits 0; apply the shrink-only
 # ceiling with `python -m dev.audit.checkout_drift --check`.
 # Count tracked files whose on-disk bytes differ from their committed bytes.
+[group('audits')]
 audit-checkout-drift:
     @uv run --no-sync python -m dev.audit.checkout_drift
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
+[group('audits')]
 audit-rag QUERY:
     @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
 
 # Run all advisory audits with section headers; tolerant of individual findings.
 # Advisory-audit sibling of `check-all` (the fast static gates).
+[doc('Run all advisory audits with section headers; tolerant of individual findings.')]
+[group('audits')]
 audit-all:
     @echo "=== complexity ==="
     -@just audit-complexity
@@ -579,10 +620,13 @@ audit-all:
 # each classified red/amber/green. Composes the scanners above (plus
 # lint-imports) into one contributor-facing verdict. Exits 1 if any
 # dimension is RED; AMBER dimensions are advisory debt, not a gate.
+[doc('Monthly code-health report: shadowing, duplication, layering, and complexity, each classified red/amber/green.')]
+[group('audits')]
 audit-health-report:
     @uv run --no-sync python -m dev.audit.report
 
 # Same report, machine-readable.
+[group('audits')]
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
 
@@ -590,6 +634,8 @@ audit-health-report-json:
 # committed baseline. ``report`` exits 0 always (a screen); ``audit`` exits 0
 # here too (screen posture without ``--check``). To gate on the baseline use
 # ``audit --check`` directly or run the CI integration test in ci-full.yml.
+[doc('Show conformance status across all modelo revisions and compare against the committed baseline.')]
+[group('audits')]
 audit-registry-conformance:
     @uv run --no-sync python -m dev.registry.conformance report
     @uv run --no-sync python -m dev.registry.conformance audit
@@ -597,10 +643,12 @@ audit-registry-conformance:
 # ── Documentation ────────────────────────────────────────────────────────────
 
 # Build changed narrative and API reference documents.
+[group('docs')]
 docs:
     uv run --no-sync python -m dev.docs.build docs/conf.py
 
 # Build a single narrative page.
+[group('docs')]
 docs-page PAGE:
     uv run --no-sync python -m dev.docs.build --single-page {{PAGE}}
 
@@ -608,30 +656,38 @@ docs-page PAGE:
 # interface on the docs' canonical port 8788, claimed strictly: attaches to a
 # healthy running server, evicts an invalid squatter, and errors rather than
 # drifting to another port. The first serve builds before opening the browser.
+[doc('Serve documentation with live reload on docs/ and src/cadrumo/ edits.')]
+[group('docs')]
 docs-serve PORT="":
     uv run --no-sync python -m dev.docs.serve {{ if PORT == "" { "" } else { "--port " + PORT } }} --open-browser
 
 # Build documentation changed since a base commit.
+[group('docs')]
 docs-changed BASE="HEAD":
     uv run --no-sync python -m dev.docs.build --base {{BASE}}
 
 # Build changed documentation with strict warnings-as-errors flags.
+[group('docs')]
 docs-changed-strict BASE="HEAD":
     uv run --no-sync python -m dev.docs.build --base {{BASE}} --strict
 
 # Build changed documentation and update the vector index.
+[group('docs')]
 docs-changed-rag BASE="HEAD":
     uv run --no-sync python -m dev.docs.build --base {{BASE}} --rag-index
 
 # Extract gettext POT templates and refresh the es/ca/hu doc catalogues.
+[group('docs')]
 docs-gettext:
     uv run --no-sync python -m dev.docs.i18n
 
 # Build the user-scope documentation in one language (es/en/ca/hu).
+[group('docs')]
 docs-lang LANG:
     uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}}
 
 # Build the user-scope documentation for every translation language.
+[group('docs')]
 docs-langs:
     uv run --no-sync python -m dev.docs.build --scope user --language es
     uv run --no-sync python -m dev.docs.build --scope user --language ca
@@ -641,40 +697,41 @@ docs-langs:
 # `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,
 # .github/ci-control-plane.md — three runners share the 24-core box); local
 # development keeps the `auto` default per the same control plane.
+[doc('Run docstring structure and Sphinx build checks. Quiet pytest progress.')]
+[group('docs')]
 docs-check workers="auto":
     @uv run --no-sync pytest -q -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m "docs or unit or (integration and not serial)"
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
 # Create or update the private Cadrumo docs stack.
+[group('docs')]
 docs-stack-deploy:
     uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
 
 # Build and publish the complete Cadrumo docs site.
+[group('docs')]
 docs-deploy:
     uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
 
 # Build and publish the Cadrumo landing page to the site root.
+[group('docs')]
 frontend-deploy:
     uv run --no-sync python -m dev.deploy.frontend_static_site publish --confirm publish-cadrumo-frontend
 
 # ── Database migrations ──────────────────────────────────────────────────────
 
-# Generate a new Alembic database migration file.
-[unix]
+# Generate a new Alembic database migration file. Identical body across
+# platforms — a single plain `uv run` invocation needs no shell preamble.
+[doc('Generate a new Alembic database migration file.')]
+[group('database')]
 db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"
 
-[windows]
-db-migrate message:
-    uv run alembic revision --autogenerate -m "{{message}}"
-
-# Upgrade the database schema to the latest version.
-[unix]
-db-upgrade:
-    uv run alembic upgrade head
-
-[windows]
+# Upgrade the database schema to the latest version. Identical body across
+# platforms — a single plain `uv run` invocation needs no shell preamble.
+[doc('Upgrade the database schema to the latest version.')]
+[group('database')]
 db-upgrade:
     uv run alembic upgrade head
 
@@ -687,16 +744,21 @@ db-upgrade:
 # `gh` unavailable) are reported but do not fail the gate. Re-run
 # automatically by the release orchestrator's bump stage after every
 # automated bump. See docs/_release_checklist.yaml.
+[doc('Audit-state readiness gate: version-surface parity, changelog sanity, and packaging-smoke evidence.')]
+[group('release')]
 release-readiness:
     uv run --no-sync python -m dev.release.readiness
 
 # Same gate, machine-readable.
+[group('release')]
 release-readiness-json:
     uv run --no-sync python -m dev.release.readiness --json
 
 # Print the rollback procedure for a released version that must be pulled.
 # Read-only — never runs a destructive action; every step below is printed
 # for a human to run deliberately. See RELEASING.md#rollback-procedure.
+[doc('Print the rollback procedure for a released version that must be pulled (read-only, human-run).')]
+[group('release')]
 [unix]
 release-rollback version:
     #!/usr/bin/env bash
@@ -722,6 +784,8 @@ release-rollback version:
     echo "5. Update docs/updates.md per its critical-updates contract and note the"
     echo "   rollback + corrected version in the GitHub Release notes for v{{version}}."
 
+[doc('Print the rollback procedure for a released version that must be pulled (read-only, human-run).')]
+[group('release')]
 [windows]
 release-rollback version:
     #!pwsh
@@ -748,6 +812,8 @@ release-rollback version:
     Write-Host "   rollback + corrected version in the GitHub Release notes for v{{version}}."
 
 # Preview the next version release via dry-run.
+[doc('Preview the next version release via dry-run (release-please).')]
+[group('release')]
 [unix]
 release:
     #!/usr/bin/env bash
@@ -778,6 +844,8 @@ release:
         2>&1 | tee "$LOG"
     echo "✔ dry-run complete — review $LOG. The release orchestrator (dispatched in CI) applies the bump; this recipe is preview-only and mutates nothing."
 
+[doc('Preview the next version release via dry-run (release-please).')]
+[group('release')]
 [windows]
 release:
     #!pwsh
@@ -818,6 +886,8 @@ release:
 # retired). The four real client rows (claude-*) are minted locally by
 # `python -m dev.packaging.emit_real_client_evidence ...` and already live in
 # the dest.
+[doc('Aggregate distribution-evidence rows from the given CI run(s) into var/distribution-install-readiness/.')]
+[group('release')]
 [unix]
 release-collect-evidence *run_ids:
     #!/usr/bin/env bash
@@ -851,6 +921,8 @@ release-collect-evidence *run_ids:
     rm -rf "$tmp"
     echo "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
 
+[doc('Aggregate distribution-evidence rows from the given CI run(s) into var/distribution-install-readiness/.')]
+[group('release')]
 [windows]
 release-collect-evidence *run_ids:
     #!pwsh
@@ -893,6 +965,8 @@ release-collect-evidence *run_ids:
 # RESULT from Desktop's own MCP telemetry, and mints the evidence row.
 # MUST run from a NON-ELEVATED INTERACTIVE session; closes a running Desktop
 # only with --allow-close-running (graceful close first) and leaves it closed.
+[doc('Automated Claude Desktop real-client capture (claude-desktop-mcpb / claude-desktop-plugin).')]
+[group('release')]
 [windows]
 desktop-capture row_id release_cohort_dir acquisition_source destination_locator *extra_args:
     @uv run --no-sync python -m dev.packaging.smoke_desktop_client \

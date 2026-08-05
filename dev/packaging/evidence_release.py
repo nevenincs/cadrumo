@@ -303,14 +303,19 @@ def plan_evidence_gc(
     return GcPlan(kept=tuple(kept), delete=tuple(delete))
 
 
-def _run_gh(gh: str, arguments: list[str]) -> str:
-    """Run one real ``gh`` subprocess and return stdout, raising on failure."""
+def _run_gh(gh: str, arguments: list[str], *, timeout_seconds: int = _GH_TIMEOUT_SECONDS) -> str:
+    """Run one real ``gh`` subprocess and return stdout, raising on failure.
+
+    ``timeout_seconds`` is injectable so the retry helper's timeout path can be
+    exercised against a real slow subprocess rather than a simulated one; every
+    production caller takes the default.
+    """
     completed = subprocess.run(
         [gh, *arguments],
         capture_output=True,
         text=True,
         check=False,
-        timeout=_GH_TIMEOUT_SECONDS,
+        timeout=timeout_seconds,
     )
     if completed.returncode != 0:
         raise EvidenceReleaseError(
@@ -335,16 +340,58 @@ def resolve_gh(explicit: str | None) -> str:
     return resolved
 
 
-def run_gh_with_retry(gh: str, arguments: list[str]) -> str:
-    """Run ``gh`` with a short bounded retry for transient API failures."""
+def _is_deterministic_gh_failure(message: str) -> bool:
+    """Return whether a ``gh`` failure will fail identically however often it is retried.
+
+    Authorization and not-found failures are decisions the API has already made:
+    retrying one only delays the report and burns the backoff budget. Anything
+    unrecognised stays retryable, so an unenumerated transient keeps today's
+    behaviour rather than becoming a new hard failure.
+    """
+    haystack = message.lower()
+    return any(
+        marker in haystack
+        for marker in (
+            "http 401",
+            "http 403",
+            "http 404",
+            "bad credentials",
+            "requires authentication",
+            "gh auth login",
+            "not logged into",
+        )
+    )
+
+
+def run_gh_with_retry(gh: str, arguments: list[str], *, timeout_seconds: int = _GH_TIMEOUT_SECONDS) -> str:
+    """Run ``gh`` with a short bounded retry for transient API failures.
+
+    Retries the TRANSPORT only. A timeout is the most retryable failure there
+    is, so :class:`subprocess.TimeoutExpired` is converted and retried here
+    rather than escaping uncaught. A deterministic authorization or not-found
+    failure is raised on the first attempt: it cannot succeed on the third, and
+    delaying it behind two backoffs only obscures the diagnosis.
+
+    Retrying is never a substitute for surfacing: every exhausted failure raises
+    carrying the last error verbatim. Trust decisions deliberately do NOT come
+    through here — :func:`list_releases` and the exactly-one-draft guard call
+    :func:`_run_gh` directly, so no retry can paper over a state that must never
+    be trusted.
+    """
     last_error: EvidenceReleaseError | None = None
     for attempt in range(1, _DOWNLOAD_ATTEMPTS + 1):
         try:
-            return _run_gh(gh, arguments)
+            return _run_gh(gh, arguments, timeout_seconds=timeout_seconds)
+        except subprocess.TimeoutExpired as timeout:
+            last_error = EvidenceReleaseError(
+                f"gh {' '.join(arguments)} timed out after {timeout_seconds}s: {timeout}",
+            )
         except EvidenceReleaseError as error:
+            if _is_deterministic_gh_failure(str(error)):
+                raise
             last_error = error
-            if attempt < _DOWNLOAD_ATTEMPTS:
-                time.sleep(_DOWNLOAD_RETRY_SECONDS * attempt)
+        if attempt < _DOWNLOAD_ATTEMPTS:
+            time.sleep(_DOWNLOAD_RETRY_SECONDS * attempt)
     raise EvidenceReleaseError(f"gh failed after {_DOWNLOAD_ATTEMPTS} attempts: {last_error}")
 
 
