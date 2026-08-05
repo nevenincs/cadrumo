@@ -73,7 +73,10 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
 
     unit = document["jobs"]["cadrumo-unit"]
     unit_commands = "\n".join(str(step.get("run", "")) for step in unit["steps"])
-    assert "uv run pytest --durations=50 -n 8" in unit_commands
+    # Routed through the `test-unit` recipe (same one `just test-unit` runs
+    # locally) so the marker expression and the durations/worker overrides
+    # have one declaration site; the recipe's substance is pinned below.
+    assert "CADRUMO_PYTEST_WORKERS=8 just test-unit 50" in unit_commands
 
 
 def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> None:
@@ -99,6 +102,33 @@ def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> Non
     assert 'pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)"' in recipe
     for directory in ("dev/ci/tests", "dev/packaging/tests", "dev/quality/tests", "dev/release/tests"):
         assert directory in recipe, f"the delegated lane no longer reaches {directory}"
+
+
+def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> None:
+    """`test-unit` is the same recipe local runs invoke; emptying it must not pass.
+
+    Same rationale as `test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates`:
+    the workflow now names a recipe, so the recipe -- not the workflow line --
+    is where the marker-expression pin has to bite.
+    """
+    recipe = next(
+        (line for line in _JUSTFILE.read_text(encoding="utf-8").splitlines() if line.startswith("test-unit ")),
+        None,
+    )
+    assert recipe is not None, "no justfile recipe line named test-unit; the delegated lane has no home"
+
+    body = next(
+        (
+            line
+            for line in _JUSTFILE.read_text(encoding="utf-8").splitlines()
+            if "--dist=loadfile" in line and "workbook_parity" in line
+        ),
+        None,
+    )
+    assert body is not None, "no justfile line carries the test-unit body; the delegated lane has no home"
+    assert "-m 'unit and not external_tool and not os_keychain'" in body
+    assert "--ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity" in body
+    assert "--durations=" in body, "the durations override the CI step passes must reach the underlying pytest call"
 
 
 def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
@@ -136,7 +166,10 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     assert "just docs-check" in commands
     assert "pip-audit --strict" in commands
     assert "just check-pre-commit" in commands
-    assert "uv run pytest --durations=100 -n 8" in commands
+    # Same `test-unit` recipe ci.yml routes through, with the full lane's own
+    # durations value; the recipe's substance is pinned in
+    # test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates.
+    assert "CADRUMO_PYTEST_WORKERS=8 just test-unit 100" in commands
     assert "uv run --no-sync aeat app registry verify" in commands
     assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
 
@@ -267,15 +300,25 @@ def test_full_lane_runs_the_channel_generator_tests_explicitly_and_serially() ->
     Explicit paths and -n0 are the assertion, not incidental style. A
     marker-filtered xdist run HOLDS serial tests out while reporting a clean
     pass, which is the same false green that hid those breakages, so selecting
-    them by marker alone would reinstate it.
+    them by marker alone would reinstate it. Routed through the
+    `test-channel-artifacts` recipe, so the workflow step names the recipe and
+    the recipe -- not the workflow line -- is where this pin has to bite (same
+    pattern as `test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates`).
     """
     document = yaml.safe_load(_FULL_WORKFLOW.read_text(encoding="utf-8"))
     steps = document["jobs"]["cadrumo-full-conformance"]["steps"]
-    generator = next(
-        (str(step["run"]) for step in steps if "packaging/homebrew/tests" in str(step.get("run", ""))),
+    step = next(
+        (str(step["run"]) for step in steps if "test-channel-artifacts" in str(step.get("run", ""))),
         None,
     )
-    assert generator is not None, "no lane selects the Homebrew generator tests"
+    assert step is not None, "no full-lane step invokes the test-channel-artifacts recipe"
+
+    generator = next(
+        (line for line in _JUSTFILE.read_text(encoding="utf-8").splitlines() if "packaging/homebrew/tests" in line),
+        None,
+    )
+    assert generator is not None, "no justfile line names packaging/homebrew/tests; the delegated lane has no home"
     assert "packaging/scoop/tests" in generator, "the Scoop generator tests share this lane"
+    assert "packaging/mcpb/tests" in generator, "the mcpb generator tests share this lane"
     assert "-n0" in generator, "serial tests must run single-worker or they are held out silently"
     assert "-m serial" in generator, "the lane must select the serial marker these tests carry"

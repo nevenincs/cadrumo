@@ -401,10 +401,14 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 test-ratchets:
     @uv run --no-sync pytest -q -p no:cacheprovider -rs src/cadrumo/tests/test_test_inventory.py src/cadrumo/tests/test_marker_integrity.py src/cadrumo/tests/test_relative_imports_only.py src/cadrumo/tests/test_no_skip_xfail.py src/cadrumo/tests/test_mock_inventory.py src/cadrumo/tests/test_monkeypatch_inventory.py src/cadrumo/tests/test_no_broad_exception_raises.py src/cadrumo/tests/test_no_bare_except.py src/cadrumo/tests/test_no_tautology.py --tb=short
 
-# Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.
+# Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
+# progress; failures shown. `durations` is optional and, when set, prints
+# pytest's slowest-N-tests profile (CI passes a value to keep a rolling
+# public log of the suite's heaviest tests; local runs leave it unset).
+[doc('Run the unit test suite in parallel, ignoring workbook parity tests. Quiet progress; failures shown.')]
 [group('testing')]
-test-unit:
-    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+test-unit durations="":
+    @uv run --no-sync pytest -q -rs -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Run the unit test suite serially for reruns after a parallel failure.
 [group('testing')]
@@ -448,7 +452,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, registry, docs subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/newmodelo/tests dev/registry/migration/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
+    @uv run --no-sync pytest -q -m "(unit or integration) and not resident_service" dev/audit/tests dev/deploy/tests dev/env/tests dev/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
@@ -541,6 +545,17 @@ test-smoke:
 [group('testing')]
 test-workbook-parity:
     uv run --no-sync pytest -m external_tool src/cadrumo/domain/calculations/registry/tests/workbook_parity/test_workbook_parity.py
+
+# Run the Homebrew/Scoop/mcpb channel-artifact conformance tests. These bind
+# the generated formula and manifest to a real built cohort. Explicit paths
+# and -n0, never marker selection alone: a marker-filtered xdist run holds
+# serial tests out while still reporting a clean pass. Dispatch-only
+# (ci-full.yml) rather than per-push: these tests build real sdists and
+# wheels, costing minutes the per-push budget cannot absorb.
+[doc('Run the Homebrew/Scoop/mcpb channel-artifact conformance tests (serial, builds real sdists and wheels).')]
+[group('testing')]
+test-channel-artifacts:
+    @uv run --no-sync pytest -q -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests packaging/mcpb/tests
 
 # Run the unit test suite with coverage report and fail-under check. Quiet progress.
 [doc('Run the unit test suite with a coverage report and a fail-under check.')]

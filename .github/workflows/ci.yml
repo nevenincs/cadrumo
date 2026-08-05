@@ -182,6 +182,9 @@ jobs:
         # storage (quota-broken; the release-asset transport exists precisely
         # to avoid it), and the profile lives in the job log.
         # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/ci-control-plane.md).
-        run: uv run pytest --durations=50 -n 8
+        # CPUs (machine-aware sizing, .github/ci-control-plane.md). Routed
+        # through the recipe so the selection (marker expression, ignore) has
+        # one declaration site; CADRUMO_PYTEST_WORKERS overrides the recipe's
+        # local `auto` default for this machine-aware sizing.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-unit 50
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
