@@ -5,28 +5,11 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:46e67dfd5b91f1b59bed334e3f5ac3b4227c63a084b5a2ac35003d591f213e89'
+body_hash: 'sha256:e2927447d2c98fb73a141f00cea4e4760afa2e353da785faba26d07473a36fa6'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace modelo-localization-cascade with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline `file:line` locators. -->
 
 # `modelo-localization-cascade` audit: `execution closeout`
 
