@@ -96,6 +96,15 @@ The cutover constant shares a value with the alta-posterior gate and is delibera
 merged with it. They are two independent rules that happen to change in the same reform,
 and a shared constant would silently move one if the other were corrected.
 
+The blocker is the campaign's own founding defect in a second guise, and that is worth
+more than the tax fix. `cotizaciones_ss_madre_2024` is a YEAR-SUFFIXED fact name, the same
+shape as the year-suffixed derived fields that made the operator's list grow without
+bound and started this campaign. Suffixing the year into the fact name makes the concept
+inexpressible for every other year, so the ceiling could not be applied to 2020-2022 even
+though the statute plainly required it. The next person wanting a cross-year figure will
+hit the identical wall, and the fix is the same one this campaign has been applying
+elsewhere: parameterise the year rather than encoding it in the name.
+
 Four failures in the surrounding suite are foreign and were attributed rather than
 assumed: two bare modelo-code literals in a peer's mid-refactor validator, and three
 registry-parity failures from the localization cascade rewriting the Modelo 036 revision.
