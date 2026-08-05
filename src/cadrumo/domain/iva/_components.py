@@ -381,7 +381,8 @@ class IvaCategoryComponents(IvaStrictFrozen):
 
 # --------------------------------------------------------------------------- #
 # Legal-reference shorthands. Every id below is present in the bundled legal
-# catalogue under registry/aeat/legal/ unless it appears in _PENDING_*.
+# catalogue under registry/aeat/legal/. An id read from live authoritative text
+# but not yet bundled belongs on a row's pending_legal_refs, never here.
 # --------------------------------------------------------------------------- #
 _LIVA_NO_SUJECION: Final[str] = "ley-37-1992:art-7"
 _LIVA_ADQ_INTRACOM: Final[str] = "ley-37-1992:art-13"
@@ -403,29 +404,27 @@ _LIVA_RECARGO_TIPOS: Final[str] = "ley-37-1992:art-161"
 _LIRPF_PAGOS_A_CUENTA: Final[str] = "ley-35-2006:art-99"
 _RIRPF_RETENCION_ACTIVIDADES: Final[str] = "rd-439-2007:art-95"
 
-#: RIRPF art. 76 (obligados a retener o ingresar a cuenta) was verified against
-#: live BOE consolidated text on 2026-08-05 — apartado 1.c obliges non-residents
-#: operating through a permanent establishment, and apartado 1.d limits the
-#: obligation for non-residents *without* a PE to rendimientos del trabajo and
-#: to rendimientos that are a deducible gasto for IRNR art. 24.2 rentas. The
-#: provision is not yet bundled, so rows relying on it declare it here.
-_RIRPF_OBLIGADOS_A_RETENER_PENDING: Final[str] = "rd-439-2007:art-76"
+#: RIRPF art. 76 (obligados a retener o ingresar a cuenta) fixes WHO bears the
+#: withholding obligation: apartado 1.c obliges non-residents operating through
+#: a permanent establishment, and apartado 1.d limits the obligation for
+#: non-residents *without* a PE to rendimientos del trabajo and to rendimientos
+#: that are a deducible gasto for IRNR art. 24.2 rentas.
+_RIRPF_OBLIGADOS_A_RETENER: Final[str] = "rd-439-2007:art-76"
 
 _NON_RESIDENT_PAYER_NOTE: Final[str] = (
-    "Reasoned from a live-BOE reading of RIRPF art. 76.1 (2026-08-05), not from bundled text: "
-    "the payer is non-resident by construction for this category, and a non-resident payer "
-    "without a Spanish permanent establishment falls outside the withholding obligation except "
-    "for rendimientos del trabajo and rendimientos that are a deducible gasto for IRNR art. 24.2 "
-    "rentas (art. 76.1.d). A payer WITH a Spanish permanent establishment IS obliged (art. 76.1.c), "
-    "so this expectation is a default and not a prohibition. Promote to bundled grounding once "
-    "rd-439-2007:art-76 is in the legal catalogue."
+    "The payer is non-resident by construction for this category, and RIRPF art. 76.1 places a "
+    "non-resident payer without a Spanish permanent establishment outside the withholding "
+    "obligation except for rendimientos del trabajo and rendimientos that are a deducible gasto "
+    "for IRNR art. 24.2 rentas (art. 76.1.d). A payer WITH a Spanish permanent establishment IS "
+    "obliged (art. 76.1.c), so this expectation is a default and not a prohibition: a counterparty "
+    "falling in either carve-out bears a real retención and the row is wrong for that counterparty."
 )
 
 _NON_RESIDENT_SUPPLIER_NOTE: Final[str] = (
-    "Reasoned from a live-BOE reading of RIRPF art. 76.1 (2026-08-05), not from bundled text: "
-    "this is an acquisition category, so the counterparty is a non-resident supplier whose income "
-    "is not an IRPF rendimiento; no IRPF retención arises for the Spanish acquirer. Any IRNR "
-    "withholding obligation is a separate tax and is out of this table's scope."
+    "This is an acquisition category, so the counterparty is a non-resident supplier whose income "
+    "is not an IRPF rendimiento; no IRPF retención arises for the Spanish acquirer, and RIRPF "
+    "art. 76.1 names no obligation running the other way. Any IRNR withholding obligation is a "
+    "separate tax and is out of this table's scope."
 )
 
 _PROFESSIONAL_SERVICE_NOTE: Final[str] = (
@@ -592,10 +591,9 @@ def _zero_cuota_non_resident_payer(
         recargo=IvaComponentPresence.ZERO_BY_LAW,
         recargo_grounding=IvaGroundingConfidence.REASONED,
         retencion=IvaRetencionExpectation.NOT_EXPECTED,
-        retencion_grounding=IvaGroundingConfidence.LIVE_SOURCE_ONLY,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=_NON_RESIDENT_PAYER_NOTE,
-        legal_refs=(exencion_ref,),
-        pending_legal_refs=(_RIRPF_OBLIGADOS_A_RETENER_PENDING,),
+        legal_refs=(exencion_ref, _RIRPF_OBLIGADOS_A_RETENER),
     )
 
 
@@ -659,10 +657,9 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
         recargo=IvaComponentPresence.ZERO_BY_LAW,
         recargo_grounding=IvaGroundingConfidence.REASONED,
         retencion=IvaRetencionExpectation.NOT_EXPECTED,
-        retencion_grounding=IvaGroundingConfidence.LIVE_SOURCE_ONLY,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=_NON_RESIDENT_SUPPLIER_NOTE,
-        legal_refs=(_LIVA_EXENCION_ADQ_INTRACOM,),
-        pending_legal_refs=(_RIRPF_OBLIGADOS_A_RETENER_PENDING,),
+        legal_refs=(_LIVA_EXENCION_ADQ_INTRACOM, _RIRPF_OBLIGADOS_A_RETENER),
     ),
     _row(
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
@@ -726,15 +723,15 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
         recargo=IvaComponentPresence.OPTIONAL,
         recargo_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion=IvaRetencionExpectation.NOT_EXPECTED,
-        retencion_grounding=IvaGroundingConfidence.LIVE_SOURCE_ONLY,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=_NON_RESIDENT_SUPPLIER_NOTE,
         legal_refs=(
             _LIVA_ADQ_INTRACOM,
             _LIVA_ADQ_INTRACOM_CONCEPTO,
             _LIVA_SUJETO_PASIVO,
             _LIVA_RECARGO_SUJETOS,
+            _RIRPF_OBLIGADOS_A_RETENER,
         ),
-        pending_legal_refs=(_RIRPF_OBLIGADOS_A_RETENER_PENDING,),
     ),
     _one_sided(
         IvaCategory.IMPORT_THIRD_COUNTRY,
@@ -755,10 +752,9 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
         recargo=IvaComponentPresence.OPTIONAL,
         recargo_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion=IvaRetencionExpectation.NOT_EXPECTED,
-        retencion_grounding=IvaGroundingConfidence.LIVE_SOURCE_ONLY,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=_NON_RESIDENT_SUPPLIER_NOTE,
-        legal_refs=(_LIVA_IMPORTACION, _LIVA_RECARGO_SUJETOS),
-        pending_legal_refs=(_RIRPF_OBLIGADOS_A_RETENER_PENDING,),
+        legal_refs=(_LIVA_IMPORTACION, _LIVA_RECARGO_SUJETOS, _RIRPF_OBLIGADOS_A_RETENER),
     ),
     # The recargo de equivalencia category is the retailer's PURCHASE-side
     # surcharge: the supplier charges IVA + RE to a comerciante minorista, and

@@ -219,6 +219,47 @@ required_text = [
     "No obstante, existirá obligación de practicar retención o ingreso a cuenta sobre los rendimientos del capital mobiliario",
 ]
 
+[legal."rd-439-2007:art-76"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-76.html#a76"
+document_id = "BOE-A-2007-6820"
+article = "76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a76"
+published_at = 2007-03-31
+effective_from = 2017-12-30
+review_status = "reviewed"
+reviewed_at = 2026-08-05
+reviewed_by = "agent-authored from live BOE consolidated text BOE-A-2007-6820 retrieved 2026-08-05; operator to re-stamp"
+notes = """RIRPF art 76: obligados a retener o ingresar a cuenta. Fixes WHO bears the \
+withholding obligation, which is the provision the IVA component-expectation table \
+relies on when it declares a cross-border counterparty's retencion NOT_EXPECTED. \
+Apartado 1 lists the obligados: a) personas juridicas y demas entidades, incluidas \
+las comunidades de propietarios y las entidades en regimen de atribucion de rentas; \
+b) contribuyentes que ejerzan actividades economicas, cuando satisfagan rentas en el \
+ejercicio de sus actividades; c) no residentes que operen en territorio espanol \
+MEDIANTE establecimiento permanente; d) no residentes que operen SIN mediacion de \
+establecimiento permanente, unicamente en cuanto a los rendimientos del trabajo y a \
+otros rendimientos sometidos a retencion que constituyan gasto deducible para las \
+rentas del art. 24.2 del TRLIRNR.
+SCOPE NOTE - the not-expected expectation this entry grounds is a DEFAULT, never a \
+prohibition. Two carve-outs are load-bearing and both restore the obligation: a \
+non-resident payer WITH a Spanish permanent establishment is obliged under letra c), \
+and a non-resident payer WITHOUT one is still obliged for rendimientos del trabajo \
+and for the art. 24.2 TRLIRNR deductible-expense rendimientos under letra d). A \
+counterparty falling in either carve-out bears a real retencion, so a row declaring \
+NOT_EXPECTED for that counterparty is wrong and must be corrected, not silenced. \
+Apartado 1 also excludes simple mediacion de pago from the definition of satisfacer \
+rentas, and then lists four supuestos that are NOT simple mediacion de pago.
+Bundled excerpt is the current redaction BOE-A-2017-15842, in force from 2017-12-30, \
+retrieved from the live BOE consolidated text on 2026-08-05."""
+required_text = [
+    "Obligados a retener o ingresar a cuenta",
+    "que operen en él mediante establecimiento permanente",
+    "en cuanto a los rendimientos del trabajo que satisfagan",
+]
+
 [legal."rd-439-2007:art-95"]
 evidence_tier = "legal_authority"
 authority = "boe"
