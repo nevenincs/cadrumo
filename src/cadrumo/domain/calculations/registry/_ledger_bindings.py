@@ -221,6 +221,38 @@ def validate_ledger_oss_aggregation_binding_definition(
         )
 
 
+def _oss_build_matcher(
+    selector: _OssIossLedgerSelector,
+) -> Callable[[OssIossLedgerObservation], bool]:
+    regime, destination, rate_kind, direction = (
+        selector.regime,
+        selector.destination_member_state,
+        selector.rate_kind,
+        selector.invoice_direction,
+    )
+    kinds = set(selector.transaction_kinds)
+
+    def matcher(observation: OssIossLedgerObservation) -> bool:
+        return (
+            observation.regime is regime
+            and observation.destination_member_state is destination
+            and observation.rate_kind is rate_kind
+            and observation.invoice_direction is direction
+            and observation.transaction_kind in kinds
+        )
+
+    return matcher
+
+
+def _oss_aggregate(
+    matched: Sequence[OssIossLedgerObservation],
+    selector: _OssIossLedgerSelector,
+) -> Decimal:
+    if selector.fact == "iva_amount_sum":
+        return sum((observation.iva_amount for observation in matched), Decimal("0"))
+    return sum((observation.base_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_oss_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[OssIossLedgerObservation],
@@ -231,7 +263,11 @@ def resolve_ledger_oss_aggregation_binding_values(
     classification axes plus the transaction-kind set; matched
     observations are aggregated through the binding's declared fact
     (``iva_amount_sum`` defaults; ``base_amount_sum`` selects the base).
-    The resolver is deterministic and side-effect-free.
+    The resolver is deterministic and side-effect-free. Delegates the
+    filter/aggregate skeleton to :func:`resolve_ledger_family_binding_values`,
+    shared by every ledger family resolver; the per-selector
+    ``transaction_kinds`` set is built once when the matcher closure is
+    constructed for a binding, not once per observation.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings to resolve.
@@ -241,28 +277,14 @@ def resolve_ledger_oss_aggregation_binding_values(
         Mapping of binding id to the aggregated Decimal value. Empty
         match sets resolve to ``Decimal("0")``.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_OSS_AGGREGATION:
-            continue
-        selector = _ledger_oss_selector(binding)
-        kinds = set(selector.transaction_kinds)
-        matched = [
-            observation
-            for observation in available
-            if observation.regime is selector.regime
-            and observation.destination_member_state is selector.destination_member_state
-            and observation.rate_kind is selector.rate_kind
-            and observation.invoice_direction is selector.invoice_direction
-            and observation.transaction_kind in kinds
-        ]
-        if selector.fact == "iva_amount_sum":
-            total = sum((observation.iva_amount for observation in matched), Decimal("0"))
-        else:
-            total = sum((observation.base_amount for observation in matched), Decimal("0"))
-        resolved[binding.id] = total
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        parse_selector=_ledger_oss_selector,
+        build_matcher=_oss_build_matcher,
+        aggregate=_oss_aggregate,
+    )
 
 
 def unsupported_ledger_oss_observations(
