@@ -5,6 +5,7 @@ label = "Numero total de perceptores"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_perceptores_count"
+continuidad_id = "total-perceptores-count"
 required = true
 input_kind = "bound"
 binding = "modelo-180-115-perceptores-anual"

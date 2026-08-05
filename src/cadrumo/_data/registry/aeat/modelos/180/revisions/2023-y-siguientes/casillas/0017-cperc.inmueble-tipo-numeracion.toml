@@ -5,6 +5,7 @@ label = "Tipo de numeracion del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_tipo_numeracion"
+continuidad_id = "payee-inmueble-tipo-numeracion"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-tipo-numeracion"]

@@ -5,6 +5,7 @@ label = "Codigo postal del inmueble arrendado"
 section = ["perceptor", "inmueble"]
 data_type = "postal_code"
 semantic_role = "payee_inmueble_codigo_postal"
+continuidad_id = "payee-inmueble-codigo-postal"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-codigo-postal"]

@@ -5,6 +5,7 @@ label = "Tipo de via del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_tipo_via"
+continuidad_id = "payee-inmueble-tipo-via"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-tipo-via"]

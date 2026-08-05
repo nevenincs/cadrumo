@@ -5,6 +5,7 @@ label = "NIF del representante legal del perceptor"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
 semantic_role = "payee_representative_nif"
+continuidad_id = "payee-representative-nif"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-nif-representante-legal"]
