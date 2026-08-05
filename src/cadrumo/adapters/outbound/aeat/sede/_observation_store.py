@@ -38,6 +38,7 @@ from __future__ import annotations
 import re
 from contextlib import nullcontext
 from pathlib import Path
+from typing import override
 
 from .....core import Period
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -137,6 +138,7 @@ class FiledDeclaracionObservationRepository(SecureBoundRepository[FiledDeclaraci
     schema_version = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.schema_version
     payload_type = FiledDeclaracionObservation
 
+    @override
     def extract_identifier(self, payload: FiledDeclaracionObservation) -> str:
         """Return the natural key ``payload`` claims to be filed under."""
         return filed_declaracion_observation_object_key(
@@ -146,6 +148,7 @@ class FiledDeclaracionObservationRepository(SecureBoundRepository[FiledDeclaraci
             payload.expediente_id,
         )
 
+    @override
     def _translate_row_identity_error(self, error: SecureObjectRowIdentityError) -> Exception:
         """Preserve this module's domain error for a single-row identity mismatch."""
         return SedeValidationError(
@@ -170,6 +173,7 @@ class IvaCompensationWalletObservationRepository(SecureBoundRepository[IvaCompen
     schema_version = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.schema_version
     payload_type = IvaCompensationWalletObservation
 
+    @override
     def extract_identifier(self, payload: IvaCompensationWalletObservation) -> str:
         """Return the natural key ``payload`` claims to be filed under."""
         return iva_compensation_wallet_observation_object_key(
@@ -179,6 +183,7 @@ class IvaCompensationWalletObservationRepository(SecureBoundRepository[IvaCompen
             payload.captured_at.isoformat(),
         )
 
+    @override
     def _translate_row_identity_error(self, error: SecureObjectRowIdentityError) -> Exception:
         """Preserve this module's domain error for a single-row identity mismatch."""
         return SedeValidationError(
