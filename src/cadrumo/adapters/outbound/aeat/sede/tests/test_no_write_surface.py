@@ -44,12 +44,18 @@ class TestNoCallContextWriteVerbs:
                 continue
             for line_no, line in enumerate(source.read_text(encoding="utf-8").splitlines(), start=1):
                 if source.name == "_observation_store.py" and (
-                    "self._objects.save(" in line or "self._repository.save(" in line
+                    "self._objects.save(" in line
+                    or "self._repository.save(" in line
+                    or "self._observations.save(" in line
+                    or "self._wallet_observations.save(" in line
                 ):
                     # Local encrypted observation persistence is allowed;
-                    # this guard is for remote Sede mutation verbs.
-                    # Accepts both the legacy ``self._objects`` direct attr
-                    # and the current ``self._repository`` property accessor.
+                    # this guard is for remote Sede mutation verbs. Accepts
+                    # the legacy ``self._objects``/``self._repository`` raw
+                    # SecureObjectRepository accessors and the current
+                    # SecureBoundRepository-backed ``self._observations`` /
+                    # ``self._wallet_observations`` properties -- both call
+                    # shapes persist to the same local encrypted namespaces.
                     continue
                 if pattern.search(line):
                     offenders.append(f"{source.relative_to(_SEDE_ROOT)}:{line_no}: {line.strip()}")
