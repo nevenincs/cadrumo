@@ -106,16 +106,25 @@ def _m130_revision(work_unit: WorkUnit) -> CalculationRevision:
 
 
 def test_result_summary_rows_render_requested_localized_label() -> None:
-    """Modelo result summaries keep official labels while rendering localized display labels."""
+    """Modelo result-summary labels resolve for the active output language.
+
+    The row label is the display projection of the casilla label and is
+    resolved once, in the application layer, so it follows the requested
+    language rather than carrying a locale map the renderer has to unpack.
+    Under ``es`` it is the official Spanish label the registry grounds, which
+    is the channel regulatory and export consumers read; the summary itself is
+    an operator display surface and localizes.
+    """
 
     work_unit = _seed_m130_work_unit()
     revision = _m130_revision(work_unit)
 
-    summary = calculation_result_summary(revision)
-    assert summary is not None
-    row = next(item for item in summary.rows if item.casilla_id == "03")
-    assert row.label == "Rendimiento neto"
-    assert "localized_labels" not in row.model_dump()
+    with override_settings(cadrumo_output_language="es"):
+        summary = calculation_result_summary(revision)
+        assert summary is not None
+        row = next(item for item in summary.rows if item.casilla_id == "03")
+        assert row.label == "Rendimiento neto"
+        assert "localized_labels" not in row.model_dump()
 
     with override_settings(cadrumo_output_language="ca"):
         lines = result_summary_lines(revision)
