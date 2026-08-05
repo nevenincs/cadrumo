@@ -298,17 +298,25 @@ def test_bundled_corpus_grounding_requires_a_citation() -> None:
             assert row.legal_refs, f"{category.value} claims bundled grounding but cites no legal_refs"
 
 
-def test_weakly_grounded_retencion_expectations_carry_their_caveat() -> None:
-    """A reasoned or live-source-only expectation never travels without its note.
+def test_every_retencion_expectation_carries_its_caveat() -> None:
+    """No retención expectation travels without its note, however well grounded.
 
     An unmarked guess in a legal table is worse than a gap: the next reader
     treats it as verified. The note is where the carve-outs live.
+
+    This gate used to skip bundled-corpus rows, on the reasoning that a cited
+    provision speaks for itself. It does not. When the seven cross-border rows
+    were promoted from live-source-only to bundled-corpus after RIRPF art. 76
+    was bundled, that skip silently made the carve-out disclosure optional on
+    exactly the rows whose "no retención" is a default rather than a rule — a
+    grounding upgrade must never be able to switch a disclosure off. The skip is
+    gone, so coverage cannot leak out of this gate through the grounding column
+    again.
     """
-    for (category, _kind), row in IVA_CATEGORY_COMPONENTS.items():
-        if row.retencion_grounding is IvaGroundingConfidence.BUNDLED_CORPUS:
-            continue
+    for (category, kind), row in IVA_CATEGORY_COMPONENTS.items():
         assert row.retencion_note.strip(), (
-            f"{category.value}: retención grounding is {row.retencion_grounding.value!r} "
+            f"{category.value}/{kind.value}: retención expectation is "
+            f"{row.retencion.value!r} at grounding {row.retencion_grounding.value!r} "
             "and must state its caveat in retencion_note"
         )
 
@@ -419,6 +427,35 @@ def test_bundled_grounding_without_legal_refs_is_refused() -> None:
     kwargs = _valid_row_kwargs() | {"legal_refs": ()}
     with pytest.raises(ValidationError, match="claims bundled corpus"):
         IvaCategoryComponents(**kwargs)
+
+
+def test_not_expected_retencion_without_a_note_is_refused_even_when_bundled() -> None:
+    """Grounding a "no retención" expectation does not make it unconditional.
+
+    The reference row is POSSIBLE at bundled-corpus grounding with an empty
+    note, and is accepted — proof this test discriminates the expectation and
+    not merely the empty string. Flipping only the expectation to NOT_EXPECTED
+    must refuse, because RIRPF art. 76.1 restores the obligation for a payer
+    with a Spanish permanent establishment (letra c) and for rendimientos del
+    trabajo and the TRLIRNR art. 24.2 deducible-gasto rendimientos (letra d).
+    Without the note the row reads as a prohibition rather than a default.
+    """
+    accepted = _valid_row_kwargs()
+    assert accepted["retencion_note"] == "", "positive control must carry no note"
+    assert accepted["retencion_grounding"] is IvaGroundingConfidence.BUNDLED_CORPUS
+    IvaCategoryComponents(**accepted)
+
+    refused = accepted | {
+        "retencion": IvaRetencionExpectation.NOT_EXPECTED,
+        # NOT_EXPECTED forces role NONE; without this the role validator fires
+        # first and the note check under test would never be reached.
+        "retencion_role": IvaRetencionRole.NONE,
+    }
+    with pytest.raises(ValidationError, match="not-expected retención requires a retencion_note"):
+        IvaCategoryComponents(**refused)
+
+    restored = refused | {"retencion_note": "RIRPF art. 76.1.c/d carve-outs restore the obligation."}
+    IvaCategoryComponents(**restored)
 
 
 def test_duplicate_legal_refs_are_refused() -> None:
