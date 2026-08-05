@@ -115,9 +115,9 @@ def test_code_lane_carve_out_is_identical_across_every_python_lane_and_trigger()
     only catch a lane dropping a shared path, never one lane carving out
     something the other does not. That is not a hypothetical — it is how the
     tree actually drifted. `packaging-quick.yml` carved out `docs/**` and
-    `ci.yml` did not, for long enough that the whole documentation tree was T0
-    for one Python lane and T1 for the other, while the ci-discipline ADR (D1)
-    described the carve-out as shared and this gate reported green.
+    `ci.yml` did not, for long enough that the whole documentation tree was
+    carved out for one Python lane and not the other, while the governing
+    decision described the carve-out as shared and this gate reported green.
 
     Both triggers, not just push. The old form read only ``push``, so the
     pull-request carve-out could diverge from the push one with nothing
@@ -188,8 +188,8 @@ def test_the_docs_verification_lane_never_publishes() -> None:
     for forbidden in ("docs_static_site", "publish", "--confirm"):
         assert forbidden not in commands, forbidden
 
-    # And the delivery lane stays free of push/PR triggers, so no ordinary
-    # commit can reach it.
+    # And the delivery lane stays free of push and pull-request triggers, so no
+    # ordinary commit can reach it.
     delivery = _triggers(_document(_WORKFLOWS_DIR / "docs-publish.yml"))
     assert set(delivery) == {"release", "workflow_dispatch"}
 
