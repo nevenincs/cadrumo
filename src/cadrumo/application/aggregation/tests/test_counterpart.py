@@ -281,9 +281,29 @@ class TestObservationBoundaryAuthorities:
         with pytest.raises(ValidationError):
             _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", accrued=malformed)
 
-    @pytest.mark.parametrize("unconstrained", ["2025", "bogus", "Q1", "ANUAL"])
+    @pytest.mark.parametrize(
+        "unconstrained",
+        [
+            "2025",
+            "bogus",
+            "Q1",
+            "ANUAL",
+            "ALTA",
+            "MODIFICACION",
+            "BAJA",
+            "COMUNICACION",
+            "VARIACION",
+            "EVENT-N",
+        ],
+    )
     def test_non_registry_operation_periods_are_refused(self, unconstrained: str) -> None:
-        """``operation_period`` must be a registry period token, not free text."""
+        """``operation_period`` must be a FILING period token, not free text.
+
+        The administrative censo tokens and the ``EVENT-N`` selector placeholder
+        address a registry revision; an M347 counterpart operation period is a
+        period the taxpayer operated in, so they are refused here even though the
+        registry coordinate admits them.
+        """
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):

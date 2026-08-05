@@ -13,9 +13,15 @@ the closed standard vocabulary (1T-4T, 1P-4P, 0A, 01-12). It includes both
 calendar spans and instalment claves, so callers that need date boundaries
 must still check :meth:`Period.has_date_span`. :data:`RegistryPeriodCode`
 is the pydantic field annotation for the full registry union: standard
-members plus extended OSS/IOSS literals, ``AD-HOC``, and the open-ended
-``EVENT-N`` shape. :class:`Period` combines one accepted code with a filing
-year, and :class:`PeriodKind` classifies the resulting cadence.
+members plus extended OSS/IOSS literals, ``AD-HOC``, the open-ended event
+shape, the administrative censo tokens, and the ``EVENT-N`` selector
+placeholder. :data:`FilingPeriodCode` is the narrower annotation for a period
+a taxpayer files in — the same union minus the administrative tokens and the
+placeholder, both of which address a registry revision rather than name a
+period. Two boundaries with different value spaces need two annotations:
+widening one to admit a registry coordinate must not widen the other.
+:class:`Period` combines one accepted FILING code with a filing year, and
+:class:`PeriodKind` classifies the resulting cadence.
 
 This module is the runtime counterpart to the registry
 :data:`domain.calculations.registry.PeriodCode` alias and
@@ -78,24 +84,36 @@ _STANDARD_PERIOD_SET = frozenset(StandardPeriodCode)
 _EXTENDED_PERIOD_SET = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _AD_HOC_PERIOD = "AD-HOC"
 _ADMINISTRATIVE_PERIOD_SET = frozenset(("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"))
+#: The literal placeholder a registry ``period_selector`` declares to mean "an
+#: event number". It addresses a revision; it is not itself a filing period.
+_EVENT_SELECTOR_PLACEHOLDER = "EVENT-N"
 _EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
-_EVENT_PERIOD_RE = re.compile(r"^EVENT-(?:N|\d+)$")
+_EVENT_NUMBER_PERIOD_RE = re.compile(r"^EVENT-\d+$")
 _DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
 
 
-def _validate_period_against_registry(value: str) -> str:
-    """Validate and normalize a period code against the union of accepted forms.
-
-    Accepts StandardPeriodCode members, extended OSS/IOSS forms (EXT-1T..EXT-4T),
-    ad-hoc literal (AD-HOC), and event-driven forms (EVENT-N where N is an integer).
-
-    Raises ValueError with the full accepted-set list on rejection; pydantic
-    wraps it into a ValidationError at the BeforeValidator boundary.
-    """
+def _normalised_period_token(value: str) -> str:
+    """Return the trimmed, upper-cased token, refusing a non-string input."""
     if not isinstance(value, str):
         raise ValueError(f"period code must be a string, got {type(value).__name__}")
+    return value.strip().upper()
 
-    normalized = value.strip().upper()
+
+def _validate_filing_period(value: str) -> str:
+    """Validate and normalize a period code that a taxpayer can actually file.
+
+    Accepts StandardPeriodCode members, extended OSS/IOSS forms (EXT-1T..EXT-4T),
+    the ad-hoc literal (AD-HOC), and event-driven forms carrying a concrete event
+    NUMBER (EVENT-3). It admits neither the administrative censo/comunicación
+    tokens nor the ``EVENT-N`` selector placeholder: both address a registry
+    revision rather than name a period a filing occupies, so admitting them here
+    would let a registration event or a documentation placeholder become a typed
+    filing period.
+
+    Raises ValueError with the filing-scoped accepted set on rejection; pydantic
+    wraps it into a ValidationError at the BeforeValidator boundary.
+    """
+    normalized = _normalised_period_token(value)
 
     if normalized in _STANDARD_PERIOD_SET:
         return normalized
@@ -103,54 +121,112 @@ def _validate_period_against_registry(value: str) -> str:
         return normalized
     if normalized == _AD_HOC_PERIOD:
         return normalized
-    if normalized in _ADMINISTRATIVE_PERIOD_SET:
-        return normalized
-    if _EVENT_PERIOD_RE.match(normalized):
+    if _EVENT_NUMBER_PERIOD_RE.match(normalized):
         return normalized
 
-    accepted = _format_accepted_period_set()
+    accepted = _format_accepted_filing_period_set()
     raise ValueError(f"invalid period code '{value}'; accepted forms: {accepted}")
 
 
+def _validate_period_against_registry(value: str) -> str:
+    """Validate and normalize a period code against the union of accepted forms.
+
+    This is the REGISTRY coordinate's vocabulary: every filing period plus the
+    two sub-vocabularies that address a revision without naming a filing period —
+    the administrative censo/comunicación tokens (Modelo 036, Modelo 145) and the
+    ``EVENT-N`` selector placeholder (Modelo 210). Use :func:`_validate_filing_period`
+    for anything that represents a period a taxpayer files in.
+
+    Raises ValueError with the full accepted-set list on rejection; pydantic
+    wraps it into a ValidationError at the BeforeValidator boundary.
+    """
+    normalized = _normalised_period_token(value)
+
+    if normalized in _ADMINISTRATIVE_PERIOD_SET:
+        return normalized
+    if normalized == _EVENT_SELECTOR_PLACEHOLDER:
+        return normalized
+    try:
+        return _validate_filing_period(normalized)
+    except ValueError:
+        accepted = _format_accepted_period_set()
+        raise ValueError(f"invalid period code '{value}'; accepted forms: {accepted}") from None
+
+
 def accepted_period_codes() -> tuple[str, ...]:
-    """Return the fully enumerable period codes.
+    """Return the fully enumerable REGISTRY period codes.
 
     The tuple includes :class:`StandardPeriodCode`, extended OSS/IOSS literals,
-    and ``AD-HOC``. It deliberately excludes the infinite ``EVENT-N`` family;
-    pair it with :func:`accepted_period_patterns` when building help text or
-    parse-error guidance.
+    ``AD-HOC``, and the administrative tokens. It deliberately excludes the
+    infinite ``EVENT-N`` family; pair it with :func:`accepted_period_patterns`
+    when building help text or parse-error guidance.
+
+    This is the registry-facing set. Operator surfaces describing what may be
+    FILED consume :func:`accepted_filing_period_codes` instead.
     """
     return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD} | _ADMINISTRATIVE_PERIOD_SET))
 
 
+def accepted_filing_period_codes() -> tuple[str, ...]:
+    """Return the fully enumerable codes a :class:`Period` accepts.
+
+    The administrative tokens are excluded — they address a registry revision,
+    not a filing period — as is the infinite ``EVENT-<number>`` family.
+    """
+    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
+
+
 def accepted_period_patterns() -> tuple[str, ...]:
-    """Return human-readable period-code patterns, including open regex shapes."""
+    """Return human-readable REGISTRY period-code patterns, including open regex shapes."""
+    return (
+        *accepted_filing_period_patterns(),
+        f"Administrative ({', '.join(sorted(_ADMINISTRATIVE_PERIOD_SET))})",
+        f"Registry selector placeholder (the literal {_EVENT_SELECTOR_PLACEHOLDER}, a registry coordinate only)",
+    )
+
+
+def accepted_filing_period_patterns() -> tuple[str, ...]:
+    """Return human-readable patterns for the periods a :class:`Period` accepts."""
     return (
         "StandardPeriodCode (1T-4T, 1P-4P, 0A, 01-12)",
         "Extended OSS/IOSS (EXT-1T, EXT-2T, EXT-3T, EXT-4T)",
         "Ad-hoc (AD-HOC)",
-        "Administrative (ALTA, MODIFICACION, BAJA)",
-        "Event-driven (EVENT-N where N is an integer)",
+        "Event-driven (EVENT-N where N is an event-number integer, e.g. EVENT-3)",
     )
 
 
-def _format_accepted_period_set() -> str:
-    """Format the accepted period set for error messages."""
+def _format_accepted_filing_period_set() -> str:
+    """Format the filing-scoped accepted period set for error messages."""
     standard = sorted(_STANDARD_PERIOD_SET)
     extended = sorted(_EXTENDED_PERIOD_SET)
     lines = [
         f"StandardPeriodCode: {', '.join(standard)}",
         f"Extended: {', '.join(extended)}",
         f"Ad-hoc: {_AD_HOC_PERIOD}",
+        "Event-driven: EVENT-N (where N is an event-number integer, e.g. EVENT-3)",
+    ]
+    return "; ".join(lines)
+
+
+def _format_accepted_period_set() -> str:
+    """Format the registry-scoped accepted period set for error messages."""
+    lines = [
+        _format_accepted_filing_period_set(),
         f"Administrative: {', '.join(sorted(_ADMINISTRATIVE_PERIOD_SET))}",
-        "Event-driven: EVENT-N (where N is an integer)",
+        f"Registry selector placeholder: the literal {_EVENT_SELECTOR_PLACEHOLDER}",
     ]
     return "; ".join(lines)
 
 
 #: Pydantic field annotation for bare registry period tokens. Use
-#: :class:`Period` instead when a filing year is known.
+#: :data:`FilingPeriodCode` (or :class:`Period`) instead when the value names a
+#: period a taxpayer files in rather than a registry coordinate.
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
+
+#: Pydantic field annotation for a bare period token a taxpayer can file in.
+#: Narrower than :data:`RegistryPeriodCode`: the administrative censo tokens and
+#: the ``EVENT-N`` selector placeholder are refused.
+FilingPeriodCode = Annotated[str, BeforeValidator(_validate_filing_period)]
 
 
 def _validate_registry_selector_period(value: str) -> str:
@@ -199,6 +275,44 @@ _QUARTER_ORDINALS: dict[StandardPeriodCode, int] = {
 }
 
 
+def _period_kind_for_code(code: str) -> PeriodKind:
+    """Classify a normalised period code's cadence.
+
+    The cadence is a property of the token alone — no filing year participates —
+    so this is shared by :attr:`Period.kind` and :func:`registry_period_kind`
+    rather than requiring a registry-facing caller to mint a throwaway
+    :class:`Period` (which the administrative tokens can no longer become).
+    """
+    if code in _QUARTER_SPAN_MONTHS:
+        return PeriodKind.QUARTERLY
+    if code == "0A":
+        return PeriodKind.ANNUAL
+    if len(code) == 2 and code.isdigit():
+        return PeriodKind.MONTHLY
+    if len(code) == 2 and code.endswith("P") and code[0] in "1234":
+        return PeriodKind.INSTALMENT
+    return PeriodKind.EXTENDED
+
+
+def registry_period_kind(token: str) -> PeriodKind:
+    """Return the cadence class of any REGISTRY period token.
+
+    Accepts the full :data:`RegistryPeriodCode` vocabulary, so a registry-facing
+    consistency check (a ``filing_schedules`` declaration reconciling its
+    ``period_kind`` against its ``periods``) can classify an administrative censo
+    token or the ``EVENT-N`` selector placeholder. Both classify as
+    :attr:`PeriodKind.EXTENDED`, matching what a :class:`Period` reported for them
+    while one validator still served both boundaries.
+
+    Raises:
+        ValueError: When ``token`` is not an accepted registry period code.
+    """
+    normalized = _validate_period_against_registry(token)
+    if normalized in _ADMINISTRATIVE_PERIOD_SET or normalized == _EVENT_SELECTOR_PLACEHOLDER:
+        return PeriodKind.EXTENDED
+    return _period_kind_for_code(normalized)
+
+
 class Period(BaseModel):
     """A filing period as one typed value: a year paired with a registry code.
 
@@ -221,14 +335,14 @@ class Period(BaseModel):
 
     Attributes:
         filing_year: Filing year carried separately from the registry token.
-        code: Bare :data:`RegistryPeriodCode` token validated against the registry
-            period union.
+        code: Bare :data:`FilingPeriodCode` token — the registry union minus the
+            coordinates that address a revision rather than a filing period.
     """
 
     model_config = ConfigDict(frozen=True)
 
     filing_year: int = Field(ge=1980, le=2200)
-    code: RegistryPeriodCode
+    code: FilingPeriodCode
 
     @classmethod
     def from_year_and_code(cls, year: int, code: str) -> Period:
@@ -236,14 +350,16 @@ class Period(BaseModel):
 
         Args:
             year: The filing year (e.g. ``2026``).
-            code: A bare registry period code — a :class:`StandardPeriodCode`
+            code: A bare filing period code — a :class:`StandardPeriodCode`
                 value (``1T``-``4T`` / ``1P``-``4P`` / ``0A`` / ``01``-``12``) or
                 an extended union member (``EXT-1T``-``EXT-4T`` / ``AD-HOC`` /
-                ``EVENT-N``). The code is validated against the registry union;
-                a combined calendar string is refused.
+                ``EVENT-3``). The code is validated against
+                :data:`FilingPeriodCode`; a combined calendar string, an
+                administrative censo token, and the ``EVENT-N`` selector
+                placeholder are all refused.
 
         Raises:
-            PeriodError: When ``code`` is not an accepted registry period code or
+            PeriodError: When ``code`` is not an accepted filing period code or
                 ``year`` is outside the supported range.
         """
         try:
@@ -317,16 +433,7 @@ class Period(BaseModel):
     @property
     def kind(self) -> PeriodKind:
         """Return the cadence class derived from the period code."""
-        code = str(self.code)
-        if self.is_quarterly:
-            return PeriodKind.QUARTERLY
-        if code == "0A":
-            return PeriodKind.ANNUAL
-        if len(code) == 2 and code.isdigit():
-            return PeriodKind.MONTHLY
-        if len(code) == 2 and code.endswith("P") and code[0] in "1234":
-            return PeriodKind.INSTALMENT
-        return PeriodKind.EXTENDED
+        return _period_kind_for_code(str(self.code))
 
     def has_date_span(self) -> bool:
         """Return whether the period maps to an inclusive calendar date span.
@@ -403,11 +510,15 @@ class Period(BaseModel):
 
 
 __all__ = [
+    "FilingPeriodCode",
     "Period",
     "PeriodError",
     "PeriodKind",
     "RegistryPeriodCode",
     "StandardPeriodCode",
+    "accepted_filing_period_codes",
+    "accepted_filing_period_patterns",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "registry_period_kind",
 ]

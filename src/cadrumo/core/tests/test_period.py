@@ -8,14 +8,26 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from .. import (
+    FilingPeriodCode,
     Period,
     PeriodError,
     PeriodKind,
     RegistryPeriodCode,
     StandardPeriodCode,
+    accepted_filing_period_codes,
+    accepted_filing_period_patterns,
     accepted_period_codes,
     accepted_period_patterns,
 )
+
+#: The tokens a registry ``period_selector`` declares to address a censo or
+#: comunicación revision (Modelo 036 declares the first three, Modelo 145 the
+#: last two). They name a registration event, never a period a taxpayer files in.
+ADMINISTRATIVE_TOKENS = ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION")
+
+#: The literal placeholder Modelo 210's 2025 ``period_selector`` declares. It
+#: stands for "an event number"; it is not an event number.
+EVENT_SELECTOR_PLACEHOLDER = "EVENT-N"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -115,6 +127,23 @@ class TestRegistryPeriodCodeAccessors:
         assert "event" in pattern_str
         assert "integer" in pattern_str
 
+    def test_registry_patterns_report_every_administrative_token(self) -> None:
+        """The pattern listing and the code listing describe the same set."""
+        pattern_str = " ".join(accepted_period_patterns())
+        for token in ADMINISTRATIVE_TOKENS:
+            assert token in pattern_str, token
+            assert token in accepted_period_codes(), token
+
+    def test_filing_accessors_exclude_the_administrative_vocabulary(self) -> None:
+        codes = accepted_filing_period_codes()
+        patterns = " ".join(accepted_filing_period_patterns())
+        for token in ADMINISTRATIVE_TOKENS:
+            assert token not in codes, token
+            assert token not in patterns, token
+        for expected in ("1T", "0A", "12", "EXT-1T", "AD-HOC"):
+            assert expected in codes, expected
+        assert set(codes) < set(accepted_period_codes())
+
 
 class TestRegistryPeriodCodeRoundtrip:
     """Verify RegistryPeriodCode persists through JSON roundtrip."""
@@ -166,6 +195,92 @@ def _validate_test_model(period: str) -> str:
 
     model = TestModel(period=period)
     return model.period
+
+
+def _validate_filing_test_model(period: str) -> str:
+    """Helper to validate a period code through the narrow filing annotation."""
+
+    class TestModel(BaseModel):
+        period: FilingPeriodCode
+
+    model = TestModel(period=period)
+    return model.period
+
+
+class TestPeriodTypeBoundarySplit:
+    """Pin BOTH halves of the registry/filing period-vocabulary split, adjacently.
+
+    The registry coordinate and the typed filing period have genuinely different
+    value spaces, and for a while one validator served both. Widening it so the
+    registry could address a Modelo 036 censo revision silently widened
+    :class:`Period`, so ``--period alta`` built a filing period out of a
+    registration event and the instructive parse-boundary refusal that named the
+    modelo's declared tokens was replaced by a late generic error.
+
+    A test pinning only the refusal direction would let the next well-intentioned
+    widening re-merge the validators to fix a registry-load failure; a test
+    pinning only the registry direction is what existed when this arrived. Both
+    directions belong here, together, so the trade-off is visible at the point
+    where either one would be changed.
+    """
+
+    @pytest.mark.parametrize("token", ADMINISTRATIVE_TOKENS)
+    def test_administrative_tokens_are_not_filing_periods(self, token: str) -> None:
+        for spelling in (token, token.lower()):
+            with pytest.raises(PeriodError):
+                Period.from_year_and_code(2025, spelling)
+            with pytest.raises(ValidationError):
+                _validate_filing_test_model(spelling)
+
+    def test_event_selector_placeholder_is_not_a_filing_period(self) -> None:
+        with pytest.raises(PeriodError):
+            Period.from_year_and_code(2025, EVENT_SELECTOR_PLACEHOLDER)
+        with pytest.raises(ValidationError):
+            _validate_filing_test_model(EVENT_SELECTOR_PLACEHOLDER)
+
+    @pytest.mark.parametrize("token", ("EVENT-3", "EVENT-27", "EVENT-142"))
+    def test_concrete_event_numbers_remain_filing_periods(self, token: str) -> None:
+        """The positive control: narrowing must not have taken the event family with it."""
+        assert Period.from_year_and_code(2025, token).registry_token == token
+
+    def test_filing_refusal_names_the_accepted_filing_set(self) -> None:
+        with pytest.raises(PeriodError) as exc_info:
+            Period.from_year_and_code(2025, "ALTA")
+        message = str(exc_info.value)
+        assert "accepted forms" in message
+        assert "AD-HOC" in message
+        # The filing-scoped listing must not advertise the vocabulary it refuses.
+        assert "Administrative" not in message
+
+    @pytest.mark.parametrize("token", (*ADMINISTRATIVE_TOKENS, EVENT_SELECTOR_PLACEHOLDER))
+    def test_registry_coordinate_still_admits_the_administrative_vocabulary(self, token: str) -> None:
+        """The other direction: the registry must keep loading."""
+        from ...domain.calculations.registry import RegistrySnapshotRef
+
+        assert _validate_test_model(token) == token
+        ref = RegistrySnapshotRef(
+            modelo="036",
+            revision_id="2025-02-03-y-siguientes",
+            modelo_year=2025,
+            period=token,
+        )
+        assert ref.period == token
+
+    @pytest.mark.parametrize(
+        "declared",
+        (
+            pytest.param(("alta", "modificacion", "baja"), id="modelo-036-censo-events"),
+            pytest.param(("comunicacion", "variacion"), id="modelo-145-comunicacion-events"),
+            pytest.param(("EVENT-N", "0A"), id="modelo-210-event-placeholder-plus-annual"),
+        ),
+    )
+    def test_declared_period_selectors_still_validate(self, declared: tuple[str, ...]) -> None:
+        """The shipped declarations that made the widening necessary in the first place."""
+        from ...domain.calculations.registry import PeriodSelector
+
+        selector = PeriodSelector(year_from=2012, periods=declared)
+
+        assert selector.periods == declared
 
 
 class TestPeriodConstruction:

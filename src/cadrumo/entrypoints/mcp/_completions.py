@@ -15,12 +15,14 @@ enum remains the completion source if a modelo argument is ever added.
 
 from __future__ import annotations
 
-from ...core import accepted_period_codes
+from ...core import accepted_filing_period_codes
 
-#: The finite, enumerable RegistryPeriodCode values. ``EVENT-N`` remains an
-#: open grammar pattern and is deliberately described, rather than fabricated
-#: as one completion candidate.
-_PERIOD_VALUES: tuple[str, ...] = tuple(str(value) for value in accepted_period_codes())
+#: The finite, enumerable FilingPeriodCode values. The prompt argument names a
+#: period the operator FILES in, so the administrative censo tokens the registry
+#: coordinate also accepts are deliberately not offered. ``EVENT-<number>``
+#: remains an open grammar pattern and is described rather than fabricated as one
+#: completion candidate.
+_PERIOD_VALUES: tuple[str, ...] = tuple(str(value) for value in accepted_filing_period_codes())
 
 #: A plausible filing-year range offered for completion. Deliberately a fixed
 #: recent span (no wall clock is read at import), filtered by the typed prefix;
