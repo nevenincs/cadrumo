@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:38da12af13f8cb70ebd86b0369cf037cf70981bd6c226d2a56c3d0f0cdcdbe53'
+body_hash: 'sha256:ad51263872643de35f965b140e37b173abf5e97a498d9a29229cf783e821d0f0'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -136,3 +136,11 @@ The source acceptance boundary remains honest: no artifact or runtime acceptance
 ## 2026-08-05 browser-hash parity disposition
 
 RAG and the LUNA Extra High source review confirm that the browser must not recompute the Python self-attestation hashes until the two runtimes share a proven canonical JSON number contract. Python's canonical serializer preserves numeric lexical forms that JSON.parse discards, and JavaScript serialization is not byte-equivalent for every valid finite float accepted by the matrix, bridge, and manifest schemas. Adding a browser recomputation now could reject a valid future artifact or validate bytes different from the Python contract. No new canonicalizer or schema amendment is authorized in this source-only lane; browser nested-content hash parity remains a bounded follow-up before artifact acceptance. No tests, builds, artifact generation, runtime probes, or deployment were run.
+
+## 2026-08-05 committed-object manifest review
+
+### r8-manifest-review | low | PASS: raw-byte manifest source contract
+
+The mandated RAG-grounded reviewer returned PASS for the committed objects `a0dc2c47bf` and `351d3cb935`. Direct committed-object inspection confirmed the ADR Update 8 contract: strict `RawByteManifestV1` fields and canonical root hashing; explicit raw-byte SHA-256 and byte-length checks; rejection of absolute, escaping, non-normalized, duplicate, case-colliding, symlinked, missing, and unexpected files; provider/model/tokenizer role and snapshot-root binding; verification before provider import and `from_pretrained`; local-only loading with `force_download=False`; and browser enforcement of `model_snapshot_sha256`.
+
+The review is source-only. Actual provider/package/model/tokenizer manifests, installed package evidence, matrix generation, measured quantization, held-out evidence, tests, builds, runtime probes, reindexing, and deployment remain intentionally absent. P02.S26, P02.S06, and all artifact/runtime/deployment acceptance rows remain open.
