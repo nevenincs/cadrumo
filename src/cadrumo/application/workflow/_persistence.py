@@ -48,6 +48,7 @@ from ...adapters.persistence.storage import (
     SecureObjectRevisionConflictError,
     SecureObjectWrite,
     StorageError,
+    inner_envelope_classification_is_expected,
     inner_envelope_version_is_current,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_cold_bootstrap_state,
@@ -175,7 +176,7 @@ class WorkflowStateRepository:
                 translated_message="application.workflow.errors.state_unreadable",
                 context={"detail": str(exc)},
             ) from exc
-        if envelope.classification is not _STATE_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _STATE_SENSITIVITY):
             raise ClassificationError(
                 f"workflow state has classification {envelope.classification}; consumer expected {_STATE_SENSITIVITY}",
             )
@@ -468,7 +469,7 @@ class WorkflowRunRepository:
                 context={"run_id": safe_run_id},
             )
         envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not _RUN_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _RUN_SENSITIVITY):
             raise ClassificationError(
                 f"workflow run has classification {envelope.classification}; consumer expected {_RUN_SENSITIVITY}",
             )

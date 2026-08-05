@@ -149,6 +149,7 @@ class BucketEventHistoryRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
 
@@ -181,7 +182,7 @@ class BucketEventHistoryRepository:
                 suggestion="aeat config repair --help",
                 translated_message="errors.storage.stored_data_validation_boundary",
             ) from exc
-        if envelope.classification is not _CATALOGUE_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _CATALOGUE_SENSITIVITY):
             _LOGGER.error(
                 "bucket-event-history catalogue classification mismatch classification=%s",
                 envelope.classification.value,

@@ -118,6 +118,7 @@ class TransactionParticipationIndexRepository:
             Envelope,
             EnvelopeVersionError,
             SecureObjectRowIdentityError,
+            inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
         from ..storage.crypto import secure_object_key_digest
@@ -142,7 +143,7 @@ class TransactionParticipationIndexRepository:
         envelope = Envelope[TransactionRevisionParticipationIndex].model_validate_json(
             record.payload.decode(UTF_8_ENCODING),
         )
-        if envelope.classification is not _PARTICIPATION_INDEX_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _PARTICIPATION_INDEX_SENSITIVITY):
             _LOGGER.error("participation-index classification mismatch")
             raise TransactionParticipationIndexPersistenceError(
                 "participation-index classification mismatch",

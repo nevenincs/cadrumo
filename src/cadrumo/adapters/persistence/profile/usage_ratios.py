@@ -63,7 +63,7 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage import Envelope, inner_envelope_version_is_current
+    from ..storage import Envelope, inner_envelope_classification_is_expected, inner_envelope_version_is_current
     from ..storage.errors import ClassificationError, EnvelopeVersionError
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -80,7 +80,7 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
             _LOGGER.debug("usage-ratios object not found; returning empty profile bucket_id=%s", bucket_id)
             return UsageRatioProfile()
         envelope = Envelope[UsageRatioProfile].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not _USAGE_RATIO_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _USAGE_RATIO_SENSITIVITY):
             raise ClassificationError(
                 f"usage-ratio profile object has classification {envelope.classification}; "
                 f"consumer expected {_USAGE_RATIO_SENSITIVITY}",

@@ -22,7 +22,7 @@ from .._namespace_registry import (
     StorageHierarchyRegistry,
     is_former_product_namespace,
 )
-from .._schema_lineage import ensure_schema_version_readable
+from .._schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
 from ..crypto import (
     encrypt_secure_object_payload,
     secure_object_key_digest,
@@ -167,7 +167,7 @@ class SecureObjectRepository:
             # pre-computed HMAC digest whose natural key was already lost, so
             # there is no key left to check against the declared grammar.
             self._enforce_registered_object_key(definition, object_key)
-        if classification is not definition.sensitivity:
+        if not inner_envelope_classification_is_expected(classification, definition.sensitivity):
             raise ClassificationError(
                 translated_message="errors.storage.namespace.classification_mismatch",
                 context={
@@ -221,7 +221,7 @@ class SecureObjectRepository:
         definition = self._registered_namespace_definition(namespace)
         if definition is None:
             return None
-        if expected_class is not definition.sensitivity:
+        if not inner_envelope_classification_is_expected(expected_class, definition.sensitivity):
             raise ClassificationError(
                 translated_message="errors.storage.namespace.classification_mismatch",
                 context={
