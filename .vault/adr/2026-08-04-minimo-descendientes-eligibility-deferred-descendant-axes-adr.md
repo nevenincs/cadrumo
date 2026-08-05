@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a252e92a6ad7ab9bf9a8ad8c127c6e60986f3aaaf8585cd40a267161f46dbd2'
+body_hash: 'sha256:a8ea61c6b6c26db6e1898c86fbcad9bae0d4d1fc7be5e988cfd00a68c5d7a67a'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -270,6 +270,52 @@ follows the birth, the month in which the thirty-day contribution period complet
 additional amount, making that single month materially larger than the ordinary monthly
 figure. Nothing in the current path expresses it. Direction is under-grant, and it belongs in
 whichever Step takes the maternidad work rather than being discovered afterwards.
+
+
+### DECISION: the maternidad months are a hybrid, and the split follows the authority
+
+Taken rather than deferred, because the grounding above makes it a reading of the law rather
+than a preference between two designs. Three Steps were blocked on this and are now unblocked.
+
+**Decided:**
+
+1. **Child eligibility is engine-derived, from the mínimo predicate.** Not a new rule and not
+   an operator assertion. The authority defines the qualifying child as one *con derecho a la
+   aplicación del mínimo por descendientes* — so the condition already exists, already runs,
+   and already governs the same descendant in the same calculation. Re-asserting it would
+   create a second authority for a question this campaign spent its length giving one.
+
+2. **Month arithmetic is engine-computed from the birth date.** The month of birth counts in
+   full; the month in which the child turns three does not. Both are determinable from a fact
+   the profile holds, so neither is an operator judgement and neither should be typed.
+
+3. **Employment months are operator-supplied and stay so.** Whether the taxpayer held
+   unemployment benefit at the birth, or Social Security registration with the required
+   contributed period, is her employment history. The application does not hold it and must
+   not infer it. It is separately reported to the authority by its own informative return, so
+   the operator's figure is checkable against a record the authority already has — the same
+   property that settled the childcare window.
+
+**Why this is the same answer as the guardería resolution, arrived at independently.** In both
+cases the tempting framing was a binary — derive it or assert it — and in both the law splits
+the question along a line the binary cannot express: the operator supplies what only they
+know, the engine applies what it can compute, and neither re-derives the other's part. A
+design that picks one side wholesale is wrong on the other side's half.
+
+**What this makes implementable.** The Art. 81.1 window Step now has a real consumer, because
+the calculate path must read the descendant record to apply eligibility and month arithmetic
+— which is what made that Step dead on arrival while the disconnect stood. The eligibility
+Step resolves to *derive*, with the predicate already written. The disconnect Step resolves to
+*connect*: the declared months must reach a casilla rather than being offered and discarded.
+
+**Carried into the implementing work**, and not to be rediscovered: where Social Security
+registration follows the birth, the month completing the required contribution period carries
+an additional amount above the ordinary monthly figure. Unmodelled anywhere today, and the
+direction is under-grant.
+
+**Reversible on evidence rather than on preference.** The decision rests on the authority's own
+definition of the qualifying child. If that definition is read differently — with a source —
+the first clause falls and the other two stand independently.
 
 
 ## Amendment: a design review corrected all four decisions, and refuted one
