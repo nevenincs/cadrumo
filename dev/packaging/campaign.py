@@ -94,6 +94,14 @@ class Lane:
     name: str
     invariant: str
     forms: tuple[Form, ...]
+    # The lane's BEHAVIOURAL proof and the form that carries it. This is the one
+    # class that legitimately runs once per lane: it proves a property of the
+    # product, not of one route to it, so running it per form was triplication.
+    # Install-level invariants are the opposite and stay per-form — the installed
+    # virtualenv is exactly what a form produces, so asserting those once would
+    # leave the other installers unproven.
+    behavioural_proof: str | None = None
+    reference_form: str | None = None
 
     def form(self, name: str) -> Form:
         """Return this lane's form by name, refusing an unregistered one."""
@@ -101,6 +109,12 @@ class Lane:
             if form.name == name:
                 return form
         raise KeyError(f"lane {self.name!r} has no form {name!r}: {[f.name for f in self.forms]}")
+
+    def reference(self) -> Form | None:
+        """Return the form carrying this lane's behavioural proof, if it has one."""
+        if self.reference_form is None:
+            return None
+        return self.form(self.reference_form)
 
 
 _LANES: Final[dict[str, Lane]] = {
@@ -115,6 +129,8 @@ _LANES: Final[dict[str, Lane]] = {
             Form("joined-cohort", "dev.packaging.smoke_split_install"),
             Form("container", "dev.packaging.smoke_docker"),
         ),
+        behavioural_proof="installed grounded Modelo 200 tax-work oracle",
+        reference_form="uv-venv",
     ),
     "browser": Lane(
         name="browser",

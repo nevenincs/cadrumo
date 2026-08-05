@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from dev.packaging.campaign import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _JUSTFILE = Path(__file__).resolve().parents[3] / "justfile"
+_PACKAGING = Path(__file__).resolve().parents[1]
 
 # The executed set, pinned as (module, extra args) per profile in run order.
 # This is the guarantee the lane/form migration had to preserve: the hierarchy
@@ -169,3 +171,42 @@ def test_aggregates_route_through_the_campaign_driver() -> None:
     assert "dev.packaging.campaign --profile portable" in justfile
     assert "dev.packaging.campaign --profile ci" in justfile
     assert "dev.packaging.campaign --profile quick" in justfile
+
+
+def test_a_lane_with_a_behavioural_proof_names_a_real_reference_form() -> None:
+    """The reference form must exist on its own lane, and pair with a proof."""
+    for lane in _LANES.values():
+        assert (lane.behavioural_proof is None) == (lane.reference_form is None), (
+            f"lane {lane.name} pairs a behavioural proof with a reference form, or declares neither"
+        )
+        if lane.reference_form is not None:
+            lane.form(lane.reference_form)  # raises KeyError on an unregistered form
+
+
+def test_the_behavioural_proof_runs_on_the_reference_form_and_nowhere_else() -> None:
+    """The installed oracle is lane-level: exactly one form carries it.
+
+    This is the only invariant class that legitimately collapses — it proves a
+    property of the PRODUCT, so running it per form was triplication (it ran in
+    core, split, and the serial oracles pass against one cohort and one target).
+    Install-level invariants are deliberately not collapsed this way: the
+    installed virtualenv is what a form produces, so asserting those once would
+    leave the other installers unproven.
+
+    Pinned statically against each form's module source, so a second call site
+    fails here rather than after a campaign has paid for it twice.
+    """
+    oracle = "run_installed_tax_oracle"
+    for lane in _LANES.values():
+        reference = lane.reference()
+        for form in lane.forms:
+            module_path = _PACKAGING / f"{form.module.rsplit('.', 1)[-1]}.py"
+            calls_oracle = any(
+                isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == oracle
+                for node in ast.walk(ast.parse(module_path.read_text(encoding="utf-8")))
+            )
+            expected = reference is not None and form is reference
+            assert calls_oracle is expected, (
+                f"{lane.name}/{form.name} {'must' if expected else 'must not'} run the "
+                f"lane's behavioural proof; it is owned by {lane.reference_form!r}"
+            )
