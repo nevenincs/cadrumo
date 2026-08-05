@@ -50,7 +50,11 @@ from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing import parse_bool, parse_iso8601_date
-from ._guarderia_mensual import parse_guarderia_mensual, serialise_guarderia_mensual
+from ._guarderia_mensual import (
+    is_plain_whole_number,
+    parse_guarderia_mensual,
+    serialise_guarderia_mensual,
+)
 from .family import DescendantInfo
 
 #: Localised refusal for a rentas figure outside the canonical euro grammar.
@@ -350,20 +354,33 @@ def _stored_gastos_guarderia(raw: str | None, *, index: int) -> int:
     A negative figure refuses rather than clamping to zero, for this module's
     standing reason: a clamp is a value the operator never wrote, and silently
     substituting one is how a figure stops meaning what was typed.
+
+    The sign is read rather than stripped. An earlier form of this guard used
+    ``lstrip("-")``, which removes EVERY leading dash, so ``"--5"`` satisfied the
+    digit test and fell through to ``int``, which rejects a double sign with the
+    exact bare ``ValueError`` the paragraph above says this function exists to
+    replace. That is the shape where an almost-right guard is worse than none,
+    because the test proving it works passes. ``removeprefix`` takes one dash
+    and no more, so a second one is left in the text and fails the shape test.
     """
     if raw is None:
         return 0
     text = raw.strip()
-    if not text.lstrip("-").isdigit():
+    negative = text.startswith("-")
+    digits = text.removeprefix("-")
+    if not is_plain_whole_number(digits):
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.gastos_guarderia must be a whole number of euros; got {raw!r}.",
         )
-    value = int(text)
-    if value < 0:
+    if negative:
+        # Reached for a signed zero too, deliberately. ``"-0"`` is numerically
+        # the default and harmless, but accepting it while refusing ``"-5"``
+        # would make the sign sometimes readable and sometimes not, and a reader
+        # cannot tell which from the code. One rule: a sign here is refused.
         raise ProfileAnswerTypeError(
             f"renta_family.descendiente.{index}.gastos_guarderia must be zero or more; got {raw!r}.",
         )
-    return value
+    return int(digits)
 
 
 def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:

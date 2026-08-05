@@ -93,6 +93,17 @@ class TestGrammar:
             ("9:100;9:200", "the same month twice"),
             ("9-11:100;10:200", "a month covered by a range and again alone"),
             ("9:100;;10:200", "a doubled separator"),
+            # The isdigit-is-not-int family. Every one of these satisfied the
+            # original gate and then raised a bare ValueError from int, which is
+            # untranslated, names neither field nor accepted form, and escapes
+            # the wizard's answer validator because that catches only the typed
+            # refusal. The superscript is the reachable one: an operator pastes a
+            # footnote marker out of a formatted certificate.
+            ("9:²", "a superscript amount, which isdigit accepts and int does not"),
+            ("²:100", "a superscript month"),
+            ("9:1_0", "an amount using int's own underscore tolerance"),
+            ("٩:100", "a non-ASCII digit month"),
+            ("9:٩", "a non-ASCII digit amount"),
         ],
     )
     def test_a_malformed_map_refuses_rather_than_dropping_the_entry(self, raw: str, reason: str) -> None:
@@ -265,6 +276,7 @@ class TestStoredValueAntiTautology:
             ("9:100;9:200", "the same month stored twice"),
             ("9:abc", "an amount that is not a number"),
             ("garbage", "a value with no structure at all"),
+            ("9:²", "a superscript int cannot read"),
         ],
     )
     def test_a_corrupted_stored_map_refuses_instead_of_reading_as_undeclared(
@@ -278,6 +290,39 @@ class TestStoredValueAntiTautology:
             ),
         )
         facts["renta_family.descendiente.0.gastos_guarderia_mensuales"] = corrupted
+
+        with pytest.raises(ProfileAnswerTypeError):
+            descendant_list_from_facts(facts)
+
+    @pytest.mark.parametrize(
+        ("corrupted", "reason"),
+        [
+            ("nine hundred", "a value with no digits at all"),
+            ("--5", "a DOUBLE sign, which a dash-stripping guard let reach int"),
+            ("-5", "a single negative sign"),
+            ("-0", "a signed zero, refused so the sign is never sometimes readable"),
+            ("+5", "an explicit positive sign"),
+            ("1_0", "int's own underscore tolerance"),
+            ("²", "a superscript isdigit accepts and int does not"),
+            ("9.5", "a fractional figure"),
+        ],
+    )
+    def test_a_corrupted_annual_figure_refuses_by_shape(self, corrupted: str, reason: str) -> None:
+        """Every non-plain-integer shape refuses as the TYPED error, never as ValueError.
+
+        The double sign is the case that got through. The guard stripped every
+        leading dash before testing for digits, so a second dash survived into
+        ``int`` and raised exactly the bare, untranslated ``ValueError`` this
+        function exists to replace — the failure class its own docstring names,
+        surviving one shape outside the case the test below covers.
+
+        That is the shape where an almost-right guard is worse than none: the
+        test proving it works passes, so nothing signals the hole.
+        """
+        facts = dict(
+            descendant_facts_from_list([DescendantInfo(birth_date=date(2021, 4, 15), gastos_guarderia_euros=900)]),
+        )
+        facts["renta_family.descendiente.0.gastos_guarderia"] = corrupted
 
         with pytest.raises(ProfileAnswerTypeError):
             descendant_list_from_facts(facts)

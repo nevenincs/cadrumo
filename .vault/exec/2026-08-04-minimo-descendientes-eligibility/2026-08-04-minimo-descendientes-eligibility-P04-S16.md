@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:7fdb89cd62a9af480b2971b94a45418aac7b0bd8fd570fdb6940d7c15b3c29b1'
+body_hash: 'sha256:135be84804e2d2d850283e6cf851edb341c3891eab259a9d5ebead576b5e2e14'
 step_id: 'S16'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -18,7 +18,13 @@ related:
 
 ## Description
 
-The Step row's BLOCKED clause is stale and was dissolved before this work began.
+The heading and scope above are machine-filled from the Step row as it stood when
+this record was scaffolded, so they preserve the pre-correction text: a BLOCKED
+clause naming a per-comunidad regional table, and one scoped file. The row itself
+was corrected before it was checked and now names neither. Read the heading as a
+record of what the row said, not as a live instruction.
+
+That clause was already dissolved before this work began.
 The governing decision record established that the window's upper bound is the
 childcare centre's legal obligation, not this application's: the centre files the
 informative return reporting childcare custody, applies its own region's
@@ -143,5 +149,28 @@ expectation, which is what the registry-side failures read. That work was left
 untouched, and the commit carried an explicit pathspec verified after the fact
 against what the commit actually took.
 
-The Step row is left OPEN pending code review, per the standing requirement that
-review passes before completion is claimed.
+Code review returned a pass with one medium finding, fixed in the closing change
+along with a second instance of the same defect class that the review did not
+reach. Both are the shape where an almost-right guard is worse than none, because
+the test proving it works passes.
+
+The reported one: the annual-figure guard stripped every leading dash before
+testing for digits, so a double sign survived into the integer conversion and
+raised exactly the bare, untranslated error the guard exists to replace. Not
+reachable from any entry door, since it needs a tampered fact store.
+
+The one found while fixing it is more reachable and was authored in this same
+pass. Three sites tested operator input with the standard digit predicate, which
+answers true for superscripts and for non-ASCII digit scripts while the integer
+conversion accepts only the second group. A superscript is a shape an operator
+reaches by pasting a footnote marker out of a formatted certificate, and the
+resulting error escaped the wizard's answer validator entirely, because that
+validator catches only the typed refusal. The operator met a crash where a verdict
+was due. Both now route through one named predicate whose docstring states why the
+obvious predicate is the wrong one, because the same mistake was made
+independently at three sites and the reasoning is what stops a fourth.
+
+The Step row's own action text was corrected before the row was checked. It still
+named the per-comunidad regional table as a blocker, which was retired on
+measurement rather than descoped, and a row naming a retired blocker is a trap for
+the reader who trusts rows over prose.

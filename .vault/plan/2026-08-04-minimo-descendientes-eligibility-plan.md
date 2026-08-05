@@ -4,13 +4,14 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:f0190deff5df54feb226227b847d14f19f4b0b25ebc91e53028c5cc2be78213f'
+body_hash: 'sha256:59388ed3d12bb75e5d6fd1aa0a171b39a7830a1cd20821fea4d97b9700f33e79'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
 ---
+
 # `minimo-descendientes-eligibility` plan
 
 ## Description
@@ -61,7 +62,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface; `src/cadrumo/core/_descendant_relacion.py`.
 - [x] `P04.S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche; `src/cadrumo/domain/contribuyente/family.py`.
 - [ ] `P04.S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one; `src/cadrumo/domain/contribuyente/family.py`.
-- [ ] `P04.S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin; `src/cadrumo/domain/contribuyente/family.py`.
+- [x] `P04.S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, and route the calculate path through the canonical record so a declared map reaches the cap terms; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/_guarderia_mensual.py, src/cadrumo/application/modelo/_profile_binding.py`.
 - [x] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S18` - Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S19` - Retire or enroll the RentaFamilyProfile guarderia increment property, which duplicates registry formula 0181 in Python and has no production consumer, so it is today either dead code or a second calculation authority; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py`.

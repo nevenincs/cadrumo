@@ -143,8 +143,31 @@ def _parse_month_spec(spec: str, *, entry: str, field: str) -> Sequence[int]:
     return range(start, end + 1)
 
 
+def is_plain_whole_number(text: str) -> bool:
+    """Whether *text* is exactly ASCII digits, so ``int`` cannot fail on it.
+
+    ``str.isdigit`` is NOT that test and the difference is a live defect rather
+    than a nicety. It answers True for superscripts and for non-ASCII digit
+    scripts, and ``int`` accepts only the second group -- so ``"9:²"``, a shape
+    an operator reaches by pasting a footnote marker out of a formatted
+    certificate, passed an ``isdigit`` gate and then raised a bare
+    :class:`ValueError` from ``int``. That error is untranslated, names neither
+    the field nor the accepted form, and escapes the wizard's answer validator
+    entirely, because the validator catches only the typed refusal this module
+    raises. The operator met a crash where a verdict was due.
+
+    ``isdigit`` also lets ``int``'s own tolerances through unexamined: it would
+    be the wrong gate for ``"1_0"``, which ``int`` reads as ten.
+
+    Kept as one named predicate rather than repeated inline, because the same
+    mistake was made independently at three sites in this feature and the
+    reasoning is what stops it being made a fourth time.
+    """
+    return text.isascii() and text.isdecimal()
+
+
 def _parse_month(raw: str, *, entry: str, field: str) -> int:
-    if not raw.isdigit():
+    if not is_plain_whole_number(raw):
         raise ProfileAnswerTypeError(
             f"{field} entry {entry!r} names month {raw!r}, which is not a number; "
             f"write {GUARDERIA_MENSUAL_ACCEPTED_FORM}.",
@@ -158,11 +181,11 @@ def _parse_month(raw: str, *, entry: str, field: str) -> int:
 
 
 def _parse_amount(raw: str, *, entry: str, field: str) -> int:
-    # ``isdigit`` rather than a try/int: it refuses the sign, the decimal point
-    # and the exponent in one test. Euros here are whole by the same decision
+    # A shape test rather than a try/int: it refuses the sign, the decimal point
+    # and the exponent in one place. Euros here are whole by the same decision
     # the annual field already made, and a signed or fractional figure is a
     # different shape rather than a rounding question.
-    if not raw.isdigit():
+    if not is_plain_whole_number(raw):
         raise ProfileAnswerTypeError(
             f"{field} entry {entry!r} carries amount {raw!r}, which is not a whole number of euros "
             f"of zero or more; write {GUARDERIA_MENSUAL_ACCEPTED_FORM}.",
@@ -186,6 +209,7 @@ def serialise_guarderia_mensual(entries: Iterable[GuarderiaMonthSpend]) -> str:
 
 __all__ = [
     "GUARDERIA_MENSUAL_ACCEPTED_FORM",
+    "is_plain_whole_number",
     "parse_guarderia_mensual",
     "serialise_guarderia_mensual",
 ]
