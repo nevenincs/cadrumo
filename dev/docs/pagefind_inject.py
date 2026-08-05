@@ -160,11 +160,12 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
 
     Concepts and casillas are the priority surfaces and always project. The CLI
     projection runs the live-command-tree subprocess walk; if it fails (a
-    transiently broken CLI), it is skipped-and-reported rather than failing the
-    whole injection - concepts + casillas + legal provisions still land. Legal
-    records are loaded from the registry-backed generated legal-reference
-    surface and fail closed when that authored catalogue cannot produce a safe
-    destination.
+    transiently broken CLI), it is skipped-and-reported in this projection so
+    diagnostic and manifest callers can see the omission. The authoritative
+    Pagefind injector rejects that report before writing, rather than shipping
+    concepts + casillas + legal provisions as a narrowed corpus. Legal records
+    are loaded from the registry-backed generated legal-reference surface and
+    fail closed when that authored catalogue cannot produce a safe destination.
     """
     from .terminology._casilla_projection import project_casilla_search_records
     from .terminology._concept_cards import project_concept_cards
