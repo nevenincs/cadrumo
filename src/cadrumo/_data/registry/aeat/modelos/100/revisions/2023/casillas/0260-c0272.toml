@@ -5,5 +5,6 @@ label = "Persona o entidad primera cesionaria de los derechos de imagen: NIF (si
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_derechos_imagen"]
 data_type = "text"
 semantic_role = "irpf_re_imagen_primera_cesionaria"
+continuidad_id = "irpf-re-imagen-primera-cesionaria"
 legal_refs = ["ley-35-2006:art-92"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

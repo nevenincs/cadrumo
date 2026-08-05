@@ -140,7 +140,7 @@ class SemanticBridgeEntry(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     term: Annotated[str, StringConstraints(min_length=1, max_length=160)]
-    targets: tuple[SemanticBridgeTarget, ...] = Field(min_length=1, max_length=5)
+    targets: tuple[SemanticBridgeTarget, ...] = Field(min_length=1)
     targets_sha256: _SHA256
 
     @model_validator(mode="after")
@@ -335,14 +335,22 @@ def build_rung2_search_bundle(
     if set(grouped) != matrix_terms:
         missing = sorted(matrix_terms - set(grouped), key=lambda term: term.encode(_UTF_8))
         raise BridgeCompilationError(f"matrix terms have no semantic bridge mapping: {missing[0]!r}")
-    entries = tuple(
-        SemanticBridgeEntry(
-            term=term,
-            targets=tuple(grouped[term]),
-            targets_sha256=_hash_json([target.model_dump(mode="json") for target in grouped[term]]),
+    entries_list: list[SemanticBridgeEntry] = []
+    for term in sorted(grouped, key=lambda item: item.encode(_UTF_8)):
+        ordered_targets = tuple(
+            sorted(
+                grouped[term],
+                key=lambda target: (-target.ranking_weight, target.record_id.encode(_UTF_8)),
+            ),
         )
-        for term in sorted(grouped, key=lambda item: item.encode(_UTF_8))
-    )
+        entries_list.append(
+            SemanticBridgeEntry(
+                term=term,
+                targets=ordered_targets,
+                targets_sha256=_hash_json([target.model_dump(mode="json") for target in ordered_targets]),
+            ),
+        )
+    entries = tuple(entries_list)
     bridge_core: dict[str, object] = {
         "schema_version": BRIDGE_SCHEMA_VERSION,
         "row_order": _ROW_ORDER,
