@@ -1094,13 +1094,11 @@ class DescendantInfo(BaseModel):
         third_birthday_year = self.birth_date.year + 3
         if third_birthday_year < filing_year:
             return 0
-        if third_birthday_year == filing_year:
-            # Under three only until the birthday month, which is itself
-            # excluded: the same boundary ``guarderia_contributing_spend`` draws
-            # when it drops months up to and including that month.
-            last_month = self.birth_date.month - 1
-        else:
-            last_month = 12
+        # In the year the child turns three they are under three only until the
+        # birthday month, which is itself excluded -- the same boundary
+        # ``guarderia_contributing_spend`` draws when it drops months up to and
+        # including that month.
+        last_month = self.birth_date.month - 1 if third_birthday_year == filing_year else 12
         return max(0, last_month - first_month + 1)
 
     def guarderia_needs_monthly_detail(self, filing_year: int) -> bool:
