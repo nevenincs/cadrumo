@@ -36,18 +36,26 @@ standing invariants, each enforced by a conformance gate in the test tree:
 
 ## Fleet topology and load sizing
 
-Five runners, but only **two physical machines** — a runner label is NOT a
-machine, and up to three jobs can co-reside on one box:
+Four runners for THIS repository, on **two physical machines** — a runner label
+is NOT a machine, and jobs from other repositories co-reside on the same boxes:
 
-| Machine | Cores | Runners on it |
+| Machine | Cores | This repository's runners on it |
 | --- | --- | --- |
-| Windows/WSL build host (Ryzen 5900X, 12C/24T) | 24 logical | the Windows runner (Windows X64), plus two Linux X64 container runners |
+| Windows/WSL build host (Ryzen 5900X, 12C/24T) | 24 logical | the Windows runner (Windows X64), plus one Linux X64 container runner |
 | macOS build host (Apple silicon) | 6 | the macOS ARM64 runner and a Linux ARM64 runner (via colima, VM capped at 4 CPUs) |
 
+**The workstation is NOT ours alone.** It hosts self-hosted runners for three
+other repositories under four distinct mechanisms — Windows services, logon
+scheduled tasks, WSL systemd units, and Docker containers. Measured 2026-08-05:
+**seven runners online, nine at ceiling** once the two logon-triggered tasks
+start. Only two of those nine belong to this repository, and one of the two (the
+Windows runner) was offline at the time of measurement. Enumerating Windows
+services alone finds two of the nine; any question of the form "what else runs
+on this box" must enumerate all four mechanisms.
+
 **Sizing rule:** the sum of co-resident workers must fit the machine's CPUs —
-size every parallel knob for worst-case co-residency (3 jobs on the
-workstation, 2 on the MacBook), never for the whole box. Concretely:
-workstation lanes get explicit `-n 8` (24 / 3); MacBook lanes get `-n 2` (the
+size every parallel knob for worst-case co-residency, never for the whole box.
+Concretely: workstation lanes get explicit `-n 8`; MacBook lanes get `-n 2` (the
 colima Linux ARM VM is capped at 4 of the 6 cores, leaving 2 for the macOS
 lane); `pytest -n auto` is banned in any
 CI invocation (it grabs every logical CPU); the packaging campaign's lane
@@ -57,6 +65,17 @@ matrix carries `max-parallel: 2` (two of its three legs live on the MacBook)
 and per-leg `HOMEBREW_MAKE_JOBS`. Local development keeps `-n auto` — the
 rule binds surfaces that can run CONCURRENTLY with other jobs on a shared
 machine.
+
+**`-n 8` is an unverified pin, not a derivation.** It was previously documented
+as `24 / 3` — twenty-four logical CPUs divided by three co-resident runners.
+That arithmetic counted only this repository's own runners and is false: seven
+runners are online on that box. The value has been left at `8` deliberately,
+because correcting a premise is not the same as measuring a replacement, and no
+such measurement has been done. Do NOT recompute a new worker count from this
+section — a smaller number derived from the true denominator would be just as
+unmeasured as the old one, only more confidently wrong. Treat `-n 8` as a
+working pin pending a real contention measurement, and cite that measurement,
+not this paragraph, when you change it.
 
 ## Change-class tiers
 

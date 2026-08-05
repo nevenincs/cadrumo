@@ -50,8 +50,9 @@ jobs:
         run: uv sync --frozen
 
       - name: Cadrumo agent-harness eval surface
-        # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/ci-control-plane.md).
+        # -n 8, never -n auto: this machine's 24 logical CPUs are shared with
+        # co-resident runners from other repositories (machine-aware sizing,
+        # .github/ci-control-plane.md; 8 is a working pin, not a derivation).
         run: >-
           uv run --no-sync pytest -n 8
           src/cadrumo/agent

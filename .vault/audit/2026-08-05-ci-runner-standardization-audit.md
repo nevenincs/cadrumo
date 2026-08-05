@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:210dc683477c5a88e10536520ddc321c2eeeba85fd599caa9d7dd28823d53f2e'
+body_hash: 'sha256:a052e0c602fc95d4011d761c2c5090ee9fec2cc85f90d969549efc502cf46daf'
 related: []
 ---
 
@@ -13,12 +13,17 @@ related: []
 
 ## Scope
 
-Every self-hosted GitHub Actions runner registration physically resident on the
-`gw-workstation` development box, enumerated across all four hosting mechanisms —
-Windows services, Windows scheduled tasks, WSL systemd units, and Docker containers —
-and reconciled against the live GitHub registration state for the four repositories
-that register runners here. Investigation and proposal only; nothing was started,
-stopped, reconfigured, or deleted. Credential material was never read or printed.
+Every self-hosted GitHub Actions runner registration physically resident on the shared
+Windows/WSL build host, enumerated across all four hosting mechanisms — Windows
+services, Windows scheduled tasks, WSL systemd units, and Docker containers — and
+reconciled against the live GitHub registration state for the four repositories that
+register runners here. Runners are identified by role rather than by machine name,
+following the convention the runners README already sets and the privacy gate enforces.
+
+The first pass was investigation and proposal only. A later pass, on explicit operator
+authority, actioned the findings; the corrections appended to the findings log below
+record where the first pass was wrong. Nothing was started, stopped, or reconfigured
+without that authority, and credential material was never read or printed.
 
 The trigger was an operator observation that runner directory naming is inconsistent
 across projects. Naming turned out to be the least consequential finding. Four
@@ -37,17 +42,17 @@ Windows services (2, both running): `vaultspec-core-win-x64` for the `vaultspec-
 repository out of `C:\actions-runner-vaultspec-core`, and `vaultspec-rag-gpu-win` for
 `vaultspec-rag` out of `C:\actions-runner-vaultspec-rag`.
 
-WSL Ubuntu systemd units (2, both active): `gw-workstation-wsl-vaultspec` for
+WSL Ubuntu systemd units (2, both active): the dashboard WSL registration for
 `vaultspec-dashboard` out of `~/vs-runner`, and `vaultspec-rag-linux` for
 `vaultspec-rag` out of `~/gh-runner-vsrag`.
 
-Docker containers (3, all up): `cadrumo-runner-linux-2` registered as
-`gw-workstation-wsl-2` against this repository, plus `dev-runner-vaultspec-core` and
+Docker containers (3, all up): `cadrumo-runner-linux-2`, carrying this repository's
+sole Linux X64 registration, plus `dev-runner-vaultspec-core` and
 `build-runner-vaultspec-core`, the latter two managed by a Compose project rooted in a
 separate development-runner worktree.
 
 Windows scheduled tasks at logon (2 enabled but not currently serving):
-`cadrumo-runner-gw-workstation-win` launching `C:\actions-runner\run.cmd` for this
+the cadrumo Windows runner task launching `C:\actions-runner\run.cmd` for this
 repository, and `VaultspecRunnerWin` launching `C:\actions-runner-vs\run-vs.cmd` for
 `vaultspec-dashboard`. A third task, `VaultspecRunnerWsl`, is enabled and duplicates a
 systemd-managed registration (see below). A fourth, `CadrumoActionsRunner`, is
@@ -58,7 +63,7 @@ next interactive logon, for a ceiling of nine.
 
 ### windows-lane-unschedulable | critical | This repository has no online Windows runner while eight workflow jobs target one
 
-The registration `gw-workstation-win` reports `status=offline` at the GitHub API. Its
+The Windows build-host registration reports `status=offline` at the GitHub API. Its
 launcher is a logon-triggered scheduled task whose last recorded exit was a failure,
 and its diagnostic log stopped advancing on 4 August. Its working tree and diagnostics
 prove it served jobs until then, so this is a live registration that has fallen over,
@@ -69,7 +74,7 @@ Claude packaging lane, the quick packaging lane, and twice in the packaging smok
 lane. With no online runner carrying that label set, those jobs queue indefinitely
 rather than failing fast — the failure mode presents as a hung workflow, not a red
 one. The same pattern holds for `vaultspec-dashboard`, whose Windows registration
-`gw-workstation-win-vaultspec` is also offline with a terminated-process exit code.
+is also offline with a terminated-process exit code.
 
 ### scoop-label-unsatisfiable | critical | The Scoop packaging lane requests a label no runner anywhere carries
 
@@ -176,15 +181,133 @@ second.
 
 Runner naming: `vaultspec-core` and `vaultspec-rag` lead with the product
 (`vaultspec-core-win-x64`, `vaultspec-rag-linux`). This repository and
-`vaultspec-dashboard` lead with the machine (`gw-workstation-win`,
-`gw-workstation-wsl-2`, `gw-workstation-win-vaultspec`). The machine-led form loses
-the project when runners are listed per-repository, which is the only way they are
-ever listed.
+`vaultspec-dashboard` instead lead with the build host's machine name, appending the
+platform and, for the dashboard, a project suffix. The machine-led form loses the
+project when runners are listed per-repository, which is the only way they are ever
+listed — and it embeds an operator-identifying host name in a field that is echoed
+into public workflow logs.
 
-Most significantly, this repository's Linux runner is named `gw-workstation-wsl-2` but
-is a Docker container, not a WSL runner. The name asserts a hosting mechanism it does
-not use. That is what made this runner hard to locate: searching WSL for it finds
-nothing.
+Most significantly, this repository's Linux runner carries `wsl` in its registered
+name while it is a Docker container, not a WSL runner. The name asserts a hosting
+mechanism it does not use. That is what made this runner hard to locate: searching WSL
+for it finds nothing.
+
+### CORRECTION-provisioning-is-tracked | medium | The provisioning-source finding above was wrong; it is tracked and documented
+
+Retracting the substance of `provisioning-source-divergence`. That finding claimed the
+provisioning script "is not tracked in any repository". It is. The repository carries
+`dev/runners/runner-entry-linux.sh` plus a long `dev/runners/README.md` that documents
+the container topology, the entrypoint-in-the-volume rule, the exit-127 outage that
+taught it, the tool-durability rule, and the restart discipline.
+
+Diffing the tracked script against the entrypoint actually running inside the container
+shows they differ in **two comment lines only** — the live copy substitutes the instance
+name where the tracked copy carries a `<n>` placeholder. Executable content is
+identical. There is no functional drift, and the tracked source would faithfully rebuild
+the running runner.
+
+The original finding was reached by searching the filesystem, the Docker state, and the
+GitHub API, and never searching the repository's own `dev/` tree. That is a
+methodological failure, not a close call: the mandated discovery sequence is to search
+by meaning first, and a search for "runner provisioning" would have returned the README
+immediately. The stale WSL copy is real and is still superseded residue — but it is
+superseded *by a tracked successor*, which makes it ordinary leftovers rather than the
+only surviving record of anything.
+
+### CORRECTION-windows-service-absence-is-by-design | low | The missing Windows service is documented intent, not an anomaly
+
+The inventory treated the absence of an `actions.runner.*` service for the Windows
+runner as part of the asymmetry to be explained. The README already explains it: that
+runner deliberately runs interactively as a console-session listener rather than as a
+service, and the document states plainly that there is no `.service` marker and no
+service to restart, that the hook takes effect on the next listener start, and that
+killing the listener does not auto-resume it.
+
+That also supplies the mechanism behind the offline state: a console-session runner
+dies with its session, and the logon-triggered scheduled task exists precisely to
+relaunch it. The runner being down is still a live problem — but it is a known-fragile
+hosting choice behaving as documented, not an unexplained failure.
+
+### CORRECTION-scoop-gap-is-tracked-and-operator-gated | high | The Scoop label gap is a known open row, and BOTH proposed fixes are wrong
+
+The `scoop-label-unsatisfiable` finding stands on the facts but was wrong to imply the
+gap was unnoticed. It is tracked as an open row in the open-work consolidation plan,
+which already states in terms that no such label exists on the fleet today and marks
+the row OPERATOR-GATED as a host act. A second row in the same plan names the runner
+inventory exposing that label as the verification condition.
+
+More importantly, both remedies proposed in this audit's own recommendations are wrong,
+and one is actively destructive:
+
+Removing the label from the workflow contradicts an accepted ADR that rules the Scoop
+lane must run natively on a dedicated runner, and would break a structural test that
+hard-asserts the exact four-element label list.
+
+Adding the label to the existing Windows registration is worse. The ADR requires a
+runner under a **dedicated non-admin local user**, with Scoop installing into *that
+user's* profile, and the lane resets that profile between runs. The existing Windows
+runner runs as the interactive operator account. Labelling it would schedule the lane
+onto a runner that violates the ADR's isolation constraint, and the lane's
+reset-between-runs step would then wipe the Scoop profile of the operator's own
+account. The correct state is the current one: the lane stays unschedulable until the
+operator provisions the dedicated user and runner.
+
+### linux-capacity-halved | high | One of the two documented Linux container runners no longer exists
+
+Both the runners README and the CI control plane document **two** Linux X64 container
+runners, and the README's restart procedure explicitly warns never to take both down at
+once because CI and smoke depend on the pair.
+
+Only one exists. The second container is absent entirely — not stopped, absent — and
+its GitHub registration is gone with it, leaving a single online Linux X64 runner for
+this repository. Its state volume survives, orphaned, holding credentials for a
+registration that no longer exists.
+
+The README supplies the likely mechanism against itself: it warns that the cleanup hook
+runs a container prune on every job completion, so a stopped container is reaped by the
+next job finishing anywhere on the host. A container that stopped for any reason would
+be removed before anyone noticed, and nothing would announce it.
+
+This compounds the Windows outage rather than sitting beside it. More than thirty jobs
+across this repository's workflows target `[self-hosted, Linux, X64]`. They now all
+queue through one runner, so concurrent Linux work serialises where the documented
+topology assumed it would not. That is a capacity halving that presents as slowness
+rather than failure, which is why it survived undetected.
+
+### CORRECTION-this-audit-leaked-the-host-name | high | The first commit of this audit put an operator-identifying host name into a public repository
+
+The initial version of this document named the build host directly, nine times. The
+repository is public, and `dev/quality/tests/test_doc_privacy.py` bans that token
+tree-wide as leaked machine metadata — the runners README states the rule explicitly and
+identifies runners by role for exactly this reason.
+
+The gate caught it, but only because a later phase ran it; the audit's own commit went
+in without running it first. The commit is local and has not reached the remote, so the
+exposure is contained, but the token is in local history and cannot be removed by any
+action permitted here — history rewriting is categorically forbidden in this shared
+worktree, and the commit sits behind peer commits in the unpushed range. The tracked
+content is now scrubbed to role-based identification; whether the local history needs
+attention before any push is an operator decision, not one this audit can take.
+
+The generalisable lesson is narrow and worth stating: an audit that inventories
+infrastructure will naturally quote machine names, which is precisely the class of
+string a public repository must not carry. Enumerating hosts and writing about them are
+different acts with different disclosure rules, and the gate that knows this must be run
+before the commit, not after.
+
+### naming-must-not-embed-the-host | medium | The convention proposal needs a privacy constraint, not only a consistency one
+
+The naming finding treated machine-led runner names as a discoverability problem. The
+privacy gate shows they are also a disclosure problem. A runner name is echoed into
+workflow logs, job summaries, and the API responses any collaborator can read, so a
+machine-led name publishes the build host's name every time a job runs.
+
+That converts the naming recommendation from a matter of taste into one with a stated
+constraint behind it: the product-led convention the majority already follows is not
+merely tidier, it is the only one of the two that keeps an operator-identifying token
+out of public surfaces. This strengthens the case for renaming the machine-led
+registrations, though it does not change the cost — a rename is still a
+deregister/re-register cycle and still the operator's call.
 
 ## Recommendations
 

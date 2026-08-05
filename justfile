@@ -466,9 +466,9 @@ test-dev-tooling:
 # and still exits zero. `not serial` leaves the installed-oracles pass to the
 # packaging campaign that builds its cohort.
 #
-# -n 8, never -n auto: the workstation's 24 logical CPUs are shared by THREE
-# runners (win + wsl + wsl-2); worst-case co-residency is 3 jobs, so each lane
-# gets 24/3 (machine-aware sizing, .github/ci-control-plane.md). The dev tree
+# -n 8, never -n auto: the workstation's 24 logical CPUs are shared with
+# co-resident runners from other repositories, so 8 is a working pin rather
+# than a derivation (machine-aware sizing, .github/ci-control-plane.md). The dev tree
 # carries real install/harness tests that legitimately run 300-900 s, so this
 # raises the per-test ceiling above the product suite's 300 s ini default
 # (slowest product test: 58.7 s measured); 900 s still kills a wedge in minutes.
@@ -711,7 +711,8 @@ docs-langs:
 
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
 # `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,
-# .github/ci-control-plane.md — three runners share the 24-core box); local
+# .github/ci-control-plane.md — the 24-core box is shared with other
+# repositories' runners, and 8 is a working pin, not a derivation); local
 # development keeps the `auto` default per the same control plane.
 [doc('Run docstring structure and Sphinx build checks. Quiet pytest progress.')]
 [group('docs')]
