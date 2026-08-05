@@ -2,16 +2,19 @@
 
 This module is intentionally an orchestration seam, not a third artifact
 compiler.  The static-matrix module owns provider, model, normalization, and
-matrix validation; the bridge module owns sweep, authoritative-record, and
-bundle validation.  This seam passes their outputs through in that order and
-never writes an artifact or derives a search destination.
+matrix validation; the bridge module owns sweep, authoritative-record, bundle
+validation, canonical serialization, and the explicit writer.  This seam
+passes their outputs through in that order and never derives a search
+destination.  Writing is available only through the explicit wrapper after the
+complete bundle has been validated.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
+from pathlib import Path
 
-from ._rung2_bridge import Rung2SearchBundle, build_rung2_search_bundle
+from ._rung2_bridge import Rung2SearchBundle, build_rung2_search_bundle, write_rung2_search_bundle
 from ._static_matrix import (
     DEFAULT_MAX_SERIALIZED_BYTES,
     MatrixCompilationError,
@@ -23,7 +26,11 @@ from ._static_matrix import (
 from ._sweep import SweepResult
 from ._unified_record import SearchRecord
 
-__all__ = ["Rung2CompilationError", "compile_rung2_search_bundle"]
+__all__ = [
+    "Rung2CompilationError",
+    "compile_rung2_search_bundle",
+    "compile_and_write_rung2_search_bundle",
+]
 
 
 class Rung2CompilationError(MatrixCompilationError):
@@ -74,6 +81,41 @@ def compile_rung2_search_bundle(
         )
     except (TypeError, ValueError) as exc:
         raise Rung2CompilationError(f"Rung-2 compilation failed: {exc}") from exc
+
+
+def compile_and_write_rung2_search_bundle(
+    *,
+    vocabulary: tuple[str, ...],
+    query_tokens: tuple[str, ...],
+    provider: StaticEmbeddingProvider,
+    sweep: SweepResult,
+    records: Iterable[SearchRecord],
+    destination: Path,
+    max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
+) -> Rung2SearchBundle:
+    """Compile one validated bundle and write its canonical bytes explicitly.
+
+    The destination is a dev-side operator choice.  No parent directory is
+    created and no artifact is written until :func:`compile_rung2_search_bundle`
+    has accepted the provider, matrix, sweep, record manifest, bridge, and
+    shared byte bound.  The validated bundle is returned for an immediate
+    caller-side measurement or manifest handoff.
+    """
+    if not isinstance(destination, Path):
+        raise Rung2CompilationError("destination must be a pathlib.Path")
+    bundle = compile_rung2_search_bundle(
+        vocabulary=vocabulary,
+        query_tokens=query_tokens,
+        provider=provider,
+        sweep=sweep,
+        records=records,
+        max_serialized_bytes=max_serialized_bytes,
+    )
+    try:
+        write_rung2_search_bundle(bundle, destination)
+    except OSError as exc:
+        raise Rung2CompilationError(f"cannot write Rung-2 bundle {destination}: {exc}") from exc
+    return bundle
 
 
 def _require_canonical_vocabulary(vocabulary: tuple[str, ...]) -> None:

@@ -148,7 +148,11 @@ from ._rung2_bridge import (
     load_rung2_search_bundle,
     write_rung2_search_bundle,
 )
-from ._rung2_compiler import Rung2CompilationError, compile_rung2_search_bundle
+from ._rung2_compiler import (
+    Rung2CompilationError,
+    compile_and_write_rung2_search_bundle,
+    compile_rung2_search_bundle,
+)
 from ._legal_projection import LegalSearchRecord, project_legal_search_records
 from ._wrangle import (
     STRONG_SIGNAL_SCORE_FLOOR,
@@ -168,6 +172,7 @@ __all__ = [
     "BRIDGE_SCHEMA_VERSION",
     "BridgeCompilationError",
     "Rung2CompilationError",
+    "compile_and_write_rung2_search_bundle",
     "compile_rung2_search_bundle",
     "EMBEDDING_MATRIX_SCHEMA_VERSION",
     "INT8_QUANTIZATION_ALGORITHM",
