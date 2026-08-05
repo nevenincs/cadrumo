@@ -333,3 +333,54 @@ def test_the_collector_does_not_treat_an_ordinary_citation_as_pending() -> None:
     """
     source = f'_GROUNDED: Final[str] = "{_PENDING_LITERAL}"\nRow(legal_refs=("{_PENDING_LITERAL}",))\n'
     assert _pending_lines_for(source) == set(), "the collector treats ordinary citations as pending"
+
+
+_BOE_DOCUMENT_ID_IN_PERMALINK_RE = re.compile(r"\bid=(BOE-[A-Z]-\d{4}-\d+)")
+
+
+def test_legal_entry_document_id_agrees_with_its_own_permalink(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """A catalogue entry must not contradict itself about which document it cites.
+
+    Six LIVA entries carried ``document_id = "Ley 37/1992"`` -- the human name of
+    the law -- while their own ``permalink`` named ``BOE-A-1992-28740``, the
+    canonical identifier every other entry for the same law uses. The entry
+    therefore answered "which document is this?" two different ways depending on
+    which field you read, and the agent-facing citation-resolve surface returns
+    the field that was wrong.
+
+    Nothing downstream broke, because the projection that groups citations keys
+    off the reference id rather than the document id -- correct today, but only
+    incidentally. That is precisely the kind of defect that survives review: the
+    evidence contradicting it was sitting in the adjacent line the whole time.
+
+    So the check is self-evidencing rather than a hardcoded expectation. Each
+    entry supplies both halves; this only asserts they agree. An entry whose
+    permalink names no BOE document is skipped -- it makes no claim to
+    contradict, and demanding one would fail entries citing consolidated texts
+    that have no per-document permalink.
+    """
+    _registry_root, _modelos, catalogues = committed_registry
+
+    checked: dict[str, str] = {}
+    disagreements: list[str] = []
+    for ref, entry in catalogues.legal.items():
+        permalink = getattr(entry, "permalink", None)
+        document_id = getattr(entry, "document_id", None)
+        if not permalink or not document_id:
+            continue
+        match = _BOE_DOCUMENT_ID_IN_PERMALINK_RE.search(permalink)
+        if match is None:
+            continue
+        checked[ref] = match.group(1)
+        if document_id != match.group(1):
+            disagreements.append(f"{ref}: document_id={document_id!r} but permalink names {match.group(1)!r}")
+
+    # Anti-vacuity: a scan that matched nothing would satisfy the assertion below
+    # perfectly while checking no entry at all, and would keep passing if the
+    # permalink field were renamed out from under it.
+    assert len(checked) >= 50, f"self-agreement scan covered only {len(checked)} entries -- the matcher is not reaching the catalogue"
+    assert len(set(checked.values())) > 1, "scan saw only one document -- it is not spanning the catalogue"
+
+    assert not disagreements, "legal catalogue entries contradict their own permalink:\n" + "\n".join(sorted(disagreements))
