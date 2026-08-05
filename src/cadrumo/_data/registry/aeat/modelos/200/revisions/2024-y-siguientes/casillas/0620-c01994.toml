@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01994"
 number = "01994"
-label = "Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Activos impuesto diferido (AID). Art. 130 LIS - Ejercicio generación - 2018 - AID aplicados en el periodo [01994]"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
 semantic_role = "is_conversion_aid_art130_importe"

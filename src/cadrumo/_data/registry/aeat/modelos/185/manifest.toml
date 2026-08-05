@@ -1,7 +1,5 @@
 [modelo]
 id = "185"
-title = "Declaración informativa mensual de cotizaciones de afiliados y mutualistas"
-official_name = "Modelo 185. Declaración informativa mensual de cotizaciones de afiliados y mutualistas."
 tax_domain = "informative"
 cadence = "monthly"
 jurisdiction = "ES-AEAT"

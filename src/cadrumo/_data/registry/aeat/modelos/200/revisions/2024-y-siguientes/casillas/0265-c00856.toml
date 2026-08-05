@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00856"
 number = "00856"
-label = "Deducciones inversión Canarias - Activos fijos 2018 - Pendiente de aplicación en periodos futuros [00856]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2018"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"

@@ -1,7 +1,6 @@
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la declaracion-resumen"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +12,6 @@ source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
-label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_declaracion"

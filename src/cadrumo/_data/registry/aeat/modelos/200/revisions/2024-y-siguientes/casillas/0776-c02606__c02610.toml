@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02606"
 number = "02606"
-label = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3 c) LIS) - Disminución - Correcciones del ejercicio - Permanentes [02606]"
 section = ["libertad_de_amortizacion_de_gastos_de_investigacio", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_investigacion_desarrollo_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02607"
 number = "02607"
-label = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3 c) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02607]"
 section = ["libertad_de_amortizacion_de_gastos_de_investigacio", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_investigacion_desarrollo_temporaria_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02608"
 number = "02608"
-label = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3 c) LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02608]"
 section = ["libertad_de_amortizacion_de_gastos_de_investigacio", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_investigacion_desarrollo_temporaria_anteriores_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02609"
 number = "02609"
-label = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3 c) LIS) - Disminución - Saldo pendiente a principio de ejercicio [02609]"
 section = ["libertad_de_amortizacion_de_gastos_de_investigacio", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_investigacion_desarrollo_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02610"
 number = "02610"
-label = "Libertad de amortización de gastos de investigación y desarrollo (art. 12.3 c) LIS) - Disminución - Saldo pendiente a fin de ejercicio [02610]"
 section = ["libertad_de_amortizacion_de_gastos_de_investigacio", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_investigacion_desarrollo_saldo_final"

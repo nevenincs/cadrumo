@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00602"
 number = "00602"
-label = "Estado de cambios patrimonio neto (III) - Operaciones con socios o propietarios - Incremento (reducción) de patr. neto de combinación de negocios - Subvenciones, donaciones y legados recibidos [00602]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"
 semantic_role = "is_ecpn_operaciones_socios_importe"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 id = "DP200011:00603"
 number = "00603"
 segmento = "DP200011"
-label = "Estado de cambios patrimonio neto (III) - Operaciones con socios o propietarios - Incremento (reducción) de patr. neto de combinación de negocios - Total [00603]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "operaciones_con_socios_o_propietarios"]
 data_type = "money"
 semantic_role = "is_ecpn_operaciones_socios_importe"

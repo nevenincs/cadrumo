@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1828"
 number = "1828"
-label = "Valor de transmisión de la vivienda habitual susceptible de reinversión a efectos de la exención por reinversión en vivienda habitual"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_valor_transmision_susceptible_vh"
 continuidad_id = "irpf-ganancia-inmueble-valor-transmision-susceptible-vh"

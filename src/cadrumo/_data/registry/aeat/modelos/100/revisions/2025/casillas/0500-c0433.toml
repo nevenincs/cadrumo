@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0433"
 number = "0433"
-label = "Saldo neto negativo de las ganancias y pérdidas patrimoniales de 2025 a integrar en la base imponible general, con el límite del 25 por 100 del importe de la casilla [0432] (*) (traslade el importe..."
 section = ["resultados", "base_imponible_res"]
 semantic_role = "irpf_saldo_neto_gyp_general_limite_25pct"
 input_kind = "computed"

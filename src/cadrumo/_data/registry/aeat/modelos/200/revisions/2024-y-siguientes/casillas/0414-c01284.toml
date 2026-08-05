@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01284"
 number = "01284"
-label = "Deducción por inversiones y gastos realizados por las autoridades portuarias (art. 38 bis LIS) - 2020 - Deducción pendiente/generada [01284]"
 section = ["deduccion_por_inversiones_y_gastos_realizados_por", "2020"]
 data_type = "money"
 semantic_role = "is_deduccion_autoridades_portuarias_importe"

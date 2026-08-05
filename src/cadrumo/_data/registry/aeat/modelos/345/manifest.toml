@@ -1,7 +1,5 @@
 [modelo]
 id = "345"
-title = "Declaracion informativa anual de planes y fondos de pensiones, participes, aportaciones y contribuciones"
-official_name = "Modelo 345. Declaracion informativa. Planes, fondos de pensiones y sistemas alternativos. Declaracion anual participes, aportaciones y contribuciones."
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

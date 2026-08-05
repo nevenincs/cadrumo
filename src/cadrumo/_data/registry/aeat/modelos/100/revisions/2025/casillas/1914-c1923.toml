@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1923"
 number = "1923"
-label = "Matrícula"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
 data_type = "text"
 semantic_role = "irpf_deduccion_vehiculo_matricula"

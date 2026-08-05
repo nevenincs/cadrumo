@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "ZCCAD"
 number = "*70"
-label = "Comunidad autonoma de la declaracion"
 section = ["datos_identificativos", "declaracion"]
 data_type = "text"
 semantic_role = "irpf_declaracion_ccaa"

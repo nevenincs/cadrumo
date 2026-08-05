@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1655"
 number = "1655"
-label = "Situación. Clave"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"
 semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_situacion_clave"

@@ -20,15 +20,15 @@ after model selection and measurement have been ratified.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from hashlib import sha256
 import json
 import math
-from pathlib import Path
 import re
 import struct
-from typing import Annotated, Final, Literal, Protocol
 import unicodedata
+from collections.abc import Iterable
+from hashlib import sha256
+from pathlib import Path
+from typing import Annotated, Final, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -43,22 +43,22 @@ __all__ = [
     "ModelMetadata",
     "NormalizationContract",
     "ProviderProvenance",
-    "QueryTokenObservation",
-    "QuantizedQueryTokenRow",
     "QuantizedEmbeddingRow",
+    "QuantizedQueryTokenRow",
+    "QueryTokenObservation",
     "StaticEmbeddingMatrix",
     "StaticEmbeddingProvider",
-    "TokenizerProvenance",
     "TokenInventoryEntry",
+    "TokenizerProvenance",
+    "canonical_query_tokens",
     "canonical_vocabulary",
     "canonical_vocabulary_bytes",
-    "canonical_query_tokens",
     "compile_static_embedding_matrix",
     "load_static_embedding_matrix",
     "normalise_query_tokens",
-    "write_static_embedding_matrix",
     "query_token_fingerprint",
     "vocabulary_fingerprint",
+    "write_static_embedding_matrix",
 ]
 
 _UTF_8: Final[str] = "utf-8"

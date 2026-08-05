@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0168"
 number = "0168"
-label = "Modalidad aplicable del método de estimación directa (consigne N:normal S:simplificada)"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "text"
 semantic_role = "irpf_ed_modalidad_clave"

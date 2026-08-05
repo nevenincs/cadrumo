@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0077"
 number = "0077"
-label = "NIF del excónyuge"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_exconyuge_nif"

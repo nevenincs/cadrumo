@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00328"
 number = "00328"
-label = "Cuenta de pérdidas y ganancias (II) - Operaciones interrumpidas - RESULTADO DEL EJERCICIO PROCEDENTE DE OPERACIONES INTERRUMPIDAS NETO DE IMPUESTOS [00328]"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_interrumpidas"]
 data_type = "money"
 semantic_role = "is_pyg_importe"

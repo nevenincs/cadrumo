@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00825"
 number = "00825"
-label = "Deducciones doble imposición internacional RDLeg. 4/2004 - DI internacional 2008 - 2025 Deducción pendiente [00825]"
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2008"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_rdleg_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00826"
 number = "00826"
-label = "Deducciones doble imposición internacional RDLeg. 4/2004 - DI internacional 2008 - Aplicado en esta liquidación [00826]"
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2008"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_rdleg_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00827"
 number = "00827"
-label = "Deducciones doble imposición internacional RDLeg. 4/2004 - DI internacional 2008 - Pendiente aplic. en períodos futuros [00827]"
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2008"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_rdleg_pendiente"

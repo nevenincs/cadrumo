@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1379"
 number = "1379"
-label = "Contribuyente titular"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 data_type = "text"
 semantic_role = "irpf_toma_datos_declarante_selector"

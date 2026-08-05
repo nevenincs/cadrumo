@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00459"
 number = "00459"
-label = "Deducc. para incentivar determ.actividades - 2013 Investigación y desarrollo - Pendiente de aplicación en periodos futuros [00459]"
 section = ["deducc_para_incentivar_determ_actividades", "2013_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_investigacion_desarrollo_periodo"

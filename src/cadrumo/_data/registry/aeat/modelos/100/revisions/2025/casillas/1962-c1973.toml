@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1973"
 number = "1973"
-label = "Tipo de operación (1: Fusión; 2: Escisión; 3: Canje de Valores; 4: Aportación no dineraria de rama de actividad; 5: Aportación no dineraria de otros elementos patrimoniales)"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "text"
 semantic_role = "irpf_feac_tipo_operacion"

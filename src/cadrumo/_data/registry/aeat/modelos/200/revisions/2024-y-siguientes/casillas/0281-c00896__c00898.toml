@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00896"
 number = "00896"
-label = "Detalle compensación bases imponibles negativas - 2022 - Pendiente aplicación a principio del período/generada en el período [00896]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2022"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00897"
 number = "00897"
-label = "Detalle compensación bases imponibles negativas - 2022 - Aplicado en esta liquidación [00897]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2022"]
 data_type = "money"
 semantic_role = "is_compensacion_bases_negativas"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00898"
 number = "00898"
-label = "Detalle compensación bases imponibles negativas - 2022 - Pendiente aplicación en períodos futuros [00898]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2022"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"

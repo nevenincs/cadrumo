@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0315"
 number = "0315"
-label = "Importe global de las adquisiciones"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 semantic_role = "irpf_ganancia_fondos_valor_adquisicion_global"
 continuidad_id = "irpf-ganancia-fondos-valor-adquisicion-global"

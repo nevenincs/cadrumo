@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0636"
 number = "0636"
-label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
 semantic_role = "irpf_deduccion_ascendiente_discapacidad"
 legal_refs = ["ley-35-2006:art-81-bis"]

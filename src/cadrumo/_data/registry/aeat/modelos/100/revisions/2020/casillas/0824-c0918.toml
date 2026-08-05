@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0918"
 number = "0918"
-label = "Por cantidades destinadas por sus titulares a la restauración, rehabilitación o reparación de bienes inmuebles declarados de Interés Cultural"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_restauracion_bienes"
 continuidad_id = "irpf-deduccion-canarias-restauracion-bienes"

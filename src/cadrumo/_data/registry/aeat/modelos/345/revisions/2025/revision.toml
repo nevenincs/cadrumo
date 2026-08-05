@@ -1,5 +1,4 @@
 [revisions."2025"]
-label = "Modelo 345 ejercicio 2025 (Orden HFP/823/2022 y Orden HAC/1430/2025)"
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }
 orden_aplicabilidad = [

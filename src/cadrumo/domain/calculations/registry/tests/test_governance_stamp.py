@@ -34,7 +34,6 @@ _CASILLA_FRAGMENT = """
 [[revisions."2025".casillas]]
 id = "0001"
 number = "1"
-label = "Base"
 section = ["liquidacion"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]

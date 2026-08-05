@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2211"
 number = "2211"
-label = "Importe total satisfecho (suma de las casillas [2207] + [2210])"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
 semantic_role = "irpf_anexo_b_importe_total_satisfecho"
 input_kind = "computed"

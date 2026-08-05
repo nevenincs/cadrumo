@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2123"
 number = "2123"
-label = "Contribuyente con derecho a deducción"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aia"]
 data_type = "text"
 semantic_role = "irpf_anexo_b_contribuyente_con_derecho_clave"

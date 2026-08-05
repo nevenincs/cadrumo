@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0323"
 number = "0323"
-label = "Bono Cultural Joven"
 section = ["toma_datos_ampliada", "gp_premios", "otras"]
 semantic_role = "irpf_ganancia_premios_bono_cultural_joven"
 continuidad_id = "irpf-ganancia-premios-bono-cultural-joven"

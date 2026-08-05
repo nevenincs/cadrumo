@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0975"
 number = "0975"
-label = "Por arrendamiento de vivienda habitual por jóvenes (importe de la casilla [1130] del anexo B.11)"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_arrendamiento_jovenes"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

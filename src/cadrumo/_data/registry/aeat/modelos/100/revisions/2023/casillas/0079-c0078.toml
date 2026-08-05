@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0078"
 number = "0078"
-label = "Marque una \"X\" si en la casilla [0077] ha consignado un NIF de otro país"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_exconyuge_nif_extranjero_flag"

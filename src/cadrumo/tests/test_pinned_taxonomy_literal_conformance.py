@@ -116,7 +116,7 @@ from __future__ import annotations
 
 import ast
 from functools import cache
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 from typing import Final
 
 import pytest
@@ -294,7 +294,7 @@ def used_taxonomy_literals(tree: ast.AST, declaration: ast.AnnAssign) -> dict[st
 class _PinnedModule:
     """One module's declared pins, actual usage, and display path."""
 
-    __slots__ = ("module", "declared", "used")
+    __slots__ = ("declared", "module", "used")
 
     def __init__(self, module: str, declared: frozenset[str], used: dict[str, tuple[int, ...]]) -> None:
         self.module = module

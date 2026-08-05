@@ -2,7 +2,6 @@
 id = "DP200011:00625"
 number = "00625"
 segmento = "DP200011"
-label = "Estado de cambios patrimonio neto (III) - Otras variaciones del patrimonio neto - Resultado del ejercicio [00625]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_otras_variaciones_importe"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00626"
 number = "00626"
-label = "Estado de cambios patrimonio neto (III) - Otras variaciones del patrimonio neto - Dividendo a cuenta [00626]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_otras_variaciones_importe"
@@ -26,7 +24,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00627"
 number = "00627"
-label = "Estado de cambios patrimonio neto (III) - Otras variaciones del patrimonio neto - Otros instrumentos patrimonio neto [00627]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_otras_variaciones_importe"
@@ -38,7 +35,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00628"
 number = "00628"
-label = "Estado de cambios patrimonio neto (III) - Otras variaciones del patrimonio neto - Ajustes por cambios de valor [00628]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_otras_variaciones_importe"
@@ -50,7 +46,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00629"
 number = "00629"
-label = "Estado de cambios patrimonio neto (III) - Otras variaciones del patrimonio neto - Ajustes en patrimonio neto [00629]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_otras_variaciones_importe"
@@ -62,7 +57,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00630"
 number = "00630"
-label = "Estado de cambios patrimonio neto (III) - Otras variaciones del patrimonio neto - Subvenciones, donaciones y legados recibidos [00630]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_otras_variaciones_importe"
@@ -74,7 +68,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00631"
 number = "00631"
-label = "Estado de cambios patrimonio neto (III) - Otras variaciones del patrimonio neto - Total [00631]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_otras_variaciones_importe"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0597"
 number = "0597"
-label = "Por rendimientos del capital mobiliario"
 section = ["retenciones_ingresos_cuenta_pagos_fraccionados"]
 semantic_role = "irpf_retencion_capital_mobiliario"
 input_kind = "bound"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1080"
 number = "1080"
-label = "Por suministro de luz y gas de uso doméstico para jóvenes emancipados"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_suministros_jovenes"
 continuidad_id = "irpf-deduccion-la-rioja-suministros-jovenes"

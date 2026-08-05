@@ -6,7 +6,6 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la declaración"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -18,7 +17,6 @@ source_refs = ["enrolled-modelo-185-procedure"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
-label = "Tipo de declaración (originaria / sustitutiva / complementaria)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_declaracion"

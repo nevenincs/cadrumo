@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2107"
 number = "2107"
-label = "NIF prestador del servicio 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_dep"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"

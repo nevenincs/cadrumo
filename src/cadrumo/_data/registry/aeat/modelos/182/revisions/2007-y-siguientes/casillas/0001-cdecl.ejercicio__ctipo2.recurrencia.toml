@@ -1,7 +1,6 @@
 [[revisions."2007-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la declaracion"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +12,6 @@ source_refs = ["enrolled-modelo-182-procedure"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
-label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_declaracion"
@@ -25,7 +23,6 @@ source_refs = ["enrolled-modelo-182-procedure"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.donante-nif"
 number = "nif-donante"
-label = "NIF del donante (persona fisica, juridica o entidad sin fines lucrativos donataria de referencia)"
 section = ["declarado", "donante"]
 data_type = "nif"
 semantic_role = "donante_nif"
@@ -37,7 +34,6 @@ source_refs = ["enrolled-modelo-182-procedure"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.donante-nombre"
 number = "nombre-donante"
-label = "Apellidos y nombre, o razon social, del donante"
 section = ["declarado", "donante"]
 data_type = "name"
 semantic_role = "donante_nombre"
@@ -49,7 +45,6 @@ source_refs = ["enrolled-modelo-182-procedure"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.importe-donado"
 number = "importe-donativo"
-label = "Importe del donativo, donacion o aportacion recibida en el ejercicio (sin signo, en euros)"
 section = ["declarado", "donativo"]
 data_type = "money"
 semantic_role = "importe_donativo"
@@ -61,7 +56,6 @@ source_refs = ["enrolled-modelo-182-procedure"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.porcentaje-deduccion"
 number = "porcentaje-deduccion"
-label = "Porcentaje de deduccion aplicable al donativo (regimen fiscal del donante, art. 68.3 LIRPF / regimen especial Ley 49/2002)"
 section = ["declarado", "donativo"]
 data_type = "ratio"
 semantic_role = "porcentaje_deduccion"
@@ -73,7 +67,6 @@ source_refs = ["enrolled-modelo-182-procedure"]
 [[revisions."2007-y-siguientes".casillas]]
 id = "tipo2.recurrencia"
 number = "recurrencia"
-label = "Indicador de donativo recurrente (donativo plurianual a la misma entidad donataria, dos o mas ejercicios consecutivos)"
 section = ["declarado", "donativo"]
 data_type = "boolean"
 semantic_role = "donativo_recurrente"

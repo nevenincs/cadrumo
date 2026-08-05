@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1081"
 number = "1081"
-label = "Por inversión en vivienda habitual de jóvenes menores de 36 años"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_vivienda_jovenes"
 continuidad_id = "irpf-deduccion-la-rioja-vivienda-jovenes"

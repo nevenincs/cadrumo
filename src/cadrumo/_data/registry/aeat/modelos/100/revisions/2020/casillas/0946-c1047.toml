@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1047"
 number = "1047"
-label = "Para el fomento del autoempleo de jóvenes menores de 35 años"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_autoempleo_jovenes"
 continuidad_id = "irpf-deduccion-madrid-autoempleo-jovenes"

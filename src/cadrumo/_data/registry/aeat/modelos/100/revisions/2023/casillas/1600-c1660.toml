@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1660"
 number = "1660"
-label = "Cantidades satisfechas en 2023 (respecto de cada inmueble) (*) (**)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_cantidades_satisfechas"
 legal_refs = ["ley-35-2006:da-50"]

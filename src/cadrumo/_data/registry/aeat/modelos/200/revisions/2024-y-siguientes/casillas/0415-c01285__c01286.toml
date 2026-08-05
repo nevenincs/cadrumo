@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01285"
 number = "01285"
-label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Reserva de nivelación convertido en cuotas (solo entidades del art. 101 LIS) - Aumentos [01285]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_base_imponible_cooperativa_ajuste"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01286"
 number = "01286"
-label = "Liquidación III - Base imponible - Sólo sociedades cooperativas - Reserva de nivelación convertido en cuotas (solo entidades del art. 101 LIS) - Disminuciones [01286]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_reserva_nivelacion_cuota"

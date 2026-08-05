@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0964"
 number = "0964"
-label = "Por donaciones con finalidad en investigación y desarrollo e innovación empresarial"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_donaciones_idi"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-donaciones-idi"

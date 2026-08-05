@@ -27,8 +27,6 @@ from ...application.ledger import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     create_manual_transaction,
-    ledger_transaction_payload,
-    ledger_transaction_review_status,
     resolve_lineage_transaction_id,
     update_manual_transaction_fields,
 )
@@ -441,17 +439,6 @@ def ledger_add(
         raise _ledger_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerAddResult
 
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
-    add_result = LedgerAddResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.ref.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
     # An empty bucket_event_ids tuple is the guarded-idempotent no-op signal
     # from create_manual_transaction: the keyed add matched an already-stored
     # row and wrote nothing. Surface it as an info Notice on the typed channel
@@ -496,19 +483,15 @@ def ledger_add(
     if sector_notice is not None:
         notices.append(sector_notice)
         noop_lines.append(sector_notice.message)
-    _emit_envelope(
+    _emit_update_result(
         ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        tuple(result.bucket_event_ids),
         command="ledger.add",
-        result=add_result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-            *noop_lines,
-        ],
+        result_cls=LedgerAddResult,
         notices=notices or None,
+        extra_lines=noop_lines,
     )
 
 
@@ -793,31 +776,14 @@ def ledger_classify(
         raise _ledger_transaction_validation_bad(exc) from exc
     from ._ledger_payloads import LedgerClassifySingleResult
 
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
-    classify_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-        f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-        f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    if reaffirm:
-        lines.insert(0, tr("cli.ledger.classify.reaffirmed"))
-    _emit_envelope(
+    _emit_update_result(
         ctx,
+        result.transaction,
+        result.ref.bucket_id,
+        tuple(result.bucket_event_ids),
         command="ledger.classify",
-        result=classify_result,
-        lines=lines,
+        result_cls=LedgerClassifySingleResult,
+        prepend_lines=(tr("cli.ledger.classify.reaffirmed"),) if reaffirm else (),
     )
 
 

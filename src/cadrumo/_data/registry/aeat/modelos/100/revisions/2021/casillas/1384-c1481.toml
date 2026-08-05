@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1481"
 number = "1481"
-label = "Rendimiento neto reducido"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "decimal"
 semantic_role = "irpf_eo_rdto_neto_reducido"

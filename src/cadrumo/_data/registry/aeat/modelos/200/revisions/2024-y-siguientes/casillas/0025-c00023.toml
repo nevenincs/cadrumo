@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00023"
 number = "00023"
-label = "Gran empresa [00023]"
 section = ["gran_empresa"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

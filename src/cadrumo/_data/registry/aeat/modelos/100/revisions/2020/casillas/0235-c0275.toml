@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0275"
 number = "0275"
-label = "Suma de imputaciones de rentas por la cesión de derechos de imagen"
 section = ["resultados", "regimenes_especiales_res", "re_derechos_imagen_res"]
 semantic_role = "irpf_re_imagen_suma_imputaciones"
 continuidad_id = "irpf-re-imagen-suma-imputaciones"

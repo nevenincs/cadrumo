@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1068"
 number = "1068"
-label = "Importe de la deducción"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_adecuacion_importe"
 continuidad_id = "irpf-deduccion-la-rioja-adecuacion-importe"

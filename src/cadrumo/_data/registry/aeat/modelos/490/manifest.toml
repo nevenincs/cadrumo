@@ -1,7 +1,5 @@
 [modelo]
 id = "490"
-title = "Impuesto sobre Determinados Servicios Digitales — autoliquidación"
-official_name = "Modelo 490. Impuesto sobre Determinados Servicios Digitales. Autoliquidación."
 tax_domain = "idsd"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

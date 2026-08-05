@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0938"
 number = "0938"
-label = "Por familias monoparentales"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_familia_monoparental"
 continuidad_id = "irpf-deduccion-canarias-familia-monoparental"

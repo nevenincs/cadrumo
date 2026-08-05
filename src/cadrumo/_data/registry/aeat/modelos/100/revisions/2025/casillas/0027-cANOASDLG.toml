@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "ANOASDLG"
 number = "*92"
-label = "Ascendiente fecha de nacimiento"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "text"
 semantic_role = "irpf_ascendiente_fecha_nacimiento"

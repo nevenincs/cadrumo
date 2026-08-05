@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1166"
 number = "1166"
-label = "Por adquisición de bicicletas de pedaleo no asistido"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_bicicletas"
 continuidad_id = "irpf-deduccion-la-rioja-bicicletas"

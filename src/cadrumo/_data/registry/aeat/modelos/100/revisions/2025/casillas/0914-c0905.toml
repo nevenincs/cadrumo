@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0905"
 number = "0905"
-label = "Por donaciones a determinadas entidades que tengan por objeto el fomento de la lengua catalana"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 semantic_role = "irpf_deduccion_baleares_donaciones_lengua"
 continuidad_id = "irpf-deduccion-baleares-donaciones-lengua"

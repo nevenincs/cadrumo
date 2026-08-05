@@ -1,5 +1,4 @@
 [revisions."2009-y-siguientes"]
-label = "Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc segun tipo de operador)"
 valid_from = 2009-01-01
 period_selector = { year_from = 2009, periods = ["AD-HOC"] }
 legal_refs = [

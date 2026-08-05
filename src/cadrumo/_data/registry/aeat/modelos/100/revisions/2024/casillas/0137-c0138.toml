@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0138"
 number = "0138"
-label = "Valor catastral"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_3_valor_catastral"
 continuidad_id = "irpf-inmueble-3-valor-catastral"

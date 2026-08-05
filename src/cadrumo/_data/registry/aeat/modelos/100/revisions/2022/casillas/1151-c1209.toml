@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1209"
 number = "1209"
-label = "NIF del otro progenitor 1"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_cyl_otro_progenitor_nif"

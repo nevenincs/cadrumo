@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1639"
 number = "1639"
-label = "Pérdida patrimonial imputable a 2023"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_perdida_otros_imputable_ejercicio"
 continuidad_id = "irpf-perdida-otros-imputable-ejercicio"

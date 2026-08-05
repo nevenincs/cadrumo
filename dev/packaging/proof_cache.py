@@ -108,7 +108,17 @@ def source_fingerprint(repo_root: Path) -> str | None:
 
 
 def environment_fingerprint() -> str:
-    """Fingerprint the install-relevant toolchain of this runner."""
+    """Fingerprint the install-relevant toolchain of this runner.
+
+    Known uncovered axis: the build backend's RESOLVED version. ``pyproject.toml``
+    pins which backend is required and is covered by the source fingerprint, but
+    ``hatchling`` is fetched into an isolated build environment at build time and
+    appears in neither this environment's installed metadata nor ``uv.lock``, so
+    its resolved version cannot be read here without performing a resolve. A
+    backend release can therefore change wheel contents while every fingerprinted
+    input stays identical, and a quick proof would carry across it. The window is
+    bounded: only the quick profile memoizes, and no promotable evidence row does.
+    """
     uv = shutil.which("uv")
     uv_version = "uv-absent"
     if uv is not None:

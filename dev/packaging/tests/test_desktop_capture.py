@@ -162,17 +162,35 @@ def test_capture_with_retries_exhausts_fail_closed() -> None:
     assert len(result.attempts) == 3
 
 
-def test_capture_with_retries_logs_raised_attempt() -> None:
-    """An attempt that raises is logged as a failed attempt and retried."""
+def test_capture_with_retries_logs_raised_transient_attempt() -> None:
+    """A transient app-state failure is logged as a failed attempt and retried."""
 
     def perform(index: int) -> dc.AttemptLog:
         if index == 1:
-            raise RuntimeError("CDP connect failed")
+            raise dc.DesktopCaptureError("CDP connect failed")
         return dc.AttemptLog(attempt=index, ok=True, detail="ok")
 
     result = dc.capture_with_retries(perform, attempts=3)
     assert result.ok is True
     assert "attempt raised" in result.attempts[0].detail
+
+
+def test_capture_with_retries_propagates_a_harness_defect() -> None:
+    """A programming error is NOT retried, so it cannot read as model flakiness.
+
+    The complement of the transient case above: retrying a deterministic bug
+    would burn further app launches and record it in the evidence indistinguishably
+    from a model that declined to tool-call. It must surface on attempt one.
+    """
+    calls: list[int] = []
+
+    def perform(index: int) -> dc.AttemptLog:
+        calls.append(index)
+        raise AttributeError("'McpLogObservation' object has no attribute 'successful_call'")
+
+    with pytest.raises(AttributeError):
+        dc.capture_with_retries(perform, attempts=3)
+    assert calls == [1], "a harness defect must not be retried"
 
 
 def test_collect_seed_secrets_and_leak_scan_refuses(tmp_path: Path) -> None:

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02845"
 number = "02845"
-label = "Rég. cooperativas - Determ. base imponible - 9. 50% Dotación obligatoria - Resultados extracooperativos [02845]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02846"
 number = "02846"
-label = "Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados cooperativos [02846]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02847"
 number = "02847"
-label = "Rég. cooperativas - Determ. base imponible - 10. Reserva inversiones Canarias - Resultados extracooperativos [02847]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02848"
 number = "02848"
-label = "Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados cooperativos [02848]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02849"
 number = "02849"
-label = "Rég. cooperativas - Determ. base imponible - 12, Factor de agotamiento - Resultados extracooperativos [02849]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"

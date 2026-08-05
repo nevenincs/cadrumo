@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1773"
 number = "1773"
-label = "Consumo de energía primaria no renovable anterior"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 semantic_role = "irpf_deduccion_eficiencia_energetica_consumo_anterior"
 legal_refs = ["ley-35-2006:da-50"]

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00436"
 number = "00436"
-label = "Estado de cambios patrimonio neto (II) - Total ingresos y gastos reconocidos - Capital - Escriturado [00436]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
 semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00437"
 number = "00437"
-label = "Estado de cambios patrimonio neto (II) - Total ingresos y gastos reconocidos - Capital - No exigido [00437]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
 semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00438"
 number = "00438"
-label = "Estado de cambios patrimonio neto (II) - Total ingresos y gastos reconocidos - Prima de emisión [00438]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
 semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00439"
 number = "00439"
-label = "Estado de cambios patrimonio neto (II) - Total ingresos y gastos reconocidos - Reservas [00439]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
 semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00440"
 number = "00440"
-label = "Estado de cambios patrimonio neto (II) - Total ingresos y gastos reconocidos - Acciones y participaciones en patrimonio propias [00440]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
 semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00441"
 number = "00441"
-label = "Estado de cambios patrimonio neto (II) - Total ingresos y gastos reconocidos - Resultados ejercicios anteriores [00441]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
 semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00442"
 number = "00442"
-label = "Estado de cambios patrimonio neto (II) - Total ingresos y gastos reconocidos - Otras aportaciones de socios [00442]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "total_ingresos_y_gastos_reconocidos"]
 data_type = "money"
 semantic_role = "is_ecpn_total_ingresos_gastos_reconocidos_importe"

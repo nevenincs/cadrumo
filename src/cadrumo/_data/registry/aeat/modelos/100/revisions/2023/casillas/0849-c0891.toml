@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0891"
 number = "0891"
-label = "Para familias numerosas"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_familia_numerosa"
 continuidad_id = "irpf-deduccion-asturias-familia-numerosa"

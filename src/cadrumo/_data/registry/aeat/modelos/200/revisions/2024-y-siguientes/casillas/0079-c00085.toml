@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00085"
 number = "00085"
-label = "Unión temporal de empresas [00085]"
 section = ["union_temporal_de_empresas"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

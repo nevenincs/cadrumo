@@ -1,5 +1,4 @@
 [revisions."2012-01-31-y-siguientes"]
-label = "Modelo 145 comunicacion de datos al pagador desde 31 de enero de 2012 (diseno de registro v2.0)"
 valid_from = 2012-01-31
 period_selector = { year_from = 2012, periods = ["comunicacion", "variacion"] }
 legal_refs = [

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1960"
 number = "1960"
-label = "Por cantidades satisfechas en gastos asociados a la práctica del deporte y actividades saludables (importe de la casilla [2122] del anexo B.14)"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_gastos_deporte"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

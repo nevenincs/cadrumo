@@ -1,7 +1,5 @@
 [modelo]
 id = "289"
-title = "Declaracion informativa anual de cuentas financieras en el ambito de la asistencia mutua"
-official_name = "Modelo 289. Declaracion informativa anual de cuentas financieras en el ambito de la asistencia mutua (CRS)."
 tax_domain = "cross_tax"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

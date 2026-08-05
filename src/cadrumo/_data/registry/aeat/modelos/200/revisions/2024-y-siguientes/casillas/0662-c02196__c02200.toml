@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02196"
 number = "02196"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2019 - Deducción pendiente [02196]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2019"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02197"
 number = "02197"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2019 - Tipo gravamen período generación [02197]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2019"]
 data_type = "decimal"
 semantic_role = "is_deduccion_di_interna_tipo_gravamen"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02198"
 number = "02198"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2019 - 2025 - Deducción pendiente [02198]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2019"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02199"
 number = "02199"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2019 - Aplicado en esta liquidación [02199]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2019"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_dt231_detalle"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02200"
 number = "02200"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - DI interna 2019 - Pendiente aplic. en períodos futuros [02200]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2019"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_total"

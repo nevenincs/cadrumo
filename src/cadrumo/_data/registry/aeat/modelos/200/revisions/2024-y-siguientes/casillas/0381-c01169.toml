@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01169"
 number = "01169"
-label = "Deducción por reversión de medidas temporales (D.T.37ª. 1 LIS) - 2015 - Importe pendiente [01169]"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2015"]
 data_type = "money"
 semantic_role = "is_deduccion_reversion_medidas_periodo"

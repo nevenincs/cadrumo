@@ -1,7 +1,5 @@
 [modelo]
 id = "234"
-title = "Mecanismos transfronterizos de planificación fiscal DAC6 (informativa)"
-official_name = "Modelo 234. Declaración de información de determinados mecanismos transfronterizos de planificación fiscal."
 tax_domain = "informative"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

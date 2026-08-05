@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03613"
 number = "03613"
-label = "Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2025 - Exceso cuota líquida positiva pendiente a principio per..."
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
 data_type = "money"
 semantic_role = "is_conversion_aid_exceso_cuota_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03614"
 number = "03614"
-label = "Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2025 - Exceso cuota líquida positiva aplicado periodos imposit..."
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
 data_type = "money"
 semantic_role = "is_conversion_aid_exceso_cuota_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03615"
 number = "03615"
-label = "Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2025 - Exceso cuota líquida positiva aplicado periodos imposit..."
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
 data_type = "money"
 semantic_role = "is_conversion_aid_exceso_cuota_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03616"
 number = "03616"
-label = "Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2025 - Exceso cuota líquida positiva pendiente aplicación peri..."
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "exceso_cuota_liquida_positiva"]
 data_type = "money"
 semantic_role = "is_conversion_aid_exceso_cuota_importe"

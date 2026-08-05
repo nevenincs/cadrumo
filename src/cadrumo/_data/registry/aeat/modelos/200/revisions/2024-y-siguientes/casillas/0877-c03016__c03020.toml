@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03016"
 number = "03016"
-label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades no residentes - Disminución - Correcciones del ejercicio - Permane..."
 section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03017"
 number = "03017"
-label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades no residentes - Disminución - Correcciones del ejercicio - Tempora..."
 section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03018"
 number = "03018"
-label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades no residentes - Disminución - Correcciones del ejercicio - Tempora..."
 section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03019"
 number = "03019"
-label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades no residentes - Disminución - Saldo pendiente a principio de ejerc..."
 section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "disminucion"]
 data_type = "money"
 semantic_role = "is_exencion_rentas_ajuste_saldo_inicio"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03020"
 number = "03020"
-label = "Exención sobre la renta obtenida en los supuestos del art. 21.3, 21.10 y DT 40ª LIS distintos a transmisiones de valores entidades no residentes - Disminución - Saldo pendiente a fin de ejercicio [..."
 section = ["exencion_sobre_la_renta_obtenida_en_los_supuestos", "disminucion"]
 data_type = "money"
 semantic_role = "is_exencion_transmision_saldo_fin"

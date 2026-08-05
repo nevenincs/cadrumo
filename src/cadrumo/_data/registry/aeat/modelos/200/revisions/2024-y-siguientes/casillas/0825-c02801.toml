@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02801"
 number = "02801"
-label = "Gastos de actuaciones contrarias al ordenamiento jurídico (art. 15 f) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02801]"
 section = ["gastos_de_actuaciones_contrarias_al_ordenamiento_j", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_gastos_contrarios_ordenamiento_art15f_permanente_aumento"

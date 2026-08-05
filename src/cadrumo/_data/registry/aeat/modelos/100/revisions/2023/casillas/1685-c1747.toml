@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1747"
 number = "1747"
-label = "Hijo/Hija 3 (*): NIF/NIE"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
 semantic_role = "irpf_descendiente_nif"

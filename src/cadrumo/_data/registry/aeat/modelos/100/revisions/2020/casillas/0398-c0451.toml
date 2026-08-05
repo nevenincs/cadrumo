@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0451"
 number = "0451"
-label = "Saldos netos negativos de rendimientos del capital mobiliario, de 2018, pendientes de compensación a 1 de enero de 2020, a integrar en la base imponible del ahorro (Cumplimente el anexo C.2)"
 section = ["resultados", "base_imponible_res"]
 semantic_role = "irpf_saldo_neto_rdto_capital_mobiliario_ejercicios_anteriores"
 legal_refs = ["ley-35-2006:art-49"]

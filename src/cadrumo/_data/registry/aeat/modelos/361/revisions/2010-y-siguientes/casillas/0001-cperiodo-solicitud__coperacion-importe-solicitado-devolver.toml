@@ -1,7 +1,6 @@
 [[revisions."2010-y-siguientes".casillas]]
 id = "periodo-solicitud"
 number = "devolucion.periodo"
-label = "Periodo de la solicitud"
 section = ["devolucion_solicitada"]
 data_type = "period_code"
 semantic_role = "m361_periodo_solicitud"
@@ -13,7 +12,6 @@ source_refs = ["aeat-modelo-361-devolucion-solicitada", "boe-modelo-361-form"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "ejercicio"
 number = "devolucion.ano"
-label = "Ano al que se refiere la solicitud"
 section = ["devolucion_solicitada"]
 data_type = "year"
 semantic_role = "m361_ejercicio"
@@ -25,7 +23,6 @@ source_refs = ["aeat-modelo-361-devolucion-solicitada", "boe-modelo-361-form"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "operacion-base-imponible"
 number = "operacion.base-imponible"
-label = "Base imponible de cada factura o documento de importacion"
 section = ["lista_operaciones"]
 data_type = "money"
 semantic_role = "m361_operacion_base_imponible"
@@ -37,7 +34,6 @@ source_refs = ["aeat-modelo-361-lista-operaciones", "boe-modelo-361-form"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "operacion-cuota-iva"
 number = "operacion.cuota-iva"
-label = "Cuota IVA de cada factura o documento de importacion"
 section = ["lista_operaciones"]
 data_type = "money"
 semantic_role = "m361_operacion_cuota_iva"
@@ -49,7 +45,6 @@ source_refs = ["aeat-modelo-361-lista-operaciones", "boe-modelo-361-form"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "operacion-prorrata-iva"
 number = "operacion.prorrata-iva"
-label = "Prorrata IVA deducible aplicable a cada operacion"
 section = ["lista_operaciones"]
 data_type = "ratio"
 semantic_role = "m361_operacion_prorrata_iva"
@@ -61,7 +56,6 @@ source_refs = ["aeat-modelo-361-lista-operaciones", "boe-modelo-361-form"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "operacion-importe-solicitado-devolver"
 number = "operacion.importe-solicitado-devolver"
-label = "Importe solicitado a devolver por operacion"
 section = ["lista_operaciones"]
 data_type = "money"
 semantic_role = "m361_operacion_importe_solicitado_devolver"

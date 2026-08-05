@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2018"
 number = "2018"
-label = "Año de adquisición"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_madrid_vivienda_anio_adquisicion"

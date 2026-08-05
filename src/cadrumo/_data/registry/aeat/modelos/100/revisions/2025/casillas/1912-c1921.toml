@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1921"
 number = "1921"
-label = "Importe de los gastos y tributos inherentes a la adquisición del vehículo"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
 semantic_role = "irpf_deduccion_vehiculo_gastos_tributos"
 continuidad_id = "irpf-deduccion-vehiculo-gastos-tributos"

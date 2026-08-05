@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1650"
 number = "1650"
-label = "Ganancia patrimonial reducida no exenta imputable a 2021"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_reducida_no_exenta_imputable_dt9"
 continuidad_id = "irpf-ganancia-otros-reducida-no-exenta-imputable-dt9"

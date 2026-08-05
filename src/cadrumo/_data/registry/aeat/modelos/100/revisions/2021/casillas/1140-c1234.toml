@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1234"
 number = "1234"
-label = "Importe reinvertido hasta el 31-12-2021 en la adquisición de acciones o participaciones de una entidad nueva o de reciente creación"
 section = ["resultados", "anexo_c_res", "exencion_nuevas_empresas_res"]
 semantic_role = "irpf_anexo_c_exencion_reinversion_importe_reinvertido"
 continuidad_id = "irpf-anexo-c-exencion-reinversion-importe-reinvertido"

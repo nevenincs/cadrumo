@@ -1,4 +1,4 @@
-"""Parity and referential integrity tests for all registered modelo localization files."""
+"""Parity and referential integrity tests for shared Modelo locale keys."""
 
 from __future__ import annotations
 
@@ -15,13 +15,7 @@ def _modelos_by_id() -> dict[str, ModeloDefinition]:
 
 
 def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
-    """The entire registry tree's localization files must compile and validate without errors.
-
-    Any malformed TOML structures or invalid translation keys referencing unknown
-    casilla_ids/continuidad_ids will fail the loader's referential integrity checks
-    and raise a RegistryValidationError.
-    """
-    # This loads all models and legal parameters, parsing and verifying every locales/*.toml file.
+    """Every derived Modelo key resolves through the shared catalogues."""
     modelos_by_id = _modelos_by_id()
     assert modelos_by_id, "No modelos loaded from registry"
 
@@ -74,8 +68,8 @@ def test_complete_registry_tree_locales_compile_and_validate_cleanly() -> None:
     assert casilla_303_gen.get_help("en") == "Total output VAT calculated at the standard 21% rate."
 
 
-def test_modelo_130_all_casillas_have_schema_localized_labels_and_help() -> None:
-    """Modelo 130 is the complete small-model exemplar for schema-local translations."""
+def test_modelo_130_all_casillas_have_shared_localized_labels_and_help() -> None:
+    """Modelo 130 is the complete small-model exemplar for shared translations."""
     m130 = _modelos_by_id()["130"]
     revision = m130.revisions["2019-y-siguientes"]
     assert len(revision.casillas) == 20

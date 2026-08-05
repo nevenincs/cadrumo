@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1790"
 number = "1790"
-label = "Compensación entre cónyuges: IBAN"
 section = ["resultados", "compensacion_conyuges_res"]
 data_type = "iban"
 semantic_role = "irpf_compensacion_conyuges_iban"

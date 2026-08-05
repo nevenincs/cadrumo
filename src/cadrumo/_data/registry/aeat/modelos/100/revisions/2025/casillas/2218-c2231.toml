@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2231"
 number = "2231"
-label = "Ganancias exentas por reinversión de rentas vitalicias"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 semantic_role = "irpf_ganancia_fondos_coti_exenta_renta_vitalicia"
 semantic_role_cardinality = "intentional_singleton"

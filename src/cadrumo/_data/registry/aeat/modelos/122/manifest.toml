@@ -1,7 +1,5 @@
 [modelo]
 id = "122"
-title = "IRPF regularización de la deducción por familia numerosa / discapacidad"
-official_name = "Modelo 122. Impuesto sobre la Renta de las Personas Físicas. Deducciones por familia numerosa o por personas con discapacidad a cargo. Regularización del derecho a la deducción por contribuyentes no obligados a presentar declaración."
 tax_domain = "irpf"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

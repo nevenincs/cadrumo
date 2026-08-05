@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1545"
 number = "1545"
-label = "6. Por cultivos en tierras de regadío que utilicen, a tal efecto, energía eléctrica"
 data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_regadio_electrico"

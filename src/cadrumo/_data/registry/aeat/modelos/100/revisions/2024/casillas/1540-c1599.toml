@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1599"
 number = "1599"
-label = "Atribución de retenciones de rendimientos de actividades económicas"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_retenciones_act_eco"
 continuidad_id = "irpf-re-atrib-retenciones-act-eco"

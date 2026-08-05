@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1376"
 number = "1376"
-label = "Ejercicio 2023: Aplicado en esta  declaración"
 section = ["resultados", "anexo_c_res", "excesos_deportistas_res"]
 semantic_role = "irpf_anexo_c_exceso_deportistas_aplicado"
 legal_refs = ["ley-35-2006:da-11"]

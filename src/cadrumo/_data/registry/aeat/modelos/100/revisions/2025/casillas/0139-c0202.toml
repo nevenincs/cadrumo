@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0202"
 number = "0202"
-label = "Otros servicios exteriores"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_otros_servicios_exteriores"
 input_kind = "bound"

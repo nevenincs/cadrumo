@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1818"
 number = "1818"
-label = "Situación. Clave"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "text"
 semantic_role = "irpf_ganancia_inmueble_situacion_clave"

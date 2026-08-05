@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0610"
 number = "0610"
-label = "Cuota diferencial"
 section = ["resultados", "calculo_impuesto_res", "cuota_diferencial_res"]
 data_type = "decimal"
 semantic_role = "irpf_cuota_diferencial"

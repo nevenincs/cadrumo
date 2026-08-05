@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0895"
 number = "0895"
-label = "Por gastos de descendientes en centros de 0 a 3 años"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_centros_0_3"
 continuidad_id = "irpf-deduccion-asturias-centros-0-3"

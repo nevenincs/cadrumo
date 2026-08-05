@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1160"
 number = "1160"
-label = "Código cuenta de cotización"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_murcia_empleada_hogar_ccc"

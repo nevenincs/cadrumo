@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0313"
 number = "0313"
-label = "Valor de transmisión destinado a constituir una renta vitalicia"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 semantic_role = "irpf_ganancia_fondos_valor_transmision_renta_vitalicia"
 continuidad_id = "irpf-ganancia-fondos-valor-transmision-renta-vitalicia"

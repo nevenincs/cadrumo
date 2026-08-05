@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02766"
 number = "02766"
-label = "Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2024 - Aplicado en esta liquidación [02766]"
 section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2024"]
 data_type = "money"
 semantic_role = "is_gastos_financieros_pendiente_deducir"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02767"
 number = "02767"
-label = "Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2024 - Pendiente aplicación en períodos futuros - Por límite [02767]"
 section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2024"]
 data_type = "money"
 semantic_role = "is_gastos_financieros_pendiente_deducir"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02768"
 number = "02768"
-label = "Limitación deducibilidad gastos financieros. gastos financieros pendientes deducir - Ejercicio generación 2024 - Pendiente aplicación en períodos futuros - Resto [02768]"
 section = ["limitacion_deducibilidad_gastos_financieros_gastos", "ejercicio_generacion_2024"]
 data_type = "money"
 semantic_role = "is_gastos_financieros_pendiente_deducir"

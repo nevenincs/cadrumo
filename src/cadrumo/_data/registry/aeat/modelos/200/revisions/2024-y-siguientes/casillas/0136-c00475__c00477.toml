@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00475"
 number = "00475"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Ajustes en patrimonio neto [00475]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00476"
 number = "00476"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Subvenciones, donaciones y legados recibidos [00476]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00477"
 number = "00477"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Total [00477]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"

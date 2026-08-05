@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0586"
 number = "0586"
-label = "Cuota liquida autonomica incrementada"
 section = ["resultado_declaracion"]
 semantic_role = "irpf_cuota_liquida_autonomica_incrementada"
 input_kind = "computed"

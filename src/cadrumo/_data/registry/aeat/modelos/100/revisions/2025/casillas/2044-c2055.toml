@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2055"
 number = "2055"
-label = "NIF/NIE 4"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_canarias_nif_nie"

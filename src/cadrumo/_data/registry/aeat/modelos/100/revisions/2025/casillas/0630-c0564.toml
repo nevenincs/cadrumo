@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0564"
 number = "0564"
-label = "Suma de deducciones autonómicas (importe de esta casilla del anexo B.1, B.2, B.3, B.4, B.5, B.6, B.7, B.8, B.9 o B.10 según corresponda): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deducciones_autonomicas_suma"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

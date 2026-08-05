@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1795"
 number = "1795"
-label = "Banco/Name of the bank"
 section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
 data_type = "text"
 semantic_role = "irpf_compensacion_conyuges_entidad_bancaria_nombre"

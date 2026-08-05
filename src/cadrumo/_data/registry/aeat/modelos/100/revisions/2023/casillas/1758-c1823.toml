@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1823"
 number = "1823"
-label = "Transmisión intervivos gratuita (donación, liberalidad, etc.)"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_ganancia_inmueble_transmision_gratuita"

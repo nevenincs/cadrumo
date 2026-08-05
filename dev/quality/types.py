@@ -169,11 +169,13 @@ def collect_pyrefly() -> list[Diagnostic]:
 
 def collect_basedpyright() -> list[Diagnostic]:
     """Run BasedPyright and parse its JSON diagnostics."""
-    # Select the strict production-only configuration explicitly.  A legacy
-    # root ``pyrightconfig.json`` also exists for the editor and would
-    # otherwise win discovery, re-admitting the entire ``src/cadrumo`` tree
-    # (including tests) and making this gate report a different surface than
-    # the documented basedpyright boundary in ``pyproject.toml``.
+    # Name the strict production-only configuration explicitly.  ``pyproject``
+    # is the sole basedpyright authority — a root ``pyrightconfig.json`` used to
+    # sit beside it declaring a wider, laxer surface (all of ``src/cadrumo`` at
+    # ``standard``) and won discovery, so the gate and the contributor's editor
+    # reported different things; it was deleted rather than kept in sync.  The
+    # flag is retained so the boundary this gate measures stays legible at the
+    # call site and cannot silently move if another config file reappears.
     result = _run(["basedpyright", "--project", "pyproject.toml", "--threads", "8", "--outputjson"])
     payload = result.stdout.strip()
     if not payload:

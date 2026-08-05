@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0385"
 number = "0385"
-label = "Suma de pérdidas patrimoniales derivadas de transmisiones de otros elementos patrimoniales (suma de las casillas [1639])"
 section = ["resultados", "gp_otros_elementos_res"]
 semantic_role = "irpf_gyp_otras_transmisiones_suma_perdidas"
 input_kind = "computed"

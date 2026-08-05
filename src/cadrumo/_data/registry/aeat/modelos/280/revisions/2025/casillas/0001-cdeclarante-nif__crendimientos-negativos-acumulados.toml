@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "declarante-nif"
 number = "tipo1.nif-declarante"
-label = "NIF del declarante"
 section = ["identificacion_declaracion"]
 data_type = "nif"
 semantic_role = "irpf_declarante_nif"
@@ -13,7 +12,6 @@ source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
 number = "tipo1.ejercicio"
-label = "Ejercicio de declaracion"
 section = ["identificacion_declaracion"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -25,7 +23,6 @@ source_refs = ["boe-modelo-280-base-order", "aeat-modelo-280-procedure", "aeat-d
 [[revisions."2025".casillas]]
 id = "declarado-nif"
 number = "tipo2.nif-declarado"
-label = "NIF del declarado"
 section = ["declarado"]
 data_type = "nif"
 semantic_role = "m280_declarado_nif"
@@ -37,7 +34,6 @@ source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
 number = "tipo2.apellidos-nombre-declarado"
-label = "Apellidos y nombre del declarado"
 section = ["declarado"]
 data_type = "name"
 semantic_role = "m280_declarado_nombre"
@@ -49,7 +45,6 @@ source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 [[revisions."2025".casillas]]
 id = "clave-alta"
 number = "tipo2.110"
-label = "Clave de alta"
 section = ["plan_ahorro_largo_plazo", "estado"]
 data_type = "text"
 semantic_role = "m280_clave_alta"
@@ -61,7 +56,6 @@ source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
 [[revisions."2025".casillas]]
 id = "aportaciones-ejercicio"
 number = "tipo2.111-116"
-label = "Aportaciones efectuadas en el ejercicio"
 section = ["plan_ahorro_largo_plazo", "aportaciones"]
 data_type = "money"
 semantic_role = "m280_aportaciones_ejercicio"
@@ -77,7 +71,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "rendimientos-positivos-ejercicio"
 number = "tipo2.117-126"
-label = "Rendimientos positivos obtenidos durante el ejercicio"
 section = ["plan_ahorro_largo_plazo", "rendimientos"]
 data_type = "money"
 semantic_role = "m280_rendimientos_positivos_ejercicio"
@@ -93,7 +86,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-ejercicio"
 number = "tipo2.127-136"
-label = "Rendimientos negativos obtenidos durante el ejercicio"
 section = ["plan_ahorro_largo_plazo", "rendimientos"]
 data_type = "money"
 semantic_role = "m280_rendimientos_negativos_ejercicio"
@@ -109,7 +101,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "extincion-plan"
 number = "tipo2.137"
-label = "Extincion del Plan de Ahorro a Largo Plazo"
 section = ["plan_ahorro_largo_plazo", "extincion"]
 data_type = "text"
 semantic_role = "m280_extincion_plan"
@@ -125,7 +116,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "fecha-extincion"
 number = "tipo2.138-145"
-label = "Fecha de extincion"
 section = ["plan_ahorro_largo_plazo", "extincion"]
 data_type = "text"
 semantic_role = "m280_fecha_extincion"
@@ -141,7 +131,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "rendimientos-positivos-acumulados"
 number = "tipo2.146-155"
-label = "Rendimientos positivos acumulados"
 section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
 data_type = "money"
 semantic_role = "m280_rendimientos_positivos_acumulados"
@@ -157,7 +146,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-acumulados"
 number = "tipo2.156-165"
-label = "Rendimientos negativos acumulados"
 section = ["plan_ahorro_largo_plazo", "rendimientos_acumulados"]
 data_type = "money"
 semantic_role = "m280_rendimientos_negativos_acumulados"

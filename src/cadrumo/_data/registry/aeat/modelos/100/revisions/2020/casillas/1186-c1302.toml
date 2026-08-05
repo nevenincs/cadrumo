@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1302"
 number = "1302"
-label = "Ejercicio 2015: Aplicado en esta  declaración"
 section = ["resultados", "anexo_c_res", "exceso_seguros_colectivos_dependencia_res"]
 semantic_role = "irpf_anexo_c_exceso_scd_aplicado"
 legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2015"]

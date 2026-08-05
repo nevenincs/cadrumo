@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1844"
 number = "1844"
-label = "Suma de pérdidas patrimoniales derivadas de transmisiones de inmuebles y derechos reales sobre inmuebles (suma de las casillas [1832])"
 section = ["resultados", "gp_otros_inmuebles_res"]
 semantic_role = "irpf_gyp_inmueble_suma_perdidas"
 input_kind = "computed"

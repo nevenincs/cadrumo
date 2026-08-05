@@ -1,7 +1,6 @@
 [[revisions.2023-2024.casillas]]
 id = "31"
 number = "31"
-label = "Mod. 40.3 LIS — Resultado de la declaracion anterior (complementaria)"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_resultado_declaracion_anterior"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0051"
 number = "0051"
-label = "Otros rendimientos del capital mobiliario en base general"
 section = ["rendimientos_capital_mobiliario", "base_general"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_general_otros"

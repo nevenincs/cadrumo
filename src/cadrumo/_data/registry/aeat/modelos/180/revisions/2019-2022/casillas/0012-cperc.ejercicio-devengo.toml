@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.ejercicio-devengo"
 number = "110-113"
-label = "Ejercicio de devengo"
 section = ["perceptor", "renta"]
 data_type = "year"
 semantic_role = "devengo_year"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1943"
 number = "1943"
-label = "Inversiones anticipadas de futuras dotaciones a la Reserva para inversiones en las Illes Balears, efectuadas en 2024: Inversiones previstas en la letra C del apartado 4"
 section = ["resultados", "anexo_a_res", "reserva_inversiones_baleares_res"]
 semantic_role = "irpf_rib_baleares_inversion_tipo_c"
 legal_refs = ["ley-31-2022:da-70"]

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0270"
 number = "0270"
-label = "Suma de imputaciones de rentas en el régimen de transparencia fiscal internacional: (suma de las casillas [0269])"
 section = ["resultados", "regimenes_especiales_res", "re_tr_fiscal_inter_res"]
 semantic_role = "irpf_re_tfi_suma_imputaciones"
 input_kind = "computed"

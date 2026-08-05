@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1906"
 number = "1906"
-label = "Por los gastos en intereses por la financiación ajena de la adquisición de primera vivienda habitual por menores de 40 años"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_intereses_vivienda"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-intereses-vivienda"

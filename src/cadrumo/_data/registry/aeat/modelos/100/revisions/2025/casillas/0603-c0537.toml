@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0537"
 number = "0537"
-label = "Aplicación de la escala general y autonómica del Impuesto al importe de la casilla [0510]. Importes resultantes: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_general_resultado_autonomico"
 input_kind = "computed"

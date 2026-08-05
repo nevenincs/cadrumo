@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0258"
 number = "0258"
-label = "Criterio de imputación temporal. Clave"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
 data_type = "text"
 semantic_role = "irpf_re_aie_criterio_imputacion_clave"

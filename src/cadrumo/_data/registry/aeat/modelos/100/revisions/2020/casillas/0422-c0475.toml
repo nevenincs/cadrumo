@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0475"
 number = "0475"
-label = "Aportaciones realizadas en 2020 por parientes o tutores a favor de la persona con discapacidad"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_discapacidad"]
 semantic_role = "irpf_red_discapacidad_aportaciones_parientes"
 continuidad_id = "irpf-red-discapacidad-aportaciones-parientes"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0669"
 number = "0669"
-label = "Discrepancia de criterio administrativo"
 section = ["resultado_declaracion"]
 data_type = "decimal"
 semantic_role = "irpf_discrepancia_criterio_administrativo"

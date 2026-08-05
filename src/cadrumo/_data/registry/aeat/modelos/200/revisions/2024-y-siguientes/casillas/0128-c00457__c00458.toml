@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00457"
 number = "00457"
-label = "Estado de cambios patrimonio neto (III) - Resultado cuenta pérdidas y ganancias - Resultado del ejercicio [00457]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "resultado_cuenta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00458"
 number = "00458"
-label = "Estado de cambios patrimonio neto (III) - Resultado cuenta pérdidas y ganancias - Dividendo a cuenta [00458]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "resultado_cuenta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"

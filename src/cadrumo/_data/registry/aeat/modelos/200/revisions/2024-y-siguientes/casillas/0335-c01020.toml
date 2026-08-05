@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01020"
 number = "01020"
-label = "Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Abono por conversión de activos por impuesto diferido en crédito exigible fren..."
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "abono_por_conversion_de_activos_por_impuesto_difer"]
 data_type = "money"
 semantic_role = "is_conversion_aid_abono"

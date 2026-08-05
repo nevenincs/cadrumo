@@ -190,9 +190,11 @@ def test_effective_storage_root_prefers_an_explicit_settings_object_over_reloadi
     """
     from ..config import override_settings
 
-    with override_settings(cadrumo_local_storage_root=Path("caller-held-root")) as held_settings:
-        with override_settings(cadrumo_local_storage_root=Path("ambient-root")):
-            assert effective_storage_root(settings=held_settings) == held_settings.cadrumo_local_storage_root
+    with (
+        override_settings(cadrumo_local_storage_root=Path("caller-held-root")) as held_settings,
+        override_settings(cadrumo_local_storage_root=Path("ambient-root")),
+    ):
+        assert effective_storage_root(settings=held_settings) == held_settings.cadrumo_local_storage_root
 
 
 def test_effective_storage_root_override_wins_over_a_supplied_settings_object() -> None:

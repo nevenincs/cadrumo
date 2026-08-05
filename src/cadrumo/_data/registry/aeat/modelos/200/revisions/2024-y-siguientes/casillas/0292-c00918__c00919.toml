@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00918"
 number = "00918"
-label = "Deducciones I+D+i excluidas de límite - 2013 Investigación y desarrollo - Deducción pendiente/generada [00918]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2013_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00919"
 number = "00919"
-label = "Deducciones I+D+i excluidas de límite - 2013 Investigación y desarrollo - Deducción reducida [00919]"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2013_investigacion_y_desarrollo"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_excluida_limite_investigacion"

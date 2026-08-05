@@ -1,7 +1,5 @@
 [modelo]
 id = "117"
-title = "Retenciones e ingresos a cuenta - rentas o ganancias por transmision o reembolso de acciones y participaciones de IIC"
-official_name = "Modelo 117. Retenciones e ingresos a cuenta. Rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversion colectiva."
 tax_domain = "cross_tax"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

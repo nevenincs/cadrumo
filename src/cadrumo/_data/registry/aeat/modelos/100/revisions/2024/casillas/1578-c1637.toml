@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1637"
 number = "1637"
-label = "Valor de adquisición"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_valor_adquisicion"
 continuidad_id = "irpf-ganancia-otros-valor-adquisicion"

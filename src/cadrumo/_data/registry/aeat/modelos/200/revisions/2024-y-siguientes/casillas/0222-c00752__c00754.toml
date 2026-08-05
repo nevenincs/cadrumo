@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00752"
 number = "00752"
-label = "Deducciones DT 24ª.1 LIS - 2021 Periodificación - Deducción pendiente/generada [00752]"
 section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
 data_type = "money"
 semantic_role = "is_deduccion_dt24a1_periodificacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00753"
 number = "00753"
-label = "Deducciones DT 24ª.1 LIS - 2021 Periodificación - Aplicado en esta liquidación [00753]"
 section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
 data_type = "money"
 semantic_role = "is_deduccion_dt24a1_periodificacion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00754"
 number = "00754"
-label = "Deducciones DT 24ª.1 LIS - 2021 Periodificación - Pendiente de aplicación en periodos futuros [00754]"
 section = ["deducciones_dt_24a_1_lis", "2021_periodificacion"]
 data_type = "money"
 semantic_role = "is_deduccion_dt24a1_periodificacion"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1481"
 number = "1481"
-label = "Rendimiento neto reducido"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 input_kind = "bound"
 binding = "renta-2024-modelo-131-rendimiento-neto-modulos"

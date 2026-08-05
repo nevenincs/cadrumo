@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0665"
 number = "0665"
-label = "NIF del descendiente cuya deducción se regulariza"
 section = ["resultados", "calculo_impuesto_res", "regularizacion_descendiente_res"]
 data_type = "nif"
 semantic_role = "irpf_descendiente_nif"

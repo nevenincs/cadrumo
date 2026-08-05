@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0941"
 number = "0941"
-label = "Por familiares dependientes con discapacidad"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_familiares_discapacidad"
 continuidad_id = "irpf-deduccion-canarias-familiares-discapacidad"

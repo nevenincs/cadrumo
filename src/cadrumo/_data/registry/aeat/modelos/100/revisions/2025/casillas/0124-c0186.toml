@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0186"
 number = "0186"
-label = "Seguridad Social del titular de la actividad"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_seguridad_social_titular"
 input_kind = "bound"

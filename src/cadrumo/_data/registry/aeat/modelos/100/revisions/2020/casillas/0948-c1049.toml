@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1049"
 number = "1049"
-label = "Por donativos a fundaciones"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_donativos_fundaciones_deportivos"
 legal_refs = ["ley-35-2006:art-77"]

@@ -3,7 +3,6 @@ id = "0613"
 input_kind = "computed"
 formula = "renta-2024-incremento-guarderia-0613"
 number = "0613"
-label = "Incremento por gastos en guarderias o centros de educación infantil autorizados"
 section = ["resultados", "calculo_impuesto_res", "deduc_mater_res"]
 semantic_role = "irpf_incremento_maternidad_guarderia"
 legal_refs = ["ley-35-2006:art-81"]

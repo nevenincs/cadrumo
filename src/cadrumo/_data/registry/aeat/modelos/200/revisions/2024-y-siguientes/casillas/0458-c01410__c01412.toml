@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01410"
 number = "01410"
-label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva dotada [01410]"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_dotacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01411"
 number = "01411"
-label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Importe reserva pendiente dotación [01411]"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01412"
 number = "01412"
-label = "Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2023 - Reserva dispuesta [01412]"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
 semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"

@@ -18,6 +18,10 @@ walking; the registry is a TOML surface and shares no traversal machinery.
 
 from __future__ import annotations
 
+from functools import cache
+
+from ..core.resources import bundled_path
+from ..domain.calculations.registry import load_registry_tree
 from ..domain.categories import load_category_profile_registry
 from ..domain.user_profile import load_user_profile_schema, profile_schema_locale_keys
 
@@ -53,3 +57,19 @@ def scan_profile_schema_keys() -> set[str]:
         The dotted section-title and field-label keys the schema declares.
     """
     return profile_schema_locale_keys(load_user_profile_schema())
+
+
+@cache
+def scan_modelo_schema_keys() -> set[str]:
+    """Return every concrete key derived by the language-neutral Modelo schema."""
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    keys: set[str] = set()
+    for modelo in modelos:
+        keys.add(modelo.title_localization_key)
+        keys.add(modelo.official_name_localization_key)
+        for revision in modelo.revisions.values():
+            keys.add(revision.localization_key)
+            for casilla in revision.casillas:
+                keys.update(casilla.localization_keys)
+                keys.update(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
+    return keys

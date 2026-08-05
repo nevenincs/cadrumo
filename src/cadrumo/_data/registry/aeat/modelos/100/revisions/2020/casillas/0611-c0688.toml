@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0688"
 number = "0688"
-label = "SWIFT rectificación"
 section = ["resultados", "regularizacion_res"]
 data_type = "text"
 semantic_role = "irpf_regularizacion_swift_bic"

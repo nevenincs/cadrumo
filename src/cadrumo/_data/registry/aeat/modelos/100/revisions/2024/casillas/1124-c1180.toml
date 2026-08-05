@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1180"
 number = "1180"
-label = "Por adquisición de vehículos nuevos pertenecientes a las categorías incluidas en la Orden 5/2020, de 8 de junio"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_vehiculos_electricos"
 continuidad_id = "irpf-deduccion-c-valenciana-vehiculos-electricos"

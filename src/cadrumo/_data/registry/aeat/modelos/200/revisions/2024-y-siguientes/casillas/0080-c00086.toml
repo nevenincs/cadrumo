@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00086"
 number = "00086"
-label = "Régimen especial Illes Balears [00086]"
 section = ["regimen_especial_illes_balears"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

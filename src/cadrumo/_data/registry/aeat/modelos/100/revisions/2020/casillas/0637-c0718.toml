@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0718"
 number = "0718"
-label = "Marque una \"X\" si en la casilla [0717] ha consignado un NIF de otro país"
 section = ["resultados", "anexo_a_res", "deduccion_alquiler_res"]
 data_type = "boolean"
 semantic_role = "irpf_deduccion_alquiler_arrendador_nif_extranjero_flag"

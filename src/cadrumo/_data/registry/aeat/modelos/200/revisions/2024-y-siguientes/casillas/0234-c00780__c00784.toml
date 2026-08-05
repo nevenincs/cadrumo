@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00780"
 number = "00780"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondo de Educación, Formación y Promoción a largo plazo (cooperativas) [00780]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00781"
 number = "00781"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Deudas con características especiales a largo plazo (cooperativas) [00781]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00782"
 number = "00782"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - \"Capital\" reembolsable exigible (cooperativas) [00782]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00783"
 number = "00783"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondos especiales calificados como pasivo (cooperativas) [00783]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00784"
 number = "00784"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Acreedores por fondos capitalizados a largo plazo (cooperativas) [00784]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"

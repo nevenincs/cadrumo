@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0927"
 number = "0927"
-label = "Por obras de adecuación de la vivienda habitual por razón de discapacidad"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_vivienda_discapacidad"
 continuidad_id = "irpf-deduccion-canarias-vivienda-discapacidad"

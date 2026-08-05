@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0245"
 number = "0245"
-label = "Si el matrimonio ha estado vigente durante todo el año 2020, marque esta casilla"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
 data_type = "boolean"
 semantic_role = "irpf_matrimonio_vigente_todo_anio_flag"

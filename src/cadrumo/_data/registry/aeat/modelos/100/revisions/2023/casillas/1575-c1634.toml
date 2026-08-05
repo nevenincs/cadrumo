@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1634"
 number = "1634"
-label = "Valor de transmisión destinado a constituir una renta vitalicia"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_valor_transmision_renta_vitalicia"
 continuidad_id = "irpf-ganancia-otros-valor-transmision-renta-vitalicia"

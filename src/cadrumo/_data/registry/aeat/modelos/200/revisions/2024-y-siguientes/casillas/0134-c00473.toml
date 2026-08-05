@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00473"
 number = "00473"
-label = "Deducc. para incentivar determ.actividades - 2007 Suma deducciones - Aplicado en esta liquidación [00473]"
 section = ["deducc_para_incentivar_determ_actividades", "2007_suma_deducciones"]
 data_type = "money"
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0260"
 number = "0260"
-label = "Deducciones por inversión empresarial (bases imputadas)"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
 semantic_role = "irpf_re_aie_deduccion_inversion_empresarial"
 continuidad_id = "irpf-re-aie-deduccion-inversion-empresarial"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0336"
 number = "0336"
-label = "Ganancias patrimoniales reducidas no exentas ( [0332] - [0333] - [0335] )"
 section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
 semantic_role = "irpf_ganancia_acciones_ganancia_reducida_no_exenta"
 input_kind = "computed"

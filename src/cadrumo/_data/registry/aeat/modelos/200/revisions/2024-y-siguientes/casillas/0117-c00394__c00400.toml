@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00394"
 number = "00394"
-label = "Estado de cambios patrimonio neto (II) - Ajustes por cambio de criterio de ejercicios anteriores - Capital - Escriturado [00394]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
 semantic_role = "is_ecpn_ajuste_criterio_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00395"
 number = "00395"
-label = "Estado de cambios patrimonio neto (II) - Ajustes por cambio de criterio de ejercicios anteriores - Capital - No exigido [00395]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
 semantic_role = "is_ecpn_ajuste_criterio_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00396"
 number = "00396"
-label = "Estado de cambios patrimonio neto (II) - Ajustes por cambio de criterio de ejercicios anteriores - Prima de emisión [00396]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
 semantic_role = "is_ecpn_ajuste_criterio_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00397"
 number = "00397"
-label = "Estado de cambios patrimonio neto (II) - Ajustes por cambio de criterio de ejercicios anteriores - Reservas [00397]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
 semantic_role = "is_ecpn_ajuste_criterio_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00398"
 number = "00398"
-label = "Estado de cambios patrimonio neto (II) - Ajustes por cambio de criterio de ejercicios anteriores - Acciones y participaciones en patrimonio propias [00398]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
 semantic_role = "is_ecpn_ajuste_criterio_importe"
@@ -62,7 +57,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 id = "DP200010:00399"
 number = "00399"
 segmento = "DP200010"
-label = "Estado de cambios patrimonio neto (II) - Ajustes por cambio de criterio de ejercicios anteriores - Resultados ejercicios anteriores [00399]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
 semantic_role = "is_ecpn_ajuste_criterio_importe"
@@ -74,7 +68,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00400"
 number = "00400"
-label = "Estado de cambios patrimonio neto (II) - Ajustes por cambio de criterio de ejercicios anteriores - Otras aportaciones de socios [00400]"
 section = ["estado_de_cambios_patrimonio_neto_ii", "ajustes_por_cambio_de_criterio_de_ejercicios_anter"]
 data_type = "money"
 semantic_role = "is_ecpn_ajuste_criterio_importe"

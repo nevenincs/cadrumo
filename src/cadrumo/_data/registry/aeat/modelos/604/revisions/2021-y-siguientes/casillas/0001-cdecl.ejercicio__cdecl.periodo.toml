@@ -6,7 +6,6 @@
 [[revisions."2021-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la autoliquidación"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -18,7 +17,6 @@ source_refs = ["enrolled-modelo-604-procedure"]
 [[revisions."2021-y-siguientes".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo (mes natural)"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"

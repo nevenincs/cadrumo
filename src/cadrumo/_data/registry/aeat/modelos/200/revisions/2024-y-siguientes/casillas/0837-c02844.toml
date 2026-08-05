@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02844"
 number = "02844"
-label = "Exención sobre dividendos o participaciones en beneficios de entidades no residentes (art. 21.11 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02844]"
 section = ["exencion_sobre_dividendos_o_participaciones_en_ben", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"

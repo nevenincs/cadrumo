@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0254"
 number = "0254"
-label = "Por cantidades destinadas a investigación, conservación, restauración, rehabilitación o consolidación de bienes que formen parte del patrimonio histórico de La Rioja"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_cantidades_investigacion_restauracion"
 continuidad_id = "irpf-deduccion-la-rioja-cantidades-investigacion-restauracion"

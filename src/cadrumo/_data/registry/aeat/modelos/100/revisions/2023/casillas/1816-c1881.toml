@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1881"
 number = "1881"
-label = "Nº total años  de cobro"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "integer"
 semantic_role = "irpf_ganancia_inmueble_anios_cobro_pendiente"

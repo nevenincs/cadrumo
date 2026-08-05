@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0408"
 number = "0408"
-label = "Ganancias patrimoniales"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 semantic_role = "irpf_g4_re_ganancia_patrimonial"
 continuidad_id = "irpf-g4-re-ganancia-patrimonial"

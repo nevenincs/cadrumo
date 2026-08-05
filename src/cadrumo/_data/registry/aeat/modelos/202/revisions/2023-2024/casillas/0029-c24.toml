@@ -1,7 +1,6 @@
 [[revisions.2023-2024.casillas]]
 id = "24"
 number = "24"
-label = "Mod. 40.3 LIS B2 — Porcentaje 2"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "decimal"
 semantic_role = "is_pf_mod_40_3_b2_porcentaje_2"

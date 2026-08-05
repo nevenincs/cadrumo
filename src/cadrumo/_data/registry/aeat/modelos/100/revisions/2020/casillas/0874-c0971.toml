@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0971"
 number = "0971"
-label = "Por adquisición de viviendas por jóvenes en núcleos rurales"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_vivienda_jovenes"
 legal_refs = ["ley-35-2006:art-77"]

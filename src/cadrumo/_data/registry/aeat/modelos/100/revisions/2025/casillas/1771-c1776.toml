@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1776"
 number = "1776"
-label = "Letra de calificación energética posterior (consumo de energía)"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"
 semantic_role = "irpf_deduccion_eficiencia_energetica_calificacion_posterior"

@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0474"
 number = "0474"
-label = "Aportaciones realizadas en 2021 por la propia persona con discapacidad"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_discapacidad"]
 semantic_role = "irpf_red_discapacidad_aportaciones_propias"
 continuidad_id = "irpf-red-discapacidad-aportaciones-propias"

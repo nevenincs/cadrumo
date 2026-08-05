@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00011"
 number = "00011"
-label = "Entidad de tenencia de valores extranjeros [00011]"
 section = ["entidad_de_tenencia_de_valores_extranjeros"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

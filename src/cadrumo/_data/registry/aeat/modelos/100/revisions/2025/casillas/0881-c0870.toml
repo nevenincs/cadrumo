@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0870"
 number = "0870"
-label = "Por donaciones con finalidad ecológica y en investigación y desarrollo científico y técnico"
 section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
 semantic_role = "irpf_deduccion_aragon_donativos_ecologicos"
 continuidad_id = "irpf-deduccion-aragon-donativos-ecologicos"

@@ -1,5 +1,4 @@
 [revisions."2004-y-siguientes"]
-label = "Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados primero y tercero). Ad-hoc por trigger de obligacion no periodica."
 valid_from = 2003-12-31
 period_selector = { year_from = 2004, periods = ["AD-HOC"] }
 legal_refs = [

@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0064"
 number = "0064"
-label = "Usufructo (%)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "ratio"
 semantic_role = "irpf_inmueble_porcentaje_usufructo"

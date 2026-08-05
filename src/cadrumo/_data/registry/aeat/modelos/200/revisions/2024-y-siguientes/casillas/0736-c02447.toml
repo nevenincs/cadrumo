@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02447"
 number = "02447"
-label = "Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2025(*) - Pendiente aplicación a principio del período [02447]"
 section = ["pendiente_adicion_por_limite_beneficio_operativo_n", "ejercicio_generacion_2025"]
 data_type = "money"
 semantic_role = "is_correccion_limite_beneficio_operativo_saldo_inicial"

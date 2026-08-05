@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02077"
 number = "02077"
-label = "Deducciones inversión Canarias - Activos fijos 2023 - Pendiente de aplicación en periodos futuros [02077]"
 section = ["deducciones_inversion_canarias", "activos_fijos_2023"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"

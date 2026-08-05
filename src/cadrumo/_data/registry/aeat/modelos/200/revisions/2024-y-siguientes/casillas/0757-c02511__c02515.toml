@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02511"
 number = "02511"
-label = "Operaciones a plazos (art. 11.4 LIS) - Aumento - Correcciones del ejercicio - Permanentes [02511]"
 section = ["operaciones_a_plazos_art_11_4_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_permanente_aumento"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02512"
 number = "02512"
-label = "Operaciones a plazos (art. 11.4 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02512]"
 section = ["operaciones_a_plazos_art_11_4_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_aumento"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02513"
 number = "02513"
-label = "Operaciones a plazos (art. 11.4 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02513]"
 section = ["operaciones_a_plazos_art_11_4_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_aumento"
@@ -43,7 +40,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02514"
 number = "02514"
-label = "Operaciones a plazos (art. 11.4 LIS) - Aumento - Saldo pendiente a principio de ejercicio [02514]"
 section = ["operaciones_a_plazos_art_11_4_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_saldo_inicial_neto"
@@ -55,7 +51,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02515"
 number = "02515"
-label = "Operaciones a plazos (art. 11.4 LIS) - Aumento - Saldo pendiente a fin de ejercicio [02515]"
 section = ["operaciones_a_plazos_art_11_4_lis", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_saldo_final"

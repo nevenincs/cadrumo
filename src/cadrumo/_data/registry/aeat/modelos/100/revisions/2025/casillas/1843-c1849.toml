@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1849"
 number = "1849"
-label = "Por emancipación de jóvenes de hasta 35 años de edad"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_emancipacion_jovenes"
 continuidad_id = "irpf-deduccion-asturias-emancipacion-jovenes"

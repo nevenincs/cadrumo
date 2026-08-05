@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1037"
 number = "1037"
-label = "Importe generado en 2025"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_arrendamiento_viviendas_vacias_generado"
 semantic_role_cardinality = "intentional_singleton"

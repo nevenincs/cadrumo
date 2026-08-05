@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1242"
 number = "1242"
-label = "Importe de la retención que el contribuyente se compromete a reinvertir en 2021"
 section = ["resultados", "anexo_c_res", "exencion_rentas_vitalicias_res"]
 semantic_role = "irpf_anexo_c_exencion_rv_retencion_comprometida"
 continuidad_id = "irpf-anexo-c-exencion-rv-retencion-comprometida"

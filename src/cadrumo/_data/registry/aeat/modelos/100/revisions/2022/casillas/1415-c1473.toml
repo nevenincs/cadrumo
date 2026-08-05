@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1473"
 number = "1473"
-label = "5. Índice corrector por inicio de nueva actividad"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 semantic_role = "irpf_eo_indice_corrector_inicio"
 continuidad_id = "irpf-eo-indice-corrector-inicio"

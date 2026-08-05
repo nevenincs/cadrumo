@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0628"
 number = "0628"
-label = "Fecha de fin de la discapacidad"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
 data_type = "text"
 semantic_role = "irpf_ascendiente_discapacidad_fecha_fin"

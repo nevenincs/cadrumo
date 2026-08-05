@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00779"
 number = "00779"
-label = "Deducciones DT 24ª.1 LIS - 2025 Periodificación - Deducción pendiente/generada [00779]"
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 data_type = "money"
 semantic_role = "is_deduccion_dt24a1_periodificacion"

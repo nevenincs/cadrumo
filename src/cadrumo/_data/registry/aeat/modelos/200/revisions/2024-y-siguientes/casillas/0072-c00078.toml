@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00078"
 number = "00078"
-label = "Diócesis, provincia religiosa o entidad eclesiástica que integra entidades menores de ellas dependientes [00078]"
 section = ["diocesis_provincia_religiosa_o_entidad_eclesiastic"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

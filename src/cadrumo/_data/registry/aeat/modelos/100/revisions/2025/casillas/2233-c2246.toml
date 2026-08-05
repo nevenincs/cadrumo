@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2246"
 number = "2246"
-label = "Por inversión en la adquisición de acciones y participaciones sociales de nuevas entidades o de reciente creación (importe de la casilla [1136] del Anexo B.11)"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_acciones_participaciones"
 semantic_role_cardinality = "intentional_singleton"

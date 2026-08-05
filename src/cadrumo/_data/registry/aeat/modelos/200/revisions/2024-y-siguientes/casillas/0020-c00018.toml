@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00018"
 number = "00018"
-label = "Cooperativa especialmente protegida [00018]"
 section = ["cooperativa_especialmente_protegida"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1027"
 number = "1027"
-label = "Por acogimiento de menores"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_acogimiento_menores"
 continuidad_id = "irpf-deduccion-galicia-acogimiento-menores"

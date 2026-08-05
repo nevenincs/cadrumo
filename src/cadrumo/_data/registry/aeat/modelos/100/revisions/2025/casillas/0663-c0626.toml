@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0626"
 number = "0626"
-label = "Nombre"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
 data_type = "text"
 semantic_role = "irpf_ascendiente_discapacidad_nombre"

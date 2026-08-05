@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00333"
 number = "00333"
-label = "Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS) - Aumentos [00333]"
 section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
 semantic_role = "is_correcciones_aumentos"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00334"
 number = "00334"
-label = "Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Entidad en régimen de atribución de rentas: asimetrías híbridas (art. 15 bis.12 LIS) - Disminuciones [00334]"
 section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
 semantic_role = "is_correccion_asimetrias_hibridas_atribucion_rentas_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00335"
 number = "00335"
-label = "Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Gastos y provisiones por pensiones no afectos por el art. 11.12 LIS - Aumentos [00335]"
 section = ["liquidacion_i", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
 semantic_role = "is_correcciones_aumentos"

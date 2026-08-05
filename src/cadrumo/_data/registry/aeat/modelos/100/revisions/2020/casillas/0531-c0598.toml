@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0598"
 number = "0598"
-label = "Suma de retenciones e ingresos a cuenta (suma de las casillas [0153])"
 section = ["resultados", "inmuebles_res"]
 data_type = "decimal"
 semantic_role = "irpf_suma_retenciones_capital_inmobiliario_aggregate"

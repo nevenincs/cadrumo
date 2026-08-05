@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "APENOMDLG_ASC"
 number = "*91"
-label = "Ascendiente apellidos y nombre"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "text"
 semantic_role = "irpf_ascendiente_apellidos_nombre"

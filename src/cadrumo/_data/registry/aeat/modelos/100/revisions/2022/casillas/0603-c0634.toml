@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0634"
 number = "0634"
-label = "Indique si cede el derecho a la deducción y en su caso el NIF del beneficiario"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
 data_type = "boolean"
 semantic_role = "irpf_ascendiente_cede_flag"

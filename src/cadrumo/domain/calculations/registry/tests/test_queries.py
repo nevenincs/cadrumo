@@ -440,7 +440,7 @@ def test_bindings_and_casilla_detail_remain_separate_non_substitutable_reports()
     assert "rows" not in detail_fields
     # The detail carries per-casilla grounding and the resolved formula the
     # listing has no field for, so it cannot be projected from the listing.
-    for casilla_only in ("casilla_id", "formula_expression", "legal_refs", "source_refs", "localized_labels"):
+    for casilla_only in ("casilla_id", "formula_expression", "legal_refs", "source_refs", "help_text"):
         assert casilla_only in detail_fields
         assert casilla_only not in binding_fields
 

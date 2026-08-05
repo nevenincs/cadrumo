@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0317"
 number = "0317"
-label = "Ganancias exentas por reinversión de rentas vitalicias"
 section = ["toma_datos_ampliada", "gp_fondos", "fondo"]
 semantic_role = "irpf_ganancia_fondos_exenta_renta_vitalicia"
 continuidad_id = "irpf-ganancia-fondos-exenta-renta-vitalicia"

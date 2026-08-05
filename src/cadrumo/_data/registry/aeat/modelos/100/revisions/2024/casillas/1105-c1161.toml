@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1161"
 number = "1161"
-label = "Por acogimiento no remunerado de mayores de 65 años y/o personas con discapacidad"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_acogimiento_mayores_discapacidad"
 continuidad_id = "irpf-deduccion-murcia-acogimiento-mayores-discapacidad"

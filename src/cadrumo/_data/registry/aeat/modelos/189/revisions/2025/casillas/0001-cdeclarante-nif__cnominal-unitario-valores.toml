@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "declarante-nif"
 number = "tipo1.nif-declarante"
-label = "NIF del declarante"
 section = ["identificacion_declaracion"]
 data_type = "nif"
 semantic_role = "irpf_declarante_nif"
@@ -13,7 +12,6 @@ source_refs = ["boe-modelo-189-base-order"]
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
 number = "tipo1.ejercicio"
-label = "Ejercicio de declaracion"
 section = ["identificacion_declaracion"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -25,7 +23,6 @@ source_refs = ["boe-modelo-189-base-order", "aeat-modelo-189-procedure"]
 [[revisions."2025".casillas]]
 id = "declarado-nif"
 number = "tipo2.nif-declarado"
-label = "NIF del declarado"
 section = ["declarado"]
 data_type = "nif"
 semantic_role = "m189_declarado_nif"
@@ -37,7 +34,6 @@ source_refs = ["boe-modelo-189-base-order"]
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
 number = "tipo2.nombre-declarado"
-label = "Apellidos y nombre, razon social o denominacion del declarado"
 section = ["declarado"]
 data_type = "name"
 semantic_role = "m189_declarado_nombre"
@@ -49,7 +45,6 @@ source_refs = ["boe-modelo-189-base-order"]
 [[revisions."2025".casillas]]
 id = "codigo-pais"
 number = "tipo2.78-79"
-label = "Codigo pais"
 section = ["declarado", "localizacion"]
 data_type = "country_code"
 semantic_role = "m189_codigo_pais"
@@ -61,7 +56,6 @@ source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1
 [[revisions."2025".casillas]]
 id = "clave-valor"
 number = "tipo2.81"
-label = "Clave de valor"
 section = ["valores_seguros_rentas", "identificacion_valor"]
 data_type = "text"
 semantic_role = "m189_clave_valor"
@@ -73,7 +67,6 @@ source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1
 [[revisions."2025".casillas]]
 id = "valoracion"
 number = "tipo2.108-123"
-label = "Valoracion"
 section = ["valores_seguros_rentas", "valoracion"]
 data_type = "money"
 semantic_role = "m189_valoracion"
@@ -89,7 +82,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "numero-valores"
 number = "tipo2.130-146"
-label = "Numero de valores"
 section = ["valores_seguros_rentas", "detalle_valor"]
 data_type = "decimal"
 semantic_role = "m189_numero_valores"
@@ -105,7 +97,6 @@ source_refs = [
 [[revisions."2025".casillas]]
 id = "nominal-unitario-valores"
 number = "tipo2.147-164"
-label = "Nominal unitario de los valores"
 section = ["valores_seguros_rentas", "detalle_valor"]
 data_type = "money"
 semantic_role = "m189_nominal_unitario_valores"

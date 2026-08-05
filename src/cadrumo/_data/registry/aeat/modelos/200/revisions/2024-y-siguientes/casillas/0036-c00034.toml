@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00034"
 number = "00034"
-label = "Régimen especial hidrocarburos [00034]"
 section = ["regimen_especial_hidrocarburos"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

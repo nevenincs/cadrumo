@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "CONVASDLG"
 number = "*95"
-label = "Ascendiente descendientes convivientes"
 section = ["datos_identificativos", "ascendientes", "ascendiente"]
 data_type = "integer"
 semantic_role = "irpf_ascendiente_convivientes"

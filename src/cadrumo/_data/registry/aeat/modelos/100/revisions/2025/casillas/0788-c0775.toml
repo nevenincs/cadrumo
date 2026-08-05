@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0775"
 number = "0775"
-label = "Por familias monoparentales"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_familia_monoparental"
 continuidad_id = "irpf-deduccion-cantabria-familia-monoparental"

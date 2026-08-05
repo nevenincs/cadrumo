@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0463"
 number = "0463"
-label = "Excesos pendientes de reducir procedentes de los ejercicios 2015 a 2019 (excepto los derivados de contribuciones empresariales a seguros colectivos de dependencia) (Vea el anexo C.2)"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 semantic_role = "irpf_red_prevision_social_exceso_2015_2019"
 semantic_role_cardinality = "intentional_singleton"

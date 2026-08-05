@@ -22,32 +22,56 @@ carry semantics.
   proof of identity. Ids renumber across filing years (Modelo 100 id `1911` is
   a ganancia box in 2024 and a maternity-deduction box in 2022). Only
   `continuidad_id` asserts cross-revision identity, and only with evidence.
-- A chain id is concept-named, never numeric, so it survives renumbering.
-  Constraint: `^[a-z0-9][a-z0-9._:-]*[a-z0-9]$`, max 128 chars. Which of the
-  two shapes below applies is decided by ONE question — does the casilla's
-  `semantic_role` identify exactly one box per revision?
-  - **Role-unique → flat kebab, derived from the role**: `semantic_role`
-    lowercased with `_` → `-`, nothing else. `irpf_deduccion_galicia_otras`
-    → `irpf-deduccion-galicia-otras`. This is the overwhelming majority of the
-    corpus and it is mechanically exact — every one of the 3,159 occurrences
-    measured on 2026-08-05 equals `role.replace("_", "-")` with no exceptions.
-    Derive it; do not invent a prettier name.
-  - **Role-ambiguous → dotted, instance-keyed, hand-adjudicated**: when two or
-    more casillas in one revision share the role, a role-derived id would
-    collide and merge distinct concepts into one chain. Key on whatever DOES
-    identify the box — the event, the column, the distinguishing clause — as
-    `<impuesto>.<familia>.<instancia>.<columna>`. The anexo-A AEIP family is
-    the worked example: 71 boxes share `irpf_anexo_a_aeip_aplicado` and the ids
-    repack yearly, so `dev/registry/aeip` keys them on the programme title AEAT
-    prints (`irpf.aeip.<event-slug>.aplicado`, its `CHAIN_PREFIX`).
-  Check role-uniqueness before naming. Reaching for dotted on a role-unique
-  chain is the drift that has to be swept back out later; reaching for kebab on
-  a role-ambiguous one silently merges two concepts, which is worse.
+- A chain id is concept-named, never numeric, so it survives renumbering, and
+  it MUST be a single plain segment — `^[A-Za-z0-9_-]+$`, max 128 chars. **Never
+  put a dot in a chain id.** The localization cascade
+  (`2026-08-04-modelo-localization-cascade-adr`) makes the chain id a segment of
+  the shared locale key,
+  `modelo.schema.<modelo>.casilla.continuidad.<chain-id>.<field>`, and
+  `encode_modelo_locale_segment` base32-encodes any id that is not a plain
+  segment. So `irpf-deduccion-galicia-otras` stays readable in every catalogue
+  while `irpf.deduccion-autonomica.galicia.otras` becomes
+  `x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pjm2r39cdkm2bjfehp62so`. Nothing
+  refuses a dotted id — `ContinuidadId` still permits dots — so the damage is
+  silent and only shows up as unreadable locale keys.
+  Within that one shape, how you DERIVE the name depends on whether the
+  casilla's `semantic_role` identifies exactly one box per revision:
+  - **Role-unique → derive mechanically from the role**: lowercase, `_` → `-`,
+    nothing else. `irpf_deduccion_galicia_otras` → `irpf-deduccion-galicia-otras`.
+    Exact on all 3,159 occurrences measured 2026-08-05. Do not invent a prettier
+    name.
+  - **Role-ambiguous → hand-adjudicate an instance-keyed name, still flat**:
+    when two or more casillas in one revision share the role, a role-derived id
+    would merge distinct concepts into one chain. Key on whatever DOES identify
+    the box — the event, the column, the distinguishing clause — joined with
+    `-`, e.g. `irpf-aeip-centenario-del-hockey-1923-2023-aplicado`. The anexo-A
+    family is the worked case: 71 boxes share `irpf_anexo_a_aeip_aplicado` and
+    the ids repack yearly. (`dev/registry/aeip` still declares
+    `CHAIN_PREFIX = "irpf.aeip."` — dotted, and therefore wrong under the
+    cascade. Flatten it before that planner grounds anything.)
+  Both errors are real: a role-derived id on a role-ambiguous chain silently
+  merges two legal concepts, and a dotted id on any chain silently produces an
+  opaque locale key.
 - Evolution kinds are a closed set: `unchanged`, `label_evolved`,
   `legal_refs_evolved`, `label_and_legal_refs_evolved`, `repurposed`,
   `retired`. Two are safety-critical: `retired` ends a chain (the target
   revision MUST NOT declare the id — validated), and `repurposed` is an
   inheritance BARRIER: no value, translation, or carry crosses it.
+- `label` is no longer stored on the casilla. The cascade removed the Spanish
+  string from the schema; `CasillaDefinition.label` is now a property resolving
+  `get_label("es")` through the shared catalogues, and the drift engine reads it
+  by `getattr`, so cross-revision label comparison still works — it just compares
+  resolved values now. **The consequence for `label_evolved`: a chain whose
+  labels differ only by an embedded filing year is a transitional record.** The
+  cascade's year-parameterized amendment represents that class (247 chains
+  measured) as ONE locale value carrying a `{year}` placeholder under the
+  continuity key, and `get_label` resolves with no `year` argument, so every
+  revision returns the identical template and the drift disappears. Do not
+  author `label_evolved` for a year-token difference expecting it to be durable
+  — it covers drift the cascade is removing. `label_and_legal_refs_evolved` on a
+  year-token chain likely becomes plain `legal_refs_evolved`. `retired` and
+  `repurposed` are unaffected: they are about the id and the concept, not the
+  wording.
 - Enforcement is two-tier: unannotated repeated-id drift is advisory;
   declared continuity surfaces hard-fail under a revision's
   `continuidad_validation = "strict"` opt-in (drift on a stamped surface must

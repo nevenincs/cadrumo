@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0159"
 number = "0159"
-label = "Rendimiento base producto"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 input_kind = "computed"
 formula = "renta-2025-eo-agraria-rendimiento-base-mejillon-batea"

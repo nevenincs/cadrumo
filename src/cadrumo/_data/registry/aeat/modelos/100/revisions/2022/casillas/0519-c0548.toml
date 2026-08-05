@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0548"
 number = "0548"
-label = "Deducción por inversión en vivienda habitual: (traslade los importes de estas mismas casillas del anexo A.1): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_vivienda_habitual_autonomica"
 input_kind = "computed"

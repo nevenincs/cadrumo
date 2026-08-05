@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1836"
 number = "1836"
-label = "Ganancia no exenta ( [1826] - [1830] - [1641] - [1834] - [1835] )"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_no_exenta"
 input_kind = "computed"

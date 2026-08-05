@@ -6,8 +6,8 @@ composer that already joined the evidence-tier coverage audit, the support
 probe, the registry-scope validator, the authorization manifest, the
 external-oracle grounding relation, the classification-coherence check, and the
 declared governance stamp. The one axis added here is locale coverage, read
-through :class:`~locales.ModeloLocaleManager`, because it lives in a different
-shipped package and the composer does not reach for it.
+from the shared locale-key catalogue because it lives in a different shipped
+package and the composer does not reach for it.
 
 Why the arrow points this way
 -----------------------------
@@ -79,8 +79,8 @@ See Also:
         Shipped composer every fact here is read from.
     :class:`~application.registry.RevisionConformanceRow`
         Per-revision row the payload models project.
-    :class:`~locales.ModeloLocaleManager`
-        Schema-local translation coverage the locale axis reads.
+    :func:`~core.i18n.lookup_translation_entry`
+        Shared locale-key catalogue membership the locale axis reads.
     :mod:`~dev.registry.conformance.cli`
         Typer surface that renders these payloads.
 """
@@ -89,11 +89,12 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.application.registry import (
     RegistryConformanceProfile,
@@ -102,26 +103,43 @@ from cadrumo.application.registry import (
 )
 from cadrumo.core import STRICT_FROZEN_CONFIG, RevisionReviewStatus
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
+from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.domain.calculations.registry import (
     ExternalOracleInventory,
     UnattributedOraclePayload,
+    bundled_authority,
     load_bundled_external_oracle_inventory,
 )
-from cadrumo.locales import (
-    ModeloLocaleCoverageRecord,
-    ModeloLocaleDriftKind,
-    ModeloLocaleError,
-    ModeloLocaleManager,
-)
+@dataclass(frozen=True, slots=True)
+class _SharedModeloLocaleCoverageRecord:
+    """Shared-catalogue coverage for one Modelo revision and locale."""
 
-#: Index of schema-local translation coverage, keyed by ``(modelo, revision)``.
-LocaleCoverageIndex = Mapping[tuple[str, str], tuple[ModeloLocaleCoverageRecord, ...]]
+    locale: OutputLanguage
+    modelo_id: str
+    revision_id: str
+    label_required: int
+    label_translated: int
+    help_required: int
+    help_translated: int
+
+    @property
+    def complete(self) -> bool:
+        """Return whether every required label has an authored value."""
+        return self.label_translated == self.label_required
+
+
+#: Index of shared-catalogue translation coverage, keyed by ``(modelo, revision)``.
+LocaleCoverageIndex = Mapping[tuple[str, str], tuple[_SharedModeloLocaleCoverageRecord, ...]]
 
 __all__ = [
     "AUDITED_LOCALES",
+    "COORDINATE_CLASSIFICATIONS",
     "NOT_MEASURED",
     "ConformanceAuditResult",
     "ConformanceBaseline",
+    "ConformanceCoordinate",
+    "ConformanceCoordinateClassification",
+    "ConformanceCoordinateMatrix",
     "ConformanceProgressFloors",
     "ConformanceRatchetCeilings",
     "ConformanceReport",
@@ -134,6 +152,7 @@ __all__ = [
     "RevisionLocaleCoverage",
     "baseline_path",
     "baseline_weakenings",
+    "build_annual_coordinate_matrix",
     "build_conformance_report",
     "build_coverage_report",
     "check_conformance_ratchet",
@@ -157,6 +176,37 @@ independent-check coverage to report, and a degraded read never consulted the
 validating authority for evidence-tier coverage; rendering either as ``0``
 would state a fact nobody established.
 """
+
+type ConformanceCoordinateClassification = Literal[
+    "unsupported",
+    "open_ended",
+    "manual",
+    "upstream",
+    "deferred",
+    "not_yet_measured",
+]
+"""Allowed dispositions for finite annual-matrix coordinates.
+
+The matrix is an evidence ledger, not a completion score. A coordinate remains
+visible when it is unsupported, belongs to an open-ended revision, is manual or
+upstream by declaration, is deferred by an accepted decision, or has not yet
+been measured. The vocabulary is intentionally closed so a new disposition
+cannot disappear from the census by omission.
+"""
+
+COORDINATE_CLASSIFICATIONS: Final[tuple[ConformanceCoordinateClassification, ...]] = (
+    "unsupported",
+    "open_ended",
+    "manual",
+    "upstream",
+    "deferred",
+    "not_yet_measured",
+)
+
+# The annual matrix is deliberately finite. D2025 is a provisional label only
+# for this one exact coordinate; it is not a repository-wide revision class or
+# an open-ended claim about any other modelo or year.
+_PROVISIONAL_ANNUAL_COORDINATE_SPECS: Final[tuple[tuple[str, int, str], ...]] = (("100", 2025, "0A"),)
 
 AUDITED_LOCALES: Final[tuple[OutputLanguage, ...]] = tuple(
     language for language in OutputLanguage if language is not OutputLanguage.ES
@@ -218,6 +268,45 @@ class RevisionLocaleCoverage(ConformanceModel):
     def labels_untranslated(self) -> int:
         """Required label leaves with no authored translation, across audited locales."""
         return self.labels_required_across_locales - self.labels_translated
+
+
+class ConformanceCoordinate(ConformanceModel):
+    """One exact finite annual-matrix coordinate selected by registry law."""
+
+    modelo: str = Field(min_length=1)
+    filing_year: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=32)
+    law_selected_revision: str = Field(min_length=1)
+    classification: ConformanceCoordinateClassification
+    provisional: bool
+
+
+class ConformanceCoordinateMatrix(ConformanceModel):
+    """Finite annual coordinates and an explicit census of every disposition."""
+
+    coordinates: tuple[ConformanceCoordinate, ...]
+    classification_census: dict[str, int]
+
+    @model_validator(mode="after")
+    def _classification_census_is_complete(self) -> ConformanceCoordinateMatrix:
+        expected = set(COORDINATE_CLASSIFICATIONS)
+        if set(self.classification_census) != expected:
+            raise ValueError(
+                "annual coordinate classification census must name every supported disposition exactly once",
+            )
+        actual = {classification: 0 for classification in COORDINATE_CLASSIFICATIONS}
+        coordinate_keys: set[tuple[str, int, str]] = set()
+        for coordinate in self.coordinates:
+            key = (coordinate.modelo, coordinate.filing_year, coordinate.period)
+            if key in coordinate_keys:
+                raise ValueError(f"annual coordinate is duplicated: {key!r}")
+            coordinate_keys.add(key)
+            actual[coordinate.classification] += 1
+        if self.classification_census != actual:
+            raise ValueError(
+                "annual coordinate classification census does not match the enumerated coordinates",
+            )
+        return self
 
 
 class RevisionConformancePayload(ConformanceModel):
@@ -404,6 +493,9 @@ class ConformanceReport(ConformanceModel):
         locale_axis: Per-locale registry-wide translation coverage.
         locale_unavailable_modelos: Modelos the locale manager could not read.
             Recorded rather than counted as zero coverage.
+        annual_matrix: The finite annual coordinate matrix, or :data:`None` on
+            a degraded read where law-selected coordinates were not validated.
+            This is deliberately separate from the portfolio's revision rows.
     """
 
     rows: tuple[RevisionConformancePayload, ...]
@@ -430,6 +522,7 @@ class ConformanceReport(ConformanceModel):
     unattributed_scope_diagnostic_count: int = Field(ge=0)
     locale_axis: tuple[LocaleAxisSummary, ...]
     locale_unavailable_modelos: tuple[str, ...]
+    annual_matrix: ConformanceCoordinateMatrix | None = None
 
     @property
     def translated_locale_labels(self) -> int:
@@ -885,7 +978,7 @@ def _cached_profile(validate: bool) -> RegistryConformanceProfile:
 
 @lru_cache(maxsize=1)
 def _cached_locale_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
-    """Read schema-local translation coverage for every directory-mode modelo."""
+    """Read shared-catalogue translation coverage for every bundled Modelo."""
     return _read_locale_coverage()
 
 
@@ -901,33 +994,76 @@ def reset_conformance_cache() -> None:
 
 
 def load_locale_coverage_index() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
-    """Return schema-local translation coverage keyed by ``(modelo, revision)``.
+    """Return shared-catalogue translation coverage keyed by ``(modelo, revision)``.
 
     Returns:
-        The coverage index, and the modelo ids the locale manager could not
-        read. An unreadable modelo is REPORTED, never rendered as zero coverage:
-        the two are different claims and only one of them is about translation.
+        The coverage index and modelo ids that could not be read. An unreadable
+        Modelo is reported, never rendered as zero coverage.
     """
     return _cached_locale_index()
 
 
 def _read_locale_coverage() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
-    """Sweep every directory-mode modelo once, indexing its per-revision records."""
-    manager = ModeloLocaleManager()
-    index: dict[tuple[str, str], tuple[ModeloLocaleCoverageRecord, ...]] = {}
+    """Sweep every bundled Modelo and index its shared locale-key coverage."""
+    index: dict[tuple[str, str], tuple[_SharedModeloLocaleCoverageRecord, ...]] = {}
     unavailable: list[str] = []
-    for modelo_id in manager.modelo_ids():
-        try:
-            records = manager.coverage_records(modelo_id, locales=AUDITED_LOCALES)
-        except ModeloLocaleError:
-            unavailable.append(modelo_id)
-            continue
-        grouped: dict[str, list[ModeloLocaleCoverageRecord]] = {}
-        for record in records:
-            grouped.setdefault(record.revision_id, []).append(record)
-        for revision_id, items in grouped.items():
-            index[(modelo_id, revision_id)] = tuple(items)
+    try:
+        modelos = bundled_authority().modelos
+    except Exception:
+        return {}, ("<bundled-registry>",)
+    for modelo in modelos:
+        modelo_id = str(modelo.id)
+        for revision_id, revision in modelo.revisions.items():
+            records = tuple(
+                _shared_locale_coverage_record(
+                    locale=locale,
+                    modelo_id=modelo_id,
+                    revision_id=str(revision_id),
+                    casillas=revision.casillas,
+                )
+                for locale in AUDITED_LOCALES
+            )
+            index[(modelo_id, str(revision_id))] = records
     return index, tuple(sorted(unavailable))
+
+
+def _shared_locale_coverage_record(
+    *,
+    locale: OutputLanguage,
+    modelo_id: str,
+    revision_id: str,
+    casillas: Sequence[object],
+) -> _SharedModeloLocaleCoverageRecord:
+    """Count authored values across exact and continuity candidate keys."""
+    label_required = len(casillas)
+    label_translated = sum(
+        1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="label")
+    )
+    help_required = len(casillas)
+    help_translated = sum(
+        1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="help")
+    )
+    return _SharedModeloLocaleCoverageRecord(
+        locale=locale,
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+        label_required=label_required,
+        label_translated=label_translated,
+        help_required=help_required,
+        help_translated=help_translated,
+    )
+
+
+def _has_authored_locale_value(casilla: object, locale: OutputLanguage, *, field: str) -> bool:
+    """Return whether a casilla has an authored value in the requested locale."""
+    keys = getattr(casilla, "localization_keys", ())
+    if field == "help":
+        keys = tuple(f"{key.removesuffix('.label')}.help" for key in keys)
+    return any(
+        (present and value is not None)
+        for key in keys
+        for present, value in (lookup_translation_entry(key, locale=locale.value),)
+    )
 
 
 def load_conformance_report(*, validate: bool = True) -> ConformanceReport:
@@ -946,20 +1082,65 @@ def load_conformance_report(*, validate: bool = True) -> ConformanceReport:
     """
     profile = _cached_profile(validate)
     locale_index, unavailable = _cached_locale_index()
+    annual_matrix = build_annual_coordinate_matrix() if validate else None
     return build_conformance_report(
         profile,
         locale_index=locale_index,
         locale_unavailable_modelos=unavailable,
         oracle_inventory=load_bundled_external_oracle_inventory(),
+        annual_matrix=annual_matrix,
+    )
+
+
+def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
+    """Enumerate the finite annual coordinates through the validated authority.
+
+    The portfolio conformance rows remain one row per validated modelo revision
+    (currently 73 modelos and 90 revisions). This function owns the separate,
+    finite behavioral denominator. Its only current coordinate is the
+    provisional D2025 interpretation: Modelo 100, ejercicio 2025, period ``0A``,
+    revision selected by the law-determined registry authority.
+
+    Returns:
+        A typed matrix whose classification census names every supported
+        disposition, including zero populations that must remain visible.
+
+    Raises:
+        RegistrySnapshotError: If the accepted coordinate cannot be resolved by
+            the validated registry authority.
+    """
+    authority = bundled_authority()
+    coordinates = tuple(
+        ConformanceCoordinate(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            law_selected_revision=authority.snapshot(
+                modelo,
+                filing_year=filing_year,
+                period=period,
+            ).revision.id,
+            classification="not_yet_measured",
+            provisional=True,
+        )
+        for modelo, filing_year, period in _PROVISIONAL_ANNUAL_COORDINATE_SPECS
+    )
+    classification_census = {classification: 0 for classification in COORDINATE_CLASSIFICATIONS}
+    for coordinate in coordinates:
+        classification_census[coordinate.classification] += 1
+    return ConformanceCoordinateMatrix(
+        coordinates=coordinates,
+        classification_census=classification_census,
     )
 
 
 def build_conformance_report(
     profile: RegistryConformanceProfile,
     *,
-    locale_index: Mapping[tuple[str, str], Sequence[ModeloLocaleCoverageRecord]],
+    locale_index: Mapping[tuple[str, str], Sequence[_SharedModeloLocaleCoverageRecord]],
     locale_unavailable_modelos: Sequence[str],
     oracle_inventory: ExternalOracleInventory,
+    annual_matrix: ConformanceCoordinateMatrix | None = None,
 ) -> ConformanceReport:
     """Project a composed profile plus the locale axis into rendered payload rows.
 
@@ -974,6 +1155,8 @@ def build_conformance_report(
         locale_unavailable_modelos: Modelos the locale manager could not read.
         oracle_inventory: The bundled oracle inventory, supplying the honest
             denominator for the attribution-gap counts.
+        annual_matrix: The finite annual coordinate matrix from the validated
+            authority, or :data:`None` for a synthetic/degraded projection.
 
     Returns:
         The projected :class:`ConformanceReport`.
@@ -1014,6 +1197,7 @@ def build_conformance_report(
         unattributed_scope_diagnostic_count=len(profile.unattributed_scope_diagnostics),
         locale_axis=_locale_axis_summary(locale_index),
         locale_unavailable_modelos=tuple(locale_unavailable_modelos),
+        annual_matrix=annual_matrix,
     )
 
 
@@ -1314,6 +1498,35 @@ def render_report(report: ConformanceReport) -> str:
                 locale_stale_keys=None if row.locale is None else row.locale.stale_keys,
             ),
         )
+    lines.append(
+        _kv_line(
+            "annual_matrix",
+            registry_validated=report.registry_validated,
+            measured=report.annual_matrix is not None,
+            coordinates=None if report.annual_matrix is None else len(report.annual_matrix.coordinates),
+        ),
+    )
+    if report.annual_matrix is not None:
+        lines.extend(
+            _kv_line(
+                "annual_coordinate",
+                modelo=coordinate.modelo,
+                filing_year=coordinate.filing_year,
+                period=coordinate.period,
+                law_selected_revision=coordinate.law_selected_revision,
+                classification=coordinate.classification,
+                provisional=coordinate.provisional,
+            )
+            for coordinate in report.annual_matrix.coordinates
+        )
+        lines.extend(
+            _kv_line(
+                "annual_coordinate_classification",
+                classification=classification,
+                count=report.annual_matrix.classification_census[classification],
+            )
+            for classification in COORDINATE_CLASSIFICATIONS
+        )
     lines.extend(
         _kv_line("oracle_gap", kind="unattributed_payload", corpus=item.corpus, payload=item.payload_name, gap=item.gap)
         for item in report.unattributed_oracle_payloads
@@ -1532,7 +1745,7 @@ def _gap_row(payload: UnattributedOraclePayload) -> OraclePayloadGapRow:
 
 
 def _locale_coverage(
-    records: Sequence[ModeloLocaleCoverageRecord] | None,
+    records: Sequence[_SharedModeloLocaleCoverageRecord] | None,
 ) -> RevisionLocaleCoverage | None:
     """Fold one revision's per-locale records, or report absence as absence."""
     if not records:
@@ -1547,13 +1760,13 @@ def _locale_coverage(
     )
 
 
-def _stale_key_count(record: ModeloLocaleCoverageRecord) -> int:
-    """Count locale leaves on disk that no registry key claims."""
-    return sum(1 for drift in record.drift if drift.kind is ModeloLocaleDriftKind.STALE)
+def _stale_key_count(record: _SharedModeloLocaleCoverageRecord) -> int:
+    """Return zero; shared-catalogue stale keys are audited globally."""
+    return 0
 
 
 def _locale_axis_summary(
-    locale_index: Mapping[tuple[str, str], Sequence[ModeloLocaleCoverageRecord]],
+    locale_index: Mapping[tuple[str, str], Sequence[_SharedModeloLocaleCoverageRecord]],
 ) -> tuple[LocaleAxisSummary, ...]:
     """Fold the locale index into one registry-wide summary per audited locale."""
     required: dict[str, int] = {}

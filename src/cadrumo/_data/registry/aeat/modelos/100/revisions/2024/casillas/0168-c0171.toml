@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0171"
 number = "0171"
-label = "Ingresos de explotación"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_ingresos_explotacion"
 input_kind = "bound"

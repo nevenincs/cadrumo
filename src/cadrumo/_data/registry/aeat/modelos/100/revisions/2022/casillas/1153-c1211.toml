@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1211"
 number = "1211"
-label = "Contribuyente titular"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_contribuyente_titular"

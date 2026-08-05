@@ -1,7 +1,6 @@
 [[revisions.2025-y-siguientes.casillas]]
 id = "45"
 number = "45"
-label = "Mod. 40.3 LIS — Reserva de nivelacion (art. 105 LIS) — Aumentos"
 section = ["liquidacion", "modalidad_40_3_lis", "reserva_nivelacion"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_reserva_nivelacion_aumentos"

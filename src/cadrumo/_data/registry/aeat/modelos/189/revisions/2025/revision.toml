@@ -1,5 +1,4 @@
 [revisions."2025"]
-label = "Modelo 189 ejercicio 2025 (Orden EHA/3481/2008; Ordenes HFP/1180/2023, HFP/1284/2023 y HAC/132/2026)"
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }
 orden_aplicabilidad = [

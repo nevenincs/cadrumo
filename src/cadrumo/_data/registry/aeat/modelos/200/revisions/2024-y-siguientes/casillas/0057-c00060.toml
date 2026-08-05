@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00060"
 number = "00060"
-label = "Fondos o activos de titulización [00060]"
 section = ["fondos_o_activos_de_titulizacion"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

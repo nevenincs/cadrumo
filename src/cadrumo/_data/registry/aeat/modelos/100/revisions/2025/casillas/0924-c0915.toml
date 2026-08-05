@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0915"
 number = "0915"
-label = "Por determinadas subvenciones y ayudas otorgadas por razón de una declaración de zona afectada gravemente por una emergencia de protección civil"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 semantic_role = "irpf_deduccion_baleares_subvenciones_declaracion_sinistro"
 continuidad_id = "irpf-deduccion-baleares-subvenciones-declaracion-sinistro"

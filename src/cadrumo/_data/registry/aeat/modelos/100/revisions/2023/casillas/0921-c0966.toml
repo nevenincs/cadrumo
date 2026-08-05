@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0966"
 number = "0966"
-label = "Por acogimiento familiar no remunerado de menores"
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_acogimiento_menores"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-acogimiento-menores"

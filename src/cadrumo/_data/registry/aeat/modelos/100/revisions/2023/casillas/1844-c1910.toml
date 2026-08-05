@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1910"
 number = "1910"
-label = "Por intereses de financiación ajena para la inversión en vivienda habitual para jóvenes"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_intereses_vivienda"
 continuidad_id = "irpf-deduccion-extremadura-intereses-vivienda"

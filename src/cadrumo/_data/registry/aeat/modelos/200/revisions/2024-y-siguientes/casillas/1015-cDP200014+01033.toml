@@ -2,7 +2,6 @@
 id = "DP200014:01033"
 number = "01033"
 segmento = "DP200014"
-label = "Liquidación III - Base Imponible - Entidades Reducida dimensión - Reserva de nivelación - Aumentos [01033]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_liquidacion_iii_reserva_nivelacion_aumentos"

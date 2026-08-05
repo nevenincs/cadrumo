@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2228"
 number = "2228"
-label = "Valor de transmisión destinado a constituir una renta vitalicia"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 semantic_role = "irpf_ganancia_fondos_coti_valor_transmision_renta_vitalicia"
 semantic_role_cardinality = "intentional_singleton"

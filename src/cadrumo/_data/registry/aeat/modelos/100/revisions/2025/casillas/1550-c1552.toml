@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1552"
 number = "1552"
-label = "Gastos extraordinarios por circunstancias excepcionales"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_gastos_extraordinarios"
 continuidad_id = "irpf-eo-agr-gastos-extraordinarios"

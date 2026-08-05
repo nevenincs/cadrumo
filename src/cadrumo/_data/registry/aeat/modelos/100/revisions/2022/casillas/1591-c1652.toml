@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1652"
 number = "1652"
-label = "Reducción (licencia municipal autotaxis en estimación objetiva D.A. 7.ª)"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_reduccion_autotaxis_da7"
 continuidad_id = "irpf-ganancia-otros-reduccion-autotaxis-da7"

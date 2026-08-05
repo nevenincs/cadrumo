@@ -1,7 +1,0 @@
-[labels]
-"decl.ejercicio" = "Az önadózás vonatkozási éve"
-"decl.periodo" = "A bevallás időszaka"
-"iva.importacion.cuota-total" = "Az importszabályozás szerinti áthárított HÉA összesen (IOSS, célországonkénti összeg)"
-"iva.importacion.de.low-value-cuota" = "IOSS HÉA a DE célországba — behozott áruk távértékesítése ≤ 150 EUR (LIVA 163. quinvicies cikk)"
-
-[help]

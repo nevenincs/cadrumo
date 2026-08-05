@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00920"
 number = "00920"
-label = "Deducciones doble imposición interna RDLeg. 4/2004 - DI interna 2014 - Tipo gravamen período generación [00920]"
 section = ["deducciones_doble_imposicion_interna_rdleg_4_2004", "di_interna_2014"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_rdleg_detalle"

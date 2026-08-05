@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0262"
 number = "0262"
-label = "Deducción por rentas obtenidas en Ceuta o Melilla (base imputada)"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_agrup_interes_economico"]
 semantic_role = "irpf_re_aie_deduccion_ceuta_melilla"
 continuidad_id = "irpf-re-aie-deduccion-ceuta-melilla"

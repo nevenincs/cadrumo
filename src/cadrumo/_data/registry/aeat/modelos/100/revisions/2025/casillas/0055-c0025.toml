@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0025"
 number = "0025"
-label = "Rendimiento neto reducido del trabajo"
 section = ["rendimientos_trabajo"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_trabajo_rendimiento_neto_reducido"

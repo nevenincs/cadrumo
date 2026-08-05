@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01658"
 number = "01658"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa: Devolución - Araba/..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01659"
 number = "01659"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa: Devolución - Gipuzk..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01660"
 number = "01660"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa: Devolución - Bizkai..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01661"
 number = "01661"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Rectificativa: Devolución - Navarr..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01662"
 number = "01662"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Abono - A..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01663"
 number = "01663"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Abono - G..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01664"
 number = "01664"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Abono - B..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -85,7 +78,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01665"
 number = "01665"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Abono - N..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -97,7 +89,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01666"
 number = "01666"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Compensac..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -109,7 +100,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01667"
 number = "01667"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Compensac..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -121,7 +111,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01668"
 number = "01668"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Compensac..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -133,7 +122,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01669"
 number = "01669"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: Compensac..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -145,7 +133,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01670"
 number = "01670"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -157,7 +144,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01671"
 number = "01671"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -169,7 +155,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01672"
 number = "01672"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"
@@ -181,7 +166,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01673"
 number = "01673"
-label = "Tributación conjunta Estado y Adm.Forales - Conversión de activos por impuesto diferido en crédito exigible frente a la Administración tributaria (art. 130 LIS) - Resultado de conversión: A Ingresa..."
 section = ["tributacion_conjunta_estado_y_adm_forales", "conversion_de_activos_por_impuesto_diferido_en_cre"]
 data_type = "money"
 semantic_role = "is_conversion_aid_conjunta_importe"

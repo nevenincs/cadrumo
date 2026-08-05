@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0992"
 number = "0992"
-label = "Por gastos de adopción"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_gastos_adopcion"
 continuidad_id = "irpf-deduccion-castilla-y-leon-gastos-adopcion"

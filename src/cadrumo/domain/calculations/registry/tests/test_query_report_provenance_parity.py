@@ -37,8 +37,7 @@ _SHARED_GROUNDING_FIELDS = (
     "binding",
     "legal_refs",
     "source_refs",
-    "localized_labels",
-    "localized_help",
+    "help_text",
 )
 
 _VALID_LEGAL_REF = "ley-35-2006:art-27"

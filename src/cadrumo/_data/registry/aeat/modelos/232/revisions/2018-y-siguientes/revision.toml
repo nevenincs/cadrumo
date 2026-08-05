@@ -1,5 +1,4 @@
 [revisions."2018-y-siguientes"]
-label = "Modelo 232 ejercicios 2018 y siguientes (Orden HFP/816/2017 v14)"
 valid_from = 2018-01-01
 period_selector = { year_from = 2018, periods = ["0A"] }
 legal_refs = [

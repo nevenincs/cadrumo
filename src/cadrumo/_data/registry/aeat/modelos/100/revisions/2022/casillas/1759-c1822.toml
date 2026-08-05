@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1822"
 number = "1822"
-label = "Transmisión intervivos onerosa (venta, permuta, etc.)"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_ganancia_inmueble_transmision_onerosa"

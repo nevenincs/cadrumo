@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.inmueble-calificador-numero"
 number = "198-200"
-label = "Calificador del numero del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_calificador_numero"

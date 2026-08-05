@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0018"
 number = "0018"
-label = "Suma de rendimientos netos previos del trabajo"
 section = ["rendimientos_trabajo"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_trabajo_suma_rendimientos_netos_previos"

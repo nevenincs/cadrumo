@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0510"
 number = "0510"
-label = "Base liquidable del ahorro"
 section = ["resultados", "base_liquidable_res"]
 semantic_role = "irpf_base_liquidable_ahorro"
 input_kind = "computed"

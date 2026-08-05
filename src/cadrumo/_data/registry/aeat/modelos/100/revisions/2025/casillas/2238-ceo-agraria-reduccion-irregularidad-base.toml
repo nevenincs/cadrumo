@@ -20,7 +20,6 @@
 [[revisions."2025".casillas]]
 id = "eo-agraria-reduccion-irregularidad-base"
 number = "eo-agraria-reduccion-irregularidad-base"
-label = "Rendimientos netos de la actividad agrícola, ganadera o forestal con período de generación superior a dos años, o calificados reglamentariamente como obtenidos de forma notoriamente irregular en el tiempo, imputados en este único período impositivo (base sobre la que se aplica la reducción del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado por el operador — véase la casilla [1554])"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "money"
 semantic_role = "irpf_eo_agr_reduccion_irregulares_base"

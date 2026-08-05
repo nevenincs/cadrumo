@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2007"
 number = "2007"
-label = "Por inversiones en la rehabilitación de viviendas en zonas rurales para ser destinadas a su alquiler"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_rehabilitacion_rural"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

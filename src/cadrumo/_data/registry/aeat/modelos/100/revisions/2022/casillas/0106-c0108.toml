@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0108"
 number = "0108"
-label = "Importe de 2022 pendiente de deducir en los 4 años siguientes (Cumplimente el anexo C.1)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_gastos_financiacion_pendientes_futuros"
 continuidad_id = "irpf-inmueble-gastos-financiacion-pendientes-futuros"

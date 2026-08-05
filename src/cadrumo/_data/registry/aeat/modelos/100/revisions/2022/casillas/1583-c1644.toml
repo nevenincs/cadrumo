@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1644"
 number = "1644"
-label = "Ganancia exenta por reinversión en entidades de nueva o reciente creación"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_exenta_nueva_empresa"
 continuidad_id = "irpf-ganancia-otros-exenta-nueva-empresa"

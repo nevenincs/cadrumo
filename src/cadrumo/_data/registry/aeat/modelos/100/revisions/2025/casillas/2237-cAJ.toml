@@ -16,7 +16,6 @@
 [[revisions."2025".casillas]]
 id = "AJ"
 number = "*98"
-label = "Reducción agricultores jóvenes (disposición adicional sexta de la Ley del Impuesto) (Sí/No)"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "boolean"
 semantic_role = "irpf_eo_agr_reduccion_jovenes_flag"

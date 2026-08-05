@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00758"
 number = "00758"
-label = "Deducciones DT 24ª.1 LIS - 2023 Periodificación - Deducción pendiente/generada [00758]"
 section = ["deducciones_dt_24a_1_lis", "2023_periodificacion"]
 data_type = "money"
 semantic_role = "is_deduccion_dt24a1_periodificacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00759"
 number = "00759"
-label = "Deducciones DT 24ª.1 LIS - 2023 Periodificación - Aplicado en esta liquidación [00759]"
 section = ["deducciones_dt_24a_1_lis", "2023_periodificacion"]
 data_type = "money"
 semantic_role = "is_deduccion_dt24a1_periodificacion"

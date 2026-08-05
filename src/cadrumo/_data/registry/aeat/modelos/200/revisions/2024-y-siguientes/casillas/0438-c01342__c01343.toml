@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01342"
 number = "01342"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - Total - Deducción pendiente [01342]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_total"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01343"
 number = "01343"
-label = "Deducciones doble imposición interna (DT 23.1 LIS) - Total - 2025 - Deducción pendiente [01343]"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "total"]
 data_type = "money"
 semantic_role = "is_deduccion_di_interna_dt231_detalle"

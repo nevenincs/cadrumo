@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01676"
 number = "01676"
-label = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE- Aumento - Saldo pendiente a principio de ejercicio [01676]"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "saldo_pendiente_a_principio_de_ejercicio"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_art19_otras_saldo_inicial"

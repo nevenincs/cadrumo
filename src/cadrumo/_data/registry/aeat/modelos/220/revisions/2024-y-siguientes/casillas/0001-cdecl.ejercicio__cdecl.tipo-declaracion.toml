@@ -8,7 +8,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la declaración del grupo fiscal"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -20,7 +19,6 @@ source_refs = ["boe-modelo-200-2025-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
-label = "Tipo de declaración (originaria / sustitutiva / complementaria)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_declaracion"

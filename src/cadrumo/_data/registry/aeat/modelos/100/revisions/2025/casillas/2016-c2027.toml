@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2027"
 number = "2027"
-label = "Por adquisición de vivienda habitual en municipios en riesgo de despoblación"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_vivienda_municipio_riesgo"
 semantic_role_cardinality = "intentional_singleton"

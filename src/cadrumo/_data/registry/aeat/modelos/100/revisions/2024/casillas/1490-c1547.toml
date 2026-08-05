@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1547"
 number = "1547"
-label = "8. Índice corrector en determinadas actividades forestales"
 data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_forestal"

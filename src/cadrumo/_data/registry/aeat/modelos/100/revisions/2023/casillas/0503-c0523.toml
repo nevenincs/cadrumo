@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0523"
 number = "0523"
-label = "Importe del mínimo personal y familiar que forma parte de la base liquidable general a efectos del cálculo del gravamen autonómico: la menor de las cantidades consignadas en las casillas [0505] y [..."
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_aplicado_base_general_autonomico"
 input_kind = "computed"

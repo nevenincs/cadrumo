@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "14"
 number = "14"
-label = "Mod. 40.3 LIS — Compensacion de bases negativas de ejercicios anteriores"
 section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_compensacion_bases_negativas"

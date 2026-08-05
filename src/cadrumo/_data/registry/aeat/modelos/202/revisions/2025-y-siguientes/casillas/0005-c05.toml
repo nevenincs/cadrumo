@@ -1,7 +1,6 @@
 [[revisions.2025-y-siguientes.casillas]]
 id = "05"
 number = "05"
-label = "Mod. 40.3 LIS — Correcciones por IS — Aumentos"
 section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_correcciones_is_aumentos"

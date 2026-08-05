@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0097"
 number = "0097"
-label = "Nif del arrendatario 3 (*)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_arrendatario_nif_o_id_extranjero"

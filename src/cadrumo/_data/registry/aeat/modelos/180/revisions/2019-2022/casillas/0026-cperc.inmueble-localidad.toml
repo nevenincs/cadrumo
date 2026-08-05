@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.inmueble-localidad"
 number = "256-285"
-label = "Localidad del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_localidad"

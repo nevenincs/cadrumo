@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0239"
 number = "0239"
-label = "Reintegro de subvenciones (se incluirá el importe de la subvención declarada por la aplicación de los índices)"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_reintegro_subvenciones"
 semantic_role_cardinality = "intentional_singleton"

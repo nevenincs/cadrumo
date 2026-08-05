@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0304"
 number = "0304"
-label = "Otras ganancias y/o pérdidas patrimoniales imputables a 2021: Importe ganancias"
 section = ["toma_datos_ampliada", "gp_premios", "otras"]
 semantic_role = "irpf_ganancia_premios_otras_ganancias"
 continuidad_id = "irpf-ganancia-premios-otras-ganancias"

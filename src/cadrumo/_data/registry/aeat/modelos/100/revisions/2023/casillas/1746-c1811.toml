@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1811"
 number = "1811"
-label = "Ganancia no exenta ( [1804] - [1806] - [1810] )"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_no_exenta"
 input_kind = "computed"

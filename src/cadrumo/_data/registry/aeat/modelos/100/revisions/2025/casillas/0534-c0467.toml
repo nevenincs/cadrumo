@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0467"
 number = "0467"
-label = "Importes con derecho a reducción ( [0463] + [0464] + [0465] + [0438] + [0426] + [0427] + [0499] + [0466] ) (Límite máximo artículo 52 de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 semantic_role = "irpf_red_prevision_social_importes_derecho_reduccion"
 input_kind = "computed"

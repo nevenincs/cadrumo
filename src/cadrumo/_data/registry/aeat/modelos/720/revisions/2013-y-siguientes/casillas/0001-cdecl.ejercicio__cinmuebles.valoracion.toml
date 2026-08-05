@@ -1,7 +1,6 @@
 [[revisions."2013-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la informacion"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-720"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
-label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_declaracion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-720"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "cuentas.codigo-de-cuenta"
 number = "cuentas.codigo-de-cuenta"
-label = "Codigo de cuenta en entidad financiera situada en el extranjero"
 section = ["detalle", "cuentas", "identificacion"]
 data_type = "text"
 semantic_role = "foreign_account_identifier"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "cuentas.valoracion"
 number = "cuentas.valoracion"
-label = "Valoracion de cuenta en entidad financiera situada en el extranjero"
 section = ["detalle", "cuentas", "valoracion"]
 data_type = "money"
 semantic_role = "foreign_account_valuation"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "valores.identificacion"
 number = "valores.identificacion"
-label = "Identificacion de valores, derechos, seguros o rentas situados en el extranjero"
 section = ["detalle", "valores", "identificacion"]
 data_type = "text"
 semantic_role = "foreign_security_identifier"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "valores.valoracion"
 number = "valores.valoracion"
-label = "Valoracion de valores, derechos, seguros o rentas situados en el extranjero"
 section = ["detalle", "valores", "valoracion"]
 data_type = "money"
 semantic_role = "foreign_security_valuation"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
 [[revisions."2013-y-siguientes".casillas]]
 id = "inmuebles.valoracion"
 number = "inmuebles.valoracion"
-label = "Valoracion de bienes inmuebles o derechos reales situados en el extranjero"
 section = ["detalle", "inmuebles", "valoracion"]
 data_type = "money"
 semantic_role = "foreign_real_estate_valuation"

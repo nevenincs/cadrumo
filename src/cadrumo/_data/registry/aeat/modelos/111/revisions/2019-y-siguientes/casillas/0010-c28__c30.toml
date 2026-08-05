@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "28"
 number = "28"
-label = "Total retenciones e ingresos a cuenta"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
@@ -16,7 +15,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "29"
 number = "29"
-label = "Resultado de anteriores autoliquidaciones"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "resultado_anteriores_autoliquidaciones"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "30"
 number = "30"
-label = "Resultado a ingresar"
 section = ["total_liquidacion"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"

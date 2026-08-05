@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1539"
 number = "1539"
-label = "Rendimiento neto minorado (Fase 2ª: previo [1537] − amortización [1538])"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 input_kind = "computed"
 formula = "renta-2025-eo-agraria-rendimiento-neto-minorado"

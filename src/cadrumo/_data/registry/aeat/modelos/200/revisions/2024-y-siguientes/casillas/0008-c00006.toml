@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00006"
 number = "00006"
-label = "Incentivos entidad de reducida dimensión ( cap XI, tít. VII LIS ) [00006]"
 section = ["incentivos_entidad_de_reducida_dimension_cap_xi_ti"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

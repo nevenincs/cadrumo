@@ -1,5 +1,4 @@
 [revisions.2025-y-siguientes]
-label = "Modelo 202 vigente, ejercicios 2025 y siguientes (DR202e25.xlsx)"
 valid_from = 2025-01-01
 period_selector = { year_from = 2025, periods = ["1P", "2P", "3P"] }
 legal_refs = [

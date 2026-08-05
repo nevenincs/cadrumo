@@ -1,7 +1,5 @@
 [modelo]
 id = "187"
-title = "Acciones y participaciones de IIC - resumen anual"
-official_name = "Modelo 187. Declaración informativa de acciones y participaciones representativas del capital o patrimonio de las instituciones de inversión colectiva y resumen anual de retenciones e ingresos a cuenta del IRPF, IS e IRNR en relación con las rentas o ganancias patrimoniales obtenidas."
 tax_domain = "cross_tax"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

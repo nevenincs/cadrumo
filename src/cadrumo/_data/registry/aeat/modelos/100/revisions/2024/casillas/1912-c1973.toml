@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1973"
 number = "1973"
-label = "Tipo de operación"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "text"
 semantic_role = "irpf_feac_tipo_operacion"

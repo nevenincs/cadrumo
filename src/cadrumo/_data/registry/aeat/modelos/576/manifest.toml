@@ -1,7 +1,5 @@
 [modelo]
 id = "576"
-title = "IEDMT — autoliquidación por matriculación de determinados medios de transporte"
-official_name = "Modelo 576. Impuesto Especial sobre Determinados Medios de Transporte. Autoliquidación."
 tax_domain = "iedmt"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

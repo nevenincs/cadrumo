@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "03"
 number = "03"
-label = "Base retenciones e ingresos a cuenta"
 section = ["resumen"]
 data_type = "money"
 semantic_role = "capital_mobiliario_resumen_base"
@@ -13,7 +12,6 @@ source_refs = ["boe-modelo-194-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "04"
 number = "04"
-label = "Retenciones e ingresos a cuenta declarados"
 section = ["resumen"]
 data_type = "money"
 semantic_role = "capital_mobiliario_resumen_retenciones"
@@ -25,7 +23,6 @@ source_refs = ["boe-modelo-194-form-layout"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "05"
 number = "05"
-label = "Total retenciones del resumen anual"
 section = ["resumen"]
 data_type = "money"
 semantic_role = "capital_mobiliario_resumen_total"

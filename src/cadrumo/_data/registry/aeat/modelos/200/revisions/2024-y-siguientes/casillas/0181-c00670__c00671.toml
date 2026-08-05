@@ -2,7 +2,6 @@
 id = "00670"
 number = "00670"
 segmento = "DP200015"
-label = "Detalle compensación bases imponibles negativas - TOTAL - Pendiente aplicación a principio del período/generada en el período [00670]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "total"]
 data_type = "money"
 semantic_role = "is_bin_total_pendiente"
@@ -16,7 +15,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 id = "00671"
 number = "00671"
 segmento = "DP200015"
-label = "Detalle compensación bases imponibles negativas - TOTAL - Pendiente de aplicación en períodos futuros [00671]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "total"]
 data_type = "money"
 semantic_role = "is_bin_total_pendiente"

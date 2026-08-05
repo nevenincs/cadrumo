@@ -431,6 +431,29 @@ class CaptureResult:
     reply_text: str = ""
 
 
+def _retryable_attempt_errors() -> tuple[type[BaseException], ...]:
+    """Return the exception types one capture attempt may legitimately fail with.
+
+    An attempt fails RETRYABLY when the launched app was not ready, its UI did
+    not settle, or the model did not tool-call — all transient states of a real
+    running application. Playwright raises its own hierarchy for those and is an
+    optional extra, so its base error is resolved lazily and simply omitted when
+    the package is absent.
+
+    Everything else is a harness defect — a log-parser ``AttributeError``, a
+    changed-manifest ``KeyError``, a missing-profile ``OSError`` — and MUST
+    propagate on the first attempt. Retrying a deterministic bug twice more
+    burns two further app launches and, worse, records it in the evidence as if
+    it were model flakiness, making the two indistinguishable to a later reader.
+    """
+    retryable: tuple[type[BaseException], ...] = (DesktopCaptureError, TimeoutError)
+    try:
+        from playwright.sync_api import Error as PlaywrightError
+    except ImportError:
+        return retryable
+    return (*retryable, PlaywrightError)
+
+
 def capture_with_retries(
     perform: Callable[[int], AttemptLog],
     *,
@@ -445,14 +468,25 @@ def capture_with_retries(
     tool call. The model may not tool-call on the first attempt, so attempts are
     bounded and every one is logged; exhaustion returns a non-ok result carrying
     all diagnostics rather than raising, so the caller bundles them into the
-    fail-closed evidence. A ``perform`` that raises is itself a failed,
-    retryable attempt.
+    fail-closed evidence.
+
+    Only the transient classes in :func:`_retryable_attempt_errors` are retried;
+    a harness defect propagates immediately rather than being logged as a failed
+    attempt, so a deterministic bug can never be diagnosed as model flakiness.
+
+    The default of three attempts is a CHOSEN convention, not a derived
+    threshold: no measurement of the model's first-attempt tool-call rate backs
+    it. It is safe to state plainly because the count never launders a result —
+    exhaustion fails closed, and every attempt is retained in the emitted
+    evidence row, so a run that needed three tries is visibly weaker than one
+    that needed one. Deriving it would need a first-attempt success series.
     """
     result = CaptureResult(ok=False)
+    retryable = _retryable_attempt_errors()
     for index in range(1, attempts + 1):
         try:
             attempt = perform(index)
-        except Exception as exc:  # every attempt failure is retryable and logged
+        except retryable as exc:  # transient app/model state; a harness defect propagates
             result.attempts.append(AttemptLog(attempt=index, ok=False, detail=f"attempt raised: {exc}"))
             continue
         result.attempts.append(attempt)

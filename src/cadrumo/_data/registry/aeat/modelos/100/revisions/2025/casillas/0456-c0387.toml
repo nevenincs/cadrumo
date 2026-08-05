@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0387"
 number = "0387"
-label = "Suma de ganancias patrimoniales derivadas de transmisiones de otros elementos patrimoniales afectos a actividades económicas (suma de las casillas [1654])"
 section = ["resultados", "gp_otros_elementos_res"]
 semantic_role = "irpf_gyp_actividades_economicas_suma_ganancias"
 input_kind = "computed"

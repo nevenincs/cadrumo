@@ -1,5 +1,4 @@
 [revisions."2021-y-siguientes"]
-label = "Modelo 714 ejercicios 2021-2025 (Orden HAC/1023/2021; art. 31 M100 same-year coverage)"
 valid_from = 2021-09-28
 valid_to = 2025-12-31
 period_selector = { year_from = 2021, year_to = 2025, periods = ["0A"] }

@@ -62,7 +62,6 @@ _CASILLA_FRAGMENT = f"""
 [[revisions."{_REVISION_ID}".casillas]]
 id = "0001"
 number = "1"
-label = "Base"
 section = ["liquidacion"]
 legal_refs = ["{_LEGAL_REF}"]
 source_refs = ["aeat-manual"]

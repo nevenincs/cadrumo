@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00346"
 number = "00346"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Por valoración de instrumentos financieros [00346]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00347"
 number = "00347"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Activos financieros a valor razonable con cambios en el patrimonio neto [00347]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00348"
 number = "00348"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Otros ingresos/gastos [00348]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00349"
 number = "00349"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Por coberturas de flujos de efectivo [00349]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00350"
 number = "00350"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Subvenciones, donaciones y legados recibidos [00350]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00351"
 number = "00351"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Por activos no corrientes y pasivos vinculados , mantenidos para la venta [00351]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00352"
 number = "00352"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Diferencias de conversión [00352]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -85,7 +78,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00353"
 number = "00353"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Efecto impositivo [00353]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -97,7 +89,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00354"
 number = "00354"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Total transferencia a la cuenta de pérdidas y ganancias [00354]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"
@@ -109,7 +100,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00355"
 number = "00355"
-label = "Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - TOTAL DE INGRESOS Y GASTOS RECONOCIDOS [00355]"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_transferencias_perdidas_ganancias_importe"

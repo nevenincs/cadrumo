@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0166"
 number = "0166"
-label = "Tipo de actividad/es realizada/s: clave indicativa"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 data_type = "text"
 semantic_role = "irpf_ed_actividad_tipo_clave"

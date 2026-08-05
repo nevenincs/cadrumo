@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0356"
 number = "0356"
-label = "Número de orden del elemento"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 data_type = "integer"
 semantic_role = "irpf_gp_elemento_numero_orden"

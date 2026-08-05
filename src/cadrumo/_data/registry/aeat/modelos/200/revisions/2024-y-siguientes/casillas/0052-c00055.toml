@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00055"
 number = "00055"
-label = "Tributación conjunta Estado y Adm.Forales - Convenio económico - Volumen operaciones en Navarra [00055]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "convenio_economico"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_proporcion"

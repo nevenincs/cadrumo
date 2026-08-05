@@ -1,7 +1,5 @@
 [modelo]
 id = "179"
-title = "Cesión de uso de viviendas con fines turísticos (informativa anual)"
-official_name = "Modelo 179. Declaración informativa anual de la cesión de uso de viviendas con fines turísticos."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

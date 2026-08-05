@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0550"
 number = "0550"
-label = "Por inversiones o gastos de interés cultural (importes de estas casillas del anexo A.2): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_interes_cultural_estatal"
 input_kind = "computed"

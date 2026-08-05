@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0035"
 number = "0035"
-label = "Rendimientos procedentes de seguros de vida, depósitos y contratos financieros que instrumenten Planes de Ahorro a largo plazo"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_palp"

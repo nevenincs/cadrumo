@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0332"
 number = "0332"
-label = "Ganancias patrimoniales"
 section = ["toma_datos_ampliada", "gp_acciones", "entidad_accion"]
 semantic_role = "irpf_ganancia_acciones_ganancia"
 continuidad_id = "irpf-ganancia-acciones-ganancia"

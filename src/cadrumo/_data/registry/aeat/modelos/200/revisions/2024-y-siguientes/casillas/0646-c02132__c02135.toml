@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02132"
 number = "02132"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2021 - Deducción pendiente/generada [02132]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2021"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02133"
 number = "02133"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2021 - Aplicado en esta liquidación [02133]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2021"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02134"
 number = "02134"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2021 - Importe abonado por insuficiencia de cuota [02134]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2021"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02135"
 number = "02135"
-label = "Deducciones por producciones cinematográficas extranjeras (art. 36.2 LIS) - 2021 - Pendiente de aplicación en períodos futuros [02135]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2021"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02516"
 number = "02516"
-label = "Operaciones a plazos (art. 11.4 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02516]"
 section = ["operaciones_a_plazos_art_11_4_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_permanente_disminucion"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02517"
 number = "02517"
-label = "Operaciones a plazos (art. 11.4 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02517]"
 section = ["operaciones_a_plazos_art_11_4_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_temporaria_ejercicio_disminucion"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02518"
 number = "02518"
-label = "Operaciones a plazos (art. 11.4 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02518]"
 section = ["operaciones_a_plazos_art_11_4_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_temporaria_anteriores_disminucion"
@@ -43,7 +40,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02519"
 number = "02519"
-label = "Operaciones a plazos (art. 11.4 LIS) - Disminución - Saldo pendiente a principio de ejercicio [02519]"
 section = ["operaciones_a_plazos_art_11_4_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_saldo_inicial_neto"
@@ -55,7 +51,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02520"
 number = "02520"
-label = "Operaciones a plazos (art. 11.4 LIS) - Disminución - Saldo pendiente a fin de ejercicio [02520]"
 section = ["operaciones_a_plazos_art_11_4_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_a_plazos_art11_4_saldo_final"

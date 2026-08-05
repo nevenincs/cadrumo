@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1797"
 number = "1797"
-label = "Ciudad/City"
 section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
 data_type = "text"
 semantic_role = "irpf_compensacion_conyuges_entidad_ciudad"

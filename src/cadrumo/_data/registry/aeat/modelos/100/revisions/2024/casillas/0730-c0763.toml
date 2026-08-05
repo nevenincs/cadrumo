@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0763"
 number = "0763"
-label = "Por donaciones de bienes culturales y contribuciones a favor de la conservación, reparación y restauración de bienes pertenecientes al patrimonio cultural de Castilla-La Mancha, y para fines cultur..."
 section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
 semantic_role = "irpf_deduccion_castilla_la_mancha_donaciones_bienes_culturales"
 continuidad_id = "irpf-deduccion-castilla-la-mancha-donaciones-bienes-culturales"

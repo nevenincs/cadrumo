@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "25"
 number = "25"
-label = "Cesion de derechos de imagen numero de perceptores"
 section = ["cesion_derechos_imagen"]
 data_type = "integer"
 semantic_role = "perceptor_count"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "26"
 number = "26"
-label = "Cesion de derechos de imagen contraprestaciones satisfechas"
 section = ["cesion_derechos_imagen"]
 data_type = "money"
 semantic_role = "importe_percepciones_dinerario"
@@ -27,7 +25,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "27"
 number = "27"
-label = "Cesion de derechos de imagen importe de ingresos a cuenta"
 section = ["cesion_derechos_imagen"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

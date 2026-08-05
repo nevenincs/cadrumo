@@ -57,8 +57,8 @@ from ._sweep import SweepResult
 from ._unified_record import SearchRecord, to_search_record
 
 __all__ = [
-    "CasillaCoverageKind",
     "CasillaCoverageCensus",
+    "CasillaCoverageKind",
     "CasillaSurfaceCoverage",
     "CoverageKind",
     "CoverageReport",

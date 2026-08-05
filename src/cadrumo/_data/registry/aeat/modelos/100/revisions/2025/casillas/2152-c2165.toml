@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2165"
 number = "2165"
-label = "Importe generado en 2025 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_infraestructuras_pendiente"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

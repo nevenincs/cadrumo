@@ -1,7 +1,5 @@
 [modelo]
 id = "145"
-title = "IRPF. Retenciones sobre rendimientos del trabajo. Comunicacion de datos al pagador"
-official_name = "Modelo 145. Impuesto sobre la Renta de las Personas Fisicas. Comunicacion de datos del perceptor de rentas del trabajo a su pagador (articulo 88 del Reglamento del IRPF)."
 tax_domain = "irpf"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

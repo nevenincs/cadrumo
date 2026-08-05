@@ -1,7 +1,5 @@
 [modelo]
 id = "188"
-title = "Retenciones capitalización y seguros de vida - resumen anual"
-official_name = "Modelo 188. Retenciones e ingresos a cuenta. Rentas del capital mobiliario de operaciones de capitalización y contratos de seguro de vida o invalidez. Resumen anual."
 tax_domain = "cross_tax"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

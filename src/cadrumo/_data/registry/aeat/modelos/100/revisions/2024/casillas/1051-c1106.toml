@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1106"
 number = "1106"
-label = "Por adquisición de material escolar"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_material_escolar"
 continuidad_id = "irpf-deduccion-c-valenciana-material-escolar"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0005"
 number = "0005"
-label = "Rendimientos del trabajo en especie. Ingresos a cuenta"
 section = ["rendimientos_trabajo"]
 semantic_role = "irpf_rendimiento_trabajo_especie_ingreso_cuenta"
 legal_refs = ["ley-35-2006:art-17"]

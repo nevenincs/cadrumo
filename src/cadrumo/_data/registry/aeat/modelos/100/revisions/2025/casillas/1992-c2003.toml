@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2003"
 number = "2003"
-label = "Por inversión en sociedades cooperativas agrarias y de vivienda (importe de la casilla [2172] del Anexo B.14"
 section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
 semantic_role = "irpf_deduccion_catalunya_cooperativas_agrarias"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

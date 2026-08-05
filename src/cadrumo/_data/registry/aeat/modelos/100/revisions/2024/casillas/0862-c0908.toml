@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0908"
 number = "0908"
-label = "Para cursar estudios de educación superior fuera de la isla de residencia habitual"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 semantic_role = "irpf_deduccion_baleares_estudios_superiores"
 continuidad_id = "irpf-deduccion-baleares-estudios-superiores"

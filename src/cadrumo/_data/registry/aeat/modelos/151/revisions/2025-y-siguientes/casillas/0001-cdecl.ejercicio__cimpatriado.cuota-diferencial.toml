@@ -14,7 +14,6 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la declaracion"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -27,7 +26,6 @@ source_refs = ["aeat-modelo-151-procedure"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo (anual, 0A)"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
@@ -40,7 +38,6 @@ source_refs = ["aeat-modelo-151-procedure"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.base-liquidable-general"
 number = "impatriado.base-liquidable-general"
-label = "Base liquidable general (régimen impatriados, excluida la parte del ahorro art. 25.1.f TRLIRNR)"
 section = ["liquidacion", "base"]
 data_type = "money"
 semantic_role = "impatriado_base_liquidable_general"
@@ -54,7 +51,6 @@ source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.base-liquidable-ahorro"
 number = "impatriado.base-liquidable-ahorro"
-label = "Base liquidable del ahorro (parte de la base liquidable de las rentas art. 25.1.f TRLIRNR: dividendos, intereses y ganancias patrimoniales del ahorro de fuente española)"
 section = ["liquidacion", "base"]
 data_type = "money"
 semantic_role = "impatriado_base_liquidable_ahorro"
@@ -66,7 +62,6 @@ source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.cuota-integra-general"
 number = "impatriado.cuota-integra-general"
-label = "Cuota integra general (escala art. 93.2.e.1º: 24% hasta 600.000 €, 47% sobre el exceso)"
 section = ["liquidacion", "cuota"]
 data_type = "money"
 semantic_role = "impatriado_cuota_integra_general"
@@ -80,7 +75,6 @@ source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.cuota-integra-ahorro"
 number = "impatriado.cuota-integra-ahorro"
-label = "Cuota integra del ahorro (escala art. 93.2.e.2º: 19/21/23/27/30 sobre la base liquidable del ahorro, redacción vigente Ley 7/2024)"
 section = ["liquidacion", "cuota"]
 data_type = "money"
 semantic_role = "impatriado_cuota_integra_ahorro"
@@ -93,7 +87,6 @@ source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.retenciones"
 number = "impatriado.retenciones"
-label = "Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)"
 section = ["liquidacion", "pagos_a_cuenta"]
 data_type = "money"
 semantic_role = "impatriado_retenciones"
@@ -106,7 +99,6 @@ source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.cuota-diferencial"
 number = "impatriado.cuota-diferencial"
-label = "Cuota diferencial (cuota integra general mas cuota integra del ahorro, menos retenciones)"
 section = ["liquidacion", "resultado"]
 data_type = "money"
 semantic_role = "impatriado_cuota_diferencial"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00083"
 number = "00083"
-label = "Tipo gravamen reducido para empresa emergente [00083]"
 section = ["tipo_gravamen_reducido_para_empresa_emergente"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0587"
 number = "0587"
-label = "Cuota liquida incrementada total"
 section = ["resultado_declaracion"]
 semantic_role = "irpf_cuota_liquida_total"
 input_kind = "computed"

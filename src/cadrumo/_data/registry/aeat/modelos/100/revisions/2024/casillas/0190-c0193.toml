@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0193"
 number = "0193"
-label = "Reparaciones y conservación"
 section = ["toma_datos_ampliada", "reg_estima_directa", "actividad_est_directa"]
 semantic_role = "irpf_ed_reparaciones_conservacion"
 input_kind = "bound"

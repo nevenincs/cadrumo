@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1171"
 number = "1171"
-label = "Por cantidades procedentes de ayudas públicas concedidas por la Generalitat en virtud de la Orden 5/2020, de 8 de junio, para la adquisición o electrificación de bicicletas urbanas y vehículos eléc..."
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_ayudas_publicas_generalitat_2020"
 semantic_role_cardinality = "intentional_singleton"

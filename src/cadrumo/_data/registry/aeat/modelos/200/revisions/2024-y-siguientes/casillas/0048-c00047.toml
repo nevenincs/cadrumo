@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00047"
 number = "00047"
-label = "Entidades sometidas a normativa foral [00047]"
 section = ["entidades_sometidas_a_normativa_foral"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

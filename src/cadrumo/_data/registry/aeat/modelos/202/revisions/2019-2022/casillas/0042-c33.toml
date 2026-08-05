@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "33"
 number = "33"
-label = "Mod. 40.3 LIS — Minimo a ingresar (CN >= 10 millones euros)"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_minimo_a_ingresar"

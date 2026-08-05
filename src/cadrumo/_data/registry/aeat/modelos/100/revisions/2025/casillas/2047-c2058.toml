@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2058"
 number = "2058"
-label = "Importe generado en 2025"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_fijacion_poblacion_rural_generado"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

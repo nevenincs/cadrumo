@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02335"
 number = "02335"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2018 - Deducción pendiente/generada [02335]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02336"
 number = "02336"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2018 - Aplicado en esta liquidación [02336]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02337"
 number = "02337"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2018 - Pendiente de aplicación en periodos futuros [02337]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02338"
 number = "02338"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2019 - Deducción pendiente/generada [02338]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_generado"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02339"
 number = "02339"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2019 - Aplicado en esta liquidación [02339]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02340"
 number = "02340"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2019 - Pendiente de aplicación en periodos futuros [02340]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
@@ -73,7 +67,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02341"
 number = "02341"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2020 - Deducción pendiente/generada [02341]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_generado"
@@ -85,7 +78,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02342"
 number = "02342"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2020 - Aplicado en esta liquidación [02342]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
@@ -97,7 +89,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02343"
 number = "02343"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2020 - Pendiente de aplicación en periodos futuros [02343]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"
@@ -109,7 +100,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02344"
 number = "02344"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2021 - Deducción pendiente/generada [02344]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_generado"
@@ -121,7 +111,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02345"
 number = "02345"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2021 - Aplicado en esta liquidación [02345]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_aplicado"
@@ -133,7 +122,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02346"
 number = "02346"
-label = "Deducciones inversión Canarias - Activos fijos en La Palma, La Gomera y el Hierro 2021 - Pendiente de aplicación en periodos futuros [02346]"
 section = ["deducciones_inversion_canarias", "activos_fijos_en_la_palma_la_gomera_y_el_hierro_20"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_islas_menores_pendiente"

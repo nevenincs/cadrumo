@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02896"
 number = "02896"
-label = "Revalorizaciones contables (art. 17.1 LIS) - Disminución - Correcciones del ejercicio - Permanentes [02896]"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_revalorizaciones_contables_art17_1_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02897"
 number = "02897"
-label = "Revalorizaciones contables (art. 17.1 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [02897]"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_revalorizaciones_contables_art17_1_temporaria_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02898"
 number = "02898"
-label = "Revalorizaciones contables (art. 17.1 LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02898]"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_revalorizaciones_contables_art17_1_temporaria_anteriores_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02899"
 number = "02899"
-label = "Revalorizaciones contables (art. 17.1 LIS) - Disminución - Saldo pendiente a principio de ejercicio [02899]"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_revalorizaciones_contables_art17_1_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02900"
 number = "02900"
-label = "Revalorizaciones contables (art. 17.1 LIS) - Disminución - Saldo pendiente a fin de ejercicio [02900]"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_revalorizaciones_contables_art17_1_saldo_final"

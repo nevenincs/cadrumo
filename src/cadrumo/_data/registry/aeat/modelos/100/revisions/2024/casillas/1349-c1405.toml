@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1405"
 number = "1405"
-label = "Resto de gastos"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "money"
 semantic_role = "irpf_inmueble_gasto_reparacion_importe"

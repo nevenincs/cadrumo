@@ -1,7 +1,5 @@
 [modelo]
 id = "156"
-title = "Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad (informativa anual)"
-official_name = "Modelo 156. Impuesto sobre la Renta de las Personas Físicas. Cotizaciones de afiliados y mutualistas a efectos de la deducción por maternidad. Declaración informativa anual."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

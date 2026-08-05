@@ -1,5 +1,4 @@
 [revisions.2023-2024]
-label = "Modelo 202 ejercicios 2023 a 2024 (DR202e23.xlsx)"
 valid_from = 2023-01-01
 valid_to = 2024-12-31
 period_selector = { year_from = 2023, year_to = 2024, periods = ["1P", "2P", "3P"] }

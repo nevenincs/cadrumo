@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01884"
 number = "01884"
-label = "Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminución - Saldo pendiente a principio de ejercicio [01884]"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_vehiculos_saldo_inicial_neto"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01885"
 number = "01885"
-label = "Libertad de amortización de determinados vehículos y de nuevas infraestructuras de recarga (DA 18ª LIS RDL 4/2024) - Disminución - Correcciones del ejercicio - Permanentes [01885]"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_libertad_amortizacion_vehiculos_permanente_disminucion"

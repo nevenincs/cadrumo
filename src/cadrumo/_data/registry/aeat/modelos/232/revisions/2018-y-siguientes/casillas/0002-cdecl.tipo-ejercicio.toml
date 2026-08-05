@@ -1,7 +1,6 @@
 [[revisions."2018-y-siguientes".casillas]]
 id = "decl.tipo-ejercicio"
 number = "2.devengo.tipo"
-label = "Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior a 12 meses)"
 section = ["declarante", "devengo"]
 data_type = "integer"
 semantic_role = "tipo_ejercicio_232"

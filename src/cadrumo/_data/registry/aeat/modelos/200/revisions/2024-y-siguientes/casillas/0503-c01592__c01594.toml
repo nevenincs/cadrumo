@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01592"
 number = "01592"
-label = "Detalle compensación bases imponibles negativas - 2017 - Pendiente aplicación a principio del período/generada en el período [01592]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2017"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01593"
 number = "01593"
-label = "Detalle compensación bases imponibles negativas - 2017 - Aplicado en esta liquidación [01593]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2017"]
 data_type = "money"
 semantic_role = "is_compensacion_bases_negativas"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01594"
 number = "01594"
-label = "Detalle compensación bases imponibles negativas - 2017 - Pendiente aplicación en períodos futuros [01594]"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2017"]
 data_type = "money"
 semantic_role = "is_bin_detalle_compensacion"

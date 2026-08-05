@@ -26,6 +26,7 @@ from ._ids import (
     RevisionId,
     SourceRefId,
 )
+from ._modelo_localization import resolve_modelo_localization
 from ._record_spec import ENCODING_ALIAS_MAP
 from ._schema_base import ContinuidadId, LegalRefs, RegistryModel, SourceRefs
 from ._schema_input_kind import InputKind, InputKindValue
@@ -232,18 +233,7 @@ class CasillaDefinition(RegistryModel):
             "casilla.id, not this metadata pair."
         ),
     )
-    label: str
-    localized_labels: dict[str, str] = Field(
-        default_factory=dict,
-        description=(
-            "Optional localized label overrides mapped by locale code (e.g., 'en', 'ca', 'hu'). "
-            "The primary 'label' field remains the official Spanish invariant."
-        ),
-    )
-    localized_help: dict[str, str] = Field(
-        default_factory=dict,
-        description=("Optional localized help/hint texts mapped by locale code (e.g., 'en', 'ca', 'hu')."),
-    )
+    localization_keys: tuple[str, ...] = Field(min_length=1, exclude=True, repr=False)
     section: tuple[str, ...]
     data_type: Literal[
         "decimal",
@@ -311,16 +301,27 @@ class CasillaDefinition(RegistryModel):
     source_refs: SourceRefs
 
     def get_label(self, locale: str) -> str:
-        """Return the localized label for `locale`, falling back to the Spanish invariant `label`."""
-        return self.localized_labels.get(locale, self.label)
+        """Resolve one label scalar through the canonical shared catalogues."""
+        resolved = resolve_modelo_localization(self.localization_keys, locale=locale, required=True)
+        assert resolved is not None
+        return resolved
 
     def get_help(self, locale: str) -> str | None:
-        """Return the localized help/hint text for `locale`, or None if not defined."""
-        return self.localized_help.get(locale)
+        """Resolve optional help through the same identity and fallback chain."""
+        help_keys = tuple(f"{key.removesuffix('.label')}.help" for key in self.localization_keys)
+        return resolve_modelo_localization(help_keys, locale=locale, required=False)
+
+    @property
+    def label(self) -> str:
+        """Return the strict official-Spanish regulatory label."""
+        return self.get_label("es")
 
     @model_validator(mode="after")
     def _validate_input_kind(self) -> CasillaDefinition:
-        _require_official_text(self.label, f"casilla {self.id!r} label")
+        # Localization is resolved by the registry authority after its shared
+        # catalogue has been selected. Constructing a schema from an arbitrary
+        # test or operator-supplied root must not consult the bundled catalogue;
+        # the structural validator still enforces every non-localized rule here.
         if self.input_kind == InputKind.COMPUTED and self.formula is None:
             raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
         if self.input_kind == InputKind.COMPUTED and self.binding is not None:

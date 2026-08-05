@@ -10,7 +10,6 @@
 [[revisions."2025".casillas]]
 id = "base-liq-neg-general-2024-aplicada-maxima"
 number = "base-liq-neg-general-2024-aplicada-maxima"
-label = "Base liquidable general negativa ej. 2024: compensación máxima aplicable (límite art. 50.3 LIRPF) [interno]"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
 input_kind = "computed"

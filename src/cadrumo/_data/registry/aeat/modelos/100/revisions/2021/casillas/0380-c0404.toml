@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0404"
 number = "0404"
-label = "Valor de mercado de las acciones o participaciones"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 semantic_role = "irpf_g4_re_valor_mercado_acciones"
 continuidad_id = "irpf-g4-re-valor-mercado-acciones"

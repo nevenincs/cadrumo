@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1757"
 number = "1757"
-label = "Ejercicio 2021: Aportaciones personales del período"
 section = ["resultados", "anexo_c_res", "aportaciones_sist_prevision_social_rg_res"]
 semantic_role = "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo"
 semantic_role_cardinality = "intentional_singleton"

@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1378"
 number = "1378"
-label = "Aportaciones y contribuciones de 2020 no aplicadas cuyo importe se solicita poder reducir en los 5 ejercicios siguientes"
 section = ["resultados", "anexo_c_res", "excesos_deportistas_res"]
 semantic_role = "irpf_anexo_c_exceso_deportistas_generado"
 continuidad_id = "irpf-anexo-c-exceso-deportistas-generado"

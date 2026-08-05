@@ -1,7 +1,5 @@
 [modelo]
 id = "341"
-title = "Reintegro de compensaciones del régimen especial de agricultura, ganadería y pesca del IVA"
-official_name = "Modelo 341. Solicitud de reintegro de compensaciones en el régimen especial de la agricultura, ganadería y pesca."
 tax_domain = "iva"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

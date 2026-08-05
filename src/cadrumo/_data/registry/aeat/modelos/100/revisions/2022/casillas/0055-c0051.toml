@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0051"
 number = "0051"
-label = "Otros rendimientos del capital mobiliario a integrar en la base imponible general"
 section = ["toma_datos_ampliada", "rdto_capital_mobiliario", "rdto_capital_mobiliario_general"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_general_otros"

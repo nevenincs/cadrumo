@@ -1,7 +1,5 @@
 [modelo]
 id = "181"
-title = "Préstamos, créditos y operaciones financieras sobre inmuebles (informativa anual)"
-official_name = "Modelo 181. Declaración informativa de préstamos y créditos, y operaciones financieras relacionadas con bienes inmuebles."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

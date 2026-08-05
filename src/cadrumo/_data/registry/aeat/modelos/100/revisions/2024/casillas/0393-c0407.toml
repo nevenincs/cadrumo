@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0407"
 number = "0407"
-label = "Valor de adquisición de las acciones o participaciones"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 semantic_role = "irpf_g4_re_valor_adquisicion_acciones"
 continuidad_id = "irpf-g4-re-valor-adquisicion-acciones"

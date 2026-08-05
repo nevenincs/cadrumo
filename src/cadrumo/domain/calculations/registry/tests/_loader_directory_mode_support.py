@@ -8,7 +8,7 @@ from functools import cache
 from pathlib import Path
 
 from .....core.resources import bundled_path
-from .. import CasillaId, ModeloDefinition, ModeloSource, validated_casilla_id
+from .. import ModeloDefinition, ModeloSource
 from .._loader import (
     _REVISION_SECTION_FIELDS,
     discover_modelo_sources,
@@ -20,25 +20,9 @@ _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+
 _REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
 _MAX_SINGLE_FILE_MODELO_LINES = 2_000
 _MAX_TOML_FRAGMENT_LINES = 1_750
-# Locale catalogues (``<modelo>/revisions/<rev>/locales/<lang>.toml``) are a
-# single CLI-managed aggregate translation surface per language (labels + help),
-# not a hand-splittable calculation fragment: the M100 2025 catalogues reach
-# ~2242 lines because M100 carries the largest casilla set in the registry
-# (~6000 casillas). They are authored only through ``python -m cadrumo.locales``
-# (never hand-split), so they get their own documented cap while structural
-# fragments stay under the tighter ``_MAX_TOML_FRAGMENT_LINES`` gate.
-_MAX_LOCALE_TOML_FRAGMENT_LINES = 2_500
 _MAX_TOML_ROW_CHARS = 600
 _TOML_CASILLA_ID_KEY = "casilla_id"
-_COMPLETENESS_CASILLA_0001: CasillaId = validated_casilla_id(
-    "0001",
-    surface="_COMPLETENESS_CASILLA_0001",
-)
-_COMPLETENESS_CASILLA_0002: CasillaId = validated_casilla_id(
-    "0002",
-    surface="_COMPLETENESS_CASILLA_0002",
-)
-_MINIMAL_MANIFEST_TEXT = '[modelo]\nid = "999"\ntitle = "x"\n'
+_MINIMAL_MANIFEST_TEXT = '[modelo]\nid = "999"\n'
 _MINIMAL_REVISION_TEXT = '[revisions."2025"]\nvalid_from = 2025-01-01\n'
 
 
@@ -79,15 +63,10 @@ def _committed_modelo_toml_paths() -> tuple[Path, ...]:
 
 
 @cache
-def _committed_non_locale_modelo_toml_paths() -> tuple[Path, ...]:
-    return tuple(path for path in _committed_modelo_toml_paths() if not any(part == "locales" for part in path.parts))
-
-
-@cache
-def _committed_non_locale_toml_paths_by_modelo_id() -> dict[str, tuple[Path, ...]]:
+def _committed_toml_paths_by_modelo_id() -> dict[str, tuple[Path, ...]]:
     paths_by_modelo_id: dict[str, list[Path]] = {}
     modelos_dir = _committed_modelos_dir()
-    for path in _committed_non_locale_modelo_toml_paths():
+    for path in _committed_modelo_toml_paths():
         relative = path.relative_to(modelos_dir)
         if len(relative.parts) < 3 or relative.parts[1] != "revisions":
             continue
@@ -96,10 +75,10 @@ def _committed_non_locale_toml_paths_by_modelo_id() -> dict[str, tuple[Path, ...
 
 
 @cache
-def _committed_non_locale_toml_paths_by_fragment_revision() -> dict[tuple[str, str], tuple[Path, ...]]:
+def _committed_toml_paths_by_fragment_revision() -> dict[tuple[str, str], tuple[Path, ...]]:
     paths_by_revision: dict[tuple[str, str], list[Path]] = {}
     modelos_dir = _committed_modelos_dir()
-    for path in _committed_non_locale_modelo_toml_paths():
+    for path in _committed_modelo_toml_paths():
         relative = path.relative_to(modelos_dir)
         if len(relative.parts) < 4 or relative.parts[1] != "revisions" or relative.parts[2].endswith(".toml"):
             continue
@@ -107,12 +86,10 @@ def _committed_non_locale_toml_paths_by_fragment_revision() -> dict[tuple[str, s
     return {revision_key: tuple(sorted(paths)) for revision_key, paths in paths_by_revision.items()}
 
 
-def _standard_manifest_text(title: str) -> str:
-    return f"""
+def _standard_manifest_text(_description: str) -> str:
+    return """
 [modelo]
 id = "999"
-title = "{title}"
-official_name = "{title}"
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
@@ -121,13 +98,13 @@ source_refs = ["aeat-manual"]
 """.lstrip()
 
 
-def _standard_revision_preamble_text() -> str:
-    return """
+def _standard_revision_preamble_text(source_ref: str = "aeat-manual") -> str:
+    return f"""
 [revisions."2025"]
 valid_from = 2025-01-01
-period_selector = { years = [2025], periods = ["0A"] }
+period_selector = {{ years = [2025], periods = ["0A"] }}
 legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
+source_refs = ["{source_ref}"]
 """.lstrip()
 
 
@@ -235,57 +212,6 @@ def _minimal_fragment_revision_layout(
     (revision_dir / "revision.toml").write_text(revision_text, encoding="utf-8", newline="\n")
     for relative_dir in fragment_dirs:
         (revision_dir / relative_dir).mkdir(parents=True)
-    return revision_dir
-
-
-def _write_locale_fragment(locales_dir: Path, language: str, filename: str, text: str) -> None:
-    language_dir = locales_dir / language
-    language_dir.mkdir(parents=True, exist_ok=True)
-    (language_dir / filename).write_text(text, encoding="utf-8", newline="\n")
-
-
-def _write_minimal_localized_modelo(target_dir: Path, casilla_ids: tuple[str, ...]) -> Path:
-    revision_dir = target_dir / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    (target_dir / "manifest.toml").write_text(
-        """
-[modelo]
-id = "999"
-title = "Localized loader test"
-official_name = "Localized loader test"
-tax_domain = "iva"
-cadence = "annual"
-jurisdiction = "ES-AEAT"
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-        newline="\n",
-    )
-    casilla_tables = "\n".join(
-        f"""
-[[revisions."2025".casillas]]
-id = "{casilla_id}"
-number = "{index}"
-label = "Casilla {index}"
-section = ["liquidacion"]
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-""".lstrip()
-        for index, casilla_id in enumerate(casilla_ids, start=1)
-    )
-    write_fragmented_revision(
-        revision_dir,
-        f"""
-[revisions."2025"]
-valid_from = 2025-01-01
-period_selector = {{ years = [2025], periods = ["0A"] }}
-legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
-
-{casilla_tables}
-""".lstrip(),
-    )
     return revision_dir
 
 

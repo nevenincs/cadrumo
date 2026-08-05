@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0375"
 number = "0375"
-label = "Año de imputación"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 data_type = "year"
 semantic_role = "irpf_ganancia_otros_anio_imputacion_4"

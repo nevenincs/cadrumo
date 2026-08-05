@@ -1,7 +1,5 @@
 [modelo]
 id = "210"
-title = "IRNR autoliquidación no residentes sin establecimiento permanente"
-official_name = "Modelo 210. Impuesto sobre la Renta de no Residentes. No residentes sin establecimiento permanente. Autoliquidación."
 tax_domain = "irnr"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"

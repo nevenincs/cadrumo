@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00181"
 number = "00181"
-label = "Deducc. para incentivar determ.actividades - 2008 Suma deducciones - Aplicado en esta liquidación [00181]"
 section = ["deducc_para_incentivar_determ_actividades", "2008_suma_deducciones"]
 data_type = "money"
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00182"
 number = "00182"
-label = "Deducc. para incentivar determ.actividades - 2008 Suma deducciones - Pendiente de aplicación en periodos futuros [00182]"
 section = ["deducc_para_incentivar_determ_actividades", "2008_suma_deducciones"]
 data_type = "money"
 semantic_role = "is_deduccion_idi_suma_pendiente"

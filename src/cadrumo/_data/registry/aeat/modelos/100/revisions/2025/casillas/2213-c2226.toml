@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2226"
 number = "2226"
-label = "Denominación de los valores transmitidos"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 data_type = "text"
 semantic_role = "irpf_ganancia_fondos_coti_denominacion"

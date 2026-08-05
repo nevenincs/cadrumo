@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0977"
 number = "0977"
-label = "Fecha de visado del proyecto de ejecución:"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_castilla_y_leon_fecha_visado"

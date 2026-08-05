@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0068"
 number = "0068"
-label = "Rústica"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_naturaleza_rustica"

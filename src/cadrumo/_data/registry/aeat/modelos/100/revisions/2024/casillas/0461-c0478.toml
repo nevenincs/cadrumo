@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0478"
 number = "0478"
-label = "Número de identificación fiscal (NIF) de la persona con discapacidad titular del patrimonio protegido"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_patrimonio_protegido_discapacidad"]
 data_type = "nif"
 semantic_role = "irpf_discapacitado_nif"

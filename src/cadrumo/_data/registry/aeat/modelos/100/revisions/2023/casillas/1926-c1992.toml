@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1992"
 number = "1992"
-label = "Deducción por nacimiento: Importe pendiente a solicitar por el contribuyente"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_i_baleares"]
 semantic_role = "irpf_baleares_deduccion_nacimiento_importe_pendiente"
 continuidad_id = "irpf-baleares-deduccion-nacimiento-importe-pendiente"

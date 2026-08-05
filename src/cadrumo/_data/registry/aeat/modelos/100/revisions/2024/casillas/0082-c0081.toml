@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0081"
 number = "0081"
-label = "Contribuyente que realiza la actividad económica: Bien inmueble afecto a actividades económicas"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_contribuyente_actividad_economica"

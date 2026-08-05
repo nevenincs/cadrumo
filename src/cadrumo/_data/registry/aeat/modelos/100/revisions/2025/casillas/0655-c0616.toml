@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0616"
 number = "0616"
-label = "Fecha de inicio de la discapacidad"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
 data_type = "text"
 semantic_role = "irpf_descendiente_discapacidad_fecha_inicio"

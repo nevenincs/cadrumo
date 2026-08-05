@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0296"
 number = "0296"
-label = "Importe computable ( [0293] + [0294] - [0295] )"
 section = ["toma_datos_ampliada", "gp_premios", "juegos_pub"]
 semantic_role = "irpf_ganancia_premios_juegos_pub_importe_computable"
 input_kind = "computed"

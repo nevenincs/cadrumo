@@ -82,7 +82,7 @@ from ...core import STRICT_FROZEN_CONFIG, Period, permitted_amendment_kind_value
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ...core.i18n import output_language, tr
+from ...core.i18n import tr
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.modelos import CalculationRevisionAmendmentKind
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
@@ -438,10 +438,8 @@ def _selection_definition(
 ) -> FlowDefinition:
     """Project the amendable casillas into a one-page CHECKBOX selection flow."""
     table = _ACTIVE_RUNS[run_token]
-    lang = output_language()
     summary_lines = "\n".join(
-        f"  {row.number}\t{row.localized_labels.get(lang, row.label)}\t"
-        f"{baseline_revision.casilla_values.get(row.casilla_id, Decimal('0'))}"
+        f"  {row.number}\t{row.label}\t{baseline_revision.casilla_values.get(row.casilla_id, Decimal('0'))}"
         for row in amendable
     )
     prompt_ref = _copy_ref(run_token, "sel:prompt")
@@ -460,7 +458,7 @@ def _selection_definition(
     for row in amendable:
         previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
         label_ref = _copy_ref(run_token, f"sel:choice:{row.casilla_id}")
-        table[label_ref] = f"{row.number} ({row.localized_labels.get(lang, row.label)}): {previous}"
+        table[label_ref] = f"{row.number} ({row.label}): {previous}"
         choices.append(
             FlowChoice(value=row.casilla_id, label=CopyRef(kind=CopyRefKind.SCHEMA_FIELD, ref=label_ref)),
         )
@@ -598,7 +596,6 @@ def _values_kind_reason_definition(
     too if this SELECT is ever bypassed.
     """
     table = _ACTIVE_RUNS[run_token]
-    lang = output_language()
     pages: list[FlowPage] = []
     for row in selected:
         previous = baseline_revision.casilla_values.get(row.casilla_id, Decimal("0"))
@@ -606,12 +603,12 @@ def _values_kind_reason_definition(
         table[prompt_ref] = tr(
             "cli.app.modelo.work.amend_wizard_value_prompt",
             number=row.number,
-            label=row.localized_labels.get(lang, row.label),
+            label=row.label,
             previous_value=str(previous),
             default="Corrected value for casilla {number} ({label}), currently {previous_value}",
         )
         help_ref: str | None = None
-        help_text = row.localized_help.get(lang)
+        help_text = row.help_text
         if help_text:
             help_ref = _copy_ref(run_token, f"val:{row.casilla_id}:help")
             table[help_ref] = help_text
@@ -719,7 +716,7 @@ def _emit_amend_wizard_result(
         AmendWizardCorrectedCasillaPayload(
             casilla_id=row.casilla_id,
             number=row.number,
-            label=row.localized_labels.get(output_language(), row.label),
+            label=row.label,
             previous_value=str(previous_value),
             corrected_value=str(corrected_value),
             legal_refs=tuple(row.legal_refs),

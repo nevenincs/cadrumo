@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0012"
 number = "0012"
-label = "Total ingresos integros computables del trabajo"
 section = ["rendimientos_trabajo"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_trabajo_total_ingresos_integros"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0036"
 number = "0036"
-label = "Total ingresos integros del capital mobiliario en base del ahorro"
 section = ["rendimientos_capital_mobiliario", "base_ahorro"]
 data_type = "decimal"
 semantic_role = "irpf_rendimiento_capital_mobiliario_ahorro_total_ingresos_integros"

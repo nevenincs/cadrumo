@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0180"
 number = "0180"
-label = "Total ingresos computables"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_total_ingresos_computables"
 input_kind = "computed"

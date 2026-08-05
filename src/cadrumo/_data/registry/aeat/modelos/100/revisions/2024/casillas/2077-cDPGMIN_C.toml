@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DPGMIN_C"
 number = "*22"
-label = "Conyuge grado de discapacidad"
 section = ["datos_identificativos", "conyuge"]
 data_type = "text"
 semantic_role = "spouse_disability_grade"

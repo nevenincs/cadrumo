@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02240"
 number = "02240"
-label = "Ajustes por deterioro de valores repr. de partic. en el capital o fondos propios (DT 16ª.3 LIS) - Aumento - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [02240]"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_deterioro_participaciones_dt16_temporaria_anteriores_aumento"

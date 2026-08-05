@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0411"
 number = "0411"
-label = "Ganancias patrimoniales reducidas ( [0408] - [0410] )"
 section = ["toma_datos_ampliada", "g_cambio_residencia_ext", "g4_re"]
 semantic_role = "irpf_g4_re_ganancia_reducida"
 input_kind = "computed"

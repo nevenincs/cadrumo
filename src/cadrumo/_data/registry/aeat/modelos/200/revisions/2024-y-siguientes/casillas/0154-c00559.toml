@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00559"
 number = "00559"
-label = "Liquidación III - Base imponible - Sólo entidades ZEC - Base imponible a tipo de gravamen especial - Disminuciones [00559]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_base_imponible_zec_importe"

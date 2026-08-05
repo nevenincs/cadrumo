@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0191"
 number = "0191"
-label = "Gastos de manutencion del contribuyente"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_gastos_manutencion_contribuyente"
 input_kind = "bound"

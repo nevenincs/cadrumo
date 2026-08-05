@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0520"
 number = "0520"
-label = "Importe total incrementado o disminuido del mínimo personal y familiar a efectos del cálculo del gravamen autonómico"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_personal_familiar_autonomico"
 input_kind = "computed"

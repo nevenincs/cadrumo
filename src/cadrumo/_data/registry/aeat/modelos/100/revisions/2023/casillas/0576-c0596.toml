@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0596"
 number = "0596"
-label = "Por rendimientos del trabajo"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
 semantic_role = "irpf_retencion_trabajo"
 input_kind = "bound"

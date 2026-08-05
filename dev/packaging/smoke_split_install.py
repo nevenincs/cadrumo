@@ -7,20 +7,22 @@ while two exact-version mandatory dependencies carry them:
 and ``corpus/normatives``. Both contribute to the same ``cadrumo_data`` implicit
 namespace package.
 
-This lane builds all three wheels from one pristine source snapshot, installs
-them together into a fresh stdlib venv, proves their versions and root metadata
-form one exact cohort, and runs full byte-exact registry verification. There is
-no supported command-bearing installation without both data distributions.
+This lane consumes the prebuilt immutable cohort, installs all three wheels
+together into a fresh stdlib venv, proves their versions and root metadata form
+one exact cohort, and runs full byte-exact registry verification. There is no
+supported command-bearing installation without both data distributions.
+
+The root wheel's corpus-binary shedding and each companion's sub-cap size are
+enforced where the wheels are BUILT (``python_cohort``), not here; the builders
+in this module serve the tests that construct a cohort from source.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 import zipfile
 from pathlib import Path
-from typing import Final
 
 from ._smoke_common import (
     clean_product_env,
@@ -32,11 +34,9 @@ from ._smoke_common import (
     venv_python_path,
     write_smoke_manifest,
 )
-from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import assert_installed_cohort, load_python_cohort
 
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
-_UTF_8: Final[str] = "utf-8"
 
 _COHORT_PROBE = """
 from importlib.metadata import requires, version
@@ -208,17 +208,6 @@ def main(argv: list[str] | None = None) -> int:
         env=_runtime_env(work_dir, "cohort-import-state"),
     )
     _assert_registry_verify_runs_clean(work_dir, venv_path)
-    tax_evidence = run_installed_tax_oracle(
-        _venv_cadrumo(venv_path),
-        storage_root=work_dir / "tax-oracle-state",
-        work_dir=work_dir / "outside-checkout",
-    )
-    tax_evidence_path = work_dir / "installed-tax-oracle.json"
-    tax_evidence_path.write_text(
-        json.dumps(tax_evidence.to_jsonable(), indent=2, sort_keys=True) + "\n",
-        encoding=_UTF_8,
-        newline="\n",
-    )
 
     manifest = write_smoke_manifest(
         work_dir,
@@ -227,13 +216,17 @@ def main(argv: list[str] | None = None) -> int:
             "wheel": relative_manifest_path(work_dir, wheel),
             "data_wheel_manuals": relative_manifest_path(work_dir, data_wheels[0]),
             "data_wheel_official": relative_manifest_path(work_dir, data_wheels[1]),
-            "installed_tax_oracle": relative_manifest_path(work_dir, tax_evidence_path),
             "venv": relative_manifest_path(work_dir, venv_path),
         },
+        # Every entry below is performed by THIS main(). The root wheel's
+        # corpus-binary shedding and the companions' sub-cap are real
+        # guarantees, but they are enforced during cohort construction by
+        # `python_cohort._validate_wheel_contract`, not here: this lane
+        # consumes a prebuilt cohort and never enters the build path, so
+        # claiming them would record a proof that did not run. The installed
+        # tax oracle is likewise claimed by the `core` lane that runs it.
         checks=(
             "supplied immutable Python cohort",
-            "root wheel sheds split-owned corpus binaries",
-            "both cadrumo-data-* companion wheels remain sub-cap (< 100 MB each)",
             "stdlib venv creation",
             "all three local wheels install in one pip transaction",
             "pip dependency check",
@@ -242,13 +235,10 @@ def main(argv: list[str] | None = None) -> int:
             "all three installed distributions share one version",
             "joined companion namespace resolves the complete corpus",
             "registry verify runs byte-exact clean",
-            "installed grounded Modelo 200 tax-work oracle",
         ),
         details={
             "cohort_version": cohort.version,
             "python": args.python,
-            "target_casilla": tax_evidence.target_casilla,
-            "target_value": tax_evidence.target_value,
         },
     )
 

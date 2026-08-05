@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1667"
 number = "1667"
-label = "Fecha del certificado de eficiencia energética anterior"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"
 semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_anterior"

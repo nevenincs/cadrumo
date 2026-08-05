@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0979"
 number = "0979"
-label = "Para el fomento de emprendimiento (importe de la casilla [1136] del anexo B.11)"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_emprendimiento"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

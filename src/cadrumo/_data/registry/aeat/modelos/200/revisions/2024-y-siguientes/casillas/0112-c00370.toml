@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00370"
 number = "00370"
-label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Exención sobre dividendos o participaciones en beneficios de entidades residentes (art. 21.1, 21.10 y DT 40ª LIS) - Dismi..."
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
 semantic_role = "is_liquidacion_ii_detalle_correcciones"

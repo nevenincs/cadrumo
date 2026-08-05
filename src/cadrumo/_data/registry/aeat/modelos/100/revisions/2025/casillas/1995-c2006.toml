@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2006"
 number = "2006"
-label = "Para arrendadores de viviendas vacías (información adicional en el anexo B.13)"
 section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
 semantic_role = "irpf_deduccion_extremadura_arrendadores_viviendas_vacias"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

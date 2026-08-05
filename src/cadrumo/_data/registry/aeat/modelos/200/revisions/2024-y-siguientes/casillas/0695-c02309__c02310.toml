@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02309"
 number = "02309"
-label = "Detalle correcciones resultado pérdidas y ganancias - Saldo pendiente de correcciones temporarias a fin de ejercicio - Aumentos futuros [02309]"
 section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "saldo_pendiente_de_correcciones_temporarias_a_fin"]
 data_type = "money"
 semantic_role = "is_correccion_detalle_correcciones_resultado_saldo_final_aumento"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02310"
 number = "02310"
-label = "Detalle correcciones resultado pérdidas y ganancias - Saldo pendiente de correcciones temporarias a fin de ejercicio - Disminuciones futuras [02310]"
 section = ["detalle_correcciones_resultado_perdidas_y_ganancia", "saldo_pendiente_de_correcciones_temporarias_a_fin"]
 data_type = "money"
 semantic_role = "is_correccion_temporarias_saldo_final_disminuciones_futuras"

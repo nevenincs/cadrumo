@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2022"
 number = "2022"
-label = "Importe generado en 2024 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_1"
 semantic_role_cardinality = "intentional_singleton"

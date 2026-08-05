@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03591"
 number = "03591"
-label = "Reserva Capitalización - 2025 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [03591]"
 section = ["reserva_capitalizacion", "2025"]
 data_type = "money"
 semantic_role = "is_reserva_capitalizacion_derecho_generado"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03592"
 number = "03592"
-label = "Reserva Capitalización - 2025 - Reducción B.I. aplicada [03592]"
 section = ["reserva_capitalizacion", "2025"]
 data_type = "money"
 semantic_role = "is_reserva_capitalizacion_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03593"
 number = "03593"
-label = "Reserva Capitalización - 2025 - Reducción B.I. pdte. De aplicar en períodos futuros [03593]"
 section = ["reserva_capitalizacion", "2025"]
 data_type = "money"
 semantic_role = "is_reserva_capitalizacion_pendiente_futuros"

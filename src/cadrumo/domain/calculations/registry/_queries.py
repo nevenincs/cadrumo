@@ -18,6 +18,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core import BindingSourceKind, Modelo, Period, TaxDomain
+from ....core.i18n import output_language
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import boolean_binding_encoded_values
 from ._errors import RegistryValidationError
@@ -602,8 +603,8 @@ def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> Mode
     registry_period = context.registry_period
     return ModeloDescribeReport(
         code=str(definition.id),
-        title=definition.title,
-        official_name=definition.official_name,
+        title=definition.get_title(output_language()),
+        official_name=definition.get_official_name(output_language()),
         tax_domain=definition.tax_domain,
         cadence=definition.cadence,
         jurisdiction=definition.jurisdiction,
@@ -661,7 +662,8 @@ def _build_modelo_casillas_report(
         ModeloCasillaRow(
             casilla_id=casilla.id,
             number=casilla.number,
-            label=casilla.label,
+            label=casilla.get_label(output_language()),
+            help_text=casilla.get_help(output_language()),
             section=tuple(casilla.section),
             data_type=casilla.data_type,
             input_kind=casilla.input_kind,
@@ -671,8 +673,6 @@ def _build_modelo_casillas_report(
             form_number=casilla.form_number,
             legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
             source_refs=tuple(str(ref) for ref in casilla.source_refs),
-            localized_labels=dict(casilla.localized_labels),
-            localized_help=dict(casilla.localized_help),
         )
         for casilla in revision.casillas
         if _casilla_row_included(casilla, input_kind=input_kind, required=required, form_number=form_number)
@@ -802,9 +802,8 @@ def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) 
         period=context.registry_period,
         casilla_id=matched.id,
         number=matched.number,
-        label=matched.label,
-        localized_labels=dict(matched.localized_labels),
-        localized_help=dict(matched.localized_help),
+        label=matched.get_label(output_language()),
+        help_text=matched.get_help(output_language()),
         section=tuple(matched.section),
         data_type=matched.data_type,
         input_kind=matched.input_kind,

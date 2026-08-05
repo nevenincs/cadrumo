@@ -1,7 +1,5 @@
 [modelo]
 id = "390"
-title = "IVA. Declaración-resumen anual"
-official_name = "Modelo 390. Declaración-resumen anual del Impuesto sobre el Valor Añadido."
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0540"
 number = "0540"
-label = "Cuotas correspondientes a la base liquidable del ahorro: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_base_liquidable_ahorro_estatal"
 input_kind = "computed"

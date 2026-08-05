@@ -1,7 +1,5 @@
 [modelo]
 id = "238"
-title = "Operadores de plataformas DAC7 (informativa anual)"
-official_name = "Modelo 238. Declaración informativa para la comunicación de información por parte de operadores de plataformas."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

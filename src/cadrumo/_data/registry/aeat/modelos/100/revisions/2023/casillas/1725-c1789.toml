@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1789"
 number = "1789"
-label = "Código País/Country code"
 section = ["resultados", "regularizacion_res", "rectnosepa"]
 data_type = "nif"
 semantic_role = "irpf_compensacion_conyuges_banco_pais_codigo"

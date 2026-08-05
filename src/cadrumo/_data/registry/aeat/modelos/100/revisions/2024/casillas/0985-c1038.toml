@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1038"
 number = "1038"
-label = "Otras deducciones"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_otras"
 continuidad_id = "irpf.deduccion-autonomica.galicia.otras"

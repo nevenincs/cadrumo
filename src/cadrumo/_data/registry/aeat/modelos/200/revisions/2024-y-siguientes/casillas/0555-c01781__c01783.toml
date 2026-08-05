@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01781"
 number = "01781"
-label = "Deducciones inversión Canarias - Inversiones Canarias 2018 - Deducción pendiente/generada [01781]"
 section = ["deducciones_inversion_canarias", "inversiones_canarias_2018"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01782"
 number = "01782"
-label = "Deducciones inversión Canarias - Inversiones Canarias 2018 - Aplicado en esta liquidación [01782]"
 section = ["deducciones_inversion_canarias", "inversiones_canarias_2018"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01783"
 number = "01783"
-label = "Deducciones inversión Canarias - Inversiones Canarias 2018 - Pendiente de aplicación en periodos futuros [01783]"
 section = ["deducciones_inversion_canarias", "inversiones_canarias_2018"]
 data_type = "money"
 semantic_role = "is_deduccion_inversion_canarias_pendiente"

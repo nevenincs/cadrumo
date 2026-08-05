@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0675"
 number = "0675"
-label = "Importe del IRPF que corresponde a la Comunidad Autónoma de residencia del contribuyente ([0671] - [0672])"
 section = ["resultados", "irpf_ccaa_res"]
 semantic_role = "irpf_cuota_ccaa_residencia"
 input_kind = "computed"

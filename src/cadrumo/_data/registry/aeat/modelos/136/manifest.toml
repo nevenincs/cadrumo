@@ -1,7 +1,5 @@
 [modelo]
 id = "136"
-title = "Gravamen especial sobre los premios de determinadas loterias y apuestas. Autoliquidacion"
-official_name = "Modelo 136. IRPF e IRNR. Gravamen Especial sobre los Premios de determinadas Loterias y Apuestas. Autoliquidacion."
 tax_domain = "cross_tax"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

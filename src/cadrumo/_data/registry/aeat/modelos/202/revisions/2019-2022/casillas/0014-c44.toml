@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "44"
 number = "44"
-label = "Mod. 40.3 LIS — Remanente reserva de capitalizacion no aplicada por insuficiencia de base"
 section = ["liquidacion", "modalidad_40_3_lis", "base_imponible"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_remanente_reserva_capitalizacion"

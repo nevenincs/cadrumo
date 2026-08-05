@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1168"
 number = "1168"
-label = "NIF de la persona empleada del hogar"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_autonomica_empleada_hogar_nif"

@@ -1,7 +1,5 @@
 [modelo]
 id = "189"
-title = "Declaracion informativa anual acerca de valores, seguros y rentas"
-official_name = "Modelo 189. Declaracion informativa anual acerca de valores, seguros y rentas."
 tax_domain = "cross_tax"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

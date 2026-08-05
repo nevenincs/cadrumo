@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00001"
 number = "00001"
-label = "Entidad sin ánimo de lucro acogida régimen fiscal Título II Ley 49/2002 [00001]"
 section = ["entidad_sin_animo_de_lucro_acogida_regimen_fiscal"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

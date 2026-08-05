@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ._collection_storage_root import _release_log_handlers_under, register_collection_storage_root_cleanup
+from ._collection_storage_root import _release_log_handlers_under
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

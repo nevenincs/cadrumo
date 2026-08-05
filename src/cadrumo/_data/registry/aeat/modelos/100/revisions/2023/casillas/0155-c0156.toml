@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0156"
 number = "0156"
-label = "Suma de rendimientos netos reducidos del capital inmobiliario (suma de las casillas [0154] )"
 section = ["resultados", "inmuebles_res"]
 input_kind = "computed"
 formula = "renta-2023-capital-inmobiliario-suma-rendimientos-reducidos"

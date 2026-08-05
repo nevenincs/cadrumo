@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1021"
 number = "1021"
-label = "Por nacimiento o adopción de hijos"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_nacimiento_adopcion"
 continuidad_id = "irpf-deduccion-galicia-nacimiento-adopcion"

@@ -62,7 +62,7 @@ computed_casilla_ids = []
 # and test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py).
 # The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
 # both declarations symmetrically against the bundled corpus.
-externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
+externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0513", "0514", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",

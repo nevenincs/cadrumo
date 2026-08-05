@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "2037"
 number = "2037"
-label = "Por gastos de acceso a Internet"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_gastos_internet"
 continuidad_id = "irpf-deduccion-murcia-gastos-internet"

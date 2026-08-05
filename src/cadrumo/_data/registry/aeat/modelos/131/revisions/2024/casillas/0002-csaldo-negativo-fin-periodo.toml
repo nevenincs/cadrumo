@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "saldo-negativo-fin-periodo"
 number = "saldo-negativo-fin-periodo"
-label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 10)"
 section = ["computed_carry_forward"]
 data_type = "money"
 semantic_role = "irpf_pf_saldo_negativo_fin_periodo"

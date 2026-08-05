@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1429"
 number = "1429"
-label = "Mejora 3: Importe de la mejora"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "money"
 semantic_role = "irpf_inmueble_mejora_importe"

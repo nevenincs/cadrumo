@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0530"
 number = "0530"
-label = "Aplicación de la escala general del Impuesto al importe de la casilla [0521]. Importe resultante: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_minimo_general_estatal"
 input_kind = "computed"

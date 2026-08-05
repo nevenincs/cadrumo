@@ -29,7 +29,6 @@
 [[revisions."2025".casillas]]
 id = "tipo_renta"
 number = "tipo_renta"
-label = "Tipo de renta"
 section = ["identificacion_renta"]
 data_type = "text"
 semantic_role = "irnr_tipo_renta"
@@ -41,7 +40,6 @@ source_refs = ["aeat-modelo-210-procedure"]
 [[revisions."2025".casillas]]
 id = "rendimientos_integros"
 number = "5"
-label = "Rendimientos íntegros"
 section = ["rendimientos"]
 data_type = "money"
 semantic_role = "irnr_rendimientos_integros"
@@ -54,7 +52,6 @@ constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-2
 [[revisions."2025".casillas]]
 id = "valor_catastral"
 number = "valor_catastral"
-label = "Valor catastral"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
 semantic_role = "irnr_imputacion_inmobiliaria_valor_catastral"
@@ -67,7 +64,6 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 [[revisions."2025".casillas]]
 id = "coeficiente_imputacion_inmobiliaria"
 number = "coeficiente_imputacion_inmobiliaria"
-label = "Coeficiente de imputación inmobiliaria"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "ratio"
 semantic_role = "irnr_imputacion_inmobiliaria_coeficiente"
@@ -80,7 +76,6 @@ constraints = { min_value = "0", max_value = "1", legal_refs = ["ley-35-2006:art
 [[revisions."2025".casillas]]
 id = "dias_imputacion"
 number = "dias_imputacion"
-label = "Días de imputación"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "integer"
 semantic_role = "irnr_imputacion_inmobiliaria_dias"
@@ -93,7 +88,6 @@ constraints = { min_value = "0", max_value = "366", legal_refs = ["ley-35-2006:a
 [[revisions."2025".casillas]]
 id = "valor_adquisicion"
 number = "valor_adquisicion"
-label = "Valor de adquisición"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
 semantic_role = "irnr_imputacion_inmobiliaria_valor_adquisicion"
@@ -106,7 +100,6 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 [[revisions."2025".casillas]]
 id = "valor_comprobado_administracion"
 number = "valor_comprobado_administracion"
-label = "Valor comprobado por la Administración"
 section = ["renta_inmobiliaria_imputada"]
 data_type = "money"
 semantic_role = "irnr_imputacion_inmobiliaria_valor_comprobado_administracion"
@@ -119,7 +112,6 @@ constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-85"], sour
 [[revisions."2025".casillas]]
 id = "gastos_deducibles"
 number = "7"
-label = "Gastos deducibles"
 section = ["rendimientos"]
 data_type = "money"
 semantic_role = "irnr_gastos_deducibles"
@@ -131,7 +123,6 @@ source_refs = ["aeat-modelo-210-procedure"]
 [[revisions."2025".casillas]]
 id = "retencion_practicada"
 number = "29"
-label = "Retención practicada"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_retencion_practicada"
@@ -143,7 +134,6 @@ source_refs = ["aeat-modelo-210-procedure"]
 [[revisions."2025".casillas]]
 id = "base_imponible"
 number = "8"
-label = "Base imponible"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_base_imponible"
@@ -156,7 +146,6 @@ source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-u
 [[revisions."2025".casillas]]
 id = "tipo_gravamen"
 number = "21"
-label = "Tipo de gravamen"
 section = ["liquidacion"]
 data_type = "ratio"
 semantic_role = "irnr_tipo_gravamen"
@@ -169,7 +158,6 @@ source_refs = ["aeat-modelo-210-procedure"]
 [[revisions."2025".casillas]]
 id = "cuota_integra"
 number = "22"
-label = "Cuota íntegra"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_integra"
@@ -182,7 +170,6 @@ source_refs = ["aeat-modelo-210-procedure"]
 [[revisions."2025".casillas]]
 id = "cuota_diferencial"
 number = "31"
-label = "Cuota diferencial"
 section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_diferencial"

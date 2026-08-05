@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01681"
 number = "01681"
-label = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Disminución - Saldo pendiente a principio de ejercicio [01681]"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_art19_otras_saldo_inicial"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01682"
 number = "01682"
-label = "Operaciones del art. 19 LIS distintas del cambio de residencia a Estados miembros de la Unión Europea o EEE - Disminución - Correcciones del ejercicio - Permanentes [01682]"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_operaciones_art19_otras_permanente_disminucion"

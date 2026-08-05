@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0494"
 number = "0494"
-label = "Por aportaciones y contribuciones a sistemas de previsión social constituidos a favor de personas con discapacidad. Importe de la casilla [0476] que se aplica"
 section = ["resultados", "base_liquidable_res"]
 semantic_role = "irpf_reduccion_prevision_social_discapacidad_aplicada"
 continuidad_id = "irpf-reduccion-prevision-social-discapacidad-aplicada"

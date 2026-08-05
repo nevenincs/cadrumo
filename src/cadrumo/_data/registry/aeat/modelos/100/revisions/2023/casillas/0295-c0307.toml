@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0307"
 number = "0307"
-label = "Suma de otras pérdidas que no derivan de la transmisión de elementos patrimoniales (suma de las casillas [0305])"
 section = ["resultados", "gp_premios_res", "otras_res"]
 semantic_role = "irpf_gyp_otras_perdidas_no_transmision"
 input_kind = "computed"

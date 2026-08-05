@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1023"
 number = "1023"
-label = "Por cuidado de hijos menores"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_cuidado_hijos_menores"
 continuidad_id = "irpf-deduccion-galicia-cuidado-hijos-menores"

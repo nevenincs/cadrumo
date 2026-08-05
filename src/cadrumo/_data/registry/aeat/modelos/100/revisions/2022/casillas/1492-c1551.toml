@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1551"
 number = "1551"
-label = "Reducción agricultores jóvenes  (disposición adicional sexta de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "decimal"
 semantic_role = "irpf_eo_agr_reduccion_jovenes"

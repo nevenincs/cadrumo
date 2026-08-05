@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2242"
 number = "2242"
-label = "Por gastos derivados de la enfermedad celíaca diagnosticada"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_enfermedad_celiaca"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

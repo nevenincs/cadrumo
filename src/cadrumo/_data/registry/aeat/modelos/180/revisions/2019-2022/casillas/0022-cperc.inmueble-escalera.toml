@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "perc.inmueble-escalera"
 number = "207-209"
-label = "Escalera del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_escalera"

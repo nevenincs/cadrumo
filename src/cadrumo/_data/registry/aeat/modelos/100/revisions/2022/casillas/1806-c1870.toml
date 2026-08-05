@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1870"
 number = "1870"
-label = "Importe a percibir"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_importe_percibir_3"
 continuidad_id = "irpf-ganancia-cripto-importe-percibir-3"

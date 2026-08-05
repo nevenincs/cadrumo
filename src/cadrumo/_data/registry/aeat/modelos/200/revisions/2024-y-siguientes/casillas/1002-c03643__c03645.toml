@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03643"
 number = "03643"
-label = "Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2025 - Inversiones previstas letras A y B, DA 70.4 Ley 31/2022 [03643]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2025"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03644"
 number = "03644"
-label = "Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2025 - Inversiones previstas letra C DA 70.4 Ley 31/2022 [03644]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2025"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03645"
 number = "03645"
-label = "Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2025 - Pendiente de dotar RIIB al final de período [03645]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2025"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"

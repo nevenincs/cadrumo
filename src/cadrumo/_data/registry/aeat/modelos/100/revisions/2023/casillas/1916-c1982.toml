@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1982"
 number = "1982"
-label = "Referencia catastral"
 section = ["toma_datos_ampliada", "regimen_especial", "feac"]
 data_type = "text"
 semantic_role = "irpf_feac_inmueble_referencia_catastral"

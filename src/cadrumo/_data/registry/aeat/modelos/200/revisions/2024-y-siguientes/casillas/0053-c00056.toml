@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00056"
 number = "00056"
-label = "Entidad en régimen de atribución de rentas con tributación por el Impuesto sobre Sociedades [00056]"
 section = ["entidad_en_regimen_de_atribucion_de_rentas_con_tri"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

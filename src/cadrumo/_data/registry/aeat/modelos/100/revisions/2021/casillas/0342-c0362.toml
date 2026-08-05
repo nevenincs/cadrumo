@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0362"
 number = "0362"
-label = "Referencia castastral 3"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 data_type = "text"
 semantic_role = "irpf_gp_elemento_referencia_catastral_3"

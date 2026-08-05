@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01718"
 number = "01718"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2018 Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [01718]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01719"
 number = "01719"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2018 Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [01719]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01720"
 number = "01720"
-label = "Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2018 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [01720]"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
 semantic_role = "is_deduccion_donativos_general"

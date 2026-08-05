@@ -106,7 +106,7 @@ class CasillaGroundingReport(BaseModel):
     The casilla *list* row and the casilla *detail* report describe the same
     casilla. Everything a reader needs to identify it and to justify its value
     -- its id, number, label, section path, value shape, input kind,
-    requiredness, its bound binding, its localized labels/help, and its
+    requiredness, its bound binding, its localized label/help, and its
     ``legal_refs`` / ``source_refs`` grounding -- is declared once here, so the
     two projections cannot disagree about the same casilla.
 
@@ -126,6 +126,7 @@ class CasillaGroundingReport(BaseModel):
     casilla_id: CasillaId
     number: str
     label: str
+    help_text: str | None = None
     section: tuple[str, ...]
     data_type: str
     input_kind: InputKind
@@ -133,8 +134,6 @@ class CasillaGroundingReport(BaseModel):
     binding: BindingId | None
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
-    localized_labels: dict[str, str] = Field(default_factory=dict)
-    localized_help: dict[str, str] = Field(default_factory=dict)
 
 
 class ModeloCasillaRow(CasillaGroundingReport):

@@ -473,7 +473,7 @@ def _override_locales_root(root: Path) -> Iterator[None]:
         _I18N_LOCALES_ROOT.reset(token)
 
 
-def _locale_map(locale: str) -> dict[str, str]:
+def _locale_map(locale: str) -> dict[str, str | None]:
     override = _I18N_LOCALES_ROOT.get()
     if override is not None:
         # Override catalogues are small test fixtures; parse fresh so one
@@ -484,7 +484,7 @@ def _locale_map(locale: str) -> dict[str, str]:
 
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
-def _packaged_locale_map(locale: str) -> dict[str, str]:
+def _packaged_locale_map(locale: str) -> dict[str, str | None]:
     resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales", f"{locale}.yml")
     with resource.open("r", encoding="utf-8") as handle:
         return _flatten_translations(_load_locale_yaml(handle))
@@ -499,14 +499,43 @@ def _load_locale_yaml(handle: IO[str]) -> object:
     return yaml.safe_load(handle) or {}
 
 
-def _flatten_translations(value: object, prefix: str = "") -> dict[str, str]:
+def _flatten_translations(value: object, prefix: str = "") -> dict[str, str | None]:
     if isinstance(value, Mapping):
-        flattened: dict[str, str] = {}
+        flattened: dict[str, str | None] = {}
         for key, child in value.items():
             child_prefix = f"{prefix}.{key}" if prefix else str(key)
             flattened.update(_flatten_translations(child, child_prefix))
         return flattened
-    return {prefix: str(value)}
+    return {prefix: None if value is None else str(value)}
+
+
+def lookup_translation(translation_key: str, /, *, locale: str) -> str | None:
+    """Return one authored locale scalar without humanising a missing value.
+
+    ``None`` and the catalogue scaffold convention ``value == key`` both mean
+    that the selected locale has no authored value.  Domain resolvers use this
+    primitive when they own a stricter fallback policy than the operator-facing
+    :func:`tr` convenience surface.
+    """
+    _present, value = lookup_translation_entry(translation_key, locale=locale)
+    return value
+
+
+def lookup_translation_entry(translation_key: str, /, *, locale: str) -> tuple[bool, str | None]:
+    """Return catalogue membership separately from its optional scalar value."""
+    normalized_locale = _normalise_supported_language(locale)
+    if normalized_locale is None:
+        return False, None
+    try:
+        locale_map = _locale_map(normalized_locale)
+    except (OSError, yaml.YAMLError, IndexError):
+        return False, None
+    if translation_key not in locale_map:
+        return False, None
+    rendered = locale_map[translation_key]
+    if rendered is None or rendered == translation_key:
+        return True, None
+    return True, rendered
 
 
 def _lookup_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:

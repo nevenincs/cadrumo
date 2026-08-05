@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DPGMIN_D"
 number = "*20"
-label = "Primer declarante grado de discapacidad"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
 semantic_role = "irpf_declarante_discapacidad_grado"

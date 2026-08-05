@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00485"
 number = "00485"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Ingresos fiscales a distribuir en varios ejercicios - Resultado del ejercicio [00485]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00486"
 number = "00486"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Ingresos fiscales a distribuir en varios ejercicios - Dividendo a cuenta [00486]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"

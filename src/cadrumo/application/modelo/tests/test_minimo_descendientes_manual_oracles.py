@@ -38,6 +38,7 @@ import pytest
 
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import ManualWorkedExamplePayload, RegistrySnapshot
+from ....domain.user_profile import UserProfileFactValue
 from ....domain.contribuyente import RentaMaritalStatus
 from .._profile_binding import (
     inject_derived_anualidades_eligibility_facts,
@@ -75,7 +76,7 @@ def _snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=_ORACLE_YEAR, period="0A")
 
 
-def _injected_decimal(facts: dict[str, object], key: str) -> Decimal:
+def _injected_decimal(facts: dict[str, UserProfileFactValue], key: str) -> Decimal:
     """Return the injected fact at ``key``, proving it is the Decimal it claims to be.
 
     The fact mapping is ``object``-valued, so the aggregate the injector writes
@@ -89,7 +90,7 @@ def _injected_decimal(facts: dict[str, object], key: str) -> Decimal:
     return value
 
 
-def _aggregates(facts: dict[str, object]) -> tuple[Decimal, Decimal]:
+def _aggregates(facts: dict[str, UserProfileFactValue]) -> tuple[Decimal, Decimal]:
     narrowed: Any = facts
     inject_derived_minimo_descendientes_facts(narrowed, _snapshot())
     return (
@@ -131,7 +132,7 @@ def test_the_valenciana_oracle_grounds_only_the_estatal_casilla() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _asturias_children() -> dict[str, object]:
+def _asturias_children() -> dict[str, UserProfileFactValue]:
     """Matrimonio, three cohabiting children aged 27 (discapacidad 33 %), 22 and 19.
 
     The manual states no child holds rentas above 8.000 nor files their own
@@ -186,13 +187,13 @@ def test_asturias_oracle_does_not_assert_the_artefacted_contribuyente_row() -> N
 # ---------------------------------------------------------------------------
 
 
-def _valenciana_children(*, youngest_files_own_return: bool) -> dict[str, object]:
+def _valenciana_children(*, youngest_files_own_return: bool) -> dict[str, UserProfileFactValue]:
     """Pareja de hecho, three cohabiting children aged 18, 12 and 6.
 
     The youngest holds 4.050 euros of rendimientos del capital mobiliario —
     below the 8.000 Art. 58.1 ceiling, so the cap does NOT exclude this child.
     """
-    facts: dict[str, object] = {
+    facts: dict[str, UserProfileFactValue] = {
         "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 18}-01-01",
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
@@ -231,7 +232,7 @@ def test_the_youngest_child_is_excluded_by_norma_2a_and_not_by_the_cap() -> None
 # ---------------------------------------------------------------------------
 
 
-def _valenciana_conjunta() -> dict[str, object]:
+def _valenciana_conjunta() -> dict[str, UserProfileFactValue]:
     """The same three children, filed jointly by one unmarried progenitor.
 
     In the joint return the youngest does not present a separate declaración,
@@ -385,7 +386,7 @@ def test_the_anualidades_flag_consumes_the_same_eligibility_predicate() -> None:
     """
     key = f"renta_family.anualidades_sin_minimo_descendientes_{_ORACLE_YEAR}"
 
-    excluded: dict[str, object] = {
+    excluded: dict[str, UserProfileFactValue] = {
         "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 10}-01-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
         "renta_family.descendiente.0.rentas_anuales": "8001",
@@ -394,7 +395,7 @@ def test_the_anualidades_flag_consumes_the_same_eligibility_predicate() -> None:
     inject_derived_anualidades_eligibility_facts(narrowed_excluded, _snapshot())
     assert excluded[key] == Decimal("1")
 
-    eligible: dict[str, object] = {
+    eligible: dict[str, UserProfileFactValue] = {
         "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 10}-01-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
     }
@@ -408,7 +409,7 @@ def test_the_anualidades_flag_consumes_the_same_eligibility_predicate() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _rioja_adopted_child(*, adoption_year: int) -> dict[str, object]:
+def _rioja_adopted_child(*, adoption_year: int) -> dict[str, UserProfileFactValue]:
     """Ejemplo 6's child: five years old, adopted, cohabiting.
 
     *adoption_year* is a parameter rather than a constant so the window's far

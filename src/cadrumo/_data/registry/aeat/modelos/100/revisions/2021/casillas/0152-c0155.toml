@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0155"
 number = "0155"
-label = "Suma de rentas inmobiliarias imputadas  (suma de las casillas [0089] )"
 section = ["resultados", "inmuebles_res"]
 semantic_role = "irpf_rendimiento_capital_inmobiliario_suma_rentas_imputadas"
 input_kind = "computed"

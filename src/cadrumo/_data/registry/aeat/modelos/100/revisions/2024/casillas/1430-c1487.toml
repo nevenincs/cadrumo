@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1487"
 number = "1487"
-label = "Si para la imputación temporal opta por el criterio de cobros y pagos, consigne una \"X\""
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "boolean"
 semantic_role = "irpf_eo_agr_cobros_pagos_flag"

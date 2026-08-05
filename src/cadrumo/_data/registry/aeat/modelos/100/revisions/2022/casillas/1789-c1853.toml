@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1853"
 number = "1853"
-label = "Contribuyente titular"
 section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
 data_type = "text"
 semantic_role = "irpf_anexo_c_contribuyente_con_derecho_deduccion"

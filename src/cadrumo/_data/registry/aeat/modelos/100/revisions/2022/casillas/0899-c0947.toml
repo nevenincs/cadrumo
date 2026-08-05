@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0947"
 number = "0947"
-label = "Por cuidado de familiares"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_cuidado_familiares"
 continuidad_id = "irpf-deduccion-cantabria-cuidado-familiares"

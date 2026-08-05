@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1606"
 number = "1606"
-label = "Suma de ganancias patrimoniales no derivadas de transmisiones (a integrar en la B.I. general), atribuidas  (suma de las casillas [1584] )"
 section = ["resultados", "regimenes_especiales_res", "re_at_rentas_res"]
 semantic_role = "irpf_re_atrib_suma_gp_no_transmision_ganancias"
 input_kind = "computed"

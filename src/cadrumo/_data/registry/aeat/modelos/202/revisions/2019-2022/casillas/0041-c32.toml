@@ -1,7 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "32"
 number = "32"
-label = "Mod. 40.3 LIS — Resultado"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_resultado"

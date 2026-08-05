@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1061"
 number = "1061"
-label = "Por nacimiento y adopción de hijos"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_nacimiento_adopcion"
 continuidad_id = "irpf-deduccion-la-rioja-nacimiento-adopcion"

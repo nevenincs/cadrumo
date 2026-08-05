@@ -1,7 +1,5 @@
 [modelo]
 id = "182"
-title = "Donativos, donaciones y aportaciones recibidas y disposiciones realizadas (informativa anual)"
-official_name = "Modelo 182. Impuesto sobre la Renta de las Personas Fisicas, Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaracion informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

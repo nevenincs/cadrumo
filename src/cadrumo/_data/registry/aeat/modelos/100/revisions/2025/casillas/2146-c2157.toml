@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2157"
 number = "2157"
-label = "Por gastos en la instalación de infraestructuras de recarga de vehículos eléctricos"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_infraestructuras_recarga"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

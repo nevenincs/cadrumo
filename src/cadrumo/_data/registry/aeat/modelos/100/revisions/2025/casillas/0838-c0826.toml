@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0826"
 number = "0826"
-label = "Número de inscripción del certificado 1:"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_galicia_certificado_eficiencia_1"

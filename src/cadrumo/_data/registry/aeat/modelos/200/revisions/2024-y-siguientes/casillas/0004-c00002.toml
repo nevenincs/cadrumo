@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00002"
 number = "00002"
-label = "Entidad parcialmente exenta [00002]"
 section = ["entidad_parcialmente_exenta"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2155"
 number = "2155"
-label = "Importe de la deducción"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_vehiculo_importe"
 semantic_role_cardinality = "intentional_singleton"

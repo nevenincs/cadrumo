@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1708"
 number = "1708"
-label = "Por inversiones de nuevos contribuyentes procedentes del extranjero (información adicional en el anexo B.15)"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_nuevos_contribuyentes_extranjero"
 semantic_role_cardinality = "intentional_singleton"

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1145"
 number = "1145"
-label = "NIF de la entidad 2"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcf"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_inversion_empresarial_entidad_nif"

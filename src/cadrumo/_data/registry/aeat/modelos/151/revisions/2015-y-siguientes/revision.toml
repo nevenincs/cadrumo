@@ -1,5 +1,4 @@
 [revisions."2015-y-siguientes"]
-label = "Modelo 151 ejercicios 2015 a 2024 (régimen impatriados, escala general plana 24/47 tras Ley 26/2014; parte del ahorro no modelada en esta revisión)"
 valid_from = 2015-01-01
 valid_to = 2024-12-31
 period_selector = { year_from = 2015, year_to = 2024, periods = ["0A"] }

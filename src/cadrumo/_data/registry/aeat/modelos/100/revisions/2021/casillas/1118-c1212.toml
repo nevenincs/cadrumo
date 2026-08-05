@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1212"
 number = "1212"
-label = "Referencia catastral"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_referencia_catastral"

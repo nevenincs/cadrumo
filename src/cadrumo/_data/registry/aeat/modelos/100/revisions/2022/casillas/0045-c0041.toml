@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0041"
 number = "0041"
-label = "Suma de rendimientos reducidos del capital mobiliario a integrar en la base imponible del ahorro"
 section = ["resultados", "rdto_capital_mobiliario_res", "rdto_capital_mobiliario_ahorro_res"]
 input_kind = "computed"
 formula = "renta-2022-capital-mobiliario-ahorro-suma-rendimientos-reducidos"

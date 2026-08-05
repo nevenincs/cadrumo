@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1002"
 number = "1002"
-label = "Por donativos a entidades que fomentan la investigación científica y el desarrollo y la innovación tecnológicos"
 section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
 semantic_role = "irpf_deduccion_catalunya_donaciones_investigacion"
 continuidad_id = "irpf-deduccion-catalunya-donaciones-investigacion"

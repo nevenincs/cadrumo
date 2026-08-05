@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2245"
 number = "2245"
-label = "Nº de colegiado / Código Numérico Personal del médico:"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 data_type = "text"
 semantic_role = "irpf_deduccion_asturias_medico_colegiado"

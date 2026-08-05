@@ -13,12 +13,22 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ._errors import RegistryValidationError
-from ._ids import CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
-from ._schema import EvidenceTier, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from ._ids import BindingId, CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
+from ._schema import (
+    DataBindingDefinition,
+    EvidenceTier,
+    FormulaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    ParameterDefinition,
+    RegistryCatalogues,
+    RegistrySnapshot,
+    RelationDefinition,
+)
 from ._snapshot import build_validated_snapshot
 from ._validate import RegistryValidator
 
@@ -94,6 +104,90 @@ class RegistryCoverageAudit(CoverageModel):
         return not self.required_gate_failures
 
 
+ConstructEvidenceKind = Literal["formula", "parameter", "binding", "relation", "selector"]
+ConstructEvidenceStatus = Literal["grounded", "inherited", "unresolved", "unmeasured"]
+
+
+class ConstructEvidenceRow(CoverageModel):
+    """Legal/source evidence for one revision-level calculation construct.
+
+    A selector is a typed child of a binding and has no independent legal/source
+    fields in the registry schema. Its row therefore carries the owning binding
+    references with ``status='inherited'`` and says so in ``reason``. This keeps
+    the selector visible without turning binding evidence into an independent
+    selector claim.
+    """
+
+    kind: ConstructEvidenceKind
+    construct_id: str = Field(min_length=1, max_length=160)
+    binding_id: BindingId | None = None
+    status: ConstructEvidenceStatus
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+    reason: str = Field(min_length=1, max_length=1024)
+
+    @model_validator(mode="after")
+    def _validate_evidence_shape(self) -> ConstructEvidenceRow:
+        if self.kind == "selector":
+            if self.binding_id is None:
+                raise RegistryValidationError("selector evidence rows must identify their owning binding")
+            if self.construct_id != self.binding_id:
+                raise RegistryValidationError("selector evidence construct_id must equal binding_id")
+        elif self.binding_id is not None:
+            raise RegistryValidationError("only selector evidence rows may declare binding_id")
+
+        has_legal = bool(self.legal_refs)
+        has_source = bool(self.source_refs)
+        if self.status == "grounded" and not (has_legal and has_source):
+            raise RegistryValidationError("grounded construct evidence requires legal and source refs")
+        if self.status == "inherited":
+            if self.kind != "selector":
+                raise RegistryValidationError("only selector evidence may be inherited")
+            if not (has_legal and has_source):
+                raise RegistryValidationError("inherited selector evidence requires owning binding refs")
+        if self.status == "unresolved" and has_legal and has_source:
+            raise RegistryValidationError("unresolved construct evidence cannot carry complete refs")
+        if self.status == "unmeasured" and (has_legal or has_source):
+            raise RegistryValidationError("unmeasured construct evidence cannot carry refs")
+        return self
+
+
+class ConstructEvidenceLedger(CoverageModel):
+    """Per-modelo/revision construct evidence rows, separate from casilla floors."""
+
+    modelo: str
+    revision: str
+    rows: tuple[ConstructEvidenceRow, ...]
+
+    @model_validator(mode="after")
+    def _rows_are_unique(self) -> ConstructEvidenceLedger:
+        coordinates = [(row.kind, row.construct_id) for row in self.rows]
+        if len(coordinates) != len(set(coordinates)):
+            raise RegistryValidationError("construct evidence rows must have unique kind/id coordinates")
+        return self
+
+    @property
+    def gaps(self) -> tuple[ConstructEvidenceRow, ...]:
+        """Return construct rows whose own or inherited evidence is incomplete."""
+        return tuple(row for row in self.rows if row.status in {"unresolved", "unmeasured"})
+
+
+class RegistryConstructEvidenceAudit(CoverageModel):
+    """Registry-wide construct evidence audit with an explicit finite denominator."""
+
+    ledgers: tuple[ConstructEvidenceLedger, ...]
+
+    @property
+    def gaps(self) -> tuple[ConstructEvidenceRow, ...]:
+        """Return all unresolved or unmeasured construct rows."""
+        return tuple(row for ledger in self.ledgers for row in ledger.gaps)
+
+    @property
+    def ok(self) -> bool:
+        """Return whether every enumerated construct has complete evidence."""
+        return not self.gaps
+
+
 def audit_registry_model_law_coverage(
     modelos: Iterable[ModeloDefinition],
     catalogues: RegistryCatalogues,
@@ -147,6 +241,36 @@ def audit_registry_model_law_coverage(
     )
 
 
+def audit_registry_construct_evidence(
+    modelos: Iterable[ModeloDefinition],
+    catalogues: RegistryCatalogues,
+    *,
+    source_root: Path,
+) -> RegistryConstructEvidenceAudit:
+    """Build construct evidence ledgers from the validated registry authority.
+
+    The fold enumerates only revision-level declarations. It deliberately does
+    not turn revision evidence floors or casilla declarations into construct
+    evidence, and it never supplies a reference that is absent from the owning
+    declaration.
+    """
+    modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
+    RegistryValidator(catalogues, source_root=source_root).validate_registry(modelo_tuple)
+
+    ledgers: list[ConstructEvidenceLedger] = []
+    for modelo in modelo_tuple:
+        for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
+            snapshot = build_validated_snapshot(
+                modelo,
+                catalogues,
+                filing_year=_representative_year(revision),
+                period=revision.period_selector.periods[0],
+                revision_id=revision.id,
+            )
+            ledgers.append(build_construct_evidence_ledger(snapshot))
+    return RegistryConstructEvidenceAudit(ledgers=tuple(ledgers))
+
+
 def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCoverageLedger:
     """Build the four-tier coverage ledger for a validated registry snapshot.
 
@@ -166,6 +290,66 @@ def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCover
             _layout_authority_gate(snapshot),
         ),
     )
+
+
+def build_construct_evidence_ledger(snapshot: RegistrySnapshot) -> ConstructEvidenceLedger:
+    """Build exact legal/source rows for a validated revision's constructs."""
+    revision = snapshot.revision
+    rows: list[ConstructEvidenceRow] = []
+    rows.extend(_declared_construct_evidence_row(declaration, kind="formula") for declaration in revision.formulas)
+    rows.extend(_declared_construct_evidence_row(declaration, kind="parameter") for declaration in revision.parameters)
+    rows.extend(_declared_construct_evidence_row(declaration, kind="binding") for declaration in revision.bindings)
+    rows.extend(_declared_construct_evidence_row(declaration, kind="relation") for declaration in revision.relations)
+
+    for binding in revision.bindings:
+        status = _status_for_refs(binding.legal_refs, binding.source_refs)
+        if status == "grounded":
+            selector_status: ConstructEvidenceStatus = "inherited"
+            reason = f"selector evidence is inherited from binding {binding.id!r}"
+        else:
+            selector_status = status
+            reason = f"selector evidence cannot inherit complete refs from binding {binding.id!r}"
+        rows.append(
+            ConstructEvidenceRow(
+                kind="selector",
+                construct_id=binding.id,
+                binding_id=binding.id,
+                status=selector_status,
+                legal_refs=tuple(binding.legal_refs),
+                source_refs=tuple(binding.source_refs),
+                reason=reason,
+            ),
+        )
+
+    rows.sort(key=lambda row: (row.kind, row.construct_id))
+    return ConstructEvidenceLedger(modelo=snapshot.modelo.id, revision=revision.id, rows=tuple(rows))
+
+
+def _declared_construct_evidence_row(
+    declaration: FormulaDefinition | ParameterDefinition | DataBindingDefinition | RelationDefinition,
+    *,
+    kind: ConstructEvidenceKind,
+) -> ConstructEvidenceRow:
+    status = _status_for_refs(declaration.legal_refs, declaration.source_refs)
+    return ConstructEvidenceRow(
+        kind=kind,
+        construct_id=declaration.id,
+        status=status,
+        legal_refs=tuple(declaration.legal_refs),
+        source_refs=tuple(declaration.source_refs),
+        reason=f"{kind} declaration {declaration.id!r} carries its own legal/source refs",
+    )
+
+
+def _status_for_refs(
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
+) -> Literal["grounded", "unresolved", "unmeasured"]:
+    if legal_refs and source_refs:
+        return "grounded"
+    if legal_refs or source_refs:
+        return "unresolved"
+    return "unmeasured"
 
 
 def _legal_authority_gate(snapshot: RegistrySnapshot) -> EvidenceTierCoverageGate:

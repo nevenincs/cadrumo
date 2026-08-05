@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1793"
 number = "1793"
-label = "Código/Code SWIFT/BIC"
 section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
 data_type = "text"
 semantic_role = "irpf_compensacion_conyuges_swift_bic"

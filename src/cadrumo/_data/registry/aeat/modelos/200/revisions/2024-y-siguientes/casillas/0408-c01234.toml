@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01234"
 number = "01234"
-label = "Liquidación IV - Resultado de la autoliquidación - Abono deducciones I+D+i por insuficiencia de cuota - Total [01234]"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"
 semantic_role = "is_liquidacion_iv_resultado_misc"

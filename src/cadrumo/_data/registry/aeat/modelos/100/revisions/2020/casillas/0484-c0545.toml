@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0545"
 number = "0545"
-label = "Cuota íntegra estatal: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_integra_estatal"
 input_kind = "computed"

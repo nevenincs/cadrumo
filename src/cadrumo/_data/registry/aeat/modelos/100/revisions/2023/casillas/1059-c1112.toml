@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1112"
 number = "1112"
-label = "Por donaciones o cesiones de uso o comodatos para otros fines de interés cultural, científico o deportivo no profesional"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_donaciones_otros_fines"
 continuidad_id = "irpf-deduccion-c-valenciana-donaciones-otros-fines"

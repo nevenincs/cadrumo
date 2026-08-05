@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03146"
 number = "03146"
-label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Correcciones del ejercicio - Permanentes [03146]"
 section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03147"
 number = "03147"
-label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio..."
 section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_permanente_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03148"
 number = "03148"
-label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios a..."
 section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_permanente_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03149"
 number = "03149"
-label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Saldo pendiente a principio de ejercicio [03149]"
 section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03150"
 number = "03150"
-label = "Valoración de bienes y derechos. Régimen especial operaciones reestructuración (capítulo VII del título VII LIS) - Disminución - Saldo pendiente a fin de ejercicio [03150]"
 section = ["valoracion_de_bienes_y_derechos_regimen_especial_o", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_valoracion_bienes_derechos_regimen_especial_saldo_final_neto"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00447"
 number = "00447"
-label = "Tributación conjunta Estado y Adm.Forales - Pagos fraccionados 2 - Bizkaia [00447]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "pagos_fraccionados_2"]
 data_type = "money"
 semantic_role = "is_pagos_fraccionados"

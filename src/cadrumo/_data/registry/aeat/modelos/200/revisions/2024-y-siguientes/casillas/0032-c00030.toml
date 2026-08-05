@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00030"
 number = "00030"
-label = "Transmisión elementos patrimoniales arts. 27.2.d) y 77.1 L.I.S. [00030]"
 section = ["transmision_elementos_patrimoniales_arts_27_2_d_y"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

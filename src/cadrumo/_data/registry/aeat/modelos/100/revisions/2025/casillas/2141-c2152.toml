@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2152"
 number = "2152"
-label = "Por inversión en entidades de economía social (casilla [1179] del Anexo B.11)"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_economia_social"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

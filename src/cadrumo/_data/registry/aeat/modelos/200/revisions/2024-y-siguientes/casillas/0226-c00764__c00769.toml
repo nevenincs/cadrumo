@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00764"
 number = "00764"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Capital cooperativo suscrito (cooperativas) [00764]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00765"
 number = "00765"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Capital cooperativo no exigido (cooperativas) [00765]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00766"
 number = "00766"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondo de reembolso o actualización (cooperativas) [00766]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00767"
 number = "00767"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondo de reserva voluntario (cooperativas) [00767]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00768"
 number = "00768"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Retorno cooperativo y remuneración discrecional a cuenta entregado en el ejercicio) (cooperativas) [00768]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"
@@ -61,7 +56,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00769"
 number = "00769"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondos capitalizados (cooperativas) [00769]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"

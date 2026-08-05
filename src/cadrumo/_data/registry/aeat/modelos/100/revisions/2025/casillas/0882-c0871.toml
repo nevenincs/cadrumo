@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0871"
 number = "0871"
-label = "Por adquisición de vivienda habitual por víctimas del terrorismo"
 section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
 semantic_role = "irpf_deduccion_aragon_vivienda_victimas_terrorismo"
 continuidad_id = "irpf-deduccion-aragon-vivienda-victimas-terrorismo"

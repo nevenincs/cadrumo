@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0825"
 number = "0825"
-label = "Por obras de mejora de eficiencia energética en edificios de viviendas o en viviendas unifamiliares"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_eficiencia_energetica"
 continuidad_id = "irpf-deduccion-galicia-eficiencia-energetica"

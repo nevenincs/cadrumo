@@ -1,7 +1,5 @@
 [modelo]
 id = "121"
-title = "IRPF comunicación de la cesión de la deducción por familia numerosa / discapacidad"
-official_name = "Modelo 121. Impuesto sobre la Renta de las Personas Físicas. Deducciones por familia numerosa o por personas con discapacidad a cargo. Comunicación de la cesión del derecho a la deducción por contribuyentes no obligados a presentar declaración."
 tax_domain = "irpf"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

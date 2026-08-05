@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1239"
 number = "1239"
-label = "Ganancia patrimonial obtenida"
 section = ["resultados", "anexo_c_res", "exencion_rentas_vitalicias_res"]
 semantic_role = "irpf_anexo_c_exencion_rv_ganancia_patrimonial"
 continuidad_id = "irpf-anexo-c-exencion-rv-ganancia-patrimonial"

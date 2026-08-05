@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0384"
 number = "0384"
-label = "Reducción por rendimientos de actividades artísticas obtenidos de manera excepcional (disposición adicional sexagésima de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_reduccion_actividades_artisticas"
 legal_refs = ["ley-35-2006:da-60", "orden-hac-277-2026:art-3"]

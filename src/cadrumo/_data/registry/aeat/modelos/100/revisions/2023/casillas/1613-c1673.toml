@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1673"
 number = "1673"
-label = "Referencia catastral"
 section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
 data_type = "text"
 semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_referencia_catastral"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1079"
 number = "1079"
-label = "Por acceso a internet para jóvenes emancipados"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 semantic_role = "irpf_deduccion_la_rioja_internet_jovenes"
 continuidad_id = "irpf-deduccion-la-rioja-internet-jovenes"

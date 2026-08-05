@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "ZRUE2"
 number = "*27"
-label = "Pais UE o EEE del conyuge"
 section = ["datos_identificativos", "conyuge"]
 data_type = "text"
 semantic_role = "spouse_resident_ue_eee_country"

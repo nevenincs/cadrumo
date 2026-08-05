@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00049"
 number = "00049"
-label = "Regímenes especiales de normativa foral [00049]"
 section = ["regimenes_especiales_de_normativa_foral"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

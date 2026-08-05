@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1991"
 number = "1991"
-label = "Deducción por nacimiento: Importe del abono anticipado"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_i_baleares"]
 semantic_role = "irpf_anexo_b_deduccion_nacimiento_abono_anticipado"
 continuidad_id = "irpf-anexo-b-deduccion-nacimiento-abono-anticipado"

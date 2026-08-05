@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00050"
 number = "00050"
-label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen total de operaciones [00050]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_proporcion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00051"
 number = "00051"
-label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en el extranjero [00051]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_proporcion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00052"
 number = "00052"
-label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en Araba/Álava [00052]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_proporcion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00053"
 number = "00053"
-label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en Gipuzkoa [00053]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_proporcion"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00054"
 number = "00054"
-label = "Tributación conjunta Estado y Adm.Forales - Concierto económico - Volumen operaciones en Bizkaia [00054]"
 section = ["tributacion_conjunta_estado_y_adm_forales", "concierto_economico"]
 data_type = "money"
 semantic_role = "is_tributacion_conjunta_proporcion"

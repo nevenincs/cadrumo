@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1863"
 number = "1863"
-label = "Ganancia patrimonial pendiente  de imputación"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_ganancia_pendiente_1"
 continuidad_id = "irpf-ganancia-cripto-ganancia-pendiente-1"

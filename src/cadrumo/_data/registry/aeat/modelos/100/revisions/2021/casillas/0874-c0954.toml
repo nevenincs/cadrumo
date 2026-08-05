@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0954"
 number = "0954"
-label = "Por gastos de enfermedad"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_enfermedad"
 continuidad_id = "irpf-deduccion-cantabria-enfermedad"

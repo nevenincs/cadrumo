@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03346"
 number = "03346"
-label = "Reinversión de beneficios extraordinarios (DT 24ª LIS) - Disminución - Correcciones del ejercicio - Permanentes [03346]"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03347"
 number = "03347"
-label = "Reinversión de beneficios extraordinarios (DT 24ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03347]"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_temporaria_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03348"
 number = "03348"
-label = "Reinversión de beneficios extraordinarios (DT 24ª LIS) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03348]"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_temporaria_anteriores_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03349"
 number = "03349"
-label = "Reinversión de beneficios extraordinarios (DT 24ª LIS) - Disminución - Saldo pendiente a principio de ejercicio [03349]"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03350"
 number = "03350"
-label = "Reinversión de beneficios extraordinarios (DT 24ª LIS) - Disminución - Saldo pendiente a fin de ejercicio [03350]"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_saldo_final"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2026"
 number = "2026"
-label = "Por cambio de residencia a un municipio en riesgo de despoblación"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_residencia_municipio_riesgo"
 continuidad_id = "irpf-deduccion-madrid-residencia-municipio-riesgo"

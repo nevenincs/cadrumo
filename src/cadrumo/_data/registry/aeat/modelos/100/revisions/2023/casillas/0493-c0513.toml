@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0513"
 number = "0513"
-label = "Parte estatal: Mínimo por descendientes. Importe"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_descendientes_estatal"
 input_kind = "computed"

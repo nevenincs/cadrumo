@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00035"
 number = "00035"
-label = "Régimen especial fusiones, escisiones, aportaciones activos y canjes valores (Cap.VII, Tit. VII) [00035]"
 section = ["regimen_especial_fusiones_escisiones_aportaciones"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

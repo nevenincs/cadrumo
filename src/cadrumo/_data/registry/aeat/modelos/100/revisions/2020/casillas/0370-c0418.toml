@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0418"
 number = "0418"
-label = "Suma de ganancias patrimoniales ( [1606] + [0290] + [0297] + [0306] + [0400] )"
 section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
 semantic_role = "irpf_integracion_gyp_general_suma_ganancias"
 input_kind = "computed"

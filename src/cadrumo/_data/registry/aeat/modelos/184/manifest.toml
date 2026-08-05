@@ -1,7 +1,5 @@
 [modelo]
 id = "184"
-title = "Entidades en régimen de atribución de rentas (informativa anual)"
-official_name = "Modelo 184. Declaración informativa anual de Entidades en régimen de atribución de rentas."
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"

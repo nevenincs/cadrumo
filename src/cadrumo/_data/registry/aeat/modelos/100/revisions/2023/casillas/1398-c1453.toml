@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1453"
 number = "1453"
-label = "Definición"
 section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
 data_type = "text"
 semantic_role = "irpf_eo_modulo_definicion"

@@ -1,7 +1,5 @@
 [modelo]
 id = "115"
-title = "IRPF retenciones sobre arrendamientos urbanos"
-official_name = "Retenciones e ingresos a cuenta. Rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos."
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"

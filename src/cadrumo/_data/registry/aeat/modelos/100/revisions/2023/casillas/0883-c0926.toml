@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0926"
 number = "0926"
-label = "Por inversión en vivienda habitual"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_vivienda_habitual"
 continuidad_id = "irpf-deduccion-canarias-vivienda-habitual"

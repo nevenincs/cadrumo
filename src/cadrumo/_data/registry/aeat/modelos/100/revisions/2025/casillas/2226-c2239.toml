@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2239"
 number = "2239"
-label = "Por las ayudas y subvenciones recibidas por personas con diagnóstico de esclerosis lateral amiotrófica o con sus fenotipos"
 section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
 semantic_role = "irpf_deduccion_galicia_ayudas_als"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

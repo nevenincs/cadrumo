@@ -1,7 +1,6 @@
 [[revisions.2023-2024.casillas]]
 id = "30"
 number = "30"
-label = "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territorio Comun"
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_pagos_previos_territorio_comun"

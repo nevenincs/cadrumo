@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0515"
 number = "0515"
-label = "Parte estatal: Mínimo por ascendientes. Importe"
 section = ["resultados", "minimo_per_fam_res"]
 semantic_role = "irpf_minimo_ascendientes_estatal"
 continuidad_id = "irpf-minimo-ascendientes-estatal"

@@ -1,7 +1,6 @@
 [[revisions.2023-2024.casillas]]
 id = "39"
 number = "39"
-label = "Mod. 40.3 LIS — TOTAL correcciones — Disminuciones"
 section = ["liquidacion", "modalidad_40_3_lis", "correcciones_resultado_contable"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_total_correcciones_disminuciones"

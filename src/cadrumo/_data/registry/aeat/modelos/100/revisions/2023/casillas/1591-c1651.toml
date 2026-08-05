@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1651"
 number = "1651"
-label = "Parte de la ganancia patrimonial susceptible de reducción (D.A.7ª)"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_susceptible_reduccion_da7"
 continuidad_id = "irpf-ganancia-otros-susceptible-reduccion-da7"

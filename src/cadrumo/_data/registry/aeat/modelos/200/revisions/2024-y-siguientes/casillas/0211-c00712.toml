@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00712"
 number = "00712"
-label = "Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondo de reserva obligatorio de cooperativas [00712]"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
 semantic_role = "is_balance_patrimonio_neto_pasivo_importe"

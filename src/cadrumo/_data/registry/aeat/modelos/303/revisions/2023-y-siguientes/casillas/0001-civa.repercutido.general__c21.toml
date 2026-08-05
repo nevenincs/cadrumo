@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.repercutido.general"
 number = "iva.repercutido.general"
-label = "Cuota IVA repercutido al tipo general (21%)"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_general"
@@ -15,7 +14,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.repercutido.reducido"
 number = "iva.repercutido.reducido"
-label = "Cuota IVA repercutido al tipo reducido (10%)"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_reducido"
@@ -29,7 +27,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.repercutido.super-reducido"
 number = "iva.repercutido.super-reducido"
-label = "Cuota IVA repercutido al tipo super-reducido (4%)"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_super_reducido"
@@ -43,7 +40,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.soportado.interiores"
 number = "iva.soportado.interiores"
-label = "Cuota IVA soportado en operaciones interiores corrientes"
 section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 semantic_role = "iva_cuota_soportada_interiores"
@@ -57,7 +53,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
-label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA art 84.Uno.2)"
 section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
@@ -71,7 +66,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autorepercutido.interior.devengado"
 number = "iva.autorepercutido.interior.devengado"
-label = "Cuota IVA autorepercutida en operaciones interiores con inversion del sujeto pasivo (LIVA art 84.Uno.2; oficial casilla 13)"
 section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
 semantic_role = "iva_cuota_autorepercutida_interior_devengado"
@@ -85,7 +79,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autorepercutido.interior.deducible"
 number = "iva.autorepercutido.interior.deducible"
-label = "Cuota IVA deducible autorepercutida en operaciones interiores con inversion del sujeto pasivo (LIVA art 84.Uno.2 + art 92; oficial casilla 37)"
 section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 semantic_role = "iva_cuota_autorepercutida_interior_deducible"
@@ -106,7 +99,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autorepercutido.intracomunitaria.devengado"
 number = "iva.autorepercutido.intracomunitaria.devengado"
-label = "Cuota IVA autorepercutida devengada en adquisiciones intracomunitarias (LIVA art 13 + art 15 + art 84.Uno.2; oficial casillas 10/11)"
 section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria_devengado"
@@ -120,7 +112,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autorepercutido.intracomunitaria.deducible"
 number = "iva.autorepercutido.intracomunitaria.deducible"
-label = "Cuota IVA deducible autorepercutida en adquisiciones intracomunitarias (LIVA art 13 + art 15 + art 84.Uno.2 + art 92; oficial casillas 36/37)"
 section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria_deducible"
@@ -139,7 +130,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.soportado.importaciones"
 number = "iva.soportado.importaciones"
-label = "Cuota IVA soportado deducible en importaciones de bienes corrientes (LIVA art 17 + art 92; oficial casilla 33)"
 section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 semantic_role = "iva_cuota_soportada_importaciones"
@@ -153,7 +143,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autoconsumo.promotor.base"
 number = "iva.autoconsumo.promotor.base"
-label = "Base imponible del autoconsumo del promotor inmobiliario (coste de construccion, Art. 9.1.c + Art. 79.4 LISIVA)"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_autoconsumo_promotor_base"
@@ -166,7 +155,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.autoconsumo.promotor.cuota"
 number = "iva.autoconsumo.promotor.cuota"
-label = "Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre base imponible, Art. 9.1.c + Art. 90 LISIVA)"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_autoconsumo_promotor_cuota"
@@ -179,7 +167,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
-label = "Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido en adquisiciones intracomunitarias)"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
 semantic_role = "iva_cuota_devengada_total"
@@ -193,7 +180,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.cuota-deducible-total"
 number = "iva.cuota-deducible-total"
-label = "Total cuota IVA deducible (soportado en operaciones interiores + autorepercutido deducible)"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
 semantic_role = "iva_cuota_deducible_total"
@@ -207,7 +193,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.resultado-regimen-general"
 number = "iva.resultado-regimen-general"
-label = "Resultado del regimen general (cuota devengada - cuota deducible)"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
 semantic_role = "iva_resultado_regimen_general"
@@ -223,7 +208,6 @@ export_refs = ["modelo-303-page-01-casilla-46"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.prorrata-volumen-con-derecho"
 number = "prorrata-volumen-con-derecho"
-label = "Volumen anual de operaciones que originan derecho a deducción"
 section = ["iva", "prorrata"]
 data_type = "money"
 semantic_role = "iva_prorrata_volumen_con_derecho"
@@ -241,7 +225,6 @@ source_refs = ["aeat-modelo-303-procedure"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.prorrata-volumen-total"
 number = "prorrata-volumen-total"
-label = "Volumen anual total de operaciones"
 section = ["iva", "prorrata"]
 data_type = "money"
 semantic_role = "iva_prorrata_volumen_total"
@@ -259,7 +242,6 @@ source_refs = ["aeat-modelo-303-procedure"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.prorrata-porcentaje"
 number = "prorrata-porcentaje"
-label = "Prorrata general — porcentaje (volumen con derecho / volumen total × 100)"
 section = ["iva", "prorrata"]
 data_type = "ratio"
 semantic_role = "iva_prorrata_porcentaje"
@@ -280,7 +262,6 @@ source_refs = ["aeat-modelo-303-procedure"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.regularizacion-inversiones"
 number = "regularizacion-inversiones"
-label = "Regularización por bienes de inversión (LIVA arts. 107-110)"
 section = ["iva", "regularizacion"]
 data_type = "money"
 semantic_role = "iva_regularizacion_inversiones"
@@ -293,7 +274,6 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-pendiente-periodos-anteriores"
 number = "110"
-label = "Cuotas a compensar pendientes de periodos anteriores"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "iva_compensacion_pendiente_anteriores"
@@ -314,7 +294,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-aplicada-periodo"
 number = "78"
-label = "Cuotas a compensar de periodos anteriores aplicadas en este periodo"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "iva_compensacion_aplicada_periodo"
@@ -334,7 +313,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-pendiente-periodos-posteriores"
 number = "87"
-label = "Cuotas a compensar de periodos previos pendientes para periodos posteriores"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "iva_compensacion_pendiente_posteriores"
@@ -355,7 +333,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.resultado"
 number = "69"
-label = "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "iva_resultado_autoliquidacion"
@@ -369,7 +346,6 @@ export_refs = ["modelo-303-page-03-casilla-69"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-disponible-fin-periodo"
 number = "compensacion-disponible-fin-periodo"
-label = "Saldo de compensacion disponible para periodos posteriores"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "iva_compensacion_disponible_fin_periodo"
@@ -388,7 +364,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-generada-periodo"
 number = "compensacion-generada-periodo"
-label = "Saldo a compensar generado en este periodo"
 section = ["iva", "resultado"]
 data_type = "money"
 semantic_role = "iva_compensacion_generada_periodo"
@@ -407,7 +382,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la autoliquidacion"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -420,7 +394,6 @@ source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo trimestral (1T / 2T / 3T / 4T)"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
@@ -433,7 +406,6 @@ source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "150"
 number = "150"
-label = "IVA devengado regimen general nuevo tipo tier 1 - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_150"
@@ -447,7 +419,6 @@ export_refs = ["modelo-303-page-01-casilla-150"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "151"
 number = "151"
-label = "IVA devengado regimen general nuevo tipo tier 1 - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_151"
@@ -460,7 +431,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "152"
 number = "152"
-label = "IVA devengado regimen general nuevo tipo tier 1 - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_152"
@@ -474,7 +444,6 @@ export_refs = ["modelo-303-page-01-casilla-152"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "153"
 number = "153"
-label = "IVA devengado regimen general nuevo tipo tier 2 - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_153"
@@ -488,7 +457,6 @@ export_refs = ["modelo-303-page-01-casilla-153"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "154"
 number = "154"
-label = "IVA devengado regimen general nuevo tipo tier 2 - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_154"
@@ -502,7 +470,6 @@ export_refs = ["modelo-303-page-01-casilla-154"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "155"
 number = "155"
-label = "IVA devengado regimen general nuevo tipo tier 2 - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_155"
@@ -516,7 +483,6 @@ export_refs = ["modelo-303-page-01-casilla-155"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "156"
 number = "156"
-label = "Recargo equivalencia tipo 0.5pct - Base imponible"
 section = ["iva", "recargo_equivalencia", "devengado"]
 data_type = "money"
 semantic_role = "dr303_156"
@@ -530,7 +496,6 @@ export_refs = ["modelo-303-page-01-casilla-156"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "157"
 number = "157"
-label = "Recargo equivalencia tipo 0.5pct - Tipo porcentaje"
 section = ["iva", "recargo_equivalencia", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_157"
@@ -543,7 +508,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "158"
 number = "158"
-label = "Recargo equivalencia tipo 0.5pct - Cuota"
 section = ["iva", "recargo_equivalencia", "devengado"]
 data_type = "money"
 semantic_role = "dr303_158"
@@ -558,7 +522,6 @@ export_refs = ["modelo-303-page-01-casilla-158"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "165"
 number = "165"
-label = "IVA devengado regimen general tipo 2pct desde 2024 - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_165"
@@ -572,7 +535,6 @@ export_refs = ["modelo-303-page-01-casilla-165"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "166"
 number = "166"
-label = "IVA devengado regimen general tipo 2pct desde 2024 - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_166"
@@ -586,7 +548,6 @@ export_refs = ["modelo-303-page-01-casilla-166"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "167"
 number = "167"
-label = "IVA devengado regimen general tipo 2pct desde 2024 - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_167"
@@ -600,7 +561,6 @@ export_refs = ["modelo-303-page-01-casilla-167"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "168"
 number = "168"
-label = "Recargo equivalencia nuevo tipo desde 2024 - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_168"
@@ -614,7 +574,6 @@ export_refs = ["modelo-303-page-01-casilla-168"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "169"
 number = "169"
-label = "Recargo equivalencia nuevo tipo desde 2024 - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_169"
@@ -628,7 +587,6 @@ export_refs = ["modelo-303-page-01-casilla-169"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "170"
 number = "170"
-label = "Recargo equivalencia nuevo tipo desde 2024 - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_170"
@@ -642,7 +600,6 @@ export_refs = ["modelo-303-page-01-casilla-170"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "01"
 number = "01"
-label = "IVA devengado RG tipo super-reducido 4pct - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_01"
@@ -657,7 +614,6 @@ export_refs = ["modelo-303-page-01-casilla-01"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "02"
 number = "02"
-label = "IVA devengado RG tipo super-reducido 4pct - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_02"
@@ -670,7 +626,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "03"
 number = "03"
-label = "IVA devengado RG tipo super-reducido 4pct - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_03"
@@ -685,7 +640,6 @@ export_refs = ["modelo-303-page-01-casilla-03"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "04"
 number = "04"
-label = "IVA devengado RG tipo reducido 10pct - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_04"
@@ -700,7 +654,6 @@ export_refs = ["modelo-303-page-01-casilla-04"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "05"
 number = "05"
-label = "IVA devengado RG tipo reducido 10pct - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_05"
@@ -713,7 +666,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "06"
 number = "06"
-label = "IVA devengado RG tipo reducido 10pct - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_06"
@@ -728,7 +680,6 @@ export_refs = ["modelo-303-page-01-casilla-06"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "07"
 number = "07"
-label = "IVA devengado RG tipo general 21pct - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_07"
@@ -743,7 +694,6 @@ export_refs = ["modelo-303-page-01-casilla-07"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "08"
 number = "08"
-label = "IVA devengado RG tipo general 21pct - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_08"
@@ -756,7 +706,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "09"
 number = "09"
-label = "IVA devengado RG tipo general 21pct - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_09"
@@ -771,7 +720,6 @@ export_refs = ["modelo-303-page-01-casilla-09"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "10"
 number = "10"
-label = "IVA devengado adquisiciones intracomunitarias bienes y servicios - Base"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_10"
@@ -785,7 +733,6 @@ export_refs = ["modelo-303-page-01-casilla-10"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "11"
 number = "11"
-label = "IVA devengado adquisiciones intracomunitarias bienes y servicios - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_11"
@@ -800,7 +747,6 @@ export_refs = ["modelo-303-page-01-casilla-11"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "12"
 number = "12"
-label = "IVA devengado otras ops inversion sujeto pasivo excl intracom - Base"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_12"
@@ -814,7 +760,6 @@ export_refs = ["modelo-303-page-01-casilla-12"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "13"
 number = "13"
-label = "IVA devengado otras ops inversion sujeto pasivo excl intracom - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_13"
@@ -829,7 +774,6 @@ export_refs = ["modelo-303-page-01-casilla-13"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "14"
 number = "14"
-label = "Modificacion bases y cuotas IVA devengado - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_14"
@@ -843,7 +787,6 @@ export_refs = ["modelo-303-page-01-casilla-14"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "15"
 number = "15"
-label = "Modificacion bases y cuotas IVA devengado - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_15"
@@ -857,7 +800,6 @@ export_refs = ["modelo-303-page-01-casilla-15"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "16"
 number = "16"
-label = "Recargo equivalencia tipo 1.0pct - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_16"
@@ -871,7 +813,6 @@ export_refs = ["modelo-303-page-01-casilla-16"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "17"
 number = "17"
-label = "Recargo equivalencia tipo 1.0pct - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_17"
@@ -885,7 +826,6 @@ export_refs = ["modelo-303-page-01-casilla-17"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "18"
 number = "18"
-label = "Recargo equivalencia tipo 1.0pct - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_18"
@@ -899,7 +839,6 @@ export_refs = ["modelo-303-page-01-casilla-18"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "19"
 number = "19"
-label = "Recargo equivalencia tipo 1.4pct - Base imponible"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_19"
@@ -913,7 +852,6 @@ export_refs = ["modelo-303-page-01-casilla-19"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "20"
 number = "20"
-label = "Recargo equivalencia tipo 1.4pct - Tipo porcentaje"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "ratio"
 semantic_role = "dr303_20"
@@ -926,7 +864,6 @@ source_refs = ["aeat-dr-303-2025"]
 [[revisions.2023-y-siguientes.casillas]]
 id = "21"
 number = "21"
-label = "Recargo equivalencia tipo 1.4pct - Cuota"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "dr303_21"

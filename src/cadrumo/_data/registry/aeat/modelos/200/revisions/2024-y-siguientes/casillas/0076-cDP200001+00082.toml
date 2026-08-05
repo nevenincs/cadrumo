@@ -2,7 +2,6 @@
 id = "DP200001:00082"
 number = "00082"
 segmento = "DP200001"
-label = "Sociedad matriz última grupo multinacional o grupo nacional de gran magnitud [00082]"
 section = ["sociedad_matriz_ultima_grupo_multinacional_o_grupo"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

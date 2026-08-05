@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2229"
 number = "2229"
-label = "Importe global de las adquisiciones"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 semantic_role = "irpf_ganancia_fondos_coti_valor_adquisicion_global"
 semantic_role_cardinality = "intentional_singleton"

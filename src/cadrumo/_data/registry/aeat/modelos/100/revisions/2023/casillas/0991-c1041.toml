@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1041"
 number = "1041"
-label = "Por acogimiento familiar de menores"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_acogimiento_menores"
 continuidad_id = "irpf-deduccion-madrid-acogimiento-menores"

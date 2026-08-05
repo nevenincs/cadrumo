@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01500"
 number = "01500"
-label = "Dotaciones deterioro créditos u otros activos - Ejercicio generación - 2023 - Dotaciones pendientes integración periodos futuros - Que no han cumplido condiciones deducibilidad fiscal [01500]"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 data_type = "money"
 semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_no_cumplido_condiciones"

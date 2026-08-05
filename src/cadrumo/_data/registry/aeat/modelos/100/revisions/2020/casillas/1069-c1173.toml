@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1173"
 number = "1173"
-label = "Por donaciones para contribuir a la financiación de los gastos ocasionados por la crisis sanitaria producida por la Covid-19"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_donaciones_covid19"
 continuidad_id = "irpf-deduccion-c-valenciana-donaciones-covid19"

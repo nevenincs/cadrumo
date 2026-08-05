@@ -1,6 +1,5 @@
 [revisions."2022"]
 id = "2022"
-label = "Ejercicio 2022"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
 period_selector = { years = [2022], periods = ["0A"] }

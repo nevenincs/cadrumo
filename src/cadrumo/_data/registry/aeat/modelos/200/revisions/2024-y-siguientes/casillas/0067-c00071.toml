@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00071"
 number = "00071"
-label = "Tipo gravamen reducido para entidades de nueva creación (art. 29.1 LIS) [00071]"
 section = ["tipo_gravamen_reducido_para_entidades_de_nueva_cre"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

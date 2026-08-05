@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0934"
 number = "0934"
-label = "Por donaciones y aportaciones para fines culturales, deportivos, investigación o docencia"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_donaciones_culturales_deportivas"
 continuidad_id = "irpf-deduccion-canarias-donaciones-culturales-deportivas"

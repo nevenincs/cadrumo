@@ -1,5 +1,4 @@
 [revisions."2013-y-siguientes"]
-label = "Modelo 720 ejercicios 2012 y siguientes (Orden HAP/72/2013)"
 valid_from = 2013-02-01
 period_selector = { year_from = 2012, periods = ["0A"] }
 legal_refs = [

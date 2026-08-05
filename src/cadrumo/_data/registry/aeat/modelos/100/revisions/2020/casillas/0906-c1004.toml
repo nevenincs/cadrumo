@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "1004"
 number = "1004"
-label = "Por el pago de intereses de préstamos para los estudios de máster y de doctorado"
 section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
 semantic_role = "irpf_deduccion_catalunya_intereses_prestamos_estudios"
 continuidad_id = "irpf-deduccion-catalunya-intereses-prestamos-estudios"

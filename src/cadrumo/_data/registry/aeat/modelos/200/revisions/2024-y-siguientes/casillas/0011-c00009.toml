@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00009"
 number = "00009"
-label = "Entidad dominante de grupo fiscal [00009]"
 section = ["entidad_dominante_de_grupo_fiscal"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

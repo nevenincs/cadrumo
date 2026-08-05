@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03296"
 number = "03296"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Disminución - Correcciones del ejercicio - Permanentes [03296]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_ric_permanente"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03297"
 number = "03297"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03297]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "disminucion"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03298"
 number = "03298"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03298]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "disminucion"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03299"
 number = "03299"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Disminución - Saldo pendiente a principio de ejercicio [03299]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "disminucion"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03300"
 number = "03300"
-label = "Reserva para inversiones en Canarias (Ley 19/1994) - Disminución - Saldo pendiente a fin de ejercicio [03300]"
 section = ["reserva_para_inversiones_en_canarias_ley_19_1994", "disminucion"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_canarias_ajuste_disminucion"

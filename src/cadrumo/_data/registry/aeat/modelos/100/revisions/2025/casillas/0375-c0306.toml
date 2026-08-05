@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0306"
 number = "0306"
-label = "Suma de otras ganancias que no derivan de la transmisión de elementos patrimoniales (suma de las casillas [0299] a [0304] + [0266] + [0279] +  [0356] + [0323] + [0362])"
 section = ["resultados", "gp_premios_res", "otras_res"]
 semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
 input_kind = "computed"

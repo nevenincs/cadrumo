@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "PH18"
 number = "###"
-label = "Hijos menores en unidad familiar"
 section = ["datos_identificativos", "hijos"]
 data_type = "boolean"
 semantic_role = "irpf_hijos_menores_unidad_familiar_flag"

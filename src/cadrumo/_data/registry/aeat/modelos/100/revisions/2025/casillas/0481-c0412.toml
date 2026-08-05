@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0412"
 number = "0412"
-label = "Suma de ganancias patrimoniales por cambio de residencia fuera del territorio español(suma de las casillas [0411])"
 section = ["resultados", "g_cambio_residencia_ext_res"]
 semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
 input_kind = "computed"

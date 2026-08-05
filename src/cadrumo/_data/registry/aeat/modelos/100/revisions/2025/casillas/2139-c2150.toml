@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2150"
 number = "2150"
-label = "Por gastos asociados a la práctica del deporte y actividades saludables (importe de la casilla [2122] del anexo B.14)"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_deporte_actividades_saludables"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

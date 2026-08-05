@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00502"
 number = "00502"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Otros ingresos y gastos reconocidos en patrimonio neto - Dividendo a cuenta [00502]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00503"
 number = "00503"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Otros ingresos y gastos reconocidos en patrimonio neto - Ajustes en patrimonio neto [00503]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00504"
 number = "00504"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Otros ingresos y gastos reconocidos en patrimonio neto - Subvenciones, donaciones y legados recibidos [0..."
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00505"
 number = "00505"
-label = "Estado de cambios patrimonio neto (III) - Ingresos y gastos reconocidos en patrimonio neto - Otros ingresos y gastos reconocidos en patrimonio neto - Total [00505]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"
 semantic_role = "is_ecpn_ingresos_gastos_en_pn_importe"

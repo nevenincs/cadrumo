@@ -1,7 +1,6 @@
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.repercutido.general"
 number = "iva.repercutido.general"
-label = "Cuota IVA repercutido al tipo general (21%) - agregado del grupo"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_general"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.repercutido.reducido"
 number = "iva.repercutido.reducido"
-label = "Cuota IVA repercutido al tipo reducido (10%) - agregado del grupo"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_reducido"
@@ -27,7 +25,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.repercutido.super-reducido"
 number = "iva.repercutido.super-reducido"
-label = "Cuota IVA repercutido al tipo super-reducido (4%) - agregado del grupo"
 section = ["iva", "regimen_general", "devengado"]
 data_type = "money"
 semantic_role = "iva_cuota_repercutida_super_reducido"
@@ -40,7 +37,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.soportado.interiores"
 number = "iva.soportado.interiores"
-label = "Cuota IVA soportado en operaciones interiores corrientes - agregado del grupo"
 section = ["iva", "regimen_general", "deducible"]
 data_type = "money"
 semantic_role = "iva_cuota_soportada_interiores"
@@ -53,7 +49,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
-label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias - agregado del grupo"
 section = ["iva", "regimen_general", "inversion_sujeto_pasivo"]
 data_type = "money"
 semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
@@ -66,7 +61,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
-label = "Total cuota IVA devengada (agregado del grupo)"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
 semantic_role = "iva_cuota_devengada_total"
@@ -79,7 +73,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.cuota-deducible-total"
 number = "iva.cuota-deducible-total"
-label = "Total cuota IVA deducible (agregado del grupo)"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
 semantic_role = "iva_cuota_deducible_total"
@@ -92,7 +85,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.resultado-regimen-general"
 number = "iva.resultado-regimen-general"
-label = "Resultado del grupo (cuota devengada agregada - cuota deducible agregada)"
 section = ["iva", "regimen_general", "totales"]
 data_type = "money"
 semantic_role = "iva_resultado_regimen_general"

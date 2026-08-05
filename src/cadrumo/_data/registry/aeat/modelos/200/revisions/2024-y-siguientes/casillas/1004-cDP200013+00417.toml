@@ -14,7 +14,6 @@
 id = "DP200013:00417"
 number = "00417"
 segmento = "DP200013"
-label = "Liquidación II - Detalle correcciones resultado cta. pérdidas y ganancias - Total correcciones al resultado de la cuenta de pérdidas y ganancias (aumentos) [00417]"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"
 semantic_role = "is_correcciones_aumentos_total"

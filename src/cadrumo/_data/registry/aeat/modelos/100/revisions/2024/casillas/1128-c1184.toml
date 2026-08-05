@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1184"
 number = "1184"
-label = "Importe generado en 2023 pendiente de aplicación"
 section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
 semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente_2"
 legal_refs = ["ley-35-2006:art-77"]

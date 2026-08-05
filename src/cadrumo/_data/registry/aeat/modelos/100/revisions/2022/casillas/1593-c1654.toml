@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1654"
 number = "1654"
-label = "Ganancia patrimonial reducida no exenta imputable a 2022"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 semantic_role = "irpf_ganancia_otros_reducida_imputable_da7"
 continuidad_id = "irpf-ganancia-otros-reducida-imputable-da7"

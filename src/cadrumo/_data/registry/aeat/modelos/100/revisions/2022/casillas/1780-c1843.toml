@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1843"
 number = "1843"
-label = "Ganancia patrimonial no exenta imputable a 2022"
 section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
 semantic_role = "irpf_ganancia_inmueble_no_exenta_imputable"
 continuidad_id = "irpf-ganancia-inmueble-no-exenta-imputable"

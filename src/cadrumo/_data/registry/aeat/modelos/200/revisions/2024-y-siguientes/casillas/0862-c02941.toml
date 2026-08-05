@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02941"
 number = "02941"
-label = "Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2023 - Pendiente de dotar RIIB al final de período [02941]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "inversiones_anticipadas_2023"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"

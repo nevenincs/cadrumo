@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02827"
 number = "02827"
-label = "Rég. cooperativas - Determ. base imponible - 1, Ingresos computables - Resultados cooperativos [02827]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02828"
 number = "02828"
-label = "Rég. cooperativas - Determ. base imponible - 1. Ingresos computables - Resultados extracooperativos [02828]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02829"
 number = "02829"
-label = "Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados cooperativos [02829]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02830"
 number = "02830"
-label = "Rég. cooperativas - Determ. base imponible - 2. Gastos específicos - Resultados extracooperativos [02830]"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"
 semantic_role = "is_cooperativa_base_imponible"

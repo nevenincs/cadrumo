@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0902"
 number = "0902"
-label = "Por donaciones, cesiones de uso o contratos de comodato y convenios de colaboración empresarial, relativos al mecenazgo cultural, científico y de desarrollo tecnológico y al consumo cultural"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 semantic_role = "irpf_deduccion_baleares_donaciones_patrimonio"
 continuidad_id = "irpf-deduccion-baleares-donaciones-patrimonio"

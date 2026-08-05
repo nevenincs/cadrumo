@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "01576"
 number = "01576"
-label = "Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realización de actividades a las que se aplica el régime..."
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_base_imponible_zec_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "01577"
 number = "01577"
-label = "Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realización del resto de actividades, después de la rese..."
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"
 semantic_role = "is_naviera_base_imponible_foral"

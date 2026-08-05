@@ -40,6 +40,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.errors import CadrumoError
+from ...core.i18n import output_language
 from ...core.logging import get_logger
 from ...domain.calculations.registry import CasillaId
 from ...domain.modelos import CalculationRevision, WorkUnit
@@ -69,17 +70,15 @@ class ResultSummaryRow(BaseModel):
     :class:`CalculationRevision` values. ``result_ingresar`` and
     ``result_devolver`` identify registry-declared reconciliation totals;
     ``key_figure`` identifies a computed output retained for the CLI summary.
-    ``label`` remains the official Spanish invariant; ``localized_labels``
-    carries registry-provided operator-facing display labels for other output
-    languages. CLI JSON rendering serializes this model into
-    ``ResultSummaryRowPayload`` rows with string decimal values.
+    ``label`` is resolved once for the active output language. CLI JSON
+    rendering serializes this model into ``ResultSummaryRowPayload`` rows with
+    string decimal values.
     """
 
     model_config = _STRICT_FROZEN
 
     casilla_id: CasillaId
     label: str
-    localized_labels: dict[str, str] = Field(default_factory=dict)
     value: Decimal
     role: ResultSummaryRole
     """Why the casilla is a headline figure. See :class:`ResultSummaryRole`."""
@@ -164,8 +163,7 @@ def calculation_result_summary(
         casilla = casillas_by_id.get(casilla_id)
         return ResultSummaryRow(
             casilla_id=casilla_id,
-            label=casilla.label if casilla is not None else casilla_id,
-            localized_labels=dict(casilla.localized_labels) if casilla is not None else {},
+            label=casilla.get_label(output_language()) if casilla is not None else casilla_id,
             value=value,
             role=role,
         )

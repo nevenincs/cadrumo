@@ -820,8 +820,7 @@ class ModeloCasillaResult(OutputSchema):
     casilla_id: CasillaId
     number: str
     label: str
-    localized_labels: dict[str, str] = Field(default_factory=dict)
-    localized_help: dict[str, str] = Field(default_factory=dict)
+    help_text: str | None = None
     section: tuple[str, ...] = ()
     data_type: str
     input_kind: str
@@ -841,10 +840,9 @@ class CasillaRowPayload(OutputSchema):
     input_kind: str
     required: bool
     label: str
+    help_text: str | None = None
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
-    localized_labels: dict[str, str] = Field(default_factory=dict)
-    localized_help: dict[str, str] = Field(default_factory=dict)
 
 
 @register_schema("modelo.casillas")
@@ -870,7 +868,6 @@ class DataInventoryCasillaPayload(OutputSchema):
     casilla_id: CasillaId
     number: str
     label: str
-    localized_labels: dict[str, str] = Field(default_factory=dict)
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     binding_id: BindingId | None = None

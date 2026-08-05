@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00461"
 number = "00461"
-label = "Estado de cambios patrimonio neto (III) - Resultado cuenta pérdidas y ganancias - Ajustes en patrimonio neto [00461]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "resultado_cuenta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00462"
 number = "00462"
-label = "Estado de cambios patrimonio neto (III) - Resultado cuenta pérdidas y ganancias - Subvenciones, donaciones y legados recibidos [00462]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "resultado_cuenta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "00463"
 number = "00463"
-label = "Estado de cambios patrimonio neto (III) - Resultado cuenta pérdidas y ganancias - Total [00463]"
 section = ["estado_de_cambios_patrimonio_neto_iii", "resultado_cuenta_perdidas_y_ganancias"]
 data_type = "money"
 semantic_role = "is_ecpn_resultado_perdidas_ganancias_importe"

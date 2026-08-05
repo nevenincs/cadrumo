@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 import json
-import shutil
 from pathlib import Path
 
 import pytest
 
-from ...core.external_constants import OutputLanguage
-from ...core.resources import bundled_path
-from ...tests.cli_runner import invoke_typer_app, semantic_cli_output
-from .._modelo_manager import ModeloLocaleFieldKind, ModeloLocaleManager
+from ...tests.cli_runner import invoke_typer_app
 from .._status import CatalogueLeafState, catalogue_status, classify_catalogue_leaf
 from ..cli import app
 from ..manager import LocaleManager
@@ -197,45 +193,3 @@ def test_status_command_reports_catalogue_partition(manager: LocaleManager) -> N
     assert rows["hu.yml"]["identical_pending"] == "1"
     assert rows["es.yml"]["extra"] == "1"
 
-
-def test_status_command_refuses_to_count_mirrored_help_as_authored(
-    manager: LocaleManager,
-    tmp_path: Path,
-) -> None:
-    """A help value that repeats its label drops out of the authored count."""
-    registry_root = tmp_path / "registry" / "aeat"
-    modelos = registry_root / "modelos"
-    modelos.mkdir(parents=True)
-    shutil.copytree(bundled_path("registry", "aeat", "modelos", "130"), modelos / "130")
-    ModeloLocaleManager(registry_root).set_translation_value(
-        OutputLanguage.EN,
-        "130",
-        "2019-y-siguientes",
-        ModeloLocaleFieldKind.HELP,
-        "01",
-        "Income",
-    )
-
-    result = invoke_typer_app(
-        app,
-        ["status", "--modelo", "130", "--locale", "en", "--registry-root", str(registry_root)],
-        obj=manager,
-    )
-
-    assert result.exit_code == 0, result.output
-    assert "modelo locale=en modelo=130 revision=2019-y-siguientes label_authored=20/20" in result.output
-    assert "help_authored=19/20" in result.output
-    assert "help_mirrored=1" in result.output
-    # Help is optional enrichment: it is reported honestly but never
-    # gates completeness, which is a labels-only contract.
-    assert "complete=true" in result.output
-
-
-def test_status_command_rejects_revision_without_modelo(manager: LocaleManager) -> None:
-    """A revision filter without a modelo filter is refused loudly."""
-    result = invoke_typer_app(app, ["status", "--revision", "2020"], obj=manager)
-
-    assert result.exit_code != 0
-    # Typer force-styles the refusal on GitHub Actions (rich error panel with
-    # ANSI); strip styling so the message matches regardless of the CI terminal.
-    assert "--revision requires --modelo" in semantic_cli_output(result)

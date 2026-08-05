@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0849"
 number = "0849"
-label = "Por gastos educativos"
 section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
 semantic_role = "irpf_deduccion_andalucia_gastos_educativos"
 legal_refs = ["ley-35-2006:art-77"]

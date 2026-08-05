@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03594"
 number = "03594"
-label = "Reserva Capitalización - Incremento porcentual de la plantilla media total(**) [03594]"
 section = ["reserva_capitalizacion", "incremento_porcentual_de_la_plantilla_media_total"]
 data_type = "money"
 semantic_role = "is_reserva_capitalizacion_incremento_plantilla_porcentaje"

@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00020"
 number = "00020"
-label = "Otros regímenes especiales [00020]"
 section = ["otros_regimenes_especiales"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

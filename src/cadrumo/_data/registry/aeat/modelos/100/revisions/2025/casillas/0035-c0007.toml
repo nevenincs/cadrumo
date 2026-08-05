@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0007"
 number = "0007"
-label = "Rendimientos del trabajo en especie. Importe integro"
 section = ["rendimientos_trabajo"]
 semantic_role = "irpf_rendimiento_trabajo_especie_importe_integro"
 input_kind = "computed"

@@ -1,7 +1,6 @@
 [[revisions."2019-y-siguientes".casillas]]
 id = "22"
 number = "22"
-label = "Ganancias patrimoniales forestales en especie numero de perceptores"
 section = ["ganancias_forestales_especie"]
 data_type = "integer"
 semantic_role = "perceptor_count"
@@ -14,7 +13,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "23"
 number = "23"
-label = "Ganancias patrimoniales forestales en especie valor de percepciones"
 section = ["ganancias_forestales_especie"]
 data_type = "money"
 semantic_role = "valor_percepciones_especie"
@@ -27,7 +25,6 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".casillas]]
 id = "24"
 number = "24"
-label = "Ganancias patrimoniales forestales en especie importe de ingresos a cuenta"
 section = ["ganancias_forestales_especie"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

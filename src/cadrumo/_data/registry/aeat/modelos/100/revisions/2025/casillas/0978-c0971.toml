@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0971"
 number = "0971"
-label = "Por adquisición o rehabilitación de vivienda habitual por jóvenes en el medio rural"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_vivienda_jovenes"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

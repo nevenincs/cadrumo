@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00057"
 number = "00057"
-label = "Régimen fiscal salida SOCIMI [00057]"
 section = ["regimen_fiscal_salida_socimi"]
 data_type = "decimal"
 semantic_role = "is_identificacion_regimen_flag"

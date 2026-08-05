@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0920"
 number = "0920"
-label = "Por trasladar la residencia habitual a otra isla del Archipiélago para realizar una actividad laboral por cuenta ajena o una actividad económica"
 section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
 semantic_role = "irpf_deduccion_canarias_traslado_residencia_isla"
 continuidad_id = "irpf-deduccion-canarias-traslado-residencia-isla"

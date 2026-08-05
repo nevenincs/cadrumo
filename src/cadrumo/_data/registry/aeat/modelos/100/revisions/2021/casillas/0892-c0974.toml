@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0974"
 number = "0974"
-label = "Por cantidades invertidas en la recuperación del patrimonio histórico, cultural y natural"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_patrimonio_historico"
 continuidad_id = "irpf-deduccion-castilla-y-leon-patrimonio-historico"

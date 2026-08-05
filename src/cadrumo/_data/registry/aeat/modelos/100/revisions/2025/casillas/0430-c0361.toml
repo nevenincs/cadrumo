@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0361"
 number = "0361"
-label = "Valoración"
 section = ["toma_datos_ampliada", "gp_premios", "juegos_pub"]
 semantic_role = "irpf_ganancia_premios_juegos_pub_valoracion_b"
 semantic_role_cardinality = "intentional_singleton"

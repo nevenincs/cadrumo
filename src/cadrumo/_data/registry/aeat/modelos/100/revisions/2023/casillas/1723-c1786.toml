@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1786"
 number = "1786"
-label = "Dirección del Banco/Address of the bank"
 section = ["resultados", "regularizacion_res", "rectnosepa"]
 data_type = "nif"
 semantic_role = "irpf_compensacion_conyuges_banco_direccion"

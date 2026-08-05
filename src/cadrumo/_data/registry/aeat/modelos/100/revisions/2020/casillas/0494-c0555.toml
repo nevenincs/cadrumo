@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0555"
 number = "0555"
-label = "Por incentivos y estímulos a la inversión empresarial (traslade los importes de estas mismas casillas del anexo A.4): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_incentivos_inversion_empresarial_autonomica"
 legal_refs = ["ley-35-2006:art-68.2"]

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1270"
 number = "1270"
-label = "Saldo negativo de las ganancias y pérdidas imputables a 2022, a integrar en la base imponible del ahorro, pendientes de compensación en los 4 ejercicios siguientes (casillas [0425] - [0446])"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_ahorro_res"]
 semantic_role = "irpf_anexo_c_saldo_neg_gyp_ahorro_generado"
 input_kind = "computed"

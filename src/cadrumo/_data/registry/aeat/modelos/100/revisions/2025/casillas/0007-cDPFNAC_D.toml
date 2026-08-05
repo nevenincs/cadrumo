@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "DPFNAC_D"
 number = "*10"
-label = "Primer declarante fecha de nacimiento"
 section = ["datos_identificativos", "declarante"]
 data_type = "text"
 semantic_role = "irpf_declarante_fecha_nacimiento"

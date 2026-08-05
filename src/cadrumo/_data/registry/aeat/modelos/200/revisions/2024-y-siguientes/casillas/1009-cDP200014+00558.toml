@@ -2,7 +2,6 @@
 id = "DP200014:00558"
 number = "00558"
 segmento = "DP200014"
-label = "Liquidación III - Base imponible - Tipo de gravamen [00558]"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "decimal"
 semantic_role = "is_liquidacion_iii_tipo_de_gravamen"

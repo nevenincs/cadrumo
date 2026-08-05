@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00926"
 number = "00926"
-label = "Deducciones doble imposición internacional RDLeg. 4/2004 - DI internacional 2014 - Tipo gravamen período generación [00926]"
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2014"]
 data_type = "money"
 semantic_role = "is_deduccion_di_internacional_rdleg_tipo_gravamen"

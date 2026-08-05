@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1040"
 number = "1040"
-label = "Por adopción internacional de niños"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_adopcion_internacional"
 continuidad_id = "irpf-deduccion-madrid-adopcion-internacional"

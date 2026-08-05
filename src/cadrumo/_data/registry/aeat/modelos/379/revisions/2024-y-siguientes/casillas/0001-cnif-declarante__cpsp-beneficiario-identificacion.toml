@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "nif-declarante"
 number = "anexo.1.1"
-label = "NIF del declarante"
 section = ["identificacion_declaracion"]
 data_type = "nif"
 semantic_role = "m379_nif_declarante"
@@ -13,7 +12,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "ejercicio-declaracion"
 number = "anexo.1.2"
-label = "Ejercicio de declaracion"
 section = ["identificacion_declaracion"]
 data_type = "year"
 semantic_role = "m379_ejercicio_declaracion"
@@ -27,7 +25,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "trimestre-declaracion"
 number = "anexo.1.3"
-label = "Trimestre de la declaracion"
 section = ["identificacion_declaracion"]
 data_type = "period_code"
 semantic_role = "m379_trimestre_declaracion"
@@ -39,7 +36,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "psp-identificador"
 number = "anexo.2.1"
-label = "Identificador del PSP declarante"
 section = ["proveedor_servicios_pago_declarante"]
 data_type = "text"
 semantic_role = "m379_psp_identificador"
@@ -51,7 +47,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "psp-tipo-identificador"
 number = "anexo.2.2"
-label = "Tipo de identificador del PSP declarante"
 section = ["proveedor_servicios_pago_declarante"]
 data_type = "text"
 semantic_role = "m379_psp_tipo_identificador"
@@ -63,7 +58,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "psp-nombre"
 number = "anexo.2.3"
-label = "Nombre o razon social del PSP declarante"
 section = ["proveedor_servicios_pago_declarante"]
 data_type = "name"
 semantic_role = "m379_psp_nombre"
@@ -75,7 +69,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "beneficiario-nombre"
 number = "anexo.3.1"
-label = "Nombre, razon social o denominacion comercial del beneficiario"
 section = ["beneficiario"]
 data_type = "name"
 semantic_role = "m379_beneficiario_nombre"
@@ -87,7 +80,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "beneficiario-pais"
 number = "anexo.3.2"
-label = "Pais de ubicacion del beneficiario"
 section = ["beneficiario"]
 data_type = "country_code"
 semantic_role = "m379_beneficiario_pais"
@@ -99,7 +91,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "beneficiario-identificador"
 number = "anexo.3.6"
-label = "Identificador fiscal o nacional del beneficiario"
 section = ["beneficiario"]
 data_type = "text"
 semantic_role = "m379_beneficiario_identificador"
@@ -111,7 +102,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "beneficiario-cuenta"
 number = "anexo.3.7"
-label = "Cuenta del beneficiario o identificador equivalente"
 section = ["beneficiario"]
 data_type = "text"
 semantic_role = "m379_beneficiario_cuenta"
@@ -123,7 +113,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "pago-es-devolucion"
 number = "anexo.3.8.1"
-label = "Indicador de devolucion"
 section = ["detalle_pago_devolucion"]
 data_type = "boolean"
 semantic_role = "m379_pago_es_devolucion"
@@ -135,7 +124,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "pago-identificador"
 number = "anexo.3.8.2"
-label = "Identificador del pago"
 section = ["detalle_pago_devolucion"]
 data_type = "text"
 semantic_role = "m379_pago_identificador"
@@ -147,7 +135,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "pago-fecha-hora"
 number = "anexo.3.8.4"
-label = "Fecha y hora del pago o devolucion"
 section = ["detalle_pago_devolucion"]
 data_type = "text"
 semantic_role = "m379_pago_fecha_hora"
@@ -159,7 +146,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "pago-importe"
 number = "anexo.3.8.5"
-label = "Importe de la operacion de pago o devolucion"
 section = ["detalle_pago_devolucion"]
 data_type = "money"
 semantic_role = "m379_pago_importe"
@@ -171,7 +157,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "pago-moneda"
 number = "anexo.3.8.6"
-label = "Moneda de la operacion de pago o devolucion"
 section = ["detalle_pago_devolucion"]
 data_type = "text"
 semantic_role = "m379_pago_moneda"
@@ -183,7 +168,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "pago-metodo"
 number = "anexo.3.8.7"
-label = "Metodo de pago"
 section = ["detalle_pago_devolucion"]
 data_type = "text"
 semantic_role = "m379_pago_metodo"
@@ -195,7 +179,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "pagador-ubicacion"
 number = "anexo.3.8.9"
-label = "Ubicacion del pagador u ordenante"
 section = ["detalle_pago_devolucion"]
 data_type = "text"
 semantic_role = "m379_pagador_ubicacion"
@@ -207,7 +190,6 @@ source_refs = ["boe-modelo-379-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "psp-beneficiario-identificacion"
 number = "anexo.3.9"
-label = "Identificacion del PSP del beneficiario"
 section = ["beneficiario"]
 data_type = "text"
 semantic_role = "m379_psp_beneficiario_identificacion"

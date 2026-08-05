@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1048"
 number = "1048"
-label = "Por inversiones realizadas en entidades cotizadas en el Mercado Alternativo Bursátil (se traslada este importe a la casilla [1142] del anexo B.8)"
 section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
 semantic_role = "irpf_deduccion_madrid_entidades_cotizadas_mab"
 legal_refs = ["ley-35-2006:art-77"]

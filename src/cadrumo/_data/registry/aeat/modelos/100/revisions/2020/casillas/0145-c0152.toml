@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0152"
 number = "0152"
-label = "Rendimiento mínimo computable en caso de parentesco (artículo 24 de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_rendimiento_capital_inmobiliario_rendimiento_minimo_parentesco"
 legal_refs = ["ley-35-2006:art-24"]

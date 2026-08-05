@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0686"
 number = "0686"
-label = "Número de justificante de la autoliquidación cuya rectificación se solicita"
 section = ["resultados", "regularizacion_res"]
 data_type = "text"
 semantic_role = "irpf_regularizacion_numero_justificante_rectificacion"

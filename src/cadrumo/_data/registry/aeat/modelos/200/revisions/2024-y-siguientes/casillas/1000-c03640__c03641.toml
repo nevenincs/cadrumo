@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03640"
 number = "03640"
-label = "Rég. especial reserva inversiones Illes Balears - RIIB 2025 - Inversiones anticipadas consideradas materialización de la RIIB en esta liquidación [03640]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2025"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03641"
 number = "03641"
-label = "Rég. especial reserva inversiones Illes Balears - RIIB 2025 - Pendiente de materializar RIIB al final de período [03641]"
 section = ["reg_especial_reserva_inversiones_illes_balears", "riib_2025"]
 data_type = "money"
 semantic_role = "is_reserva_inversiones_illes_balears_importe"

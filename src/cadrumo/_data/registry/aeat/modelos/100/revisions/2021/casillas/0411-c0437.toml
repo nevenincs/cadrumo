@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0437"
 number = "0437"
-label = "Excesos pendientes de reducir procedentes de los ejercicios 2016 a 2020"
 section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
 semantic_role = "irpf_red_prevision_social_exceso_2016_2020"
 semantic_role_cardinality = "intentional_singleton"

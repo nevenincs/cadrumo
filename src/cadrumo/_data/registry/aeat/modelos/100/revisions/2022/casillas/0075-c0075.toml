@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0075"
 number = "0075"
-label = "Arrendamiento"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"
 semantic_role = "irpf_inmueble_arrendamiento_flag"

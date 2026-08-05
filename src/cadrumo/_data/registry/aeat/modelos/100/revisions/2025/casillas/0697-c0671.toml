@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0671"
 number = "0671"
-label = "Cuota líquida autonómica incrementada (traslade el importe de la casilla [0586])"
 section = ["resultados", "irpf_ccaa_res"]
 semantic_role = "irpf_cuota_liquida_autonomica_ccaa"
 input_kind = "computed"

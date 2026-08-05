@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.inmueble-planta"
 number = "210-212"
-label = "Planta del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_planta"

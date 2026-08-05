@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1701"
 number = "1701"
-label = "Por residencia habitual en un municipio afectado por riesgo de despoblamiento"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_residencia_municipio_riesgo"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]

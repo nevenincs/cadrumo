@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DPNIF_D"
 number = "*01"
-label = "Primer declarante NIF"
 section = ["datos_identificativos", "declarante"]
 data_type = "nif"
 semantic_role = "irpf_declarante_nif"

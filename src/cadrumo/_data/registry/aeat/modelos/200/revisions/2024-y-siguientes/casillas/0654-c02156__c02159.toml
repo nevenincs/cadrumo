@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02156"
 number = "02156"
-label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2017 - Deducción pendiente/generada [02156]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2017"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02157"
 number = "02157"
-label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2017 - Aplicado en esta liquidación [02157]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2017"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02158"
 number = "02158"
-label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2017 - Importe abonado por insuficiencia de cuota [02158]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2017"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_aplicado_periodo"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02159"
 number = "02159"
-label = "Deducciones por producciones cinematográficas extranjeras en Canarias (art. 36.2 LIS y DA 14ª Ley 19/1994) - 2017 - Pendiente de aplicación en períodos futuros [02159]"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2017"]
 data_type = "money"
 semantic_role = "is_deduccion_cinematografica_extranjera_pendiente_futuros"

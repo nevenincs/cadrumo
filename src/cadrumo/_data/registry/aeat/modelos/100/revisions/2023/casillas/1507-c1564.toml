@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1564"
 number = "1564"
-label = "Porcentaje de participación del contribuyente en la entidad"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "ratio"
 semantic_role = "irpf_re_atrib_pct_participacion"

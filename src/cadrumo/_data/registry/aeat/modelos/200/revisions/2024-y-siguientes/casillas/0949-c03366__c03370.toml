@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03366"
 number = "03366"
-label = "Entidades en rég. de atribución de rentas const. en el extranj. con presencia en territ. español (art. 38 TRLIRNR) - Disminución - Correcciones del ejercicio - Permanentes [03366]"
 section = ["entidades_en_reg_de_atribucion_de_rentas_const_en", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_atribucion_rentas_extranjero_aumento"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03367"
 number = "03367"
-label = "Entidades en rég. de atribución de rentas const. en el extranj. con presencia en territ. español (art. 38 TRLIRNR) - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercic..."
 section = ["entidades_en_reg_de_atribucion_de_rentas_const_en", "disminucion"]
 data_type = "money"
 semantic_role = "is_atribucion_rentas_extranjero_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03368"
 number = "03368"
-label = "Entidades en rég. de atribución de rentas const. en el extranj. con presencia en territ. español (art. 38 TRLIRNR) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios..."
 section = ["entidades_en_reg_de_atribucion_de_rentas_const_en", "disminucion"]
 data_type = "money"
 semantic_role = "is_atribucion_rentas_extranjero_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03369"
 number = "03369"
-label = "Entidades en rég. de atribución de rentas const. en el extranj. con presencia en territ. español (art. 38 TRLIRNR) - Disminución - Saldo pendiente a principio de ejercicio [03369]"
 section = ["entidades_en_reg_de_atribucion_de_rentas_const_en", "disminucion"]
 data_type = "money"
 semantic_role = "is_atribucion_rentas_extranjero_disminucion"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03370"
 number = "03370"
-label = "Entidades en rég. de atribución de rentas const. en el extranj. con presencia en territ. español (art. 38 TRLIRNR) - Disminución - Saldo pendiente a fin de ejercicio [03370]"
 section = ["entidades_en_reg_de_atribucion_de_rentas_const_en", "disminucion"]
 data_type = "money"
 semantic_role = "is_atribucion_rentas_extranjero_disminucion"

@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1543"
 number = "1543"
-label = "4. Por piensos adquiridos a terceros en más del 50 por 100"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 data_type = "text"
 semantic_role = "irpf_eo_agr_indice_piensos_terceros"

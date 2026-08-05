@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2230"
 number = "2230"
-label = "Ganancias patrimoniales"
 section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
 semantic_role = "irpf_ganancia_fondos_coti_ganancia"
 semantic_role_cardinality = "intentional_singleton"

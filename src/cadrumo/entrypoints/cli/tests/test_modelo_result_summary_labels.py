@@ -115,7 +115,7 @@ def test_result_summary_rows_render_requested_localized_label() -> None:
     assert summary is not None
     row = next(item for item in summary.rows if item.casilla_id == "03")
     assert row.label == "Rendimiento neto"
-    assert row.localized_labels["ca"] == "Rendiment net"
+    assert "localized_labels" not in row.model_dump()
 
     with override_settings(cadrumo_output_language="ca"):
         lines = result_summary_lines(revision)
@@ -127,8 +127,7 @@ def test_result_summary_rows_render_requested_localized_label() -> None:
 
     payload_row = next(item for item in payload if item.casilla_id == "03")
     assert payload_row.label == "Rendiment net"
-    assert payload_row.localized_labels["ca"] == "Rendiment net"
-    assert payload_row.localized_labels["en"] == "Net yield"
+    assert "localized_labels" not in payload_row.model_dump()
 
 
 def test_result_summary_row_refuses_an_unknown_role() -> None:

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0695"
 number = "0695"
-label = "Resto a ingresar del resultado de su declaración: diferencia ([0670] - [0693]) positiva o igual a cero"
 section = ["resultados", "compensacion_conyuges_res"]
 semantic_role = "irpf_compensacion_conyuges_resto_ingresar"
 input_kind = "computed"

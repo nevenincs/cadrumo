@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1879"
 number = "1879"
-label = "Resto perdida patrimonial  pendiente de imputación"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_perdida_cripto_pendiente_resto"
 continuidad_id = "irpf-perdida-cripto-pendiente-resto"

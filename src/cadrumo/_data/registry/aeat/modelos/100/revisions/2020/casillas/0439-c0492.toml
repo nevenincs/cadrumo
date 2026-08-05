@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0492"
 number = "0492"
-label = "Por aportaciones y contribuciones a sistemas de previsión social (régimen general). Importe de la casilla [0468] que se aplica"
 section = ["resultados", "base_liquidable_res"]
 semantic_role = "irpf_reduccion_prevision_social_aplicada"
 continuidad_id = "irpf-reduccion-prevision-social-aplicada"

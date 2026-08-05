@@ -35,7 +35,6 @@ def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None
 [[revisions."2025".casillas]]
 id = "0001"
 number = "1"
-label = "Base"
 section = ["liquidacion"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -86,7 +85,6 @@ required = true
 [[revisions."2025".casillas]]
 id = "0001"
 number = "1"
-label = "Base"
 section = ["liquidacion"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
@@ -354,7 +352,6 @@ def test_directory_mode_merges_construct_member_fragments_by_construct_id(tmp_pa
 
 [[revisions."2025".constructs]]
 id = "modelo-999-workflow"
-title = "Modelo 999 workflow"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 casilla_ids = ["0001"]
@@ -372,7 +369,6 @@ formulas = ["formula-1"]
         """
 [[revisions."2025".constructs]]
 id = "modelo-999-workflow"
-title = "Modelo 999 workflow"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 casilla_ids = ["0001"]
@@ -432,7 +428,6 @@ record_type = "2"
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
-title = "One"
 casilla_ids = ["0001"]
 """.lstrip(),
                 ),
@@ -441,7 +436,6 @@ casilla_ids = ["0001"]
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
-title = "Two"
 formulas = ["formula-1"]
 """.lstrip(),
                 ),

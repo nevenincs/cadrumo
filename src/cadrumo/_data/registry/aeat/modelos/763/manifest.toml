@@ -1,7 +1,5 @@
 [modelo]
 id = "763"
-title = "Impuesto sobre actividades de juego — autoliquidación (anuales/plurianuales)"
-official_name = "Modelo 763. Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales. Autoliquidación."
 tax_domain = "juego"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

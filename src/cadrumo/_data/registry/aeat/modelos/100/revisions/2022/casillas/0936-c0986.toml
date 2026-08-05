@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0986"
 number = "0986"
-label = "Por nacimiento o adopción de hijos"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 semantic_role = "irpf_deduccion_castilla_y_leon_nacimiento_adopcion"
 continuidad_id = "irpf-deduccion-castilla-y-leon-nacimiento-adopcion"

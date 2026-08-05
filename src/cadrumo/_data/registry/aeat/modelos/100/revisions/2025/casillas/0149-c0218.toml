@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "0218"
 number = "0218"
-label = "Suma de gastos previos de estimacion directa"
 section = ["rendimientos_actividades_economicas", "estimacion_directa"]
 semantic_role = "irpf_ed_suma_gastos_previos"
 input_kind = "computed"

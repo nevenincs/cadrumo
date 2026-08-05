@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1555"
 number = "1555"
-label = "Rendimiento neto reducido"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 input_kind = "computed"
 formula = "renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad"

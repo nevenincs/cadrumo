@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00183"
 number = "00183"
-label = "Deducc. para incentivar determ.actividades - 2012 Suma deducciones - Deducción pendiente/generada [00183]"
 section = ["deducc_para_incentivar_determ_actividades", "2012_suma_deducciones"]
 data_type = "money"
 semantic_role = "is_deduccion_cap_iv_tit_vi_suma_periodo"

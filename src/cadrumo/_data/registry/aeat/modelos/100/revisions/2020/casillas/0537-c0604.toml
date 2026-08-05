@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0604"
 number = "0604"
-label = "Pagos fraccionados ingresados (actividades económicas)"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
 semantic_role = "irpf_pago_fraccionado_actividades_economicas"
 input_kind = "computed"

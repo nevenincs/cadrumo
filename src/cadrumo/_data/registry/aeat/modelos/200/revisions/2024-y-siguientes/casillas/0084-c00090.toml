@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00090"
 number = "00090"
-label = "Opción art. 39.3 LIS [00090]"
 section = ["opcion_art_39_3_lis"]
 data_type = "decimal"
 semantic_role = "is_identificacion_opcion_flag"

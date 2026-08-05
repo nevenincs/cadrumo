@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "0952"
 number = "0952"
-label = "Por acogimiento familiar de menores"
 section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
 semantic_role = "irpf_deduccion_cantabria_acogimiento_menores"
 continuidad_id = "irpf-deduccion-cantabria-acogimiento-menores"

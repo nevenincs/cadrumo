@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1540"
 number = "1540"
-label = "1. Por utilización de medios de producción ajenos en actividades agrícolas"
 data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_medios_ajenos"

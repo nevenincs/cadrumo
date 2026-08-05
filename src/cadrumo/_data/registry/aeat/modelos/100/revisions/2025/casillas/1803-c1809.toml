@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1809"
 number = "1809"
-label = "Ganancia patrimonial obtenida: diferencia ( [1804] - [1806] ) positiva"
 section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
 semantic_role = "irpf_ganancia_cripto_obtenida"
 input_kind = "computed"

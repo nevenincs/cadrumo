@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1934"
 number = "1934"
-label = "Cantidades subvencionadas a través de un programa de ayudas públicas"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
 semantic_role = "irpf_deduccion_vehiculo_cantidades_subvencionadas"
 legal_refs = ["ley-35-2006:da-58", "orden-hac-277-2026:art-3"]

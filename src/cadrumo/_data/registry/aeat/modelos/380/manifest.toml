@@ -1,7 +1,5 @@
 [modelo]
 id = "380"
-title = "IVA operaciones asimiladas a las importaciones (declaración-liquidación)"
-official_name = "Modelo 380. Declaración-liquidación. Operaciones asimiladas a las importaciones del Impuesto sobre el Valor Añadido."
 tax_domain = "iva"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"

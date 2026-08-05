@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03242"
 number = "03242"
-label = "Liquidación IV - Opción de fraccionamiento en supuestos de cambios de residencia (art. 19.1 LIS) - Resultado incluido el 1er fraccionamiento del art. 19.1 LIS - D. Forales/Navarra (Totales) [03242]"
 section = ["liquidacion_iv", "opcion_de_fraccionamiento_en_supuestos_de_cambios"]
 data_type = "money"
 semantic_role = "is_liquidacion_iv_resultado_misc"

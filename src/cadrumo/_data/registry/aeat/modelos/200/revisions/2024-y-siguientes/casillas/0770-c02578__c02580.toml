@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02578"
 number = "02578"
-label = "Deducción del 30% importe gastos de amortiz. contable (excluidas emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios ant..."
 section = ["deduccion_del_30_importe_gastos_de_amortiz_contabl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02579"
 number = "02579"
-label = "Deducción del 30% importe gastos de amortiz. contable (excluidas emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Saldo pendiente a principio de ejercicio [02579]"
 section = ["deduccion_del_30_importe_gastos_de_amortiz_contabl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_amortizacion_libre_30pct_saldo_pendiente"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "02580"
 number = "02580"
-label = "Deducción del 30% importe gastos de amortiz. contable (excluidas emp. reducida dimensión) (art. 7 Ley 16/2012) - Disminución - Saldo pendiente a fin de ejercicio [02580]"
 section = ["deduccion_del_30_importe_gastos_de_amortiz_contabl", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_amortizacion_libre_30pct_saldo_pendiente"

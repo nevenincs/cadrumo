@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "02761"
 number = "02761"
-label = "Gastos no deducibles por considerarse retribución de fondos propios (art. 15 a) LIS) - Aumento - Correcciones del ejercicio - Permanentes [02761]"
 section = ["gastos_no_deducibles_por_considerarse_retribucion", "aumento"]
 data_type = "money"
 semantic_role = "is_correccion_gastos_retribucion_fondos_propios_art15a_permanente_aumento"

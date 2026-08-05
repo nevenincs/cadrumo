@@ -1,5 +1,4 @@
 [revisions."2023-y-siguientes"]
-label = "Modelo 721 ejercicios 2023 y siguientes (Orden HFP/886/2023; anexo sustituido por Orden HAC/1504/2024 desde ejercicio 2024)"
 valid_from = 2023-08-01
 period_selector = { year_from = 2023, periods = ["0A"] }
 legal_refs = [

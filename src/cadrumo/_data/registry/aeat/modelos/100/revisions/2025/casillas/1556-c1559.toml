@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "1559"
 number = "1559"
-label = "Reducción por el ejercicio de determinadas actividades económicas (artículo 32.2.3º de la Ley del Impuesto)"
 section = ["resultados", "reg_estima_obj_agricola_res"]
 semantic_role = "irpf_eo_agr_reduccion_art_32_2_3"
 continuidad_id = "irpf-eo-agr-reduccion-art-32-2-3"

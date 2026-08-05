@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.inmueble-tipo-via"
 number = "135-139"
-label = "Tipo de via del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_tipo_via"

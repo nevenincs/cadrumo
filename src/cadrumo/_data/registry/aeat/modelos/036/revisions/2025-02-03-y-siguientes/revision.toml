@@ -1,5 +1,4 @@
 [revisions."2025-02-03-y-siguientes"]
-label = "Modelo 036 desde 3 de febrero de 2025"
 valid_from = 2025-02-03
 period_selector = { year_from = 2025, periods = ["alta", "modificacion", "baja"] }
 legal_refs = [

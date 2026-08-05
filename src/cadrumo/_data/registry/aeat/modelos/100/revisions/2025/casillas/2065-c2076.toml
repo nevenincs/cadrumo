@@ -1,7 +1,6 @@
 [[revisions."2025".casillas]]
 id = "2076"
 number = "2076"
-label = "Referencia catastral 3"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_vv"]
 data_type = "text"
 semantic_role = "irpf_anexo_b_baleares_referencia_catastral"

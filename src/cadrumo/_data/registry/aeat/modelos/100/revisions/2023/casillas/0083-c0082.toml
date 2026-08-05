@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0082"
 number = "0082"
-label = "Bien inmueble objeto de arrendamiento de negocio"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"
 semantic_role = "irpf_inmueble_dias_arrendamiento_negocio"

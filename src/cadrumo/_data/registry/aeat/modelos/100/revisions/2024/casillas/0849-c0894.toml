@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0894"
 number = "0894"
-label = "Por certificación de la gestión forestal sostenible"
 section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
 semantic_role = "irpf_deduccion_asturias_gestion_forestal"
 continuidad_id = "irpf-deduccion-asturias-gestion-forestal"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1244"
 number = "1244"
-label = "NIF del otro progenitor 2"
 section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
 data_type = "nif"
 semantic_role = "irpf_anualidades_alimentos_otro_progenitor_nif"

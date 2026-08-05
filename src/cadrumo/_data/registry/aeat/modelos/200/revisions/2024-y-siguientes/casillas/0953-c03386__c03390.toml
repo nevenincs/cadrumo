@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "03386"
 number = "03386"
-label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Disminución - Correcciones del ejercicio - Permanentes [03386]"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_eliminaciones_pendientes_grupo_permanente_disminucion"
@@ -13,7 +12,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03387"
 number = "03387"
-label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Disminución - Correcciones del ejercicio - Temporarias (con origen en el ejercicio) [03387]"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_eliminaciones_pendientes_sociedades_cooperativas_temporaria_ejercicio_disminucion"
@@ -25,7 +23,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03388"
 number = "03388"
-label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Disminución - Correcciones del ejercicio - Temporarias (con origen en ejercicios anteriores) [03388]"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_eliminaciones_pendientes_grupo_temporaria_anteriores_disminucion"
@@ -37,7 +34,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03389"
 number = "03389"
-label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Disminución - Saldo pendiente a principio de ejercicio [03389]"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_eliminaciones_pendientes_grupo_saldo_inicial"
@@ -49,7 +45,6 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "03390"
 number = "03390"
-label = "Eliminaciones pendientes de incorporar de sociedades que dejen de pertenecer a un grupo - Disminución - Saldo pendiente a fin de ejercicio [03390]"
 section = ["eliminaciones_pendientes_de_incorporar_de_sociedad", "disminucion"]
 data_type = "money"
 semantic_role = "is_correccion_eliminaciones_pendientes_grupo_saldo_final"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1932"
 number = "1932"
-label = "Fecha en la que finaliza la instalación"
 section = ["toma_datos_ampliada", "anexo_a", "vehiculos_elec_y_puntos_carga"]
 data_type = "text"
 semantic_role = "irpf_deduccion_instalacion_recarga_fecha_fin"

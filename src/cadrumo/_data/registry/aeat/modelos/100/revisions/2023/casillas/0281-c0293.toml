@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0293"
 number = "0293"
-label = "Valoración"
 section = ["toma_datos_ampliada", "gp_premios", "juegos_pub"]
 semantic_role = "irpf_ganancia_premios_juegos_pub_valoracion"
 continuidad_id = "irpf-ganancia-premios-juegos-pub-valoracion"

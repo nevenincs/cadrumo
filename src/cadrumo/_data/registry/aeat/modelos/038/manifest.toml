@@ -1,7 +1,5 @@
 [modelo]
 id = "038"
-title = "Operaciones de entidades inscritas en registros públicos (informativa mensual)"
-official_name = "Modelo 038. Relación de operaciones realizadas por entidades inscritas en registros públicos. Declaración informativa."
 tax_domain = "informative"
 cadence = "monthly"
 jurisdiction = "ES-AEAT"

@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1240"
 number = "1240"
-label = "Importe reinvertido hasta el 31-12-2023 en rentas vitalicias"
 section = ["resultados", "anexo_c_res", "exencion_rentas_vitalicias_res"]
 semantic_role = "irpf_anexo_c_exencion_rv_importe_reinvertido"
 continuidad_id = "irpf-anexo-c-exencion-rv-importe-reinvertido"

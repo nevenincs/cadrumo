@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0597"
 number = "0597"
-label = "Por rendimientos del capital mobiliario"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
 semantic_role = "irpf_retencion_capital_mobiliario"
 input_kind = "bound"

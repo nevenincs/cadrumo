@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.total-percepciones"
 number = "136-144"
-label = "Número total de percepciones"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_percepciones_count"
@@ -20,7 +19,6 @@ source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.percepciones-total"
 number = "145-160"
-label = "Importe total de las percepciones"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "total_percepciones_amount"
@@ -38,7 +36,6 @@ source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.retenciones-total"
 number = "161-175"
-label = "Importe total de retenciones e ingresos a cuenta"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"

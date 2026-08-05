@@ -1,7 +1,6 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "00037"
 number = "00037"
-label = "Opción de fraccionamiento art. 19.1 LIS [00037]"
 section = ["opcion_de_fraccionamiento_art_19_1_lis"]
 data_type = "decimal"
 semantic_role = "is_identificacion_opcion_flag"

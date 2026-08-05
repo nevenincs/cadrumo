@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1586"
 number = "1586"
-label = "Ganancias patrimoniales"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 semantic_role = "irpf_re_atrib_gp_transmision_ganancias"
 continuidad_id = "irpf-re-atrib-gp-transmision-ganancias"

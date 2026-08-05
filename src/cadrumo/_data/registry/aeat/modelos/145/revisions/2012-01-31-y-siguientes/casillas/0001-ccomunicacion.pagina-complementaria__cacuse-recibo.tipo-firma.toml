@@ -9,7 +9,6 @@
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.pagina-complementaria"
 number = "dr-02"
-label = "Indicador de pagina complementaria"
 section = ["comunicacion"]
 data_type = "text"
 semantic_role = "modelo_145_pagina_complementaria"
@@ -22,7 +21,6 @@ export_refs = ["modelo-145-dr-02-page-complementaria"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.nif"
 number = "dr-03"
-label = "1. NIF del perceptor"
 section = ["perceptor"]
 data_type = "nif"
 semantic_role = "modelo_145_perceptor_nif"
@@ -35,7 +33,6 @@ export_refs = ["modelo-145-dr-03-perceptor-nif"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.primer-apellido"
 number = "dr-04"
-label = "1. Primer apellido del perceptor"
 section = ["perceptor"]
 data_type = "text"
 semantic_role = "modelo_145_perceptor_primer_apellido"
@@ -48,7 +45,6 @@ export_refs = ["modelo-145-dr-04-perceptor-primer-apellido"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.segundo-apellido"
 number = "dr-05"
-label = "1. Segundo apellido del perceptor"
 section = ["perceptor"]
 data_type = "text"
 semantic_role = "modelo_145_perceptor_segundo_apellido"
@@ -61,7 +57,6 @@ export_refs = ["modelo-145-dr-05-perceptor-segundo-apellido"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.nombre"
 number = "dr-06"
-label = "1. Nombre del perceptor"
 section = ["perceptor"]
 data_type = "text"
 semantic_role = "modelo_145_perceptor_nombre"
@@ -74,7 +69,6 @@ export_refs = ["modelo-145-dr-06-perceptor-nombre"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.anio-nacimiento"
 number = "dr-07"
-label = "1. Anio de nacimiento del perceptor"
 section = ["perceptor"]
 data_type = "year"
 semantic_role = "modelo_145_perceptor_anio_nacimiento"
@@ -87,7 +81,6 @@ export_refs = ["modelo-145-dr-07-perceptor-anio-nacimiento"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.situacion-familiar"
 number = "dr-08"
-label = "1. Situacion familiar del perceptor"
 section = ["perceptor"]
 data_type = "text"
 semantic_role = "modelo_145_perceptor_situacion_familiar"
@@ -100,7 +93,6 @@ export_refs = ["modelo-145-dr-08-perceptor-situacion-familiar"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.conyuge-nif"
 number = "dr-09"
-label = "1. NIF del conyuge cuando la situacion familiar es 2"
 section = ["perceptor"]
 data_type = "nif"
 semantic_role = "modelo_145_perceptor_conyuge_nif"
@@ -113,7 +105,6 @@ export_refs = ["modelo-145-dr-09-perceptor-conyuge-nif"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.discapacidad-grado"
 number = "dr-10"
-label = "1. Discapacidad del perceptor, grado reconocido"
 section = ["perceptor"]
 data_type = "text"
 semantic_role = "modelo_145_perceptor_discapacidad_grado"
@@ -128,7 +119,6 @@ export_refs = ["modelo-145-dr-10-perceptor-discapacidad-grado"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.discapacidad-ayuda"
 number = "dr-11"
-label = "1. Discapacidad del perceptor, ayuda de terceras personas o movilidad reducida"
 section = ["perceptor"]
 data_type = "text"
 semantic_role = "modelo_145_perceptor_discapacidad_ayuda"
@@ -143,7 +133,6 @@ export_refs = ["modelo-145-dr-11-perceptor-discapacidad-ayuda"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.movilidad-geografica-fecha"
 number = "dr-12"
-label = "1. Movilidad geografica, fecha de traslado"
 section = ["perceptor"]
 data_type = "date"
 semantic_role = "modelo_145_perceptor_movilidad_geografica_fecha"
@@ -156,7 +145,6 @@ export_refs = ["modelo-145-dr-12-14-perceptor-movilidad-geografica-fecha"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.prolongacion-actividad-laboral"
 number = "dr-15"
-label = "1. Prolongacion de la actividad laboral"
 section = ["perceptor"]
 data_type = "text"
 semantic_role = "modelo_145_perceptor_prolongacion_actividad_laboral"
@@ -171,7 +159,6 @@ export_refs = ["modelo-145-dr-15-perceptor-prolongacion-actividad-laboral"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.anio-nacimiento"
 number = "dr-16"
-label = "2.1. Hijos y descendientes menores de 25 anios, anio de nacimiento"
 section = ["descendientes", "descendiente_1"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_nacimiento"
@@ -184,7 +171,6 @@ export_refs = ["modelo-145-dr-16-descendiente-1-anio-nacimiento"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.anio-adopcion"
 number = "dr-17"
-label = "2.1. Hijos y descendientes menores de 25 anios, anio de adopcion o acogimiento"
 section = ["descendientes", "descendiente_1"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_adopcion"
@@ -197,7 +183,6 @@ export_refs = ["modelo-145-dr-17-descendiente-1-anio-adopcion"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.discapacidad-grado"
 number = "dr-18"
-label = "2.1. Hijos y descendientes menores de 25 anios, grado de discapacidad"
 section = ["descendientes", "descendiente_1"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_discapacidad_grado"
@@ -210,7 +195,6 @@ export_refs = ["modelo-145-dr-18-descendiente-1-discapacidad-grado"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.ayuda-movilidad"
 number = "dr-19"
-label = "2.1. Hijos y descendientes menores de 25 anios, ayuda de terceras personas o movilidad reducida"
 section = ["descendientes", "descendiente_1"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_ayuda_movilidad"
@@ -223,7 +207,6 @@ export_refs = ["modelo-145-dr-19-descendiente-1-ayuda-movilidad"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.computo-entero"
 number = "dr-20"
-label = "2.1. Hijos y descendientes menores de 25 anios, computo por entero"
 section = ["descendientes", "descendiente_1"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_computo_entero"
@@ -236,7 +219,6 @@ export_refs = ["modelo-145-dr-20-descendiente-1-computo-entero"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.anio-nacimiento"
 number = "dr-21"
-label = "2.2. Hijos y descendientes menores de 25 anios, anio de nacimiento"
 section = ["descendientes", "descendiente_2"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_nacimiento"
@@ -249,7 +231,6 @@ export_refs = ["modelo-145-dr-21-descendiente-2-anio-nacimiento"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.anio-adopcion"
 number = "dr-22"
-label = "2.2. Hijos y descendientes menores de 25 anios, anio de adopcion o acogimiento"
 section = ["descendientes", "descendiente_2"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_adopcion"
@@ -262,7 +243,6 @@ export_refs = ["modelo-145-dr-22-descendiente-2-anio-adopcion"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.discapacidad-grado"
 number = "dr-23"
-label = "2.2. Hijos y descendientes menores de 25 anios, grado de discapacidad"
 section = ["descendientes", "descendiente_2"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_discapacidad_grado"
@@ -275,7 +255,6 @@ export_refs = ["modelo-145-dr-23-descendiente-2-discapacidad-grado"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.ayuda-movilidad"
 number = "dr-24"
-label = "2.2. Hijos y descendientes menores de 25 anios, ayuda de terceras personas o movilidad reducida"
 section = ["descendientes", "descendiente_2"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_ayuda_movilidad"
@@ -288,7 +267,6 @@ export_refs = ["modelo-145-dr-24-descendiente-2-ayuda-movilidad"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.computo-entero"
 number = "dr-25"
-label = "2.2. Hijos y descendientes menores de 25 anios, computo por entero"
 section = ["descendientes", "descendiente_2"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_computo_entero"
@@ -301,7 +279,6 @@ export_refs = ["modelo-145-dr-25-descendiente-2-computo-entero"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.anio-nacimiento"
 number = "dr-26"
-label = "2.3. Hijos y descendientes menores de 25 anios, anio de nacimiento"
 section = ["descendientes", "descendiente_3"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_nacimiento"
@@ -314,7 +291,6 @@ export_refs = ["modelo-145-dr-26-descendiente-3-anio-nacimiento"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.anio-adopcion"
 number = "dr-27"
-label = "2.3. Hijos y descendientes menores de 25 anios, anio de adopcion o acogimiento"
 section = ["descendientes", "descendiente_3"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_adopcion"
@@ -327,7 +303,6 @@ export_refs = ["modelo-145-dr-27-descendiente-3-anio-adopcion"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.discapacidad-grado"
 number = "dr-28"
-label = "2.3. Hijos y descendientes menores de 25 anios, grado de discapacidad"
 section = ["descendientes", "descendiente_3"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_discapacidad_grado"
@@ -340,7 +315,6 @@ export_refs = ["modelo-145-dr-28-descendiente-3-discapacidad-grado"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.ayuda-movilidad"
 number = "dr-29"
-label = "2.3. Hijos y descendientes menores de 25 anios, ayuda de terceras personas o movilidad reducida"
 section = ["descendientes", "descendiente_3"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_ayuda_movilidad"
@@ -353,7 +327,6 @@ export_refs = ["modelo-145-dr-29-descendiente-3-ayuda-movilidad"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.computo-entero"
 number = "dr-30"
-label = "2.3. Hijos y descendientes menores de 25 anios, computo por entero"
 section = ["descendientes", "descendiente_3"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_computo_entero"
@@ -366,7 +339,6 @@ export_refs = ["modelo-145-dr-30-descendiente-3-computo-entero"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.anio-nacimiento"
 number = "dr-31"
-label = "2.4. Hijos y descendientes menores de 25 anios, anio de nacimiento"
 section = ["descendientes", "descendiente_4"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_nacimiento"
@@ -379,7 +351,6 @@ export_refs = ["modelo-145-dr-31-descendiente-4-anio-nacimiento"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.anio-adopcion"
 number = "dr-32"
-label = "2.4. Hijos y descendientes menores de 25 anios, anio de adopcion o acogimiento"
 section = ["descendientes", "descendiente_4"]
 data_type = "year"
 semantic_role = "modelo_145_descendiente_anio_adopcion"
@@ -392,7 +363,6 @@ export_refs = ["modelo-145-dr-32-descendiente-4-anio-adopcion"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.discapacidad-grado"
 number = "dr-33"
-label = "2.4. Hijos y descendientes menores de 25 anios, grado de discapacidad"
 section = ["descendientes", "descendiente_4"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_discapacidad_grado"
@@ -405,7 +375,6 @@ export_refs = ["modelo-145-dr-33-descendiente-4-discapacidad-grado"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.ayuda-movilidad"
 number = "dr-34"
-label = "2.4. Hijos y descendientes menores de 25 anios, ayuda de terceras personas o movilidad reducida"
 section = ["descendientes", "descendiente_4"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_ayuda_movilidad"
@@ -418,7 +387,6 @@ export_refs = ["modelo-145-dr-34-descendiente-4-ayuda-movilidad"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.computo-entero"
 number = "dr-35"
-label = "2.4. Hijos y descendientes menores de 25 anios, computo por entero"
 section = ["descendientes", "descendiente_4"]
 data_type = "text"
 semantic_role = "modelo_145_descendiente_computo_entero"
@@ -433,7 +401,6 @@ export_refs = ["modelo-145-dr-35-descendiente-4-computo-entero"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-1.anio-nacimiento"
 number = "dr-36"
-label = "3.1. Ascendientes mayores de 65 anios, anio de nacimiento"
 section = ["ascendientes", "ascendiente_1"]
 data_type = "year"
 semantic_role = "modelo_145_ascendiente_anio_nacimiento"
@@ -446,7 +413,6 @@ export_refs = ["modelo-145-dr-36-ascendiente-1-anio-nacimiento"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-1.discapacidad-grado"
 number = "dr-37"
-label = "3.1. Ascendientes mayores de 65 anios, grado de discapacidad"
 section = ["ascendientes", "ascendiente_1"]
 data_type = "text"
 semantic_role = "modelo_145_ascendiente_discapacidad_grado"
@@ -459,7 +425,6 @@ export_refs = ["modelo-145-dr-37-ascendiente-1-discapacidad-grado"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-1.ayuda-movilidad"
 number = "dr-38"
-label = "3.1. Ascendientes mayores de 65 anios, ayuda de terceras personas o movilidad reducida"
 section = ["ascendientes", "ascendiente_1"]
 data_type = "text"
 semantic_role = "modelo_145_ascendiente_ayuda_movilidad"
@@ -472,7 +437,6 @@ export_refs = ["modelo-145-dr-38-ascendiente-1-ayuda-movilidad"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-1.convivencia-otros"
 number = "dr-39"
-label = "3.1. Ascendientes mayores de 65 anios, convivencia con otros descendientes"
 section = ["ascendientes", "ascendiente_1"]
 data_type = "integer"
 semantic_role = "modelo_145_ascendiente_convivencia_otros"
@@ -485,7 +449,6 @@ export_refs = ["modelo-145-dr-39-ascendiente-1-convivencia-otros"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.anio-nacimiento"
 number = "dr-40"
-label = "3.2. Ascendientes mayores de 65 anios, anio de nacimiento"
 section = ["ascendientes", "ascendiente_2"]
 data_type = "year"
 semantic_role = "modelo_145_ascendiente_anio_nacimiento"
@@ -498,7 +461,6 @@ export_refs = ["modelo-145-dr-40-ascendiente-2-anio-nacimiento"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.discapacidad-grado"
 number = "dr-41"
-label = "3.2. Ascendientes mayores de 65 anios, grado de discapacidad"
 section = ["ascendientes", "ascendiente_2"]
 data_type = "text"
 semantic_role = "modelo_145_ascendiente_discapacidad_grado"
@@ -511,7 +473,6 @@ export_refs = ["modelo-145-dr-41-ascendiente-2-discapacidad-grado"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.ayuda-movilidad"
 number = "dr-42"
-label = "3.2. Ascendientes mayores de 65 anios, ayuda de terceras personas o movilidad reducida"
 section = ["ascendientes", "ascendiente_2"]
 data_type = "text"
 semantic_role = "modelo_145_ascendiente_ayuda_movilidad"
@@ -524,7 +485,6 @@ export_refs = ["modelo-145-dr-42-ascendiente-2-ayuda-movilidad"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.convivencia-otros"
 number = "dr-43"
-label = "3.2. Ascendientes mayores de 65 anios, convivencia con otros descendientes"
 section = ["ascendientes", "ascendiente_2"]
 data_type = "integer"
 semantic_role = "modelo_145_ascendiente_convivencia_otros"
@@ -539,7 +499,6 @@ export_refs = ["modelo-145-dr-43-ascendiente-2-convivencia-otros"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "pension-compensatoria.importe-anual"
 number = "dr-44"
-label = "4. Pension compensatoria en favor del conyuge, importe anual"
 section = ["pensiones"]
 data_type = "money"
 semantic_role = "modelo_145_pension_compensatoria_importe_anual"
@@ -552,7 +511,6 @@ export_refs = ["modelo-145-dr-44-pension-compensatoria-importe-anual"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "anualidades-alimentos.importe-anual"
 number = "dr-45"
-label = "4. Anualidades por alimentos en favor de los hijos, importe anual"
 section = ["pensiones"]
 data_type = "money"
 semantic_role = "modelo_145_anualidades_alimentos_importe_anual"
@@ -567,7 +525,6 @@ export_refs = ["modelo-145-dr-45-anualidades-alimentos-importe-anual"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "vivienda-habitual.financiacion-ajena"
 number = "dr-46"
-label = "5. Pagos por adquisicion o rehabilitacion de vivienda habitual con financiacion ajena"
 section = ["vivienda_habitual"]
 data_type = "text"
 semantic_role = "modelo_145_vivienda_habitual_financiacion_ajena"
@@ -582,7 +539,6 @@ export_refs = ["modelo-145-dr-46-vivienda-habitual-financiacion-ajena"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.firma-lugar"
 number = "dr-47"
-label = "6. Fecha y firma de la comunicacion, lugar"
 section = ["comunicacion"]
 data_type = "text"
 semantic_role = "modelo_145_comunicacion_firma_lugar"
@@ -595,7 +551,6 @@ export_refs = ["modelo-145-dr-47-comunicacion-firma-lugar"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.firma-fecha"
 number = "dr-48"
-label = "6. Fecha y firma de la comunicacion, fecha"
 section = ["comunicacion"]
 data_type = "date"
 semantic_role = "modelo_145_comunicacion_firma_fecha"
@@ -608,7 +563,6 @@ export_refs = ["modelo-145-dr-48-50-comunicacion-firma-fecha"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.firma-tipo"
 number = "dr-51"
-label = "6. Fecha y firma de la comunicacion, tipo de firma"
 section = ["comunicacion"]
 data_type = "text"
 semantic_role = "modelo_145_comunicacion_firma_tipo"
@@ -623,7 +577,6 @@ export_refs = ["modelo-145-dr-51-comunicacion-firma-tipo"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.empresa-entidad"
 number = "dr-52"
-label = "7. Acuse de recibo, empresa o entidad pagadora"
 section = ["acuse_recibo"]
 data_type = "text"
 semantic_role = "modelo_145_acuse_recibo_empresa_entidad"
@@ -636,7 +589,6 @@ export_refs = ["modelo-145-dr-52-acuse-recibo-empresa-entidad"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.lugar"
 number = "dr-53"
-label = "7. Acuse de recibo, lugar"
 section = ["acuse_recibo"]
 data_type = "text"
 semantic_role = "modelo_145_acuse_recibo_lugar"
@@ -649,7 +601,6 @@ export_refs = ["modelo-145-dr-53-acuse-recibo-lugar"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.fecha"
 number = "dr-54"
-label = "7. Acuse de recibo, fecha"
 section = ["acuse_recibo"]
 data_type = "date"
 semantic_role = "modelo_145_acuse_recibo_fecha"
@@ -662,7 +613,6 @@ export_refs = ["modelo-145-dr-54-56-acuse-recibo-fecha"]
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.tipo-firma"
 number = "dr-57"
-label = "7. Acuse de recibo, tipo de firma"
 section = ["acuse_recibo"]
 data_type = "text"
 semantic_role = "modelo_145_acuse_recibo_tipo_firma"

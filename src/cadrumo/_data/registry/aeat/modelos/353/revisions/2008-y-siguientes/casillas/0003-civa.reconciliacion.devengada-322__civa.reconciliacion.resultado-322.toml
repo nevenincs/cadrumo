@@ -6,7 +6,6 @@
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.reconciliacion.devengada-322"
 number = "iva.reconciliacion.devengada-322"
-label = "Cuota devengada agregada del grupo reconciliada desde los Modelos 322 de los miembros"
 section = ["iva", "regimen_general", "reconciliacion"]
 data_type = "money"
 semantic_role = "iva_agregado_reconciliacion_devengada_322"
@@ -19,7 +18,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.reconciliacion.deducible-322"
 number = "iva.reconciliacion.deducible-322"
-label = "Cuota deducible agregada del grupo reconciliada desde los Modelos 322 de los miembros"
 section = ["iva", "regimen_general", "reconciliacion"]
 data_type = "money"
 semantic_role = "iva_agregado_reconciliacion_deducible_322"
@@ -32,7 +30,6 @@ source_refs = ["aeat-dr-353-2026"]
 [[revisions."2008-y-siguientes".casillas]]
 id = "iva.reconciliacion.resultado-322"
 number = "iva.reconciliacion.resultado-322"
-label = "Resultado agregado del grupo reconciliado desde los Modelos 322 de los miembros"
 section = ["iva", "regimen_general", "reconciliacion"]
 data_type = "money"
 semantic_role = "iva_agregado_reconciliacion_resultado_322"

@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "MINUSDLG"
 number = "*78"
-label = "Hijo o descendiente clave discapacidad"
 section = ["datos_identificativos", "hijos", "hijo"]
 data_type = "text"
 semantic_role = "irpf_descendiente_clave_discapacidad"

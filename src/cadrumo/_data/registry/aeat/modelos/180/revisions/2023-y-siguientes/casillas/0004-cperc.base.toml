@@ -1,7 +1,6 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "perc.base"
 number = "79-92"
-label = "Base retenciones e ingresos a cuenta del perceptor"
 section = ["perceptor", "renta"]
 data_type = "money"
 semantic_role = "base_retenciones_ingresos_a_cuenta"

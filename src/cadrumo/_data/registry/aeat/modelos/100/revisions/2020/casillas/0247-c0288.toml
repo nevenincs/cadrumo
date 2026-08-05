@@ -1,7 +1,6 @@
 [[revisions."2020".casillas]]
 id = "0288"
 number = "0288"
-label = "Suma de ganancias patrimoniales derivadas de estos juegos: (suma de casillas [0282]+ [0286])"
 section = ["resultados", "gp_premios_res", "juegos_res"]
 semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
 input_kind = "computed"

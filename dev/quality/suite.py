@@ -9,9 +9,12 @@ reports signal only:
   its actionable output, and listing the gates that passed by name only,
   then exit 1.
 
-Each gate is invoked through its own ``just`` recipe so the per-gate signal
-wrappers (``check_types.py``, ``quiet_ok.py``) own the formatting; this
-script only aggregates pass/fail and surfaces the failing detail.
+Each gate invokes its underlying tool directly (no ``just`` re-entry, no
+nested ``uv run``): this process is already started via ``uv run --no-sync
+python -m dev.quality.suite``, so the active venv's console scripts
+(``ruff``, ``lint-imports``, ``deptry``) resolve by bare name and
+``sys.executable`` already names the venv interpreter for the Python-module
+gates. This script aggregates pass/fail and surfaces the failing detail.
 """
 
 from __future__ import annotations
@@ -23,13 +26,33 @@ from typing import Final
 
 _UTF_8: Final[str] = "utf-8"
 
-GATES = (
-    "check-style",
-    "check-format",
-    "check-types",
-    "check-imports",
-    "check-relative-imports",
-    "check-dependencies",
+# Each gate's underlying command, kept byte-identical to the tool invocation
+# the matching `just check-*` recipe wraps (see justfile). Direct invocation
+# here is deliberately independent of the recipe wrapper (`dev.quality.quiet`
+# for the bare-tool gates): that wrapper's job — stay silent on success,
+# replay on failure — is already `main()`'s job for the dashboard, so
+# duplicating it here would be redundant, not protective.
+GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("check-style", ("ruff", "check", ".")),
+    ("check-format", ("ruff", "format", "--check", ".")),
+    ("check-types", (sys.executable, "-m", "dev.quality.types")),
+    ("check-imports", ("lint-imports",)),
+    ("check-relative-imports", (sys.executable, "-m", "dev.quality.relative_imports")),
+    (
+        "check-dependencies",
+        (
+            "deptry",
+            "src/cadrumo",
+            "--known-first-party",
+            "cadrumo",
+            "--extend-exclude",
+            ".*test_.*[.]py",
+            "--extend-exclude",
+            ".*_test_.*[.]py",
+            "--extend-exclude",
+            r".*[\\/]tests[\\/].*",
+        ),
+    ),
 )
 
 
@@ -42,20 +65,14 @@ class GateResult:
     output: str
 
 
-def _strip_just_noise(output: str) -> str:
-    """Drop just's own ``error: Recipe ... failed`` epilogue from gate output."""
-    kept = [line for line in output.splitlines() if not line.startswith("error: Recipe `")]
-    return "\n".join(kept).strip()
-
-
-def run_gate(name: str) -> GateResult:
-    """Run a single ``just`` gate recipe, capturing combined output."""
+def run_gate(name: str, command: tuple[str, ...]) -> GateResult:
+    """Run a single gate's underlying tool command, capturing combined output."""
     # Decode explicitly: `text=True` alone uses the locale preferred encoding,
     # which on a Windows console is cp1252. The wrapped gates emit UTF-8, so the
     # reader thread died on the first non-cp1252 byte and the dashboard lost the
     # whole run rather than reporting the gate's verdict.
     result = subprocess.run(
-        ["just", name],
+        command,
         capture_output=True,
         text=True,
         encoding=_UTF_8,
@@ -65,13 +82,13 @@ def run_gate(name: str) -> GateResult:
     return GateResult(
         name=name,
         returncode=result.returncode,
-        output=_strip_just_noise((result.stdout or "") + (result.stderr or "")),
+        output=((result.stdout or "") + (result.stderr or "")).strip(),
     )
 
 
 def main() -> int:
     """Run all gates and emit the consolidated dashboard."""
-    results = [run_gate(name) for name in GATES]
+    results = [run_gate(name, command) for name, command in GATES]
     failed = [r for r in results if r.returncode != 0]
     passed = [r for r in results if r.returncode == 0]
 

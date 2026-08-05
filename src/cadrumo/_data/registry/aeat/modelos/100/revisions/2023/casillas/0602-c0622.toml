@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "0622"
 number = "0622"
-label = "NIF del beneficiario"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_familiar_beneficiario_nif"

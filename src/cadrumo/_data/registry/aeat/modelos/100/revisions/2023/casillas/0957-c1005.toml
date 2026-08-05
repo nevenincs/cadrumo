@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1005"
 number = "1005"
-label = "Para contribuyentes que queden viudos en los ejercicios 2021, 2022 y 2023"
 section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
 semantic_role = "irpf_deduccion_catalunya_viudedad"
 legal_refs = ["ley-35-2006:art-77"]

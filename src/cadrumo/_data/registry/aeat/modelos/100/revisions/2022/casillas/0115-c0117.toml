@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0117"
 number = "0117"
-label = "Amortización de bienes muebles"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_rendimiento_capital_inmobiliario_amortizacion_bienes_muebles"
 legal_refs = ["ley-35-2006:art-23"]

@@ -1,7 +1,6 @@
 [[revisions."2021".casillas]]
 id = "1756"
 number = "1756"
-label = "Contribuyente con derecho a reducción"
 section = ["resultados", "anexo_c_res", "aportaciones_sist_prevision_social_rg_res"]
 data_type = "text"
 semantic_role = "irpf_anexo_c_reductor_contribuyente_codigo"

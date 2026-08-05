@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "1388"
 number = "1388"
-label = "Ejercicio 2023: Pendiente de aplicación  al principio del periodo"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 semantic_role = "irpf_anexo_c_base_liq_neg_pendiente_inicio"
 input_kind = "bound"

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0090"
 number = "0090"
-label = "Referencia catastral del inmueble principal al que está vinculado"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_referencia_catastral_principal"

@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "0390"
 number = "0390"
-label = "Suma de otras ganancias patrimoniales a integrar en la base imponible del ahorro (suma de las casillas [0389])"
 section = ["resultados", "gp_otras_ganancias_res"]
 semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
 input_kind = "computed"

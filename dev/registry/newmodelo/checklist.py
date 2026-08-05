@@ -112,10 +112,10 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         ),
     ),
     ChecklistItem(
-        title="Author schema-local locale labels",
+        title="Author shared locale keys",
         detail=(
-            "revisions/<revision-id>/locales/{en,ca,hu}.toml: translated casilla labels and "
-            "help text via `python -m cadrumo.locales modelo scaffold/set` "
+            "src/cadrumo/locales/{es,en,ca,hu}.yml: derived casilla labels and "
+            "help text via `python -m cadrumo.locales scaffold/set` "
             "(modelo-locales-cli-authority) — never hand-edit the locale TOML directly. "
             "Spanish stays the official CasillaDefinition.label; no es.toml fallback file."
         ),

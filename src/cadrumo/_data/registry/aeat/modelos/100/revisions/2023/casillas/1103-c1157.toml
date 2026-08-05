@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1157"
 number = "1157"
-label = "Por contribuyentes con discapacidad"
 section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
 semantic_role = "irpf_deduccion_murcia_discapacidad"
 continuidad_id = "irpf-deduccion-murcia-discapacidad"

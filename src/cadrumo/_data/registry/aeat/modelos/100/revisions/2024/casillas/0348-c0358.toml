@@ -1,7 +1,6 @@
 [[revisions."2024".casillas]]
 id = "0358"
 number = "0358"
-label = "Nº total años  de cobro pendiente"
 section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
 data_type = "integer"
 semantic_role = "irpf_ganancia_otros_anios_cobro_pendiente"

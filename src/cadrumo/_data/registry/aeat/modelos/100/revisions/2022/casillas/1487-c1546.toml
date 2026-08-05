@@ -1,7 +1,6 @@
 [[revisions."2022".casillas]]
 id = "1546"
 number = "1546"
-label = "7. Por ser empresa cuyo rdto. neto minorado no supera 9.447,91 euros"
 data_type = "decimal"
 section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
 semantic_role = "irpf_eo_agr_indice_pequena_empresa"

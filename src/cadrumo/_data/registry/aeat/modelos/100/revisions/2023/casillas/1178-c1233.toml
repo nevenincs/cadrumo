@@ -1,7 +1,6 @@
 [[revisions."2023".casillas]]
 id = "1233"
 number = "1233"
-label = "Ganancia patrimonial obtenida como consecuencia de la transmisión de las acciones o participaciones por las que se hubiera practicado la deducción prevista en el art. 68.1 de la Ley del Impuesto"
 section = ["resultados", "anexo_c_res", "exencion_nuevas_empresas_res"]
 semantic_role = "irpf_anexo_c_exencion_reinversion_ganancia_patrimonial"
 continuidad_id = "irpf-anexo-c-exencion-reinversion-ganancia-patrimonial"
