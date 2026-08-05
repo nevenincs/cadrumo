@@ -16,6 +16,7 @@ from itertools import pairwise
 from ._cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
+    ordered_revisions,
     revisions_overlap,
 )
 from ._errors import RegistryValidationError
@@ -29,6 +30,7 @@ from ._validate_cross_revision_advisory import (
     CrossRevisionCasillaDriftSummary,
     summarize_non_overlapping_cross_revision_casilla_drift,
 )
+from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
 
 # D3 defines revision-level continuidad_validation = "strict" as
 # surface-scoped strictness: declared continuity surfaces hard-fail drift,
@@ -99,7 +101,7 @@ def _validate_strict_cross_revision_casilla_continuity(
     for modelo in modelos:
         semantic_failures.extend(_validate_strict_continuity_evolution_references(modelo))
         semantic_failures.extend(_validate_strict_retired_continuity_surfaces(modelo))
-        semantic_failures.extend(_validate_strict_continuity_chain_contiguity(modelo))
+        semantic_failures.extend(strict_continuity_chain_contiguity_failures(modelo))
         for divergence in iter_cross_revision_casilla_divergences((modelo,)):
             if divergence.revisions_overlap:
                 continue
@@ -199,69 +201,6 @@ def _validate_strict_retired_continuity_surfaces(modelo: ModeloDefinition) -> tu
     return tuple(failures)
 
 
-def _validate_strict_continuity_chain_contiguity(modelo: ModeloDefinition) -> tuple[str, ...]:
-    """Reject a continuity chain that skips a revision and resumes later.
-
-    A `continuidad_id` asserts one legal concept running continuously across the
-    revisions that carry it. A chain that is present, absent, then present again
-    asserts continuity across a period in which the modelo declares the concept
-    does not exist, which no legal grounding can support. The declared
-    resolution is two chains: the later concept takes a new grounded
-    `continuidad_id`. `retired` therefore ends a chain permanently, and this gate
-    is what makes that contract enforceable rather than advisory prose - a
-    retired-then-resurrected chain is one shape of the non-contiguous chain this
-    rejects.
-
-    An absence only counts when the skipped revision genuinely stands apart from
-    the revisions on either side. Variant schemas that share a validity window
-    are alternative shapes of the same period, not a temporal gap.
-    """
-    ordered_revisions = _ordered_revisions(modelo)
-    if len(ordered_revisions) < 3:
-        return ()
-    positions = {revision.id: index for index, revision in enumerate(ordered_revisions)}
-    continuidad_ids_by_revision = _continuidad_ids_by_revision(modelo)
-
-    chain_positions: dict[str, set[int]] = defaultdict(set)
-    for revision_id, continuidad_ids in continuidad_ids_by_revision.items():
-        for continuidad_id in continuidad_ids:
-            chain_positions[continuidad_id].add(positions[revision_id])
-
-    failures: list[str] = []
-    for continuidad_id in sorted(chain_positions):
-        present = sorted(chain_positions[continuidad_id])
-        for left, right in pairwise(present):
-            skipped = _skipped_revisions(ordered_revisions, left, right)
-            if not skipped:
-                continue
-            span = ordered_revisions[left : right + 1]
-            if not any(revision.continuidad_validation == "strict" for revision in span):
-                continue
-            failures.append(
-                "strict continuity chain is not contiguous: "
-                f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
-                f"is declared in {ordered_revisions[left].id!r} and {ordered_revisions[right].id!r} "
-                f"but absent from {tuple(revision.id for revision in skipped)!r}; "
-                "a chain cannot resume after the concept leaves the modelo - "
-                "declare the later concept under a new grounded continuidad_id",
-            )
-    return tuple(failures)
-
-
-def _skipped_revisions(
-    ordered_revisions: tuple[ModeloRevision, ...],
-    left: int,
-    right: int,
-) -> tuple[ModeloRevision, ...]:
-    """Return the revisions between two chain occurrences that are a real gap."""
-    return tuple(
-        revision
-        for revision in ordered_revisions[left + 1 : right]
-        if not revisions_overlap(revision, ordered_revisions[left])
-        and not revisions_overlap(revision, ordered_revisions[right])
-    )
-
-
 def _continuidad_ids_by_revision(modelo: ModeloDefinition) -> dict[str, set[str]]:
     return {
         revision.id: {casilla.continuidad_id for casilla in revision.casillas if casilla.continuidad_id is not None}
@@ -290,17 +229,8 @@ def _revision_pair_for_evolution(
     return left_revision, right_revision
 
 
-def _ordered_revisions(modelo: ModeloDefinition) -> tuple[ModeloRevision, ...]:
-    return tuple(
-        sorted(
-            modelo.revisions.values(),
-            key=lambda revision: (revision.valid_from, revision.id),
-        ),
-    )
-
-
 def _adjacent_revisions(modelo: ModeloDefinition) -> tuple[tuple[ModeloRevision, ModeloRevision], ...]:
-    return tuple(pairwise(_ordered_revisions(modelo)))
+    return tuple(pairwise(ordered_revisions(modelo)))
 
 
 def _is_strict_non_overlapping_revision_pair(

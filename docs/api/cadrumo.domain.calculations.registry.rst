@@ -108,6 +108,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_cross_domain_snapshot
    cadrumo.domain.calculations.registry._validate_cross_revision
    cadrumo.domain.calculations.registry._validate_cross_revision_advisory
+   cadrumo.domain.calculations.registry._validate_cross_revision_contiguity
    cadrumo.domain.calculations.registry._validate_dependency_sections
    cadrumo.domain.calculations.registry._validate_evidence
    cadrumo.domain.calculations.registry._validate_exports
