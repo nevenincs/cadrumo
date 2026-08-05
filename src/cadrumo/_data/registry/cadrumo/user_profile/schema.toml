@@ -54,6 +54,13 @@ entry_surface = "aeat config profile descendiente"
 description = "Gastos de custodia en guarderia agregados de los descendientes declarados."
 legal_refs = ["ley-35-2006:art-81"]
 
+[[derived_selectors]]
+pattern = "renta_family.incremento_guarderia_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Incremento por gastos de custodia, prorrateado por meses y limitado por descendiente."
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-81-2", "ley-35-2006:art-81-3"]
+
 [[sections]]
 key = "identity"
 title = "Identity"

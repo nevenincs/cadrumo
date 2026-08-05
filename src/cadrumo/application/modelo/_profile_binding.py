@@ -979,6 +979,74 @@ def _inject_derived_autonomic_deduccion_facts(
     fact_index[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] = weighted_count
 
 
+_GUARDERIA_CAP_PARAMETER_SUFFIX = "guarderia-incremento-cap-anual"
+
+
+def _guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
+    """Resolve the Art. 81.2 annual cap parameter for the snapshot's filing year.
+
+    Its own registry parameter rather than the inline literal the 0613 formula
+    carries: a literal inside a formula expression is registry data the
+    application layer cannot read, and the per-child proration is computed
+    here. Returns ``None`` when the revision declares no such parameter, which
+    leaves the aggregate unresolved rather than proceeding against a guessed
+    ceiling.
+    """
+    parameter_id = f"renta-{snapshot.filing_year}-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
+    for parameter in snapshot.revision.parameters:
+        if parameter.id == parameter_id:
+            return resolve_parameter(parameter, {"filing_period": date(snapshot.filing_year, 12, 31)})
+    return None
+
+
+def _inject_derived_incremento_guarderia_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    declared_selectors: frozenset[str],
+) -> None:
+    """Inject the Art. 81.2 guardería increment (casilla 0613) into *fact_index*.
+
+    The increment is prorated per child by the months the Art. 81.1 and 81.2
+    requirements hold simultaneously and bounded by that child's own
+    non-subsidised spend, both stated by LIRPF art. 81.3 third paragraph, which
+    caps at the spend "en relación con ese hijo". The registry schema cannot
+    express a per-child fold, so the fold happens here and the registry consumes
+    one resolved value — the same division of labour the mínimo por
+    descendientes aggregate uses.
+
+    Computes ALWAYS where a consumer is declared, overwriting whatever the index
+    holds. The path is derived, so a stored fact at this key can only be stale
+    or hand-planted, and deferring to one would substitute an operator's number
+    for the law's.
+
+    Leaves the fact ABSENT rather than writing a zero when either the cap
+    parameter or the eligibility ceilings are unresolvable. A zero would read as
+    a computed "no increment due" and silently withhold a real deducción; an
+    absent fact leaves the casilla unresolved, which is visible.
+
+    Gated on a declared consuming binding rather than a hardcoded filing year,
+    so extending coverage to another revision is registry work with no code
+    change here.
+    """
+    key = f"renta_family.incremento_guarderia_{snapshot.filing_year}"
+    if key not in declared_selectors:
+        return
+
+    cap_anual = _guarderia_cap_anual(snapshot)
+    if cap_anual is None:
+        return
+    thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
+    if thresholds is None:
+        return
+
+    profile = _renta_family_profile_from_facts(fact_index)
+    fact_index[key] = profile.incremento_guarderia_0613(
+        snapshot.filing_year,
+        thresholds=thresholds,
+        cap_anual=cap_anual,
+    )
+
+
 def _inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
 ) -> None:
@@ -1207,6 +1275,7 @@ def _load_profile_facts(
     _inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
+    _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors)
     _inject_derived_state_attribution_facts(fact_index)
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
 

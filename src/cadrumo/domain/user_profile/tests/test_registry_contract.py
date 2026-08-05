@@ -170,7 +170,7 @@ def test_anti_rot_gate_detects_a_pattern_that_matches_nothing() -> None:
 
 
 def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
-    """The patterns own the 20 derived selectors and neither of the 2 operator inputs.
+    """The patterns own the 21 derived selectors and neither of the 2 operator inputs.
 
     ``cotizaciones_ss_madre`` and ``rental_reduccion_art_23_2_tier`` are
     genuine taxpayer input that keep their declarations, so a pattern
@@ -187,7 +187,7 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
         if any(definition.matches(selector) for definition in schema.derived_selectors)
     }
 
-    assert len(covered) == 20, sorted(covered)
+    assert len(covered) == 21, sorted(covered)
     assert not [selector for selector in covered if "cotizaciones_ss_madre" in selector]
     assert not [selector for selector in covered if "rental_reduccion_art_23_2_tier" in selector]
 
