@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:e60c1b3c8b29daea0cb54a5c390cb942a33aa66dd43e196bf0a08cd9fffb4e96'
+body_hash: 'sha256:f0190deff5df54feb226227b847d14f19f4b0b25ebc91e53028c5cc2be78213f'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -207,6 +207,20 @@ reasoning about coverage. The persisted-shape change carries a fact-boundary rou
 plus an anti-tautology proof that four separately corrupted stored maps each REFUSE
 rather than reading as undeclared, which is the dangerous fallback: an empty map in the
 turning-three period withholds the whole increase.
+
+`S16` also has a CLOSING condition, and it binds whoever closes the row rather than
+whoever wrote it. The row may not be checked while its action text still states the
+per-comunidad regional table as a blocker: correct that text in or before the closing
+change. Both halves of the reason are needed, because a reader who gets only the first
+will misread the second. The blocker is gone because it was RETIRED ON MEASUREMENT and
+not because the Step was descoped: the determination belongs to the childcare centre,
+which files the informative return reporting childcare custody, is required to apply its
+own region's calendar, and reports the resulting months to the authority. The table was
+therefore never this application's to build, and the Step landed at its full recorded
+scope. Reading the correction as scope reduction is exactly what the no-narrowing rule
+above forbids, and a row that still names a retired blocker is a trap for the reader who
+trusts rows over prose, which is the ordinary reader, because the row is the structured
+surface.
 
 `S18` is complete only as one atomic commit, and its verification is the collect-only
 gate observed clean immediately before that commit rather than after. A partial rename
