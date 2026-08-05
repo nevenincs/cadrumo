@@ -346,6 +346,7 @@ from ._loader import (
     load_modelo_source,
     load_registry_tree,
 )
+from ._modelo_localization import modelo_locale_key, revision_locale_key
 from ._observation_fold import (
     fold_observed_requirement_values,
     fold_sum_or_copy,
@@ -944,6 +945,7 @@ __all__ = [
     "load_registry_tree",
     "materialize_relation_binding_values",
     "modelo_202_modality_from_inputs",
+    "modelo_locale_key",
     "parse_export_payload",
     "parse_renta_web_open_live_payload",
     "parse_workbook_cell_ref",
@@ -996,6 +998,7 @@ __all__ = [
     "revision_capability_probe",
     "revision_casilla_identity_failures",
     "revision_date_binding_ids",
+    "revision_locale_key",
     "revision_reference_identity_failures",
     "run_parity_scenario",
     "run_registry_workbook_parity",
