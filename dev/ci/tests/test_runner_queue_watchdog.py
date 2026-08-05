@@ -319,6 +319,75 @@ def test_every_watchdog_job_invokes_the_shared_module() -> None:
         )
 
 
+def _needs_of(job: dict[str, Any]) -> frozenset[str]:
+    """A job's dependency set, normalised across the string and list forms."""
+    needs = job.get("needs")
+    if isinstance(needs, str):
+        return frozenset({needs})
+    return frozenset(str(entry) for entry in needs or ())
+
+
+def test_the_watchdog_is_created_no_later_than_the_lanes_it_watches() -> None:
+    """A gated off-lane job must not outlive the watchdog's watch window.
+
+    The module's own measurement is the reason: GitHub does not create a
+    dependent job's record until its dependencies resolve, so a `needs:`-gated
+    lane appears LATE. An ungated watchdog starts its bounded window
+    immediately and can therefore stand down before the job it exists to watch
+    is created — leaving exactly the silent six-hour hang the watchdog was
+    built to remove, while the workflow still looks watched because a watchdog
+    job is present.
+
+    Presence is not coverage. This asserts the watchdog shares the dependency
+    of every off-lane job it watches, which is what makes them appear together.
+    `packaging-smoke` already had this right; `packaging-homebrew` did not.
+    """
+    for path, document in _workflow_documents():
+        jobs = document.get("jobs") or {}
+        watchdog = jobs.get(_WATCHDOG_JOB_ID)
+        if watchdog is None:
+            continue
+        watchdog_needs = _needs_of(watchdog)
+        for job_name in _off_watchdog_lane_jobs(document):
+            watched_needs = _needs_of(jobs[job_name])
+            assert watched_needs <= watchdog_needs, (
+                f"{path.name}: '{job_name}' is gated on {sorted(watched_needs - watchdog_needs)}, "
+                f"which the watchdog does not wait for — the watchdog would begin (and could "
+                f"finish) its watch window before that job is created"
+            )
+
+
+def test_the_needs_parity_gate_refuses_an_ungated_watchdog(tmp_path: Path) -> None:
+    """Proof the gate above can fail, driven with the shape it must reject.
+
+    This is the pre-fix `packaging-homebrew` topology in miniature: a watchdog
+    with no dependency alongside an off-lane job gated behind a build step.
+    """
+    (tmp_path / "late.yml").write_text(
+        "name: Cadrumo Late\n"
+        "on: workflow_dispatch\n"
+        "jobs:\n"
+        "  runner-queue-watchdog:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps: []\n"
+        "  build:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps: []\n"
+        "  late-macos:\n"
+        "    needs: build\n"
+        "    runs-on: [self-hosted, macOS, ARM64]\n"
+        "    steps: []\n",
+        encoding="utf-8",
+    )
+    document = yaml.safe_load((tmp_path / "late.yml").read_text(encoding="utf-8"))
+    jobs = document["jobs"]
+
+    assert _off_watchdog_lane_jobs(document) == ["late-macos"]
+    assert not _needs_of(jobs["late-macos"]) <= _needs_of(jobs[_WATCHDOG_JOB_ID]), (
+        "the gate must reject a watchdog that does not wait for a dependency its watched job waits for"
+    )
+
+
 def test_every_watchdog_job_can_read_jobs_and_cancel_the_run() -> None:
     """Without `actions: write` the cancel silently no-ops and the run hangs on.
 

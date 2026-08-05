@@ -30,6 +30,12 @@ jobs:
   # dispatching the lane queues silently. See dev/ci/runner_queue_watchdog.py.
   runner-queue-watchdog:
     name: Cadrumo / runner queue watchdog
+    # Gated on the SAME dependency as the off-lane jobs it watches. GitHub does
+    # not create a dependent job's record until its dependencies resolve, so an
+    # ungated watchdog here would start its bounded watch window while
+    # `cadrumo-homebrew-acquisition` did not yet exist, and could stand down
+    # before the macOS/Linux-ARM64 legs it is here to watch were ever created.
+    needs: create-evidence-draft
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     permissions:
