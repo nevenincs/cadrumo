@@ -720,21 +720,6 @@ docs-check workers="auto":
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
-# Create or update the private Cadrumo docs stack.
-[group('docs')]
-docs-stack-deploy:
-    uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
-
-# Build and publish the complete Cadrumo docs site.
-[group('docs')]
-docs-deploy:
-    uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
-
-# Build and publish the Cadrumo landing page to the site root.
-[group('docs')]
-frontend-deploy:
-    uv run --no-sync python -m dev.deploy.frontend_static_site publish --confirm publish-cadrumo-frontend
-
 # ── Database migrations ──────────────────────────────────────────────────────
 
 # Generate a new Alembic database migration file. Identical body across
@@ -750,6 +735,55 @@ db-migrate message:
 [group('database')]
 db-upgrade:
     uv run alembic upgrade head
+
+# ── Deployment ───────────────────────────────────────────────────────────────
+#
+# Its own lane, deliberately. Building documentation is a local
+# check-and-balance verification with no bearing on deployment; publishing
+# writes bytes to a live public destination. The `docs` group therefore holds
+# only build and check verbs, and the three recipes below are the only ones in
+# this file that reach outward at all.
+#
+# The `release` group is adjacent but disjoint, and nothing here re-declares
+# any of it: every release recipe is read-only or evidence-collecting
+# (`release` is a dry-run preview, `release-rollback` prints a procedure,
+# `release-readiness` audits, `release-collect-evidence` downloads), and
+# release publication itself lives in CI behind the `release` environment
+# (`publish-release.yml`). The release lane deliberately publishes nothing.
+#
+# These three verbs do NOT share an automation posture, and this group must
+# not be read as granting one. Each states its own authority below.
+
+# Create or update the private Cadrumo docs stack. Infrastructure provisioning,
+# not publication: a one-time stack create/update that no workflow performs and
+# no release step calls. Operator-only.
+[doc('Create or update the private Cadrumo docs stack (infrastructure provisioning, operator-only).')]
+[group('deploy')]
+docs-stack-deploy:
+    uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
+
+# Build and publish the complete Cadrumo docs site. The human half of a
+# two-authority verb: the publisher accepts a provisioned automated authority,
+# and `docs-publish.yml` runs the same publish on `release: published` once the
+# deploy-role variable is set (operator decision OP-3). Until then this recipe
+# is the release runbook's distribution-complete tripwire — see RELEASING.md
+# phase 4, the one post-publication step still held by a human.
+[doc('Build and publish the complete Cadrumo docs site (human half; docs-publish.yml is the automated peer).')]
+[group('deploy')]
+docs-deploy:
+    uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
+
+# Build and publish the Cadrumo landing page to the site root. Operator-only,
+# absolutely: `_require_human_publish_environment` refuses under CI at three
+# call sites, because no workflow publishes the landing page and no deploy role
+# is scoped to it. This is NOT the docs guard awaiting provisioning — the two
+# publishers are deliberately independent verbs, and one shared authority would
+# silently extend the docs site's automated permission to a surface that was
+# never granted any. Named in no release document.
+[doc('Build and publish the Cadrumo landing page to the site root (operator-only, refused under CI).')]
+[group('deploy')]
+frontend-deploy:
+    uv run --no-sync python -m dev.deploy.frontend_static_site publish --confirm publish-cadrumo-frontend
 
 # ── Release ──────────────────────────────────────────────────────────────────
 
