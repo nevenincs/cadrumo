@@ -44,7 +44,7 @@ from pydantic import BaseModel
 
 from ...core import BindingSourceKind
 from ...core.decimal import coerce_decimal
-from ...core.external_constants import UTF_8_ENCODING
+from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
@@ -363,6 +363,15 @@ class MaternidadMesesResolution:
     withheld_indices: tuple[str, ...]
     ceilings_resolved: bool
     declares_meses: bool
+    cotizaciones_ceiling_inexpressible: bool = False
+    """True when the filing year predates 2023 and the engine cannot apply the ceiling.
+
+    Until 2022 Art. 81.1 limited the deducción to the mother's Social Security
+    cotizaciones devengadas in the period. Neither the registry nor the profile
+    schema can express that figure for those years -- the binding and the fact are
+    both 2024-pinned -- so the deducción is withheld rather than granted
+    un-ceilinged, and the caller discloses it.
+    """
     alta_posterior_hijos: frozenset[str] = frozenset()
     """``hijo_id`` values from :attr:`pairs` that also carry the Art. 81.1 post-birth
 
@@ -398,6 +407,20 @@ def resolve_maternidad_meses(
     declares_meses = any(
         key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo") for key in fact_index
     )
+    if snapshot.filing_year < DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR:
+        # Until 2022 the deducción was capped at the mother's cotizaciones
+        # devengadas in the period. The engine cannot apply that cap: the
+        # cotizaciones binding exists only in the 2024 revision and the profile
+        # fact is 2024-pinned, so no figure is reachable for these years.
+        # Computing anyway would grant an un-ceilinged deducción, which
+        # over-grants and therefore under-declares.
+        return MaternidadMesesResolution(
+            pairs=(),
+            withheld_indices=(),
+            ceilings_resolved=True,
+            declares_meses=declares_meses,
+            cotizaciones_ceiling_inexpressible=True,
+        )
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
         return MaternidadMesesResolution(

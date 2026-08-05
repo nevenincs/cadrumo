@@ -93,6 +93,7 @@ _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternida
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
+_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_inexpressible"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
 _DECLARANTE_SELECTOR_SEMANTIC_ROLE = "irpf_toma_datos_declarante_selector"
@@ -791,6 +792,42 @@ def _maternidad_ceilings_unresolved_advisory(
     )
 
 
+def _maternidad_cotizaciones_ceiling_advisory(
+    withheld_for_ceiling: bool,
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic | None:
+    """Advise when a pre-2023 deducción is withheld because its ceiling is unreachable.
+
+    Until 2022 Art. 81.1 capped the deducción at the mother's "cotizaciones y
+    cuotas totales a la Seguridad Social y mutualidades devengadas en cada
+    período impositivo"; the Manual Práctico de Renta 2024 records the removal
+    "desde el 1 de enero de 2023". The engine cannot apply that cap for the
+    affected years, because the cotizaciones binding exists only in the 2024
+    revision and the profile fact is 2024-pinned, so no figure is reachable.
+
+    Granting an un-ceilinged deducción for those years would over-grant and
+    therefore under-declare. Withholding is the safe direction; withholding
+    SILENTLY is not, because the operator declared months and would otherwise
+    see them vanish with no reason given. The remedy is theirs rather than the
+    engine's: the figure is computable by hand from the certificate they hold.
+    """
+    if not withheld_for_ceiling:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND,
+        message=(
+            "the active profile declares meses_madre_trabajo but this filing year predates 2023, when "
+            "the Art. 81.1 deducción por maternidad was still capped at the mother's Social Security "
+            "cotizaciones devengadas in the period. This application holds no cotizaciones figure for "
+            "filing years before 2024, so the cap cannot be applied and the deducción is withheld "
+            "rather than granted un-capped. Compute it by hand as min(months x 100, 1200, cotizaciones "
+            "devengadas) and enter the result with `--casilla` if you are filing this year."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
 def _maternidad_meses_withheld_advisory(
     withheld: tuple[str, ...],
     casilla_id: CasillaId,
@@ -1028,6 +1065,10 @@ def apply_calculation_shortcut_inputs(
                 maternidad_casilla_id,
             ),
             _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
+            _maternidad_cotizaciones_ceiling_advisory(
+                maternidad.declares_meses and maternidad.cotizaciones_ceiling_inexpressible,
+                maternidad_casilla_id,
+            ),
         ):
             if advisory is not None:
                 advisories.append(advisory)

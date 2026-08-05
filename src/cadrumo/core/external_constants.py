@@ -710,6 +710,19 @@ DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR: Final[int] = 1350
 #: no increment and keep the ordinary DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR cap.
 DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR: Final[int] = 2023
 
+#: Art. 81.1 LIRPF: the first filing year in which the deducción por maternidad is NO
+#: LONGER capped at the mother's Social Security cotizaciones. Until 2022 the deducción
+#: was limited to the "cotizaciones y cuotas totales a la Seguridad Social y mutualidades
+#: devengadas en cada período impositivo", stated in the Manual Práctico de Renta 2020 and
+#: 2022; the Manual Práctico de Renta 2024 records the removal in terms — "desaparece esta
+#: limitación del importe de la deducción a las cotizaciones devengadas en el período
+#: impositivo … el nuevo régimen resulta aplicable desde el 1 de enero de 2023".
+#:
+#: Shares a value with the alta-posterior gate above and is deliberately NOT merged with
+#: it: two independent rules that happen to change in the same reform. Collapsing them
+#: would silently move one if the other were ever corrected.
+DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR: Final[int] = 2023
+
 #: Art. 58.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) ordinary mínimo-por-descendientes
 #: age ceiling: a descendant qualifies for the ordinary mínimo while younger than 25
 #: (exclusive) at year end, unless disabled (which removes the age limit).
