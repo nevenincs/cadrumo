@@ -340,7 +340,6 @@ def build_work_calculate_input_bundle(
     borrador_snapshot_id: str | None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
     prestacion_inss_exenta: Decimal | None = None,
-    meses_trabajo_con_hijo_menor_3: tuple[tuple[str, int], ...] = (),
     rescate_plan_pensiones_capital: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_pre_2007: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_totales: Decimal | None = None,
@@ -429,7 +428,6 @@ def build_work_calculate_input_bundle(
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
         prestacion_inss_exenta=prestacion_inss_exenta,
-        meses_trabajo_con_hijo_menor_3=meses_trabajo_con_hijo_menor_3,
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
         rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
@@ -963,7 +961,6 @@ def apply_calculation_shortcut_inputs(
     casilla_inputs: Mapping[CasillaId, Decimal],
     binding_values: Mapping[BindingId, Decimal],
     prestacion_inss_exenta: Decimal | None = None,
-    meses_trabajo_con_hijo_menor_3: tuple[tuple[str, int], ...] = (),
     rescate_plan_pensiones_capital: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_pre_2007: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_totales: Decimal | None = None,
@@ -1016,34 +1013,15 @@ def apply_calculation_shortcut_inputs(
         )
 
     maternidad_casilla_id = _maternidad_casilla_id(work_unit_id)
-    declared_meses: tuple[tuple[str, int], ...] = ()
     maternidad = _resolved_maternidad_meses(work_unit_id) if maternidad_casilla_id is not None else None
     if maternidad_casilla_id is not None and maternidad is not None:
-        declared_meses = maternidad.pairs
-        # Keyed on the PRE-eligibility-filter `declares_meses`, not on `pairs`
-        # (== `declared_meses`, already filtered to `meses > 0` post-eligibility).
-        # A profile whose every declared descendant is withheld -- over three, not
-        # cohabiting, over the rentas ceiling -- has an EMPTY `pairs` while still
-        # declaring real months, and keying the refusal on `pairs` let the flag win
-        # that case silently: no refusal, no advisory, the operator never told their
-        # profile-side declaration was in play at all.
-        if meses_trabajo_con_hijo_menor_3 and maternidad.declares_meses:
-            raise ModeloCalculateShortcutInputError(
-                "--meses-trabajo-con-hijo-menor-3 was supplied while the active profile already declares "
-                "meses_madre_trabajo on its descendiente records. One authority per filing: either drop "
-                "the flag and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO "
-                "with `aeat config profile descendiente remove <index>` then `add` to restate the row "
-                "without it -- `descendiente add` alone only appends and cannot edit a declared row.",
-                translated_message="application.modelo.errors.calculate_maternidad_meses_two_authorities",
-            )
-        # Evaluated unconditionally rather than gated on the flag's absence: the
-        # refusal above already aborts the one state where the flag and a real
-        # profile declaration coexist, so reaching here with the flag supplied
-        # means `declares_meses` is False and both advisories are no-ops on their
-        # own internal gates -- but the two concerns (refuse on conflict, disclose
-        # a withholding) are independent and must not share one external gate,
-        # which is the coupling that let the ceilings-unresolved case go silent
-        # too whenever the flag happened to be present.
+        # The active profile's descendiente records are the SOLE authority for
+        # casilla 0611: the calculate-time `--meses-trabajo-con-hijo-menor-3`
+        # shortcut this block once reconciled against (a free-form hijo id no
+        # descendant record answered to, itself never eligibility-checked) is
+        # retired. One channel means no two-authorities refusal is possible any
+        # more, and both advisories below always evaluate against the one
+        # source rather than being gated on a second channel's absence.
         for advisory in (
             _maternidad_ceilings_unresolved_advisory(
                 maternidad.declares_meses and not maternidad.ceilings_resolved,
@@ -1054,26 +1032,15 @@ def apply_calculation_shortcut_inputs(
             if advisory is not None:
                 advisories.append(advisory)
 
-    maternidad_meses = meses_trabajo_con_hijo_menor_3 or declared_meses
-    if maternidad_meses:
-        # The alta-posterior increment is a fact carried on the profile's
-        # descendiente records; the `--meses-trabajo-con-hijo-menor-3` shortcut
-        # supplies bare (hijo, meses) pairs with no linked record to read it
-        # from, so it never contributes the increment. The two are already
-        # mutually exclusive above.
-        alta_posterior_hijos: frozenset[str] = (
-            maternidad.alta_posterior_hijos
-            if maternidad is not None and not meses_trabajo_con_hijo_menor_3
-            else frozenset()
-        )
-        deduccion = compute_deduccion_maternidad_0611(
-            list(maternidad_meses),
-            filing_year=_work_unit_filing_year(work_unit_id),
-            alta_posterior_hijos=alta_posterior_hijos,
-        )
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
-            deduccion
-        )
+        if maternidad.pairs:
+            deduccion = compute_deduccion_maternidad_0611(
+                list(maternidad.pairs),
+                filing_year=_work_unit_filing_year(work_unit_id),
+                alta_posterior_hijos=maternidad.alta_posterior_hijos,
+            )
+            resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = (
+                Decimal(deduccion)
+            )
 
     pension_values = (
         rescate_plan_pensiones_capital,

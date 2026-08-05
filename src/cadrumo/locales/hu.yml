@@ -921,14 +921,6 @@ application:
         %{fetch_gated}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere összesen %{total},
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR küszöböt.
-      calculate_maternidad_meses_two_authorities: 'A --meses-trabajo-con-hijo-menor-3
-        kapcsolot akkor adta meg, amikor az aktiv profil mar deklaral meses_madre_trabajo
-        erteket a leszarmazotti nyilvantartasaiban. Bevallasonkent egyetlen forras
-        lehet: vagy hagyja el a kapcsolot, es a deklaralt nyilvantartasok adjak a
-        81.1. cikk szerinti honapokat, vagy torolje a MESES_TRABAJO erteket az `aeat
-        config profile descendiente remove <index>`, majd az `add` paranccsal ujra
-        deklaralva a sort nelkule -- a `descendiente add` onmagaban csak hozzaad,
-        es nem tudja szerkeszteni a mar deklaralt sort.'
       calculate_pension_inputs_incomplete: A nyugdíjterv kiváltási adatait együtt
         kell megadni.
       calculate_relation_unknown: '--relation %{key} egyik relation azonosítónak sem
@@ -2905,23 +2897,6 @@ cli:
           %{casilla} rovatába (LIRPF 86-89. cikk).'
         m210_gross_income_source_help: 'Az M210-es modell [5] mezőjének forrása: kézi
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
-        meses_trabajo_con_hijo_menor_3_help: 'Munkahónapok száma, amíg a gyermek jogosult
-          volt a LIRPF 81. cikk szerinti anyasági levonásra -- 3 év alatti, vagy egy
-          örökbefogadás/nevelésbe vétel a belépési dátum ablakán belül, kortól függetlenül
-          -- és a családi egységben volt. Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként
-          ismételhető. A GYERMEK_AZONOSÍTÓ szabad felirat (pl. 0, 1, ''laia''). Kiszámítja:
-          összeg(min(HÓNAPOK x 100; 1200)) és befecskendezi a 0611-es mezőbe. Példa:
-          --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6
-          -> 0611 = 1800. Csak olyan profilokhoz, amelyek nem deklarálnak leszármazottat:
-          ha az aktív profil már deklarál MESES_TRABAJO értéket az `aeat config profile
-          descendiente add` paranccsal, akkor azok a nyilvántartások adják a hónapokat,
-          és ez a kapcsoló elutasításra kerül.'
-        meses_trabajo_hijo_bad_format: 'A --meses-trabajo-con-hijo-menor-3 GYERMEK_AZONOSÍTÓ=HÓNAPOK
-          formátumot igényel; kapott: {spec}.'
-        meses_trabajo_hijo_not_integer: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3
-          esetén 0–12 közötti egésznek kell lennie; kapott: {spec}.'
-        meses_trabajo_hijo_out_of_range: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3
-          esetén 0–12 közé kell esnie; kapott {meses} ebben: {spec}.'
         missing_binding_guidance: '%{base} Adja meg az értéket a --binding KEY=VALUE
           kapcsolóval ezen a parancson, vagy futtassa: `%{discover}` az összes hiányzó
           kötés listázásához.'

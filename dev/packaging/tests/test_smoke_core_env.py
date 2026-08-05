@@ -27,10 +27,10 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
         import sys
         from pathlib import Path
 
-        from dev.packaging._smoke_common import _isolated_product_env
+        from dev.packaging._smoke_common import isolated_product_env
 
         isolated = Path(sys.argv[1])
-        env = _isolated_product_env(isolated)
+        env = isolated_product_env(isolated)
         assert env["CADRUMO_LOCAL_STORAGE_ROOT"] == str(isolated)
         assert env["CADRUMO_DATABASE_URL"] == f"sqlite:///{(isolated / 'cadrumo.db').as_posix()}"
         assert "CADRUMO_OUTPUT_LANGUAGE" not in env

@@ -207,8 +207,9 @@ jobs:
         # No junit artifact: the repo's posture is zero Actions-artifact
         # storage (quota-broken; the release-asset transport exists precisely
         # to avoid it), and the profile lives in the job log.
-        # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/ci-control-plane.md). Routed
+        # -n 8, never -n auto: this machine's 24 logical CPUs are shared with
+        # co-resident runners from other repositories (machine-aware sizing,
+        # .github/ci-control-plane.md; 8 is a working pin, not a derivation). Routed
         # through the recipe so the selection (marker expression, ignore) has
         # one declaration site; CADRUMO_PYTEST_WORKERS overrides the recipe's
         # local `auto` default for this machine-aware sizing.

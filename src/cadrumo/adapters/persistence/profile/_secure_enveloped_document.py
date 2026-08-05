@@ -123,7 +123,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         )
         if record is None:
             return self._empty_document()
-        envelope = Envelope[self._model_type].model_validate_json(record.payload)
+        envelope = Envelope[self._model_type].model_validate_json(record.payload)  # ty: ignore[invalid-type-form]  # reason: pydantic runtime generic parameterisation; the model type is a per-instance value, which no static type expression can carry
         if not inner_envelope_classification_is_expected(envelope.classification, self._definition.sensitivity):
             from ..storage import ClassificationError
 
@@ -151,7 +151,7 @@ class ProfileEnvelopedModelSecurePersistence[DocumentT: BaseModel]:
         """
         from ..storage import Envelope
 
-        envelope = Envelope[self._model_type](
+        envelope = Envelope[self._model_type](  # ty: ignore[invalid-type-form]  # reason: pydantic runtime generic parameterisation; the model type is a per-instance value, which no static type expression can carry
             schema_version=self._definition.schema_version,
             written_at=now(),
             classification=self._definition.sensitivity,

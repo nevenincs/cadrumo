@@ -15,6 +15,7 @@ from ._smoke_common import (
     expected_wheel_data_paths,
     install_targets_with_pip,
     isolated_product_env,
+    record_proof,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
@@ -64,6 +65,7 @@ print("all-extra-imports-ok")
 """
     env = isolated_product_env(work_dir / "all-extras-import-state")
     run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
+    record_proof("all capability-gated optional imports")
 
 
 def _assert_cli_version(work_dir: Path, venv_path: Path) -> None:
@@ -71,6 +73,7 @@ def _assert_cli_version(work_dir: Path, venv_path: Path) -> None:
     env = isolated_product_env(work_dir / "cli-version-state")
     version = run_checked([str(venv_cadrumo_path(venv_path)), "--version"], cwd=work_dir, env=env)
     assert_cadrumo_version_output(version, context="in all-extras venv")
+    record_proof("installed CLI version smoke")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -127,18 +130,18 @@ def main(argv: list[str] | None = None) -> int:
     _assert_all_extra_imports(work_dir, venv_path)
     _assert_cli_version(work_dir, venv_path)
 
-    checks = [
+    declared = [
         "wheel tracked shipped-data payload",
         "wheel metadata dependency surface",
         "stdlib venv creation",
-        "plain pip wheel[all] install",
-        "pip check",
+        "exact local cohort install with pip",
+        "pip dependency check",
         "installed bundled data resources",
         "all capability-gated optional imports",
         "installed CLI version smoke",
     ]
     if not args.skip_export_checks:
-        checks.insert(0, "frozen dependency exports")
+        declared.insert(0, "frozen dependency exports")
     manifest = write_smoke_manifest(
         work_dir,
         lane="all-extras-wheel",
@@ -148,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
             "venv": relative_manifest_path(work_dir, venv_path),
         },
-        checks=tuple(checks),
+        declared=tuple(declared),
         details={"cohort_version": cohort.version, "python": args.python},
     )
 

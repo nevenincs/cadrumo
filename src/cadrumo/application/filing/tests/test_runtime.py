@@ -273,6 +273,7 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
     revision = ModeloRevision.model_validate(
         {
             "id": "2025",
+            "localization_key": "test.schema.revision.2025.label",
             "valid_from": date(2025, 1, 1),
             "period_selector": {"years": (2025,), "periods": ("0A",)},
             "legal_refs": ("ley-58-2003:art-29",),
@@ -281,7 +282,7 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
                 {
                     "id": "01",
                     "number": "99",
-                    "label": "Canonical owner",
+                    "localization_keys": ("test.schema.casilla.label",),
                     "section": ("test",),
                     "legal_refs": ("ley-58-2003:art-29",),
                     "source_refs": ("aeat-manual",),
@@ -290,7 +291,7 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
                     "id": "DPX:01",
                     "number": "01",
                     "segmento": "DPX",
-                    "label": "Display token owner",
+                    "localization_keys": ("test.schema.casilla.label",),
                     "section": ("test",),
                     "legal_refs": ("ley-58-2003:art-29",),
                     "source_refs": ("aeat-manual",),
@@ -300,8 +301,8 @@ def test_runtime_projection_rejects_ambiguous_revision_casilla_identity() -> Non
     )
     modelo = ModeloDefinition(
         id="999",
-        title="Ambiguous projection fixture",
-        official_name="Ambiguous projection fixture",
+        title_localization_key="test.schema.modelo.999.title",
+        official_name_localization_key="test.schema.modelo.999.official_name",
         tax_domain=TaxDomain.IVA,
         cadence="annual",
         jurisdiction="ES-AEAT",
@@ -345,6 +346,7 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
     revision = ModeloRevision.model_validate(
         {
             "id": "2025",
+            "localization_key": "test.schema.revision.2025.label",
             "valid_from": date(2025, 1, 1),
             "period_selector": {"years": (2025,), "periods": ("0A",)},
             "legal_refs": ("ley-58-2003:art-29",),
@@ -353,7 +355,7 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
                 {
                     "id": "01",
                     "number": "01",
-                    "label": "Canonical owner",
+                    "localization_keys": ("test.schema.casilla.label",),
                     "section": ("test",),
                     "legal_refs": ("ley-58-2003:art-29",),
                     "source_refs": ("aeat-manual",),
@@ -372,8 +374,8 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
     )
     modelo = ModeloDefinition(
         id="999",
-        title="Ambiguous projection fixture",
-        official_name="Ambiguous projection fixture",
+        title_localization_key="test.schema.modelo.999.title",
+        official_name_localization_key="test.schema.modelo.999.official_name",
         tax_domain=TaxDomain.IVA,
         cadence="annual",
         jurisdiction="ES-AEAT",

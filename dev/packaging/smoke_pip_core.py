@@ -98,19 +98,19 @@ def main(argv: list[str] | None = None) -> int:
     assert_attachment_and_llm_surfaces(work_dir, venv_path)
     assert_cli_smoke(work_dir, venv_path)
 
-    checks = [
+    declared = [
         "wheel tracked shipped-data payload",
         "wheel metadata dependency surface",
         "stdlib venv creation",
-        "plain pip wheel install",
-        "pip check",
+        "exact local cohort install with pip",
+        "pip dependency check",
         "installed bundled data resources",
         "attachment storage round-trip",
         "core LLM missing-extra boundary",
         "installed CLI config/profile smoke",
     ]
     if not args.skip_export_checks:
-        checks.insert(0, "frozen dependency exports")
+        declared.insert(0, "frozen dependency exports")
     manifest = write_smoke_manifest(
         work_dir,
         lane="pip-core-wheel",
@@ -120,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
             "venv": relative_manifest_path(work_dir, venv_path),
         },
-        checks=tuple(checks),
+        declared=tuple(declared),
         details={"cohort_version": cohort.version, "python": args.python},
     )
 

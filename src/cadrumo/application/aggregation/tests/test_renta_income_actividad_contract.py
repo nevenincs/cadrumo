@@ -71,6 +71,7 @@ def _m130_renta_income_binding(
 def _m130_2026_q1_revision() -> ModeloRevision:
     return ModeloRevision(
         id="2019-y-siguientes",
+        localization_key="test.schema.revision.2019-y-siguientes.label",
         valid_from=date(2019, 1, 1),
         period_selector=PeriodSelector(year_from=2019, periods=("1T", "2T", "3T", "4T")),
         legal_refs=_M130_INGRESOS_LEGAL_REFS,

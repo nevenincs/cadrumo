@@ -43,7 +43,15 @@ def _service() -> ProfileValidationService:
 
 def _refusals(*facts: UserProfileFact) -> list[str]:
     report = _service().validate_facts(_PROFILE_ID, facts)
-    return [issue.path for issue in report.issues if issue.code == DERIVED_FIELD_ISSUE_CODE]
+    refused: list[str] = []
+    for issue in report.issues:
+        if issue.code != DERIVED_FIELD_ISSUE_CODE:
+            continue
+        # `path` is optional on the issue model; a derived-field refusal that
+        # named nothing would be unactionable, so pin it rather than filter it.
+        assert issue.path is not None, f"derived-field refusal carried no path: {issue}"
+        refused.append(issue.path)
+    return refused
 
 
 def test_a_value_written_at_a_derived_path_is_refused() -> None:

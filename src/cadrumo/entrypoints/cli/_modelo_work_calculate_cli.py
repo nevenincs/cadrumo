@@ -160,25 +160,6 @@ _PrestacionInssExentaOpt = Annotated[
         ),
     ),
 ]
-_MesesTrabajoHijoOpt = Annotated[
-    list[str] | None,
-    typer.Option(
-        "--meses-trabajo-con-hijo-menor-3",
-        help=tr(
-            "cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help",
-            default=(
-                "Meses trabajados mientras el hijo cumplía los requisitos de la deducción por "
-                "maternidad del art. 81 LIRPF -- menor de 3 años, o una adopción/acogimiento "
-                "dentro de su ventana de fecha de entrada, con independencia de la edad -- y "
-                "estaba en la unidad familiar. Formato: HIJO_ID=MESES. Repetible por cada hijo. "
-                "HIJO_ID es un identificador libre. Se calcula sum(min(MESES x 100, 1200)) y se "
-                "inyecta en casilla 0611. Solo para perfiles que no declaran descendientes: si "
-                "el perfil activo ya declara MESES_TRABAJO con `aeat config profile descendiente add`, "
-                "esos registros aportan los meses y esta opción se rechaza."
-            ),
-        ),
-    ),
-]
 _RescateCapitalOpt = Annotated[
     str | None,
     typer.Option(
@@ -349,7 +330,6 @@ def register_work_calculate_commands(
         relation: _RelationOpt = None,
         row: _RowOpt = None,
         prestacion_inss_exenta: _PrestacionInssExentaOpt = None,
-        meses_trabajo_con_hijo_menor_3: _MesesTrabajoHijoOpt = None,
         rescate_plan_pensiones_capital: _RescateCapitalOpt = None,
         rescate_plan_pensiones_aportaciones_pre_2007: _RescatePre2007Opt = None,
         rescate_plan_pensiones_aportaciones_totales: _RescateTotalesOpt = None,
@@ -380,7 +360,6 @@ def register_work_calculate_commands(
             relation=relation,
             row=row,
             prestacion_inss_exenta=prestacion_inss_exenta,
-            meses_trabajo_con_hijo_menor_3=meses_trabajo_con_hijo_menor_3,
             rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
             rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
             rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
@@ -413,7 +392,6 @@ def _run_work_calculate(
     relation: list[str] | None,
     row: list[str] | None,
     prestacion_inss_exenta: str | None,
-    meses_trabajo_con_hijo_menor_3: list[str] | None,
     rescate_plan_pensiones_capital: str | None,
     rescate_plan_pensiones_aportaciones_pre_2007: str | None,
     rescate_plan_pensiones_aportaciones_totales: str | None,
@@ -446,7 +424,6 @@ def _run_work_calculate(
         borrador_snapshot_id=borrador_snapshot_id,
         m210_gross_income_source_mode=m210_gross_income_source,
         prestacion_inss_exenta=prestacion_inss_exenta,
-        meses_trabajo_con_hijo_menor_3=meses_trabajo_con_hijo_menor_3,
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
         rescate_plan_pensiones_aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,

@@ -221,6 +221,38 @@ def validate_ledger_oss_aggregation_binding_definition(
         )
 
 
+def _oss_build_matcher(
+    selector: _OssIossLedgerSelector,
+) -> Callable[[OssIossLedgerObservation], bool]:
+    regime, destination, rate_kind, direction = (
+        selector.regime,
+        selector.destination_member_state,
+        selector.rate_kind,
+        selector.invoice_direction,
+    )
+    kinds = set(selector.transaction_kinds)
+
+    def matcher(observation: OssIossLedgerObservation) -> bool:
+        return (
+            observation.regime is regime
+            and observation.destination_member_state is destination
+            and observation.rate_kind is rate_kind
+            and observation.invoice_direction is direction
+            and observation.transaction_kind in kinds
+        )
+
+    return matcher
+
+
+def _oss_aggregate(
+    matched: Sequence[OssIossLedgerObservation],
+    selector: _OssIossLedgerSelector,
+) -> Decimal:
+    if selector.fact == "iva_amount_sum":
+        return sum((observation.iva_amount for observation in matched), Decimal("0"))
+    return sum((observation.base_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_oss_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[OssIossLedgerObservation],
@@ -231,7 +263,11 @@ def resolve_ledger_oss_aggregation_binding_values(
     classification axes plus the transaction-kind set; matched
     observations are aggregated through the binding's declared fact
     (``iva_amount_sum`` defaults; ``base_amount_sum`` selects the base).
-    The resolver is deterministic and side-effect-free.
+    The resolver is deterministic and side-effect-free. Delegates the
+    filter/aggregate skeleton to :func:`resolve_ledger_family_binding_values`,
+    shared by every ledger family resolver; the per-selector
+    ``transaction_kinds`` set is built once when the matcher closure is
+    constructed for a binding, not once per observation.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings to resolve.
@@ -241,28 +277,18 @@ def resolve_ledger_oss_aggregation_binding_values(
         Mapping of binding id to the aggregated Decimal value. Empty
         match sets resolve to ``Decimal("0")``.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_OSS_AGGREGATION:
-            continue
-        selector = _ledger_oss_selector(binding)
-        kinds = set(selector.transaction_kinds)
-        matched = [
-            observation
-            for observation in available
-            if observation.regime is selector.regime
-            and observation.destination_member_state is selector.destination_member_state
-            and observation.rate_kind is selector.rate_kind
-            and observation.invoice_direction is selector.invoice_direction
-            and observation.transaction_kind in kinds
-        ]
-        if selector.fact == "iva_amount_sum":
-            total = sum((observation.iva_amount for observation in matched), Decimal("0"))
-        else:
-            total = sum((observation.base_amount for observation in matched), Decimal("0"))
-        resolved[binding.id] = total
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        parse_selector=_ledger_oss_selector,
+        build_matcher=_oss_build_matcher,
+        aggregate=_oss_aggregate,
+    )
+
+
+def _oss_is_declarable(observation: OssIossLedgerObservation) -> bool:
+    return observation.base_amount != Decimal("0") or observation.iva_amount != Decimal("0")
 
 
 def unsupported_ledger_oss_observations(
@@ -271,16 +297,15 @@ def unsupported_ledger_oss_observations(
 ) -> tuple[OssIossLedgerObservation, ...]:
     """Return the :class:`OssIossLedgerObservation` rows no binding on ``revision`` can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_oss_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_iva_observations`. An observation whose
-    regime/destination/rate/direction/transaction-kind tuple matches no
-    ``ledger_oss_aggregation`` binding has its base/cuota silently dropped — a
-    modelling gap, not a legitimate zero.
-
-    False-fire guard: an observation carrying neither base nor IVA (both zero)
-    contributes nothing whether or not it is routed and is excluded; only a
-    non-zero declarable OSS line reaching no binding is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the compound regime/destination/rate/
+    direction/transaction-kind match predicate (reused from the resolver's
+    ``_oss_build_matcher``, so the ``transaction_kinds`` set is built once
+    per binding rather than once per (observation, binding) pair) and a
+    false-fire guard excluding an observation carrying neither base nor IVA
+    (both zero). No ``extra_exclusion``.
 
     Args:
         revision: The :class:`ModeloRevision` whose OSS bindings define the
@@ -291,25 +316,14 @@ def unsupported_ledger_oss_observations(
         Tuple of observations whose non-zero base/cuota is selected by no
         ``ledger_oss_aggregation`` binding.
     """
-    selectors = tuple(
-        _ledger_oss_selector(binding)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_OSS_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+        parse_selector=_ledger_oss_selector,
+        build_matcher=_oss_build_matcher,
+        is_declarable=_oss_is_declarable,
     )
-    unsupported: list[OssIossLedgerObservation] = []
-    for observation in observations:
-        if observation.base_amount == Decimal("0") and observation.iva_amount == Decimal("0"):
-            continue
-        if not any(
-            observation.regime is selector.regime
-            and observation.destination_member_state is selector.destination_member_state
-            and observation.rate_kind is selector.rate_kind
-            and observation.invoice_direction is selector.invoice_direction
-            and observation.transaction_kind in set(selector.transaction_kinds)
-            for selector in selectors
-        ):
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 # Ledger IVA aggregation source bindings (cross-modelo IVA roll-out).
@@ -528,6 +542,29 @@ def _iva_ledger_observation_matches_selector(
     return observation.exemption_article in set(selector.exemption_articles)
 
 
+def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaLedgerObservation], bool]:
+    categories = set(selector.categories)
+    rate_kinds = set(selector.rate_kinds)
+
+    def matcher(observation: IvaLedgerObservation) -> bool:
+        return _iva_ledger_observation_matches_selector(
+            observation,
+            selector,
+            categories=categories,
+            rate_kinds=rate_kinds,
+        )
+
+    return matcher
+
+
+def _iva_aggregate(matched: Sequence[IvaLedgerObservation], selector: _IvaLedgerSelector) -> Decimal:
+    if selector.fact == "iva_amount_sum":
+        return sum((observation.iva_amount for observation in matched), Decimal("0"))
+    if selector.fact == "recargo_amount_sum":
+        return sum((observation.recargo_amount for observation in matched), Decimal("0"))
+    return sum((observation.base_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_iva_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[IvaLedgerObservation],
@@ -537,7 +574,12 @@ def resolve_ledger_iva_aggregation_binding_values(
     Filters observations by the three classification axes (category in
     selector.categories, rate_kind in selector.rate_kinds, flow_direction
     matches selector.flow_direction) and aggregates the matched lines'
-    iva_amount or base_amount per the declared fact.
+    iva_amount, recargo_amount, or base_amount per the declared fact.
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver; the per-selector ``categories`` / ``rate_kinds`` sets
+    are built once when the matcher closure is constructed for a binding,
+    not once per observation.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings to resolve.
@@ -547,32 +589,14 @@ def resolve_ledger_iva_aggregation_binding_values(
         Mapping of binding id to the aggregated Decimal value. Empty
         match sets resolve to ``Decimal("0")``.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
-            continue
-        selector = _iva_ledger_selector(binding)
-        cat_set = set(selector.categories)
-        kind_set = set(selector.rate_kinds)
-        matched = [
-            observation
-            for observation in available
-            if _iva_ledger_observation_matches_selector(
-                observation,
-                selector,
-                categories=cat_set,
-                rate_kinds=kind_set,
-            )
-        ]
-        if selector.fact == "iva_amount_sum":
-            total = sum((observation.iva_amount for observation in matched), Decimal("0"))
-        elif selector.fact == "recargo_amount_sum":
-            total = sum((observation.recargo_amount for observation in matched), Decimal("0"))
-        else:
-            total = sum((observation.base_amount for observation in matched), Decimal("0"))
-        resolved[binding.id] = total
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        parse_selector=_iva_ledger_selector,
+        build_matcher=_iva_build_matcher,
+        aggregate=_iva_aggregate,
+    )
 
 
 def unsupported_ledger_iva_observations(
@@ -581,6 +605,31 @@ def unsupported_ledger_iva_observations(
 ) -> tuple[IvaLedgerObservation, ...]:
     """Return IVA observations no binding on ``revision`` can consume.
 
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family
+    carries the campaign's two documented, deliberate asymmetries against
+    its six siblings — both load-bearing, neither a gap to "fix":
+
+    1. **``extra_exclusion`` (no sibling has one).** Categories that bear no
+       Modelo 303 cuota *by law*
+       (:data:`~cadrumo.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
+       zero-rated, not-subject, exempt intra-community supplies/exports,
+       triangulation, régimen simplificado) are excluded before the binding
+       check: they correctly match no cuota binding, so flagging them would
+       be a false positive. After the M303 routing tail (domestic /
+       intra-community reverse-charge bindings, the import deducible
+       binding) landed, every cuota-bearing declarable category has a
+       consuming binding, so the residual unsupported set is empty for the
+       known declarable categories; the function still fail-closes on any
+       *new* declarable triple that no binding selects.
+    2. **``is_declarable`` is ``lambda observation: True`` — this family has
+       NO zero-amount false-fire guard, unlike every other ledger family.**
+       This is intentional, not an oversight: adding one would SUPPRESS
+       real findings the current code fires on
+       (``no-silent-under-declaration``). Do not add a zero-amount /
+       zero-cuota guard here to "match" the other six families.
+
     Args:
         revision: The :class:`ModeloRevision` whose bindings define the
             supported IVA classification triples.
@@ -588,46 +637,16 @@ def unsupported_ledger_iva_observations(
 
     Returns:
         Tuple of :class:`IvaLedgerObservation` instances not matched by any binding.
-
-    This is the fail-closed counterpart to
-    :func:`resolve_ledger_iva_aggregation_binding_values`. Empty match
-    sets on supported bindings still resolve to zero, but a concrete
-    observation whose category/rate/flow triple is not selected by any
-    ``ledger_iva_aggregation`` binding is a modelling gap and must not
-    be silently inferred into an annual or periodic form.
-
-    Categories that bear no Modelo 303 cuota *by law*
-    (:data:`~cadrumo.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
-    zero-rated, not-subject, exempt intra-community supplies/exports,
-    triangulation, and régimen simplificado) are excluded: they
-    correctly match no cuota binding, so flagging them would be a false
-    positive. After the M303 routing tail (domestic / intra-community
-    reverse-charge bindings, the import deducible binding) landed, every
-    cuota-bearing declarable category has a consuming binding, so the
-    residual unsupported set is empty for the known declarable categories;
-    the function still fail-closes on any *new* declarable triple that no
-    binding selects.
     """
-    selectors = tuple(
-        _iva_ledger_selector(binding)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        parse_selector=_iva_ledger_selector,
+        build_matcher=_iva_build_matcher,
+        is_declarable=lambda observation: True,
+        extra_exclusion=lambda observation: observation.category in CUOTA_LESS_M303_IVA_CATEGORIES,
     )
-    unsupported: list[IvaLedgerObservation] = []
-    for observation in observations:
-        if observation.category in CUOTA_LESS_M303_IVA_CATEGORIES:
-            continue
-        if not any(
-            _iva_ledger_observation_matches_selector(
-                observation,
-                selector,
-                categories=set(selector.categories),
-                rate_kinds=set(selector.rate_kinds),
-            )
-            for selector in selectors
-        ):
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 # Ledger Renta estimación directa gastos aggregation source bindings.
@@ -966,6 +985,38 @@ class RentaIncomeObservationProtocol(Protocol):
     def withheld_amount(self) -> Decimal: ...
 
 
+def _renta_income_build_matcher(
+    selector: _RentaLedgerIncomeSelector,
+) -> Callable[[RentaIncomeObservationProtocol], bool]:
+    target_casilla_id = selector.target_casilla_id
+
+    def matcher(observation: RentaIncomeObservationProtocol) -> bool:
+        return observation.target_casilla_id == target_casilla_id
+
+    return matcher
+
+
+def _renta_income_aggregate(
+    matched: Sequence[RentaIncomeObservationProtocol],
+    selector: _RentaLedgerIncomeSelector,
+) -> Decimal:
+    if selector.fact == "ingresos_integros_sum":
+        return sum(
+            (
+                observation.taxable_base_amount
+                if observation.taxable_base_amount is not None
+                else observation.gross_amount
+                for observation in matched
+            ),
+            Decimal("0"),
+        )
+    if selector.fact == "taxable_base_sum":
+        return sum((observation.taxable_base_amount or Decimal("0") for observation in matched), Decimal("0"))
+    if selector.fact == "withheld_amount_sum":
+        return sum((observation.withheld_amount for observation in matched), Decimal("0"))
+    return sum((observation.gross_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_renta_income_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],
@@ -978,40 +1029,29 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     fallback); ``"gross_income_sum"`` → ``observation.gross_amount``;
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
     ``None``); ``"withheld_amount_sum"`` → ``observation.withheld_amount``.
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings are resolved.
         observations: Renta income ledger lines to aggregate over.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
-            continue
-        selector = _renta_ledger_income_selector(binding)
-        matched = [
-            observation for observation in available if observation.target_casilla_id == selector.target_casilla_id
-        ]
-        if selector.fact == "ingresos_integros_sum":
-            resolved[binding.id] = sum(
-                (
-                    observation.taxable_base_amount
-                    if observation.taxable_base_amount is not None
-                    else observation.gross_amount
-                    for observation in matched
-                ),
-                Decimal("0"),
-            )
-        elif selector.fact == "taxable_base_sum":
-            resolved[binding.id] = sum(
-                (observation.taxable_base_amount or Decimal("0") for observation in matched),
-                Decimal("0"),
-            )
-        elif selector.fact == "withheld_amount_sum":
-            resolved[binding.id] = sum((observation.withheld_amount for observation in matched), Decimal("0"))
-        else:
-            resolved[binding.id] = sum((observation.gross_amount for observation in matched), Decimal("0"))
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        parse_selector=_renta_ledger_income_selector,
+        build_matcher=_renta_income_build_matcher,
+        aggregate=_renta_income_aggregate,
+    )
+
+
+def _renta_income_is_declarable(observation: RentaIncomeObservationProtocol) -> bool:
+    declarable = observation.gross_amount
+    if observation.taxable_base_amount is not None:
+        declarable = max(declarable, observation.taxable_base_amount)
+    return declarable != Decimal("0")
 
 
 def unsupported_ledger_renta_income_observations(
@@ -1020,17 +1060,14 @@ def unsupported_ledger_renta_income_observations(
 ) -> tuple[RentaIncomeObservationProtocol, ...]:
     """Return the :class:`RentaIncomeObservationProtocol` rows no binding on ``revision`` can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_renta_income_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_iva_observations`. An observation whose
-    ``target_casilla_id`` matches no ``ledger_renta_income_aggregation`` binding has
-    its income silently dropped from the filing — a modelling gap, not a
-    legitimate zero.
-
-    False-fire guard: an observation whose declarable income is zero (both
-    ``gross_amount`` and any declared ``taxable_base_amount`` are zero) contributes
-    nothing whether or not it is routed and is excluded; only a non-zero income
-    reaching no casilla is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the ``target_casilla_id`` match predicate
+    (reused from the resolver's ``_renta_income_build_matcher``) and a
+    false-fire guard that excludes an observation whose declarable amount —
+    ``max(gross_amount, taxable_base_amount)`` when a base is declared,
+    ``gross_amount`` otherwise — is zero. No ``extra_exclusion``.
 
     Args:
         revision: The :class:`ModeloRevision` whose renta-income bindings define
@@ -1041,21 +1078,14 @@ def unsupported_ledger_renta_income_observations(
         Tuple of observations whose non-zero income is selected by no
         ``ledger_renta_income_aggregation`` binding.
     """
-    supported_casillas = frozenset(
-        _renta_ledger_income_selector(binding).target_casilla_id
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        parse_selector=_renta_ledger_income_selector,
+        build_matcher=_renta_income_build_matcher,
+        is_declarable=_renta_income_is_declarable,
     )
-    unsupported: list[RentaIncomeObservationProtocol] = []
-    for observation in observations:
-        declarable = observation.gross_amount
-        if observation.taxable_base_amount is not None:
-            declarable = max(declarable, observation.taxable_base_amount)
-        if declarable == Decimal("0"):
-            continue
-        if observation.target_casilla_id not in supported_casillas:
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 # Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at

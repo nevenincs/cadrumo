@@ -71,6 +71,7 @@ def _m720_row_binding(binding_id: str, row_field: str) -> DataBindingDefinition:
 def _m720_revision() -> ModeloRevision:
     return ModeloRevision(
         id="2013-y-siguientes",
+        localization_key="test.schema.revision.2013-y-siguientes.label",
         valid_from=date(2013, 1, 1),
         period_selector=PeriodSelector(year_from=2013, periods=("0A",)),
         legal_refs=_M720_LEGAL_REFS,
@@ -89,6 +90,7 @@ def _m720_revision() -> ModeloRevision:
 def _revision_without_foreign_asset_source() -> ModeloRevision:
     return ModeloRevision(
         id="foreign-asset-empty-test",
+        localization_key="test.schema.revision.foreign-asset-empty-test.label",
         valid_from=date(2025, 1, 1),
         period_selector=PeriodSelector(years=(2025,), periods=("1T",)),
         legal_refs=("ley-37-1992:art-1",),

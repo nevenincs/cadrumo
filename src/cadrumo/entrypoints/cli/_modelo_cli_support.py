@@ -431,41 +431,6 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
         ) from exc
 
 
-def parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
-    """Parse one ``HIJO_ID=MESES`` token from ``--meses-trabajo-con-hijo-menor-3``."""
-    if "=" not in spec:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.meses_trabajo_hijo_bad_format",
-                spec=spec,
-                default="--meses-trabajo-con-hijo-menor-3 requires HIJO_ID=MESES format; got: {spec}",
-            ),
-        )
-    hijo_id, _, meses_raw = spec.partition("=")
-    hijo_id = hijo_id.strip()
-    meses_raw = meses_raw.strip()
-    try:
-        meses = int(meses_raw)
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.meses_trabajo_hijo_not_integer",
-                spec=spec,
-                default="--meses-trabajo-con-hijo-menor-3 MESES must be an integer 0-12; got: {spec}",
-            ),
-        ) from exc
-    if not (0 <= meses <= 12):
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.meses_trabajo_hijo_out_of_range",
-                spec=spec,
-                meses=meses,
-                default="--meses-trabajo-con-hijo-menor-3 MESES must be 0-12; got {meses} in: {spec}",
-            ),
-        )
-    return hijo_id, meses
-
-
 def optional_decimal_option(raw: str | None, *, translation_key: str, default: str) -> Decimal | None:
     """Parse an optional hand-typed euro amount carrying a per-field refusal message.
 
@@ -509,7 +474,6 @@ def work_calculate_input_bundle_from_cli(
     borrador_snapshot_id: str | None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
     prestacion_inss_exenta: str | None,
-    meses_trabajo_con_hijo_menor_3: list[str] | None,
     rescate_plan_pensiones_capital: str | None,
     rescate_plan_pensiones_aportaciones_pre_2007: str | None,
     rescate_plan_pensiones_aportaciones_totales: str | None,
@@ -526,9 +490,6 @@ def work_calculate_input_bundle_from_cli(
     binding_pairs = dict(parse_binding_override(spec) for spec in (binding or ()))
     relation_pairs = dict(parse_relation_override(spec) for spec in relation or ())
     detail_rows: tuple[ModeloDetailRow, ...] = tuple(parse_row_spec(spec) for spec in (row or ()))
-    meses_pairs: tuple[tuple[str, int], ...] = tuple(
-        parse_meses_trabajo_hijo_spec(spec) for spec in (meses_trabajo_con_hijo_menor_3 or ())
-    )
     try:
         _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows)
         return build_work_calculate_input_bundle(
@@ -547,7 +508,6 @@ def work_calculate_input_bundle_from_cli(
                     "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
                 ),
             ),
-            meses_trabajo_con_hijo_menor_3=meses_pairs,
             rescate_plan_pensiones_capital=optional_decimal_option(
                 rescate_plan_pensiones_capital,
                 translation_key="cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
@@ -864,7 +824,6 @@ __all__ = [
     "parse_binding_override",
     "parse_casilla_override",
     "parse_kv_spec",
-    "parse_meses_trabajo_hijo_spec",
     "parse_relation_override",
     "parse_revision_selector",
     "parse_row_spec",

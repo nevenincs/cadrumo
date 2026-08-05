@@ -52,6 +52,7 @@ _M190_WITHHOLDING_SOURCE_REFS = (
 def _revision_with(*bindings: DataBindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="2024-y-siguientes",
+        localization_key="test.schema.revision.2024-y-siguientes.label",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
         legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
@@ -74,6 +75,7 @@ def _percepcion_binding() -> DataBindingDefinition:
 def _non_withholding_revision() -> ModeloRevision:
     return ModeloRevision(
         id="303-no-withholding-test",
+        localization_key="test.schema.revision.303-no-withholding-test.label",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(years=(2024,), periods=("1T",)),
         legal_refs=("ley-37-1992:art-1",),

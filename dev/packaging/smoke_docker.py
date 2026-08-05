@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from ._proof_ledger import record_proof
 from ._smoke_common import relative_manifest_path, require_executable, write_smoke_manifest
 from .python_cohort import load_python_cohort
 
@@ -142,6 +143,7 @@ def _preflight_docker(docker: DockerCli) -> None:
         sys.stdout.write(result.stdout)
         sys.stderr.write(result.stderr)
         raise SystemExit(result.returncode or 1)
+    record_proof("docker daemon preflight")
 
 
 def _run_docker(command: list[str], *, timeout: int) -> None:
@@ -456,6 +458,7 @@ run([sys.executable, "-m", "playwright", "install", "--with-deps", "chromium"], 
 
 from cadrumo.adapters.outbound.aeat.browser import default_browser_session_factory
 from cadrumo.core.config import load_settings
+from dev.packaging._proof_ledger import record_proof
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -571,6 +574,8 @@ def _run_probe(
             check=False,
             timeout=_DOCKER_COMMAND_TIMEOUT_SECONDS,
         )
+    record_proof("clean Linux container install")
+    record_proof("container pip check")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -623,29 +628,32 @@ def main(argv: list[str] | None = None) -> int:
         timeout=timeout,
     )
 
-    checks = [
+    # The probe above runs the variant's checks INSIDE the container and exits
+    # non-zero on any failure, so reaching here is the proof that they passed.
+    # Recording per variant keeps the claim tied to the probe that ran it.
+    variant_claims = (
+        (
+            "browser optional imports",
+            "Playwright Chromium with system dependencies",
+            "container localhost browser health smoke",
+        )
+        if args.browser
+        else (
+            "installed CLI config/profile smoke",
+            "attachment storage round-trip",
+            "core LLM missing-extra boundary",
+        )
+    )
+    for claim in variant_claims:
+        record_proof(claim)
+
+    declared = [
         "docker daemon preflight",
-        "wheel tracked shipped-data payload",
+        "installed bundled data resources",
         "clean Linux container install",
         "container pip check",
+        *variant_claims,
     ]
-    if args.browser:
-        checks.extend(
-            [
-                "browser optional imports",
-                "Playwright Chromium with system dependencies",
-                "container localhost browser health smoke",
-            ]
-        )
-    else:
-        checks.extend(
-            [
-                "installed bundled data resources",
-                "installed CLI config/profile smoke",
-                "attachment storage round-trip",
-                "core LLM missing-extra boundary",
-            ]
-        )
     manifest = write_smoke_manifest(
         work_dir,
         lane=f"docker-{mode}",
@@ -655,7 +663,7 @@ def main(argv: list[str] | None = None) -> int:
             "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
             "probe": relative_manifest_path(work_dir, probe),
         },
-        checks=tuple(checks),
+        declared=tuple(declared),
         details={
             "docker_backend": docker.label,
             "cohort_version": cohort.version,

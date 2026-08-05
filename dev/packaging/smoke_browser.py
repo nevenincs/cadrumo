@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ._smoke_common import (
     install_wheel,
+    record_proof,
     relative_manifest_path,
     require_executable,
     requirement_name,
@@ -38,6 +39,7 @@ def _assert_browser_extra_metadata(wheel: Path) -> None:
     missing = sorted(_BROWSER_EXTRA_DEPENDENCIES - browser_requires)
     if missing:
         raise SystemExit(f"wheel browser extra is missing dependencies: {missing!r}")
+    record_proof("browser extra wheel metadata")
 
 
 def _browser_env(work_dir: Path) -> dict[str, str]:
@@ -63,12 +65,14 @@ def _install_chromium(work_dir: Path, venv: Path, *, env: dict[str, str], with_d
         command.append("--with-deps")
     command.append("chromium")
     run_checked(command, cwd=work_dir, env=env)
+    record_proof("Playwright Chromium provisioning")
 
 
 def _assert_browser_imports(work_dir: Path, venv: Path) -> None:
     """Verify the optional Python packages are importable from the fresh venv."""
     code = "import playwright.async_api, playwright_stealth; print('browser-extra-imports-ok')"
     run_checked([str(venv_python_path(venv)), "-c", code], cwd=work_dir)
+    record_proof("browser optional imports")
 
 
 def _run_health(work_dir: Path, venv: Path, *, env: dict[str, str]) -> None:
@@ -135,6 +139,7 @@ print("browser-health-ok")
         cwd=work_dir,
         env=env,
     )
+    record_proof("localhost browser health smoke")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -200,8 +205,7 @@ def main(argv: list[str] | None = None) -> int:
             "venv": relative_manifest_path(work_dir, venv),
             "playwright_browsers": relative_manifest_path(work_dir, Path(env["PLAYWRIGHT_BROWSERS_PATH"])),
         },
-        checks=(
-            "wheel tracked shipped-data payload",
+        declared=(
             "browser extra wheel metadata",
             "fresh uv virtualenv install",
             "browser optional imports",

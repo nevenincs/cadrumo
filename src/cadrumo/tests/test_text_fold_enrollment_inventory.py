@@ -26,6 +26,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Mapping
 from pathlib import Path
+from typing import TypeGuard
 
 import pytest
 
@@ -39,7 +40,7 @@ _CANONICAL_MODULE = SRC_CADRUMO / "core" / "text_fold.py"
 _NORMALIZATION_FORMS = frozenset({"NFC", "NFD", "NFKC", "NFKD"})
 
 
-def _is_unicodedata_normalize_call(node: ast.AST) -> bool:
+def _is_unicodedata_normalize_call(node: ast.AST) -> TypeGuard[ast.expr]:
     """Match ``unicodedata.normalize("NFKD", ...)`` and the bare-imported form.
 
     Keyed on the call shape (a function literally named ``normalize`` whose

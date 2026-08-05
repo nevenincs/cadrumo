@@ -16,7 +16,7 @@ operator-identifying and are kept out of committed text (gated by
 | Role                    | Labels                       | Platform | Location                                  | Script               |
 | ----------------------- | ---------------------------- | -------- | ----------------------------------------- | -------------------- |
 | Windows build host      | `self-hosted, Windows, X64`  | Windows  | `C:\actions-runner`                       | `cleanup-windows.ps1`|
-| Linux container runner  | `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux`   | `cleanup-linux.sh`   |
+| Linux container runner 1| `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux-1` | `cleanup-linux.sh`   |
 | Linux container runner 2| `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux-2` | `cleanup-linux.sh`   |
 | macOS build host        | `self-hosted, macOS, ARM64`  | macOS    | `~/actions-runner`                        | `cleanup-macos.sh`   |
 | Linux ARM container     | `self-hosted, Linux, ARM64`  | Linux    | colima container `cadrumo-runner-mac-arm` | `cleanup-linux.sh`   |
@@ -94,7 +94,7 @@ console session (Ctrl-C the `run.cmd` window, then re-run `run.cmd`) when
 runner is later reconfigured as a service (`svc.sh install` / `Install-Service`),
 switch to `Get-Service 'actions.runner.*' | Restart-Service`.
 
-### Linux docker runners (`cadrumo-runner-linux`, `-2`)
+### Linux docker runners (`cadrumo-runner-linux-1`, `-2`)
 
 The in-container runner root is `/home/runner` (that is where `config.sh`,
 `.runner`, `.env`, and `_work` live). Copy the script there and append the hook
@@ -103,7 +103,7 @@ simultaneously, CI/smoke depend on the pair (the runner auto-resumes on
 restart, which re-reads `.env`):
 
 ```bash
-for c in cadrumo-runner-linux cadrumo-runner-linux-2; do
+for c in cadrumo-runner-linux-1 cadrumo-runner-linux-2; do
   docker cp dev/runners/cleanup-linux.sh "$c":/home/runner/cleanup-linux.sh
   docker exec "$c" bash -lc 'chmod +x /home/runner/cleanup-linux.sh 2>/dev/null; \
     grep -q ACTIONS_RUNNER_HOOK_JOB_COMPLETED /home/runner/.env 2>/dev/null || \
@@ -206,8 +206,41 @@ The type checker is now `pyrefly`, a native binary with no JavaScript runtime
 underneath, so this gap no longer exists and the apt step is retired. Nothing
 needs installing for the dev lane's type check.
 
-Recreate a Linux runner like this (the volume already holds `config.sh`,
-`run.sh`, `.runner`, `.credentials`, and `.env`, so it does **not** re-register):
+**A stopped runner is a doomed runner, and the volume dies with it.** This is the
+third failure class and the most expensive, because it is silent. If a container
+stops and stays stopped, the service deletes its registration after a period of
+no contact. When the container next starts — a daemon restart, a host reboot,
+the restart policy firing — it wakes with credentials naming a registration that
+no longer exists, logs `the runner registration has been deleted from the
+server, please re-configure`, and exits 1. With `--restart always` that becomes
+an unrecoverable loop: re-registering needs a token the container has no way to
+obtain, so it burns restarts forever. `docker container prune` then reaps it on
+the next job completion anywhere on the host, and the runner is simply gone.
+
+Three consequences worth internalising. **A state volume whose registration was
+deleted is permanently dead** — never build a new container on it, because it
+reproduces the loop indefinitely; register fresh into a fresh volume and leave
+the old one for disposal. **Nothing in this fleet detects any of that**: the loop
+is logged inside a container nobody watches, so the gap is invisible until
+someone counts runners by hand. And because the whole chain begins with a
+container that merely *stopped*, the cheap prevention is noticing within days
+rather than weeks.
+
+**Capability parity between the two Linux runners is load-bearing, not tidiness.**
+They carry identical labels, so a job requesting `[self-hosted, Linux, X64]`
+lands on whichever is free. Any tool present on one and absent on the other is a
+coin-flip failure that reproduces only half the time — the worst debugging shape
+there is. Whenever you provision one, provision both, and verify with the checks
+below rather than assuming. Note that `gh` belongs in the volume at
+`/home/runner/tools/bin` precisely so a container rebuild keeps it; an install
+into the container's writable layer (`/usr/local/bin`) works until the rebuild
+that silently loses it.
+
+Recreate a Linux runner like this **when its volume still holds a live
+registration** (`config.sh`, `run.sh`, `.runner`, `.credentials`, and `.env` are
+already there, so it does **not** re-register). If the registration was deleted,
+do not reuse the volume — create a new one and run `config.sh` against a fresh
+registration token first:
 
 ```bash
 docker create --name cadrumo-runner-linux-2 --restart always \
@@ -251,5 +284,5 @@ After wiring, the next completed job appends a line to
 `<work-root>/runner-hygiene.log`. Confirm the hook fired:
 
 - Windows: `Get-Content C:\actions-runner\_work\runner-hygiene.log -Tail 5`
-- Linux: `docker exec cadrumo-runner-linux tail -5 /home/runner/_work/runner-hygiene.log`
+- Linux: `docker exec cadrumo-runner-linux-1 tail -5 /home/runner/_work/runner-hygiene.log`
 - macOS: `ssh … tail -5 ~/actions-runner/_work/runner-hygiene.log`

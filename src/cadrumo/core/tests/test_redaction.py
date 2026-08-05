@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-from typing import cast
 
 import pytest
 
@@ -217,8 +216,8 @@ def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> No
         "modelo": "130",
     }
 
-    default_redacted = cast("dict[str, object]", redact_structured_for_cli_output(payload))
-    revealed_structured = cast("dict[str, object]", redact_structured_for_cli_output(payload, reveal_identifiers=True))
+    default_redacted = redact_structured_for_cli_output(payload)
+    revealed_structured = redact_structured_for_cli_output(payload, reveal_identifiers=True)
 
     assert default_redacted["profile_id"] == CLI_PROFILE_ID_PLACEHOLDER
     assert default_redacted["bucket_id"] == CLI_BUCKET_ID_PLACEHOLDER

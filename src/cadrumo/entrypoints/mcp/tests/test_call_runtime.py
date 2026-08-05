@@ -258,7 +258,10 @@ def test_cli_resolution_refusal_does_not_leak_the_installation_path() -> None:
     error = OSError(2, "No such file or directory", r"C:\Users\a-real-person\AppData\cadrumo\aeat.exe")
     document = _cli_resolution_refusal_envelope(command_key="app.modelo.calculate", error=error)
 
-    message = str(document["error"]["message"])  # type: ignore[index]
+    raw_section = document["error"]
+    assert isinstance(raw_section, dict)
+    error_section: dict[str, object] = {str(key): value for key, value in raw_section.items()}
+    message = str(error_section["message"])
     assert "a-real-person" not in message, "the refusal must not echo the installation path"
     assert "AppData" not in message, "nor any component of it"
     # Python resolves OSError(2, ...) to FileNotFoundError, so the reported class

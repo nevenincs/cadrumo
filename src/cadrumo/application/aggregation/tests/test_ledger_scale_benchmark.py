@@ -91,7 +91,7 @@ from .. import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "40404040-4040-4040-8040-404040404040"
-_TAX_ID = "40404040T"
+_TAX_ID = "40404040D"
 
 #: Period-scoped ledger operations complete under 3 seconds at
 #: 30k-transaction scale. Unfiltered full-catalogue reads and the annual renta

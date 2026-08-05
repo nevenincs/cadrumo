@@ -53,6 +53,7 @@ import ast
 import re
 from collections.abc import Mapping
 from pathlib import Path
+from typing import TypeGuard
 
 import pytest
 
@@ -237,7 +238,7 @@ def _unmatchable_modelo_references(tree: ast.AST) -> list[str]:
     return offenders
 
 
-def _is_modelo_lookup_by_member_name(node: ast.AST) -> bool:
+def _is_modelo_lookup_by_member_name(node: ast.AST) -> TypeGuard[ast.expr]:
     """Return whether *node* reaches a ``Modelo`` member by its NAME rather than as an attribute.
 
     ``Modelo["M303"]`` and ``getattr(Modelo, "M303")`` are the same move spelled

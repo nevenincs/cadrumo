@@ -29,6 +29,14 @@ from ._concept_cards import (
     TermAlias,
     project_concept_cards,
 )
+from ._content_manifest import (
+    RAW_BYTE_MANIFEST_SCHEMA_VERSION,
+    RawByteManifest,
+    RawByteManifestEntry,
+    RawByteManifestError,
+    build_raw_byte_manifest,
+    verify_raw_byte_manifest,
+)
 from ._legal_projection import LegalSearchRecord, project_legal_search_records
 from ._miss_rate import (
     DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
@@ -186,6 +194,7 @@ __all__ = [
     "POTION_MODEL_LICENSE",
     "POTION_MODEL_REPOSITORY",
     "POTION_MODEL_REVISION",
+    "RAW_BYTE_MANIFEST_SCHEMA_VERSION",
     "ROW_ORDER",
     "STRONG_SIGNAL_SCORE_FLOOR",
     "BridgeCompilationError",
@@ -226,6 +235,9 @@ __all__ = [
     "RatificationStatus",
     "RatificationValidationResult",
     "RatificationViolation",
+    "RawByteManifest",
+    "RawByteManifestEntry",
+    "RawByteManifestError",
     "RecordManifest",
     "RecordManifestEntry",
     "RelativeCosineThresholds",
@@ -263,6 +275,7 @@ __all__ = [
     "TokenizerProvenance",
     "WrangledResult",
     "adjudicate_rung2",
+    "build_raw_byte_manifest",
     "build_record_manifest",
     "build_rung2_compilation_inputs",
     "build_rung2_search_bundle",
@@ -301,6 +314,7 @@ __all__ = [
     "synonym_ratification_queue_path",
     "to_search_record",
     "validate_ratification_queue",
+    "verify_raw_byte_manifest",
     "vocabulary_fingerprint",
     "wrangle",
     "write_rung2_search_bundle",

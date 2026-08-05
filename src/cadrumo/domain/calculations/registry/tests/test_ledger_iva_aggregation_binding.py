@@ -475,6 +475,33 @@ def test_unsupported_excludes_cuota_less_by_law_categories() -> None:
     assert unsupported_ledger_iva_observations(revision, (exempt_supply, reverse_charge)) == (reverse_charge,)
 
 
+def test_unsupported_flags_zero_amount_observation_unlike_every_other_ledger_family() -> None:
+    """IVA's fail-closed screen has NO zero-amount false-fire guard, unlike its six siblings.
+
+    Every other ``unsupported_ledger_*`` function excludes a matched-nothing
+    observation once its declarable amount is zero. IVA is the sole
+    documented exception (F15): a ``DOMESTIC_REVERSE_CHARGE`` observation
+    genuinely bears a cuota by law and is not in
+    ``CUOTA_LESS_M303_IVA_CATEGORIES``, so it must be flagged as unsupported
+    even when this particular row's base/iva/recargo all happen to be zero
+    — the guard other families have does not exist here, on purpose, and
+    must not be added to "match" them (doing so would silently suppress a
+    real routing gap on a future non-zero row of the same unrouted
+    category).
+    """
+    revision = _revision_with_bindings(_binding())
+    zero_amount_reverse_charge = _observation(
+        ledger_id="domestic-reverse-charge-zero",
+        category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        flow=IvaFlowDirection.SOPORTADO,
+        base=Decimal("0"),
+        iva=Decimal("0"),
+        recargo=Decimal("0"),
+    )
+
+    assert unsupported_ledger_iva_observations(revision, (zero_amount_reverse_charge,)) == (zero_amount_reverse_charge,)
+
+
 def test_resolve_handles_multiple_bindings_independently() -> None:
     revision = _revision_with_bindings(
         _binding("modelo-303-iva-repercutido-general-cuota"),

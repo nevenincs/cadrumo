@@ -986,13 +986,6 @@ application:
       calculate_m347_threshold_not_met: La contrapart %{nif} del model 347 suma %{total},
         que no supera el llindar de %{threshold} EUR exigit pel RD 1065/2007 art.
         31.1.
-      calculate_maternidad_meses_two_authorities: 'S''ha indicat --meses-trabajo-con-hijo-menor-3
-        mentre el perfil actiu ja declara meses_madre_trabajo als seus registres de
-        descendent. Una sola autoritat per declaracio: prescindeix de l''opcio i deixa
-        que els registres declarats aportin els mesos de l''art. 81.1, o elimina MESES_TRABAJO
-        amb `aeat config profile descendiente remove <index>` i despres `add` per
-        tornar a declarar la fila sense ell -- `descendiente add` tota sola nomes
-        afegeix files i no pot editar-ne una de ja declarada.'
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
         s'han d'indicar juntes.
       calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
@@ -1607,6 +1600,9 @@ application:
       registration_label_blank: El nom del perfil no pot estar buit.
       registration_passphrase_too_short: La contrasenya ha de tenir com a mínim {minimum_length}
         caràcters.
+      repository_classification_mismatch: L'espai de noms d'objecte segur %{namespace}
+        està registrat amb sensibilitat %{expected}, però la classificació del registre
+        emmagatzemat és %{classification}.
       repository_profile_bucket_mismatch: El perfil %{profile_id} no pertany al bucket
         %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.
       repository_profile_record_missing: No s'ha trobat el registre de perfil al bucket
@@ -1619,7 +1615,6 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
-      repository_classification_mismatch: 'L''espai de noms d''objecte segur %{namespace} està registrat amb sensibilitat %{expected}, però la classificació del registre emmagatzemat és %{classification}.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
@@ -2624,7 +2619,7 @@ cli:
           d'ús de l'habitatge per a l'activitat econòmica).
         period_help: 'Testimoni de període utilitzat per resoldre la revisió del model:
           0A anual, 1T-4T trimestres, 01-12 mesos; per als models censals (036) utilitza
-          alta, modificació o baixa.'
+          alta, modificacion o baja.'
         section_ledger: derivades_del_llibre_de_moviments
         section_optional: caselles_opcionals_manuals
         section_profile: derivades_del_perfil
@@ -2964,21 +2959,6 @@ cli:
           d''atribució (activitat econòmica) del seu Model 100 (arts. 86-89 LIRPF).'
         m210_gross_income_source_help: 'Autoritat de la [5] del Model 210: manual
           (predeterminada) o agregació de llibre major de font espanyola.'
-        meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill complia
-          els requisits de la deducció per maternitat de l''art. 81 LIRPF -- menor
-          de 3 anys, o una adopció/acolliment dins de la seva finestra de data d''entrada,
-          amb independència de l''edat -- i era a la unitat familiar. Format: FILL_ID=MESOS.
-          Repetible per cada fill. FILL_ID és un identificador lliure (p. ex. 0, 1,
-          ''laia''). Es calcula sum(min(MESOS x 100, 1200)) i s''injecta a la casella
-          0611. Només per a perfils que no declaren descendents: si el perfil actiu
-          ja declara MESES_TRABAJO amb `aeat config profile descendiente add`, aquests
-          registres aporten els mesos i aquesta opció es rebutja.'
-        meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requereix
-          format FILL_ID=MESOS; s''ha rebut: {spec}.'
-        meses_trabajo_hijo_not_integer: 'MESOS a --meses-trabajo-con-hijo-menor-3
-          ha de ser un enter 0–12; s''ha rebut: {spec}.'
-        meses_trabajo_hijo_out_of_range: 'MESOS a --meses-trabajo-con-hijo-menor-3
-          ha d''estar entre 0 i 12; s''ha rebut {meses} a: {spec}.'
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'

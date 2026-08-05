@@ -97,6 +97,7 @@ jobs:
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
         # module-to-stub correspondence, CLI reference drift) plus doc8 and
         # interrogate — the same recipe ci-full.yml invokes, so the two lanes
-        # cannot drift. 8 workers, never auto: three runners share this
-        # machine's 24 logical CPUs (.github/ci-control-plane.md).
+        # cannot drift. 8 workers, never auto: this machine's 24 logical CPUs
+        # are shared with co-resident runners from other repositories
+        # (.github/ci-control-plane.md; 8 is a working pin, not a derivation).
         run: just docs-check 8

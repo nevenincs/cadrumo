@@ -42,6 +42,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Mapping
 from pathlib import Path
+from typing import TypeGuard
 
 import pytest
 
@@ -114,7 +115,7 @@ def _is_live_reference(node: ast.expr) -> bool:
     return isinstance(node, ast.Name | ast.Attribute)
 
 
-def _is_classification_compare(node: ast.AST) -> bool:
+def _is_classification_compare(node: ast.AST) -> TypeGuard[ast.expr]:
     """Match ``<expr>.classification <op> <live reference>`` for ``op`` in ``==``/``!=``/``is``/``is not``.
 
     Only one side needs to be the ``.classification`` attribute access -- every

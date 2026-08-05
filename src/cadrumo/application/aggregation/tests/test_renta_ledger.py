@@ -87,6 +87,7 @@ def _m100_renta_expense_binding(binding_id: str, casilla_id: str) -> DataBinding
 def _m100_2025_renta_expense_revision() -> ModeloRevision:
     return ModeloRevision(
         id="2025",
+        localization_key="test.schema.revision.2025.label",
         valid_from=date(2026, 1, 1),
         period_selector=PeriodSelector(years=(2025,), periods=("0A",)),
         legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),

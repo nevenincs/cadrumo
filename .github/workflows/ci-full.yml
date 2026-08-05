@@ -97,8 +97,9 @@ jobs:
       - name: Test (unit)
         # No junit artifact (zero Actions-artifact posture); the durations
         # profile lives in the job log.
-        # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/ci-control-plane.md). Routed
+        # -n 8, never -n auto: this machine's 24 logical CPUs are shared with
+        # co-resident runners from other repositories (machine-aware sizing,
+        # .github/ci-control-plane.md; 8 is a working pin, not a derivation). Routed
         # through the same recipe ci.yml uses so the selection has one
         # declaration site.
         run: CADRUMO_PYTEST_WORKERS=8 just test-unit 100

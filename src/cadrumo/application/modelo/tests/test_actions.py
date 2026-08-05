@@ -122,7 +122,7 @@ def _test_casilla_definition(
     return CasillaDefinition(
         id=casilla_id,
         number=casilla_id,
-        label=f"Test casilla {casilla_id}",
+        localization_keys=(f"test.schema.casilla.{casilla_id}.label",),
         section=("test",),
         input_kind=input_kind,
         binding=binding,
@@ -139,6 +139,7 @@ def _test_revision(
 ) -> ModeloRevision:
     return ModeloRevision(
         id="test-actions-revision",
+        localization_key="test.schema.revision.test-actions-revision.label",
         valid_from=date(2026, 1, 1),
         period_selector=PeriodSelector(years=(2026,), periods=("0A", "1T")),
         legal_refs=(_TEST_LEGAL_REF,),

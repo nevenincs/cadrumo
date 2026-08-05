@@ -10,6 +10,7 @@ from pathlib import Path
 from ._smoke_common import (
     assert_cadrumo_version_output,
     assert_installed_data,
+    record_proof,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
@@ -79,6 +80,10 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
     )
     run_checked([uv, "pip", "check", "--python", str(venv_python_path(venv))], cwd=repo_root)
     return venv
+    record_proof("frozen uv all-extras/all-groups sync")
+    record_proof("non-editable project install")
+    record_proof("uv sync check")
+    record_proof("pip dependency check")
 
 
 def _assert_dev_commands(work_dir: Path, venv: Path) -> None:
@@ -86,6 +91,7 @@ def _assert_dev_commands(work_dir: Path, venv: Path) -> None:
     for command in _DEV_COMMANDS:
         executable, *args = command
         run_checked([_venv_script(venv, executable), *args], cwd=work_dir)
+    record_proof("developer command surface")
 
 
 def _assert_dev_imports(work_dir: Path, venv: Path) -> None:
@@ -101,12 +107,14 @@ import yaml
 print("dev-imports-ok")
 """
     run_checked([str(venv_python_path(venv)), "-c", code], cwd=work_dir)
+    record_proof("dev optional runtime imports")
 
 
 def _assert_dev_cli(work_dir: Path, venv: Path) -> None:
     """Verify the non-editable project install exposes the AEAT console script."""
     version = run_checked([str(venv_cadrumo_path(venv)), "--version"], cwd=work_dir)
     assert_cadrumo_version_output(version, context="in dev venv")
+    record_proof("installed CLI version smoke")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -138,11 +146,11 @@ def main(argv: list[str] | None = None) -> int:
         work_dir,
         lane="dev-environment",
         artifacts={"venv": relative_manifest_path(work_dir, venv)},
-        checks=(
+        declared=(
             "frozen uv all-extras/all-groups sync",
             "non-editable project install",
             "uv sync check",
-            "pip check",
+            "pip dependency check",
             "developer command surface",
             "dev optional runtime imports",
             "installed CLI version smoke",

@@ -61,6 +61,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from types import MappingProxyType
+from typing import overload
 from urllib.parse import urlparse
 
 from .._iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
@@ -401,6 +402,19 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
     return result
 
 
+
+@overload
+def redact_structured[T](value: dict[str, T], *, rules: tuple[_RedactionRule, ...]) -> dict[str, T]: ...
+
+
+@overload
+def redact_structured[T](value: list[T], *, rules: tuple[_RedactionRule, ...]) -> list[T]: ...
+
+
+@overload
+def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object: ...
+
+
 def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object:
     """Recursively apply ``rules`` to every string **value** inside a structure.
 
@@ -691,6 +705,18 @@ def redact_for_cli_output(text: str, *, reveal_identifiers: bool = False) -> str
 
         raise RedactionError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
     return _redact_cli_string(text, reveal_identifiers=reveal_identifiers)
+
+
+@overload
+def redact_structured_for_cli_output[T](value: dict[str, T], *, reveal_identifiers: bool = False) -> dict[str, T]: ...
+
+
+@overload
+def redact_structured_for_cli_output[T](value: list[T], *, reveal_identifiers: bool = False) -> list[T]: ...
+
+
+@overload
+def redact_structured_for_cli_output(value: object, *, reveal_identifiers: bool = False) -> object: ...
 
 
 def redact_structured_for_cli_output(value: object, *, reveal_identifiers: bool = False) -> object:

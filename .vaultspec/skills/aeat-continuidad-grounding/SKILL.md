@@ -103,7 +103,17 @@ carry semantics.
 ## Programmatic tooling
 
 Save the two scripts below into your session scratchpad and run them from the
-repo root with plain `python` (stdlib only, read-only, seconds per run).
+repo root with `uv run --no-sync python` (read-only, seconds per run).
+
+**They must run through the venv, not plain `python`.** The localization
+cascade moved the Spanish label out of the casilla fragments, so a raw-TOML
+walk cannot see it and every label silently compares equal. Measured against
+the corpus on 2026-08-05: a raw-TOML worklist reported `T1=14, T2=1093, T3=0`
+where resolving labels through the loader gives `T1=5, T2=752, T3=353` — 350
+chains mis-tiered, 9 of them offered as rubber-stamps, and an entire tier
+vanishing rather than reporting empty. Anything that reads a casilla field the
+cascade relocated MUST resolve it through the loader, and an unresolvable
+label must tier DOWN, never compare equal.
 
 ### 1. Tiered triage worklist (which chains, in what order)
 
@@ -111,16 +121,30 @@ Classifies every ungrounded multi-revision casilla id by review effort:
 `T1-rubber-stamp` (label, core, legal refs all identical),
 `T2-legal-refs-review` (only legal refs differ), `T3-wording-review`
 (label diverges, core stable), `T4-full-adjudication` (core drifts —
-renumbering suspect). Measured on 2026-08-05: 2,354 candidates = 171 T1 +
-1,260 T2 + 406 T3 + 517 T4. Also flags partially-stamped chains.
+renumbering suspect). Measured on 2026-08-05 after the M100/M180/M131 batch:
+1,540 candidates = 5 T1 + 752 T2 + 353 T3 + 430 T4. Also flags
+partially-stamped chains and labels that would not resolve.
 
 ```python
-"""chain_worklist.py [repo-root] [--json out.json] -- easiest-first triage."""
-import json, re, sys, tomllib, unicodedata
+"""chain_worklist.py [--json out.json] -- easiest-first triage.
+
+Run through the venv (`uv run --no-sync python chain_worklist.py`): the
+localization cascade moved the Spanish label out of the casilla fragments, so a
+raw-TOML walk can no longer see it. Tiering resolves labels through the same
+loader the drift engine reads, and a label that will not resolve is reported as
+`unresolved` -- never silently treated as equal, which would tier a
+label-drifting chain as a rubber stamp.
+"""
+
+import json
+import re
+import sys
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
-repo = Path(sys.argv[1]) if len(sys.argv) > 1 and not sys.argv[1].startswith("--") else Path.cwd()
+from cadrumo.core.resources import resources
+
 out_path = Path(sys.argv[sys.argv.index("--json") + 1]) if "--json" in sys.argv else None
 _WS, _YEAR = re.compile(r"\s+"), re.compile(r"(19|20)\d{2}")
 # The strict validator compares exactly five fields
@@ -134,53 +158,75 @@ CORE = ("section", "data_type", "semantic_role")
 # Not validated, so never a strict failure -- but a `number` or `formula` move
 # is a strong renumbering signal, so carry it as a visible column.
 INFO = ("number", "input_kind", "formula", "binding")
+_UNRESOLVED = "\x00unresolved"
 
-def norm(t):
-    t = unicodedata.normalize("NFKC", t).casefold()
-    return _WS.sub(" ", t).strip().rstrip(".,;:")
+
+def norm(text: str) -> str:
+    text = unicodedata.normalize("NFKC", text).casefold()
+    return _WS.sub(" ", text).strip().rstrip(".,;:")
+
+
+def label_of(casilla) -> str:
+    """Resolve the official Spanish label, or the unresolved sentinel."""
+    try:
+        resolved = casilla.get_label("es")
+    except Exception:
+        return _UNRESOLVED
+    return norm(resolved) if resolved else _UNRESOLVED
+
 
 rows = []
-for modelo_dir in sorted(p for p in (repo / "src/cadrumo/_data/registry/aeat/modelos").iterdir() if p.is_dir()):
+for definition in resources().modelos.authority.modelos:
     owners = defaultdict(dict)
-    for path in sorted((modelo_dir / "revisions").rglob("*.toml")):
-        if "locales" in path.parts:
-            continue
-        for rev, body in tomllib.loads(path.read_text(encoding="utf-8")).get("revisions", {}).items():
-            if isinstance(body, dict):
-                for e in body.get("casillas", []) or []:
-                    if isinstance(e, dict) and e.get("id"):
-                        owners[str(e["id"])][str(rev)] = e
+    for revision_id, revision in definition.revisions.items():
+        for casilla in revision.casillas:
+            owners[str(casilla.id)][str(revision_id)] = casilla
     for cid, per in owners.items():
-        if len(per) < 2 or all(e.get("continuidad_id") for e in per.values()):
+        if len(per) < 2 or all(c.continuidad_id for c in per.values()):
             continue
-        labels = {norm(str(e.get("label", ""))) for e in per.values()}
-        cores = {tuple((f, str(e.get(f))) for f in CORE) for e in per.values()}
-        infos = {tuple((f, str(e.get(f))) for f in INFO) for e in per.values()}
-        legal = {tuple(e.get("legal_refs") or ()) for e in per.values()}
-        label_state = ("identical" if len(labels) == 1
-                       else "year_token_only" if len({_YEAR.sub("Y", v) for v in labels}) == 1
-                       else "divergent")
+        labels = {label_of(c) for c in per.values()}
+        cores = {tuple((f, str(getattr(c, f, None))) for f in CORE) for c in per.values()}
+        infos = {tuple((f, str(getattr(c, f, None))) for f in INFO) for c in per.values()}
+        legal = {tuple(c.legal_refs or ()) for c in per.values()}
+        if _UNRESOLVED in labels:
+            label_state = "unresolved"
+        elif len(labels) == 1:
+            label_state = "identical"
+        elif len({_YEAR.sub("Y", v) for v in labels}) == 1:
+            label_state = "year_token_only"
+        else:
+            label_state = "divergent"
         core_ok = len(cores) == 1
-        tier = ("T1-rubber-stamp" if label_state != "divergent" and core_ok and len(legal) == 1
-                else "T2-legal-refs-review" if label_state != "divergent" and core_ok
-                else "T3-wording-review" if core_ok else "T4-full-adjudication")
-        rows.append({"modelo": modelo_dir.name, "casilla_id": cid, "revisions": sorted(per),
-                     "label_state": label_state, "core_stable": core_ok,
-                     "legal_refs_stable": len(legal) == 1,
-                     "unvalidated_drift": sorted(
-                         f for f in INFO if len({dict(t)[f] for t in infos}) > 1
-                     ),
-                     "partially_stamped": any(e.get("continuidad_id") for e in per.values()),
-                     "tier": tier})
+        label_ok = label_state in ("identical", "year_token_only")
+        tier = (
+            "T1-rubber-stamp" if label_ok and core_ok and len(legal) == 1
+            else "T2-legal-refs-review" if label_ok and core_ok
+            else "T3-wording-review" if core_ok
+            else "T4-full-adjudication"
+        )
+        rows.append({
+            "modelo": definition.id,
+            "casilla_id": cid,
+            "revisions": sorted(per),
+            "label_state": label_state,
+            "core_stable": core_ok,
+            "legal_refs_stable": len(legal) == 1,
+            "unvalidated_drift": sorted(f for f in INFO if len({dict(t)[f] for t in infos}) > 1),
+            "partially_stamped": any(c.continuidad_id for c in per.values()),
+            "tier": tier,
+        })
 
 order = {"T1-rubber-stamp": 0, "T2-legal-refs-review": 1, "T3-wording-review": 2, "T4-full-adjudication": 3}
 rows.sort(key=lambda r: (order[r["tier"]], r["modelo"], r["casilla_id"]))
 tally = defaultdict(int)
-for r in rows:
-    tally[r["tier"]] += 1
+for row in rows:
+    tally[row["tier"]] += 1
 print(f"ungrounded multi-revision candidate chains: {len(rows)}")
 for tier in sorted(tally, key=order.get):
     print(f"  {tier}: {tally[tier]}")
+unresolved = sum(1 for r in rows if r["label_state"] == "unresolved")
+if unresolved:
+    print(f"  WARNING labels unresolved (tiered down, never rubber-stamped): {unresolved}")
 partial = sum(1 for r in rows if r["partially_stamped"])
 if partial:
     print(f"  WARNING partially-stamped chains: {partial}")
@@ -191,21 +237,38 @@ if out_path:
 
 ### 2. Chain dossier (everything known about one candidate)
 
-`python chain_dossier.py <modelo> <casilla-id> [repo-root]` prints every
+`uv run --no-sync python chain_dossier.py <modelo> <casilla-id>` prints every
 occurrence's label/legal_refs/structural core, drift classification, a
 SUGGESTED evolution kind (a hypothesis to verify, never a decision), existing
-stamps and evolution records, and the revision-catalogue locale leaves the
-chain will eventually own. Positive control: run it on grounded `100 0063` —
-its suggestion must match the authored `legal_refs_evolved` records.
+stamps and evolution records, and the localization keys the chain owns.
+Positive control: run it on grounded `100 0063` — its suggestion must match the
+authored `legal_refs_evolved` records (verified 2026-08-05: it does, against 12
+existing records).
+
+Read the localization-key section every time. It is where a dotted chain id
+becomes visible: `0063` is stamped `irpf.inmueble.porcentaje-propiedad`, and the
+dossier prints its continuity key as
+`modelo.schema.100.casilla.continuidad.x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0.label`.
+Nothing refuses that id, so the base32 blob in this output is the only place the
+damage shows up before it reaches four locale catalogues.
 
 ```python
-"""chain_dossier.py <modelo> <casilla-id> [repo-root]"""
-import re, sys, tomllib, unicodedata
-from pathlib import Path
+"""chain_dossier.py <modelo> <casilla-id> -- everything known about one candidate.
+
+Run through the venv (`uv run --no-sync python chain_dossier.py 100 0063`).
+Labels resolve through the loader, never from raw TOML: the localization
+cascade moved them out of the casilla fragments, and a raw read would report
+every label as empty and therefore identical, suggesting `unchanged` for a
+chain whose wording actually moved.
+"""
+
+import re
+import sys
+import unicodedata
+
+from cadrumo.core.resources import resources
 
 modelo, cid = sys.argv[1], sys.argv[2]
-repo = Path(sys.argv[3]) if len(sys.argv) > 3 else Path.cwd()
-mdir = repo / "src/cadrumo/_data/registry/aeat/modelos" / modelo
 _WS, _YEAR = re.compile(r"\s+"), re.compile(r"(19|20)\d{2}")
 # The strict validator's compared set, minus label/legal_refs which are
 # classified separately below. Keep in step with
@@ -213,76 +276,82 @@ _WS, _YEAR = re.compile(r"\s+"), re.compile(r"(19|20)\d{2}")
 CORE = ("section", "data_type", "semantic_role")
 # Unvalidated, but a renumbering tell worth seeing during adjudication.
 INFO = ("number", "input_kind", "formula", "binding")
+_UNRESOLVED = "<label did not resolve>"
 
-def norm(t):
-    t = unicodedata.normalize("NFKC", t).casefold()
-    return _WS.sub(" ", t).strip().rstrip(".,;:")
 
+def norm(text: str) -> str:
+    text = unicodedata.normalize("NFKC", text).casefold()
+    return _WS.sub(" ", text).strip().rstrip(".,;:")
+
+
+def label_of(casilla) -> str:
+    try:
+        return casilla.get_label("es") or _UNRESOLVED
+    except Exception:
+        return _UNRESOLVED
+
+
+definition = resources().modelos.authority.modelo(modelo)
 occ, evos = {}, []
-for path in sorted((mdir / "revisions").rglob("*.toml")):
-    if "locales" in path.parts:
-        continue
-    for rev, body in tomllib.loads(path.read_text(encoding="utf-8")).get("revisions", {}).items():
-        if not isinstance(body, dict):
-            continue
-        for e in body.get("casillas", []) or []:
-            if isinstance(e, dict) and str(e.get("id")) == cid:
-                occ[str(rev)] = dict(e)
-        evos += [dict(v) for v in body.get("casilla_continuidad_evolutions", []) or []]
+for revision_id, revision in definition.revisions.items():
+    for casilla in revision.casillas:
+        if str(casilla.id) == cid:
+            occ[str(revision_id)] = casilla
+    evos += list(revision.casilla_continuidad_evolutions or ())
 if not occ:
     sys.exit(f"modelo {modelo}: no occurrence of casilla id {cid!r}")
 
 print(f"=== modelo {modelo} casilla {cid}: {len(occ)} occurrence(s) ===")
 for rev in sorted(occ):
-    e = occ[rev]
-    core = {f: e.get(f) for f in CORE if e.get(f) is not None}
-    info = {f: e.get(f) for f in INFO if e.get(f) is not None}
-    print(f"\n[{rev}] stamp={e.get('continuidad_id')!r}")
-    print(f"  label: {e.get('label', '')}")
-    print(f"  legal_refs: {e.get('legal_refs')}")
+    c = occ[rev]
+    core = {f: getattr(c, f, None) for f in CORE}
+    info = {f: getattr(c, f, None) for f in INFO if getattr(c, f, None) is not None}
+    print(f"\n[{rev}] stamp={c.continuidad_id!r}")
+    print(f"  label: {label_of(c)}")
+    print(f"  legal_refs: {list(c.legal_refs or ())}")
     print(f"  core (validated): {core}")
     print(f"  info (unvalidated): {info}")
 
-labels = {rev: str(e.get("label", "")) for rev, e in occ.items()}
-core_ok = len({tuple((f, str(e.get(f))) for f in CORE) for e in occ.values()}) == 1
-legal_ok = len({tuple(e.get("legal_refs") or ()) for e in occ.values()}) == 1
+labels = {rev: label_of(c) for rev, c in occ.items()}
+core_ok = len({tuple((f, str(getattr(c, f, None))) for f in CORE) for c in occ.values()}) == 1
+legal_ok = len({tuple(c.legal_refs or ()) for c in occ.values()}) == 1
 lv = set(labels.values())
-label_state = ("byte-identical" if len(lv) == 1
-               else "identical after normalise" if len({norm(v) for v in lv}) == 1
-               else "differs only by embedded year" if len({_YEAR.sub("Y", norm(v)) for v in lv}) == 1
-               else "SUBSTANTIVELY DIVERGENT -- adjudicate reword vs repurpose")
-info_drift = sorted(f for f in INFO if len({str(e.get(f)) for e in occ.values()}) > 1)
+if _UNRESOLVED in lv:
+    label_state = "UNRESOLVED -- do not tier this as stable; fix resolution first"
+elif len(lv) == 1:
+    label_state = "byte-identical"
+elif len({norm(v) for v in lv}) == 1:
+    label_state = "identical after normalise"
+elif len({_YEAR.sub("Y", norm(v)) for v in lv}) == 1:
+    label_state = "differs only by embedded year"
+else:
+    label_state = "SUBSTANTIVELY DIVERGENT -- adjudicate reword vs repurpose"
+info_drift = sorted(f for f in INFO if len({str(getattr(c, f, None)) for c in occ.values()}) > 1)
 print("\n=== drift classification ===")
 print(f"  validated core stable:  {core_ok}\n  legal_refs stable:      {legal_ok}\n  label:                  {label_state}")
 print(f"  unvalidated drift:      {info_drift or 'none'}  (no strict failure; a renumbering tell)")
 tidy = label_state in ("byte-identical", "identical after normalise")
-suggestion = ("unchanged" if core_ok and legal_ok and tidy
-              else "label_evolved" if core_ok and legal_ok
-              else "legal_refs_evolved" if core_ok and tidy
-              else "label_and_legal_refs_evolved" if core_ok
-              else "NO SUGGESTION -- core drifts; suspect renumbering/repurposed")
+resolved = not label_state.startswith("UNRESOLVED")
+suggestion = (
+    "NO SUGGESTION -- labels did not resolve" if not resolved
+    else "unchanged" if core_ok and legal_ok and tidy
+    else "label_evolved" if core_ok and legal_ok
+    else "legal_refs_evolved" if core_ok and tidy
+    else "label_and_legal_refs_evolved" if core_ok
+    else "NO SUGGESTION -- core drifts; suspect renumbering/repurposed"
+)
 print(f"  suggested evolution_kind (verify against official sources!): {suggestion}")
 
-stamps = {e.get("continuidad_id") for e in occ.values()} - {None}
-mine = [v for v in evos if v.get("continuidad_id") in stamps]
+stamps = {c.continuidad_id for c in occ.values()} - {None}
+mine = [v for v in evos if v.continuidad_id in stamps]
 print(f"\n=== existing evolution records touching these stamps: {len(mine)} ===")
 for v in mine:
-    print(f"  {v.get('id')}: {v.get('from_revision')} -> {v.get('to_revision')} [{v.get('evolution_kind')}]")
+    print(f"  {v.id}: {v.from_revision} -> {v.to_revision} [{v.evolution_kind}]")
 
-print("\n=== locale leaves for this id (revision catalogues) ===")
-for rev_dir in sorted((mdir / "revisions").iterdir()):
-    loc = rev_dir / "locales"
-    if not loc.is_dir():
-        continue
-    for entry in sorted(loc.iterdir()):
-        paths = [entry] if entry.is_file() else sorted(entry.rglob("*.toml"))
-        for path in paths:
-            data = tomllib.loads(path.read_text(encoding="utf-8"))
-            for table in ("labels", "help"):
-                value = data.get(table, {}).get(cid)
-                if value is not None:
-                    name = entry.stem if entry.is_file() else entry.name
-                    print(f"  {rev_dir.name}/{name}/{table}: {value[:70]}")
+print("\n=== localization keys this chain owns ===")
+for rev in sorted(occ):
+    for key in occ[rev].localization_keys or ():
+        print(f"  {rev}: {key}")
 ```
 
 ### 3. Quick probes
