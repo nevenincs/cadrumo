@@ -15,7 +15,9 @@ en la Seguridad Social con posterioridad al nacimiento y 30 días cotizados en
 el mes de mayo") -- mellizos at 8 qualifying months each, 950 euros per
 mellizo, 1.900 total. Filing year 2022, one year earlier with the identical
 profile, must resolve to no increment at all: the year boundary this module
-exists to prove.
+exists to prove. For 2022 it resolves to no DEDUCCIÓN at all, which is a
+second and independent pre-2023 rule -- the cotizaciones ceiling, unreachable
+for those years -- rather than a stronger form of this one.
 """
 
 from __future__ import annotations
@@ -113,12 +115,26 @@ def test_the_older_hijo_mayor_figure_reproduces_through_the_real_resolver() -> N
 
 
 def test_the_same_declared_profile_carries_no_increment_one_filing_year_earlier() -> None:
-    """The year boundary, proven both ways: 2023 grants it (above), 2022 does not.
+    """The year boundary, proven both ways: 2023 grants it (above), 2022 grants nothing.
 
     The SAME descendant, the SAME declared completion month, one filing year
-    earlier. ``pairs`` is unaffected -- the ordinary months still contribute --
-    but ``alta_posterior_hijos`` must be empty, and the resulting deducción must
-    stay at the ordinary rate with no completion-month increment.
+    earlier. ``alta_posterior_hijos`` must be empty, which is the boundary this
+    module exists to prove: the post-birth alta route did not reach a mother
+    before 2023.
+
+    The deducción is 0 rather than the ordinary 800, and the reason is a SECOND,
+    independent pre-2023 rule rather than this one. Until 2022 Art. 81.1 was
+    still capped at the mother's cotizaciones devengadas in the period, and this
+    application holds no cotizaciones figure for those years, so the resolver
+    withholds the whole deducción rather than granting it un-capped
+    (``cotizaciones_ceiling_inexpressible``). ``pairs`` is therefore empty too.
+
+    Do not "restore" the 800 by asserting the ordinary months still contribute.
+    That figure is exactly the un-ceilinged over-grant the cotizaciones gate
+    removed, and asserting it here would reinstate it behind a green test. The
+    per-year sweep of that withholding is owned by
+    ``test_maternidad_cotizaciones_ceiling``; this test only pins that the alta
+    increment cannot arrive through it.
     """
     child = DescendantInfo(
         birth_date=date(2021, 6, 1),
@@ -129,15 +145,16 @@ def test_the_same_declared_profile_carries_no_increment_one_filing_year_earlier(
 
     resolution = resolve_maternidad_meses(record, _snapshot(2022))
 
-    assert resolution.pairs == (("0", 8),)
     assert resolution.alta_posterior_hijos == frozenset()
+    assert resolution.pairs == ()
+    assert resolution.cotizaciones_ceiling_inexpressible is True
 
     deduccion = compute_deduccion_maternidad_0611(
         list(resolution.pairs),
         filing_year=2022,
         alta_posterior_hijos=resolution.alta_posterior_hijos,
     )
-    assert deduccion == 800
+    assert deduccion == 0
 
 
 def test_a_child_with_no_declared_completion_month_is_never_in_the_increment_set() -> None:
