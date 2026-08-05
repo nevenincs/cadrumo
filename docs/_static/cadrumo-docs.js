@@ -1145,6 +1145,12 @@
         excerpt: summary || excerpt || "",
         kind: kind,
         displayClass: displayClass,
+        /* The weight-sorted Pagefind pass contains only injected records. A
+         * hit there is therefore a declared lexical surface match, including
+         * a search_aliases hit, even when its title is not the query. Keep the
+         * flag separate from titleMatch so exact titles retain their stronger
+         * score inside the lexical band. */
+        isLexicalCard: isCard,
         /* Newer injection payloads may carry the opaque id. Older Pagefind
          * records remain valid and dedupe by their href below. */
         recordId: meta && meta.record_id ? meta.record_id : null,
@@ -1320,8 +1326,8 @@
         var aSemantic = typeof a.semanticScore === "number";
         var bSemantic = typeof b.semanticScore === "number";
         if (aSemantic !== bSemantic) {
-          var aDirect = ma > 0;
-          var bDirect = mb > 0;
+          var aDirect = !!a.isLexicalCard || ma > 0;
+          var bDirect = !!b.isLexicalCard || mb > 0;
           if (aDirect !== bDirect) return aDirect ? -1 : 1;
           if (aDirect && bDirect && mb !== ma) return mb - ma;
           /* With no direct identity/title/alias signal, fall through to the
