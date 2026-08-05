@@ -648,11 +648,21 @@ class TestGhRetryClassification:
         Before this classification landed, ``subprocess.TimeoutExpired`` was
         neither caught nor converted, so the one class most worth retrying got
         zero retries and surfaced as a raw subprocess error.
+
+        The stand-in records its invocation FIRST and hangs afterwards, so the
+        timeout budget has to outlast interpreter startup or the attempt is
+        killed before it can count itself - the counter would then measure
+        children that survived startup rather than attempts made, and undercount
+        on a loaded machine while production retried correctly. Measured on this
+        worktree: a cold start took 1.388s against warm starts of ~0.1s, which
+        is what a one-second budget was losing an attempt to. Five seconds is
+        that worst case with room over it; the hang must stay well clear of the
+        budget so the attempt times out rather than racing it.
         """
         counter = tmp_path / "calls.txt"
-        argv = self._counting_script(counter, body="import time;time.sleep(5)")
+        argv = self._counting_script(counter, body="import time;time.sleep(60)")
         with pytest.raises(EvidenceReleaseError, match="timed out"):
-            run_gh_with_retry(sys.executable, argv, timeout_seconds=1)
+            run_gh_with_retry(sys.executable, argv, timeout_seconds=5)
         assert counter.read_text() == "3", "every attempt should have been made before failing closed"
 
     def test_exhaustion_still_surfaces_the_underlying_error(self, tmp_path: Path) -> None:
