@@ -43,9 +43,8 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -67,7 +66,7 @@ from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import fold_casilla_observations
-from ._models import CasillaAggregation
+from ._models import CasillaAggregation, LedgerAggregationResultBase
 
 # The Modelo 151 base liquidable general (régimen impatriados, excluida la parte
 # del ahorro). The impatriado income aggregation folds Spanish-source income into
@@ -139,7 +138,9 @@ class ImpatriadoIncomeObservation(BaseModel):
     source_jurisdiction: str = Field(min_length=2, max_length=2)
 
 
-class ImpatriadoIncomeLedgerAggregation(BaseModel):
+class ImpatriadoIncomeLedgerAggregation(
+    LedgerAggregationResultBase[ImpatriadoIncomeObservation, ImpatriadoIncomeLedgerAggregationIssue],
+):
     """Annual Spanish-source income observations for one Modelo 151 ejercicio.
 
     ``out_of_window_summary`` is populated by repository-backed date partitions.
@@ -147,52 +148,7 @@ class ImpatriadoIncomeLedgerAggregation(BaseModel):
     is already loaded for classification.
     """
 
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1, max_length=16)
-    period: Period
-    observations: Sequence[ImpatriadoIncomeObservation] = Field(default_factory=tuple)
-    issues: Sequence[ImpatriadoIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
-    casilla_aggregation: CasillaAggregation
-
-    @field_validator("observations")
-    @classmethod
-    def _freeze_observations(
-        cls,
-        value: Sequence[ImpatriadoIncomeObservation],
-    ) -> tuple[ImpatriadoIncomeObservation, ...]:
-        return tuple(value)
-
-    @field_validator("issues")
-    @classmethod
-    def _freeze_issues(
-        cls,
-        value: Sequence[ImpatriadoIncomeLedgerAggregationIssue],
-    ) -> tuple[ImpatriadoIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @model_validator(mode="after")
-    def _validate_casilla_period(self) -> Self:
-        if self.casilla_aggregation.modelo != self.modelo:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.modelo_mismatch"))
-        if self.casilla_aggregation.period != self.period:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.period_mismatch"))
-        return self
-
-    @field_serializer("observations")
-    def _serialize_observations(
-        self,
-        value: Sequence[ImpatriadoIncomeObservation],
-    ) -> tuple[ImpatriadoIncomeObservation, ...]:
-        return tuple(value)
-
-    @field_serializer("issues")
-    def _serialize_issues(
-        self,
-        value: Sequence[ImpatriadoIncomeLedgerAggregationIssue],
-    ) -> tuple[ImpatriadoIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
 
 
 def aggregate_impatriado_income_ledger_from_repositories(

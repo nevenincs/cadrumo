@@ -26,9 +26,9 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self, overload
+from typing import overload
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -71,7 +71,7 @@ from ..user_profile import UserProfileLifecycleRepository, fact_value
 from . import _shared_issue_reasons
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
-from ._models import CasillaAggregation, CasillaProvenance
+from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
     relies_on_activity_marker,
     renta_expense_business_proportion,
@@ -154,60 +154,23 @@ class _PurchaseInvoiceEvidencePayload(BaseModel):
     iva_amount: Decimal | None = None
 
 
-class RentaLedgerExpenseAggregation(BaseModel):
-    """First-slice Renta observations plus binding-ready casilla totals."""
+class RentaLedgerExpenseAggregation(
+    LedgerAggregationResultBase[RentaDeductibleExpenseObservation, RentaLedgerAggregationIssue],
+):
+    """First-slice Renta observations plus binding-ready casilla totals.
 
-    model_config = _STRICT_FROZEN
+    Carries no ``out_of_window_summary``: this annual first-slice aggregation
+    has no repository-backed date partition, unlike the base's four other
+    known subclasses -- deliberately not declared here (see
+    :class:`~._models.LedgerAggregationResultBase`).
+    """
 
-    modelo: str = Field(min_length=1, max_length=16)
-    period: Period
     profile_year: int = Field(ge=2000, le=2099)
-    observations: Sequence[RentaDeductibleExpenseObservation] = Field(default_factory=tuple)
-    issues: Sequence[RentaLedgerAggregationIssue] = Field(default_factory=tuple)
-    casilla_aggregation: CasillaAggregation
-
-    @field_validator("observations")
-    @classmethod
-    def _freeze_observations(
-        cls,
-        value: Sequence[RentaDeductibleExpenseObservation],
-    ) -> tuple[RentaDeductibleExpenseObservation, ...]:
-        return tuple(value)
-
-    @field_validator("issues")
-    @classmethod
-    def _freeze_issues(
-        cls,
-        value: Sequence[RentaLedgerAggregationIssue],
-    ) -> tuple[RentaLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @model_validator(mode="after")
-    def _validate_casilla_period(self) -> Self:
-        if self.casilla_aggregation.modelo != self.modelo:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.modelo_mismatch"))
-        if self.casilla_aggregation.period != self.period:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.period_mismatch"))
-        return self
 
     @property
     def casilla_values(self) -> Mapping[CasillaId, Decimal]:
         """Return the frozen mapping of binding-ready casilla totals."""
         return self.casilla_aggregation.casilla_values
-
-    @field_serializer("observations")
-    def _serialize_observations(
-        self,
-        value: Sequence[RentaDeductibleExpenseObservation],
-    ) -> tuple[RentaDeductibleExpenseObservation, ...]:
-        return tuple(value)
-
-    @field_serializer("issues")
-    def _serialize_issues(
-        self,
-        value: Sequence[RentaLedgerAggregationIssue],
-    ) -> tuple[RentaLedgerAggregationIssue, ...]:
-        return tuple(value)
 
 
 def _resolve_residence_ccaa(
