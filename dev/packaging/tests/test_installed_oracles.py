@@ -25,11 +25,10 @@ from typing import IO, Any, cast
 import pytest
 
 from cadrumo.agent import materialise_marketplace
+from dev.packaging._smoke_common import create_pip_venv, run_checked, venv_bin_dir, venv_python_path
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import run_installed_tax_oracle
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
-from dev.packaging.smoke_core import _run, _venv_bin, _venv_python
-from dev.packaging.smoke_pip_core import _create_pip_venv
 from dev.packaging.smoke_split_install import (
     _build_data_wheels,
     _build_root_wheel,
@@ -93,7 +92,7 @@ class InstalledCohort:
 
 def _installed_script(venv: Path, name: str) -> Path:
     suffix = ".exe" if sys.platform == "win32" else ""
-    return (_venv_bin(venv) / f"{name}{suffix}").resolve()
+    return (venv_bin_dir(venv) / f"{name}{suffix}").resolve()
 
 
 def _sha256(path: Path) -> str:
@@ -120,7 +119,7 @@ def _extract_source_commit(repo_root: Path, work_dir: Path, source_commit: str) 
     """Extract one immutable source commit rather than resolving a moving HEAD twice."""
     archive = work_dir / "source-commit.zip"
     extract_root = work_dir / "source-commit"
-    _run(
+    run_checked(
         ["git", "archive", "--format=zip", "-o", str(archive), source_commit],
         cwd=repo_root,
     )
@@ -150,7 +149,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             "cadrumo-data-official": supplied.sha256["cadrumo-data-official"],
         }
     else:
-        source_commit_result = _run(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
+        source_commit_result = run_checked(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT)
         source_commit = source_commit_result.stdout.strip()
         assert len(source_commit) == 40
         build_root = _extract_source_commit(_REPO_ROOT, work_dir, source_commit)
@@ -162,9 +161,9 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         cohort_dir.mkdir()
         for artifact in (root_wheel, *data_wheels):
             shutil.copy2(artifact, cohort_dir / artifact.name)
-        _run([uv, "build", "--sdist", "--out-dir", str(cohort_dir)], cwd=build_root)
+        run_checked([uv, "build", "--sdist", "--out-dir", str(cohort_dir)], cwd=build_root)
         for project in ("cadrumo_data_manuals", "cadrumo_data_official"):
-            _run(
+            run_checked(
                 [
                     uv,
                     "build",
@@ -211,10 +210,10 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
             "cadrumo-data-official": supplied.sha256["cadrumo-data-official"],
         }
 
-    venv = _create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
-    _run(
+    venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
+    run_checked(
         [
-            str(_venv_python(venv)),
+            str(venv_python_path(venv)),
             "-m",
             "pip",
             "install",
@@ -225,9 +224,9 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         ],
         cwd=work_dir,
     )
-    _run([str(_venv_python(venv)), "-m", "pip", "check"], cwd=work_dir)
-    metadata_result = _run(
-        [str(_venv_python(venv)), "-c", _COHORT_PROBE],
+    run_checked([str(venv_python_path(venv)), "-m", "pip", "check"], cwd=work_dir)
+    metadata_result = run_checked(
+        [str(venv_python_path(venv)), "-c", _COHORT_PROBE],
         cwd=work_dir,
     )
     metadata = json.loads(metadata_result.stdout)

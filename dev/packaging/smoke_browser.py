@@ -6,20 +6,20 @@ import argparse
 import os
 from pathlib import Path
 
+from ._smoke_common import (
+    install_wheel,
+    relative_manifest_path,
+    require_executable,
+    requirement_name,
+    resolve_work_dir,
+    run_checked,
+    venv_python_path,
+    wheel_metadata,
+    write_smoke_manifest,
+)
 from .python_cohort import (
     assert_installed_cohort,
     load_python_cohort,
-)
-from .smoke_core import (
-    _executable,
-    _install_wheel,
-    _manifest_path,
-    _requirement_name,
-    _run,
-    _venv_python,
-    _wheel_metadata,
-    _work_dir,
-    _write_smoke_manifest,
 )
 
 _BROWSER_EXTRA_DEPENDENCIES = {"playwright", "playwright-stealth"}
@@ -27,11 +27,11 @@ _BROWSER_EXTRA_DEPENDENCIES = {"playwright", "playwright-stealth"}
 
 def _assert_browser_extra_metadata(wheel: Path) -> None:
     """Verify the built wheel advertises the browser extra and its packages."""
-    requires_dist, provided_extras = _wheel_metadata(wheel)
+    requires_dist, provided_extras = wheel_metadata(wheel)
     if "browser" not in provided_extras:
         raise SystemExit(f"wheel metadata is missing the browser extra: {sorted(provided_extras)!r}")
     browser_requires = {
-        _requirement_name(requirement)
+        requirement_name(requirement)
         for requirement in requires_dist
         if "extra ==" in requirement.lower() and "browser" in requirement.lower()
     }
@@ -58,17 +58,17 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
 
 def _install_chromium(work_dir: Path, venv: Path, *, env: dict[str, str], with_deps: bool) -> None:
     """Provision the Playwright Chromium browser binary for the installed venv."""
-    command = [str(_venv_python(venv)), "-m", "playwright", "install"]
+    command = [str(venv_python_path(venv)), "-m", "playwright", "install"]
     if with_deps:
         command.append("--with-deps")
     command.append("chromium")
-    _run(command, cwd=work_dir, env=env)
+    run_checked(command, cwd=work_dir, env=env)
 
 
 def _assert_browser_imports(work_dir: Path, venv: Path) -> None:
     """Verify the optional Python packages are importable from the fresh venv."""
     code = "import playwright.async_api, playwright_stealth; print('browser-extra-imports-ok')"
-    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir)
+    run_checked([str(venv_python_path(venv)), "-c", code], cwd=work_dir)
 
 
 def _run_health(work_dir: Path, venv: Path, *, env: dict[str, str]) -> None:
@@ -130,8 +130,8 @@ async def main():
 asyncio.run(main())
 print("browser-health-ok")
 """
-    _run(
-        [str(_venv_python(venv)), "-c", code],
+    run_checked(
+        [str(venv_python_path(venv)), "-c", code],
         cwd=work_dir,
         env=env,
     )
@@ -156,8 +156,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo_root = Path(__file__).resolve().parents[2]
-    uv = _executable("uv")
-    work_dir = _work_dir(repo_root, args.work_dir, prefix="browser")
+    uv = require_executable("uv")
+    work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="browser")
     env = _browser_env(work_dir)
     print(f"browser packaging smoke work dir: {work_dir}", flush=True)
 
@@ -167,7 +167,7 @@ def main(argv: list[str] | None = None) -> int:
     _assert_browser_extra_metadata(wheel)
 
     print("installing exact cohort with wheel[browser] into fresh venv", flush=True)
-    venv = _install_wheel(
+    venv = install_wheel(
         repo_root,
         work_dir,
         wheel,
@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
         companion_wheels=cohort.companion_wheels,
     )
     assert_installed_cohort(
-        _venv_python(venv),
+        venv_python_path(venv),
         cohort,
         root_artifact=wheel,
         cwd=work_dir,
@@ -190,15 +190,15 @@ def main(argv: list[str] | None = None) -> int:
     print("running installed browser health check", flush=True)
     _run_health(work_dir, venv, env=env)
 
-    manifest = _write_smoke_manifest(
+    manifest = write_smoke_manifest(
         work_dir,
         lane="browser-wheel",
         artifacts={
-            "wheel": _manifest_path(work_dir, wheel),
-            "data_wheel_manuals": _manifest_path(work_dir, cohort.manuals_wheel),
-            "data_wheel_official": _manifest_path(work_dir, cohort.official_wheel),
-            "venv": _manifest_path(work_dir, venv),
-            "playwright_browsers": _manifest_path(work_dir, Path(env["PLAYWRIGHT_BROWSERS_PATH"])),
+            "wheel": relative_manifest_path(work_dir, wheel),
+            "data_wheel_manuals": relative_manifest_path(work_dir, cohort.manuals_wheel),
+            "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
+            "venv": relative_manifest_path(work_dir, venv),
+            "playwright_browsers": relative_manifest_path(work_dir, Path(env["PLAYWRIGHT_BROWSERS_PATH"])),
         },
         checks=(
             "wheel tracked shipped-data payload",

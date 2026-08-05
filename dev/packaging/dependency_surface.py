@@ -6,13 +6,13 @@ import argparse
 import json
 from typing import TypedDict
 
-from .smoke_core import (
-    _assert_optional_extra_registry_matches_pyproject,
-    _executable,
-    _optional_extra_registry,
-    _pyproject_surfaces,
-    _repo_root,
-    _validate_frozen_exports,
+from ._smoke_common import (
+    assert_optional_extra_registry_matches_pyproject,
+    find_repo_root,
+    optional_extra_registry,
+    pyproject_surfaces,
+    require_executable,
+    validate_frozen_exports,
 )
 
 
@@ -30,9 +30,9 @@ class DependencySurfaceSummary(TypedDict):
 
 def _summary() -> DependencySurfaceSummary:
     """Build a dependency-surface summary from pyproject and the runtime registry."""
-    repo_root = _repo_root()
-    surfaces = _pyproject_surfaces(repo_root)
-    registry_extras, _symbols = _optional_extra_registry(repo_root)
+    repo_root = find_repo_root()
+    surfaces = pyproject_surfaces(repo_root)
+    registry_extras, _symbols = optional_extra_registry(repo_root)
     return {
         "ok": True,
         "project_dependency_count": len(surfaces.project_names),
@@ -50,10 +50,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Emit a machine-readable summary.")
     args = parser.parse_args(argv)
 
-    repo_root = _repo_root()
-    uv = _executable("uv")
-    _assert_optional_extra_registry_matches_pyproject(repo_root)
-    _validate_frozen_exports(repo_root, uv)
+    repo_root = find_repo_root()
+    uv = require_executable("uv")
+    assert_optional_extra_registry_matches_pyproject(repo_root)
+    validate_frozen_exports(repo_root, uv)
     summary = _summary()
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))

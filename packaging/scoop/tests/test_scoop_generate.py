@@ -12,11 +12,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-from dev.packaging.smoke_core import (
-    _build_companion_wheels,
-    _build_wheel,
-    _commit_defined_build_root,
-    _run,
+from dev.packaging._smoke_common import (
+    build_companion_wheels,
+    build_wheel,
+    commit_defined_build_root,
+    run_checked,
 )
 from dev.packaging.uv_constraints import export_runtime_constraints
 
@@ -109,11 +109,11 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     # worktree a peer's uncommitted edit would otherwise ride into the wheels,
     # and the manifest this test asserts on would describe bytes matching no
     # commit. On a clean checkout this IS the tree, so CI pays nothing.
-    # ``_build_wheel`` still takes the real repository as well, because its
+    # ``build_wheel`` still takes the real repository as well, because its
     # tracked-data queries need Git and the extract has no ``.git``.
-    build_root = _commit_defined_build_root(_REPO_ROOT, build_dir)
-    root = _build_wheel(_REPO_ROOT, build_dir, uv, build_root=build_root)
-    manuals, official = _build_companion_wheels(build_dir, uv, build_root=build_root)
+    build_root = commit_defined_build_root(_REPO_ROOT, build_dir)
+    root = build_wheel(_REPO_ROOT, build_dir, uv, build_root=build_root)
+    manuals, official = build_companion_wheels(build_dir, uv, build_root=build_root)
     cohort_dir = root_dir / "cohort"
     copied_root, copied_manuals, copied_official = _copy_cohort(
         (root, manuals, official),
@@ -142,8 +142,8 @@ def test_generated_manifest_binds_exact_cohort_and_both_commands(
     first = tmp_path / "first.json"
     second = tmp_path / "second.json"
     command = _generator_command(built_cohort)
-    _run([*command, "--output", str(first)], cwd=_REPO_ROOT)
-    _run([*command, "--output", str(second)], cwd=_REPO_ROOT)
+    run_checked([*command, "--output", str(first)], cwd=_REPO_ROOT)
+    run_checked([*command, "--output", str(second)], cwd=_REPO_ROOT)
     assert first.read_bytes() == second.read_bytes()
 
     manifest = json.loads(first.read_text(encoding="utf-8"))
@@ -187,7 +187,7 @@ def test_manifest_pins_transitive_closure_from_lock(
 ) -> None:
     """The written constraints closure is the exact tested uv.lock export."""
     output = tmp_path / "manifest.json"
-    _run(
+    run_checked(
         [*_generator_command(built_cohort), "--output", str(output)],
         cwd=_REPO_ROOT,
     )
@@ -221,7 +221,7 @@ def test_generator_rejects_mutable_release_urls(
     command = _generator_command(built_cohort)
     command[command.index("--release-base-url") + 1] = release_base
     with pytest.raises(SystemExit):
-        _run([*command, "--output", str(tmp_path / "manifest.json")], cwd=_REPO_ROOT)
+        run_checked([*command, "--output", str(tmp_path / "manifest.json")], cwd=_REPO_ROOT)
 
 
 def test_generator_rejects_missing_and_duplicate_wheels(
@@ -234,7 +234,7 @@ def test_generator_rejects_missing_and_duplicate_wheels(
     shutil.copy2(built_cohort.root, missing_dir / built_cohort.root.name)
     shutil.copy2(built_cohort.manuals, missing_dir / built_cohort.manuals.name)
     with pytest.raises(SystemExit):
-        _run(
+        run_checked(
             [
                 *_generator_command(built_cohort, cohort_dir=missing_dir),
                 "--output",
@@ -253,7 +253,7 @@ def test_generator_rejects_missing_and_duplicate_wheels(
         duplicate_dir / f"cadrumo_data_manuals-{built_cohort.version}-duplicate.whl",
     )
     with pytest.raises(SystemExit):
-        _run(
+        run_checked(
             [
                 *_generator_command(built_cohort, cohort_dir=duplicate_dir),
                 "--output",
@@ -277,7 +277,7 @@ def test_generator_rejects_distribution_and_version_mismatches(
     )
     shutil.copy2(built_cohort.official, foreign_dir / built_cohort.official.name)
     with pytest.raises(SystemExit):
-        _run(
+        run_checked(
             [
                 *_generator_command(built_cohort, cohort_dir=foreign_dir),
                 "--output",
@@ -290,7 +290,7 @@ def test_generator_rejects_distribution_and_version_mismatches(
     command[command.index("--version") + 1] = "999.0.0"
     command[command.index("--release-base-url") + 1] = "https://github.com/nevenincs/cadrumo/releases/download/v999.0.0"
     with pytest.raises(SystemExit):
-        _run([*command, "--output", str(tmp_path / "version.json")], cwd=_REPO_ROOT)
+        run_checked([*command, "--output", str(tmp_path / "version.json")], cwd=_REPO_ROOT)
 
 
 def test_generator_rejects_conditional_companion_pin(
@@ -308,7 +308,7 @@ def test_generator_rejects_conditional_companion_pin(
     shutil.copy2(built_cohort.manuals, conditional_dir / built_cohort.manuals.name)
     shutil.copy2(built_cohort.official, conditional_dir / built_cohort.official.name)
     with pytest.raises(SystemExit):
-        _run(
+        run_checked(
             [
                 *_generator_command(built_cohort, cohort_dir=conditional_dir),
                 "--output",

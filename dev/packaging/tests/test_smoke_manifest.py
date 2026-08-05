@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from dev.packaging.smoke_core import _manifest_path, _write_smoke_manifest
+from dev.packaging._smoke_common import relative_manifest_path, write_smoke_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -17,10 +17,10 @@ def test_smoke_manifest_records_successful_run_evidence(tmp_path) -> None:
     wheel.parent.mkdir()
     wheel.write_bytes(b"wheel-smoke")
 
-    manifest = _write_smoke_manifest(
+    manifest = write_smoke_manifest(
         tmp_path,
         lane="core-wheel",
-        artifacts={"wheel": _manifest_path(tmp_path, wheel)},
+        artifacts={"wheel": relative_manifest_path(tmp_path, wheel)},
         checks=("wheel metadata dependency surface", "installed CLI config/profile smoke"),
         details={"python": "3.13"},
     )

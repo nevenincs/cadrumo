@@ -7,17 +7,17 @@ import os
 import sys
 from pathlib import Path
 
-from .smoke_core import (
-    _assert_cadrumo_version_output,
-    _assert_installed_data,
-    _executable,
-    _manifest_path,
-    _run,
-    _venv_bin,
-    _venv_cadrumo,
-    _venv_python,
-    _work_dir,
-    _write_smoke_manifest,
+from ._smoke_common import (
+    assert_cadrumo_version_output,
+    assert_installed_data,
+    relative_manifest_path,
+    require_executable,
+    resolve_work_dir,
+    run_checked,
+    venv_bin_dir,
+    venv_cadrumo_path,
+    venv_python_path,
+    write_smoke_manifest,
 )
 
 _DEV_COMMANDS: tuple[tuple[str, ...], ...] = (
@@ -38,7 +38,7 @@ _DEV_COMMANDS: tuple[tuple[str, ...], ...] = (
 def _venv_script(venv: Path, command: str) -> str:
     """Return a console script from the isolated development environment."""
     suffix = ".exe" if os.name == "nt" else ""
-    return str(_venv_bin(venv) / f"{command}{suffix}")
+    return str(venv_bin_dir(venv) / f"{command}{suffix}")
 
 
 def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str) -> Path:
@@ -48,7 +48,7 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
         **os.environ,
         "UV_PROJECT_ENVIRONMENT": str(venv),
     }
-    _run(
+    run_checked(
         [
             uv,
             "sync",
@@ -62,7 +62,7 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
         cwd=repo_root,
         env=env,
     )
-    _run(
+    run_checked(
         [
             uv,
             "sync",
@@ -77,7 +77,7 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
         cwd=repo_root,
         env=env,
     )
-    _run([uv, "pip", "check", "--python", str(_venv_python(venv))], cwd=repo_root)
+    run_checked([uv, "pip", "check", "--python", str(venv_python_path(venv))], cwd=repo_root)
     return venv
 
 
@@ -85,7 +85,7 @@ def _assert_dev_commands(work_dir: Path, venv: Path) -> None:
     """Verify the declared developer command surface starts in the clean venv."""
     for command in _DEV_COMMANDS:
         executable, *args = command
-        _run([_venv_script(venv, executable), *args], cwd=work_dir)
+        run_checked([_venv_script(venv, executable), *args], cwd=work_dir)
 
 
 def _assert_dev_imports(work_dir: Path, venv: Path) -> None:
@@ -100,13 +100,13 @@ import yaml
 
 print("dev-imports-ok")
 """
-    _run([str(_venv_python(venv)), "-c", code], cwd=work_dir)
+    run_checked([str(venv_python_path(venv)), "-c", code], cwd=work_dir)
 
 
 def _assert_dev_cli(work_dir: Path, venv: Path) -> None:
     """Verify the non-editable project install exposes the AEAT console script."""
-    version = _run([str(_venv_cadrumo(venv)), "--version"], cwd=work_dir)
-    _assert_cadrumo_version_output(version, context="in dev venv")
+    version = run_checked([str(venv_cadrumo_path(venv)), "--version"], cwd=work_dir)
+    assert_cadrumo_version_output(version, context="in dev venv")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -121,8 +121,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo_root = Path(__file__).resolve().parents[2]
-    uv = _executable("uv")
-    work_dir = _work_dir(repo_root, args.work_dir, prefix="dev")
+    uv = require_executable("uv")
+    work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="dev")
     print(f"dev packaging smoke work dir: {work_dir}", flush=True)
 
     print("syncing frozen all-extras/all-groups development environment", flush=True)
@@ -132,12 +132,12 @@ def main(argv: list[str] | None = None) -> int:
     _assert_dev_commands(work_dir, venv)
     _assert_dev_imports(work_dir, venv)
     _assert_dev_cli(work_dir, venv)
-    _assert_installed_data(work_dir, venv)
+    assert_installed_data(work_dir, venv)
 
-    manifest = _write_smoke_manifest(
+    manifest = write_smoke_manifest(
         work_dir,
         lane="dev-environment",
-        artifacts={"venv": _manifest_path(work_dir, venv)},
+        artifacts={"venv": relative_manifest_path(work_dir, venv)},
         checks=(
             "frozen uv all-extras/all-groups sync",
             "non-editable project install",

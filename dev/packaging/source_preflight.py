@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 from typing import TypedDict
 
-from .smoke_core import _TRACKED_DATA_ROOTS, _repo_root, _tracked_source_data_paths
+from ._smoke_common import TRACKED_DATA_ROOTS, find_repo_root, tracked_source_data_paths
 
 
 class SourceDataSummary(TypedDict):
@@ -21,7 +21,7 @@ class SourceDataSummary(TypedDict):
 
 def _root_for(path: str) -> str:
     """Return the configured tracked data root that owns ``path``."""
-    for root in _TRACKED_DATA_ROOTS:
+    for root in TRACKED_DATA_ROOTS:
         if path.startswith(f"{root}/") or path == root:
             return root
     return "<outside-tracked-data-roots>"
@@ -43,8 +43,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Emit a machine-readable summary.")
     args = parser.parse_args(argv)
 
-    repo_root = _repo_root()
-    paths = _tracked_source_data_paths(repo_root)
+    repo_root = find_repo_root()
+    paths = tracked_source_data_paths(repo_root)
     summary = _summary(paths)
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))

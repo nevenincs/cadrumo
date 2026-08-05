@@ -13,8 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from ._smoke_common import relative_manifest_path, require_executable, write_smoke_manifest
 from .python_cohort import load_python_cohort
-from .smoke_core import _executable, _manifest_path, _write_smoke_manifest
 
 _UTF_8: Final[str] = "utf-8"
 _DOCKER_COMMAND_TIMEOUT_SECONDS: Final[int] = 30
@@ -114,9 +114,9 @@ def _docker_cli() -> DockerCli:
         distro = os.environ.get("CADRUMO_WSL_DOCKER_DISTRO", "Ubuntu")
         if wsl is not None and _wsl_docker_cli_available(wsl, distro):
             return DockerCli((wsl, "-d", distro, "--", "docker"), f"wsl:{distro}", distro)
-        docker = _executable("docker")
+        docker = require_executable("docker")
         return DockerCli((docker,), "windows")
-    return DockerCli((_executable("docker"),), "native")
+    return DockerCli((require_executable("docker"),), "native")
 
 
 def _preflight_docker(docker: DockerCli) -> None:
@@ -646,14 +646,14 @@ def main(argv: list[str] | None = None) -> int:
                 "core LLM missing-extra boundary",
             ]
         )
-    manifest = _write_smoke_manifest(
+    manifest = write_smoke_manifest(
         work_dir,
         lane=f"docker-{mode}",
         artifacts={
-            "wheel": _manifest_path(work_dir, wheel),
-            "data_wheel_manuals": _manifest_path(work_dir, cohort.manuals_wheel),
-            "data_wheel_official": _manifest_path(work_dir, cohort.official_wheel),
-            "probe": _manifest_path(work_dir, probe),
+            "wheel": relative_manifest_path(work_dir, wheel),
+            "data_wheel_manuals": relative_manifest_path(work_dir, cohort.manuals_wheel),
+            "data_wheel_official": relative_manifest_path(work_dir, cohort.official_wheel),
+            "probe": relative_manifest_path(work_dir, probe),
         },
         checks=tuple(checks),
         details={

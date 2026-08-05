@@ -22,18 +22,18 @@ import zipfile
 from pathlib import Path
 from typing import Final
 
+from ._smoke_common import (
+    clean_product_env,
+    create_pip_venv,
+    relative_manifest_path,
+    resolve_work_dir,
+    run_checked,
+    venv_bin_dir,
+    venv_python_path,
+    write_smoke_manifest,
+)
 from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import assert_installed_cohort, load_python_cohort
-from .smoke_core import (
-    _clean_product_env,
-    _manifest_path,
-    _run,
-    _venv_bin,
-    _venv_python,
-    _work_dir,
-    _write_smoke_manifest,
-)
-from .smoke_pip_core import _create_pip_venv
 
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 _UTF_8: Final[str] = "utf-8"
@@ -67,7 +67,7 @@ def _build_root_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
     """Build the command-bearing wheel and assert split-owned binaries stay external."""
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
-    _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
+    run_checked([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
     wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
     if len(wheels) != 1:
         raise SystemExit(f"expected exactly one Cadrumo wheel in {wheel_dir}; got {[w.name for w in wheels]!r}")
@@ -96,14 +96,14 @@ _PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 def _venv_cadrumo(venv: Path) -> Path:
     """Return the installed canonical Cadrumo console script."""
     executable = "aeat.exe" if sys.platform == "win32" else "aeat"
-    return _venv_bin(venv) / executable
+    return venv_bin_dir(venv) / executable
 
 
 def _runtime_env(work_dir: Path, state_name: str) -> dict[str, str]:
     """Return a host-independent environment for an installed runtime probe."""
     state_root = work_dir / state_name
     return {
-        **_clean_product_env(),
+        **clean_product_env(),
         "CADRUMO_LOCAL_STORAGE_ROOT": str(state_root),
         "CADRUMO_DATABASE_URL": f"sqlite:///{(state_root / 'cadrumo.db').as_posix()}",
     }
@@ -118,7 +118,7 @@ def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
     out_dir = work_dir / "dist-data"
     wheels: list[Path] = []
     for project_dir, wheel_glob in _DATA_COMPANIONS:
-        _run(
+        run_checked(
             [uv, "build", "--project", str(build_root / "packaging" / project_dir), "--out-dir", str(out_dir)],
             cwd=build_root,
         )
@@ -139,8 +139,8 @@ def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
 
 def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: list[Path], venv_path: Path) -> None:
     """Install the three local wheels in one pip transaction and validate dependencies."""
-    python = _venv_python(venv_path)
-    _run(
+    python = venv_python_path(venv_path)
+    run_checked(
         [
             str(python),
             "-m",
@@ -153,12 +153,12 @@ def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: list[Path
         ],
         cwd=work_dir,
     )
-    _run([str(python), "-m", "pip", "check"], cwd=work_dir)
+    run_checked([str(python), "-m", "pip", "check"], cwd=work_dir)
 
 
 def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
     """With the complete cohort installed, full source verification runs clean."""
-    _run(
+    run_checked(
         [str(_venv_cadrumo(venv_path)), "app", "registry", "verify"],
         cwd=work_dir,
         env=_runtime_env(work_dir, "clean-verify-state"),
@@ -183,7 +183,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo_root = Path(__file__).resolve().parents[2]
-    work_dir = _work_dir(repo_root, args.work_dir, prefix="split")
+    work_dir = resolve_work_dir(repo_root, args.work_dir, prefix="split")
     print(f"three-wheel cohort packaging smoke work dir: {work_dir}", flush=True)
 
     cohort = load_python_cohort(args.cohort_dir)
@@ -192,18 +192,18 @@ def main(argv: list[str] | None = None) -> int:
     print("using supplied immutable Python cohort", flush=True)
 
     print("creating stdlib venv and installing the complete three-wheel cohort", flush=True)
-    venv_path = _create_pip_venv(work_dir, args.python)
+    venv_path = create_pip_venv(work_dir, args.python)
     _install_cohort_with_pip(work_dir, wheel, data_wheels, venv_path)
     assert_installed_cohort(
-        _venv_python(venv_path),
+        venv_python_path(venv_path),
         cohort,
         root_artifact=wheel,
         cwd=work_dir,
     )
 
     print("verifying exact dependency cohort and byte-identical source authority", flush=True)
-    _run(
-        [str(_venv_python(venv_path)), "-c", _COHORT_PROBE],
+    run_checked(
+        [str(venv_python_path(venv_path)), "-c", _COHORT_PROBE],
         cwd=work_dir,
         env=_runtime_env(work_dir, "cohort-import-state"),
     )
@@ -220,15 +220,15 @@ def main(argv: list[str] | None = None) -> int:
         newline="\n",
     )
 
-    manifest = _write_smoke_manifest(
+    manifest = write_smoke_manifest(
         work_dir,
         lane="three-wheel-cohort",
         artifacts={
-            "wheel": _manifest_path(work_dir, wheel),
-            "data_wheel_manuals": _manifest_path(work_dir, data_wheels[0]),
-            "data_wheel_official": _manifest_path(work_dir, data_wheels[1]),
-            "installed_tax_oracle": _manifest_path(work_dir, tax_evidence_path),
-            "venv": _manifest_path(work_dir, venv_path),
+            "wheel": relative_manifest_path(work_dir, wheel),
+            "data_wheel_manuals": relative_manifest_path(work_dir, data_wheels[0]),
+            "data_wheel_official": relative_manifest_path(work_dir, data_wheels[1]),
+            "installed_tax_oracle": relative_manifest_path(work_dir, tax_evidence_path),
+            "venv": relative_manifest_path(work_dir, venv_path),
         },
         checks=(
             "supplied immutable Python cohort",

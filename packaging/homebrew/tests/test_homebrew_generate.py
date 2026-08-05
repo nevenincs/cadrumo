@@ -11,7 +11,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
-from dev.packaging.smoke_core import _commit_defined_build_root, _run
+from dev.packaging._smoke_common import commit_defined_build_root, run_checked
 from dev.packaging.smoke_sdist_core import _build_sdist
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
@@ -57,13 +57,13 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     # worktree a peer's uncommitted edit would otherwise ride into the sdist,
     # and the formula this test asserts on would describe bytes matching no
     # commit. On a clean checkout this IS the tree, so CI pays nothing.
-    build_root = _commit_defined_build_root(_REPO_ROOT, build_dir)
+    build_root = commit_defined_build_root(_REPO_ROOT, build_dir)
     root = _build_sdist(build_dir, uv, build_root=build_root)
     companion_dir = build_dir / "companions"
     manuals_project = build_root / "packaging" / "cadrumo_data_manuals"
     official_project = build_root / "packaging" / "cadrumo_data_official"
-    _run([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=manuals_project)
-    _run([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=official_project)
+    run_checked([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=manuals_project)
+    run_checked([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=official_project)
     manuals = next(companion_dir.glob("cadrumo_data_manuals-*.tar.gz"))
     official = next(companion_dir.glob("cadrumo_data_official-*.tar.gz"))
     cohort = root_dir / "cohort"
@@ -86,7 +86,7 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
 
 
 def _generate(cohort: BuiltCohort, output: Path, *, release_base: str | None = None) -> Path:
-    _run(
+    run_checked(
         [
             sys.executable,
             str(_GENERATOR),
