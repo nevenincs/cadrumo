@@ -1569,7 +1569,7 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución cuando no sea necesaria, fecha de la primera resolución de acogimiento con derecho al aumento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, derecho de otro contribuyente al mismo mínimo, meses de trabajo de la madre, gastos de guardería y NIF."
+description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento con derecho al aumento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre, gastos de guardería anuales o mensuales y NIF."
 model_selectors = [
   "DescendantInfo.birth_date",
   "DescendantInfo.relacion",
@@ -1584,6 +1584,7 @@ model_selectors = [
   "DescendantInfo.prorrata_minimo",
   "DescendantInfo.meses_madre_trabajo_2024",
   "DescendantInfo.gastos_guarderia_euros",
+  "DescendantInfo.gastos_guarderia_mensuales",
   "DescendantInfo.nif",
 ]
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1", "ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]

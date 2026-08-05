@@ -74,8 +74,14 @@ def _baseline_with_two_descendants() -> dict[str, str]:
 # descendant -- discapacidad grade 65 and convivencia false -- closing the
 # conditional-branch gap (grade 65, the convivencia-false projection branch)
 # a prior review named. Adoption dates are valid pairs (>= birth, <= today).
+#
+# Instance 2 exists because the two guardería spend shapes are mutually
+# exclusive: instance 0 already carries the annual figure, so the monthly map
+# needs its own row rather than displacing coverage that already exists. It
+# also carries the map in RANGE form, which the store must normalise -- a
+# resume leg seeding the range back would no longer match the leg that saved it.
 _MAXIMAL_DESCENDANT_ANSWERS = {
-    "descendientes-count": "2",
+    "descendientes-count": "3",
     "descendientes#0.birth-date": "2020-01-15",
     "descendientes#0.inscripcion-registro-civil": "2021-03-01",
     "descendientes#0.discapacidad": "33",
@@ -89,6 +95,10 @@ _MAXIMAL_DESCENDANT_ANSWERS = {
     "descendientes#1.convivencia": "false",
     "descendientes#1.custodia-compartida": "false",
     "descendientes#1.nif": "00000001R",
+    "descendientes#2.birth-date": "2021-04-15",
+    "descendientes#2.convivencia": "true",
+    "descendientes#2.custodia-compartida": "false",
+    "descendientes#2.gastos-guarderia-mensuales": "5-8:210;1:180",
 }
 
 
@@ -268,7 +278,7 @@ def test_resume_seeding_round_trips_a_maximal_descendant_fixture(_backend: Path)
     seeded = checkpoint_answers_from_record(SETUP_FLOW, record)
 
     # Instance 0: every optional field round-trips.
-    assert seeded["descendientes-count"] == "2"
+    assert seeded["descendientes-count"] == "3"
     assert seeded["descendientes#0.birth-date"] == "2020-01-15"
     assert seeded["descendientes#0.inscripcion-registro-civil"] == "2021-03-01"
     assert seeded["descendientes#0.discapacidad"] == "33"
@@ -283,12 +293,22 @@ def test_resume_seeding_round_trips_a_maximal_descendant_fixture(_backend: Path)
     assert seeded["descendientes#1.convivencia"] == "false"
     assert seeded["descendientes#1.custodia-compartida"] == "false"
     assert seeded["descendientes#1.nif"] == "00000001R"
+    # Instance 2: the monthly guardería map round-trips NORMALISED. The fixture
+    # typed a range; the store keeps one representation per map, so the seeded
+    # answer is the expanded month-sorted form. Asserting the range back would
+    # be asserting that the store remembered how the operator typed -- which is
+    # exactly what must NOT happen, or the two resume legs stop matching.
+    assert seeded["descendientes#2.birth-date"] == "2021-04-15"
+    assert seeded["descendientes#2.gastos-guarderia-mensuales"] == "01:180;05:210;06:210;07:210;08:210"
+    # And the annual figure stays absent for that child: the two shapes are
+    # mutually exclusive, so a stored default here would be a second authority.
+    assert "descendientes#2.gastos-guarderia" not in seeded
 
-    # resume_flow re-instantiates both instances against the current
+    # resume_flow re-instantiates every instance against the current
     # definition, none stale, and re-completing rebuilds an identical fact set.
     definition = _setup_flow_definition(SETUP_FLOW)
     state = resume_flow(definition, seeded, mode=FlowMode.CREATE)
-    assert state.instance_counts.get(DESCENDANTS_GROUP_ID) == 2
+    assert state.instance_counts.get(DESCENDANTS_GROUP_ID) == 3
     assert not any(key.startswith("descendientes") for key in state.stale)
     assert _descendant_facts(dict(state.answers)) == _descendant_facts(answers)
 

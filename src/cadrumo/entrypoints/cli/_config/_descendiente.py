@@ -154,6 +154,18 @@ def _iso_or_dash(value: date | None) -> str:
     return value.isoformat() if value is not None else "-"
 
 
+def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
+    """Render a descendant's monthly guardería map in the one canonical form.
+
+    Rendered through the same serialiser the fact index and the ``--descendiente``
+    flag round-trip, so what an operator reads back is a value they could paste
+    straight into ``GASTOS_GUARDERIA_MENSUAL=`` unchanged.
+    """
+    from ....domain.contribuyente import serialise_guarderia_mensual
+
+    return serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales) or "-"
+
+
 def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[str]:
     lines: list[str] = []
     for index, descendant in enumerate(descendientes):
@@ -171,6 +183,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"custodia={str(descendant.custodia_compartida).lower()}",
                     f"meses_madre_trabajo_2024={descendant.meses_madre_trabajo_2024}",
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
+                    f"gastos_guarderia_mensuales={_guarderia_mensual_or_dash(descendant)}",
                     f"nif={descendant.nif or '-'}",
                 ),
             ),
@@ -184,7 +197,11 @@ def _emit_descendiente_list(
     descendientes: tuple[DescendantInfo, ...],
 ) -> None:
     """Emit the active profile's declared descendant set as the list envelope."""
-    from .._config_descendiente_payloads import ConfigProfileDescendienteListResult, ProfileDescendientePayload
+    from .._config_descendiente_payloads import (
+        ConfigProfileDescendienteListResult,
+        GuarderiaMonthSpendPayload,
+        ProfileDescendientePayload,
+    )
 
     result = ConfigProfileDescendienteListResult(
         profile=pointer.label,
@@ -205,6 +222,10 @@ def _emit_descendiente_list(
                 prorrata_minimo=descendant.prorrata_minimo,
                 meses_madre_trabajo_2024=descendant.meses_madre_trabajo_2024,
                 gastos_guarderia_euros=descendant.gastos_guarderia_euros,
+                gastos_guarderia_mensuales=tuple(
+                    GuarderiaMonthSpendPayload(month=entry.month, amount_euros=entry.amount_euros)
+                    for entry in descendant.gastos_guarderia_mensuales
+                ),
                 nif=descendant.nif,
             )
             for index, descendant in enumerate(descendientes)
@@ -358,10 +379,23 @@ def _descendant_prompt(page_id: str) -> str:
             return _tr("wizard.setup.descendientes.dependencia-economica.prompt")
         case "custodia-compartida":
             return _tr("wizard.setup.descendientes.custodia-compartida.prompt")
+        case "rentas-anuales":
+            return _tr("wizard.setup.descendientes.rentas-anuales.prompt")
+        case "declaracion-propia":
+            return _tr("wizard.setup.descendientes.declaracion-propia.prompt")
+        case "prorrata-minimo":
+            return _tr("wizard.setup.descendientes.prorrata-minimo.prompt")
         case "meses-madre-trabajo":
             return _tr("wizard.setup.descendientes.meses-madre-trabajo.prompt")
         case "gastos-guarderia":
             return _tr("wizard.setup.descendientes.gastos-guarderia.prompt")
+        case "gastos-guarderia-mensuales":
+            return _tr("wizard.setup.descendientes.gastos-guarderia-mensuales.prompt")
+        # Only ``nif`` reaches here: every other member of DESCENDANT_PAGE_IDS is
+        # named above. Three of them were NOT, and this arm answered for them --
+        # the guided screen labelled the rentas, declaración-propia and prórrata
+        # rows with the NIF question, so an operator was asked for a tax id three
+        # times and the figures they typed went to fields they never saw named.
         case _:
             return _tr("wizard.setup.descendientes.nif.prompt")
 
@@ -417,7 +451,8 @@ def descendiente_add(
                 "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65]"
                 "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
                 "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
-                "[,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. "
+                "[,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N]"
+                "[,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]. "
                 "Repeatable. Run `aeat config profile descendiente` with no "
                 "subcommand to enter these guided."
             ),

@@ -237,11 +237,17 @@ def _inject_derived_family_facts(
     filing_year: int,
     declared_selectors: frozenset[str],
 ) -> None:
-    """Inject computed Art. 81 bis guardería integers into *fact_index* in-place.
+    """Inject the two Art. 81.2 guardería terms of the 0613 cap into *fact_index*.
 
-    When ``renta_family.descendiente.{n}.birth_date`` facts are present the
-    count of children whose age at year-end is < 3 (Art. 58.3 LIRPF) is
-    computed and stored as ``renta_family.descendientes_menores_3_{year}``.
+    Both are read off :class:`~domain.contribuyente.RentaFamilyProfile` rather
+    than re-derived here, and that is the point of this function's present
+    shape. It used to carry its own loop summing
+    ``renta_family.descendiente.{n}.gastos_guarderia`` under an inline
+    ``age < 3`` test, which made it a SECOND aggregation path beside the
+    canonical record's. The two then diverged the moment the record learned the
+    Art. 81.2 month rules: a descendant declaring only the monthly map
+    contributed the annual field's absent zero here, so the taxpayer could enter
+    their spend, see it stored, and receive nothing.
 
     Computes ALWAYS: a value already present at either key is overwritten
     rather than deferred to. Both paths are declared derived, so the engine
@@ -253,62 +259,62 @@ def _inject_derived_family_facts(
     Gated on a consuming binding rather than on a hardcoded filing year: the
     injector runs for whatever year the registry declares a consumer for, so
     extending coverage is registry work with no code edit.
+
+    Note on the count path's NAME. ``descendientes_menores_3_{year}`` carries
+    the GUARDERÍA population, which since the Art. 81.2 month rules landed is
+    wider than "menor de 3 al devengo" by exactly the period a child turns
+    three. The name predates that divergence and its sole consumer is the 0613
+    cap, where the wider population is the correct one — capping a turning-three
+    child's spend at zero would hand back the under-grant the extension exists
+    to close. The honest name is ``descendientes_guarderia_{year}``; renaming it
+    means renaming the binding id every M100 test fixture supplies, so it is
+    left as a follow-up rather than folded into this change.
     """
     menores_key = f"renta_family.descendientes_menores_3_{filing_year}"
     gastos_key = f"renta_family.gastos_guarderia_reales_{filing_year}"
     if menores_key not in declared_selectors and gastos_key not in declared_selectors:
         return
 
-    # Reconstruct per-descendant birth_dates from stored facts.
-    count_menores = 0
-    gastos_reales = 0
+    profile = _renta_family_profile_from_facts(fact_index)
+    fact_index[menores_key] = Decimal(profile.descendientes_guarderia_count(filing_year))
+    fact_index[gastos_key] = Decimal(profile.gastos_guarderia_reales(filing_year))
+
+
+def _renta_family_profile_from_facts(
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> RentaFamilyProfile:
+    """Rebuild the canonical family record from the stored descendant facts.
+
+    Pre-checks each row's birth date so an unparseable one refuses by INDEX. The
+    canonical reconstruction refuses too, but names the field without saying
+    which row carries it, and that diagnostic was written deliberately: an
+    unparseable stored date is a data defect the operator can fix once told
+    where it is. Skipping the row instead would silently under-count the cap
+    population and drop that child's spend, quietly reducing a deducción they
+    were entitled to.
+    """
     idx = 0
     while True:
         birth_raw = fact_index.get(f"renta_family.descendiente.{idx}.birth_date")
         if birth_raw is None:
             break
-        convivencia_raw = fact_index.get(f"renta_family.descendiente.{idx}.convivencia", "true")
-        convive = str(convivencia_raw).lower() not in ("false", "0")
-        if convive:
-            # A descendant whose birth date will not parse is REFUSED, not
-            # skipped. Skipping silently under-counted the menores-3 tally and
-            # dropped that child's guardería spend, quietly reducing a
-            # deducción the taxpayer was entitled to. An unparseable stored
-            # date is a data defect the operator can fix once told which row
-            # carries it, so the refusal names the index and the value.
-            try:
-                birth = parse_iso8601_date(str(birth_raw))
-            except (ValueError, TypeError) as exc:
-                raise ProfileBindingResolutionError(
-                    f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
-                ) from exc
-            if birth is None:
-                raise ProfileBindingResolutionError(
-                    f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
-                )
-            age_at_year_end = filing_year - birth.year
-            if age_at_year_end < 3:
-                count_menores += 1
-                gastos_raw = fact_index.get(f"renta_family.descendiente.{idx}.gastos_guarderia")
-                if gastos_raw is not None:
-                    # Tolerant coercion, not the strict grammar: this reads an
-                    # already-persisted profile fact whose text grammar the
-                    # entry boundary owns, and the index legitimately holds a
-                    # Decimal as well as a string, which coerce_decimal passes
-                    # through. The finiteness check is what the old catch-all
-                    # except was really doing -- NaN and Infinity parse happily
-                    # and only fail at int() -- so refusing them here keeps the
-                    # named refusal below and leaves int() unable to raise.
-                    gastos = coerce_decimal(gastos_raw)
-                    if gastos is None or not gastos.is_finite():
-                        raise ProfileBindingResolutionError(
-                            f"renta_family.descendiente.{idx}.gastos_guarderia is not a valid amount: {gastos_raw!r}",
-                        )
-                    gastos_reales += int(gastos)
+        try:
+            birth = parse_iso8601_date(str(birth_raw))
+        except (ValueError, TypeError) as exc:
+            raise ProfileBindingResolutionError(
+                f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+            ) from exc
+        if birth is None:
+            raise ProfileBindingResolutionError(
+                f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+            )
         idx += 1
-
-    fact_index[menores_key] = Decimal(count_menores)
-    fact_index[gastos_key] = Decimal(gastos_reales)
+    descendant_facts = {
+        fact_key: str(value)
+        for fact_key, value in fact_index.items()
+        if fact_key.startswith("renta_family.descendiente.")
+    }
+    return RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
 
 
 _MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES = (

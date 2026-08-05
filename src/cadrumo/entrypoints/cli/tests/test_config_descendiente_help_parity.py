@@ -83,6 +83,10 @@ _PROBES: dict[str, tuple[str, str]] = {
     "PRORRATA": ("PRORRATA=true", "prorrata_minimo"),
     "MESES_TRABAJO": ("MESES_TRABAJO=6", "meses_madre_trabajo_2024"),
     "GASTOS_GUARDERIA": ("GASTOS_GUARDERIA=900", "gastos_guarderia_euros"),
+    # Probes the RANGE form as well as the map, because the range is the shape a
+    # taxpayer reads off a certificate (a constant fee across an enrolment span)
+    # and it is the half a parser could drop while still honouring bare months.
+    "GASTOS_GUARDERIA_MENSUAL": ("GASTOS_GUARDERIA_MENSUAL=9-12:210;1:180", "gastos_guarderia_mensuales"),
     "NIF": ("NIF=12345678Z", "nif"),
 }
 

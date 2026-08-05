@@ -363,7 +363,6 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     from ...domain.contribuyente import DescendantInfo, relacion_kwarg
 
     meses = row.get("meses-madre-trabajo") or ""
-    gastos = row.get("gastos-guarderia") or ""
     birth_date = parse_iso8601_date(row["birth-date"])
     assert birth_date is not None
     rentas = row.get("rentas-anuales", "").strip()
@@ -431,9 +430,43 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         presenta_declaracion_propia=parse_bool(row.get("declaracion-propia", "")) is True,
         prorrata_minimo=parse_bool(prorrata) if prorrata else None,
         meses_madre_trabajo_2024=int(meses) if meses else 0,
-        gastos_guarderia_euros=int(gastos) if gastos else 0,
+        **_safe_guarderia_spend(row),
         nif=row.get("nif") or None,
     )
+
+
+def _safe_guarderia_spend(row: Mapping[str, str]) -> dict[str, object]:
+    """Read one instance's two guardería answers into a pair the record accepts.
+
+    The checkpoint path runs no flow validators, so an answer map can reach here
+    carrying both an annual total and a monthly map, or a monthly map whose
+    grammar broke. The canonical record refuses both states, and raising out of
+    a save-and-exit would read as a crash rather than a correction — the same
+    reason :func:`_safe_relacion_and_entry_dates` drops rather than raises. The
+    review verdict still blocks the final submit, so the operator is told.
+
+    Both resolutions follow the record's own ranking, not convenience:
+
+    * Both declared -> keep the MONTHLY map, drop the annual. The record
+      documents the monthly breakdown as the authority where it exists, and it
+      is the only shape that can express the period the child turns three.
+    * Monthly map unreadable -> drop it and keep whatever annual figure was
+      given. Dropping an unreadable map can only WITHHOLD spend, never invent
+      it, which is the safe direction while the verdict brings the operator back
+      to fix the text.
+    """
+    from ...core.errors import ProfileAnswerTypeError
+    from ...domain.contribuyente import parse_guarderia_mensual
+
+    annual_raw = row.get("gastos-guarderia") or ""
+    annual = int(annual_raw) if annual_raw else 0
+    try:
+        mensuales = parse_guarderia_mensual(row.get("gastos-guarderia-mensuales") or "", field="gastos-guarderia")
+    except ProfileAnswerTypeError:
+        return {"gastos_guarderia_euros": annual, "gastos_guarderia_mensuales": ()}
+    if mensuales:
+        return {"gastos_guarderia_euros": 0, "gastos_guarderia_mensuales": mensuales}
+    return {"gastos_guarderia_euros": annual, "gastos_guarderia_mensuales": ()}
 
 
 def descendant_facts_from_answers(answers: Mapping[str, str]) -> list[tuple[str, str]]:
@@ -515,6 +548,8 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
     which is what keeps a save-then-resume round-trip reconstructing an
     identical fact set on both legs.
     """
+    from ...domain.contribuyente import serialise_guarderia_mensual
+
     answers = {
         f"{prefix}.birth-date": descendant.birth_date.isoformat(),
         f"{prefix}.convivencia": "true" if descendant.convive_con_contribuyente else "false",
@@ -549,6 +584,15 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
             descendant.meses_madre_trabajo_2024 if descendant.meses_madre_trabajo_2024 > 0 else None,
         ),
         ("gastos-guarderia", descendant.gastos_guarderia_euros if descendant.gastos_guarderia_euros > 0 else None),
+        # Re-emitted in the CANONICAL expanded form, which is what the resume
+        # walk must see: a map the operator originally typed as a range was
+        # stored expanded, so seeding the range back would make the resumed
+        # answer differ from the saved one and the two legs would stop matching.
+        # An empty map emits nothing, like every other absent optional.
+        (
+            "gastos-guarderia-mensuales",
+            serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales) or None,
+        ),
         # Unlike the counts above, zero rentas is a MEANINGFUL declaration
         # ("this child earned nothing"), distinct from never having been
         # asked, so a zero emits its answer rather than being dropped.

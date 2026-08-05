@@ -3727,7 +3727,7 @@ cli:
         config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
@@ -7380,6 +7380,8 @@ profile:
         valid_to:
           label: Válido hasta
       renta_family:
+        anualidades_alimentos_euros:
+          label: Anualidades por alimentos a favor de los hijos por decisión judicial
         ascendants:
           label: Ascendientes
         cotizaciones_ss_madre_2024:
@@ -7870,11 +7872,26 @@ wizard:
           o para un adoptado que antes estuvo acogido. Corrija la relación o borre
           la fecha.
       gastos-guarderia:
+        both_declared: Indique el total anual de guardería o los importes mes a mes
+          de este hijo, pero no ambos. El detalle mensual es el único que puede expresar
+          el año en que el hijo cumple tres años, así que borre el total anual.
         help: Importes pagados a una guardería o centro de educación infantil autorizado
           (art. 81.2 LIRPF) que incrementan la deducción por maternidad; euros enteros.
         invalid_negative: Los gastos de guardería no pueden ser negativos; introduzca
           0 o un importe positivo en euros (art. 81 bis LIRPF).
         prompt: Gastos de guardería pagados en el año de declaración (euros)
+      gastos-guarderia-mensuales:
+        help: 'Utilice esta casilla en lugar del total anual cuando el hijo cumpla
+          tres años durante el ejercicio: solo cuentan los meses posteriores al cumpleaños
+          y un importe anual no puede repartirse entre ellos. Escriba cada mes y su
+          importe como MM:IMPORTE separados por punto y coma, o un periodo como MM-MM:IMPORTE,
+          por ejemplo 9-12:210;1:180. Los meses con derecho son los que certifica
+          su guardería.'
+        invalid_grammar: Escriba cada mes y su importe como MM:IMPORTE separados por
+          punto y coma; un periodo puede escribirse MM-MM:IMPORTE. Por ejemplo 9-12:210;1:180.
+          Los meses van del 1 al 12, los importes son euros enteros y cada mes puede
+          aparecer una sola vez.
+        prompt: Gastos de guardería de este hijo, mes a mes (opcional)
       inscripcion-registro-civil:
         help: Fecha en que la adopción se inscribió en el Registro Civil. Si la inscripción
           no era necesaria, indique la fecha de la resolución judicial o administrativa.
@@ -7958,7 +7975,7 @@ wizard:
         help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
       descendiente:
-        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:

@@ -23,6 +23,12 @@ the engine branches on. It is what decides whether the Art. 58.2 increase applie
 at all — a temporal acogimiento takes the tranches and not the increase — so
 flattening it here would put the one distinction the axis exists to draw outside
 the machine-readable contract.
+
+``gastos_guarderia_mensuales`` rides as typed month rows rather than the canonical
+``MM:AMOUNT`` string the ``--descendiente`` flag and the fact index carry. That
+string is an INPUT grammar, chosen so a month map fits a flag value that already
+splits on commas; a machine-readable transport has structure available and should
+not make its consumer re-implement a parser to read a month.
 """
 
 from __future__ import annotations
@@ -42,6 +48,21 @@ DescendantNif = Annotated[
     StringConstraints(strip_whitespace=True, to_upper=True, min_length=9, max_length=9),
 ]
 """Optional descendant NIF/NIE, shaped exactly as :class:`DescendantInfo` validates it."""
+
+
+class GuarderiaMonthSpendPayload(OutputSchema):
+    """One month's Art. 81.2 guardería spend, as the wire carries it.
+
+    Projection of :class:`~cadrumo.domain.contribuyente.GuarderiaMonthSpend`,
+    with the same bounds. The map is SPARSE: a month with no spend has no row,
+    and nothing here encodes the window's ends. That is deliberate — the upper
+    bound is the childcare centre's determination, reported by the centre on its
+    own informative return, so a transport that implied a window would assert a
+    fact this application does not hold.
+    """
+
+    month: int = Field(ge=1, le=12)
+    amount_euros: int = Field(ge=0)
 
 
 class ProfileDescendientePayload(OutputSchema):
@@ -66,7 +87,34 @@ class ProfileDescendientePayload(OutputSchema):
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
+    gastos_guarderia_mensuales: tuple[GuarderiaMonthSpendPayload, ...] = ()
     nif: DescendantNif | None = None
+
+    @model_validator(mode="after")
+    def _validate_guarderia_spend(self) -> ProfileDescendientePayload:
+        """Mirror the canonical one-spend-authority-per-child rule on the wire.
+
+        Mirrored rather than left to the record for the same reason the entry-date
+        coherence rules are: this transport is a lossless projection, so a payload
+        a consumer could construct but the canonical record would refuse is a
+        shape that exists only on the wire. Here that shape is a child carrying
+        both an annual total and a monthly breakdown — two spend figures with no
+        rule saying which reached the filing, which is exactly the ambiguity the
+        canonical refusal exists to remove.
+
+        The repeated-month half is mirrored too. A sparse map's only way to
+        contradict itself is two rows for one month, and summing them would
+        invent a figure nobody stated.
+        """
+        months = [row.month for row in self.gastos_guarderia_mensuales]
+        duplicates = sorted({month for month in months if months.count(month) > 1})
+        if duplicates:
+            raise ValueError(f"gastos_guarderia_mensuales declares month(s) {duplicates} more than once")
+        if self.gastos_guarderia_mensuales and self.gastos_guarderia_euros > 0:
+            raise ValueError(
+                "gastos_guarderia_euros and gastos_guarderia_mensuales cannot both be declared for one descendant",
+            )
+        return self
 
     @model_validator(mode="after")
     def _validate_entry_event_dates(self) -> ProfileDescendientePayload:

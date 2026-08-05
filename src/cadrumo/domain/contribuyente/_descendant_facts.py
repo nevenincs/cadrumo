@@ -21,6 +21,8 @@ Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.prorrata_minimo         "true" / "false" or absent (absent means unanswered)
   renta_family.descendiente.{n}.meses_madre_trabajo     "0".."12" (absent means 0)
   renta_family.descendiente.{n}.gastos_guarderia        non-negative integer euros (absent means 0)
+  renta_family.descendiente.{n}.gastos_guarderia_mensuales
+                                                        canonical MM:AMOUNT[;MM:AMOUNT...] map or absent
   renta_family.descendiente.{n}.nif                     NIF string or absent
 
 Aggregate facts stored:
@@ -28,9 +30,10 @@ Aggregate facts stored:
 
 The Art. 81.2 guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
 is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
-the calculate-time injector recomputes it from the per-child
-``gastos_guarderia`` figures above and overwrites whatever the index holds,
-precisely so an operator's number can never be substituted for the law's. The
+the calculate-time injector recomputes it from the per-child spend above —
+through the canonical record, so the annual figure and the monthly map are
+weighed by the same Art. 81.2 month rules — and overwrites whatever the index
+holds, precisely so an operator's number can never be substituted for the law's. The
 profile write door refuses that path outright, so projecting it from here would
 refuse the whole batch rather than persist a second, divergent copy.
 """
@@ -47,6 +50,7 @@ from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing import parse_bool, parse_iso8601_date
+from ._guarderia_mensual import parse_guarderia_mensual, serialise_guarderia_mensual
 from .family import DescendantInfo
 
 #: Localised refusal for a rentas figure outside the canonical euro grammar.
@@ -76,6 +80,7 @@ _DESCENDIENTE_FLAG_KEYS = frozenset(
         "PRORRATA",
         "MESES_TRABAJO",
         "GASTOS_GUARDERIA",
+        "GASTOS_GUARDERIA_MENSUAL",
         "NIF",
     },
 )
@@ -151,6 +156,16 @@ def descendant_facts_from_list(
             facts.append((f"{prefix}.meses_madre_trabajo", str(d.meses_madre_trabajo_2024)))
         if d.gastos_guarderia_euros > 0:
             facts.append((f"{prefix}.gastos_guarderia", str(d.gastos_guarderia_euros)))
+        # Emitted in the canonical expanded form regardless of how it was typed,
+        # so a map entered as a range and one entered month-by-month store the
+        # same bytes and a save-then-reload round-trip is stable.
+        if d.gastos_guarderia_mensuales:
+            facts.append(
+                (
+                    f"{prefix}.gastos_guarderia_mensuales",
+                    serialise_guarderia_mensual(d.gastos_guarderia_mensuales),
+                ),
+            )
         if d.nif is not None:
             facts.append((f"{prefix}.nif", d.nif))
     facts.append((_COUNT_PATH, str(len(descendientes))))
@@ -162,7 +177,12 @@ _N_RE = re.compile(
     r"(birth_date|relacion|inscripcion_registro_civil|acogimiento_resolucion|"
     r"discapacidad|convivencia|dependencia_economica|custodia_compartida|"
     r"rentas_anuales|declaracion_propia|prorrata_minimo|"
-    r"meses_madre_trabajo|gastos_guarderia|nif)$",
+    # The monthly map precedes the annual figure in the alternation because a
+    # regex alternation is ordered: with `gastos_guarderia` first, every
+    # `gastos_guarderia_mensuales` path would match the shorter branch, fail the
+    # `$` anchor, and be DROPPED from the row -- a declared map silently absent
+    # on every reload.
+    r"meses_madre_trabajo|gastos_guarderia_mensuales|gastos_guarderia|nif)$",
 )
 
 
@@ -280,10 +300,18 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         meses = int(meses_raw) if meses_raw is not None else 0
         if not (0 <= meses <= 12):
             meses = 0
-        gastos_raw = row.get("gastos_guarderia")
-        gastos = int(gastos_raw) if gastos_raw is not None else 0
-        if gastos < 0:
-            gastos = 0
+        gastos = _stored_gastos_guarderia(row.get("gastos_guarderia"), index=idx)
+        # A stored map that will not parse REFUSES rather than resolving to the
+        # empty tuple, on this module's standing reading of which direction a
+        # silent fallback points. Empty means "no monthly breakdown declared",
+        # which in the turning-three period makes the spend contribute nothing
+        # at all -- so a corrupted map would quietly withhold the whole Art.
+        # 81.2 increase from the household the extension exists for, and the
+        # operator would see a deduction disappear with nothing said.
+        mensuales = parse_guarderia_mensual(
+            row.get("gastos_guarderia_mensuales") or "",
+            field=f"renta_family.descendiente.{idx}.gastos_guarderia_mensuales",
+        )
         nif = row.get("nif")
         result.append(
             DescendantInfo(
@@ -300,10 +328,42 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 prorrata_minimo=prorrata_minimo,
                 meses_madre_trabajo_2024=meses,
                 gastos_guarderia_euros=gastos,
+                gastos_guarderia_mensuales=mensuales,
                 nif=nif,
             ),
         )
     return tuple(result)
+
+
+def _stored_gastos_guarderia(raw: str | None, *, index: int) -> int:
+    """Read one descendant's stored ANNUAL guardería figure, refusing a bad value.
+
+    Absent means zero — no annual spend declared for this child.
+
+    A present but unreadable value refuses INSTRUCTIVELY and by index, where a
+    bare ``int()`` raised an untranslated ``ValueError`` naming neither the row
+    nor the accepted form. That mattered once this became the canonical reader
+    for the calculate path: the derived-facts injector used to carry its own
+    tolerant coercion and its own named refusal, and folding it onto this reader
+    would otherwise have traded a diagnostic naming the row for a raw traceback.
+
+    A negative figure refuses rather than clamping to zero, for this module's
+    standing reason: a clamp is a value the operator never wrote, and silently
+    substituting one is how a figure stops meaning what was typed.
+    """
+    if raw is None:
+        return 0
+    text = raw.strip()
+    if not text.lstrip("-").isdigit():
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.gastos_guarderia must be a whole number of euros; got {raw!r}.",
+        )
+    value = int(text)
+    if value < 0:
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.gastos_guarderia must be zero or more; got {raw!r}.",
+        )
+    return value
 
 
 def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
@@ -427,7 +487,19 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
                              contribuyente also entitled to this descendant's mínimo?
                              Omit to let the engine derive it from profile signals.
       MESES_TRABAJO=0..12    (optional, default 0) months mother worked — Art. 81 deducción maternidad
-      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613
+      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613,
+                             as an ANNUAL total. Sufficient only while the
+                             child is under three for the whole period.
+      GASTOS_GUARDERIA_MENSUAL=MM:N[;MM-MM:N...]
+                             (optional) the same spend month by month, sparse.
+                             Entries are separated by ';' rather than ',' because
+                             ',' already separates this flag's own keys, and a
+                             month specification may be a range (9-12:210) for
+                             the ordinary case of a constant fee across an
+                             enrolment span. Required for the period in which the
+                             child turns three, whose post-birthday months an
+                             annual total cannot be apportioned across. Mutually
+                             exclusive with GASTOS_GUARDERIA for one child.
       NIF=XXXXXXXXX          (optional) NIF/NIE
 
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``
@@ -517,6 +589,23 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
             raise ProfileAnswerTypeError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_val!r}")
         gastos_guarderia_euros = gastos_val
 
+    gastos_guarderia_mensuales = parse_guarderia_mensual(
+        parts.get("GASTOS_GUARDERIA_MENSUAL") or "",
+        field="GASTOS_GUARDERIA_MENSUAL",
+    )
+    # Raised HERE as well as by the record, and the flag door's copy is the one
+    # the operator reads. A refusal left to the model surfaces as a pydantic
+    # ValidationError, which this verb's handler does not translate -- so the
+    # operator would meet a raw traceback instead of a sentence naming the two
+    # keys and which one to drop. The record keeps its own refusal for every
+    # other door.
+    if gastos_guarderia_mensuales and gastos_guarderia_euros > 0:
+        raise ProfileAnswerTypeError(
+            "--descendiente accepts GASTOS_GUARDERIA or GASTOS_GUARDERIA_MENSUAL for one "
+            "descendant, not both. The monthly breakdown is the authority where it exists, "
+            "so drop GASTOS_GUARDERIA rather than stating the same spend twice.",
+        )
+
     nif: str | None = None
     nif_raw = parts.get("NIF")
     if nif_raw:
@@ -536,6 +625,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
         prorrata_minimo=prorrata_minimo,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,
         gastos_guarderia_euros=gastos_guarderia_euros,
+        gastos_guarderia_mensuales=gastos_guarderia_mensuales,
         nif=nif,
     )
 

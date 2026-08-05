@@ -42,12 +42,15 @@ from .. import attach_descendant_group, descendant_facts_from_answers
 from .._descendant_group import (
     _ENTRY_BEFORE_BIRTH_LOCALE_KEY,
     _ENTRY_IN_FUTURE_LOCALE_KEY,
+    _GASTOS_BOTH_DECLARED_LOCALE_KEY,
     _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
+    _GASTOS_MENSUALES_INVALID_LOCALE_KEY,
     _MESES_INVALID_RANGE_LOCALE_KEY,
     _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
     _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY,
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     DESCENDANT_GROUP,
+    DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID,
     DESCENDANTS_COUNT_PAGE,
 )
 
@@ -114,7 +117,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     definition = _probe_definition()
     state = start_flow(definition, mode=FlowMode.CREATE)
     state = answer(definition, state, "entity-type", EntityType.NATURAL_PERSON.value)
-    state = answer(definition, state, "descendientes-count", "2")
+    state = answer(definition, state, "descendientes-count", "3")
 
     # Instance 0: menor de tres years old in 2024, disabled, guardería spend.
     state = answer(definition, state, "descendientes#0.birth-date", "2023-05-10")
@@ -125,6 +128,11 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     state = answer(definition, state, "descendientes#0.gastos-guarderia", "900")
 
     # Instance 1: older adopted child under shared custody, carrying a NIF.
+    #
+    # NOTE: the walk grows to a third instance below rather than moving the
+    # monthly map onto one of these two. Instance 0 already declares an annual
+    # figure and the two spend shapes are mutually exclusive, so reusing it
+    # would have swapped one page's coverage for another's.
     state = answer(definition, state, "descendientes#1.birth-date", "2015-03-01")
     # The inscription page is GATED on this instance's relación, so the answer
     # has to precede it -- answering it first is not test convenience, it is the
@@ -134,6 +142,18 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     state = answer(definition, state, "descendientes#1.convivencia", "true")
     state = answer(definition, state, "descendientes#1.custodia-compartida", "true")
     state = answer(definition, state, "descendientes#1.nif", _VALID_NIF)
+
+    # Instance 2: the child who turns three in the period. The monthly map is
+    # ANSWERED here, not merely reachable: three pages added earlier in this
+    # campaign shipped visible and never given a value, so the walk proved only
+    # that they rendered. What has to hold is that the answer lands as a fact.
+    # The range form is used because it is the shape a taxpayer reads off a
+    # certificate, and it is the half a parser could drop while still honouring
+    # bare months.
+    state = answer(definition, state, "descendientes#2.birth-date", "2021-04-15")
+    state = answer(definition, state, "descendientes#2.convivencia", "true")
+    state = answer(definition, state, "descendientes#2.custodia-compartida", "false")
+    state = answer(definition, state, "descendientes#2.gastos-guarderia-mensuales", "5-8:210;1:180")
 
     for key in state.verdicts:
         assert not key.startswith("descendientes"), f"unexpected verdict on {key}: {state.verdicts[key]}"
@@ -152,12 +172,126 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
         "renta_family.descendiente.1.convivencia": "true",
         "renta_family.descendiente.1.custodia_compartida": "true",
         "renta_family.descendiente.1.nif": _VALID_NIF,
-        "renta_family.descendientes_count": "2",
+        "renta_family.descendiente.2.birth_date": "2021-04-15",
+        "renta_family.descendiente.2.convivencia": "true",
+        # Stored in the canonical expanded form regardless of the range typed
+        # above, so the same map entered two ways is one set of stored bytes.
+        "renta_family.descendiente.2.gastos_guarderia_mensuales": "01:180;05:210;06:210;07:210;08:210",
+        "renta_family.descendientes_count": "3",
     }
     # The Art. 81 bis sum is deliberately absent. It is derived at calculate
     # time from the per-child figure above, and the write door refuses it, so
     # projecting it here would refuse this whole batch.
     assert projected == expected
+
+
+def test_the_monthly_guarderia_page_commits_a_range_and_refuses_a_bad_map() -> None:
+    """The flattened month map is a real answer channel, not a rendered page.
+
+    One page carries the WHOLE map because a per-month sub-question inside the
+    per-descendant group is a nested repetition the substrate has no primitive
+    for. The grammar validator is what carries the structure the widget cannot,
+    so it is the thing that has to hold.
+    """
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+
+    committed = answer(definition, state, "descendientes#0.gastos-guarderia-mensuales", "9-12:210;1:180")
+    assert committed.answers["descendientes#0.gastos-guarderia-mensuales"] == "9-12:210;1:180"
+    assert "descendientes#0.gastos-guarderia-mensuales" not in committed.verdicts
+
+    rejected = answer(definition, state, "descendientes#0.gastos-guarderia-mensuales", "13:210")
+    assert [v.message_key for v in rejected.verdicts["descendientes#0.gastos-guarderia-mensuales"]] == [
+        _GASTOS_MENSUALES_INVALID_LOCALE_KEY
+    ]
+    assert "descendientes#0.gastos-guarderia-mensuales" not in rejected.answers
+
+
+def test_the_wizard_grammar_is_the_domain_grammar() -> None:
+    """A shape one door accepts is a shape every door accepts.
+
+    The page-local alternative would be a second reader, and this exact surface
+    has already shipped the failure that produces: a value one door honoured and
+    another silently treated differently. Driving the wizard's own verdict from
+    shapes the domain parser decides keeps them one rule rather than two that
+    agree today.
+    """
+    from ....core.errors import ProfileAnswerTypeError
+    from ....domain.contribuyente import parse_guarderia_mensual
+
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+    key = "descendientes#0.gastos-guarderia-mensuales"
+
+    for candidate in ("1:100", "9-12:210;1:180", "12:0", "13:100", "12-9:100", "1:100;1:200", "nonsense"):
+        try:
+            parse_guarderia_mensual(candidate, field="probe")
+        except ProfileAnswerTypeError:
+            domain_accepts = False
+        else:
+            domain_accepts = True
+        wizard_accepts = key in answer(definition, state, key, candidate).answers
+        assert wizard_accepts is domain_accepts, f"{candidate!r}: wizard and domain disagree"
+
+
+def test_declaring_both_spend_shapes_blocks_submit_and_names_the_annual_page() -> None:
+    """The record's one-authority-per-child rule, held before the persist path.
+
+    A per-answer validator cannot see this: the annual figure is only wrong in
+    the presence of a map on a sibling page. Left to the record it would raise
+    from inside persist, which reads as a crash rather than a correction.
+
+    The verdict points at the ANNUAL page because the monthly map is the
+    authority where it exists — it is the only shape that can express the period
+    the child turns three, so the annual figure is the one to drop.
+    """
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+    state = answer(definition, state, "descendientes#0.gastos-guarderia", "900")
+    state = answer(definition, state, "descendientes#0.gastos-guarderia-mensuales", "1:100")
+
+    validator = resolve_cross_field_validator(DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID)
+    verdicts = validator(state.answers)
+
+    assert [v.message_key for v in verdicts] == [_GASTOS_BOTH_DECLARED_LOCALE_KEY]
+    assert all(v.context.get("page") == "gastos-guarderia" for v in verdicts)
+
+
+def test_a_zero_annual_answer_does_not_collide_with_a_monthly_map() -> None:
+    """Zero states no annual spend, so it contradicts nothing.
+
+    Refusing it would block an operator who typed ``0`` on the annual page
+    before reaching the monthly one — a walk order the flow permits.
+    """
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+    state = answer(definition, state, "descendientes#0.gastos-guarderia", "0")
+    state = answer(definition, state, "descendientes#0.gastos-guarderia-mensuales", "1:100")
+
+    validator = resolve_cross_field_validator(DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID)
+
+    assert all(v.passed for v in validator(state.answers))
+
+
+def test_the_guarderia_spend_validator_is_named_on_the_attached_definition() -> None:
+    """A registered validator nothing names is a guard that never runs."""
+    base = FlowDefinition(
+        id="descendant-guarderia-splice",
+        title=_ref("probe.title"),
+        description=_ref("probe.description"),
+        sections=(FlowSection(id="familia", title=_ref("probe.familia.title"), items=(_entity_type_page(),)),),
+        answers_model=_ProbeAnswers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+    attached = attach_descendant_group(base)
+
+    assert DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID in attached.flow_validator_ids
+    # Idempotent, like its sibling: re-applying must not duplicate either id.
+    assert attach_descendant_group(attached).flow_validator_ids == attached.flow_validator_ids
 
 
 def test_invalid_descendant_nif_refuses_and_valid_commits() -> None:

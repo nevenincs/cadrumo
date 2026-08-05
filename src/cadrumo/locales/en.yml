@@ -3445,7 +3445,7 @@ cli:
         %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
       descendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repeatable. Run `aeat config profile descendiente` with no subcommand to
           enter these guided.
         add_help: Add one or more descendants to the active profile.
@@ -6888,6 +6888,8 @@ profile:
         valid_to:
           label: Valid to
       renta_family:
+        anualidades_alimentos_euros:
+          label: Court-ordered child maintenance annuities paid
         ascendants:
           label: Ascendants
         cotizaciones_ss_madre_2024:
@@ -7370,11 +7372,25 @@ wizard:
           adopted child previously fostered. Correct the relationship or clear the
           date.
       gastos-guarderia:
+        both_declared: Give either the annual guardería total or the month-by-month
+          amounts for this child, not both. The monthly detail is the only one that
+          can express the year the child turns three, so clear the annual total.
         help: Amounts paid to an authorised nursery (Art. 81.2 LIRPF) that increase
           the maternity deduction; whole euros.
         invalid_negative: Nursery expenses cannot be negative; enter 0 or a positive
           amount in euros.
         prompt: Nursery expenses paid in the filing year (euros)
+      gastos-guarderia-mensuales:
+        help: 'Use this instead of the annual total when the child turns three during
+          the year: only the months after the birthday count, and an annual figure
+          cannot be split across the birthday. Write each month and its amount as
+          MM:AMOUNT separated by semicolons, or a span as MM-MM:AMOUNT, for example
+          9-12:210;1:180. The eligible months are the ones your childcare centre certifies.'
+        invalid_grammar: Enter each month and its amount as MM:AMOUNT separated by
+          semicolons; a span may be written MM-MM:AMOUNT. For example 9-12:210;1:180.
+          Months run 1 to 12, amounts are whole euros, and each month may appear only
+          once.
+        prompt: Guardería spend for this child, month by month (optional)
       inscripcion-registro-civil:
         help: Date the adoption was inscribed in the Registro Civil. Where inscription
           was not required, give the date of the judicial or administrative resolution
@@ -7455,7 +7471,7 @@ wizard:
         help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
           DE, FR). Required when fiscal-residency is non_resident_irnr.
       descendiente:
-        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]
+        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:

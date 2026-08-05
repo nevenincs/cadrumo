@@ -3648,7 +3648,7 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
@@ -7223,6 +7223,8 @@ profile:
         valid_to:
           label: Érvényes eddig
       renta_family:
+        anualidades_alimentos_euros:
+          label: Bírósági határozat alapján fizetett gyermektartásdíj
         ascendants:
           label: Felmenők
         cotizaciones_ss_madre_2024:
@@ -7727,11 +7729,26 @@ wizard:
           illetve korábban nevelésbe vett örökbefogadottra. Javítsa a jogviszonyt,
           vagy törölje a dátumot.
       gastos-guarderia:
+        both_declared: Adja meg ennek a gyermeknek vagy az éves bölcsődei összeget,
+          vagy a havi összegeket, de ne mindkettőt. A havi bontás az egyetlen, amely
+          ki tudja fejezni azt az évet, amelyben a gyermek betölti a harmadik életévét,
+          ezért törölje az éves összeget.
         help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81.2. cikk), amelyek
           növelik az anyasági levonást; egész euró.
         invalid_negative: A bölcsődei költség nem lehet negatív; adjon meg 0-t vagy
           pozitív összeget euróban (LIRPF 81 bis cikk).
         prompt: Az adóévben fizetett bölcsődei költségek (euró)
+      gastos-guarderia-mensuales:
+        help: 'Az éves összeg helyett ezt használja, ha a gyermek az adóévben tölti
+          be a harmadik életévét: csak a születésnap utáni hónapok számítanak, és
+          egy éves összeg nem osztható fel közöttük. Írja be minden hónapot és összegét
+          HH:ÖSSZEG formában, pontosvesszővel elválasztva, vagy egy időszakot HH-HH:ÖSSZEG
+          formában, például 9-12:210;1:180. A jogosult hónapokat a bölcsőde igazolja.'
+        invalid_grammar: Írja be minden hónapot és összegét HH:ÖSSZEG formában, pontosvesszővel
+          elválasztva; egy időszak HH-HH:ÖSSZEG formában írható. Például 9-12:210;1:180.
+          A hónapok 1-től 12-ig terjednek, az összegek egész eurók, és minden hónap
+          csak egyszer szerepelhet.
+        prompt: Ennek a gyermeknek a bölcsődei költségei, hónapról hónapra (nem kötelező)
       inscripcion-registro-civil:
         help: Az a dátum, amikor az örökbefogadást az anyakönyvbe bejegyezték. Ha
           a bejegyzés nem volt szükséges, adja meg a bírósági vagy hatósági határozat
@@ -7818,7 +7835,7 @@ wizard:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
-        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:

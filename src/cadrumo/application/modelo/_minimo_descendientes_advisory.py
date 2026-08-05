@@ -45,6 +45,7 @@ from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casill
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
+    "collect_guarderia_spend_shape_diagnostics",
     "collect_minimo_descendientes_dependencia_diagnostics",
     "collect_minimo_descendientes_entry_date_missing_diagnostics",
     "collect_minimo_descendientes_prorrata_inferred_diagnostics",
@@ -63,6 +64,10 @@ _RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
 _ENTRY_DATE_MISSING_SOURCE_KIND = "minimo_descendientes_entry_date_missing"
 _DEPENDENCIA_ASSIMILATED_SOURCE_KIND = "minimo_descendientes_dependencia_assimilated"
 _DEPENDENCIA_SUPPRESSED_SOURCE_KIND = "minimo_descendientes_dependencia_suppressed"
+_GUARDERIA_SHAPE_SOURCE_KIND = "guarderia_spend_needs_monthly_detail"
+
+#: The Art. 81.2 guardería increase (Modelo 100 casilla 0613).
+_INCREMENTO_GUARDERIA_SEMANTIC_ROLE = "irpf_incremento_maternidad_guarderia"
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -431,6 +436,78 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
                 "YYYY-MM-DD for the first entitling acogimiento resolución"
             ),
             casilla_id=estatal_id,
+        ),
+    )
+
+
+def collect_guarderia_spend_shape_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise when a declared guardería figure contributes nothing because of its SHAPE.
+
+    Art. 81.2 extends the increase into the period the child turns three, but
+    only for spend "incurridos con posterioridad al cumplimiento de dicha edad".
+    An ANNUAL total spans that birthday and cannot be apportioned across it, so
+    a child in that period whose spend is on record only as an annual figure
+    contributes zero.
+
+    That is the one state where a taxpayer declared real spend, sees it stored,
+    and receives nothing — and nothing about the computed value says why. It is
+    not a withheld window: the operator can replace the annual figure with the
+    month-by-month detail their childcare centre already certified, and the
+    months on that certificate are exactly the eligible ones, because the centre
+    determines them and reports them to the authority on its own informative
+    return. So the advisory points at the document that settles the question
+    rather than at a rule this application cannot state (`no-silent-under-declaration`).
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated. Its ``valid_to``
+            supplies the devengo year the turning-three test is anchored to.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        A one-element tuple carrying the advisory, or an empty tuple.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    casilla_id = _casilla_id_for_role(revision, _INCREMENTO_GUARDERIA_SEMANTIC_ROLE, modelo_id=modelo)
+    if casilla_id is None:
+        return ()
+    if revision.valid_to is None:
+        # An open-ended revision fixes no devengo date, so the turning-three
+        # test has no anchor. Silent rather than guessing a year.
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+    filing_year = revision.valid_to.year
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    affected = [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
+        if descendant.guarderia_needs_monthly_detail(filing_year)
+    ]
+    if not affected:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_GUARDERIA_SHAPE_SOURCE_KIND,
+            message=(
+                f"casilla {casilla_id!r} (incremento por gastos de guardería) counts nothing for "
+                f"{_name_indices(affected)}: the child turns three in this period, so Art. 81.2 LIRPF "
+                "admits only the spend after the birthday and an annual total cannot be split across "
+                "it. Restate it month by month with `descendiente add --descendiente "
+                "GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N`. The eligible months are the ones your centre "
+                "determined and reported, so the certificate you hold is the authority"
+            ),
+            casilla_id=casilla_id,
         ),
     )
 

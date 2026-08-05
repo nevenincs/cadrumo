@@ -1045,9 +1045,8 @@ class RentaFamilyProfile(BaseModel):
         """
         return sum(1 for d in self.descendientes if d.is_eligible_guarderia(filing_year))
 
-    @property
-    def gastos_guarderia_reales_2024(self) -> int:
-        """Sum of Art. 81.2 guardería expenses across eligible children under 3 in 2024.
+    def gastos_guarderia_reales(self, filing_year: int) -> int:
+        """Sum of the Art. 81.2 guardería spend every descendant contributes in *filing_year*.
 
         Sums :meth:`DescendantInfo.guarderia_contributing_spend`, which applies
         the Art. 81.2 month rules per child: every declared month while the child
@@ -1056,11 +1055,24 @@ class RentaFamilyProfile(BaseModel):
         before, which is the campaign's largest measured under-grant — a full
         birth cohort rather than a minority case, reducing cuota directly.
 
-        Used as the ``gastos_reales`` term in the 0613 formula:
-        min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 × 1000,
-        cotizaciones_ss_madre_2024).
+        Year-parameterised rather than pinned to 2024 because the calculate path
+        derives ``renta_family.gastos_guarderia_reales_{filing_year}`` for
+        whatever year the registry declares a consumer for. A 2024-only accessor
+        would have forced that path to keep its own parallel sum, which is how
+        the monthly map could be declared and contribute nothing.
         """
-        return sum(d.guarderia_contributing_spend(2024) for d in self.descendientes)
+        return sum(d.guarderia_contributing_spend(filing_year) for d in self.descendientes)
+
+    @property
+    def gastos_guarderia_reales_2024(self) -> int:
+        """The 2024 guardería spend, as the ``gastos_reales`` term of the 0613 formula.
+
+        0613 = min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 ×
+        1000, cotizaciones_ss_madre_2024). Delegates to
+        :meth:`gastos_guarderia_reales` so the pinned-year accessor and the
+        calculate path cannot compute different figures.
+        """
+        return self.gastos_guarderia_reales(2024)
 
     def guarderia_needs_monthly_detail_indices(self, filing_year: int) -> tuple[int, ...]:
         """Indices whose declared spend contributes nothing only because of its shape."""

@@ -79,6 +79,7 @@ _DECLARACION_PROPIA_PAGE_ID = "declaracion-propia"
 _PRORRATA_MINIMO_PAGE_ID = "prorrata-minimo"
 _MESES_MADRE_TRABAJO_PAGE_ID = "meses-madre-trabajo"
 _GASTOS_GUARDERIA_PAGE_ID = "gastos-guarderia"
+_GASTOS_GUARDERIA_MENSUALES_PAGE_ID = "gastos-guarderia-mensuales"
 _NIF_PAGE_ID = "nif"
 
 #: Per-descendant page ids in walk order (consumed by the fact projection).
@@ -96,6 +97,7 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _PRORRATA_MINIMO_PAGE_ID,
     _MESES_MADRE_TRABAJO_PAGE_ID,
     _GASTOS_GUARDERIA_PAGE_ID,
+    _GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
     _NIF_PAGE_ID,
 )
 
@@ -107,6 +109,24 @@ DESCENDANT_MESES_VALIDATOR_ID = "descendant-meses-range"
 
 #: Registered id of the per-answer descendant gastos-guardería sign validator.
 DESCENDANT_GASTOS_VALIDATOR_ID = "descendant-gastos-nonneg"
+
+#: Registered id of the per-answer monthly-guardería grammar validator.
+#:
+#: The map is ONE flattened page carrying a ``MM:AMOUNT`` grammar rather than a
+#: per-month sub-question, because a per-month group inside the per-descendant
+#: group is a NESTED repetition and this substrate has no primitive for it. The
+#: flattening is therefore a measured constraint, not a preference, and the
+#: grammar validator is what carries the structure the substrate cannot.
+DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID = "descendant-gastos-mensuales-grammar"
+
+#: Registered id of the flow-scope one-spend-authority-per-child guard.
+#:
+#: Flow-scope rather than per-answer because the rule spans two pages of one
+#: instance: an annual total is only wrong in the presence of a monthly map on a
+#: sibling page, which a per-answer validator cannot see. It mirrors the
+#: canonical record's own refusal so a scripted or resumed answer map cannot
+#: reach the persist path carrying both.
+DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID = "descendant-guarderia-spend"
 
 #: Registered id of the per-answer descendant rentas-anuales sign validator.
 DESCENDANT_RENTAS_VALIDATOR_ID = "descendant-rentas-nonneg"
@@ -180,6 +200,8 @@ _MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.meses-madre
 _MESES_MADRE_TRABAJO_HELP_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.help"
 _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.prompt"
 _GASTOS_GUARDERIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.help"
+_GASTOS_MENSUALES_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.prompt"
+_GASTOS_MENSUALES_HELP_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.help"
 _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
 
 # Verdict message keys minted for the constraint guards below (the range,
@@ -189,6 +211,8 @@ _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
 _MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
 _RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
 _GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
+_GASTOS_MENSUALES_INVALID_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia-mensuales.invalid_grammar"
+_GASTOS_BOTH_DECLARED_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.both_declared"
 _ENTRY_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.before_birth"
 _ENTRY_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.entry-event.in_future"
 _ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.relacion_mismatch"
@@ -250,9 +274,13 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _MESES_MADRE_TRABAJO_HELP_LOCALE_KEY,
     _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY,
     _GASTOS_GUARDERIA_HELP_LOCALE_KEY,
+    _GASTOS_MENSUALES_PROMPT_LOCALE_KEY,
+    _GASTOS_MENSUALES_HELP_LOCALE_KEY,
     _NIF_PROMPT_LOCALE_KEY,
     _MESES_INVALID_RANGE_LOCALE_KEY,
     _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
+    _GASTOS_MENSUALES_INVALID_LOCALE_KEY,
+    _GASTOS_BOTH_DECLARED_LOCALE_KEY,
     _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
     _ENTRY_BEFORE_BIRTH_LOCALE_KEY,
     _ENTRY_IN_FUTURE_LOCALE_KEY,
@@ -353,9 +381,82 @@ def _validate_rentas_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
     return ValidationVerdict.passed()
 
 
+def _validate_gastos_mensuales_grammar(page: FlowPage, canonical: str) -> ValidationVerdict:
+    """Refuse a monthly-spend map the canonical grammar cannot read.
+
+    Blank (optional) passes and leaves the map UNDECLARED. Anything else is
+    parsed by the one shared grammar
+    (:func:`~domain.contribuyente.parse_guarderia_mensual`) rather than a
+    wizard-local reader, so this page, the ``--descendiente`` flag and the fact
+    index accept and refuse exactly the same shapes. A page-local parser is how
+    a surface starts accepting a value another door rejects.
+
+    Refusing as a verdict keeps a bad map out of the answer map entirely, so it
+    never reaches the persistence-boundary construction of
+    :class:`~cadrumo.domain.contribuyente.DescendantInfo` (whose own duplicate-month
+    refusal stays as defence-in-depth). The raw answer never enters the
+    diagnostic; the operator is pointed at the accepted form instead.
+    """
+    if not canonical.strip():
+        return ValidationVerdict.passed()
+    from ...core.errors import ProfileAnswerTypeError
+    from ...domain.contribuyente import parse_guarderia_mensual
+
+    try:
+        parse_guarderia_mensual(canonical, field=page.id)
+    except ProfileAnswerTypeError:
+        return ValidationVerdict.failed(_GASTOS_MENSUALES_INVALID_LOCALE_KEY, page_id=page.id)
+    return ValidationVerdict.passed()
+
+
 register_answer_validator(DESCENDANT_MESES_VALIDATOR_ID, _validate_meses_range)
 register_answer_validator(DESCENDANT_GASTOS_VALIDATOR_ID, _validate_gastos_nonneg)
 register_answer_validator(DESCENDANT_RENTAS_VALIDATOR_ID, _validate_rentas_nonneg)
+register_answer_validator(DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID, _validate_gastos_mensuales_grammar)
+
+
+def _validate_descendant_guarderia_spend(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
+    """Flow-scope guard: one guardería spend authority per descendant.
+
+    Art. 81.2 spend may be stated as an annual total or as a month map, never
+    both for one child. Two figures would have to be reconciled, and whichever
+    was chosen the other would sit in the record contradicting it — a filer
+    reading their own profile could not tell which one reached the filing.
+
+    Reported against the ANNUAL page rather than the monthly one because the
+    monthly map is the authority where it exists: it is the only shape that can
+    express the period the child turns three, so the annual figure is the one to
+    drop. Pointing at the field the operator should clear is the difference
+    between a verdict they can act on and one that only says something is wrong.
+    """
+    prefix_root = f"{DESCENDANTS_GROUP_ID}{REPEATING_INSTANCE_SEPARATOR}"
+    verdicts = [
+        ValidationVerdict.failed(
+            _GASTOS_BOTH_DECLARED_LOCALE_KEY,
+            instance=instance,
+            page=_GASTOS_GUARDERIA_PAGE_ID,
+        )
+        for instance in sorted(_descendant_instances(answers, prefix_root=prefix_root))
+        if _declares_both_guarderia_shapes(answers, prefix=f"{prefix_root}{instance}")
+    ]
+    return tuple(verdicts) if verdicts else (ValidationVerdict.passed(),)
+
+
+def _declares_both_guarderia_shapes(answers: Mapping[str, str], *, prefix: str) -> bool:
+    """Whether one instance carries an annual total AND a monthly map.
+
+    A zero annual answer is not a second declaration: it states no spend, so it
+    contradicts nothing. Treating it as one would refuse an operator who typed
+    ``0`` on the annual page before reaching the monthly one.
+    """
+    annual = (answers.get(f"{prefix}.{_GASTOS_GUARDERIA_PAGE_ID}") or "").strip()
+    mensuales = (answers.get(f"{prefix}.{_GASTOS_GUARDERIA_MENSUALES_PAGE_ID}") or "").strip()
+    if not mensuales or not annual:
+        return False
+    return annual.isdigit() and int(annual) > 0
+
+
+register_cross_field_validator(DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID, _validate_descendant_guarderia_spend)
 
 
 def _validate_descendant_entry_event_dates(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
@@ -690,6 +791,29 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         answer_validator_ids=(DESCENDANT_GASTOS_VALIDATOR_ID,),
     ),
     FlowPage(
+        # TEXT, and one page for the WHOLE map. The natural shape would be a
+        # month sub-question repeated inside the per-descendant instance, but
+        # that is a repeating group nested in a repeating group and this
+        # substrate has no primitive for it. So the map is flattened onto one
+        # answer carrying the shared `MM:AMOUNT` grammar, and
+        # DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID carries the structure the
+        # widget cannot.
+        #
+        # Shown unconditionally rather than gated on the child's age. The page
+        # that needs it most is the period a child turns three, which is
+        # computable from the birth date on a sibling page -- but the increase
+        # also reaches a child under three all year, whose spend is equally
+        # expressible here, and a gate would tell the operator this question
+        # does not apply to them in a year where it does.
+        id=_GASTOS_GUARDERIA_MENSUALES_PAGE_ID,
+        widget=FlowWidgetKind.TEXT,
+        prompt=_locale_ref(_GASTOS_MENSUALES_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_GASTOS_MENSUALES_HELP_LOCALE_KEY),
+        required=False,
+        answer_type=str,
+        answer_validator_ids=(DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID,),
+    ),
+    FlowPage(
         id=_NIF_PAGE_ID,
         widget=FlowWidgetKind.TEXT,
         prompt=_locale_ref(_NIF_PROMPT_LOCALE_KEY),
@@ -738,8 +862,9 @@ def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
             f"attach_descendant_group: definition {definition.id!r} has no {_FAMILIA_SECTION_ID!r} section",
         )
     flow_validator_ids = definition.flow_validator_ids
-    if DESCENDANT_ENTRY_EVENT_VALIDATOR_ID not in flow_validator_ids:
-        flow_validator_ids = (*flow_validator_ids, DESCENDANT_ENTRY_EVENT_VALIDATOR_ID)
+    for validator_id in (DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID):
+        if validator_id not in flow_validator_ids:
+            flow_validator_ids = (*flow_validator_ids, validator_id)
     return definition.model_copy(
         update={"sections": tuple(sections), "flow_validator_ids": flow_validator_ids},
     )
@@ -750,8 +875,10 @@ __all__ = [
     "DESCENDANTS_COUNT_PAGE_ID",
     "DESCENDANTS_GROUP_ID",
     "DESCENDANT_ENTRY_EVENT_VALIDATOR_ID",
+    "DESCENDANT_GASTOS_MENSUALES_VALIDATOR_ID",
     "DESCENDANT_GASTOS_VALIDATOR_ID",
     "DESCENDANT_GROUP",
+    "DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID",
     "DESCENDANT_LOCALE_KEYS",
     "DESCENDANT_MESES_VALIDATOR_ID",
     "DESCENDANT_NIF_VALIDATOR_ID",
