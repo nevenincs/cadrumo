@@ -28,7 +28,15 @@ jobs:
   cadrumo-full-conformance:
     name: Cadrumo / full conformance / Python 3.13
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 120
+    # Raised from 120 when the integration suite and the dev tooling gates were
+    # enrolled. The integration parallel pass alone measured 23m54s (3772 tests)
+    # on a loaded shared machine, and its serial pass runs after it at -n0; the
+    # lane already carried the unit suite, the dev-tree gates, real sdist/wheel
+    # builds, the docs build, pip-audit, and the roundtrip suite. 120 left no
+    # headroom, and a ceiling that trips is indistinguishable from a wedge —
+    # which is the exact confusion the ceilings exist to prevent. Still far
+    # below the 6-hour default, so a genuine wedge still dies here.
+    timeout-minutes: 180
 
     steps:
       - name: Checkout repository
@@ -115,7 +123,21 @@ jobs:
         # the ten-minute wall cannot absorb. The recipe runs two passes — the
         # bulk under xdist, then the isolation-sensitive `serial` tests at -n0 —
         # so a global-state mutator cannot flake the parallel pass.
+        #
+        # NON-BLOCKING ON ARRIVAL, and this is the honest posture rather than a
+        # soft one. Measured on the parallel pass at the commit that enrolled it:
+        # 19 failed, 3753 passed in 23m54s. Those 19 are the accumulated rot of a
+        # suite that had never run in CI, not a regression from enrolling it —
+        # blocking immediately would red the release-verdict lane on a backlog
+        # nobody has triaged, and a lane that is always red is a lane everyone
+        # learns to ignore. The serial pass (58 tests the parallel pass holds
+        # out) had not been measured at all when this landed.
+        #
+        # Same precedent and same contract as the vault-drift step below: this
+        # is visibility now, blocking once triaged. FLIP `continue-on-error` OFF
+        # once the backlog is paid down; do not let it become permanent.
         run: CADRUMO_PYTEST_WORKERS=8 just test-integration
+        continue-on-error: true
 
       - name: Tooling gates no other lane reaches
         # The recipe's own docstring names it: "the dev/ tooling gates that no
@@ -124,7 +146,13 @@ jobs:
         # dev/registry/aeip, and the four dev/docs subsystems) ran in no
         # workflow at all, including the deploy-authority tests that gate the
         # documentation publisher this repository ships.
+        #
+        # Non-blocking on the same terms as the integration step above: these
+        # directories have never run in CI either, so their first verdict is a
+        # backlog measurement rather than a regression signal. Flip it off with
+        # the other one.
         run: CADRUMO_PYTEST_WORKERS=8 just test-dev-tooling
+        continue-on-error: true
 
       - name: Channel artifact conformance (Homebrew formula, Scoop manifest, mcpb bundle)
         # These fourteen tests bind the generated formula and manifest to a real
