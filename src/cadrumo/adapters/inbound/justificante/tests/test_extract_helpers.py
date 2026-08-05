@@ -97,6 +97,43 @@ def test_parse_decimal_raises_on_malformed_input_and_preserves_error_shape() -> 
     assert exc_info.value.malformed == ()
 
 
+def test_parse_decimal_refuses_the_ambiguous_thousands_reading() -> None:
+    """A dot-only amount is refused rather than read a thousandfold small.
+
+    The receipt amount regexes capture ``([0-9][0-9\\.,]*)``, which -- unlike
+    ``SPANISH_AMOUNT_GROUP`` -- does not require the ``,NN`` tail. Without this
+    guard ``1.234`` decodes as ``Decimal("1.234")``, so a receipt total of one
+    thousand two hundred thirty-four would be recorded as one euro twenty-three.
+    """
+    for raw in ("1.234", "45.678", "100.000"):
+        with pytest.raises(JustificanteParseError, match="ambiguous thousands"):
+            _parse_decimal(raw)
+
+    with pytest.raises(JustificanteParseError) as exc_info:
+        _parse_decimal("1.234", field="total_a_ingresar")
+    exc = exc_info.value
+    assert exc.malformed == ("total_a_ingresar",)
+    assert exc.missing == ()
+
+
+def test_parse_decimal_ambiguity_guard_stays_narrow() -> None:
+    """Every shape carrying its own evidence still parses.
+
+    A comma settles the reading, a four-digit lead cannot be a thousands run,
+    and a bare integer has no dot to be ambiguous about. The guard must reject
+    only the genuinely two-way token, or it would refuse real receipts.
+    """
+    unambiguous: tuple[tuple[str, Decimal], ...] = (
+        ("1.234,56", Decimal("1234.56")),
+        ("1234.56", Decimal("1234.56")),
+        ("0.333", Decimal("0.333")),
+        ("1234", Decimal("1234")),
+        ("-1.234,56", Decimal("-1234.56")),
+    )
+    for raw, expected in unambiguous:
+        assert _parse_decimal(raw) == expected, raw
+
+
 # ---------------------------------------------------------------------------
 # _parse_datetime
 # ---------------------------------------------------------------------------
