@@ -21,13 +21,14 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import PROSE_ELISION_MARKER, Period
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from .._business_proportion import business_proportion
 from .._errors import AggregationPeriodError
 from .._renta_ledger import (
-    _bounded_detail,
+    RentaLedgerAggregationIssue,
+    RentaLedgerAggregationIssueReason,
     _business_fact_amount,
     _renta_direction_for,
     _resolve_annual_period,
@@ -123,26 +124,39 @@ def test_business_proportion_personal_classification_returns_none() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _bounded_detail — truncate to 512 chars with ellipsis on overflow
+# RentaLedgerAggregationIssue.detail — the cap elides, it does not refuse
 # ---------------------------------------------------------------------------
 
 
-def test_bounded_detail_passes_short_string_through_unchanged() -> None:
-    assert _bounded_detail("short") == "short"
+def _issue(detail: str) -> RentaLedgerAggregationIssue:
+    return RentaLedgerAggregationIssue(
+        transaction_id="tx-1",
+        reason=RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
+        detail=detail,
+    )
 
 
-def test_bounded_detail_passes_exactly_512_chars_through_unchanged() -> None:
-    payload = "x" * 512
+def test_a_detail_within_the_cap_survives_exactly() -> None:
+    """Eliding must not touch the overwhelming majority of exclusions."""
+    detail = "ledger row rejected: booked date falls outside the resolved annual period"
 
-    assert _bounded_detail(payload) == payload
+    assert _issue(detail).detail == detail
 
 
-def test_bounded_detail_truncates_at_509_plus_ellipsis_when_over_512() -> None:
-    """A 600-char string becomes 509 original chars + 3-char ellipsis = 512."""
-    payload = "a" * 600
+def test_an_over_cap_detail_elides_rather_than_refusing_the_issue() -> None:
+    """The behaviour that keeps a rejected row explainable.
 
-    result = _bounded_detail(payload)
+    ``detail`` carries the reason a ledger row was excluded. Refusing to build
+    the issue over its length would lose the explanation AND fail the
+    aggregation that produced it, turning a traceable exclusion into a raw
+    validation error — a silent under-declaration wearing a crash.
+    """
+    issue = _issue("word " * 400)
 
-    assert len(result) == 512
-    assert result.endswith("...")
-    assert result.startswith("a" * 509)
+    assert len(issue.detail) <= 512
+    assert issue.detail.endswith(PROSE_ELISION_MARKER)
+
+
+def test_the_elision_is_visible_so_a_cut_reason_cannot_read_as_a_terse_one() -> None:
+    """An operator deciding whether to reclassify a row must know words are missing."""
+    assert PROSE_ELISION_MARKER not in _issue("a short reason").detail

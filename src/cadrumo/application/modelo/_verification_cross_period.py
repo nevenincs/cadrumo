@@ -443,12 +443,12 @@ def _cross_period_first_year_fractional_suppression_advisory_finding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
         message=(
-            "Modelo 202 cross-period dependency scoped out as a first-year no-fractional-payment "
-            f"obligation (modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement_period}): a first-year IS filer under modalidad cuota "
-            f"(LIS art. 40.2) has no Modelo 202 obligation, as no prior IS return (activity-start "
-            f"{declared_date}) provides the cuota basis. If modalidad base (art. 40.3) was elected, "
-            "the entity IS obligated — the operator confirms the modality (see next action)."
+            "Modelo 202 dependency scoped out: first-year, no fractional-payment obligation "
+            f"(modelo={requirement.source_modelo} {requirement.filing_year}/{requirement_period}). "
+            "A first-year IS filer under modalidad cuota (LIS art. 40.2) has no Modelo 202 "
+            f"obligation: no prior IS return (activity-start {declared_date}) provides the cuota "
+            "basis. If modalidad base (art. 40.3) was elected, the entity IS obligated — confirm "
+            "the modality (see next action)."
         ),
         next_action=(
             "Confirm the entity files Modelo 202 under modalidad cuota (LIS art. 40.2) and that this "
@@ -600,12 +600,12 @@ def _cross_period_m111_no_retenciones_advisory_finding(
         kind=ModeloVerificationFindingKind.ADVISORY,
         severity=ModeloVerificationFindingSeverity.WARNING,
         message=(
-            "Modelo 111 cross-period dependency scoped out as no-retenciones/no-obligation: "
+            "Modelo 111 scoped out as no-retenciones/no-obligation: "
             f"modelo={requirement.source_modelo} year={requirement.filing_year} "
-            f"period={requirement_period} origin_ids={origin_text} for target modelo={verdict.target_modelo} "
-            f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. The profile fact "
-            f"{M111_NO_RETENCIONES_PROFILE_PATH} attests that no rentas subject to retencion or ingreso a cuenta "
-            "were paid in that period, so AEAT instructions say an all-blank Modelo 111 should not be filed."
+            f"period={requirement_period} origin_ids={origin_text} target={verdict.target_modelo} "
+            f"year={verdict.target_filing_year} period={verdict.target_period.registry_token}. Fact "
+            f"{M111_NO_RETENCIONES_PROFILE_PATH} attests no rentas subject to retencion or ingreso a "
+            "cuenta were paid, so AEAT says an all-blank Modelo 111 must not be filed."
         ),
         next_action=(
             "Keep 036/037 censo or operator evidence supporting the no-retenciones period. If any subject "

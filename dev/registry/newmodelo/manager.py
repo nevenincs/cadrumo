@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.domain.calculations.registry import modelo_locale_key, revision_locale_key
 
 __all__ = [
     "NewModeloError",
@@ -122,10 +123,16 @@ def _manifest_toml(modelo_id: str, title: str) -> str:
     return (
         f"{_SCAFFOLDED_MANIFEST_SENTINEL} TODO fill in per the contributor checklist\n"
         "# (python -m dev.registry.newmodelo checklist), item 1: 'Declare the modelo manifest'.\n"
+        "#\n"
+        "# Presentation text is NOT declared here. A modelo's title and official name are\n"
+        "# localizable values owned by the shared locale catalogues, and the schema rejects\n"
+        "# them as unknown fields. Author them against the derived keys instead:\n"
+        f'#   python -m cadrumo.locales set es {modelo_locale_key(modelo_id, "title")} "{title}"\n'
+        f"#   python -m cadrumo.locales set es {modelo_locale_key(modelo_id, 'official_name')} "
+        f'"TODO: official AEAT modelo {modelo_id} name"\n'
+        "# Spanish is source-authoritative and load-blocking; repeat for en, ca and hu.\n"
         "[modelo]\n"
         f'id = "{modelo_id}"\n'
-        f'title = "{title}"\n'
-        f'official_name = "TODO: official AEAT modelo {modelo_id} title"\n'
         '# tax_domain: one of "iva" | "irpf" | "sociedades" | "informative" | ... (see TaxDomain)\n'
         'tax_domain = "TODO"\n'
         '# cadence: "monthly" | "quarterly" | "annual" | "ad_hoc" | "profile_based"\n'
@@ -141,8 +148,12 @@ def _revision_toml(modelo_id: str, revision_id: str) -> str:
         f'# Scaffolded revision metadata for modelo {modelo_id}, revision "{revision_id}".\n'
         "# TODO fill in per the contributor checklist, item 2: 'Ground the revision window\n"
         "# and applicability'.\n"
+        "#\n"
+        "# The revision label is a localizable value owned by the shared locale catalogues,\n"
+        "# not a schema field; the loader rejects it here. Author it against the derived key:\n"
+        f"#   python -m cadrumo.locales set es {revision_locale_key(modelo_id, revision_id)} "
+        f'"TODO: human-readable label for revision {revision_id}"\n'
         f'[revisions."{revision_id}"]\n'
-        f'label = "TODO: human-readable label for revision {revision_id}"\n'
         "valid_from = 2026-01-01  # TODO: real applicability start date\n"
         "# valid_to = 2026-12-31  # TODO: uncomment + set if this revision has a known end\n"
         'period_selector = { year_from = 2026, periods = ["0A"] }  # TODO\n'

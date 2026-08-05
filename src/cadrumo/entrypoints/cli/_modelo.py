@@ -83,6 +83,9 @@ from ._modelo_cli_support import (
     parse_revision_selector as _parse_revision_selector,
 )
 from ._modelo_cli_support import (
+    resolve_actor_option as _resolve_actor_option,
+)
+from ._modelo_cli_support import (
     resolve_default_actor as _resolve_default_actor,
 )
 from ._modelo_cli_support import (
@@ -621,7 +624,7 @@ register_work_calculate_commands(
     activate_output_language=activate_subcommand_output_language,
     require_active_profile=_require_active_profile,
     resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_default_actor=_resolve_default_actor,
+    resolve_actor_option=_resolve_actor_option,
     calculate_input_bundle_from_cli=_work_calculate_input_bundle_from_cli,
     bad_parameter_from_error=_bad_parameter_from_error,
     missing_binding_guidance=_missing_binding_guidance,
@@ -633,7 +636,7 @@ register_work_wizard_commands(
     activate_output_language=activate_subcommand_output_language,
     require_active_profile=_require_active_profile,
     resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
-    resolve_default_actor=_resolve_default_actor,
+    resolve_actor_option=_resolve_actor_option,
     bad_parameter_from_error=_bad_parameter_from_error,
 )
 

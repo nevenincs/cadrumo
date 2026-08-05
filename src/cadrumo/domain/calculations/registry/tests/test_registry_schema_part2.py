@@ -57,7 +57,7 @@ def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() 
             "casilla_continuidad_evolutions": (
                 {
                     "id": "renta-2024-2025-base-general-label",
-                    "continuidad_id": "renta.base-liquidacion.general",
+                    "continuidad_id": "renta-base-liquidacion-general",
                     "from_revision": "2024",
                     "to_revision": "2025",
                     "evolution_kind": "label_evolved",
@@ -69,7 +69,7 @@ def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() 
     )
 
     assert revision.continuidad_validation == "strict"
-    assert revision.casilla_continuidad_evolutions[0].continuidad_id == "renta.base-liquidacion.general"
+    assert revision.casilla_continuidad_evolutions[0].continuidad_id == "renta-base-liquidacion-general"
 
 
 def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla_id() -> None:

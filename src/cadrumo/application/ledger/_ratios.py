@@ -18,7 +18,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, elided_prose
 from ...core.identity import BucketId
 from ...domain.categories import (
     ProportionalityKind,
@@ -61,6 +61,14 @@ class EligibleCategoryRow(BaseModel):
     override_present: bool
 
 
+#: The ratios-finding ``detail`` annotation: elides rather than refusing.
+#:
+#: The tightest declared prose cap in the tree, and every builder interpolates
+#: a category label and two ratios into it. Empty is the documented default, so
+#: the lower bound stays open.
+_FindingDetail = elided_prose(300, min_length=0)
+
+
 class RatiosValidationFinding(BaseModel):
     """One issue raised by ``ratios validate`` for an eligible category."""
 
@@ -68,7 +76,7 @@ class RatiosValidationFinding(BaseModel):
 
     category: SpendingCategory
     kind: str = Field(min_length=1)
-    detail: str = Field(default="", max_length=300)
+    detail: _FindingDetail = ""
 
 
 class RatiosValidationReport(BaseModel):

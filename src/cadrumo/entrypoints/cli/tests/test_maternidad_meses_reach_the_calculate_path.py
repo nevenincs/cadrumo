@@ -355,7 +355,7 @@ def test_a_child_over_the_rentas_ceiling_contributes_nothing(
 
 
 # ---------------------------------------------------------------------------
-# S34: one authority, permanently -- the calculate-time flag is retired.
+# One authority, permanently -- the calculate-time flag is retired.
 # ---------------------------------------------------------------------------
 
 
@@ -394,7 +394,7 @@ def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: Te
 
 
 # ---------------------------------------------------------------------------
-# S38: the relación axis has no member for a grandchild or a judicial-guarda
+# The relación axis has no member for a grandchild or a judicial-guarda
 # minor, so a contributing descendant recorded under the default relación is
 # disclosed rather than silently trusted.
 # ---------------------------------------------------------------------------
@@ -403,7 +403,7 @@ def test_the_profile_declaration_alone_is_now_the_only_route(runtime_profile: Te
 def test_a_contributing_descendant_under_the_default_relacion_is_disclosed(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """The representability gap S37 researched, reaching every already-stored record.
+    """The representability gap the research identified, reaching every already-stored record.
 
     The relación axis cannot express a grandchild/other-consanguinidad
     descendant or a minor under judicial guarda y custodia -- both mínimo-
@@ -510,7 +510,7 @@ def test_a_temporal_acogimiento_contributing_nothing_is_not_disclosed(
 
 
 # ---------------------------------------------------------------------------
-# S38, the other half: the same disclosure at the point the operator declares
+# The other half: the same disclosure at the point the operator declares
 # the row, not only at calculate time.
 # ---------------------------------------------------------------------------
 

@@ -43,6 +43,7 @@ def _calculate(
             "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-2024-profile-incremento-guarderia": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-2024-profile-descendientes-guarderia": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),

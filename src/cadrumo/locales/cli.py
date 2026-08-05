@@ -150,7 +150,12 @@ def set_value(
 def set_batch(
     manifest: Annotated[
         Path,
-        typer.Argument(help="JSON object mapping locale codes to dotted-key scalar maps."),
+        typer.Argument(
+            help=tr(
+                "cli.locales.set_batch_manifest_help",
+                default="JSON object mapping locale codes to dotted-key scalar maps.",
+            ),
+        ),
     ],
 ) -> None:
     """Apply a generated locale migration manifest through the catalogue authority."""

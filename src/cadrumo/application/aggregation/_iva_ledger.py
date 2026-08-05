@@ -49,7 +49,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, elided_prose
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.calculations.registry import (
@@ -133,6 +133,15 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     CASH_ACCOUNTING_EXCLUDED_CATEGORY = "cash_accounting_excluded_category"
 
 
+#: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
+#:
+#: These issues explain why a ledger row was excluded, so refusing one over its
+#: length would drop the explanation for the exclusion AND fail the aggregation
+#: that produced it -- a silent under-declaration dressed as a validation error.
+#: Shortening the sentence is strictly the lesser loss.
+_IssueDetail = elided_prose(512)
+
+
 class IvaLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while projecting IVA ledger observations."""
 
@@ -140,7 +149,7 @@ class IvaLedgerAggregationIssue(BaseModel):
 
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
-    detail: str = Field(min_length=1, max_length=512)
+    detail: _IssueDetail
 
 
 class ProrrataLedgerReference(BaseModel):

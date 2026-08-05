@@ -338,6 +338,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
             "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
             "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-2024-profile-incremento-guarderia": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
             "renta-2024-profile-descendientes-guarderia": Decimal("0"),
             "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),

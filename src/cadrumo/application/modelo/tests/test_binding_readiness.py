@@ -61,8 +61,6 @@ review_status = "reviewed"
 _MINIMAL_MANIFEST_TOML = """\
 [modelo]
 id = "999"
-title = "Binding readiness ambiguity test modelo"
-official_name = "Binding readiness ambiguity test modelo"
 tax_domain = "iva"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
@@ -71,10 +69,11 @@ source_refs = ["test-source-001"]
 """
 
 # Scalar revision metadata only; per-section array-of-tables live in fragment
-# subdirectories (the loader rejects inline sections in revision.toml).
+# subdirectories (the loader rejects inline sections in revision.toml). The
+# label is derived from the shared locale catalogue, not stored on the
+# revision, so it carries no TOML field here.
 _MINIMAL_REVISION_TOML_TEMPLATE = """\
 [revisions."{revision_id}"]
-label = "{label}"
 valid_from = {valid_from}
 {valid_to_line}
 period_selector = {{ years = [2025], periods = ["{period}"] }}
@@ -97,7 +96,6 @@ _CASILLAS_FRAGMENT_TEMPLATE = """\
 [[revisions."{revision_id}".casillas]]
 id = "01"
 number = "01"
-label = "Test casilla"
 section = ["test"]
 data_type = "integer"
 legal_refs = ["test-ley-001:art-1"]
@@ -120,9 +118,9 @@ source_refs = ["test-source-001"]
 def _write_year_ambiguous_registry(
     tmp_path: Path,
     *,
-    revisions: tuple[tuple[str, str, str, str, str | None], ...] = (
-        ("2025-1t", "2025 first quarter", "1T", "2025-01-01", None),
-        ("2025-2t", "2025 second quarter", "2T", "2025-01-01", None),
+    revisions: tuple[tuple[str, str, str, str | None], ...] = (
+        ("2025-1t", "1T", "2025-01-01", None),
+        ("2025-2t", "2T", "2025-01-01", None),
     ),
 ) -> Path:
     registry_root = tmp_path / "registry" / "aeat"
@@ -166,13 +164,12 @@ def _write_year_ambiguous_registry(
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (modelos_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
 
-    for revision_id, label, period, valid_from, valid_to in revisions:
+    for revision_id, period, valid_from, valid_to in revisions:
         revision_dir = modelos_dir / "revisions" / revision_id
         revision_dir.mkdir(parents=True)
         (revision_dir / "revision.toml").write_text(
             _MINIMAL_REVISION_TOML_TEMPLATE.format(
                 revision_id=revision_id,
-                label=label,
                 period=period,
                 valid_from=valid_from,
                 valid_to_line="" if valid_to is None else f"valid_to = {valid_to}",
@@ -263,8 +260,8 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
     registry_root = _write_year_ambiguous_registry(
         tmp_path,
         revisions=(
-            ("2025-early", "2025 first effective window", "1T", "2025-01-01", "2025-06-30"),
-            ("2025-late", "2025 second effective window", "2T", "2025-07-01", None),
+            ("2025-early", "1T", "2025-01-01", "2025-06-30"),
+            ("2025-late", "2T", "2025-07-01", None),
         ),
     )
     authority = ValidatedRegistryAuthority.load(registry_root, source_root=tmp_path)

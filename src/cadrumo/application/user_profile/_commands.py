@@ -25,7 +25,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import Period, elided_prose
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId
@@ -177,6 +177,15 @@ class ProfileLifecycleResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+#: The validation-issue ``message`` annotation: elides rather than refusing.
+#:
+#: Every one of these is assembled from profile data — field paths, declared
+#: values, the set of modelos a gap affects — so its length belongs to the
+#: taxpayer's configuration, not to the author. Refusing the issue would fail
+#: the very validation pass that exists to report the problem.
+_IssueMessage = elided_prose(512)
+
+
 class ProfileValidationIssue(BaseModel):
     """One validation finding raised against a profile snapshot."""
 
@@ -185,7 +194,7 @@ class ProfileValidationIssue(BaseModel):
     severity: _BaseSeverity
     code: str = Field(min_length=1, max_length=64)
     path: str | None = None
-    message: str = Field(min_length=1, max_length=512)
+    message: _IssueMessage
 
 
 class ProfileValidationReport(BaseModel):

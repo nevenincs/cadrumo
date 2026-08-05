@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
+from pydantic import ValidationError
 
 from ...application.modelo import (
     CalculationRegistryUnavailableError,
@@ -39,6 +40,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistryValidationError
 from ._common import _emit_envelope
+from ._errors import CliOutboundPayloadBoundaryError
 from ._modelo_cli_support import OutputLanguageOpt
 from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
@@ -73,7 +75,7 @@ class _CalculateDeps:
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
     require_active_profile: Callable[[], None]
     resolve_work_unit_for_cli: Callable[..., Any]
-    resolve_default_actor: Callable[[], str]
+    resolve_actor_option: Callable[[str | None], str]
     calculate_input_bundle_from_cli: Callable[..., Any]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
     missing_binding_guidance: Callable[[RegistryValidationError, str], str]
@@ -292,7 +294,7 @@ def register_work_calculate_commands(
     activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
     require_active_profile: Callable[[], None],
     resolve_work_unit_for_cli: Callable[..., Any],
-    resolve_default_actor: Callable[[], str],
+    resolve_actor_option: Callable[[str | None], str],
     calculate_input_bundle_from_cli: Callable[..., Any],
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
     missing_binding_guidance: Callable[[RegistryValidationError, str], str],
@@ -307,7 +309,7 @@ def register_work_calculate_commands(
         activate_output_language=activate_output_language,
         require_active_profile=require_active_profile,
         resolve_work_unit_for_cli=resolve_work_unit_for_cli,
-        resolve_default_actor=resolve_default_actor,
+        resolve_actor_option=resolve_actor_option,
         calculate_input_bundle_from_cli=calculate_input_bundle_from_cli,
         bad_parameter_from_error=bad_parameter_from_error,
         missing_binding_guidance=missing_binding_guidance,
@@ -436,10 +438,22 @@ def _run_work_calculate(
         autoconsumo_promotor_base=autoconsumo_promotor_base,
     )
 
+    resolved_actor = deps.resolve_actor_option(actor)
+
+    # Everything below this line is downstream of operator-argument handling:
+    # the work unit is resolved, the input bundle is built and validated, and
+    # the actor label is bounded. A pydantic ValidationError raised from here on
+    # is therefore a record the application built from its own state, never a
+    # value the operator typed -- so it is classified by WHERE it was raised
+    # rather than by inspecting the exception. A classifier reading the error's
+    # `loc` or model title would have to keep a map of CLI parameter names in
+    # step with every internal field rename, and would agree with the truth only
+    # until the first collision; the region boundary cannot drift out of step
+    # with itself.
     try:
         calculation_result = calculate_modelo_work_revision(
             work_unit_id=resolved_work_unit_id,
-            actor=actor or deps.resolve_default_actor(),
+            actor=resolved_actor,
             inputs=calculation_inputs,
         )
     except RegistryValidationError as exc:
@@ -452,27 +466,32 @@ def _run_work_calculate(
         ModeloIvaWalletReconciliationBlocked,
     ) as exc:
         raise deps.bad_parameter_from_error(exc) from exc
+    except ValidationError as exc:
+        raise CliOutboundPayloadBoundaryError(exc) from exc
 
-    calculation_revision = calculation_result.revision
-    unit_for_modality = calculation_result.work_unit
-    saved_confirmation = _work_calculate_saved_confirmation(calculation_revision, unit_for_modality)
-    modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
-    authorization_payload, authorization_notices, authorization_lines = _work_calculate_authorization_output(
-        calculation_result,
-        work_unit=unit_for_modality,
-    )
-    source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
-    deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
-    result = WorkCalculateResult.model_validate(
-        {
-            "saved": True,
-            "saved_confirmation": saved_confirmation,
-            **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
-            **modality_payload,
-            **authorization_payload,
-            "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
-        },
-    )
+    try:
+        calculation_revision = calculation_result.revision
+        unit_for_modality = calculation_result.work_unit
+        saved_confirmation = _work_calculate_saved_confirmation(calculation_revision, unit_for_modality)
+        modality_payload, modality_lines = _work_calculate_modality_output(calculation_result)
+        authorization_payload, authorization_notices, authorization_lines = _work_calculate_authorization_output(
+            calculation_result,
+            work_unit=unit_for_modality,
+        )
+        source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(calculation_result)
+        deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
+        result = WorkCalculateResult.model_validate(
+            {
+                "saved": True,
+                "saved_confirmation": saved_confirmation,
+                **calculation_revision_payload(calculation_revision).model_dump(mode="python"),
+                **modality_payload,
+                **authorization_payload,
+                "deadline": deadline_payload.model_dump(mode="python") if deadline_payload is not None else None,
+            },
+        )
+    except ValidationError as exc:
+        raise CliOutboundPayloadBoundaryError(exc) from exc
     lines = [
         "operation\tmodelo.work.calculate",
         *calculation_revision_lines(calculation_revision),
@@ -578,6 +597,17 @@ def _work_calculate_source_advisory_output(
     these advisories keep an unrouted declarable observation from being silently
     under-declared (no-silent-under-declaration). The diagnostic ``message``
     already carries the observation's category / rate / flow provenance.
+
+    A diagnostic's ``remedy`` rides on :attr:`~core.json_contract.Notice.suggestion`,
+    that channel's documented purpose, rather than being concatenated into the
+    message upstream. Keeping the two apart is what buys the message its length
+    headroom: the remedy is fixed prose, the message is the part that grows with
+    the taxpayer's own data, and fusing them made the former compete for room
+    against the latter.
+
+    The text lines are rebuilt FROM the notices rather than from the diagnostics,
+    so the two surfaces cannot drift: a remedy that reaches the JSON envelope
+    reaches the terminal in the same breath.
     """
     diagnostics = calculation_result.source_diagnostics
     if not diagnostics:
@@ -586,6 +616,7 @@ def _work_calculate_source_advisory_output(
         advisory_notice(
             "modelo.work.calculate.source_advisory",
             diagnostic.message,
+            suggestion=diagnostic.remedy,
             context={
                 "reason": str(diagnostic.reason),
                 "source_kind": diagnostic.source_kind,
@@ -597,10 +628,10 @@ def _work_calculate_source_advisory_output(
     lines = [
         tr(
             "cli.app.modelo.work.calculate_source_advisory",
-            message=diagnostic.message,
+            message=notice.message if notice.suggestion is None else f"{notice.message} {notice.suggestion}",
             default="ADVISORY: %{message}",
         )
-        for diagnostic in diagnostics
+        for notice in notices
     ]
     return (notices, lines)
 

@@ -401,7 +401,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
 effective_from = 2019-11-27
 review_status = "reviewed"
 reviewed_at = 2026-07-10
-reviewed_by = "fetched verbatim art 10 from BOE consolidated BOE-A-1990-30940, redacción vigente tras el Protocolo 2019; agent-prepared, corpus-grounded, pending operator re-stamp"
+reviewed_by = "fetched verbatim from the bundled BOE consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
 notes = "Spain-United States double-taxation treaty (CDI 22-02-1990, redacción vigente tras el Protocolo de 2013 en vigor 27-11-2019) art 10.2.b dividendos: the source-state tax may not exceed 15 percent of the gross dividends in all other cases. Row-level authority for the US/dividend M210 treaty override (kind=ceiling, rate 0.15). The 5 percent (>=10% voting) and 0 percent (>=80% voting) tiers are not modelled."
 required_text = ["Dividendos", "15 por ciento del importe bruto de los dividendos", "en los demás casos"]
 
@@ -416,7 +416,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
 effective_from = 2019-11-27
 review_status = "reviewed"
 reviewed_at = 2026-07-10
-reviewed_by = "fetched verbatim art 11 from BOE consolidated BOE-A-1990-30940, redacción vigente tras el Protocolo 2019; agent-prepared, corpus-grounded, pending operator re-stamp"
+reviewed_by = "fetched verbatim from the bundled BOE consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
 notes = "Spain-United States double-taxation treaty (CDI 22-02-1990, redacción vigente tras el Protocolo de 2013 en vigor 27-11-2019) art 11.1 intereses: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the US/interest M210 treaty override (kind=exempt). The art 11.2 exceptions (contingent interest limited to 10%, REMIC) are not modelled."
 required_text = ["Intereses", "sólo pueden someterse a imposición en ese otro Estado", "beneficiario efectivo"]
 
@@ -431,7 +431,7 @@ permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
 effective_from = 2019-11-27
 review_status = "reviewed"
 reviewed_at = 2026-07-10
-reviewed_by = "fetched verbatim art 12 from BOE consolidated BOE-A-1990-30940, redacción vigente tras el Protocolo 2019 que sustituyó el art 12 original; agent-prepared, corpus-grounded, pending operator re-stamp"
+reviewed_by = "fetched verbatim from the bundled BOE consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
 notes = "Spain-United States double-taxation treaty (CDI 22-02-1990) art 12 cánones EN SU REDACCIÓN VIGENTE tras el Protocolo de 2013 (Artículo VI, BOE-A-2019-15166, en vigor 27-11-2019), que sustituyó por completo el art 12 original de tipos escalonados 5/8/10%: los cánones cuyo beneficiario efectivo sea residente del otro Estado sólo pueden someterse a imposición en ese otro Estado (exención en la fuente, tipo 0%). Row-level authority for the US/cánones M210 treaty override (kind=exempt)."
 required_text = ["Cánones", "sólo pueden someterse a imposición en ese otro Estado"]
 
@@ -558,8 +558,8 @@ effective_from = 2011-01-03
 consolidated_as_of = 2026-06-23
 review_status = "reviewed"
 reviewed_at = 2026-07-09
-reviewed_by = "read verbatim consolidated art 5 from bundled BOE-A-2010-19707, in vigor 24/06/2026, as amended by Orden HAC/56/2024 art 4.2 / BOE-A-2024-1772 and Orden HAC/623/2026 art 1.2 / BOE-A-2026-13573; agent-prepared, corpus-grounded, pending operator re-stamp"
-notes = "Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento permanente), consolidated in vigor 24/06/2026. Resto de rentas con resultado a ingresar (general): la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior. This grounds the M210 trimestral a-ingresar deadline windows. The resultado/tipo-dependent annual plazos (arrendamiento a-ingresar abril; cuota cero 1-20 enero; a devolver desde 1 febrero, cuatro años; transmisiones; imputadas presentación todo el año natural siguiente, 1 enero-31 diciembre — la domiciliación es 1 abril-23 diciembre) are deferred to the resultado/tipo-keyed deadline-modelling decision."
+reviewed_by = "read verbatim from the bundled consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento permanente), consolidated in vigor 24/06/2026. Resto de rentas con resultado a ingresar (general): la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior. This grounds the M210 trimestral a-ingresar deadline windows. Texto consolidado según las modificaciones de la Orden HAC/56/2024 art 4.2 (BOE-A-2024-1772) y la Orden HAC/623/2026 art 1.2 (BOE-A-2026-13573). The resultado/tipo-dependent annual plazos (arrendamiento a-ingresar abril; cuota cero 1-20 enero; a devolver desde 1 febrero, cuatro años; transmisiones; imputadas presentación todo el año natural siguiente, 1 enero-31 diciembre — la domiciliación es 1 abril-23 diciembre) are deferred to the resultado/tipo-keyed deadline-modelling decision."
 required_text = [
     "Plazo de presentación de las autoliquidaciones del Impuesto por las rentas obtenidas en España sin mediación de establecimiento permanente",
     "veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior",

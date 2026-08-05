@@ -31,15 +31,26 @@ carry semantics.
   `encode_modelo_locale_segment` base32-encodes any id that is not a plain
   segment. So `irpf-deduccion-galicia-otras` stays readable in every catalogue
   while `irpf.deduccion-autonomica.galicia.otras` becomes
-  `x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pjm2r39cdkm2bjfehp62so`. Nothing
-  refuses a dotted id — `ContinuidadId` still permits dots — so the damage is
-  silent and only shows up as unreadable locale keys.
+  `x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pjm2r39cdkm2bjfehp62so`.
+  `ContinuidadId` now enforces the plain segment, so a dotted id fails registry
+  load rather than shipping silently — it used to permit `.` and `:`, which is
+  how eleven Modelo 100 pilots reached four catalogues as base32 blobs before
+  being converted. The refusal is pinned by
+  `test_casilla_continuidad_id_refuses_a_dotted_segment`.
   Within that one shape, how you DERIVE the name depends on whether the
   casilla's `semantic_role` identifies exactly one box per revision:
   - **Role-unique → derive mechanically from the role**: lowercase, `_` → `-`,
     nothing else. `irpf_deduccion_galicia_otras` → `irpf-deduccion-galicia-otras`.
     Exact on all 3,159 occurrences measured 2026-08-05. Do not invent a prettier
-    name.
+    name — and when CONVERTING an existing id, derive from the role rather than
+    transforming the old id. Replacing dots with dashes looks equivalent and is
+    not: `irpf.deduccion-autonomica.galicia.otras` dot→dashes to
+    `irpf-deduccion-autonomica-galicia-otras`, but the role carries no
+    `autonomica` segment, so the correct id is `irpf-deduccion-galicia-otras`.
+    Four chains landed the wrong way in the flatten pass and nothing caught it —
+    the locale key is readable and every gate is green; only comparing the id to
+    its role shows the drift. Assert
+    `chain_id == role.lower().replace("_", "-")` for every role-unique chain.
   - **Role-ambiguous → hand-adjudicate an instance-keyed name, still flat**:
     when two or more casillas in one revision share the role, a role-derived id
     would merge distinct concepts into one chain. Key on whatever DOES identify
@@ -51,10 +62,11 @@ carry semantics.
   Both errors are real: a role-derived id on a role-ambiguous chain silently
   merges two legal concepts, and a dotted id on any chain silently produces an
   opaque locale key.
-  Corpus state 2026-08-05: 814 distinct chain ids, 11 of them still dotted, all
-  in Modelo 100 — the `irpf.inmueble.*`, `irpf.regularizacion.*`,
-  `irpf.deduccion-autonomica.*` and `irpf.intereses-demora-regularizacion.*`
-  pilots. They are the conversion backlog, not a second convention to copy.
+  Corpus state 2026-08-05: every chain id is flat. The eleven dotted Modelo 100
+  pilots were converted in one pass (92 `continuidad_id` values across stamps and
+  evolution records, 2 test files, and 88 locale leaves moved off their base32
+  keys). There is no dotted backlog left and no second convention to copy — a
+  dotted id appearing again is a regression, not legacy.
 - Evolution kinds are a closed set: `unchanged`, `label_evolved`,
   `legal_refs_evolved`, `label_and_legal_refs_evolved`, `repurposed`,
   `retired`. Two are safety-critical: `retired` ends a chain (the target
@@ -269,12 +281,13 @@ Positive control: run it on grounded `100 0063` — its suggestion must match th
 authored `legal_refs_evolved` records (verified 2026-08-05: it does, against 12
 existing records).
 
-Read the localization-key section every time. It is where a dotted chain id
-becomes visible: `0063` is stamped `irpf.inmueble.porcentaje-propiedad`, and the
-dossier prints its continuity key as
-`modelo.schema.100.casilla.continuidad.x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0.label`.
-Nothing refuses that id, so the base32 blob in this output is the only place the
-damage shows up before it reaches four locale catalogues.
+Read the localization-key section anyway, even though `ContinuidadId` now
+refuses a dotted id at load. `0063` is the worked case: while it was stamped
+`irpf.inmueble.porcentaje-propiedad` the dossier printed its continuity key as
+`...casilla.continuidad.x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0.label`;
+now that it is `irpf-inmueble-porcentaje-propiedad` the key reads back verbatim.
+The pattern catches dots, but it cannot catch a *plausible* id that drifted from
+its role — this section, read against the role, is what shows that.
 
 ```python
 """chain_dossier.py <modelo> <casilla-id> -- everything known about one candidate.

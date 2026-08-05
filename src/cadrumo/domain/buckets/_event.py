@@ -32,13 +32,24 @@ Content-addressed from the full event body, so structurally identical
 emissions collapse to one id. Public because every CLI history transport
 projects this identity and must not re-declare its shape.
 """
+BUCKET_ACTOR_LABEL_MAX_LENGTH: Final[int] = 64
+"""Maximum length of a bucket-event actor label.
+
+Named rather than inlined because a CLI surface accepting an operator-supplied
+actor has to refuse an over-long value at the boundary, quoting the accepted
+bound. Reaching the bound only when the event is constructed makes the refusal
+arrive after the work it records has already been done, and leaves the operator
+with no accepted-value set to correct against.
+"""
+
 BucketActorLabel = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=BUCKET_ACTOR_LABEL_MAX_LENGTH),
 ]
 """Short label identifying the actor that emitted a bucket event.
 
-A non-empty string of at most 64 characters; trailing and leading
+A non-empty string of at most
+:data:`BUCKET_ACTOR_LABEL_MAX_LENGTH` characters; trailing and leading
 whitespace is stripped at validation time. Typical values are the CLI
 command path (``"cadrumo.app.modelo.calculate"``) or an automated-agent
 slug (``"censo.sync"``).

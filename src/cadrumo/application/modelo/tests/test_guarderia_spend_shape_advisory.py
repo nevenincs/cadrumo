@@ -71,6 +71,19 @@ def _bucket(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _operator_text(diagnostic: object) -> str:
+    """The text an OPERATOR sees, not the message field alone.
+
+    A diagnostic states the problem in ``message`` and the fix in ``remedy``,
+    which the calculate CLI projects onto the notice's ``suggestion`` and renders
+    as one line. Asserting against ``message`` alone would let a remedy fall off
+    the operator-facing surface without any test noticing.
+    """
+    remedy = getattr(diagnostic, "remedy", None)
+    message = diagnostic.message  # type: ignore[attr-defined]
+    return message if remedy is None else f"{message} {remedy}"
+
+
 def _revision() -> ModeloRevision:
     return resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
 
@@ -118,7 +131,7 @@ def test_the_message_names_the_descendant_the_key_and_the_certificate() -> None:
     """
     _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_euros=2400))
 
-    message = _collect()[0].message
+    message = _operator_text(_collect()[0])
 
     assert "renta_family.descendiente.0" in message
     assert "GASTOS_GUARDERIA_MENSUAL" in message

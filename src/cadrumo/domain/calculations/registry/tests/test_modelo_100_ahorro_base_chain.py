@@ -63,6 +63,7 @@ _BINDINGS_2024: dict[str, Decimal] = {
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero default for
     # scenarios that do not exercise the maternidad-guarderia chain.
     "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+    "renta-2024-profile-incremento-guarderia": Decimal("0"),
     "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-2024-profile-descendientes-guarderia": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),

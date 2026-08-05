@@ -17,27 +17,23 @@ and they answer different failures:
 
 The second is what keeps the first from being a licence. A message that reaches
 the truncator has already lost words an operator was meant to read.
+
+This module owns the FIRST defence, which is a property of the type and holds for
+any input. The authoring-time headroom assertions are a property of specific
+shipped copy, so they live beside the advisories that produce it, in
+``application.modelo.tests.test_maternidad_advisory_headroom``. Both halves read
+the same cap from this package and the same elision marker from
+:mod:`core.prose_elision`, which owns the one clamp the whole tree shares.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ....core import validated_casilla_id
-from .._source_mesh import (
-    DIAGNOSTIC_MESSAGE_ELISION,
-    DIAGNOSTIC_MESSAGE_MAX_LENGTH,
-    CalculationSourceDiagnostic,
-)
+from ....core import PROSE_ELISION_MARKER as DIAGNOSTIC_MESSAGE_ELISION
+from .._source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-#: Characters a taxpayer-scaled message must keep free at its worst case.
-#:
-#: Not zero. A message that merely fits today re-crashes on the next clause
-#: someone adds, which is how this defect arrived: the interpolated term was
-#: bounded correctly and the fixed prose was never measured.
-_REQUIRED_HEADROOM = 40
 
 
 def _diagnostic(message: str) -> CalculationSourceDiagnostic:
@@ -103,71 +99,3 @@ class TestTruncationIsVisibleAndClean:
         twice = _diagnostic(once).message
 
         assert twice == once
-
-
-class TestTaxpayerScaledMessagesKeepAuthoringHeadroom:
-    """The early warning, on exactly the messages whose length is not fixed.
-
-    The discriminator is not "the message interpolates something" — most
-    interpolated terms are bounded by the calendar or by registry content and
-    cannot grow. It is "sized by data the taxpayer controls". Only those can be
-    pushed toward the cap by a filer's own household.
-    """
-
-    @staticmethod
-    def _ids(count: int) -> tuple[str, ...]:
-        return tuple(str(index) for index in range(count))
-
-    def test_the_withheld_advisory_keeps_headroom_at_its_worst_case(self) -> None:
-        """Worst case is an ENORMOUS household, not a large one.
-
-        The bounded name list still grows with the digits of its "and N more"
-        remainder, so the true worst case sits at the largest household
-        expressible rather than at fifty.
-        """
-        from ...modelo._calculate_input import _maternidad_meses_withheld_advisory
-
-        advisory = _maternidad_meses_withheld_advisory(self._ids(1_000_000), validated_casilla_id("0611"))
-
-        assert advisory is not None
-        headroom = DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(advisory.message)
-        assert headroom >= _REQUIRED_HEADROOM, (
-            f"withheld advisory has {headroom} chars of headroom; shorten the fixed prose "
-            "or move detail onto the notice context before adding another clause"
-        )
-
-    def test_the_ambiguous_relacion_advisory_keeps_headroom_at_its_worst_case(self) -> None:
-        from ...modelo._calculate_input import _maternidad_ambiguous_relacion_advisory
-
-        advisory = _maternidad_ambiguous_relacion_advisory(
-            frozenset(self._ids(1_000_000)),
-            validated_casilla_id("0611"),
-        )
-
-        assert advisory is not None
-        headroom = DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(advisory.message)
-        assert headroom >= _REQUIRED_HEADROOM, (
-            f"ambiguous-relación advisory has {headroom} chars of headroom; shorten the fixed "
-            "prose or move detail onto the notice context before adding another clause"
-        )
-
-    def test_neither_advisory_reaches_the_truncator(self) -> None:
-        """The floor must stay unreached in shipped copy.
-
-        If either of these ever ends in the elision marker, the type saved the
-        filing and the operator still lost words — which is the state the
-        headroom assertions above exist to prevent reaching.
-        """
-        from ...modelo._calculate_input import (
-            _maternidad_ambiguous_relacion_advisory,
-            _maternidad_meses_withheld_advisory,
-        )
-
-        casilla = validated_casilla_id("0611")
-        withheld = _maternidad_meses_withheld_advisory(self._ids(1_000_000), casilla)
-        ambiguous = _maternidad_ambiguous_relacion_advisory(frozenset(self._ids(1_000_000)), casilla)
-
-        assert withheld is not None
-        assert ambiguous is not None
-        assert not withheld.message.endswith(DIAGNOSTIC_MESSAGE_ELISION)
-        assert not ambiguous.message.endswith(DIAGNOSTIC_MESSAGE_ELISION)

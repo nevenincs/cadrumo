@@ -195,6 +195,46 @@ def test_scaffolded_tree_reaches_directory_mode_validation(tmp_path: Path) -> No
         load_modelo_directory(modelo_root)
 
 
+def test_scaffolded_toml_declares_only_fields_the_schema_knows(tmp_path: Path) -> None:
+    """Every key the scaffold emits is a real schema field.
+
+    The scaffold's load is expected to FAIL while its TODO placeholders stand,
+    so the adjacent load test cannot tell "refused because tax_domain is TODO"
+    apart from "refused because the key does not exist". A field the schema
+    dropped therefore hides inside an expected failure, and the contributor
+    meets it only after filling every TODO in. This asserts the structural
+    property directly instead, and derives the permitted set from the models so
+    it cannot drift from them the way a hand-listed set would.
+    """
+    import tomllib
+
+    from cadrumo.domain.calculations.registry import ModeloDefinition, ModeloRevision
+
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    modelo_root = tmp_path / _THROWAWAY_MODELO_ID
+
+    manifest = tomllib.loads((modelo_root / "manifest.toml").read_text(encoding="utf-8"))
+    declared_modelo = set(manifest["modelo"])
+    unknown_modelo = sorted(declared_modelo - set(ModeloDefinition.model_fields))
+    assert not unknown_modelo, (
+        f"scaffolded manifest.toml declares [modelo] keys ModeloDefinition rejects: {unknown_modelo}. "
+        "A scaffolded modelo must load once its TODOs are filled in."
+    )
+
+    revision_path = modelo_root / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
+    revision_doc = tomllib.loads(revision_path.read_text(encoding="utf-8"))
+    declared_revision = set(revision_doc["revisions"][_THROWAWAY_REVISION_ID])
+    unknown_revision = sorted(declared_revision - set(ModeloRevision.model_fields))
+    assert not unknown_revision, (
+        f"scaffolded revision.toml declares keys ModeloRevision rejects: {unknown_revision}. "
+        "Presentation text belongs in the shared locale catalogues, not the revision fragment."
+    )
+
+    assert declared_modelo, "manifest fixture produced no [modelo] keys; the scaffold changed shape"
+    assert declared_revision, "revision fixture produced no keys; the scaffold changed shape"
+
+
 def test_render_checklist_contains_all_twelve_items() -> None:
     """The checklist module carries exactly the 12 contributor items #410 requires."""
     assert len(CHECKLIST) == 12

@@ -450,7 +450,7 @@ def test_markers_are_collected_per_test_from_every_scope(tmp_path: Path) -> None
         "pytestmark = [pytest.mark.integration]\n\n\n"
         "@pytest.mark.serial\n"
         "class TestGroup:\n"
-        "    @pytest.mark.slow\n"
+        "    @pytest.mark.hex_core\n"
         "    def test_inner(self) -> None:\n        assert True\n\n\n"
         "def test_outer() -> None:\n    assert True\n",
         encoding="utf-8",
@@ -460,7 +460,7 @@ def test_markers_are_collected_per_test_from_every_scope(tmp_path: Path) -> None
     assert resolved is not None
     by_name = {entry.test: entry.markers for entry in resolved}
 
-    assert by_name["test_inner"] == frozenset({"integration", "serial", "slow"})
+    assert by_name["test_inner"] == frozenset({"integration", "serial", "hex_core"})
     assert by_name["test_outer"] == frozenset({"integration"})
 
 

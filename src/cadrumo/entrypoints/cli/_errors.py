@@ -38,7 +38,7 @@ import sys
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
-from typing import Never, Protocol, TypeGuard, cast
+from typing import Final, Never, Protocol, TypeGuard, cast
 
 import click
 import typer
@@ -201,6 +201,43 @@ class CliStoredDataValidationBoundaryError(CadrumoError):
         self.original_exception: ValidationError = error
 
 
+#: Ceiling on the number of field violations named in an internal-fault context.
+#: A record failing every field would otherwise turn one refusal into a wall of
+#: text; the first few name the record and the constraint, which is what makes
+#: the report actionable.
+_INTERNAL_FAULT_VIOLATION_LIMIT: Final[int] = 5
+
+
+def internal_record_fault_context(error: ValidationError) -> dict[str, object]:
+    """Summarise ``error`` as operator-safe context naming the failing contract.
+
+    The generic validation boundary discards the pydantic detail entirely and
+    writes it only to the error log, so an operator meeting an internal fault is
+    told to check arguments that are correct and has no way to discover the real
+    cause. This projects the same detail into the error envelope's ``context``,
+    which both the JSON and text renderers already emit.
+
+    Carries the failing model's name and, per violation, the field path and the
+    constraint message -- never ``input``. A validated record on this path holds
+    taxpayer data, and the value that breached a constraint is exactly the value
+    that must not cross an output boundary; the field and the rule it broke are
+    what make the defect reportable, and neither is sensitive.
+    """
+    violations = error.errors()
+    named = tuple(
+        f"{'.'.join(str(part) for part in item['loc']) or '<root>'}: {item['msg']}"
+        for item in violations[:_INTERNAL_FAULT_VIOLATION_LIMIT]
+    )
+    context: dict[str, object] = {
+        "failing_record": error.title,
+        "violation_count": len(violations),
+        "violations": "; ".join(named),
+    }
+    if len(violations) > _INTERNAL_FAULT_VIOLATION_LIMIT:
+        context["violations_omitted"] = len(violations) - _INTERNAL_FAULT_VIOLATION_LIMIT
+    return context
+
+
 class CliOutboundPayloadBoundaryError(CadrumoError):
     """Raised when the application builds an outbound payload that fails validation.
 
@@ -234,7 +271,7 @@ class CliOutboundPayloadBoundaryError(CadrumoError):
         """
         super().__init__(
             translated_message="errors.internal.cli_outbound_payload_boundary",
-            context={},
+            context=internal_record_fault_context(error),
             suggestion=None,
         )
         self.original_exception: ValidationError = error
@@ -745,10 +782,12 @@ def _project_boundary_error(error: Exception, callback: Callable[..., object]) -
 
 __all__ = [
     "CliCommandGroupUnavailableError",
+    "CliOutboundPayloadBoundaryError",
     "CliRefusedBoundaryError",
     "CliStoredDataValidationBoundaryError",
     "CliValidationBoundaryError",
     "decorate_typer_app",
     "error_boundary_under_test",
+    "internal_record_fault_context",
     "write_stderr",
 ]

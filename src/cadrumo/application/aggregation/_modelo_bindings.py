@@ -494,20 +494,19 @@ def _ungrounded_income_consequence(facts: frozenset[str]) -> str:
     consequence precisely is what makes the advisory actionable: an operator
     who reads "contributed nothing" knows the return is under-declared, while
     "bank cash stood in for the base" warns the figure may be wrong either way.
+
+    Kept short deliberately: this text shares its 512-character diagnostic
+    budget with the dropped-retención-credit clause added in
+    :func:`_ungrounded_income_diagnostics`, so headroom here is headroom for
+    the transaction-id sample, not free prose.
     """
     folds_cash = "ingresos_integros_sum" in facts
     contributes_zero = "taxable_base_sum" in facts
     if folds_cash and contributes_zero:
-        return (
-            "bank cash stood in for the base imponible on the ingresos_integros_sum binding, "
-            "and the same rows contributed nothing to the taxable_base_sum binding"
-        )
+        return "bank cash filled the ingresos_integros_sum binding while taxable_base_sum got nothing"
     if contributes_zero:
-        return "these rows contributed nothing to the taxable_base_sum binding, under-declaring by their full base"
-    return (
-        "bank cash stood in for the base imponible; that cash is net of any retención practicada "
-        "and may be IVA-inclusive, so it is not the ingresos íntegros this casilla declares"
-    )
+        return "these rows contributed nothing to taxable_base_sum, under-declaring by their full base"
+    return "bank cash stood in for the base imponible, which is not the ingresos íntegros this casilla declares"
 
 
 def _ungrounded_income_diagnostics(
@@ -534,6 +533,19 @@ def _ungrounded_income_diagnostics(
     things to report is worse than none, so the budget is now measured, not
     assumed.
 
+    The message names both halves of the harm, not just the income
+    mis-measurement. Every row this screen catches has grounding
+    ``CASH_FALLBACK`` (no declared ``taxable_base``), and the withheld-amount
+    inference in ``_renta_income_ledger`` refuses to run without that same
+    base -- so each of these rows *also* contributes zero to the
+    ``withheld_amount_sum`` binding, silently dropping the ISSUED-side
+    retención credit (RIRPF art. 110.3.a) alongside the income figure. This is
+    the credit the taxpayer is owed on income already invoiced to a client; it
+    is unrelated to the per-perceptor retenedor-liability store a RECEIVED
+    invoice routes into, which this screen never reads. The count and summed
+    cash reused below are the same values the income clause already computed,
+    not a second derivation.
+
     Returns an empty tuple when every consumed row declared its substrate.
     """
     observations = ungrounded.observations
@@ -542,11 +554,10 @@ def _ungrounded_income_diagnostics(
     total = sum((observation.gross_amount for observation in observations), Decimal("0"))
     sampled = sorted(observation.transaction_id for observation in observations)
     preamble = (
-        f"{len(observations)} actividad-económica income row(s) totalling {total} EUR of "
-        f"bank-credited cash declare no taxable_base (IVA-exclusive base imponible), so "
-        f"{_ungrounded_income_consequence(ungrounded.facts)}. Record the invoice base with "
-        f"'aeat app ledger classify <transaction-id> --taxable-base <amount>' to ground the "
-        f"figure. Transactions: "
+        f"{len(observations)} actividad-económica income row(s) totalling {total} EUR lack a "
+        f"taxable_base, so {_ungrounded_income_consequence(ungrounded.facts)}. Their retención "
+        f"credit is also lost, since it needs the same missing base. Record with 'aeat app "
+        f"ledger classify <transaction-id> --taxable-base <amount>'. Transactions: "
     )
     return (
         CalculationSourceDiagnostic(

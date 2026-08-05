@@ -1450,6 +1450,21 @@ class RegistrySnapshot(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_filing_period_consistency(self) -> RegistrySnapshot:
+        """Reconcile :attr:`filing_period` against :attr:`filing_year` and :attr:`period`.
+
+        This covers fewer snapshots than its name suggests, and the shortfall is
+        correct rather than a gap. A snapshot addressed by an administrative censo
+        coordinate — Modelo 036's ``alta`` / ``modificacion`` / ``baja``, Modelo
+        145's ``comunicacion`` / ``variacion`` — has no ``filing_period`` to
+        reconcile, because those coordinates name a registration event rather than
+        a period a filing occupies and so cannot become a typed ``Period`` at all.
+        The early return is the only honest answer for them.
+
+        It is stated here because the reduced coverage is invisible at the call
+        site: nothing about a passing snapshot build reveals that a whole class of
+        coordinates skipped this check. Do not read a green build as evidence that
+        every snapshot's filing period was reconciled.
+        """
         if self.filing_period is None:
             return self
         if self.filing_period.filing_year != self.filing_year:

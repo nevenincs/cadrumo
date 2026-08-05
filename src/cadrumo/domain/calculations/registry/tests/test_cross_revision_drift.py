@@ -794,7 +794,7 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded(committed_m100: Mo
 
 
 def test_committed_m100_continuity_surface_for_1038_retirement_is_loaded(committed_m100: ModeloDefinition) -> None:
-    continuidad_id = "irpf-deduccion-autonomica-galicia-otras"
+    continuidad_id = "irpf-deduccion-galicia-otras"
     for revision_id in ("2023", "2024"):
         revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "1038")

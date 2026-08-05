@@ -12,7 +12,7 @@ prompt.
 
 A third surface this module originally covered, the calculate-time
 ``--meses-trabajo-con-hijo-menor-3`` flag's own help text, was RETIRED
-outright rather than re-scoped (S34): the flag was a second, unvalidated
+outright rather than re-scoped: the flag was a second, unvalidated
 authority over casilla 0611 with a free-form hijo id no descendant record
 answered to, and the active profile's descendiente records are now the sole
 source. Its help key and coverage here went with it.

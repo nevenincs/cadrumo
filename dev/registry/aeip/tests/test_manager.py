@@ -501,7 +501,7 @@ def test_rendered_evolution_record_parses_as_toml() -> None:
 
     plan_pair = render_evolution_record(
         EvolutionPair(
-            chain_id="irpf.aeip.example.aplicado",
+            chain_id="irpf-aeip-example-aplicado",
             from_revision="2023",
             to_revision="2024",
             evolution_kind="unchanged",
@@ -511,7 +511,7 @@ def test_rendered_evolution_record_parses_as_toml() -> None:
     )
     parsed = tomllib.loads(plan_pair)
     record = parsed["revisions"]["2024"]["casilla_continuidad_evolutions"][0]
-    assert record["continuidad_id"] == "irpf.aeip.example.aplicado"
+    assert record["continuidad_id"] == "irpf-aeip-example-aplicado"
     assert record["from_revision"] != record["to_revision"]
     assert record["source_refs"] == ["aeat-dr-100-2024-dictionary"]
 

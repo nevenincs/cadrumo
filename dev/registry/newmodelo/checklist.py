@@ -33,10 +33,12 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
     ChecklistItem(
         title="Declare the modelo manifest",
         detail=(
-            "manifest.toml: [modelo] id, title, official_name, tax_domain, cadence, "
-            "jurisdiction, legal_refs, source_refs. legal_refs must resolve against the "
-            "legal catalogue (aeat-schema-central-config) and source_refs against the "
-            "source catalogue."
+            "manifest.toml: [modelo] id, tax_domain, cadence, jurisdiction, legal_refs, "
+            "source_refs. legal_refs must resolve against the legal catalogue "
+            "(aeat-schema-central-config) and source_refs against the source catalogue. "
+            "The title and official name are localizable values, not schema fields: author "
+            "them in the shared locale catalogues with 'python -m cadrumo.locales set', "
+            "against the derived keys the scaffolded manifest names in its header comment."
         ),
     ),
     ChecklistItem(

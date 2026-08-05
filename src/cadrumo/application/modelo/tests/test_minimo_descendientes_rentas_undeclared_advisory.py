@@ -63,6 +63,19 @@ def _bucket(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _operator_text(diagnostic: object) -> str:
+    """The text an OPERATOR sees, not the message field alone.
+
+    A diagnostic states the problem in ``message`` and the fix in ``remedy``,
+    which the calculate CLI projects onto the notice's ``suggestion`` and renders
+    as one line. Asserting against ``message`` alone would let a remedy fall off
+    the operator-facing surface without any test noticing.
+    """
+    remedy = getattr(diagnostic, "remedy", None)
+    message = diagnostic.message  # type: ignore[attr-defined]
+    return message if remedy is None else f"{message} {remedy}"
+
+
 def _revision() -> ModeloRevision:
     return resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
@@ -111,7 +124,7 @@ def test_fires_for_a_contributing_descendant_with_no_rentas_figure() -> None:
 def test_the_advisory_names_the_descendant_and_the_way_to_answer() -> None:
     """An advisory an operator cannot act on is noise."""
     _write(_contributing_child())
-    message = _collect()[0].message
+    message = _operator_text(_collect()[0])
     assert "renta_family.descendiente.0" in message
     assert "RENTAS=" in message
     assert "RENTAS=0" in message, "the message must say a zero is a valid answer, or it reads as unanswerable"

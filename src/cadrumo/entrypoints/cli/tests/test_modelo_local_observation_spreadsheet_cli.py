@@ -242,7 +242,14 @@ def test_observe_local_rejects_non_numeric_spreadsheet_value(
         ],
     )
     assert result.exit_code != 0
-    assert "not numeric" in result.output
+    error = json.loads(result.output)["error"]
+    assert error["category"] == "REFUSED"
+    # Structural, not prose: the refusal must cite the offending row by the data
+    # this test supplied -- the casilla code and the rejected value. Asserting a
+    # phrase from the message itself pins localized wording, which drifts on any
+    # rewording or locale switch while the behaviour stays correct.
+    assert "1391" in error["message"]
+    assert "not-a-number" in error["message"]
 
 
 def test_observe_local_requires_set_or_file(

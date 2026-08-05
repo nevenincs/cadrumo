@@ -36,8 +36,13 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import Modelo, Period
 from ....core.aggregation import LedgerIncomeGrounding
+from ....core.resources import resources
+from ....domain.calculations.registry import (
+    ModeloRevision,
+    resolve_ledger_renta_income_aggregation_binding_values,
+)
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -45,8 +50,13 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
     TransactionLifecycleState,
+    load_retencion_actividades_rates,
 )
-from .._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
+from .._iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+    aggregate_iva_ledger_observations,
+    resolve_iva_ledger_binding_values,
+)
 from .._renta_income_ledger import aggregate_renta_income_ledger
 from ._renta_income_aggregation_support import _raw_transaction
 
@@ -71,11 +81,30 @@ def test_the_scenario_figures_satisfy_the_canonical_invoice_identity() -> None:
     Cheap, and it is the difference between a scenario grounded in invoice
     arithmetic and one grounded in four numbers somebody typed. If this fails,
     every assertion below is measuring against a fiction.
+
+    The retención rate comes from the registry rather than a literal. A literal
+    here would go on asserting 15 % after the statutory rate moved -- passing
+    against superseded law while claiming to verify the chain -- and the oracle
+    modules that landed alongside this one already read it from the registry, so
+    a literal would also be a second spelling of one regulatory fact.
+
+    It reads the STATUTORY rate, not
+    :func:`maximum_supported_activity_retencion_rate`. That accessor returns the
+    same number today but its documented role is the upper bound the withheld
+    inference refuses to exceed, which is a different claim that merely
+    coincides. Asserting a statutory figure through a cap would be right for the
+    wrong reason, and would stop being right at all the moment the two are set
+    apart deliberately.
+
+    The IVA rate stays literal because it is the fixture's own choice of tier:
+    the invoice is declared as a 21 % supply, and the registry is consulted for
+    what 21 % IS, not for which tier this invoice used.
     """
     assert Decimal("1210.00") == _TOTAL
     assert Decimal("1060.00") == _CASH
     assert (_BASE * Decimal("0.21")).quantize(Decimal("0.01")) == _CUOTA
-    assert (_BASE * Decimal("0.15")).quantize(Decimal("0.01")) == _RETENCION
+    statutory_retencion_rate = load_retencion_actividades_rates().general_rate
+    assert (_BASE * statutory_retencion_rate).quantize(Decimal("0.01")) == _RETENCION
 
 
 def _invoice_transaction(
@@ -282,7 +311,7 @@ def test_the_ungrounded_invoice_costs_the_taxpayer_in_both_directions_at_once() 
 
 
 # --------------------------------------------------------------------------- #
-# S24: the reconciliation is proven able to FAIL, not merely observed passing
+# The reconciliation is proven able to FAIL, not merely observed passing
 # --------------------------------------------------------------------------- #
 #
 # A cross-domain assertion that has only ever been seen green is
@@ -378,3 +407,181 @@ def test_the_checker_is_silent_only_on_the_true_decomposition() -> None:
         )
         == ()
     )
+
+
+# --------------------------------------------------------------------------- #
+# The same invoice, reconciled at the BINDING level
+# --------------------------------------------------------------------------- #
+#
+# The scenario above reconciles the three projections at the OBSERVATION level,
+# which proves the pipelines agree. It does not prove the registry then routes
+# those figures to the casillas a taxpayer actually files. Those are different
+# claims: a correct observation consumed by the wrong binding, or by none, is
+# still a wrong return.
+#
+# So the same invoice is driven one layer further, through the committed
+# Modelo 130 bindings, and the resolved binding VALUES are asserted against the
+# invoice figures. This is the layer at which "the three domains agree" becomes
+# a statement about the declaration rather than about the code.
+
+
+_M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
+_M130_RETENCIONES_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
+
+
+def _modelo_130_revision() -> ModeloRevision:
+    """The committed M130 revision, resolved the way production resolves it.
+
+    Through the registry authority rather than a test-side snapshot builder, so
+    the bindings asserted below are the ones a real calculate would load. A
+    hand-built snapshot could agree with the test and disagree with the filing.
+    """
+    return (
+        resources()
+        .modelos.authority.snapshot(
+            Modelo.M130.value,
+            filing_year=2024,
+            period="1T",
+        )
+        .revision
+    )
+
+
+def test_the_committed_m130_bindings_receive_the_invoice_figures() -> None:
+    """The registry routes the decomposition to the casillas that get filed.
+
+    Ingresos takes the IVA-exclusive base, not the credited cash: casilla 01 is
+    "la totalidad de los ingresos integros fiscalmente computables", and the
+    IVA repercutido is collected for Hacienda rather than earned. Retenciones
+    takes the 150 recovered by inference, which is the credit RIRPF art. 110.3.a
+    deducts from the pago fraccionado.
+
+    Both are asserted against the invoice figures rather than against each
+    other, so a resolver that routed the same wrong number to both casillas
+    would still fail.
+    """
+    revision = _modelo_130_revision()
+    income = aggregate_renta_income_ledger(
+        _catalogue(_invoice_transaction(with_substrate=True)),
+        bucket_id=_BUCKET,
+        period=_PERIOD,
+    )
+
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, income.observations)
+
+    assert resolved[_M130_INGRESOS_BINDING] == _BASE
+    assert resolved[_M130_RETENCIONES_BINDING] == _RETENCION
+
+    # The two guards that make the first assertion mean something: casilla 01
+    # must carry neither the credited cash nor the IVA-inclusive total, which
+    # are the two figures a mis-wired resolver would most plausibly produce.
+    assert resolved[_M130_INGRESOS_BINDING] != _CASH, "casilla 01 must not receive the bank-credited cash"
+    assert resolved[_M130_INGRESOS_BINDING] != _TOTAL, "casilla 01 must not receive the IVA-inclusive total"
+
+
+def test_the_filed_figures_close_the_invoice_identity() -> None:
+    """Income and retenciones, as filed, reconcile with the IVA cuota to one invoice.
+
+    The whole point of the campaign, stated at the layer that matters: the
+    numbers on the declaration are three views of one document, and adding the
+    cuota to the filed income must reproduce the invoice total the taxpayer
+    issued.
+    """
+    revision = _modelo_130_revision()
+    catalogue = _catalogue(_invoice_transaction(with_substrate=True))
+    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, income.observations)
+
+    assert (
+        _reconciliation_violations(
+            income_base=resolved[_M130_INGRESOS_BINDING],
+            income_cash=_CASH,
+            withheld=resolved[_M130_RETENCIONES_BINDING],
+            iva_base=iva.observations[0].base_amount,
+            iva_cuota=iva.observations[0].iva_amount,
+        )
+        == ()
+    )
+
+
+# --------------------------------------------------------------------------- #
+# The IVA leg, also at the BINDING level
+# --------------------------------------------------------------------------- #
+#
+# The M130 assertions above carry the income and retenciones legs to the
+# declaration. The IVA leg stopped at the observation, so two of the three
+# domains this module exists to reconcile were checked one layer deeper than
+# the third -- the binding-level insight did not cross the modelo boundary it
+# was written to cross.
+#
+# The cuota reaches a different modelo, so it takes a different revision and a
+# different resolver, but the claim is identical: a correct observation
+# consumed by the wrong binding, or by none, is still a wrong return.
+
+_M303_REPERCUTIDO_BASE_BINDING = "modelo-303-iva-repercutido-general-base"
+_M303_REPERCUTIDO_CUOTA_BINDING = "modelo-303-iva-repercutido-general-cuota"
+
+
+def _modelo_303_revision() -> ModeloRevision:
+    """The committed M303 revision, resolved the way production resolves it.
+
+    Same discipline as :func:`_modelo_130_revision`: through the registry
+    authority, never a test-side snapshot builder, so the bindings asserted
+    are the ones a real calculate would load.
+    """
+    return (
+        resources()
+        .modelos.authority.snapshot(
+            Modelo.M303.value,
+            filing_year=2024,
+            period="1T",
+        )
+        .revision
+    )
+
+
+def test_the_committed_m303_bindings_receive_the_invoice_figures() -> None:
+    """The IVA leg reaches its filed casillas, not merely its observation.
+
+    The repercutido base takes the same 1000 the income casilla takes, and the
+    cuota takes the 210 that is collected for Hacienda rather than earned. That
+    the two modelos draw the same base from one invoice is the cross-domain
+    claim stated where it is filed rather than where it is computed: M130
+    casilla 01 and the M303 repercutido base are the same figure reached by
+    different registries.
+
+    Asserted against the invoice figures, never against the M130 resolution --
+    two modelos agreeing with each other while both disagreeing with the
+    invoice is precisely the failure a cross-domain test exists to catch.
+    """
+    revision = _modelo_303_revision()
+    iva = aggregate_iva_ledger_observations(
+        _catalogue(_invoice_transaction(with_substrate=True)),
+        period=_PERIOD,
+    )
+
+    resolved = resolve_iva_ledger_binding_values(revision, iva.observations)
+
+    assert resolved[_M303_REPERCUTIDO_BASE_BINDING] == _BASE
+    assert resolved[_M303_REPERCUTIDO_CUOTA_BINDING] == _CUOTA
+
+
+def test_the_two_modelos_draw_the_same_base_from_one_invoice() -> None:
+    """M130 casilla 01 and the M303 repercutido base are one figure, filed twice.
+
+    This is the reconciliation the module is named for, asserted at the layer
+    that reaches a return. Both sides are compared to the invoice base rather
+    than to each other, so the assertion cannot be satisfied by two registries
+    agreeing on a wrong number.
+    """
+    catalogue = _catalogue(_invoice_transaction(with_substrate=True))
+    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    m130 = resolve_ledger_renta_income_aggregation_binding_values(_modelo_130_revision(), income.observations)
+    m303 = resolve_iva_ledger_binding_values(_modelo_303_revision(), iva.observations)
+
+    assert m130[_M130_INGRESOS_BINDING] == _BASE
+    assert m303[_M303_REPERCUTIDO_BASE_BINDING] == _BASE

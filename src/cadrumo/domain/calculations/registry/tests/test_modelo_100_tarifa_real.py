@@ -314,6 +314,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in scenarios
         # without childcare deduction (mínimo del contribuyente chain only).
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-2024-profile-incremento-guarderia": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-guarderia": Decimal("0"),
         # Art. 58/61 LIRPF mínimo por descendientes aggregate

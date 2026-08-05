@@ -20,8 +20,7 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
-from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
-from ....domain.contribuyente._guarderia_mensual import parse_guarderia_mensual
+from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list, parse_guarderia_mensual
 from .._profile_binding import (
     _declared_profile_selectors,
     _guarderia_cap_anual,

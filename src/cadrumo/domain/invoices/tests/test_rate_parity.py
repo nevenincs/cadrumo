@@ -116,7 +116,7 @@ def test_iva_rate_numeric_kinds_match_registry_served_window() -> None:
 def test_iva_rate_5_stays_intentionally_absent() -> None:
     """The transient 2022-2024 5% rate has no registry coverage in the served window, and no enum slot.
 
-    Pins the ADR's stated invariant: ``RATE_5`` is absent from
+    Pins the governing decision's stated invariant: ``RATE_5`` is absent from
     :class:`IvaRate` *because* the registry carries no ES rate window
     reaching :data:`_SERVED_WINDOW_START` at 5%. If a future registry
     ingestion adds pre-2025 ES coverage that reaches the served window at

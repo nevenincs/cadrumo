@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
+from ...core import elided_prose
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
@@ -272,6 +273,14 @@ class OverviewCalendarEventType(StrEnum):
     MESSAGE = "message"
 
 
+#: The calendar-event ``summary`` annotation: elides rather than refusing.
+#:
+#: Built by interpolating a modelo label and its period into a sentence, so an
+#: unusually long obligation label is enough to cross the cap. Refusing would
+#: fail the whole calendar read over one event's wording.
+_EventSummary = elided_prose(256)
+
+
 class OverviewCalendarEvent(BaseModel):
     """One observed local event attached to an overview calendar range.
 
@@ -294,7 +303,7 @@ class OverviewCalendarEvent(BaseModel):
     post_filing_kind: _PostFilingEventKind | None = None
     event_date: date
     source: str = Field(min_length=1, max_length=64)
-    summary: str = Field(min_length=1, max_length=256)
+    summary: _EventSummary
     reference_id: str = Field(min_length=1, max_length=128)
     snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     modelo: str | None = Field(default=None, min_length=1, max_length=8)

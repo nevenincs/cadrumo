@@ -62,6 +62,16 @@ class CommandClassification(BaseModel):
     repeatable reads; ``handoff`` for filing-grade outputs a human confirms;
     ``live_write`` for a (never-exposed) AEAT-submission verb; ``open_world`` for
     a verb that reaches the outside AEAT sede.
+
+    ``risk_declared`` reports whether the three judgment axes were ASSESSED rather
+    than defaulted, and it exists because the safety axes cannot report that
+    themselves. ``live_write`` is False for every command in the tree and must stay
+    that way (`aeat-safety-legal-gates` forbids live submission), so ``not
+    live_write`` holds universally and cannot distinguish a verb someone judged
+    safe from a verb nobody has looked at. A safety invariant that holds for
+    everything cannot, on its own, tell you it was checked. This flag is what makes
+    the per-command claim falsifiable: assert it alongside ``not live_write`` and
+    the pair fails for an unassessed command while the value alone never would.
     """
 
     model_config = _STRICT_FROZEN
@@ -73,6 +83,7 @@ class CommandClassification(BaseModel):
     handoff: bool
     live_write: bool
     open_world: bool
+    risk_declared: bool
 
 
 def classify_command(command_key: str, *, mutability: OperatorMutability) -> CommandClassification:
@@ -85,10 +96,25 @@ def classify_command(command_key: str, *, mutability: OperatorMutability) -> Com
     per-command declaration wins); open_world derives from the command path. This
     is the single derivation the annotation projection and the HITL tier consume.
 
+    The absent-row coercion below stays permissive DELIBERATELY: raising instead
+    would turn the MCP identity gate's retired-key refusal into a crash, which the
+    :func:`_mutability_for` docstring records as a load-bearing property. What
+    changes is that the coercion is no longer invisible - ``risk_declared``
+    separates "assessed and safe" from "defaulted because nothing was declared",
+    so a consumer that must not act on an assumption can refuse on the flag rather
+    than reading three Falses it cannot interpret.
+
+    A read-only family needs no row because the derivation IS its assessment - the
+    manifest says the whole family only reads - so those commands report
+    ``risk_declared`` true. An UNKNOWN family token defaults to mutating (fail
+    closed) and carries no row, which is the genuinely-unassessed state and the one
+    this flag exists to surface.
+
     Returns:
         The command's :class:`CommandClassification`.
     """
-    risk: CommandRiskDeclaration = declared_risk(command_key) or CommandRiskDeclaration()
+    declaration = declared_risk(command_key)
+    risk: CommandRiskDeclaration = declaration or CommandRiskDeclaration()
     read_only = mutability is OperatorMutability.READ_ONLY and not risk.live_write
     return CommandClassification(
         command_key=command_key,
@@ -98,6 +124,7 @@ def classify_command(command_key: str, *, mutability: OperatorMutability) -> Com
         handoff=risk.handoff,
         live_write=risk.live_write,
         open_world=_is_open_world(command_key),
+        risk_declared=declaration is not None or mutability is OperatorMutability.READ_ONLY,
     )
 
 

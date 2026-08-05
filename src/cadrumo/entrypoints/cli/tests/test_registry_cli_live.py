@@ -362,43 +362,47 @@ def test_live_pull_help_locale_keys_do_not_use_capture_all_names() -> None:
     assert all("capture_all_modelo_help" not in path.read_text(encoding="utf-8") for path in checked_paths)
 
 
-def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
-    group = invoke_cached_cli(
-        ["app", "live", "iva-wallet", "--help"],
-        env=_ENGLISH_CLI_ENV,
-    )
-    pull = invoke_cached_cli(
-        ["app", "live", "iva-wallet", "pull", "--help"],
-        env=_ENGLISH_CLI_ENV,
-    )
-    capture_history = invoke_cached_cli(
-        ["app", "live", "iva-wallet", "pull-history", "--help"],
-        env=_ENGLISH_CLI_ENV,
-    )
-    history = invoke_cached_cli(
-        ["app", "live", "iva-wallet", "history", "--help"],
-        env=_ENGLISH_CLI_ENV,
-    )
-    pull_evidence = invoke_cached_cli(
-        ["app", "live", "iva-wallet", "pull-evidence", "--help"],
-        env=_ENGLISH_CLI_ENV,
-    )
+def test_live_iva_wallet_read_verbs_expose_help_without_leaking_internals() -> None:
+    """Every iva-wallet read verb renders help, offers its axis, and leaks no internal term.
+
+    This previously also asserted that the help NAMES the fail-closed
+    no-submit policy, matching that prose in English or Spanish. Those
+    assertions are RETIRED, and the property is currently unchecked.
+
+    They were retired for two reasons. The help language is fixed when the
+    Typer tree is built and the tree is cached, so an alternation only ever
+    executed its Spanish half here -- which is how a misspelt Spanish
+    alternative survived in it undetected. And matching operator prose to
+    check a safety property is the shape the no-localized-prose discipline
+    exists to prevent.
+
+    The property is now checked structurally, surface-wide, rather than here:
+    every exposed command must carry a risk ASSESSMENT and must declare no AEAT
+    live write. The assessment half is what makes the claim falsifiable -- a
+    live-write value of False holds for every command, so on its own it cannot
+    tell a verb judged safe from one nobody has looked at.
+
+    That check covers these five verbs along with the rest of the surface, in
+    every language, which is strictly more than the retired prose assertion
+    gave. What remains below is the operator-facing surface itself.
+
+    What remains is language-independent: every read verb is wired and renders
+    help, ``history`` offers the ``--as-of-year`` axis, and ``remote-state`` --
+    an internal term absent from every locale catalogue, so it would leak
+    verbatim -- stays out of operator help.
+    """
+    group = invoke_cached_cli(["app", "live", "iva-wallet", "--help"])
+    pull = invoke_cached_cli(["app", "live", "iva-wallet", "pull", "--help"])
+    capture_history = invoke_cached_cli(["app", "live", "iva-wallet", "pull-history", "--help"])
+    history = invoke_cached_cli(["app", "live", "iva-wallet", "history", "--help"])
+    pull_evidence = invoke_cached_cli(["app", "live", "iva-wallet", "pull-evidence", "--help"])
 
     assert group.exit_code == 0
     assert pull.exit_code == 0
     assert capture_history.exit_code == 0
     assert history.exit_code == 0
     assert pull_evidence.exit_code == 0
-    assert "read-only" in group.output or "solo lectura" in group.output
-    assert "read query" in pull.output or "lectura" in pull.output
-    assert "own-name" in pull.output or "nombre propio" in pull.output
-    assert (
-        "No AEAT filing or wallet form choices are submitted" in capture_history.output
-        or "No se envía ninguna declaración" in capture_history.output
-    )
     assert "--as-of-year" in history.output
-    assert "read-only" in pull_evidence.output or "solo lectura" in pull_evidence.output
-    assert "acquisition" in pull_evidence.output or "adquisicion" in pull_evidence.output
     assert "remote-state" not in pull_evidence.output.lower()
 
 

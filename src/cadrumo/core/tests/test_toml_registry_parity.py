@@ -34,14 +34,15 @@ _MANIFEST_PATH = _REGISTRY_ROOT / "manifest.toml"
 _REVISION_PATH = _REGISTRY_ROOT / "revisions" / "2025-02-03-y-siguientes" / "revision.toml"
 
 # Hand-derived directly from reading src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml.
+#
+# The fragment carries no presentation text by design: a Modelo's title and
+# official name, like a revision's label, are localizable values owned by the
+# shared locale catalogues, and schema fragments hold identifiers, legal and
+# source grounding, and structural metadata only. Their absence here is the
+# declared shape, not a stripped field to restore.
 _EXPECTED_MANIFEST: dict[str, object] = {
     "modelo": {
         "id": "036",
-        "title": "Censo de empresarios, profesionales y retenedores",
-        "official_name": (
-            "Modelo 036. Declaración censal de alta, modificación y baja en el "
-            "Censo de empresarios, profesionales y retenedores."
-        ),
         "tax_domain": "censo",
         "cadence": "ad_hoc",
         "jurisdiction": "ES-AEAT",
@@ -67,7 +68,6 @@ _EXPECTED_MANIFEST: dict[str, object] = {
 _EXPECTED_REVISION: dict[str, object] = {
     "revisions": {
         "2025-02-03-y-siguientes": {
-            "label": "Modelo 036 desde 3 de febrero de 2025",
             "valid_from": date(2025, 2, 3),
             "period_selector": {
                 "year_from": 2025,

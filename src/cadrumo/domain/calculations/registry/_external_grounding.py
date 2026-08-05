@@ -73,7 +73,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, ValidationError
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, ExternalOracleCorpus
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, ExternalOracleCorpus, elided_prose
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path
 from ._errors import RegistryValidationError
@@ -280,6 +280,15 @@ class ExternalOracleEvidence(ExternalGroundingModel):
     casilla_ids: tuple[CasillaId, ...]
 
 
+#: The grounding ``detail`` annotation: elides rather than refusing.
+#:
+#: Both carriers interpolate registry ids — modelo, revision, casilla, payload
+#: name — whose combined length is a property of the registry rather than of
+#: the sentence. Refusing one would abort the honesty audit at the point it had
+#: a breach to report, which is the one moment it must not fail.
+_GroundingDetail = elided_prose(512)
+
+
 class UnattributedOraclePayload(ExternalGroundingModel):
     """A bundled oracle payload whose evidence reaches no registry revision.
 
@@ -292,7 +301,7 @@ class UnattributedOraclePayload(ExternalGroundingModel):
     corpus: ExternalOracleCorpus
     payload_name: str = Field(min_length=1, max_length=255)
     gap: OracleAttributionGap
-    detail: str = Field(min_length=1, max_length=512)
+    detail: _GroundingDetail
 
 
 class ExternalOracleInventory(ExternalGroundingModel):
@@ -335,7 +344,7 @@ class ExternalGroundingFinding(ExternalGroundingModel):
     modelo: ModeloId
     revision: RevisionId
     casilla_id: CasillaId
-    detail: str = Field(min_length=1, max_length=512)
+    detail: _GroundingDetail
 
 
 class RevisionExternalGroundingRow(ExternalGroundingModel):

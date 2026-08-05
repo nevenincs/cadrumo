@@ -74,7 +74,14 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field
 
-from ....core import NON_REGISTRY_MODELOS, STRICT_FROZEN_CONFIG, Modelo, TaxDomain
+from ....core import (
+    NON_REGISTRY_MODELOS,
+    PROSE_ELISION_MARKER,
+    STRICT_FROZEN_CONFIG,
+    Modelo,
+    TaxDomain,
+    elide_to_cap,
+)
 from ....core.resources import bundled_path
 from ._ids import ModeloId
 from ._loader import load_registry_tree
@@ -86,7 +93,12 @@ from ._validate_revision_rules import validate_informative_class_invariant
 _INFORMATIVE_CLASS: Final[CalculationClass] = "informative"
 
 #: Appended to a clamped ``detail`` so a truncated sentence reads as truncated.
-_TRUNCATION_SUFFIX: Final[str] = "…"
+#: The elision marker, taken from the one home the whole tree shares.
+#:
+#: This module grew its own marker before a canonical one existed. Keeping a
+#: second spelling meant an operator met "…" here and " [...]" on every
+#: diagnostic, for the same act of shortening.
+_TRUNCATION_SUFFIX: Final[str] = PROSE_ELISION_MARKER
 
 #: Blockers rendered verbatim into a finding's prose before the rest is counted.
 #: A modelo can carry one blocker per casilla, so the full list belongs on
@@ -449,9 +461,9 @@ def _bounded_detail(detail: str, *, max_length: int | None = _MAX_DETAIL_LENGTH)
     number. :data:`None` disables clamping, which is the correct behaviour for an
     unbounded field.
     """
-    if max_length is None or len(detail) <= max_length:
+    if max_length is None:
         return detail
-    return f"{detail[: max_length - len(_TRUNCATION_SUFFIX)]}{_TRUNCATION_SUFFIX}"
+    return elide_to_cap(detail, cap=max_length)
 
 
 def _informative_class_blockers(modelo: ModeloDefinition) -> tuple[str, ...]:

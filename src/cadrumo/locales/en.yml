@@ -2560,6 +2560,9 @@ cli:
         view_help: Show one verification report by id
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
+        actor_too_long: The --by label must be at most {limit} characters; received
+          {length}. It names the actor on the audit event this command records, so
+          give a short operator or agent name.
         allow_not_applicable_help: Create the work unit even when the modelo does
           not apply to the active profile's taxpayer type.
         amend_help: Build a corrective amendment over an externally-filed return.
@@ -4564,6 +4567,8 @@ cli:
     remove_key_help: Dotted locale key to remove.
     remove_locale_help: Locale code to update.
     scaffold_check_help: Report drift without writing locale files
+    set_batch_manifest_help: JSON object mapping locale codes to dotted-key scalar
+      maps.
     set_key_help: Dotted locale key to set.
     set_locale_help: Locale code to update (e.g. en, es, ca).
     set_value_help: Replacement locale value.
@@ -6930,10 +6935,16 @@ modelo:
           irpf-deduccion-andalucia-vivienda-habitual-protegida:
             help: null
             label: null
+          irpf-deduccion-aragon-acogimiento-ucrania:
+            help: null
+            label: null
           irpf-deduccion-aragon-adopcion-internacional:
             help: null
             label: null
           irpf-deduccion-aragon-arrendamiento-social:
+            help: null
+            label: null
+          irpf-deduccion-aragon-ayuda-humanitaria-ucrania:
             help: null
             label: null
           irpf-deduccion-aragon-cuidado-dependientes:
@@ -7042,6 +7053,9 @@ modelo:
             help: null
             label: null
           irpf-deduccion-baleares-mecenazgo-deportivo:
+            help: null
+            label: null
+          irpf-deduccion-baleares-prestamo-hipotecario-incremento:
             help: null
             label: null
           irpf-deduccion-baleares-subvenciones-declaracion-sinistro:
@@ -7372,6 +7386,9 @@ modelo:
           irpf-deduccion-galicia-nuevas-tecnologias:
             help: null
             label: null
+          irpf-deduccion-galicia-otras:
+            help: Enter other deductions.
+            label: Other deductions
           irpf-deduccion-galicia-rehabilitacion-centros-historicos:
             help: null
             label: null
@@ -8196,6 +8213,9 @@ modelo:
           irpf-inmueble-pct-a-disposicion:
             help: null
             label: null
+          irpf-inmueble-porcentaje-propiedad:
+            help: Enter the ownership percentage.
+            label: Ownership (%)
           irpf-inmueble-porcentaje-usufructo:
             help: null
             label: null
@@ -8214,6 +8234,14 @@ modelo:
           irpf-inmueble-valor-catastral-revisado-flag:
             help: null
             label: null
+          irpf-inmueble-vivienda-habitual-flag:
+            help: Indicate whether it was the main residence in 2024.
+            label: Primary residence in 2025
+          irpf-intereses-demora-regularizacion-estatal:
+            help: Enter the state part of late-payment interest corresponding to the
+              previous regularization.
+            label: 'Late-payment interest corresponding to the prior regularisation:
+              State portion'
           irpf-minimo-ascendientes-autonomico:
             help: null
             label: null
@@ -8487,6 +8515,18 @@ modelo:
           irpf-reduccion-prevision-social-discapacidad-total:
             help: null
             label: null
+          irpf-regularizacion-complementaria-resultado:
+            help: null
+            label: null
+          irpf-regularizacion-devoluciones-solicitadas-ejercicio:
+            help: null
+            label: null
+          irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio:
+            help: null
+            label: null
+          irpf-regularizacion-numero-justificante-rectificacion:
+            help: null
+            label: null
           irpf-rendimiento-capital-mobiliario-general-cesion-derechos-autor-anticipo-flag:
             help: null
             label: null
@@ -8518,41 +8558,6 @@ modelo:
             help: null
             label: null
           irpf-vehiculo-electrico-vendedor-nif:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sobpeli62bb8elmm2rj9ehgn4qb15lqm6sj1dpkm2:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15ph62r35c5p6aspee1p6asrkc5mmubb8d5o6ut35cdgn4qbf5lkmsoriclmmarjkds:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pjm2r39cdkm2bjfehp62so:
-            help: Enter other deductions.
-            label: Other deductions
-          x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0:
-            help: Enter the ownership percentage.
-            label: Ownership (%)
-          x-d5p70phed5n6qtb5c9m6abjmd5r6ipbechgiqq31c9kn8tb1dgmmcr31cs:
-            help: Indicate whether it was the main residence in 2024.
-            label: Primary residence in 2025
-          x-d5p70phed5n78pbiclpmaspdchimqrric4mn4pb7elm62sj9f9gm6qbfdon6asrkc5q62r0:
-            help: Enter the state part of late-payment interest corresponding to the
-              previous regularization.
-            label: 'Late-payment interest corresponding to the prior regularisation:
-              State portion'
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhecdnmqs3cclmmarjkc5p6io9de9in6tbcehgm8ro:
-            help: null
-            label: null
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhechincrrcelhmirreclpiqsrfdhkm6qbkc5i62spdcll6asj3d5hmiro:
-            help: null
-            label: null
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhed5n6esj5edgn4bb1elq6ur39e5qmip31cdkmurj5ecmm2rjkclp6irriclpiqpbaclp66qb3d5ng:
-            help: null
-            label: null
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhedpqmqpbidsmmktbjehkmcqb3c5n78p9de9im6t39cpkm6ob3d5nms:
             help: null
             label: null
       field:

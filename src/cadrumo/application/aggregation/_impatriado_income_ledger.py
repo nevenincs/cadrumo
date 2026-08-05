@@ -48,7 +48,7 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodKind
+from ...core import Modelo, Period, PeriodKind, elided_prose
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
@@ -99,6 +99,15 @@ class ImpatriadoIncomeLedgerAggregationIssueReason(StrEnum):
     BECKHAM_FOREIGN_SOURCE_SEGREGATED = "beckham_foreign_source_segregated"
 
 
+#: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
+#:
+#: These issues explain why a ledger row was excluded, so refusing one over its
+#: length would drop the explanation for the exclusion AND fail the aggregation
+#: that produced it -- a silent under-declaration dressed as a validation error.
+#: Shortening the sentence is strictly the lesser loss.
+_IssueDetail = elided_prose(512)
+
+
 class ImpatriadoIncomeLedgerAggregationIssue(BaseModel):
     """Traceable exclusion emitted while aggregating impatriado income ledger rows."""
 
@@ -106,7 +115,7 @@ class ImpatriadoIncomeLedgerAggregationIssue(BaseModel):
 
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: ImpatriadoIncomeLedgerAggregationIssueReason
-    detail: str = Field(min_length=1, max_length=512)
+    detail: _IssueDetail
     # The rejected ISO 3166-1 alpha-2 source-jurisdiction code for a
     # BECKHAM_FOREIGN_SOURCE_SEGREGATED row; ``None`` when the row carried no
     # declared jurisdiction (the unresolved case), so an auditor can tell a

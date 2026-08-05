@@ -302,6 +302,21 @@ class IvaCategoryComponents(IvaStrictFrozen):
                 f"{label}: retención grounding {self.retencion_grounding.value!r} "
                 "requires a retencion_note stating the caveat",
             )
+        # A NOT_EXPECTED expectation needs its note no matter how well grounded,
+        # because grounding it does not make it unconditional. RIRPF art. 76.1
+        # carries two carve-outs that restore the obligation (letra c, a payer
+        # with a Spanish permanent establishment; letra d, rendimientos del
+        # trabajo and the TRLIRNR art. 24.2 deducible-gasto rendimientos), so an
+        # undisclosed "no retención" reads as a prohibition when it is only a
+        # default. Keying this on the EXPECTATION rather than on the grounding
+        # is deliberate: bundling the provision must not be able to switch the
+        # disclosure off, which is exactly what happened when these rows were
+        # promoted from live-source-only to bundled-corpus.
+        if self.retencion is IvaRetencionExpectation.NOT_EXPECTED and not self.retencion_note.strip():
+            raise IvaValidationError(
+                f"{label}: a not-expected retención requires a retencion_note stating the "
+                "carve-outs under which the obligation nevertheless arises",
+            )
         for name, grounding in (
             ("cuota", self.cuota_grounding),
             ("recargo", self.recargo_grounding),
@@ -593,7 +608,7 @@ def _zero_cuota_non_resident_payer(
         retencion=IvaRetencionExpectation.NOT_EXPECTED,
         retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=_NON_RESIDENT_PAYER_NOTE,
-        legal_refs=(exencion_ref, _RIRPF_OBLIGADOS_A_RETENER),
+        legal_refs=(exencion_ref, _LIRPF_PAGOS_A_CUENTA, _RIRPF_OBLIGADOS_A_RETENER),
     )
 
 
@@ -659,7 +674,7 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
         retencion=IvaRetencionExpectation.NOT_EXPECTED,
         retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=_NON_RESIDENT_SUPPLIER_NOTE,
-        legal_refs=(_LIVA_EXENCION_ADQ_INTRACOM, _RIRPF_OBLIGADOS_A_RETENER),
+        legal_refs=(_LIVA_EXENCION_ADQ_INTRACOM, _LIRPF_PAGOS_A_CUENTA, _RIRPF_OBLIGADOS_A_RETENER),
     ),
     _row(
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
@@ -730,6 +745,7 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
             _LIVA_ADQ_INTRACOM_CONCEPTO,
             _LIVA_SUJETO_PASIVO,
             _LIVA_RECARGO_SUJETOS,
+            _LIRPF_PAGOS_A_CUENTA,
             _RIRPF_OBLIGADOS_A_RETENER,
         ),
     ),
@@ -754,7 +770,12 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
         retencion=IvaRetencionExpectation.NOT_EXPECTED,
         retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
         retencion_note=_NON_RESIDENT_SUPPLIER_NOTE,
-        legal_refs=(_LIVA_IMPORTACION, _LIVA_RECARGO_SUJETOS, _RIRPF_OBLIGADOS_A_RETENER),
+        legal_refs=(
+            _LIVA_IMPORTACION,
+            _LIVA_RECARGO_SUJETOS,
+            _LIRPF_PAGOS_A_CUENTA,
+            _RIRPF_OBLIGADOS_A_RETENER,
+        ),
     ),
     # The recargo de equivalencia category is the retailer's PURCHASE-side
     # surcharge: the supplier charges IVA + RE to a comerciante minorista, and

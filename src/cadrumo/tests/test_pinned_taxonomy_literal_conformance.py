@@ -10,7 +10,7 @@ The declaration exists to distinguish a deliberate independent oracle (a
 hand-typed on-disk name asserted against what the real accessor resolves to,
 so the test does not compare the taxonomy with itself) from an unmigrated
 scaffold path that should route through the accessor instead. That
-distinction is real and it is the whole reason the S78 literal-corpus
+distinction is real and it is the whole reason the literal-corpus
 burndown reads every hit by hand rather than bulk-migrating.
 
 Until this gate, the set was prose: nothing checked that a declared literal

@@ -281,3 +281,106 @@ def test_production_python_source_ref_literals_resolve_to_catalogue_and_corpus(
         f"{ref}: {refs_by_literal[ref]}" for ref in missing
     )
     verify_source_catalogue(bundled_path(), {ref: catalogues.sources[ref] for ref in refs})
+
+
+# --------------------------------------------------------------------------- #
+# The pending-ref COLLECTOR is proven to work, independently of the live set
+# --------------------------------------------------------------------------- #
+#
+# The gate above is conditional: it has nothing to say while no production
+# literal is marked pending, which is the tree's current state after art. 76
+# was bundled and promoted. Dormancy is fine. What is not fine is that a
+# BROKEN collector is indistinguishable from an empty set -- if
+# _pending_ref_line_numbers stopped recognising the shapes below it would
+# return nothing, the gate would pass exactly as it does now, and the next
+# honestly-pending reference would sail past both halves of the contract.
+#
+# So the collector is exercised against synthetic source carrying each shape it
+# claims to detect. These fail if the detection breaks, whether or not the tree
+# happens to contain a pending reference at the time.
+
+_PENDING_LITERAL = "rd-439-2007:art-76"
+
+
+def _pending_lines_for(source: str) -> set[int]:
+    return _pending_ref_line_numbers(ast.parse(source))
+
+
+def test_the_collector_detects_a_pending_ref_declared_as_a_named_constant() -> None:
+    """The ``*_PENDING`` assignment shape, which is how a module-level marker is written."""
+    detected = _pending_lines_for(f'_RIRPF_OBLIGADOS_PENDING = "{_PENDING_LITERAL}"\n')
+    assert detected == {1}, "the collector no longer recognises a PENDING-named assignment"
+
+
+def test_the_collector_detects_a_pending_ref_declared_with_an_annotation() -> None:
+    """The annotated form, which is how this codebase actually declares such constants."""
+    detected = _pending_lines_for(f'_X_PENDING: Final[str] = "{_PENDING_LITERAL}"\n')
+    assert detected == {1}, "the collector no longer recognises an annotated PENDING assignment"
+
+
+def test_the_collector_detects_a_pending_ref_passed_as_a_keyword() -> None:
+    """The ``pending_legal_refs=`` keyword shape, which is how a table row declares one."""
+    source = f'Row(\n    legal_refs=("a:b",),\n    pending_legal_refs=("{_PENDING_LITERAL}",),\n)\n'
+    assert _pending_lines_for(source) == {3}, "the collector no longer recognises the pending_legal_refs keyword"
+
+
+def test_the_collector_does_not_treat_an_ordinary_citation_as_pending() -> None:
+    """The control, without which a collector returning every line would pass all three above.
+
+    A citation and a pending marker are opposite claims held to inverse
+    requirements, so a collector that could not tell them apart would exempt
+    every real citation from the corpus check.
+    """
+    source = f'_GROUNDED: Final[str] = "{_PENDING_LITERAL}"\nRow(legal_refs=("{_PENDING_LITERAL}",))\n'
+    assert _pending_lines_for(source) == set(), "the collector treats ordinary citations as pending"
+
+
+_BOE_DOCUMENT_ID_IN_PERMALINK_RE = re.compile(r"\bid=(BOE-[A-Z]-\d{4}-\d+)")
+
+
+def test_legal_entry_document_id_agrees_with_its_own_permalink(
+    committed_registry: tuple[Path, tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """A catalogue entry must not contradict itself about which document it cites.
+
+    Six LIVA entries carried ``document_id = "Ley 37/1992"`` -- the human name of
+    the law -- while their own ``permalink`` named ``BOE-A-1992-28740``, the
+    canonical identifier every other entry for the same law uses. The entry
+    therefore answered "which document is this?" two different ways depending on
+    which field you read, and the agent-facing citation-resolve surface returns
+    the field that was wrong.
+
+    Nothing downstream broke, because the projection that groups citations keys
+    off the reference id rather than the document id -- correct today, but only
+    incidentally. That is precisely the kind of defect that survives review: the
+    evidence contradicting it was sitting in the adjacent line the whole time.
+
+    So the check is self-evidencing rather than a hardcoded expectation. Each
+    entry supplies both halves; this only asserts they agree. An entry whose
+    permalink names no BOE document is skipped -- it makes no claim to
+    contradict, and demanding one would fail entries citing consolidated texts
+    that have no per-document permalink.
+    """
+    _registry_root, _modelos, catalogues = committed_registry
+
+    checked: dict[str, str] = {}
+    disagreements: list[str] = []
+    for ref, entry in catalogues.legal.items():
+        permalink = getattr(entry, "permalink", None)
+        document_id = getattr(entry, "document_id", None)
+        if not permalink or not document_id:
+            continue
+        match = _BOE_DOCUMENT_ID_IN_PERMALINK_RE.search(permalink)
+        if match is None:
+            continue
+        checked[ref] = match.group(1)
+        if document_id != match.group(1):
+            disagreements.append(f"{ref}: document_id={document_id!r} but permalink names {match.group(1)!r}")
+
+    # Anti-vacuity: a scan that matched nothing would satisfy the assertion below
+    # perfectly while checking no entry at all, and would keep passing if the
+    # permalink field were renamed out from under it.
+    assert len(checked) >= 50, f"self-agreement scan covered only {len(checked)} entries -- the matcher is not reaching the catalogue"
+    assert len(set(checked.values())) > 1, "scan saw only one document -- it is not spanning the catalogue"
+
+    assert not disagreements, "legal catalogue entries contradict their own permalink:\n" + "\n".join(sorted(disagreements))

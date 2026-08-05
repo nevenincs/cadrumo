@@ -1,4 +1,4 @@
-"""Independent 2025 Modelo 131 activity-identity prerequisite for S18.
+"""Independent 2025 Modelo 131 activity-identity prerequisite.
 
 The bundled AEAT Modelo 131 instructions require an IAE epigraph for each
 independent activity and describe its rendimiento neto as an annual-base

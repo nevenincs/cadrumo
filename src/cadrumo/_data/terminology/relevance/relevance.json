@@ -1798,13 +1798,6 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 1.0
-        },
-        {
-          "record_id": "code:cadrumo.domain.calculations.registry._text",
-          "target": "api/cadrumo.domain.calculations.registry._text.html",
-          "kind": "page",
-          "surface": "codebase",
-          "ranking_weight": 0.385413
         }
       ],
       "dropped_count": 19,

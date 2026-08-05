@@ -8,6 +8,7 @@ rather than silently shipping a link that resolves nothing.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from typing import cast
 
@@ -135,10 +136,16 @@ def test_thin_output_schema_models_inline_and_linked_result_branches() -> None:
     inline_branch, linked_branch = branches
     assert isinstance(inline_branch, dict)
     assert isinstance(linked_branch, dict)
-    props = _mapping(_mapping(linked_branch)["properties"])
-    assert "observations" not in props
-    assert _object_mapping(props["observations_resource"])["type"] == "string"
-    assert _object_mapping(props["observations_count"])["type"] == "integer"
+    # The property bodies are declared ONCE, shared by both branches; the
+    # branches carry only what distinguishes them, so thinning cannot enlarge
+    # the schema it thins.
+    shared = _mapping(_mapping(thinned)["properties"])
+    assert _object_mapping(shared["observations_resource"])["type"] == "string"
+    assert _object_mapping(shared["observations_count"])["type"] == "integer"
+    # ``False`` as a property schema forbids the key outright: the inline shape
+    # bars the markers, the linked shape bars the array.
+    assert _mapping(_mapping(inline_branch)["properties"])["observations_resource"] is False
+    assert _mapping(_mapping(linked_branch)["properties"])["observations"] is False
     validator = Draft202012Validator(thinned)
     empty_runtime, empty_links = thin_envelope(
         "modelo.work.calculate",
@@ -181,11 +188,54 @@ def test_thin_output_schema_retains_only_the_empty_inline_array_shape() -> None:
         thinned = thin_output_schema(command_key, base)
         branches = thinned["oneOf"]
         assert isinstance(branches, list) and len(branches) == 2
-        inline_branch = branches[0]
-        assert isinstance(inline_branch, dict)
-        inline_properties = _mapping(_mapping(inline_branch)["properties"])
+        shared_properties = _mapping(_mapping(thinned)["properties"])
         for spec in THINNED_VERBS[command_key]:
-            assert inline_properties[spec.result_key] == {"type": "array", "maxItems": 0}, command_key
+            # Declared once for both shapes: the array can only ever be the
+            # empty form, so its item schema is gone and the row payload's
+            # definitions become prunable.
+            assert shared_properties[spec.result_key] == {"type": "array", "maxItems": 0}, command_key
+
+
+def test_thin_output_schema_never_enlarges_the_schema_it_thins() -> None:
+    """Thinning must shrink every verb it applies to, on the live surface.
+
+    Expressing the two shapes as a ``oneOf`` of two FULL property bodies used to
+    cost more than pruning the row payload saved whenever those definitions were
+    still reachable from another property -- so thinning enlarged the schema and
+    quietly worsened the position of any verb reaching for it to get under the
+    output-schema size budget. Measured on the real registered result models, not
+    a fixture, so a future change to the shape is caught on the shipped verbs.
+    """
+    for command_key in THINNED_VERBS:
+        base = SCHEMA_REGISTRY[command_key].model_json_schema()
+        unthinned_size = len(json.dumps(base, ensure_ascii=False, sort_keys=True))
+        thinned = thin_output_schema(command_key, SCHEMA_REGISTRY[command_key].model_json_schema())
+        thinned_size = len(json.dumps(thinned, ensure_ascii=False, sort_keys=True))
+        assert thinned_size < unthinned_size, (
+            f"{command_key}: thinning grew the schema from {unthinned_size} to {thinned_size} chars"
+        )
+
+
+def test_thin_output_schema_branches_are_disjoint_without_additional_properties() -> None:
+    """The two shapes stay mutually exclusive on an open (``extra='allow'``) model.
+
+    Disjointness must come from the branches themselves, not from the result
+    model happening to close itself. When it relied on ``additionalProperties:
+    false``, an open model matched BOTH branches for a linked payload, so
+    ``oneOf``'s exactly-one rule rejected the very shape the server emits.
+    """
+    schema: dict[str, object] = {
+        "type": "object",
+        "properties": {"observations": {"type": "array"}, "calculation_revision_id": {"type": "string"}},
+        "required": ["calculation_revision_id"],
+    }
+    validator = Draft202012Validator(thin_output_schema("modelo.work.calculate", schema))
+    linked = {"calculation_revision_id": "rev-abc123", "observations_resource": "u", "observations_count": 2}
+    inline = {"calculation_revision_id": "rev-abc123", "observations": []}
+    assert list(validator.iter_errors(linked)) == [], "an open model must still accept the linked shape"
+    assert list(validator.iter_errors(inline)) == [], "an open model must still accept the inline shape"
+    both = {**inline, "observations_resource": "u", "observations_count": 2}
+    assert list(validator.iter_errors(both)), "carrying the array AND its markers must be refused"
 
 
 def test_thin_output_schema_prunes_defs_not_needed_by_the_empty_inline_branch() -> None:
@@ -203,14 +253,17 @@ def test_thin_output_schema_drops_the_property_from_required() -> None:
         "required": ["observations", "calculation_revision_id"],
     }
     thinned = thin_output_schema("modelo.work.calculate", unthinned_schema)
+    # The unconditional requirements stay on the shared schema; only the
+    # array-versus-markers choice moves into the branches.
+    shared_required = _mapping(thinned)["required"]
+    assert isinstance(shared_required, list)
+    assert "observations" not in shared_required
+    assert "calculation_revision_id" in shared_required
     branches = thinned["oneOf"]
     assert isinstance(branches, list)
-    linked_branch = branches[1]
-    assert isinstance(linked_branch, dict)
-    required = _mapping(linked_branch)["required"]
-    assert isinstance(required, list)
-    assert "observations" not in required
-    assert "calculation_revision_id" in required
+    inline_branch, linked_branch = branches
+    assert _mapping(inline_branch)["required"] == ["observations"]
+    assert _mapping(linked_branch)["required"] == ["observations_resource", "observations_count"]
 
 
 # ── Table ↔ live-surface binding (drift gates) ──────────────────────────────

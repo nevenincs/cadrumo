@@ -26,7 +26,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, elided_prose
 from ...core.hashing import content_hash_hex
 from ...core.time import validate_utc_aware
 from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
@@ -50,10 +50,22 @@ Strips surrounding whitespace; must be 1–64 characters after stripping.
 Used as ``verified_by`` on :class:`VerificationReport` to record the actor
 label fed into the content-addressed id derivation.
 """
-_FindingMessage = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
-]
+_FindingMessage = elided_prose(500, strip_whitespace=True)
+"""Operator-facing finding prose, elided at the cap rather than refused.
+
+A verification finding is the artifact that explains why a filing was blocked,
+and its text is assembled from registry ids, casilla numbers, and the amounts a
+reconciliation disagreed on — a length that belongs to the taxpayer's data
+rather than to whoever wrote the sentence. Refusing one over its length raises
+out of ``verify`` with a raw validation error, so the operator loses the report
+AND the reason for it, at exactly the moment the finding mattered most. The
+sharpest builder in the tree leaves 102 characters for eight interpolated
+terms; shortening the sentence is strictly the lesser loss.
+
+The cap still binds: it is a floor for shipped copy, not a licence to write
+past it. Authoring-time headroom assertions still belong on messages whose
+length scales with taxpayer data.
+"""
 
 
 class VerificationCompletenessStatus(StrEnum):
