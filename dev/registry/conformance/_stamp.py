@@ -269,6 +269,19 @@ _SAFE_SEGMENT: Final = re.compile(r"\A[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 #: refused governance stamp.
 _PROBE_PERIOD_SELECTOR: Final = PeriodSelector(year_from=2000, periods=("1T",))
 
+#: Minimal localization key for the same probe revision. Never written and never
+#: resolved against a catalogue: the probe asks only whether a GOVERNANCE
+#: combination is legal, and localization is not part of that question -- but the
+#: schema requires the field to exist, so the probe must carry one.
+#:
+#: Declared here beside the period selector rather than inline at the call site,
+#: for the reason the selector states. When the schema made this field required,
+#: the probe began failing inside the try block and surfaced as "refused
+#: governance stamp" on every revision -- a localization change wearing a
+#: governance refusal's clothes, which is precisely the disguise the selector's
+#: import-time construction exists to prevent.
+_PROBE_LOCALIZATION_KEY: Final = "probe"
+
 
 class StampError(RuntimeError):
     """A governance stamp was refused, or could not be written safely."""
@@ -889,6 +902,7 @@ def _assert_schema_accepts(revision: str, resolved: _Stamp) -> None:
     try:
         ModeloRevision(
             id=revision,
+            localization_key=_PROBE_LOCALIZATION_KEY,
             valid_from=date(2000, 1, 1),
             period_selector=_PROBE_PERIOD_SELECTOR,
             legal_refs=("probe:art-1",),
