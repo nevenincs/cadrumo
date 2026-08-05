@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:03321599bfb96907f9eb580180dd0e29ca8df920c4417fef800ecf71e8f3e676'
+body_hash: 'sha256:ce122fdf040952057502004fd1f67f5bc38faabe27749423d0a6d7f444c51128'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -25,6 +25,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S16]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S17]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S19]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S20]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
@@ -68,6 +69,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades
 - `2026-08-04-minimo-descendientes-eligibility-P04-S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin
 - `2026-08-04-minimo-descendientes-eligibility-P04-S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit
+- `2026-08-04-minimo-descendientes-eligibility-P04-S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record
 
 ### plan
 
