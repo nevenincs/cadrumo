@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:77821dc6a5b1ea68982d05fd6fe8f9981b4c3ad05586d7e2d4716d2464be4d30'
+body_hash: 'sha256:1aea3199423dc0cbd87e8ed8a13c87ac48d67c7326bec08841e1712ab716d41c'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -98,3 +98,7 @@ The `casilla-locale-fallback` finding is therefore source-remediated at the cens
 RAG confirmed that the browser already requires each semantic bridge target list to be non-increasing by ranking weight and UTF-8 record-id order on ties, while the Python `SemanticBridgeEntry` validator checked only uniqueness and `targets_sha256`. The Python validator now enforces the same deterministic ordering. Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, and diff checks. No tests or artifact loading were run.
 
 The `bridge-order-parity` finding is source-remediated; the browser nested-content hash parity finding remains open and no acceptance row is closed by this source-only change.
+
+## 2026-08-05 browser-hash parity disposition
+
+RAG and the LUNA Extra High source review confirm that the browser must not recompute the Python self-attestation hashes until the two runtimes share a proven canonical JSON number contract. Python's canonical serializer preserves numeric lexical forms that JSON.parse discards, and JavaScript serialization is not byte-equivalent for every valid finite float accepted by the matrix, bridge, and manifest schemas. Adding a browser recomputation now could reject a valid future artifact or validate bytes different from the Python contract. No new canonicalizer or schema amendment is authorized in this source-only lane; browser nested-content hash parity remains a bounded follow-up before artifact acceptance. No tests, builds, artifact generation, runtime probes, or deployment were run.
