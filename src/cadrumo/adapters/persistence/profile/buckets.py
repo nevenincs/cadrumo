@@ -9,7 +9,7 @@ bucket. Each stored record is wrapped in an
 ``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`.
 
 The write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
-:class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+:class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
 for the shared envelope-construction mechanic. The read path
 (``load`` / ``load_revisioned``) stays hand-rolled here rather than routing
 through the shared kernel's generic checks: this repository's classification
@@ -87,7 +87,7 @@ class BucketEventHistoryRepository:
     catalogue updates need one transaction. This class exposes the concrete
     load/save implementation behind
     :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`, composing
-    :class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the write-path envelope mechanic (see module docstring for why the
     read path stays separate).
     """

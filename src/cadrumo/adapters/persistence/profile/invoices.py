@@ -8,7 +8,7 @@ encrypted byte object via
 an :class:`~adapters.persistence.storage.Envelope` wrapper; no plaintext
 invoice row, JSON catalogue, or envelope file lands on disk. The
 Envelope-wrapping mechanic itself is owned by
-:class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+:class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
 (``_secure_enveloped_document.py``); this class retains only the invoice
 bucket-ownership guard, which the shared kernel has no domain knowledge of.
 
@@ -68,7 +68,7 @@ class InvoiceCatalogueRepository:
     transaction/event co-commit paths. This class exposes the concrete load/save
     implementation behind
     :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol`, composing
-    :class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     for the shared envelope/exists/load/save mechanic and retaining only the
     invoice-specific bucket-ownership guard.
     """

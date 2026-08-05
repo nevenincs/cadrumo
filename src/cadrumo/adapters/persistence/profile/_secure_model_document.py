@@ -13,7 +13,7 @@ This is NOT the only singleton-document persistence kernel: a namespace whose
 on-disk rows are wrapped in :class:`~adapters.persistence.storage.Envelope`
 (classification/schema-version/written-at duplicated inside the JSON payload
 itself) is a different wire shape and belongs on
-:class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+:class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
 (``_secure_enveloped_document.py``) instead — enrolling an Envelope-wrapped
 namespace here would change what bytes get written and fail to read what is
 already on disk. See that module's docstring for the two shapes compared side
@@ -74,7 +74,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
     wrapper. Use this kernel only for a namespace whose on-disk rows are
     already in that shape, or a brand-new namespace with no format to
     preserve; an Envelope-wrapped namespace belongs on
-    :class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
     instead (see the module docstring).
 
     The namespace definition remains the authority for object key, sensitivity,
