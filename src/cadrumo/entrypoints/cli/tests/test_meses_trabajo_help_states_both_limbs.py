@@ -40,7 +40,7 @@ _ENTRY_DATE_MARKER = {
     "en": "entry-date",
     "es": "fecha de entrada",
     "ca": "data d'entrada",
-    "hu": "belep",
+    "hu": "belép",
 }
 
 _SURFACES = [(locale, key) for key in _KEYS for locale in _LOCALES]
