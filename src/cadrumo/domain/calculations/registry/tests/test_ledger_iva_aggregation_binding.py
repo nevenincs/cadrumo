@@ -99,6 +99,7 @@ def _article_filter_binding(**selector_updates: object) -> DataBindingDefinition
 def _minimal_revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="test-revision",
+        localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2026, 1, 1),
         period_selector=PeriodSelector(year_from=2026, periods=("2T",)),
         legal_refs=("ley-37-1992:art-20",),

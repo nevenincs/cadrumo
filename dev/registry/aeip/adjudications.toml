@@ -1,70 +1,90 @@
 # Adjudications for the Modelo 100 anexo-A AEIP continuity chains.
 #
-# The planner derives chain ids from the programme titles AEAT publishes. This
+# The planner derives chain ids from the official Spanish programme titles. This
 # file is where an operator records the identity judgments the planner refuses
 # to make on its own. Every entry needs a `reason`: the reason is the audit
 # trail for the identity claim, so an ungrounded entry is rejected on load.
 #
-# Run `python -m dev.registry.aeip check` for the live open list. As measured
-# against the 2020-2025 revisions, six cases are open and each is described
-# below with what it needs. None is resolved here: each is a legal judgment
-# against the official AEAT form dictionaries and the designating norms, and
-# the planner is deliberately blocked until they are made.
+# The evidence for every entry below is the AEAT Diseño de Registros dictionary
+# for Modelo 100, bundled under
+# src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/.
+# Each dictionary row is `FIELD=[xml-path][page][casilla][label]`, and the XML
+# FIELD NAME turned out to be the decisive instrument: it is AEAT's own stable
+# identifier for a designation, so it settles identity questions the label
+# alone cannot. Each programme gets three fields -- `...S` (deducción
+# generated), `...A` (aplicado), `...P` (pendiente) -- and only the `A` field
+# carries a numbered casilla, which is why the registry models only that column.
 #
-#   1. gapped_span -- "Barcelona Mobile World Capital" is declared in
-#      2020-2023, absent from 2024, and declared again in 2025 at id 1629. If
-#      the 2025 appearance is a fresh AEIP designation (a new window under a
-#      new norm), record a [[splits]] entry giving the later window its own
-#      chain. If instead the 2024 absence is a transcription gap, the fix is
-#      to the 2024 revision, not to this file.
-#
-#   2. intra_revision_duplicate -- "175 Aniversario de la construcción del
-#      Gran Teatre del Liceu" occupies BOTH id 0757 and id 0765 in revision
-#      2020, with byte-identical records apart from the id. From 2021 onward
-#      0765 carries the Liceu programme and 0757 carries "Gran Premio de
-#      España de Fórmula 1", which makes the 2020 id-0757 record the suspected
-#      transcription error. Confirm against the official 2020 form dictionary,
-#      then either record an [[exclusions]] entry for the spurious occurrence
-#      or correct the registry fragment.
-#
-#   3. oversize_chain_id (x2) -- two titles exceed the 128-character
-#      continuidad_id budget once prefixed and suffixed:
-#        "20 Aniversario de la Reapertura del Gran Teatro del Liceo de
-#         Barcelona y el bicentenario de la creación de la Societat
-#         d'Accionistes"                                        -> 151 chars
-#        "XXV Aniversario de la declaración por la UNESCO del Real Monasterio
-#         de Santa María de Guadalupe como Patrimonio de la Humanidad"
-#                                                               -> 146 chars
-#      Record a [[chain_ids]] entry giving each a shortened but still
-#      recognisable chain id.
-#
-#   4. title_variant (x2) -- two groups differ only by an embedded year, and
-#      the two groups resolve OPPOSITE ways, which is exactly why this cannot
-#      be a text rule:
-#        "España País Invitado de Honor en la Feria del Libro de Fráncfort en
-#         2021" (2020, 2021) vs "... en 2022" (2022) -- almost certainly ONE
-#         programme whose label AEAT restated; if confirmed, record an
-#         [[aliases]] entry folding both titles onto one slug.
-#        "Año Santo Jacobeo 2021" (2020-2022) vs "Año Santo Jacobeo 2027"
-#         (2025) -- distinct holy years under distinct designations; if
-#         confirmed, record a [[distinct_variants]] entry keeping them apart.
+# Run `python -m dev.registry.aeip check` for the live open list.
 
 # One occurrence withheld from the family.
-#   revision, casilla, reason
-exclusions = []
+[[exclusions]]
+revision = "2020"
+casilla = "0757"
+reason = """
+AEAT's own 2020 dictionary mislabels this box. Casilla 0757 is XML field
+M21GPFA, which carries "Gran Premio de España de Fórmula 1" in the 2021, 2022
+and 2023 dictionaries; only the 2020 dictionary prints the Gran Teatre del Liceu
+label on it. The genuine Liceu box is the separate field M21CTLA at casilla
+0765, which carries that label consistently across 2020-2023. The registry
+faithfully transcribed AEAT's error, so 2020/0757 cannot be attributed to a
+programme by title and is withheld rather than being allowed to fabricate a
+second Liceu occurrence. It is not folded into the Fórmula 1 chain either: the
+published 2020 form said Liceu, and inferring an F1 designation from the field
+name alone would assert a continuity the published form contradicts.
+"""
 
 # Several published titles adjudicated as one programme.
-#   slug, titles (list), reason
-aliases = []
+[[aliases]]
+slug = "espana-pais-invitado-de-honor-en-la-feria-del-libro-de-francfort"
+titles = [
+  "España País Invitado de Honor en la Feria del Libro de Fráncfort en 2021",
+  "España País Invitado de Honor en la Feria del Libro de Fráncfort en 2022",
+]
+reason = """
+One programme whose label AEAT restated, not two designations. The 2020, 2021
+and 2022 dictionaries all carry XML field M21EPIA at the same casilla 0764; only
+the year inside the title moved, tracking the fair's COVID postponement from
+2021 to 2022. Same field, same casilla, no gap, so the continuity is the
+programme itself and the year change is an ordinary label evolution.
+"""
 
 # An explicit chain id where the derived slug cannot be used as-is.
-#   slug, chain_id, reason
+# None required. The only two titles that exceed the 128-character budget --
+# the 2020 "20 Aniversario de la Reapertura del Gran Teatro del Liceo..." (151)
+# and "XXV Aniversario de la Declaración por la UNESCO... Guadalupe" (146) --
+# are both single-revision programmes (2020 only, fields M21GTLA and M21UMGA),
+# so neither is ever stamped and neither needs a chain id at all. The longest
+# id among programmes that DO get a chain is exactly 128 characters (the
+# Magallanes/Elcano V Centenario), which fits with no margin to spare.
 chain_ids = []
 
 # A re-designated programme: a second chain starts at from_revision.
-#   slug, from_revision, chain_id, reason
-splits = []
+[[splits]]
+slug = "barcelona-mobile-world-capital"
+from_revision = "2025"
+chain_id = "irpf-aeip-barcelona-mobile-world-capital-2025-aplicado"
+reason = """
+The 2025 appearance is a fresh designation, not a resumption. AEAT changed the
+XML field when the programme returned: M21MWCA (casilla 1702) carries it in
+2021-2023, it is absent from the 2024 form entirely, and it comes back in 2025
+as a different field M21MOBA at a different casilla 1629. A chain spanning the
+2024 gap would assert one legal concept across a year the form says it did not
+exist in, which the contiguity policy refuses. The earlier window keeps the
+clean id; the later one is qualified by its opening revision. (The 2020 field
+M21BWCA differs from 2021's M21MWCA too, but those years are contiguous, so
+that rename is a renumbering within one designation rather than a new one.)
+"""
 
 # Year-variant titles adjudicated as genuinely separate programmes.
-#   slugs (list), reason
-distinct_variants = []
+[[distinct_variants]]
+slugs = ["ano-santo-jacobeo-2021", "ano-santo-jacobeo-2027"]
+reason = """
+Two different holy years under two different designations. "Año Santo Jacobeo
+2021" is XML field M21ASJA at casilla 0798 across 2020-2022; "Año Santo Jacobeo
+2027" is field M21JACA at casilla 0765 in 2025, with 2023 and 2024 carrying
+neither. Different field, different casilla, different jubilee, and a two-year
+gap between them. The embedded year here is part of the programme's identity,
+unlike the Fráncfort case above where the same field simply restated its year --
+which is why no mechanical year-masking rule can settle this class.
+"""

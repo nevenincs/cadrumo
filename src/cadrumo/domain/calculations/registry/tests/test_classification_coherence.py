@@ -73,6 +73,7 @@ def _revision(
     """Build the smallest revision the schema accepts, optionally carrying content."""
     return ModeloRevision(
         id=revision_id,
+        localization_key=f"test.schema.revision.{revision_id}.label",
         valid_from=date(2020, 1, 1),
         period_selector=PeriodSelector(year_from=2020, periods=("0A",)),
         legal_refs=_LEGAL_REFS,
@@ -93,8 +94,8 @@ def _modelo(
     built = revision if revision is not None else _revision()
     return ModeloDefinition(
         id=modelo_id,
-        title="test modelo",
-        official_name="test modelo",
+        title_localization_key="test.schema.modelo.title",
+        official_name_localization_key="test.schema.modelo.official_name",
         tax_domain=tax_domain,
         cadence="annual",
         jurisdiction="ES-AEAT",
@@ -110,7 +111,7 @@ def _bound_casilla() -> CasillaDefinition:
     return CasillaDefinition(
         id="c1",
         number="01",
-        label="importe",
+        localization_keys=("test.schema.casilla.label",),
         section=("totales",),
         input_kind=InputKind.BOUND,
         binding="b1",
@@ -434,7 +435,7 @@ def test_a_modelo_with_many_blockers_is_reported_rather_than_refused() -> None:
         CasillaDefinition(
             id=f"c{index}",
             number=f"{index:02d}",
-            label="importe",
+            localization_keys=("test.schema.casilla.label",),
             section=("totales",),
             input_kind=InputKind.BOUND,
             binding=f"b{index}",
@@ -580,7 +581,7 @@ def test_the_worst_case_the_registry_schema_permits_needs_no_truncation() -> Non
     widest = CasillaDefinition(
         id=casilla_id,
         number="01",
-        label="importe",
+        localization_keys=("test.schema.casilla.label",),
         section=("totales",),
         input_kind=InputKind.BOUND,
         binding="b1",

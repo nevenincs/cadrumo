@@ -174,7 +174,7 @@ def _minimal_casilla(casilla_id: CasillaId = _DEFAULT_MINIMAL_CASILLA_ID) -> Cas
     return CasillaDefinition(
         id=casilla_id,
         number=casilla_id,
-        label=f"Casilla {casilla_id}",
+        localization_keys=("test.schema.casilla.label",),
         section=("test",),
         input_kind=InputKind.MANUAL,
         legal_refs=(_REFERENCE_LEGAL_ID,),
@@ -249,6 +249,7 @@ def _minimal_revision(
     app_links = application_links if application_links is not None else (_minimal_application_link("filing"),)
     return ModeloRevision(
         id="test-revision",
+        localization_key="test.schema.revision.test-revision.label",
         valid_from=date(2024, 1, 1),
         period_selector=PeriodSelector(year_from=2024, periods=("0A",)),
         legal_refs=(_REFERENCE_LEGAL_ID,),
@@ -275,8 +276,8 @@ def _minimal_revision(
 def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
     return ModeloDefinition(
         id="130",
-        title="Test",
-        official_name="Test",
+        title_localization_key="test.schema.modelo.130.title",
+        official_name_localization_key="test.schema.modelo.130.official_name",
         tax_domain=TaxDomain.IVA,
         cadence="annual",
         jurisdiction="ES-AEAT",
@@ -338,7 +339,7 @@ def _segmented_casilla(
         id=casilla_id,
         number=number,
         segmento=segmento,
-        label=f"Casilla {casilla_id}",
+        localization_keys=("test.schema.casilla.label",),
         section=("test",),
         input_kind=InputKind.MANUAL,
         legal_refs=(_REFERENCE_LEGAL_ID,),
@@ -351,7 +352,7 @@ def _single_segment_casilla() -> CasillaDefinition:
     return CasillaDefinition(
         id=_SINGLE_SEGMENT_CASILLA_ID,
         number="00592",
-        label="Cuota liquida",
+        localization_keys=("test.schema.casilla.label",),
         section=("liquidacion",),
         data_type="money",
         legal_refs=("ley-58-2003:art-29",),

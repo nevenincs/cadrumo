@@ -10,7 +10,8 @@ import pytest
 from ....core import BindingSourceKind, Modelo, Period
 from ....core.aggregation import RetencionScheme
 from ....domain.calculations.registry import validated_casilla_id
-from .._grouping import fold_casilla_observations, group_and_collect_names
+from .._errors import AggregationPeriodError
+from .._grouping import cumulative_year_to_date_window, fold_casilla_observations, group_and_collect_names
 from .._renta_income_ledger import RentaIncomeObservation
 from .._retenciones import RetencionObservation
 
@@ -324,3 +325,54 @@ def test_fold_of_no_observations_yields_an_empty_aggregation() -> None:
     assert dict(aggregation.casilla_values) == {}
     assert tuple(aggregation.provenance) == ()
     assert aggregation.modelo == Modelo.M151.value
+
+
+def test_cumulative_year_to_date_window_spans_january_to_quarter_end() -> None:
+    """Each quarter accumulates from 1 January through its own last day.
+
+    RD 439/2007 art. 110.2: Q1 covers Jan-Mar, Q2 Jan-Jun, Q3 Jan-Sep, Q4
+    Jan-Dec. The start never moves off 1 January -- that is what makes the
+    payment cumulative rather than per-quarter.
+    """
+    expected_ends = {
+        "1T": date(2026, 3, 31),
+        "2T": date(2026, 6, 30),
+        "3T": date(2026, 9, 30),
+        "4T": date(2026, 12, 31),
+    }
+    for token, expected_end in expected_ends.items():
+        window = cumulative_year_to_date_window(Period.from_year_and_code(2026, token))
+        assert window.start == date(2026, 1, 1), token
+        assert window.end == expected_end, token
+        assert window.period.registry_token == token
+
+
+def test_cumulative_year_to_date_window_refuses_a_non_quarterly_period() -> None:
+    """A pago fraccionado has no meaning outside a quarter, so this refuses.
+
+    Inventing a span for an annual or monthly token would silently widen the
+    base both halves of the Modelo 130 calculation accumulate over.
+    """
+    with pytest.raises(AggregationPeriodError):
+        cumulative_year_to_date_window(Period.from_year_and_code(2026, "0A"))
+
+
+def test_cumulative_year_to_date_window_is_the_one_the_m130_halves_share() -> None:
+    """Ingresos and gastos must read the identical span for the same quarter.
+
+    The two halves derived this window independently before it was extracted.
+    They agreed, but nothing made them agree -- a one-sided edit would have
+    desynchronised the base without any test noticing.
+    """
+    from .._renta_gasto_ledger import aggregate_renta_gasto_ledger
+    from .._renta_income_ledger import aggregate_renta_income_ledger
+
+    period = Period.from_year_and_code(2026, "3T")
+    window = cumulative_year_to_date_window(period)
+
+    income = aggregate_renta_income_ledger({}, bucket_id="b", period=period)
+    gasto = aggregate_renta_gasto_ledger({}, bucket_id="b", period=period)
+
+    assert income.period == window.period
+    assert gasto.period == window.period
+    assert income.period == gasto.period

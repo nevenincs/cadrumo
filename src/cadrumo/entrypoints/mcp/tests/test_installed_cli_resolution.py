@@ -19,13 +19,17 @@ import sys
 from pathlib import Path
 
 import pytest
-from dev.packaging._smoke_common import create_pip_venv, head_extract, run_checked, venv_bin_dir, venv_python_path
+from dev.packaging._smoke_common import (
+    build_companion_wheels,
+    build_wheel,
+    create_pip_venv,
+    head_extract,
+    run_checked,
+    venv_bin_dir,
+    venv_python_path,
+)
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import EXPECTED_LEGAL_REF
-from dev.packaging.smoke_split_install import (
-    _build_data_wheels,
-    _build_root_wheel,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -45,8 +49,8 @@ def installed_agent_environment(tmp_path_factory: pytest.TempPathFactory) -> tup
 
     work_dir = tmp_path_factory.mktemp("installed-mcp-cli-resolution")
     build_root = head_extract(_REPO_ROOT, work_dir)
-    root_wheel = _build_root_wheel(build_root, work_dir, uv)
-    data_wheels = _build_data_wheels(build_root, work_dir, uv)
+    root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
+    data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
     venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
     run_checked(
         [

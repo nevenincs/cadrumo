@@ -15,12 +15,12 @@ Those values remain part of the measured artifact acceptance evidence.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 import importlib
-from importlib import metadata as importlib_metadata
 import math
-from pathlib import Path
 import struct
+from collections.abc import Sequence
+from importlib import metadata as importlib_metadata
+from pathlib import Path
 from typing import Any, Final
 
 from ._static_matrix import (

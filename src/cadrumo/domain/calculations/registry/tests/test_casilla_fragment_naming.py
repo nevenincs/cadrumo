@@ -140,7 +140,7 @@ def test_every_casilla_fragment_name_is_canonical_and_truthful() -> None:
 def _write_fragment(directory: Path, name: str, casilla_ids: list[str]) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     blocks = "\n\n".join(
-        f'[[revisions."2024".casillas]]\nid = "{cid}"\nlabel = "x"' for cid in casilla_ids
+        f'[[revisions."2024".casillas]]\nid = "{cid}"' for cid in casilla_ids
     )
     (directory / name).write_text(blocks + "\n", encoding="utf-8")
 

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ._errors import RegistrySnapshotError
+from ._modelo_localization import resolve_modelo_localization
 from ._schema import ModeloRevision
 from ._schema_base import LegalRefs, RegistryModel, SourceRefs
 
@@ -47,10 +48,21 @@ class ResolvedConstruct(RegistryModel):
     """
 
     id: str
-    title: str
+    localization_key: str
     legal_refs: LegalRefs
     source_refs: SourceRefs
     members: tuple[ResolvedConstructMember, ...]
+
+    def get_title(self, locale: str) -> str:
+        """Resolve the construct title from the shared catalogue."""
+        resolved = resolve_modelo_localization((self.localization_key,), locale=locale, required=True)
+        assert resolved is not None
+        return resolved
+
+    @property
+    def title(self) -> str:
+        """Return the strict official-Spanish construct title."""
+        return self.get_title("es")
 
     def members_of_kind(self, kind: str) -> tuple[ResolvedConstructMember, ...]:
         """Return every member whose ``kind`` matches the given string.
@@ -167,7 +179,7 @@ def resolve_construct(revision: ModeloRevision, construct_id: str) -> ResolvedCo
 
     return ResolvedConstruct(
         id=construct.id,
-        title=construct.title,
+        localization_key=construct.localization_key,
         legal_refs=construct.legal_refs,
         source_refs=construct.source_refs,
         members=tuple(members),

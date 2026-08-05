@@ -10,6 +10,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 
+from ....core.i18n import MissingTranslationError
 from ._ids import CasillaId
 from ._schema import ModeloDefinition
 
@@ -44,7 +45,15 @@ def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tupl
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
-                for match in _UNRESOLVED_FORMAT_PLACEHOLDER.finditer(casilla.label):
+                try:
+                    label = casilla.label
+                except MissingTranslationError:
+                    # A custom registry root may be validated before its
+                    # shared catalogue is available. Missing-key completeness
+                    # is reported by catalogue coverage; there is no label
+                    # text here from which to derive an artifact finding.
+                    continue
+                for match in _UNRESOLVED_FORMAT_PLACEHOLDER.finditer(label):
                     findings.append(
                         LabelArtifactFinding(
                             modelo_id=modelo.id,
@@ -52,7 +61,7 @@ def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tupl
                             casilla_id=casilla.id,
                             artifact="unresolved_format_placeholder",
                             placeholder_token=match.group(0),
-                            label=casilla.label,
+                            label=label,
                         ),
                     )
     return tuple(findings)

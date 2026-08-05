@@ -131,7 +131,7 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
             )
         for alias in casilla.aliases:
             checker.chk_legal_source_refs(
-                f"{cp}.alias {alias.label}",
+                f"{cp}.alias {alias.localization_key}",
                 alias.legal_refs,
                 alias.source_refs,
             )

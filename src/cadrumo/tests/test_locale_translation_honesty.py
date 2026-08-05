@@ -11,15 +11,12 @@ placeholder, never a legitimate translation, so it has no per-key
 allowlist — only a shrink-only ``_key_echo_ceiling`` ratchet recorded in
 the same allowlist file.
 
-The wholesale-placeholder era is over, and the prose used to outlive it.
-Measured across all 4404 keys: ``ca`` and ``hu`` each leave 30 values
-identical to English and ``es`` leaves 51, every one of them named and
-reasoned individually in the allowlist — so ca and hu are 4374/4404
-translated, not the "wholesale-English placeholders" this docstring
-once described. Both carry ``_untranslated_ceiling = 0``, meaning the
-``untranslated_pending`` bucket grants no bypass at all: a NEW
-untranslated string is refused immediately, with no headroom to absorb
-it. Read that before assuming a new key may ship echoing English.
+The Modelo catalogue also contains optional locale leaves whose value is
+``null`` until a translation is authored. Those absent values are not
+untranslated strings and are excluded from the identical-to-English
+comparison; authored non-null values remain subject to the same allowlist and
+ratchet rules. The ``_untranslated_ceiling = 0`` metadata therefore grants no
+bypass for a new authored value that merely echoes English.
 
 The bucket and its ceiling are retained rather than removed because
 neither is hand-editable — ``_intentional_identical.json`` is
@@ -42,13 +39,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _LOCALES_DIR = Path(__file__).resolve().parents[1] / "locales"
 
 # Recursive YAML node: either a leaf string or a nested mapping.
-type _LocaleNode = str | dict[str, "_LocaleNode"]
+type _LocaleNode = str | dict[str, "_LocaleNode"] | None
 
 
-def _flatten(mapping: dict[str, _LocaleNode], prefix: str = "") -> dict[str, str]:
+def _flatten(mapping: dict[str, _LocaleNode], prefix: str = "") -> dict[str, str | None]:
     """Walk a nested YAML mapping and return ``{dotted_key: leaf}``."""
 
-    result: dict[str, str] = {}
+    result: dict[str, str | None] = {}
     for key, value in mapping.items():
         sub = f"{prefix}.{key}" if prefix else key
         if isinstance(value, dict):
@@ -78,7 +75,7 @@ def _load_allowlist() -> dict[str, set[str]]:
     return result
 
 
-def _catalogue_leaves(locale_code: str) -> dict[str, str]:
+def _catalogue_leaves(locale_code: str) -> dict[str, str | None]:
     """Return one shipped catalogue's flattened leaves, refusing an empty one.
 
     The proof of scan lives here rather than at each gate because several gates
@@ -110,7 +107,7 @@ def _load_untranslated_ceiling(locale_code: str) -> int | None:
     return _load_metadata_ceiling(locale_code, "_untranslated_ceiling")
 
 
-def _key_echo_offenders(flat_leaves: dict[str, str]) -> list[str]:
+def _key_echo_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     """Return keys whose value is the key itself — the scaffold placeholder.
 
     Whitespace-normalised, and tolerant of trailing punctuation, so one
@@ -127,13 +124,13 @@ def _key_echo_offenders(flat_leaves: dict[str, str]) -> list[str]:
     return sorted(offenders)
 
 
-def _blank_offenders(flat_leaves: dict[str, str]) -> list[str]:
+def _blank_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     """Return keys whose value is empty or whitespace-only."""
 
     return sorted(key for key, value in flat_leaves.items() if isinstance(value, str) and not value.strip())
 
 
-def _reserved_token_offenders(flat_leaves: dict[str, str]) -> list[str]:
+def _reserved_token_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     """Return keys whose value carries a token tr() can never interpolate.
 
     ``tr()`` consumes ``locale`` and ``default`` as rendering directives and
@@ -269,7 +266,13 @@ def test_translated_values_differ_from_en_unless_allowlisted() -> None:
         offenders = [
             key
             for key, en_value in en_keys.items()
-            if key in locale_keys and locale_keys[key] == en_value and key not in locale_allows
+            if (
+                key in locale_keys
+                and isinstance(en_value, str)
+                and isinstance(locale_keys[key], str)
+                and locale_keys[key] == en_value
+                and key not in locale_allows
+            )
         ]
         failure = _identical_to_en_failure(
             locale_code, offenders, bucket_active="untranslated_pending" in locale_allows

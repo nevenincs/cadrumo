@@ -122,6 +122,12 @@ def test_relacion_reaches_the_wire_as_its_token() -> None:
         ({"meses_madre_trabajo_2024": 13}, "more mother-work months than exist in a year"),
         ({"meses_madre_trabajo_2024": -1}, "negative mother-work months"),
         ({"gastos_guarderia_euros": -1}, "negative guardería expenses"),
+        ({"alta_posterior_nacimiento_mes": 0}, "alta-posterior month outside 1-12"),
+        ({"alta_posterior_nacimiento_mes": 13}, "alta-posterior month outside 1-12"),
+        (
+            {"alta_posterior_nacimiento_mes": 5, "meses_madre_trabajo_2024": 0},
+            "alta-posterior month declared with zero worked months",
+        ),
     ],
 )
 def test_payload_refuses_values_the_canonical_record_refuses(

@@ -113,7 +113,7 @@ class Rung2BrowserConfig(BaseModel):
 
 def validate_rung2_browser_config(
     config: Rung2BrowserConfig | Mapping[str, object],
-    bundle: Rung2SearchBundle,
+    bundle: object,
 ) -> Rung2BrowserConfig:
     """Validate one browser config against an already validated bundle.
 

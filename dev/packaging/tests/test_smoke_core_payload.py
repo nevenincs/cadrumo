@@ -11,11 +11,13 @@ from pathlib import Path
 
 import pytest
 
+from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
 from dev.packaging._smoke_common import (
     _CORPUS_SOURCE_PREFIX,
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
     build_companion_wheels,
+    build_sdist,
     build_wheel,
     commit_defined_build_root,
     expected_wheel_data_paths,
@@ -24,10 +26,7 @@ from dev.packaging._smoke_common import (
 )
 from dev.packaging.python_cohort import load_python_cohort
 from dev.packaging.smoke_core import _assert_complete_wheel_cohort
-from dev.packaging.smoke_sdist_core import (
-    _assert_sdist_contains_expected_data,
-    _build_sdist,
-)
+from dev.packaging.smoke_sdist_core import _assert_sdist_contains_expected_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -103,9 +102,9 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         )
         and "/tests/" not in path
     }
-    sdist = _build_sdist(tmp_path, uv, build_root=build_root)
+    sdist = build_sdist(tmp_path, uv, build_root=build_root)
     _assert_sdist_contains_expected_data(sdist, expected_sdist_data)
-    assert sdist.stat().st_size < 100 * 1_000_000
+    assert sdist.stat().st_size < PYPI_FILE_CAP_BYTES
 
     cohort_dir = tmp_path / "real-cohort"
     cohort_dir.mkdir()

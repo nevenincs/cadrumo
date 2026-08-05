@@ -1,6 +1,5 @@
 [[revisions."2019-y-siguientes".constructs]]
 id = "modelo-117-total-liquidacion-calculation"
-title = "Modelo 117 total liquidación / resultado a ingresar"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
 source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout", "aeat-modelo-117-procedure"]
 casilla_ids = ["09", "11"]

@@ -52,7 +52,7 @@ from dev.packaging.installed_mcp_oracle import (  # noqa: E402
     run_installed_mcp_oracle,
 )
 from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
-from dev.packaging.smoke_mcpb import _resolve_mcpb_value, _run_concurrent_launches  # noqa: E402
+from dev.packaging.smoke_mcpb import resolve_mcpb_value, run_concurrent_launches  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"
@@ -181,15 +181,15 @@ def _exercise_bundle(
     storage_root = run_root / "storage"
     user_config = {"persona": "", "storage_root": str(storage_root), "surface": "full"}
     server_args = tuple(
-        _resolve_mcpb_value(value, extension_dir=extracted, user_config=user_config) for value in server["args"]
+        resolve_mcpb_value(value, extension_dir=extracted, user_config=user_config) for value in server["args"]
     )
     resolved_environment = {
-        key: _resolve_mcpb_value(value, extension_dir=extracted, user_config=user_config)
+        key: resolve_mcpb_value(value, extension_dir=extracted, user_config=user_config)
         for key, value in server["env"].items()
     }
     first_launch_env = isolated_mcp_environment(storage_root)
     first_launch_env.update(resolved_environment)
-    _run_concurrent_launches(
+    run_concurrent_launches(
         [str(uv), *server_args],
         cwd=run_root,
         env=first_launch_env,

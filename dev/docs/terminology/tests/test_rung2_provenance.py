@@ -18,6 +18,8 @@ from dev.docs.terminology._static_matrix import (
     vocabulary_fingerprint,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
 
 def test_builder_records_raw_source_and_canonical_input_identities() -> None:
     """The provenance fields identify the supplied bytes and canonical inputs."""

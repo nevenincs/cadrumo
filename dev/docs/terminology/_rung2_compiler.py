@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from pathlib import Path
+from typing import cast
 
 from ._rung2_bridge import Rung2SearchBundle, build_rung2_search_bundle, write_rung2_search_bundle
 from ._static_matrix import (
@@ -28,9 +29,9 @@ from ._unified_record import SearchRecord
 
 __all__ = [
     "Rung2CompilationError",
-    "compile_rung2_search_bundle",
     "compile_and_write_rung2_search_bundle",
     "compile_project_rung2_search_bundle",
+    "compile_rung2_search_bundle",
 ]
 
 
@@ -40,11 +41,11 @@ class Rung2CompilationError(MatrixCompilationError):
 
 def compile_rung2_search_bundle(
     *,
-    vocabulary: tuple[str, ...],
-    query_tokens: tuple[str, ...],
-    provider: StaticEmbeddingProvider,
-    sweep: SweepResult,
-    records: Iterable[SearchRecord],
+    vocabulary: object,
+    query_tokens: object,
+    provider: object,
+    sweep: object,
+    records: object,
     max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
 ) -> Rung2SearchBundle:
     """Compile a matrix and immediately link it to one authoritative sweep.
@@ -61,22 +62,22 @@ def compile_rung2_search_bundle(
     only rejects empty or structurally invalid seam inputs and composes those
     contracts in order.
     """
-    _require_canonical_vocabulary(vocabulary)
-    _require_canonical_query_tokens(query_tokens)
-    _require_provider(provider)
-    _require_sweep(sweep)
+    validated_vocabulary = _require_canonical_vocabulary(vocabulary)
+    validated_query_tokens = _require_canonical_query_tokens(query_tokens)
+    validated_provider = _require_provider(provider)
+    validated_sweep = _require_sweep(sweep)
     record_tuple = _materialize_records(records)
 
     try:
         matrix = compile_static_embedding_matrix(
-            vocabulary,
-            provider,
-            query_tokens=query_tokens,
+            validated_vocabulary,
+            validated_provider,
+            query_tokens=validated_query_tokens,
             max_serialized_bytes=max_serialized_bytes,
         )
         return build_rung2_search_bundle(
             matrix,
-            sweep,
+            validated_sweep,
             record_tuple,
             max_serialized_bytes=max_serialized_bytes,
         )
@@ -86,12 +87,12 @@ def compile_rung2_search_bundle(
 
 def compile_and_write_rung2_search_bundle(
     *,
-    vocabulary: tuple[str, ...],
-    query_tokens: tuple[str, ...],
-    provider: StaticEmbeddingProvider,
-    sweep: SweepResult,
-    records: Iterable[SearchRecord],
-    destination: Path,
+    vocabulary: object,
+    query_tokens: object,
+    provider: object,
+    sweep: object,
+    records: object,
+    destination: object,
     max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
 ) -> Rung2SearchBundle:
     """Compile one validated bundle and write its canonical bytes explicitly.
@@ -121,8 +122,8 @@ def compile_and_write_rung2_search_bundle(
 
 def compile_project_rung2_search_bundle(
     *,
-    provider: StaticEmbeddingProvider,
-    destination: Path,
+    provider: object,
+    destination: object,
     repo_root: Path | None = None,
     max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
 ) -> Rung2SearchBundle:
@@ -148,31 +149,41 @@ def compile_project_rung2_search_bundle(
     )
 
 
-def _require_canonical_vocabulary(vocabulary: tuple[str, ...]) -> None:
+def _require_canonical_vocabulary(vocabulary: object) -> tuple[str, ...]:
     """Reject a missing or non-canonical closed result vocabulary."""
     if not isinstance(vocabulary, tuple) or not vocabulary:
         raise Rung2CompilationError("vocabulary must be a non-empty canonical tuple")
+    raw_terms = cast(tuple[object, ...], vocabulary)
+    terms = tuple(term for term in raw_terms if isinstance(term, str))
+    if len(terms) != len(raw_terms):
+        raise Rung2CompilationError("invalid vocabulary: terms must be strings")
     try:
-        canonical = canonical_vocabulary(vocabulary)
+        canonical = canonical_vocabulary(terms)
     except MatrixCompilationError as exc:
         raise Rung2CompilationError(f"invalid vocabulary: {exc}") from exc
-    if canonical != vocabulary:
+    if canonical != terms:
         raise Rung2CompilationError("vocabulary must be canonical, unique, and UTF-8 ordered")
+    return canonical
 
 
-def _require_canonical_query_tokens(query_tokens: tuple[str, ...]) -> None:
+def _require_canonical_query_tokens(query_tokens: object) -> tuple[str, ...]:
     """Reject a missing or non-canonical browser query-token vocabulary."""
     if not isinstance(query_tokens, tuple) or not query_tokens:
         raise Rung2CompilationError("query_tokens must be a non-empty canonical tuple")
+    raw_tokens = cast(tuple[object, ...], query_tokens)
+    tokens = tuple(token for token in raw_tokens if isinstance(token, str))
+    if len(tokens) != len(raw_tokens):
+        raise Rung2CompilationError("invalid query_tokens: query-token identities must be strings")
     try:
-        canonical = canonical_query_tokens(query_tokens)
+        canonical = canonical_query_tokens(tokens)
     except MatrixCompilationError as exc:
         raise Rung2CompilationError(f"invalid query_tokens: {exc}") from exc
-    if canonical != query_tokens:
+    if canonical != tokens:
         raise Rung2CompilationError("query_tokens must be canonical, unique, and UTF-8 ordered")
+    return canonical
 
 
-def _require_provider(provider: StaticEmbeddingProvider) -> None:
+def _require_provider(provider: object) -> StaticEmbeddingProvider:
     """Fail clearly when the model provider cannot satisfy its protocol."""
     if provider is None or not hasattr(provider, "metadata"):
         raise Rung2CompilationError("provider must expose model metadata")
@@ -180,24 +191,28 @@ def _require_provider(provider: StaticEmbeddingProvider) -> None:
         raise Rung2CompilationError("provider must expose callable embed(terms)")
     if not callable(getattr(provider, "embed_query_tokens", None)):
         raise Rung2CompilationError("provider must expose callable embed_query_tokens(tokens)")
+    return cast(StaticEmbeddingProvider, provider)
 
 
-def _require_sweep(sweep: SweepResult) -> None:
+def _require_sweep(sweep: object) -> SweepResult:
     """Reject an absent or empty sweep before invoking the bridge."""
     if not isinstance(sweep, SweepResult):
         raise Rung2CompilationError("sweep must be a SweepResult")
     if not sweep.mappings:
         raise Rung2CompilationError("sweep mappings cannot be empty")
+    return sweep
 
 
-def _materialize_records(records: Iterable[SearchRecord]) -> tuple[SearchRecord, ...]:
+def _materialize_records(records: object) -> tuple[SearchRecord, ...]:
     """Materialize and type-check the authoritative record iterable once."""
     try:
-        materialized = tuple(records)
+        iterator = iter(cast(Iterable[object], records))
+        materialized: tuple[object, ...] = tuple(iterator)
     except TypeError as exc:
         raise Rung2CompilationError("records must be an iterable of SearchRecord") from exc
     if not materialized:
         raise Rung2CompilationError("authoritative SearchRecord records cannot be empty")
-    if any(not isinstance(record, SearchRecord) for record in materialized):
+    validated = tuple(record for record in materialized if isinstance(record, SearchRecord))
+    if len(validated) != len(materialized):
         raise Rung2CompilationError("records must contain only authoritative SearchRecord instances")
-    return materialized
+    return validated

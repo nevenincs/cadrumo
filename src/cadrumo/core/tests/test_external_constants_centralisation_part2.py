@@ -199,8 +199,17 @@ _MODELO_GROUP_LITERAL_CASES: tuple[tuple[str, tuple[str, ...], str], ...] = (
 _IRPF_INT_CONSTANT_CASES: tuple[tuple[str, int], ...] = (
     ("DEDUCCION_MATERNIDAD_MENSUAL_EUR", 100),
     ("DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR", 1200),
+    ("DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR", 150),
+    ("DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR", 1350),
+    ("DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR", 2023),
 )
-_IRPF_INT_CONSTANT_IDS = ("maternidad-mensual", "maternidad-anual-cap")
+_IRPF_INT_CONSTANT_IDS = (
+    "maternidad-mensual",
+    "maternidad-anual-cap",
+    "maternidad-alta-posterior-incremento",
+    "maternidad-alta-posterior-anual-cap",
+    "maternidad-alta-posterior-first-filing-year",
+)
 
 _IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
     (
@@ -215,10 +224,34 @@ _IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from cadrumo.core.external_constants",
     ),
+    (
+        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR from "
+        "cadrumo.core.external_constants",
+    ),
+    (
+        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR",
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR from "
+        "cadrumo.core.external_constants",
+    ),
+    (
+        "cadrumo.domain.contribuyente._deduccion_maternidad",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR",
+        "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR",
+        "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR from "
+        "cadrumo.core.external_constants",
+    ),
 )
 _IRPF_INT_ALIAS_IDS = (
     "deduccion-maternidad-mensual",
     "deduccion-maternidad-anual-cap",
+    "deduccion-maternidad-alta-posterior-incremento",
+    "deduccion-maternidad-alta-posterior-anual-cap",
+    "deduccion-maternidad-alta-posterior-first-filing-year",
 )
 
 _MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
@@ -418,6 +451,8 @@ def test_irpf_int_constant_values_types_and_maternidad_cap_relation() -> None:
 
     from .. import external_constants
     from ..external_constants import (
+        DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR,
+        DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR,
         DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
         DEDUCCION_MATERNIDAD_MENSUAL_EUR,
     )
@@ -428,6 +463,10 @@ def test_irpf_int_constant_values_types_and_maternidad_cap_relation() -> None:
         assert value == expected, case_id
 
     assert DEDUCCION_MATERNIDAD_MENSUAL_EUR * 12 == DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR
+    assert (
+        DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR + DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR
+        == DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR
+    )
 
 
 def test_irpf_int_constant_consumers_alias_core_constants() -> None:

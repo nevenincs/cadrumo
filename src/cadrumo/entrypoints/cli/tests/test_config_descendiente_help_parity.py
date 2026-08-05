@@ -82,6 +82,7 @@ _PROBES: dict[str, tuple[str, str]] = {
     "DECLARACION_PROPIA": ("DECLARACION_PROPIA=true", "presenta_declaracion_propia"),
     "PRORRATA": ("PRORRATA=true", "prorrata_minimo"),
     "MESES_TRABAJO": ("MESES_TRABAJO=6", "meses_madre_trabajo_2024"),
+    "ALTA_POSTERIOR_MES": ("ALTA_POSTERIOR_MES=5,MESES_TRABAJO=6", "alta_posterior_nacimiento_mes"),
     "GASTOS_GUARDERIA": ("GASTOS_GUARDERIA=900", "gastos_guarderia_euros"),
     # Probes the RANGE form as well as the map, because the range is the shape a
     # taxpayer reads off a certificate (a constant fee across an enrolment span)

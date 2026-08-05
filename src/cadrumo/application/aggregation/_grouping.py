@@ -1,8 +1,16 @@
-"""Shared group-by, name-cache, and casilla-fold helpers for per-modelo aggregators.
+"""Shared group-by, name-cache, casilla-fold, and period-window helpers for per-modelo aggregators.
 
 Used by: :mod:`_retenciones`, :mod:`_counterpart` to bucket observations and cache canonical names;
 :mod:`_renta_income_ledger`, :mod:`_renta_gasto_ledger`, :mod:`_impatriado_income_ledger`, and
-:mod:`_irnr_income_ledger` to fold their observations into a :class:`CasillaAggregation`.
+:mod:`_irnr_income_ledger` to fold their observations into a :class:`CasillaAggregation`;
+:mod:`_renta_income_ledger` and :mod:`_renta_gasto_ledger` to resolve the pago-fraccionado
+year-to-date window both halves of the Modelo 130 base must share.
+
+Treat that list as a claim to re-check, not a guarantee. It is accurate for the callers it
+names and says nothing about the ones it does not: a module that needs one of these
+mechanisms and never found it will not appear here, and its absence is exactly what an
+inventory like this hides. Before adding a bucket-by-key loop, a casilla fold, or a period
+window anywhere in this package, look here first.
 
 The name-cache consumers implement the same shape of aggregation: bucket
 observations by a composite key, then roll up each bucket. They additionally
@@ -26,13 +34,45 @@ grouping shape, not this one under another name.
 from __future__ import annotations
 
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from datetime import date
 from decimal import Decimal
-from typing import Protocol
+from typing import NamedTuple, Protocol
 
-from ...core import Period
+from ...core import Period, PeriodKind
 from ...domain.calculations.registry import CasillaId
-from ._errors import AggregationUnsupportedModeloError, t
+from ._errors import AggregationPeriodError, AggregationUnsupportedModeloError, t
 from ._models import CasillaAggregation, CasillaProvenance
+
+
+class CumulativeWindow(NamedTuple):
+    """The resolved quarter plus the year-to-date span it accumulates over."""
+
+    period: Period
+    start: date
+    end: date
+
+
+def cumulative_year_to_date_window(period: Period) -> CumulativeWindow:
+    """Return the year-to-date window an IRPF pago fraccionado accumulates over.
+
+    RD 439/2007 art. 110.2 computes the Modelo 130 payment on income and expenses
+    accumulated from 1 January of the filing year through the last day of the
+    declared quarter. Both halves of that base -- ingresos and gastos -- must read
+    the same span for the same quarter, so the rule lives here rather than in
+    either half: it was derived independently in each, and two copies of one legal
+    rule agree only until someone edits one of them.
+
+    Raises:
+        AggregationPeriodError: When ``period`` is not quarterly. A pago
+            fraccionado has no meaning outside a quarter, so this refuses rather
+            than inventing a span.
+    """
+    if period.kind is not PeriodKind.QUARTERLY:
+        raise AggregationPeriodError(
+            t("aggregation.renta_ledger.errors.quarterly_period_required"),
+            context={"period": str(period)},
+        )
+    return CumulativeWindow(period=period, start=date(period.filing_year, 1, 1), end=period.end_date)
 
 
 def group_and_collect_names[T, GroupKey: tuple[object, ...], IdentityKey: tuple[object, ...]](
@@ -202,7 +242,9 @@ def fold_casilla_observations[ObservationT: LedgerCasillaObservation](
 
 
 __all__ = [
+    "CumulativeWindow",
     "LedgerCasillaObservation",
+    "cumulative_year_to_date_window",
     "filter_observations_for_modelo",
     "fold_casilla_observations",
     "group_and_collect_names",

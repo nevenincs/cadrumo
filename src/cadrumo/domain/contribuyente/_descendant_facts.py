@@ -20,6 +20,9 @@ Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.declaracion_propia      "true" / "false" (absent means False)
   renta_family.descendiente.{n}.prorrata_minimo         "true" / "false" or absent (absent means unanswered)
   renta_family.descendiente.{n}.meses_madre_trabajo     "0".."12" (absent means 0)
+  renta_family.descendiente.{n}.alta_posterior_nacimiento_mes
+                                                        "1".."12" or absent (absent means no post-birth
+                                                        alta increment declared)
   renta_family.descendiente.{n}.gastos_guarderia        non-negative integer euros (absent means 0)
   renta_family.descendiente.{n}.gastos_guarderia_mensuales
                                                         canonical MM:AMOUNT[;MM:AMOUNT...] map or absent
@@ -83,6 +86,7 @@ _DESCENDIENTE_FLAG_KEYS = frozenset(
         "DECLARACION_PROPIA",
         "PRORRATA",
         "MESES_TRABAJO",
+        "ALTA_POSTERIOR_MES",
         "GASTOS_GUARDERIA",
         "GASTOS_GUARDERIA_MENSUAL",
         "NIF",
@@ -158,6 +162,8 @@ def descendant_facts_from_list(
             facts.append((f"{prefix}.prorrata_minimo", "true" if d.prorrata_minimo else "false"))
         if d.meses_madre_trabajo_2024 > 0:
             facts.append((f"{prefix}.meses_madre_trabajo", str(d.meses_madre_trabajo_2024)))
+        if d.alta_posterior_nacimiento_mes is not None:
+            facts.append((f"{prefix}.alta_posterior_nacimiento_mes", str(d.alta_posterior_nacimiento_mes)))
         if d.gastos_guarderia_euros > 0:
             facts.append((f"{prefix}.gastos_guarderia", str(d.gastos_guarderia_euros)))
         # Emitted in the canonical expanded form regardless of how it was typed,
@@ -186,7 +192,8 @@ _N_RE = re.compile(
     # `gastos_guarderia_mensuales` path would match the shorter branch, fail the
     # `$` anchor, and be DROPPED from the row -- a declared map silently absent
     # on every reload.
-    r"meses_madre_trabajo|gastos_guarderia_mensuales|gastos_guarderia|nif)$",
+    r"meses_madre_trabajo|alta_posterior_nacimiento_mes|"
+    r"gastos_guarderia_mensuales|gastos_guarderia|nif)$",
 )
 
 
@@ -304,6 +311,7 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         meses = int(meses_raw) if meses_raw is not None else 0
         if not (0 <= meses <= 12):
             meses = 0
+        alta_posterior_mes = _stored_alta_posterior_mes(row.get("alta_posterior_nacimiento_mes"), index=idx)
         gastos = _stored_gastos_guarderia(row.get("gastos_guarderia"), index=idx)
         # A stored map that will not parse REFUSES rather than resolving to the
         # empty tuple, on this module's standing reading of which direction a
@@ -331,12 +339,43 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 presenta_declaracion_propia=declaracion_propia,
                 prorrata_minimo=prorrata_minimo,
                 meses_madre_trabajo_2024=meses,
+                alta_posterior_nacimiento_mes=alta_posterior_mes,
                 gastos_guarderia_euros=gastos,
                 gastos_guarderia_mensuales=mensuales,
                 nif=nif,
             ),
         )
     return tuple(result)
+
+
+def _stored_alta_posterior_mes(raw: str | None, *, index: int) -> int | None:
+    """Read one descendant's stored Art. 81.1 alta-posterior completion month.
+
+    Absent means ``None`` — no post-birth alta increment declared for this
+    child, the ordinary case.
+
+    A PRESENT but unreadable value REFUSES rather than resolving to ``None``,
+    for the reason every other guard in this module refuses: ``None`` here
+    means the increment does not apply, and silently reading a corrupted month
+    as "not declared" would withhold an entitlement the operator believes they
+    recorded, with nothing said. A month outside 1-12 refuses for the same
+    reason a whole-number test is used elsewhere rather than a bare ``int()``:
+    a bare parse raises an untranslated ``ValueError`` naming neither the row
+    nor the accepted range.
+    """
+    if raw is None:
+        return None
+    text = raw.strip()
+    if not is_plain_whole_number(text):
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.alta_posterior_nacimiento_mes must be a month 1-12; got {raw!r}.",
+        )
+    month = int(text)
+    if not (1 <= month <= 12):
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.alta_posterior_nacimiento_mes must be a month 1-12; got {raw!r}.",
+        )
+    return month
 
 
 def _stored_gastos_guarderia(raw: str | None, *, index: int) -> int:
@@ -504,6 +543,13 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
                              contribuyente also entitled to this descendant's mínimo?
                              Omit to let the engine derive it from profile signals.
       MESES_TRABAJO=0..12    (optional, default 0) months mother worked — Art. 81 deducción maternidad
+      ALTA_POSTERIOR_MES=1..12
+                             (optional) calendar month in which a mother not registered with the
+                             Seguridad Social or a mutualidad at the birth completed the 30-day
+                             minimum contribution period Art. 81.1 requires for the post-birth alta
+                             route. Adds the 150 euro completion-month increment (raising this
+                             child's cap to 1.350 euros) for filing years from 2023 only. Omit for
+                             the ordinary case.
       GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613,
                              as an ANNUAL total. Sufficient only while the
                              child is under three for the whole period.
@@ -598,6 +644,14 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
             raise ProfileAnswerTypeError(f"MESES_TRABAJO must be 0-12; got {meses_val!r}")
         meses_madre_trabajo_2024 = meses_val
 
+    alta_posterior_nacimiento_mes: int | None = None
+    alta_posterior_raw = parts.get("ALTA_POSTERIOR_MES")
+    if alta_posterior_raw is not None:
+        alta_posterior_val = int(alta_posterior_raw)
+        if not (1 <= alta_posterior_val <= 12):
+            raise ProfileAnswerTypeError(f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_val!r}")
+        alta_posterior_nacimiento_mes = alta_posterior_val
+
     gastos_guarderia_euros = 0
     gastos_raw = parts.get("GASTOS_GUARDERIA")
     if gastos_raw is not None:
@@ -641,6 +695,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
         presenta_declaracion_propia=presenta_declaracion_propia,
         prorrata_minimo=prorrata_minimo,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,
+        alta_posterior_nacimiento_mes=alta_posterior_nacimiento_mes,
         gastos_guarderia_euros=gastos_guarderia_euros,
         gastos_guarderia_mensuales=gastos_guarderia_mensuales,
         nif=nif,

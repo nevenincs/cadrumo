@@ -17,6 +17,33 @@ this file run" (too quiet). Reporting per test resolves both.
 No stored baseline and no allowlist. The worklist is recomputed from the tree on
 every run, so coverage can only ratchet up: a new test outside every lane fails
 immediately rather than being absorbed into an accepted set that nobody revisits.
+
+THIS MODULE'S LOCATION IS LOAD-BEARING. It lives under ``src/cadrumo/tests`` and
+is marked ``unit`` deliberately: a guard against unreachable tests must itself
+sit inside the selection every lane already runs, or it is unreachable by
+exactly the defect it exists to catch. Measured, not assumed -- from here it is
+run by NINE lanes (four justfile recipes plus five workflow invocations across
+``ci.yml``, ``ci-full.yml``, ``aeat-drift-detector.yml``, and
+``agent-harness-eval.yml``). Its predecessor lived under ``dev/ci/tests``, which
+only ``ci.yml`` reached, so the strongest reachability model in the tree was
+itself among the weakest-reached files in it. Do not move this back under
+``dev/``.
+
+It replaces two gates that asked overlapping questions, and it deliberately
+kept the weaker one's only advantage. The retired ``dev/``-only gate was
+path-only and could not see marker exclusion; this one asks BOTH questions, so
+it strictly subsumes it -- verified before deletion at 178 ``dev/`` test files,
+with zero findings the retired gate would have caught and this one misses.
+
+Two questions, not one, and the second exists because the first has blind spots:
+
+* Per-test: does some lane's path scope cover this file AND its marker
+  expression select this test's own effective markers?
+* Path-level: does ANY lane name this file at all? Cheap, weaker, and retained
+  because the per-test question is blind to a module holding no test functions
+  and to a tracked file absent from disk. Both classes are empty in this tree
+  today; neither is impossible, and a consolidation that silently drops the
+  check would be a regression wearing a consolidation's clothes.
 """
 
 from __future__ import annotations
@@ -24,7 +51,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from dev.ci.lane_reachability import (
     Lane,
     analyse_reachability,

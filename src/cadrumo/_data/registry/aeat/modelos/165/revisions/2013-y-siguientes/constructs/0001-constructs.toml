@@ -1,6 +1,5 @@
 [[revisions."2013-y-siguientes".constructs]]
 id = "modelo-165-informative"
-title = "Modelo 165 declaración informativa"
 legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure", "enrolled-modelo-165-layout"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]

@@ -155,6 +155,16 @@ def _advisory_kinds(output: str) -> set[str]:
     }
 
 
+def _advisory_messages(output: str, *, source_kind: str) -> list[str]:
+    """The rendered ``message`` text of every notice carrying *source_kind*."""
+    return [
+        str(notice["message"])
+        for notice in unwrap_envelope_notices(output)
+        if notice["code"] == "modelo.work.calculate.source_advisory"
+        and notice.get("context", {}).get("source_kind") == source_kind
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Arrival: the regression this module exists for.
 # ---------------------------------------------------------------------------
@@ -233,6 +243,19 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
         f"withheld maternidad months must be disclosed; got {_advisory_kinds(output)}"
     )
 
+    messages = _advisory_messages(output, source_kind="maternidad_meses_withheld")
+    assert messages, "the withheld advisory must carry a rendered message"
+    # The advisory names the entry-date window as a second route to the
+    # deducción, and must not steer every withheld filer toward altering their
+    # birth date -- an over-three adopción/acogimiento is withheld for a
+    # missing INSCRIPCION/ACOGIMIENTO date, not for being the wrong age.
+    assert "INSCRIPCION" in messages[0] or "ACOGIMIENTO" in messages[0]
+    assert "reaches only a descendant under three" not in messages[0]
+    # The remedy must name an editing route the paged door refuses on a piped
+    # host and `descendiente add` (append-only) cannot perform: removing the
+    # row and re-adding it.
+    assert "descendiente remove" in messages[0]
+
 
 def test_an_eligible_child_does_not_raise_the_withheld_advisory(
     runtime_profile: TestRuntimeProfile,
@@ -291,6 +314,25 @@ def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
     assert _casilla_0611(output) == Decimal("1000")
 
 
+def test_no_month_before_the_adoption_reaches_the_casilla(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The over-grant this Step removes, driven through the surface an operator uses.
+
+    Born January 2024 and adopted in October. The under-three limb runs from the
+    BIRTH month for every relacion, so unioning the two limbs granted January to
+    September -- months before the child was hers -- and the casilla resolved to
+    1.200 where 300 is due. Three eligible months at the authority's 100 euros.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2024-01-10,RELACION=adoptado,INSCRIPCION=2024-10-05,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("300")
+
+
 def test_a_child_over_the_rentas_ceiling_contributes_nothing(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
@@ -333,6 +375,9 @@ def test_the_flag_and_the_declared_records_together_are_refused(
 
     assert exit_code != 0, output
     assert "meses_madre_trabajo" in output
+    # `descendiente add` only appends and cannot clear a declared row; the
+    # refusal must point at an editing route that actually can.
+    assert "descendiente remove" in output
 
 
 def test_the_flag_alone_still_reaches_the_casilla(runtime_profile: TestRuntimeProfile) -> None:
@@ -344,3 +389,28 @@ def test_the_flag_alone_still_reaches_the_casilla(runtime_profile: TestRuntimePr
 
     assert exit_code == 0, output
     assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
+
+
+def test_a_withheld_declaration_and_the_flag_together_are_also_refused(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The silent branch: a wholly-withheld profile declaration must not let the flag win quietly.
+
+    This descendant is over three, so every one of its declared months is
+    withheld (``pairs`` is empty) -- but the profile still DECLARES real
+    months. Keying the refusal on the post-eligibility-filter ``pairs``
+    instead of the pre-filter ``declares_meses`` let this exact case fall
+    through: no refusal (``pairs`` was falsy) and no advisory (the flag's
+    presence suppressed it), so the operator's declared record silently lost
+    to the flag with nothing said. Same shape as
+    ``test_the_flag_and_the_declared_records_together_are_refused`` above, one
+    limb over.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate("--meses-trabajo-con-hijo-menor-3", "0=12")
+
+    assert exit_code != 0, output
+    assert "meses_madre_trabajo" in output
+    assert "descendiente remove" in output

@@ -450,7 +450,7 @@ def vocabulary_fingerprint(terms: Iterable[str]) -> str:
     return sha256(canonical_vocabulary_bytes(terms)).hexdigest()
 
 
-def canonical_query_tokens(tokens: Iterable[str]) -> tuple[str, ...]:
+def canonical_query_tokens(tokens: Iterable[object]) -> tuple[str, ...]:
     """Return browser-recognizable query words in deterministic UTF-8 order.
 
     The same versioned normalization contract is applied to compiler input and
@@ -606,7 +606,7 @@ def write_static_embedding_matrix(matrix: StaticEmbeddingMatrix, destination: Pa
     destination.write_bytes(matrix.to_json_bytes())
 
 
-def _canonical_term(value: str) -> str:
+def _canonical_term(value: object) -> str:
     """Normalize a result term with the shared cross-runtime word contract."""
     if not isinstance(value, str):
         raise MatrixCompilationError("vocabulary terms must be strings")
@@ -619,7 +619,7 @@ def _canonical_term(value: str) -> str:
     return normalized
 
 
-def normalise_query_tokens(value: str) -> tuple[str, ...]:
+def normalise_query_tokens(value: object) -> tuple[str, ...]:
     """Apply the versioned compiler/browser normalization algorithm.
 
     NFKC, Unicode lowercase, and accent preservation are followed by Unicode

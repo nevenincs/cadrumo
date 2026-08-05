@@ -87,8 +87,10 @@ jobs:
         # No junit artifact (zero Actions-artifact posture); the durations
         # profile lives in the job log.
         # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/ci-control-plane.md).
-        run: uv run pytest --durations=100 -n 8
+        # CPUs (machine-aware sizing, .github/ci-control-plane.md). Routed
+        # through the same recipe ci.yml uses so the selection has one
+        # declaration site.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-unit 100
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
       - name: Tooling and workflow conformance gates
@@ -108,8 +110,10 @@ jobs:
         # xdist run HOLDS serial tests out while still reporting a clean pass,
         # which is the same false green that hid the breakages. Sized into this
         # lane rather than per-push because the tests build real sdists and
-        # wheels, costing minutes the per-push budget cannot absorb.
-        run: uv run --no-sync pytest -q -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests packaging/mcpb/tests
+        # wheels, costing minutes the per-push budget cannot absorb. Routed
+        # through the recipe so this path/marker selection has one declaration
+        # site instead of living only in this workflow line.
+        run: just test-channel-artifacts
 
       - name: Serving-path performance gate
         # perf-marked, excluded from every per-push lane (a shared machine

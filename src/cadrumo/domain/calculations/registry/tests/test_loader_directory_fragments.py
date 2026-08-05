@@ -379,6 +379,8 @@ casilla_ids = ["0001"]
         """
 [[revisions."2025".constructs]]
 id = "modelo-999-workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
 formulas = ["formula-1"]
 """.lstrip(),
         encoding="utf-8",
@@ -428,6 +430,8 @@ record_type = "2"
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
 casilla_ids = ["0001"]
 """.lstrip(),
                 ),
@@ -436,11 +440,13 @@ casilla_ids = ["0001"]
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["other-source"]
 formulas = ["formula-1"]
 """.lstrip(),
                 ),
             ),
-            "field 'title' conflicts",
+            "field 'source_refs' conflicts",
             id="construct-metadata",
         ),
     ),
@@ -527,12 +533,12 @@ def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) ->
     target = tmp_path / "999"
     revision_dir = _minimal_fragment_revision_layout(
         target,
-        revision_text='[revisions."2025"]\nlabel = "one"\n',
+        revision_text='[revisions."2025"]\nvalid_from = 2025-01-01\n',
     )
     (revision_dir / "extra.toml").write_text(
-        '[revisions."2025"]\nlabel = "two"\n',
+        '[revisions."2025"]\nvalid_from = 2025-02-01\n',
         encoding="utf-8",
     )
 
-    with pytest.raises(RegistryLoadError, match="redeclares scalar field 'label'"):
+    with pytest.raises(RegistryLoadError, match="redeclares scalar field 'valid_from'"):
         load_modelo_directory(target)

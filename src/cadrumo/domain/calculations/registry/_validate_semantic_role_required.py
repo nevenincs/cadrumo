@@ -18,6 +18,7 @@ import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
+from ....core.i18n import MissingTranslationError
 from ._ids import CasillaId, ModeloId, RevisionId
 from ._schema import ModeloDefinition
 
@@ -73,13 +74,22 @@ def _validate_required_role_declarations(
         for revision in modelo.revisions.values():
             for casilla in revision.casillas:
                 for pattern, expected_role in _REQUIRED_ROLE_LABEL_PATTERNS:
-                    if not pattern.match(casilla.label):
+                    try:
+                        label = casilla.label
+                    except MissingTranslationError:
+                        # Registry validation can inspect an operator-supplied
+                        # structural root before its shared catalogue is
+                        # enrolled. The bundled corpus coverage gate owns the
+                        # completeness check; this label-derived rule has no
+                        # evidence to evaluate until the catalogue is present.
+                        continue
+                    if not pattern.match(label):
                         continue
                     if casilla.semantic_role is None:
                         failures.append(
                             f"required-role gate: casilla "
                             f"{modelo.id}.{revision.id}.{casilla.id} label "
-                            f"{casilla.label!r} matches pattern {pattern.pattern!r} "
+                            f"{label!r} matches pattern {pattern.pattern!r} "
                             f"but declares no semantic_role (expected "
                             f"{expected_role!r})",
                         )
@@ -87,7 +97,7 @@ def _validate_required_role_declarations(
                         failures.append(
                             f"required-role gate: casilla "
                             f"{modelo.id}.{revision.id}.{casilla.id} label "
-                            f"{casilla.label!r} matches pattern {pattern.pattern!r} "
+                            f"{label!r} matches pattern {pattern.pattern!r} "
                             f"but declares semantic_role "
                             f"{casilla.semantic_role!r} (expected "
                             f"{expected_role!r})",

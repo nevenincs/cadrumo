@@ -810,7 +810,7 @@ def test_casilla_accepts_continuidad_id_roundtrip() -> None:
         {
             "id": "0700",
             "number": "0700",
-            "label": "Base liquidable general",
+            "localization_keys": ("test.schema.casilla.label",),
             "section": ("base",),
             "data_type": "money",
             "continuidad_id": "renta.base-liquidacion.general",
@@ -819,7 +819,9 @@ def test_casilla_accepts_continuidad_id_roundtrip() -> None:
         },
     )
 
-    restored = CasillaDefinition.model_validate(casilla.model_dump())
+    restored = CasillaDefinition.model_validate(
+        {**casilla.model_dump(), "localization_keys": casilla.localization_keys},
+    )
 
     assert restored == casilla
     assert restored.continuidad_id == "renta.base-liquidacion.general"
@@ -831,7 +833,7 @@ def test_casilla_continuidad_id_uses_registry_id_shape() -> None:
             {
                 "id": "0700",
                 "number": "0700",
-                "label": "Base liquidable general",
+                "localization_keys": ("test.schema.casilla.label",),
                 "section": ("base",),
                 "continuidad_id": "Renta Base",
                 "legal_refs": ("ley-35-2006:art-48",),
@@ -857,6 +859,7 @@ def test_modelo_revision_defaults_to_advisory_continuidad_validation() -> None:
     revision = ModeloRevision.model_validate(
         {
             "id": "2024",
+            "localization_key": "test.schema.revision.label",
             "valid_from": date(2024, 1, 1),
             "period_selector": {"years": (2024,), "periods": ("0A",)},
             "legal_refs": ("ley-35-2006:art-48",),

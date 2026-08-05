@@ -28,8 +28,10 @@ from ._loader_cache import (
     toml_file_fingerprint,
 )
 from ._modelo_localization import (
+    casilla_alias_locale_key,
     casilla_continuity_locale_key,
     casilla_occurrence_locale_key,
+    construct_locale_key,
     modelo_locale_key,
     revision_locale_key,
 )
@@ -258,25 +260,68 @@ def _enroll_revision_localization(
         "localization_key": revision_locale_key(modelo_id, revision_id),
     }
     raw_casillas = raw_revision.get("casillas")
-    if not isinstance(raw_casillas, (list, tuple)):
-        return payload
-
     casillas: list[dict[str, object]] = []
-    for raw_casilla in raw_casillas:
-        casilla = _as_toml_table(raw_casilla)
-        if casilla is None:
-            casillas.append(dict(raw_casilla) if isinstance(raw_casilla, Mapping) else {"value": raw_casilla})
-            continue
-        casilla_id = casilla.get("id")
-        if not isinstance(casilla_id, str):
-            casillas.append(dict(casilla))
-            continue
-        keys = [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, "label")]
-        continuidad_id = casilla.get("continuidad_id")
-        if isinstance(continuidad_id, str):
-            keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, "label"))
-        casillas.append({**casilla, "localization_keys": tuple(keys)})
-    payload["casillas"] = tuple(casillas)
+    if isinstance(raw_casillas, (list, tuple)):
+        for raw_casilla in raw_casillas:
+            casilla = _as_toml_table(raw_casilla)
+            if casilla is None:
+                casillas.append(dict(raw_casilla) if isinstance(raw_casilla, Mapping) else {"value": raw_casilla})
+                continue
+            casilla_id = casilla.get("id")
+            if not isinstance(casilla_id, str):
+                casillas.append(dict(casilla))
+                continue
+            keys = [casilla_occurrence_locale_key(modelo_id, revision_id, casilla_id, "label")]
+            continuidad_id = casilla.get("continuidad_id")
+            if isinstance(continuidad_id, str):
+                keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, "label"))
+            casilla_payload = {**casilla, "localization_keys": tuple(keys)}
+            raw_aliases = casilla.get("aliases")
+            if isinstance(raw_aliases, (list, tuple)):
+                aliases: list[dict[str, object]] = []
+                for alias_index, raw_alias in enumerate(raw_aliases):
+                    alias = _as_toml_table(raw_alias)
+                    if alias is None:
+                        aliases.append(
+                            dict(raw_alias) if isinstance(raw_alias, Mapping) else {"value": raw_alias},
+                        )
+                        continue
+                    aliases.append(
+                        {
+                            **alias,
+                            "localization_key": casilla_alias_locale_key(
+                                modelo_id,
+                                revision_id,
+                                casilla_id,
+                                str(alias_index),
+                            ),
+                        },
+                    )
+                casilla_payload["aliases"] = tuple(aliases)
+            casillas.append(casilla_payload)
+        payload["casillas"] = tuple(casillas)
+
+    raw_constructs = raw_revision.get("constructs")
+    if isinstance(raw_constructs, (list, tuple)):
+        constructs: list[dict[str, object]] = []
+        for raw_construct in raw_constructs:
+            construct = _as_toml_table(raw_construct)
+            if construct is None:
+                constructs.append(
+                    dict(raw_construct) if isinstance(raw_construct, Mapping) else {"value": raw_construct},
+                )
+                continue
+            construct_id = construct.get("id")
+            if not isinstance(construct_id, str):
+                constructs.append(dict(construct))
+                continue
+            constructs.append(
+                {
+                    **construct,
+                    "localization_key": construct_locale_key(modelo_id, revision_id, construct_id),
+                },
+            )
+        payload["constructs"] = tuple(constructs)
     return payload
 
 

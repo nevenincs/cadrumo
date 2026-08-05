@@ -1,7 +1,15 @@
 """Capture and staleness for the modelo filing ledger snapshot.
 
-Used by: :mod:`application.modelo._work_lifecycle` for revision staleness checks,
-:mod:`application.evidence` for audit bundle generation.
+Used by: :mod:`application.modelo._ledger_drift_gate` for the calculate-time
+staleness refusal, :mod:`entrypoints.cli._ledger_read_cli` for the stale-revision
+listing, and :mod:`application.modelo._verification_actions` for the Modelo 303
+deductible-evidence verify gate.
+
+That list names the callers as they stand and is not a guarantee that no other
+site reaches these functions; grep before relying on it. It previously named two
+modules that call nothing here at all, which is worse than naming none: a reader
+auditing the staleness refusal went looking in the wrong package, found nothing,
+and had every reason to conclude the enforcement did not exist.
 
 The pure records live in :mod:`domain.modelos._ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:

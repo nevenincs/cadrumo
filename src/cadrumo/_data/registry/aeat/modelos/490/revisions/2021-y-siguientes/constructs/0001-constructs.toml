@@ -1,6 +1,5 @@
 [[revisions."2021-y-siguientes".constructs]]
 id = "modelo-490-autoliquidacion"
-title = "Modelo 490 autoliquidación del Impuesto sobre Determinados Servicios Digitales"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure", "enrolled-modelo-490-layout"]
 casilla_ids = ["decl.ejercicio", "decl.periodo"]

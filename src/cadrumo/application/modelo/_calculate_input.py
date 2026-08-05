@@ -804,10 +804,26 @@ def _maternidad_meses_withheld_advisory(
 
     The one state where a taxpayer declared real months, sees them stored, and
     receives nothing — and nothing about the computed value says why. Art. 81.1
-    reaches only a child under three "con derecho a la aplicación del mínimo por
-    descendientes", so months declared against a descendant that predicate
-    excludes are correctly withheld; withholding them SILENTLY is what this
-    reports.
+    reaches a child under three "con derecho a la aplicación del mínimo por
+    descendientes" OR one inside the age-independent adopción/acogimiento
+    entry-date window
+    (:meth:`~domain.contribuyente.DescendantInfo.art_81_1_entry_window_meses`),
+    so months declared against a descendant BOTH limbs exclude are correctly
+    withheld; withholding them SILENTLY is what this reports.
+
+    The remedy must not name the birth date as the fix for every withheld
+    case. The entry-date limb reaches an over-three adopción or acogimiento by
+    a recorded ``INSCRIPCION``/``ACOGIMIENTO`` date, not by age — so the real
+    gap for that population is a missing entry date, and a message that only
+    ever suggests the birth date steers that filer toward altering a fact
+    that was already correct.
+
+    Nor may the remedy name ``descendiente add`` as the way to CHANGE a
+    declared row. That verb only appends, and the paged editing door
+    (``aeat config profile descendiente`` with no subcommand) refuses on a
+    piped host, which the autonomous-agent operator this CLI is built for
+    always is. The actionable route is ``descendiente remove <index>`` then
+    ``add`` to restate the row.
     """
     if not withheld:
         return None
@@ -816,11 +832,11 @@ def _maternidad_meses_withheld_advisory(
         source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
         message=(
             f"descendiente {', '.join(withheld)} declares meses_madre_trabajo but contributes no "
-            "Art. 81.1 deducción por maternidad: the deduction reaches only a descendant under three "
-            "who also holds the mínimo por descendientes, so cohabitation, the Art. 58.1 rentas "
-            "ceiling and the Art. 61 norma 2ª own-return rule all apply. Correct the birth date, the "
-            "cohabitation answer or the rentas figure with `aeat config profile descendiente add` if "
-            "the descendant does qualify."
+            "Art. 81.1 deducción por maternidad: it reaches a child under three OR one inside the "
+            "age-independent adopción/acogimiento entry-date window. An over-three adopción/acogimiento "
+            "with no recorded entry date is withheld for a missing INSCRIPCION or ACOGIMIENTO date, not "
+            "a birth date. Record it, or correct cohabitation or rentas, with `aeat config profile "
+            "descendiente remove <index>` then `add` to restate the row."
         ),
         casilla_id=casilla_id,
     )
@@ -1007,28 +1023,57 @@ def apply_calculation_shortcut_inputs(
     maternidad = _resolved_maternidad_meses(work_unit_id) if maternidad_casilla_id is not None else None
     if maternidad_casilla_id is not None and maternidad is not None:
         declared_meses = maternidad.pairs
-        if meses_trabajo_con_hijo_menor_3 and declared_meses:
+        # Keyed on the PRE-eligibility-filter `declares_meses`, not on `pairs`
+        # (== `declared_meses`, already filtered to `meses > 0` post-eligibility).
+        # A profile whose every declared descendant is withheld -- over three, not
+        # cohabiting, over the rentas ceiling -- has an EMPTY `pairs` while still
+        # declaring real months, and keying the refusal on `pairs` let the flag win
+        # that case silently: no refusal, no advisory, the operator never told their
+        # profile-side declaration was in play at all.
+        if meses_trabajo_con_hijo_menor_3 and maternidad.declares_meses:
             raise ModeloCalculateShortcutInputError(
                 "--meses-trabajo-con-hijo-menor-3 was supplied while the active profile already declares "
                 "meses_madre_trabajo on its descendiente records. One authority per filing: either drop "
                 "the flag and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO "
-                "from the records with `aeat config profile descendiente add`.",
+                "with `aeat config profile descendiente remove <index>` then `add` to restate the row "
+                "without it -- `descendiente add` alone only appends and cannot edit a declared row.",
                 translated_message="application.modelo.errors.calculate_maternidad_meses_two_authorities",
             )
-        if not meses_trabajo_con_hijo_menor_3:
-            for advisory in (
-                _maternidad_ceilings_unresolved_advisory(
-                    maternidad.declares_meses and not maternidad.ceilings_resolved,
-                    maternidad_casilla_id,
-                ),
-                _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
-            ):
-                if advisory is not None:
-                    advisories.append(advisory)
+        # Evaluated unconditionally rather than gated on the flag's absence: the
+        # refusal above already aborts the one state where the flag and a real
+        # profile declaration coexist, so reaching here with the flag supplied
+        # means `declares_meses` is False and both advisories are no-ops on their
+        # own internal gates -- but the two concerns (refuse on conflict, disclose
+        # a withholding) are independent and must not share one external gate,
+        # which is the coupling that let the ceilings-unresolved case go silent
+        # too whenever the flag happened to be present.
+        for advisory in (
+            _maternidad_ceilings_unresolved_advisory(
+                maternidad.declares_meses and not maternidad.ceilings_resolved,
+                maternidad_casilla_id,
+            ),
+            _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
+        ):
+            if advisory is not None:
+                advisories.append(advisory)
 
     maternidad_meses = meses_trabajo_con_hijo_menor_3 or declared_meses
     if maternidad_meses:
-        deduccion = compute_deduccion_maternidad_0611(list(maternidad_meses))
+        # The alta-posterior increment is a fact carried on the profile's
+        # descendiente records; the `--meses-trabajo-con-hijo-menor-3` shortcut
+        # supplies bare (hijo, meses) pairs with no linked record to read it
+        # from, so it never contributes the increment. The two are already
+        # mutually exclusive above.
+        alta_posterior_hijos: frozenset[str] = (
+            maternidad.alta_posterior_hijos
+            if maternidad is not None and not meses_trabajo_con_hijo_menor_3
+            else frozenset()
+        )
+        deduccion = compute_deduccion_maternidad_0611(
+            list(maternidad_meses),
+            filing_year=_work_unit_filing_year(work_unit_id),
+            alta_posterior_hijos=alta_posterior_hijos,
+        )
         resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE)] = Decimal(
             deduccion
         )

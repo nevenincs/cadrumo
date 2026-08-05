@@ -92,23 +92,30 @@ class CasillaContinuidadEvolutionDefinition(RegistryModel):
 
 
 class CasillaAlias(RegistryModel):
-    """A label variant for a casilla, carrying its own legal grounding.
+    """A localized label variant for a casilla, carrying its own grounding.
 
     Used by Plan C's semantic-role validator: two casillas in
-    different modelos can share a ``semantic_role`` even though
-    their primary ``label`` strings differ verbatim, provided each
-    declares the divergent phrasing via an ``aliases`` entry with
-    a documented BOE or AEAT source.
+    different modelos can share a ``semantic_role`` even though their
+    primary labels differ, provided each declares the divergent phrasing via
+    an ``aliases`` entry with a documented BOE or AEAT source. The text is
+    resolved from the shared locale catalogue; the revision loader derives
+    ``localization_key`` from the containing casilla and alias occurrence.
     """
 
-    label: str = Field(min_length=1, max_length=512)
+    localization_key: str = Field(min_length=1, exclude=True, repr=False)
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
-    @model_validator(mode="after")
-    def _validate_label(self) -> CasillaAlias:
-        _require_official_text(self.label, "casilla alias label")
-        return self
+    def get_label(self, locale: str) -> str:
+        """Resolve the alias label through the shared catalogue."""
+        resolved = resolve_modelo_localization((self.localization_key,), locale=locale, required=True)
+        assert resolved is not None
+        return resolved
+
+    @property
+    def label(self) -> str:
+        """Return the strict official-Spanish alias label."""
+        return self.get_label("es")
 
 
 class CasillaConstraints(RegistryModel):

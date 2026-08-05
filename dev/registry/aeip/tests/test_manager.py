@@ -1,30 +1,34 @@
 """Real-corpus tests for the anexo-A AEIP continuity planner.
 
-Every test runs against the shipped registry authoring tree. Counts that would
-drift when a new filing year is authored are asserted as invariants (a chain id
-is well-formed, a gap is refused, an adjudication changes the plan) rather than
-as frozen totals, so a 2026 revision extends the family without reddening the
-suite. The two totals that are pinned -- the revision set and the already-landed
-chain -- are pinned deliberately and are cheap to update.
+Every test runs against the shipped registry, loaded the way production loads
+it, with programme titles resolved from the shared locale catalogues rather
+than read out of the schema.
+
+Counts that would drift when a new filing year is authored are asserted as
+invariants -- a chain id is well-formed and survives locale-key encoding, a gap
+is refused, an adjudication changes the plan -- rather than as frozen totals, so
+a 2026 revision extends the family without reddening the suite. The two things
+pinned exactly are the revision set and the already-landed chain id; both are
+deliberate and cheap to update.
 """
 
 from __future__ import annotations
 
-import io
-import subprocess
-import tarfile
 from itertools import pairwise
 from pathlib import Path
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from cadrumo.domain.calculations.registry._modelo_localization import (
+    casilla_continuity_locale_key,
+    casilla_occurrence_locale_key,
+)
 from cadrumo.domain.calculations.registry._schema_base import ContinuidadId
 
 from ..adjudications import (
     AdjudicationError,
     AdjudicationSet,
-    ChainIdOverride,
     Exclusion,
     Split,
     TitleAlias,
@@ -56,33 +60,23 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 
 # The chain H1 already stamped into the corpus. The scheme must reproduce it
 # exactly, or the scheme supersedes a landed stamp without saying so.
-_LANDED_CHAIN_ID = "irpf.aeip.centenario-del-hockey-1923-2023.aplicado"
+_LANDED_CHAIN_ID = "irpf-aeip-centenario-del-hockey-1923-2023-aplicado"
 
 
-_REGISTRY_SUBPATH = "src/cadrumo/_data/registry/aeat/modelos/100"
+_MODELOS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+_SHIPPED_ADJUDICATIONS = Path(__file__).resolve().parents[1] / "adjudications.toml"
 
 
 @pytest.fixture(scope="module")
-def modelos_root(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """The committed registry tree, materialised from ``HEAD``.
+def modelos_root() -> Path:
+    """The registry authoring tree the loader reads.
 
-    This worktree is shared by many concurrent campaigns, so its working tree
-    routinely holds a peer's half-applied sweep of the same fragments this
-    family reads -- a mid-migration state in which every anexo-A label is
-    momentarily absent. Reading ``HEAD`` measures the committed registry
-    instead, which is what this planner is a gate on, and keeps the suite from
-    reddening on work that is not its own. Nothing is written to the worktree.
+    The programme titles no longer live here -- the schema carries only locale
+    keys and the text resolves from the shared catalogues -- so this fixture
+    points the loader at the real tree and lets the canonical resolution path
+    supply the labels.
     """
-    destination = tmp_path_factory.mktemp("registry-head")
-    archive = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        ["git", "archive", "HEAD", _REGISTRY_SUBPATH],  # noqa: S607 - git resolved from PATH
-        cwd=_REPO_ROOT,
-        capture_output=True,
-        check=True,
-    )
-    with tarfile.open(fileobj=io.BytesIO(archive.stdout)) as tar:
-        tar.extractall(destination, filter="data")
-    return destination / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+    return _MODELOS_ROOT
 
 
 @pytest.fixture(scope="module")
@@ -98,6 +92,25 @@ def inventory(corpus):
     return build_inventory(occurrences, category_row_counts=category_counts)
 
 
+@pytest.fixture(scope="module")
+def adjudicated(corpus):
+    """The family as the shipped judgments resolve it.
+
+    Exclusions and aliases act while occurrences are grouped, so the shipped
+    adjudications have to be supplied to ``build_inventory`` as well as to
+    ``plan_chains``; an inventory built without them still shows the duplicate
+    and the year-variant pair.
+    """
+    occurrences, category_counts = corpus
+    adjudications = load_adjudications(_SHIPPED_ADJUDICATIONS)
+    inventory = build_inventory(
+        occurrences,
+        adjudications=adjudications,
+        category_row_counts=category_counts,
+    )
+    return inventory, plan_chains(inventory, adjudications=adjudications), adjudications
+
+
 def test_extraction_reads_every_revision_of_the_family(inventory) -> None:
     """Every M100 revision carrying the family is read."""
     assert inventory.revisions == ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -108,15 +121,15 @@ def test_extraction_reads_every_revision_of_the_family(inventory) -> None:
 
 
 def test_every_occurrence_carries_a_parsed_programme_title(inventory) -> None:
-    """The published label is this family's only identity signal.
+    """The resolved Spanish label is this family's only identity signal.
 
     Nothing else in an anexo-A event row distinguishes one programme from
     another: the ids repack yearly, the ``semantic_role`` is shared by the
     whole family, and the ``legal_refs`` vary only by revision, never by
-    programme. If the committed registry ever stops carrying these labels -- for instance
-    if they move wholesale into the locale catalogues -- the event-keyed scheme
-    loses its input, and this gate is where that must surface loudly rather
-    than as a silently empty plan.
+    programme. The titles live in the shared locale catalogues rather than in
+    the schema, so this gate is what catches a key that stops resolving -- an
+    unenrolled occurrence, a dropped catalogue leaf, a renamed key -- while it
+    is still a loud failure rather than a silently unkeyable programme.
     """
     assert inventory.events, "the family must resolve to at least one programme"
     assert not inventory.untitled_occurrences, (
@@ -134,8 +147,89 @@ def test_derived_chain_ids_satisfy_the_registry_continuidad_constraint(inventory
     assert plan.entries, "expected at least one planned chain"
     for entry in plan.entries:
         _CHAIN_ID_ADAPTER.validate_python(entry.chain_id)
-        assert entry.chain_id.startswith("irpf.aeip.")
-        assert entry.chain_id.endswith(".aplicado")
+        assert entry.chain_id.startswith("irpf-aeip-")
+        assert entry.chain_id.endswith("-aplicado")
+
+
+def test_chain_id_keeps_its_continuity_locale_key_readable() -> None:
+    """The chain id must survive locale-key encoding without being mangled.
+
+    A chain id is embedded whole into its continuity locale key, and
+    ``encode_modelo_locale_segment`` base32-encodes any segment outside
+    ``[A-Za-z0-9_-]``. A dotted chain id therefore turns its own key into an
+    opaque ``x-...`` blob that no translator can read, which is why this family
+    is keyed with hyphens. This is the gate on that decision.
+    """
+    kebab = chain_id_for("centenario-del-hockey-1923-2023")
+    key = casilla_continuity_locale_key("100", kebab, "label")
+    assert kebab in key, "the chain id must appear verbatim in its locale key"
+    assert ".x-" not in key, f"chain id was base32-encoded into an opaque key: {key}"
+
+    # The refutation: the dotted form this scheme rejects really does mangle.
+    dotted = "irpf.aeip.centenario-del-hockey-1923-2023.aplicado"
+    assert ".x-" in casilla_continuity_locale_key("100", dotted, "label")
+
+
+def test_every_planned_chain_id_survives_locale_key_encoding(inventory) -> None:
+    """No planned chain id may produce an encoded continuity key."""
+    plan = plan_chains(inventory)
+    assert plan.entries
+    for entry in plan.entries:
+        key = casilla_continuity_locale_key("100", entry.chain_id, "label")
+        assert ".x-" not in key, f"{entry.chain_id} encodes to {key}"
+
+
+def test_grounding_collapses_per_revision_keys_onto_one_concept(adjudicated) -> None:
+    """A chain's payoff on the locale surface is measurable, not asserted.
+
+    Every occurrence spends one per-revision locale key. Grounding adds a single
+    continuity key the resolver prefers, so a chain of N occurrences collapses N
+    translatable keys onto one concept.
+    """
+    _, plan, _ = adjudicated
+    assert plan.complete, "the shipped adjudications must leave nothing open"
+    occurrence_keys = {
+        casilla_occurrence_locale_key("100", occ.revision_id, occ.casilla_id, "label")
+        for entry in plan.entries
+        for occ in entry.occurrences
+    }
+    continuity_keys = {casilla_continuity_locale_key("100", entry.chain_id, "label") for entry in plan.entries}
+    assert len(continuity_keys) == len(plan.entries)
+    assert len(occurrence_keys) > len(continuity_keys), (
+        "grounding must reduce the translatable key count, or the chain earns nothing"
+    )
+
+
+def test_shipped_adjudications_resolve_every_ambiguity(adjudicated) -> None:
+    """The four recorded judgments leave the family fully plannable."""
+    _, plan, adjudications = adjudicated
+    assert plan.ambiguities == (), f"still open: {[a.kind for a in plan.ambiguities]}"
+    # And they are grounded: every recorded judgment states its evidence.
+    recorded = (
+        *adjudications.exclusions,
+        *adjudications.aliases,
+        *adjudications.chain_ids,
+        *adjudications.splits,
+        *adjudications.distinct_variants,
+    )
+    assert recorded, "expected recorded adjudications"
+    for entry in recorded:
+        assert len(entry.reason.strip()) > 40, f"adjudication reason is too thin to audit: {entry}"
+
+
+def test_oversize_title_on_a_single_revision_programme_is_not_blocked(inventory) -> None:
+    """An over-long title only matters if the programme actually gets a chain.
+
+    The two titles that exceed the budget are both single-revision programmes,
+    so they are never stamped and demand no decision. Blocking on them would
+    require an adjudication that changes nothing.
+    """
+    plan = plan_chains(inventory)
+    oversize_slugs = {slug for a in plan.ambiguities if a.kind == "oversize_chain_id" for slug in a.slugs}
+    for slug in oversize_slugs:
+        event = inventory.event_by_slug(slug)
+        assert event is not None
+        assert event.spans_multiple_revisions, f"{slug} is single-revision and must not block"
 
 
 def test_oversize_slug_is_refused_by_the_real_constraint() -> None:
@@ -188,7 +282,7 @@ def test_gapped_programme_is_refused_until_split(inventory) -> None:
                 Split(
                     slug=slug,
                     from_revision=resumption,
-                    chain_id=f"irpf.aeip.{slug}.{resumption}.aplicado",
+                    chain_id=f"irpf-aeip-{slug}-{resumption}-aplicado",
                     reason="test: later window is a fresh designation",
                 ),
             ),
@@ -265,26 +359,6 @@ def test_distinct_variants_keeps_two_programmes_apart(inventory) -> None:
         ),
     )
     assert not [a for a in resolved.ambiguities if a.kind == "title_variant" and set(a.slugs) == set(group.slugs)]
-
-
-def test_chain_id_override_resolves_an_oversize_title(inventory) -> None:
-    """An override supplies a chain id the derived slug cannot express."""
-    plan = plan_chains(inventory)
-    oversize = [a for a in plan.ambiguities if a.kind == "oversize_chain_id"]
-    assert oversize, "the corpus carries a known oversize title"
-    slug = oversize[0].slugs[0]
-    short = "irpf.aeip.test-shortened.aplicado"
-    resolved = plan_chains(
-        inventory,
-        adjudications=AdjudicationSet(
-            chain_ids=(ChainIdOverride(slug=slug, chain_id=short, reason="test: shortened"),),
-        ),
-    )
-    # The override does not clear the ambiguity by itself -- the planner still
-    # reports the derived slug as oversize -- but it is the recorded decision
-    # the campaign lands, so it must validate as a real chain id.
-    _CHAIN_ID_ADAPTER.validate_python(short)
-    assert resolved is not None
 
 
 def test_retirement_is_planned_for_a_programme_that_left_the_form(inventory) -> None:

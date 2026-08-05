@@ -111,6 +111,7 @@ from ._credentials import (
 from ._declaracion_idioma import DeclaracionIdioma
 from ._descendant_relacion import (
     ART_58_2_ENTITLING_RELACIONES,
+    ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
 from ._export_layout_format import ExportLayoutFormat
@@ -279,6 +280,7 @@ __all__: list[str] = [
     "AEAT_CSV_PATTERN",
     "ANTHROPIC_EXTRA",
     "ART_58_2_ENTITLING_RELACIONES",
+    "ART_81_1_MATERNIDAD_RELACIONES",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "BROWSER_EXTRA",

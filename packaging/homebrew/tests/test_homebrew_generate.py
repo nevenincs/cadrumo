@@ -11,8 +11,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 import pytest
-from dev.packaging._smoke_common import commit_defined_build_root, run_checked
-from dev.packaging.smoke_sdist_core import _build_sdist
+from dev.packaging._smoke_common import build_sdist, commit_defined_build_root, run_checked
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -58,7 +57,7 @@ def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
     # and the formula this test asserts on would describe bytes matching no
     # commit. On a clean checkout this IS the tree, so CI pays nothing.
     build_root = commit_defined_build_root(_REPO_ROOT, build_dir)
-    root = _build_sdist(build_dir, uv, build_root=build_root)
+    root = build_sdist(build_dir, uv, build_root=build_root)
     companion_dir = build_dir / "companions"
     manuals_project = build_root / "packaging" / "cadrumo_data_manuals"
     official_project = build_root / "packaging" / "cadrumo_data_official"

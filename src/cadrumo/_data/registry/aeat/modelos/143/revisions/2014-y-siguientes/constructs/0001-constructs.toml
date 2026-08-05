@@ -1,6 +1,5 @@
 [[revisions."2014-y-siguientes".constructs]]
 id = "modelo-143-informative"
-title = "Modelo 143 solicitud de abono anticipado (familia numerosa / discapacidad)"
 legal_refs = ["orden-hap-2486-2014:art-1", "orden-hap-2486-2014:art-5", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-143-procedure", "enrolled-modelo-143-layout"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]

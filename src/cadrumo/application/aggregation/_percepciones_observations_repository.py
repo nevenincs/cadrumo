@@ -58,13 +58,10 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core import STRICT_FROZEN_CONFIG, Period
-from ...core.external_constants import UTF_8_ENCODING
-from ...core.hashing import sha256_hex
-from ...core.identity import tax_id_identity_token
 from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import WithholdingObservation
 from ._errors import AggregationValidationError, t
-from ._observation_window import replace_observation_window
+from ._observation_window import hashed_tax_id_token, replace_observation_window
 
 
 class _PercepcionObservationEnvelopePayload(BaseModel):
@@ -100,25 +97,6 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
     source_metadata: Mapping[str, str] = Field(default_factory=dict)
 
 
-def _hashed_perceptor_token(perceptor_tax_id: str) -> str:
-    """Return the sha256 of the perceptor's canonical identity token.
-
-    Normalises through the same :func:`tax_id_identity_token` the observation
-    model applies on construction, so the object key and the clave/subclave
-    aggregation key are derived from one identity. The normalisation is
-    idempotent, so an observation-sourced tax ID passes through unchanged; the
-    blank guard remains as a defence for callers that key without an
-    observation.
-    """
-    token = tax_id_identity_token(perceptor_tax_id)
-    if not token:
-        raise AggregationValidationError(
-            t("aggregation.retenciones.errors.perceptor_nif_blank"),
-            context={"field": "perceptor_tax_id"},
-        )
-    return sha256_hex(token.encode(UTF_8_ENCODING))
-
-
 def percepcion_observation_key(
     modelo: str,
     filing_year: int,
@@ -146,7 +124,8 @@ def percepcion_observation_key(
     safe_repository_id(clave, context="clave")
     subclave_token = subclave or "-"
     safe_repository_id(subclave_token, context="subclave")
-    return f"{modelo}:{filing_year}:{period_token}:{_hashed_perceptor_token(perceptor_tax_id)}:{clave}:{subclave_token}"
+    hashed_token = hashed_tax_id_token(perceptor_tax_id, field_name="perceptor_tax_id")
+    return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{clave}:{subclave_token}"
 
 
 class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservationEnvelopePayload]):

@@ -50,6 +50,8 @@ from pathlib import Path
 
 import pytest
 
+from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -57,10 +59,6 @@ _PACKAGING_ROOT = _REPO_ROOT / "packaging"
 _CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 _COMPANION_CORPUS_PREFIX = "cadrumo_data/_data/corpus/"
-# PyPI's default per-file size cap, in the decimal-MB convention the publish
-# guard and CI artifact guard use (bytes / 1e6). The split exists to keep every
-# companion wheel under this without a size grant.
-_PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 
 
 @dataclass(frozen=True)
@@ -267,7 +265,7 @@ def test_companion_wheel_is_under_the_pypi_file_cap(built_wheels: dict[str, _Bui
     for companion in _COMPANIONS:
         size_bytes = built_wheels[companion.dist_name].size_bytes
         size_mb = size_bytes / 1_000_000
-        assert size_bytes < _PYPI_FILE_CAP_BYTES, (
+        assert size_bytes < PYPI_FILE_CAP_BYTES, (
             f"{companion.dist_name} wheel is {size_mb:.1f} MB, at or over PyPI's 100 MB per-file cap; the split "
             "exists precisely to keep each companion sub-cap without a size grant — the corpus seam partition must "
             "be rebalanced or a third companion carved"

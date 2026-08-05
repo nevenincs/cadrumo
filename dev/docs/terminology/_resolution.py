@@ -176,6 +176,15 @@ class _CasillaSourceSection:
     end_line: int
 
 
+@dataclass(frozen=True, slots=True)
+class _LegalSourceSection:
+    """One legal catalogue provision and its inclusive source line span."""
+
+    legal_id: str
+    start_line: int
+    end_line: int
+
+
 _CONCEPT_TOML_RE = re.compile(
     r"^src/cadrumo/_data/terminology/concepts/(?P<concept_id>[^/]+)\.toml$",
 )
@@ -424,22 +433,51 @@ class TargetResolver:
         return self._legal_target(hit, legal_id)
 
     def _resolve_legal_toml(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
-        # A legal TOML file declares many provisions grouped under
-        # ``[legal."<id>"]`` headers. The catalogue is keyed by id, not file, and
-        # the authority exposes no per-entry source-file, so the file's declared
-        # ids are discovered by scanning its table headers, then cross-checked
-        # against the validated catalogue (the authority stays the value
-        # authority; this only learns WHICH ids the file declares). The first
-        # known id is the representative legal-grounding target; precise
-        # per-line resolution is the wrangling layer's concern.
-        declared = _declared_legal_ids(hit.path, self._known_legal_ids)
-        if not declared:
+        path = hit.posix_path.as_posix()
+        if hit.line_start < 1 or hit.line_end < hit.line_start:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"no catalogue-known legal id declared in {hit.posix_path.name!r}",
+                detail=f"invalid legal source line range {hit.line_start}-{hit.line_end} for {path!r}",
             )
-        return self._legal_target(hit, declared[0])
+
+        sections = _read_legal_source_sections(path)
+        if sections is None:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"cannot read legal source {path!r} to identify an individual provision",
+            )
+        matching = tuple(
+            section
+            for section in sections
+            if section.start_line <= hit.line_end and hit.line_start <= section.end_line
+        )
+        if not matching:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"source lines {hit.line_start}-{hit.line_end} identify no legal provision in {path!r}",
+            )
+        if len(matching) != 1:
+            ids = ", ".join(repr(section.legal_id) for section in matching)
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"source lines {hit.line_start}-{hit.line_end} overlap multiple legal provisions "
+                    f"({ids}) in {path!r}"
+                ),
+            )
+
+        legal_id = matching[0].legal_id
+        if legal_id not in self._known_legal_ids:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"legal provision {legal_id!r} is not in the validated catalogue",
+            )
+        return self._legal_target(hit, legal_id)
 
     def _legal_target(self, hit: ChunkHit, legal_id: str) -> ResolvedTarget | DroppedHit:
         base = self._legal_by_id.get(legal_id)
@@ -621,26 +659,48 @@ def _read_casilla_source_sections(project_relpath: str) -> tuple[_CasillaSourceS
     return tuple(sections)
 
 
-_LEGAL_HEADER_RE = re.compile(r'^\[legal\."(?P<id>[^"]+)"\]', re.MULTILINE)
+_LEGAL_HEADER_RE = re.compile(r'^\[legal\."(?P<id>[^"]+)"\]\s*$')
+_TOML_TABLE_HEADER_RE = re.compile(r'^(?:\[\[.*\]\]|\[.*\])\s*$')
 
 
-def _declared_legal_ids(project_relpath: str, known_ids: frozenset[str]) -> tuple[str, ...]:
-    """Return the catalogue-known legal ids a legal TOML file declares.
+def _read_legal_source_sections(project_relpath: str) -> tuple[_LegalSourceSection, ...] | None:
+    """Read legal catalogue provision spans without parsing catalogue values.
 
-    Resolves the project-relative path to an absolute one under the project
-    root, scans the file for ``[legal."<id>"]`` table headers, and keeps only
-    the ids the validated catalogue knows. This is build-time discovery of
-    WHICH ids a file declares -- the authority remains the value authority for
-    every provision. Returns an empty tuple when the file is unreadable or
-    declares no catalogue-known id.
+    The validated registry and generated legal-reference projection remain the
+    authorities for legal identity and target metadata. This helper only reads
+    source text to learn which single ``[legal."<id>"]`` declaration a RAG line
+    range overlaps, preserving the source-hit evidence boundary.
     """
     absolute = _REPO_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
     try:
-        text = absolute.read_text(encoding=_UTF_8)
-    except OSError:
-        return ()
-    found = [match.group("id") for match in _LEGAL_HEADER_RE.finditer(text)]
-    return tuple(legal_id for legal_id in found if legal_id in known_ids)
+        lines = absolute.read_text(encoding=_UTF_8).splitlines()
+    except (OSError, UnicodeError):
+        return None
+
+    table_headers = [
+        index
+        for index, line in enumerate(lines)
+        if _TOML_TABLE_HEADER_RE.fullmatch(line) is not None
+    ]
+    headers = [
+        (index, match.group("id"))
+        for index, line in enumerate(lines)
+        if (match := _LEGAL_HEADER_RE.fullmatch(line)) is not None
+    ]
+    sections: list[_LegalSourceSection] = []
+    for header_index, legal_id in headers:
+        next_header = next(
+            (index for index in table_headers if index > header_index),
+            len(lines),
+        )
+        sections.append(
+            _LegalSourceSection(
+                legal_id=legal_id,
+                start_line=header_index + 1,
+                end_line=next_header,
+            ),
+        )
+    return tuple(sections)
 
 
 def _module_to_dotted(path: str) -> str | None:

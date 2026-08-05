@@ -69,6 +69,7 @@ from ...domain.iva import (
 )
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ._action_errors import CalculationRegistryUnavailableError, ModeloRefundElectionNotEligibleError
+from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
 from ._registry_resources import registry_root
 
 #: Provisional fallback "Tipo de declaración" disposition for a modelo that
@@ -151,15 +152,16 @@ def _result_disposition_values_for_revision(
     The :class:`WorkUnit` selects the registry snapshot whose
     :class:`ModeloRevision` declares the canonical casilla ids accepted here.
     """
-    # This deliberately does NOT delegate to
-    # resolve_registry_snapshot_for_work_unit, which is otherwise the canonical
-    # home of the D1 assertion below. That helper resolves on
-    # ``work_unit.period``; this boundary resolves on the caller-supplied
-    # ``period``, which the export path threads down for the Modelo 303
-    # refund-election decision. The two are expected to agree and nothing here
-    # proves they cannot diverge, so the resolution axis is left as it stands
-    # rather than changed silently. The refusal wording below is kept in step
-    # with the canonical helper's on purpose.
+    # This deliberately resolves its own snapshot rather than calling
+    # resolve_registry_snapshot_for_work_unit directly: that helper resolves on
+    # ``work_unit.period``, while this boundary resolves on the
+    # caller-supplied ``period``, which the export path threads down for the
+    # Modelo 303 refund-election decision. The two are expected to agree and
+    # nothing here proves they cannot diverge, so the resolution axis is left
+    # as it stands rather than changed silently. The divergence assertion
+    # itself (message + exception type) is shared via
+    # assert_snapshot_matches_work_unit_revision so the two resolution sites
+    # cannot drift in wording or refusal type.
     try:
         snapshot = resources().modelos.authority.snapshot(
             str(work_unit.modelo),
@@ -180,23 +182,7 @@ def _result_disposition_values_for_revision(
                 "period": period.registry_token,
             },
         ) from exc
-    if snapshot.revision.id != work_unit.revision_id:
-        raise CoreValidationError(
-            f"work unit {work_unit.work_unit_id!r} was created against registry revision "
-            f"{work_unit.revision_id!r}, but the law-determined revision for "
-            f"modelo {str(work_unit.modelo)!r} {work_unit.filing_year} {period.registry_token!r} "
-            f"is now {snapshot.revision.id!r}. "
-            f"The registry's law-mapping was corrected after this work unit was created. "
-            f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
-            f"to bind it to the current law-determined revision.",
-            context={
-                "modelo": str(work_unit.modelo),
-                "filing_year": str(work_unit.filing_year),
-                "period": period.registry_token,
-                "work_unit_revision_id": work_unit.revision_id,
-                "resolved_revision_id": snapshot.revision.id,
-            },
-        )
+    assert_snapshot_matches_work_unit_revision(work_unit, snapshot, period=period)
     _reject_non_revision_casilla_values(
         modelo=str(work_unit.modelo),
         revision_id=snapshot.revision.id,

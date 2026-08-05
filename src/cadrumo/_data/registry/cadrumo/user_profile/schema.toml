@@ -1569,7 +1569,7 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento con derecho al aumento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre, gastos de guardería anuales o mensuales y NIF."
+description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento con derecho al aumento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre y mes de alta posterior, gastos de guardería y NIF."
 model_selectors = [
   "DescendantInfo.birth_date",
   "DescendantInfo.relacion",
@@ -1583,6 +1583,7 @@ model_selectors = [
   "DescendantInfo.presenta_declaracion_propia",
   "DescendantInfo.prorrata_minimo",
   "DescendantInfo.meses_madre_trabajo_2024",
+  "DescendantInfo.alta_posterior_nacimiento_mes",
   "DescendantInfo.gastos_guarderia_euros",
   "DescendantInfo.gastos_guarderia_mensuales",
   "DescendantInfo.nif",

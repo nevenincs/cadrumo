@@ -1,6 +1,5 @@
 [[revisions."2025-y-siguientes".constructs]]
 id = "modelo-222-declaration-construct"
-title = "Modelo 222 pago fraccionado en régimen de consolidación fiscal"
 legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]

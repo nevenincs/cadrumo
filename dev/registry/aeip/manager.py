@@ -5,12 +5,24 @@ The anexo-A "acontecimientos de excepcional interés público" table
 ``ley-35-2006:art-68.2``) is the registry's renumbering minefield: every event
 row shares one ``semantic_role`` and the casilla ids are repacked yearly, so
 neither the id nor the role identifies the underlying programme. What *does*
-identify it is the programme title AEAT prints in the label, which is why the
-continuity chain for this family is keyed on the event rather than on the box.
+identify it is the official Spanish programme title, which is why the continuity
+chain for this family is keyed on the event rather than on the box.
 
-This module extracts the family from the registry authoring tree, derives the
-event-keyed chain ids, and plans the stamps and evolution records a grounding
-campaign would author. It is a *planner*: nothing here writes into the registry.
+That title is not stored in the schema. A casilla declares only its
+``localization_keys`` and the text is resolved from the shared locale
+catalogues, so this module reads the family through the registry loader and
+resolves each title with ``casilla.get_label`` on the mandatory ``es`` source
+locale. It then derives the event-keyed chain ids and plans the stamps and
+evolution records a grounding campaign would author. It is a *planner*: nothing
+here writes into the registry.
+
+Grounding a chain has a direct payoff on that same locale surface. An
+occurrence's key is per-revision
+(``modelo.schema.100.revision.2024.casilla.1945.label``), so an ungrounded
+programme spends one translatable key per year it appears. A stamped chain adds
+the continuity key ``modelo.schema.100.casilla.continuidad.<chain>.label``,
+which the resolver prefers, collapsing every occurrence of one programme onto a
+single translated concept.
 
 Identity is a legal judgment, never text similarity, so the planner fails
 closed. Where the corpus is genuinely ambiguous -- a programme re-designated
@@ -24,14 +36,14 @@ one in the adjudications file, and only then does the chain plan complete.
 from __future__ import annotations
 
 import re
-import tomllib
 import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
 from itertools import pairwise
 from pathlib import Path
 
-from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.i18n import MissingTranslationError
+from cadrumo.domain.calculations.registry import RegistryLoadError, load_modelo_directory
 
 from .adjudications import AdjudicationSet
 
@@ -52,7 +64,10 @@ __all__ = [
     "render_evolution_record",
 ]
 
-_UTF_8 = UTF_8_ENCODING
+# The mandatory source locale: the official Spanish text AEAT publishes, which
+# is what identifies a programme. A translated catalogue must never key a
+# chain, so this is not an operator-tunable default.
+SOURCE_LOCALE = "es"
 
 # The anexo-A event rows. The sibling `_flag` role carries the *category* rows
 # of the same table (régimen general LIS, I+D+i, producciones cinematográficas,
@@ -63,12 +78,22 @@ ANEXO_A_SECTION_LEAF = "deducciones_inversion_empresarial_res"
 
 # Chain-id shape. Mirrors `ContinuidadId` in
 # `cadrumo.domain.calculations.registry._schema_base`: max 128 characters and
-# the kebab/dot pattern below. The column leaf is `aplicado` because that is
-# the only column the family declares -- every event row's label ends
-# "Aplicado en esta declaración". It is kept explicit so a future
-# "pendiente de aplicación" column extends the scheme without renaming the
-# chains that already exist.
-CHAIN_PREFIX = "irpf.aeip."
+# the pattern below.
+#
+# The separator is a hyphen, not a dot, because the chain id is embedded whole
+# into a locale key. `encode_modelo_locale_segment` passes `[A-Za-z0-9_-]+`
+# through verbatim and base32-encodes anything else, so a dotted chain id turns
+# its own continuity key into an opaque `x-...` blob while a kebab one stays
+# readable to a translator. 802 of the 814 chain ids in the registry are already
+# kebab-only for this reason.
+#
+# The column leaf is `aplicado` because AEAT numbers only that column. Its
+# Diseño de Registros gives each programme three XML fields -- `...S` (deducción
+# generated), `...A` (aplicado), `...P` (pendiente) -- and only the `A` field
+# carries a casilla number, so it is the only one the registry models. The leaf
+# is kept explicit so a numbered `pendiente` column could extend the scheme
+# without renaming the chains that already exist.
+CHAIN_PREFIX = "irpf-aeip-"
 CHAIN_COLUMN_LEAF = "aplicado"
 CHAIN_ID_MAX_LENGTH = 128
 CHAIN_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$")
@@ -93,7 +118,11 @@ class AeipOccurrence:
     casilla_id: str
     label: str
     title: str
-    fragment_path: Path
+    # The locale keys the schema declares for this occurrence, most specific
+    # first. A grounded occurrence carries its continuity key alongside the
+    # per-occurrence one, which is how one chain collapses many occurrence
+    # keys into a single translated concept.
+    localization_keys: tuple[str, ...] = ()
     legal_refs: tuple[str, ...] = ()
     continuidad_id: str | None = None
 
@@ -222,7 +251,7 @@ def derive_slug(title: str) -> str:
 
 def chain_id_for(slug: str, *, column: str = CHAIN_COLUMN_LEAF) -> str:
     """Compose the full continuity chain id for one event slug."""
-    return f"{CHAIN_PREFIX}{slug}.{column}"
+    return f"{CHAIN_PREFIX}{slug}-{column}"
 
 
 def _title_from_label(label: str) -> str | None:
@@ -242,69 +271,61 @@ def _title_from_label(label: str) -> str | None:
     return (wrapped.group("title") if wrapped else core).strip()
 
 
-def _iter_casilla_tables(fragment: Path) -> list[tuple[str, dict[str, object]]]:
-    try:
-        data = tomllib.loads(fragment.read_text(encoding=_UTF_8))
-    except (OSError, tomllib.TOMLDecodeError) as error:
-        raise AeipError(f"cannot read registry fragment {fragment}: {error}") from error
-    rows: list[tuple[str, dict[str, object]]] = []
-    revisions = data.get("revisions")
-    if not isinstance(revisions, dict):
-        return rows
-    for revision_id, body in revisions.items():
-        if not isinstance(body, dict):
-            continue
-        for entry in body.get("casillas") or ():
-            if isinstance(entry, dict):
-                rows.append((str(revision_id), entry))
-    return rows
-
-
 def extract_occurrences(
     modelos_root: Path,
     *,
     modelo_id: str = "100",
+    locale: str = SOURCE_LOCALE,
 ) -> tuple[tuple[AeipOccurrence, ...], dict[str, int]]:
-    """Read every anexo-A AEIP event row out of the registry authoring tree.
+    """Read every anexo-A AEIP event row through the registry loader.
+
+    The schema carries no natural-language label: a casilla declares only its
+    ``localization_keys``, and the text is resolved from the shared locale
+    catalogues. So the family is read through
+    :func:`~cadrumo.domain.calculations.registry.load_modelo_directory` and each
+    programme title comes from ``casilla.get_label`` rather than from a
+    fragment field, which keeps this planner on the one canonical resolution
+    path instead of re-deriving keys or re-reading TOML.
 
     Returns the event-row occurrences plus a per-revision count of the sibling
     category rows, which the inventory reports but never enrols in a chain.
     """
-    revisions_root = modelos_root / modelo_id / "revisions"
-    if not revisions_root.is_dir():
-        raise AeipError(f"no revisions directory for modelo {modelo_id} at {revisions_root}")
+    modelo_root = modelos_root / modelo_id
+    if not modelo_root.is_dir():
+        raise AeipError(f"no registry directory for modelo {modelo_id} at {modelo_root}")
+    try:
+        definition = load_modelo_directory(modelo_root)
+    except RegistryLoadError as error:
+        raise AeipError(f"cannot load modelo {modelo_id} registry: {error}") from error
 
     occurrences: list[AeipOccurrence] = []
     category_counts: dict[str, int] = defaultdict(int)
-    for fragment in sorted(revisions_root.rglob("*.toml")):
-        if "locales" in fragment.parts:
-            continue
-        for revision_id, entry in _iter_casilla_tables(fragment):
-            role = str(entry.get("semantic_role") or "")
-            section = tuple(str(part) for part in (entry.get("section") or ()))
-            if ANEXO_A_SECTION_LEAF not in section:
+    for revision in definition.revisions.values():
+        for casilla in revision.casillas:
+            if ANEXO_A_SECTION_LEAF not in tuple(casilla.section or ()):
                 continue
+            role = str(casilla.semantic_role or "")
             if role == CATEGORY_SEMANTIC_ROLE:
-                category_counts[revision_id] += 1
+                category_counts[revision.id] += 1
                 continue
             if role != EVENT_SEMANTIC_ROLE:
                 continue
-            label = str(entry.get("label") or "")
-            continuidad_id = entry.get("continuidad_id")
-            # The published label is this family's only identity signal, so an
-            # occurrence without a parsable programme title cannot be keyed.
-            # That is reported as an ambiguity rather than raised: a label is
-            # legitimately absent while a revision is being authored, and the
-            # rest of the family still needs to be plannable.
+            # A key with no catalogue entry leaves the occurrence untitled
+            # rather than raising: the rest of the family still needs to be
+            # plannable, and the gap surfaces as a `missing_title` ambiguity.
+            try:
+                label = casilla.get_label(locale)
+            except MissingTranslationError:
+                label = ""
             occurrences.append(
                 AeipOccurrence(
-                    revision_id=revision_id,
-                    casilla_id=str(entry.get("id")),
+                    revision_id=revision.id,
+                    casilla_id=casilla.id,
                     label=label,
                     title=_title_from_label(label) or "",
-                    fragment_path=fragment,
-                    legal_refs=tuple(str(ref) for ref in (entry.get("legal_refs") or ())),
-                    continuidad_id=str(continuidad_id) if isinstance(continuidad_id, str) else None,
+                    localization_keys=tuple(casilla.localization_keys),
+                    legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
+                    continuidad_id=casilla.continuidad_id,
                 ),
             )
     return tuple(occurrences), dict(category_counts)
@@ -394,7 +415,7 @@ def _detect_ambiguities(
                 slugs=(f"{occurrence.revision_id}:{occurrence.casilla_id}",),
                 detail=(
                     f"casilla {occurrence.casilla_id} in revision {occurrence.revision_id} "
-                    f"({occurrence.fragment_path.name}) carries no parsable programme title, "
+                    f"resolves no programme title from {occurrence.localization_keys or ('no locale key',)}, "
                     "so it cannot be keyed to an event"
                 ),
             ),
@@ -442,7 +463,15 @@ def _detect_ambiguities(
                     ),
                 )
 
-        chain_id = chain_id_for(event.slug)
+        # Chain-id shape is only a question for a programme that actually gets
+        # a chain. A single-revision programme asserts no cross-revision
+        # identity and is never stamped, so an over-long title there is not a
+        # decision anyone has to make -- and blocking on it would demand an
+        # adjudication that changes nothing. If such a programme later gains a
+        # revision, this fires then, which is the point at which it matters.
+        if not event.spans_multiple_revisions:
+            continue
+        chain_id = adjudications.chain_id_for(event.slug) or chain_id_for(event.slug)
         if len(chain_id) > CHAIN_ID_MAX_LENGTH:
             found.append(
                 AeipAmbiguity(
@@ -454,7 +483,7 @@ def _detect_ambiguities(
                     ),
                 ),
             )
-        if not CHAIN_ID_PATTERN.match(chain_id):
+        elif not CHAIN_ID_PATTERN.match(chain_id):
             found.append(
                 AeipAmbiguity(
                     kind="oversize_chain_id",

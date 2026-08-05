@@ -25,7 +25,7 @@ from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa:
 from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
-_MCPB_CLI_VERSION: Final[str] = "2.1.2"
+MCPB_CLI_VERSION: Final[str] = "2.1.2"
 _BUILDER = _REPO_ROOT / "packaging" / "mcpb" / "build.py"
 
 
@@ -45,7 +45,7 @@ def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout:
     return completed
 
 
-def _run_concurrent_launches(
+def run_concurrent_launches(
     argv: list[str],
     *,
     cwd: Path,
@@ -144,7 +144,7 @@ def _npx_argv(npx: Path) -> list[str]:
     )
 
 
-def _resolve_mcpb_value(
+def resolve_mcpb_value(
     value: str,
     *,
     extension_dir: Path,
@@ -219,7 +219,7 @@ def run_mcpb_smoke(
         [
             *_npx_argv(npx),
             "-y",
-            f"@anthropic-ai/mcpb@{_MCPB_CLI_VERSION}",
+            f"@anthropic-ai/mcpb@{MCPB_CLI_VERSION}",
             "validate",
             str(extracted),
         ],
@@ -259,7 +259,7 @@ def run_mcpb_smoke(
         "surface": "full",
     }
     server_args = tuple(
-        _resolve_mcpb_value(
+        resolve_mcpb_value(
             value,
             extension_dir=extracted,
             user_config=user_config,
@@ -267,7 +267,7 @@ def run_mcpb_smoke(
         for value in server["args"]
     )
     resolved_environment = {
-        key: _resolve_mcpb_value(
+        key: resolve_mcpb_value(
             value,
             extension_dir=extracted,
             user_config=user_config,
@@ -302,7 +302,7 @@ def run_mcpb_smoke(
     # first `uv run --no-project` does (Desktop extracts and immediately launches;
     # the first launch provisions). The launch reads DEVNULL stdin, so the server
     # provisions, starts, hits EOF, and exits.
-    _run_concurrent_launches(
+    run_concurrent_launches(
         [str(uv), *server_args],
         cwd=run_root,
         env=launch_environment,
@@ -321,7 +321,7 @@ def run_mcpb_smoke(
     # provisions, so an unchanged marker mtime proves the second launch skipped
     # provisioning entirely (the robustness research F4 remedy - no per-session
     # `uv run` project resolution after the first).
-    _run_concurrent_launches(
+    run_concurrent_launches(
         [str(uv), *server_args],
         cwd=run_root,
         env=launch_environment,
@@ -332,7 +332,7 @@ def run_mcpb_smoke(
     )
     if provision_marker.stat().st_mtime_ns != first_marker_mtime_ns:
         raise SystemExit("bootstrap second launch re-provisioned instead of direct-execing the venv")
-    _run_concurrent_launches(
+    run_concurrent_launches(
         [str(uv), *server_args],
         cwd=run_root,
         env=launch_environment,
@@ -394,7 +394,7 @@ def run_mcpb_smoke(
                     "env": resolved_environment,
                 },
                 "mcp_oracle": asdict(evidence),
-                "official_validator": f"@anthropic-ai/mcpb@{_MCPB_CLI_VERSION}",
+                "official_validator": f"@anthropic-ai/mcpb@{MCPB_CLI_VERSION}",
                 "proof": {
                     "archive_construction": "passed",
                     "first_launch_provisioning": "passed into bundle .venv",

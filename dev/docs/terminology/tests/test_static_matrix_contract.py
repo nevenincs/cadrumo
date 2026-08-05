@@ -7,6 +7,8 @@ from pydantic import ValidationError
 
 from dev.docs.terminology._static_matrix import QuantizedEmbeddingRow, QuantizedQueryTokenRow
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
 
 def test_quantized_embedding_row_accepts_non_zero_values() -> None:
     """A valid candidate-result row is accepted by the schema."""

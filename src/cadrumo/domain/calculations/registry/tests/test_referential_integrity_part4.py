@@ -199,7 +199,7 @@ def test_dangling_construct_casilla_ref() -> None:
     """construct.casilla_ids pointing at nonexistent CasillaId raises."""
     construct = ConstructDefinition(
         id="ct.test",
-        title="Test construct",
+        localization_key="test.schema.construct.ct-test.title",
         casilla_ids=(_NONEXISTENT_CASILLA,),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
@@ -226,7 +226,7 @@ def test_snapshot_integrity_checks_construct_algorithm_provider_ref() -> None:
     )
     construct = ConstructDefinition(
         id="ct.algorithm-provider",
-        title="Algorithm provider construct",
+        localization_key="test.schema.construct.ct-algorithm-provider.title",
         algorithm_providers=("provider.test",),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
@@ -268,7 +268,7 @@ def test_snapshot_integrity_checks_construct_algorithm_binding_ref() -> None:
     )
     construct = ConstructDefinition(
         id="ct.algorithm-binding",
-        title="Algorithm binding construct",
+        localization_key="test.schema.construct.ct-algorithm-binding.title",
         algorithm_bindings=("algorithm-binding.test",),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
@@ -423,7 +423,7 @@ def test_snapshot_integrity_checks_construct_filing_schedule_ref() -> None:
     )
     construct = ConstructDefinition(
         id="ct.filing-schedule",
-        title="Filing schedule construct",
+        localization_key="test.schema.construct.ct-filing-schedule.title",
         filing_schedules=("schedule.test",),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),

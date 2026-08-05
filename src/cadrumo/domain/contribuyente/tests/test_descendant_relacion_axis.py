@@ -43,8 +43,18 @@ _YEAR = 2024
 _OLD_BIRTH = date(2010, 1, 1)
 
 
-def _older_child(relacion: DescendantRelacion, **dates: date) -> DescendantInfo:
-    return DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, **dates)
+def _older_child(
+    relacion: DescendantRelacion,
+    *,
+    inscripcion_registro_civil_date: date | None = None,
+    acogimiento_resolucion_date: date | None = None,
+) -> DescendantInfo:
+    return DescendantInfo(
+        birth_date=_OLD_BIRTH,
+        relacion=relacion,
+        inscripcion_registro_civil_date=inscripcion_registro_civil_date,
+        acogimiento_resolucion_date=acogimiento_resolucion_date,
+    )
 
 
 # ── the boundary the axis exists to draw ────────────────────────────────────
@@ -80,10 +90,12 @@ def test_every_entitling_relacion_opens_the_window_with_its_own_anchor(
     relacion: DescendantRelacion,
 ) -> None:
     """Both members the statute names take the increase, each from its own date."""
-    field = (
-        "inscripcion_registro_civil_date" if relacion is DescendantRelacion.ADOPTADO else "acogimiento_resolucion_date"
+    anchor = date(_YEAR, 3, 1)
+    child = (
+        _older_child(relacion, inscripcion_registro_civil_date=anchor)
+        if relacion is DescendantRelacion.ADOPTADO
+        else _older_child(relacion, acogimiento_resolucion_date=anchor)
     )
-    child = _older_child(relacion, **{field: date(_YEAR, 3, 1)})
 
     assert child.is_eligible_minimo_incremento_menor_tres(_YEAR) is True
 
@@ -175,8 +187,12 @@ def test_an_entry_date_under_an_excluded_relacion_refuses(
     record the statute excludes -- and any consumer reading the date without
     re-checking the relación would grant the increase.
     """
+    anchor = date(2020, 1, 1)
     with pytest.raises((ValidationError, ValueError)):
-        DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, **{field: date(2020, 1, 1)})
+        if field == "inscripcion_registro_civil_date":
+            DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, inscripcion_registro_civil_date=anchor)
+        else:
+            DescendantInfo(birth_date=_OLD_BIRTH, relacion=relacion, acogimiento_resolucion_date=anchor)
 
 
 @pytest.mark.parametrize(
@@ -331,33 +347,45 @@ def _maximal_descendants() -> tuple[DescendantInfo, ...]:
     equality, and the two entitling records carry every date their relación
     permits.
     """
-    common = {
-        "discapacidad_grado": 33,
-        "convive_con_contribuyente": False,
-        "custodia_compartida": True,
-        "presenta_declaracion_propia": True,
-        "prorrata_minimo": True,
-        "meses_madre_trabajo_2024": 7,
-        "gastos_guarderia_euros": 1200,
-        "nif": "00000000T",
-    }
+    def _member(
+        *,
+        birth_date: date,
+        relacion: DescendantRelacion,
+        acogimiento_resolucion_date: date | None = None,
+        inscripcion_registro_civil_date: date | None = None,
+    ) -> DescendantInfo:
+        # The eight shared fields carry the non-default values this fixture is
+        # about; only the per-relación axes vary between members.
+        return DescendantInfo(
+            birth_date=birth_date,
+            relacion=relacion,
+            acogimiento_resolucion_date=acogimiento_resolucion_date,
+            inscripcion_registro_civil_date=inscripcion_registro_civil_date,
+            discapacidad_grado=33,
+            convive_con_contribuyente=False,
+            custodia_compartida=True,
+            presenta_declaracion_propia=True,
+            prorrata_minimo=True,
+            meses_madre_trabajo_2024=7,
+            gastos_guarderia_euros=1200,
+            nif="00000000T",
+        )
+
     return (
-        DescendantInfo(birth_date=date(2011, 2, 3), relacion=DescendantRelacion.DESCENDIENTE, **common),
-        DescendantInfo(
+        _member(birth_date=date(2011, 2, 3), relacion=DescendantRelacion.DESCENDIENTE),
+        _member(
             birth_date=date(2012, 3, 4),
             relacion=DescendantRelacion.ADOPTADO,
             acogimiento_resolucion_date=date(2018, 4, 5),
             inscripcion_registro_civil_date=date(2020, 5, 6),
-            **common,
         ),
-        DescendantInfo(
+        _member(
             birth_date=date(2013, 4, 5),
             relacion=DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
             acogimiento_resolucion_date=date(2019, 6, 7),
-            **common,
         ),
-        DescendantInfo(birth_date=date(2014, 5, 6), relacion=DescendantRelacion.ACOGIMIENTO_TEMPORAL, **common),
-        DescendantInfo(birth_date=date(2015, 6, 7), relacion=DescendantRelacion.TUTELA, **common),
+        _member(birth_date=date(2014, 5, 6), relacion=DescendantRelacion.ACOGIMIENTO_TEMPORAL),
+        _member(birth_date=date(2015, 6, 7), relacion=DescendantRelacion.TUTELA),
     )
 
 

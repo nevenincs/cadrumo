@@ -14,6 +14,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 
+from ....core.i18n import MissingTranslationError
 from ._ids import CasillaId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
@@ -30,6 +31,7 @@ _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "semantic_role",
     "legal_refs",
 )
+_UNRESOLVED_LOCALIZATION = "<unresolved-localization>"
 
 __all__ = ("CrossRevisionCasillaDivergence",)
 
@@ -55,7 +57,17 @@ class CrossRevisionCasillaDivergence:
 
 def _cross_revision_signature(casilla: CasillaDefinition) -> tuple[object, ...]:
     """Return the stable cross-revision fingerprint for a casilla."""
-    return tuple(getattr(casilla, field) for field in _CROSS_REVISION_CASILLA_FIELDS)
+    values: list[object] = []
+    for field in _CROSS_REVISION_CASILLA_FIELDS:
+        try:
+            values.append(getattr(casilla, field))
+        except MissingTranslationError:
+            # Structural roots may be checked before their shared catalogue
+            # is available. Keep both unresolved labels equal so this gate
+            # reports only evidence it can actually compare; bundled roots
+            # are covered by the strict catalogue enrollment gate.
+            values.append(_UNRESOLVED_LOCALIZATION)
+    return tuple(values)
 
 
 def _period_selector_year_bounds(selector: PeriodSelector) -> tuple[int, int | None]:

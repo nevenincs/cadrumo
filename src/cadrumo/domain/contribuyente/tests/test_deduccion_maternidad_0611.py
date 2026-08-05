@@ -34,7 +34,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import DescendantRelacion
+from ....core import ART_58_2_ENTITLING_RELACIONES, ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
 from .._descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
@@ -144,6 +144,93 @@ class TestParseDescendienteFlagMesesTrabajo:
 
 
 # ---------------------------------------------------------------------------
+# The Art. 81.1 post-birth alta-posterior completion month: the fact, its
+# roundtrip, its coherence rule, and the year-gated method the engine consults.
+# ---------------------------------------------------------------------------
+
+
+class TestAltaPosteriorNacimientoMes:
+    """``alta_posterior_nacimiento_mes``: the operator-supplied completion month."""
+
+    def test_parsed_from_the_descendiente_flag(self) -> None:
+        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=5")
+        assert d.alta_posterior_nacimiento_mes == 5
+
+    def test_absent_from_the_flag_stays_none(self) -> None:
+        d = parse_descendiente_flag("NACIMIENTO=2022-06-01,MESES_TRABAJO=8")
+        assert d.alta_posterior_nacimiento_mes is None
+
+    def test_flag_out_of_range_raises(self) -> None:
+        for case_id, spec in (
+            ("above-range", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=13"),
+            ("zero", "NACIMIENTO=2022-06-01,MESES_TRABAJO=8,ALTA_POSTERIOR_MES=0"),
+        ):
+            try:
+                with pytest.raises(ValueError, match="ALTA_POSTERIOR_MES must be 1"):
+                    parse_descendiente_flag(spec)
+            except AssertionError as exc:
+                raise AssertionError(f"out-of-range ALTA_POSTERIOR_MES was accepted: {case_id}") from exc
+
+    def test_declared_with_zero_worked_months_is_refused(self) -> None:
+        """The completion month is one of the worked months, not separate from them."""
+        with pytest.raises(ValueError, match="meses_madre_trabajo_2024 is 0"):
+            DescendantInfo(birth_date=date(2023, 1, 1), alta_posterior_nacimiento_mes=5)
+
+    def test_roundtrip_stored_and_reloaded(self) -> None:
+        original = DescendantInfo(
+            birth_date=date(2023, 1, 1),
+            meses_madre_trabajo_2024=8,
+            alta_posterior_nacimiento_mes=5,
+        )
+        facts = dict(descendant_facts_from_list((original,)))
+
+        assert facts.get("renta_family.descendiente.0.alta_posterior_nacimiento_mes") == "5"
+
+        reloaded = descendant_list_from_facts(facts)
+        assert reloaded[0].alta_posterior_nacimiento_mes == 5
+        assert reloaded[0] == original
+
+    def test_roundtrip_absent_stays_absent(self) -> None:
+        original = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8)
+        facts = dict(descendant_facts_from_list((original,)))
+
+        assert "renta_family.descendiente.0.alta_posterior_nacimiento_mes" not in facts
+
+        reloaded = descendant_list_from_facts(facts)
+        assert reloaded[0].alta_posterior_nacimiento_mes is None
+
+    def test_a_corrupted_stored_month_refuses_rather_than_reading_as_absent(self) -> None:
+        """Anti-tautology: a malformed stored value must not silently withhold the increment."""
+        original = DescendantInfo(
+            birth_date=date(2023, 1, 1),
+            meses_madre_trabajo_2024=8,
+            alta_posterior_nacimiento_mes=5,
+        )
+        facts = dict(descendant_facts_from_list((original,)))
+        facts["renta_family.descendiente.0.alta_posterior_nacimiento_mes"] = "13"
+
+        with pytest.raises(ValueError, match="alta_posterior_nacimiento_mes must be a month 1-12"):
+            descendant_list_from_facts(facts)
+
+
+class TestMaternidadAltaPosteriorIncrementApplies:
+    """The engine-side gate: a declared month plus the year-2023-onward boundary."""
+
+    def test_applies_from_2023_when_declared(self) -> None:
+        child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8, alta_posterior_nacimiento_mes=5)
+        assert child.maternidad_alta_posterior_increment_applies(2023) is True
+
+    def test_does_not_apply_before_2023_even_when_declared(self) -> None:
+        """Same descendant, one filing year earlier: the route does not exist yet."""
+        child = DescendantInfo(birth_date=date(2020, 1, 1), meses_madre_trabajo_2024=8, alta_posterior_nacimiento_mes=5)
+        assert child.maternidad_alta_posterior_increment_applies(2022) is False
+
+    def test_does_not_apply_when_nothing_is_declared(self) -> None:
+        child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo_2024=8)
+        assert child.maternidad_alta_posterior_increment_applies(2023) is False
+
+
+# ---------------------------------------------------------------------------
 # CLI helper functions
 # ---------------------------------------------------------------------------
 
@@ -162,15 +249,105 @@ class TestCLIHelpers:
             ("zero-months", [("0", 0)], 0),
         )
         for case_id, inputs, expected in cases:
-            assert compute_deduccion_maternidad_0611(inputs) == expected, case_id
+            assert compute_deduccion_maternidad_0611(inputs, filing_year=2024) == expected, case_id
 
     def test_compute_anti_tautology_delta(self) -> None:
         """Incrementing meses from 6 to 12 must change result by exactly 600."""
         from .._deduccion_maternidad import compute_deduccion_maternidad_0611
 
-        r6 = compute_deduccion_maternidad_0611([("0", 6)])
-        r12 = compute_deduccion_maternidad_0611([("0", 12)])
+        r6 = compute_deduccion_maternidad_0611([("0", 6)], filing_year=2024)
+        r12 = compute_deduccion_maternidad_0611([("0", 12)], filing_year=2024)
         assert r12 - r6 == 600
+
+
+class TestComputeDeduccionMaternidadAltaPosterior:
+    """The Art. 81.1 post-birth alta increment, oracle-anchored on the bundled
+
+    Manual Práctico de Renta 2023 worked example ("Alta en la Seguridad Social
+    con posterioridad al nacimiento y 30 días cotizados en el mes de mayo"):
+    doña M.D.O had mellizos in January 2023, was not registered with the
+    Seguridad Social at the birth, and completed the 30-day minimum
+    contribution period in May 2023. Each mellizo contributes 8 months
+    (May-December) and receives the 150 euro completion-month increment:
+    ``[(8 x 100) + (1 x 150)] = 950`` per mellizo, ``1.900`` for the two
+    together. Her older child contributes 4 months (May-August, the month
+    before his third birthday) and the same increment: ``[(4 x 100) + (1 x
+    150)] = 550``. None of these figures is derivable from the formula under
+    test without the increment: every one is the manual's own printed total.
+    """
+
+    def test_the_manual_worked_example_reproduces_verbatim(self) -> None:
+        """Every printed figure from the manual's own worked example."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        mellizos_total = compute_deduccion_maternidad_0611(
+            [("mellizo_a", 8), ("mellizo_b", 8)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"mellizo_a", "mellizo_b"}),
+        )
+        assert mellizos_total == 1900
+
+        one_mellizo = compute_deduccion_maternidad_0611(
+            [("mellizo_a", 8)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"mellizo_a"}),
+        )
+        assert one_mellizo == 950
+
+        hijo_mayor = compute_deduccion_maternidad_0611(
+            [("hijo_mayor", 4)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"hijo_mayor"}),
+        )
+        assert hijo_mayor == 550
+
+    def test_the_increment_raises_the_per_hijo_cap_to_1350(self) -> None:
+        """A hijo whose months alone would exceed 1.200 is capped at 1.350, not 1.200."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        capped = compute_deduccion_maternidad_0611(
+            [("0", 12)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"0"}),
+        )
+        assert capped == 1350
+
+    def test_a_hijo_absent_from_alta_posterior_hijos_keeps_the_ordinary_cap(self) -> None:
+        """The increment adds to a named hijo only; an unnamed one is untouched."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        mixed = compute_deduccion_maternidad_0611(
+            [("alta", 8), ("ordinary", 8)],
+            filing_year=2023,
+            alta_posterior_hijos=frozenset({"alta"}),
+        )
+        assert mixed == 950 + 800
+
+    def test_filing_years_before_2023_take_no_increment(self) -> None:
+        """The route is year-gated: the SAME pair and hijo id, one year earlier, gets nothing extra.
+
+        Proves the boundary runs both ways: 2023 grants the increment (asserted
+        above) and 2022 -- one year earlier, same inputs -- does not.
+        """
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        pre_2023 = compute_deduccion_maternidad_0611(
+            [("mellizo_a", 8)],
+            filing_year=2022,
+            alta_posterior_hijos=frozenset({"mellizo_a"}),
+        )
+        assert pre_2023 == 800
+
+    def test_filing_year_2022_never_exceeds_the_ordinary_1200_cap(self) -> None:
+        """The raised 1.350 cap must not leak into a pre-2023 filing year."""
+        from .._deduccion_maternidad import compute_deduccion_maternidad_0611
+
+        pre_2023_capped = compute_deduccion_maternidad_0611(
+            [("0", 12)],
+            filing_year=2022,
+            alta_posterior_hijos=frozenset({"0"}),
+        )
+        assert pre_2023_capped == 1200
 
 
 # ---------------------------------------------------------------------------
@@ -249,9 +426,14 @@ class TestArt811EntryWindowDivergesFromArt582:
         assert self._ADOPTADO.art_81_1_entry_window_meses(2024) == 10
 
     def test_the_window_is_age_independent(self) -> None:
-        """ "Con independencia de la edad del menor": the child was five at inscription."""
-        assert self._ADOPTADO.maternidad_eligible_meses(2022) == 0
+        """ "Con independencia de la edad del menor": the child was five at inscription.
+
+        The under-three limb contributes nothing for a five-year-old, so every
+        eligible month in 2022 came from the entry window.
+        """
+        assert self._ADOPTADO._maternidad_edad_months(2022) == frozenset()
         assert self._ADOPTADO.art_81_1_entry_window_meses(2022) == 12
+        assert self._ADOPTADO.maternidad_eligible_meses(2022) == 12
 
     def test_a_relacion_the_statute_excludes_opens_no_window(self) -> None:
         """A temporal acogimiento carer takes the tranches and not this limb."""
@@ -286,11 +468,14 @@ class TestArt811EntryWindowDivergesFromArt582:
         assert fostered_then_adopted.art_81_1_entry_window_meses(2024) == 10
         assert fostered_then_adopted.art_81_1_entry_window_meses(2025) == 0
 
-    def test_the_two_limbs_union_rather_than_taking_the_wider(self) -> None:
-        """An infant adopted in October is covered by both limbs over different months.
+    def test_no_month_before_the_adoption_is_eligible(self) -> None:
+        """An infant born in January and adopted in October yields three months, not twelve.
 
-        Under three all year, and inside the entry window from October. Neither
-        limb's own count is twelve; their union is.
+        The under-three limb runs from the BIRTH month for every relación, so
+        unioning the limbs granted the mother January to September — months
+        before the child was hers. This is the over-grant case, and it is worth
+        two figures rather than one: the under-three limb alone is twelve here,
+        which is why the union looked harmless.
         """
         infant = DescendantInfo(
             birth_date=date(2024, 1, 10),
@@ -299,9 +484,39 @@ class TestArt811EntryWindowDivergesFromArt582:
             meses_madre_trabajo_2024=12,
         )
 
-        assert infant.maternidad_eligible_meses(2024) == 12
+        assert len(infant._maternidad_edad_months(2024)) == 12
         assert infant.art_81_1_entry_window_meses(2024) == 3
-        assert infant.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 12
+        assert infant.maternidad_eligible_meses(2024) == 3
+        assert infant.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 3
+
+    def test_the_year_where_union_and_wider_limb_genuinely_differ(self) -> None:
+        """The only shape that distinguishes the two candidate rules, and it favours the clip.
+
+        Born April 2021, inscribed February 2024, so 2024 contains BOTH the entry
+        month and the third-birthday month. The under-three limb is January to
+        March, the entry limb February to December: their union is twelve and the
+        wider limb is eleven. The single month that separates them is January —
+        before the adoption — so the union is wrong exactly where it differs, and
+        the answer is eleven.
+        """
+        child = DescendantInfo(
+            birth_date=date(2021, 4, 15),
+            relacion=DescendantRelacion.ADOPTADO,
+            inscripcion_registro_civil_date=date(2024, 2, 10),
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert len(child._maternidad_edad_months(2024)) == 3
+        assert child.art_81_1_entry_window_meses(2024) == 11
+        assert child.maternidad_eligible_meses(2024) == 11
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 11
+
+    def test_a_descendant_with_no_entry_date_is_unclipped(self) -> None:
+        """The clip must not touch an ordinary child, who has no entry event at all."""
+        ordinary = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo_2024=12)
+
+        assert ordinary.maternidad_eligible_meses(2024) == 12
+        assert ordinary.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 12
 
     def test_the_entry_window_reaches_the_deduccion(self) -> None:
         """The consumer clause: a window nothing calls is indistinguishable from no window.
@@ -309,7 +524,8 @@ class TestArt811EntryWindowDivergesFromArt582:
         This child is five, so the under-three limb grants nothing. Every month
         that survives here came from the entry window.
         """
-        assert self._ADOPTADO.maternidad_eligible_meses(2024) == 0
+        assert self._ADOPTADO._maternidad_edad_months(2024) == frozenset()
+        assert self._ADOPTADO.maternidad_eligible_meses(2024) == 10
         assert self._ADOPTADO.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 10
 
 
@@ -373,6 +589,70 @@ class TestMaternidadContributingMeses:
         child = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo_2024=4)
 
         assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 4
+
+
+class TestArt811PopulationGate:
+    """Art. 81.1 draws its own line, and it is not the Art. 58.1 assimilated set.
+
+    The authority states the exclusion in terms, and byte-identically in every
+    manual vintage the registry serves: the deducción "no resulta aplicable … ni
+    cuando se trate de acogimientos familiares simples, de urgencia o
+    temporales". Art. 58.1 assimilates exactly that carer, so gating the
+    deducción on entitlement to the mínimo granted twelve months the statute
+    refuses.
+    """
+
+    @staticmethod
+    def _under_three(relacion: DescendantRelacion) -> DescendantInfo:
+        """A cohabiting child under three all year, differing only in relación."""
+        return DescendantInfo(
+            birth_date=date(2023, 5, 1),
+            relacion=relacion,
+            meses_madre_trabajo_2024=12,
+        )
+
+    def test_a_temporal_acogimiento_carer_contributes_nothing(self) -> None:
+        """The over-grant this gate removes: twelve months where none are due."""
+        carer = self._under_three(DescendantRelacion.ACOGIMIENTO_TEMPORAL)
+
+        assert carer.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is True
+        assert carer.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+
+    def test_the_gate_is_not_implied_by_the_minimo_test(self) -> None:
+        """Both conditions are load-bearing, which is why they are separate calls.
+
+        The temporal carer above passes the Art. 58.1 test and fails this one.
+        Were the two ever merged, that carer would collect again.
+        """
+        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in ART_81_1_MATERNIDAD_RELACIONES
+        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in ART_58_2_ENTITLING_RELACIONES
+        assert DescendantRelacion.TUTELA in ART_81_1_MATERNIDAD_RELACIONES
+        assert DescendantRelacion.TUTELA not in ART_58_2_ENTITLING_RELACIONES
+
+    def test_every_admitted_relacion_still_contributes(self) -> None:
+        """The gate must exclude one member, not narrow the population generally.
+
+        Tutela is admitted on a positive statement rather than by absence from
+        the exclusion list: "en el supuesto de tutela, el tutor tendrá derecho al
+        importe de la deducción que corresponda al tiempo que reste hasta que el
+        tutelado alcance los tres años de edad".
+        """
+        for relacion in ART_81_1_MATERNIDAD_RELACIONES:
+            contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
+            assert contributed == 12, relacion
+
+    def test_no_relacion_outside_the_declared_set_contributes(self) -> None:
+        """Anti-tautology over the axis: the excluded set is exactly the complement.
+
+        Enumerating the enum rather than restating a list means a member added
+        later defaults to contributing nothing until it is deliberately admitted,
+        which is the under-granting direction.
+        """
+        for relacion in DescendantRelacion:
+            if relacion in ART_81_1_MATERNIDAD_RELACIONES:
+                continue
+            contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
+            assert contributed == 0, relacion
 
 
 class TestMesesMaternidadPorDescendiente:
