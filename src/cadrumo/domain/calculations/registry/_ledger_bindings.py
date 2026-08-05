@@ -12,11 +12,17 @@ invariants are enforced at registry-build time only. The
 the invariant body — each re-parses the selector independently through its own
 private ``_<family>_selector`` helper, which raises on a malformed selector but
 re-checks no op/fact invariant.
+
+Each resolver delegates its filter/aggregate skeleton to
+:func:`~.registry._ledger_binding_resolution.resolve_ledger_family_binding_values`,
+the shape shared by every ledger family (this module's five plus IRNR and
+impatriado in their own family modules); the family supplies only its
+selector parser, match predicate, and fact-dispatch aggregation.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
@@ -43,6 +49,7 @@ from ._binding_selector_utils import invariant_diagnostics, selector_against_mod
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
+from ._ledger_binding_resolution import resolve_ledger_family_binding_values
 from ._schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
@@ -1118,6 +1125,25 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
         )
 
 
+def _renta_gastos_pago_fraccionado_build_matcher(
+    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+) -> Callable[[RentaGastosPagoFraccionadoObservationProtocol], bool]:
+    target_casilla_id = selector.target_casilla_id
+
+    def matcher(observation: RentaGastosPagoFraccionadoObservationProtocol) -> bool:
+        return observation.target_casilla_id == target_casilla_id
+
+    return matcher
+
+
+def _renta_gastos_pago_fraccionado_aggregate(
+    matched: Sequence[RentaGastosPagoFraccionadoObservationProtocol],
+    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+) -> Decimal:
+    del selector  # single declared fact (deductible_amount_sum); nothing to dispatch on
+    return sum((observation.deductible_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaGastosPagoFraccionadoObservationProtocol],
@@ -1126,22 +1152,22 @@ def resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
 
     Matches observations by ``target_casilla_id`` and sums their
     ``deductible_amount``, mirroring the income resolver's casilla-keyed fold.
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver.
 
     Args:
         revision: The :class:`ModeloRevision` whose gasto bindings are resolved.
         observations: M130 deductible gastos observations to aggregate over.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION:
-            continue
-        selector = _renta_ledger_gastos_pago_fraccionado_selector(binding)
-        matched = [
-            observation for observation in available if observation.target_casilla_id == selector.target_casilla_id
-        ]
-        resolved[binding.id] = sum((observation.deductible_amount for observation in matched), Decimal("0"))
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_pago_fraccionado_selector,
+        build_matcher=_renta_gastos_pago_fraccionado_build_matcher,
+        aggregate=_renta_gastos_pago_fraccionado_aggregate,
+    )
 
 
 def unsupported_ledger_renta_gastos_pago_fraccionado_observations(

@@ -1,0 +1,129 @@
+"""Tests for the ledger-backed Modelo 130 gastos (casilla 02) registry binding.
+
+Pins the committed M130 casilla 02 contract: the casilla binds
+``modelo-130-actividad-economica-gastos-cumulative``, source
+``ledger_renta_gastos_pago_fraccionado_aggregation``, fact
+``deductible_amount_sum``. Also covers
+:func:`resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values`
+after its refactor onto the shared
+:func:`~....registry._ledger_binding_resolution.resolve_ledger_family_binding_values`
+skeleton (F15): a real registry revision, a worked-example Decimal sum
+independent of the resolver under test, and an off-casilla observation
+proving the ``target_casilla_id`` predicate genuinely excludes non-matching
+rows rather than folding everything in scope.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from decimal import Decimal
+
+import pytest
+
+from .....core.resources import bundled_path
+from .. import (
+    CasillaId,
+    build_snapshot,
+    resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
+    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
+    validated_casilla_id,
+)
+from .._binding_selector_utils import selector_as_dict
+from ._registry_schema_support import _committed_modelo
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_GASTOS_BINDING = "modelo-130-actividad-economica-gastos-cumulative"
+_M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02", surface="_M130_GASTOS_CASILLA")
+_M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
+    "03",
+    surface="_M130_RENDIMIENTO_NETO_CASILLA",
+)
+
+
+@dataclass(frozen=True)
+class _GastoObservation:
+    """Minimal stand-in satisfying ``RentaGastosPagoFraccionadoObservationProtocol``.
+
+    Deliberately local and application-layer-free: the resolver only reads
+    ``target_casilla_id`` / ``deductible_amount``, and a domain-layer test
+    should not reach into ``application.aggregation`` internals to get them.
+    """
+
+    target_casilla_id: CasillaId
+    deductible_amount: Decimal
+
+
+def _modelo_130_snapshot():
+    modelo, catalogues = _committed_modelo("130")
+    return build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="1T",
+    )
+
+
+def test_committed_m130_casilla_02_binds_gastos_pago_fraccionado_fact() -> None:
+    """The committed registry routes casilla 02 through deductible_amount_sum."""
+    revision = _modelo_130_snapshot().revision
+
+    casilla_02 = next(casilla for casilla in revision.casillas if casilla.id == _M130_GASTOS_CASILLA)
+    assert casilla_02.binding == _GASTOS_BINDING
+
+    binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
+    assert binding.source == "ledger_renta_gastos_pago_fraccionado_aggregation"
+    assert selector_as_dict(binding)["fact"] == "deductible_amount_sum"
+    validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition(binding)
+
+
+def test_resolver_sums_matching_casilla_and_excludes_other_casilla() -> None:
+    """Casilla 02's binding sums only observations targeting casilla 02.
+
+    Worked example (mirrors the grounded application-layer aggregation
+    regression in ``test_domain_resolver_folds_gasto_observations_into_the_
+    m130_casilla_02_binding``): two deductible bases feeding casilla 02
+    (147.93 + 100.00 = 247.93) plus a third observation carrying a
+    distinguishing, non-coincidental amount routed to casilla 03. The
+    expected total is derived from the two casilla-02 inputs alone, never
+    copied from what the resolver under test returns — a regression that
+    folded every observation regardless of ``target_casilla_id`` would
+    produce 247.93 + 63.10 = 311.03, a different, checkable number.
+    """
+    revision = _modelo_130_snapshot().revision
+    binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
+
+    feb_base, apr_base = Decimal("147.93"), Decimal("100.00")
+    off_casilla_base = Decimal("63.10")
+    feb = _GastoObservation(target_casilla_id=_M130_GASTOS_CASILLA, deductible_amount=feb_base)
+    apr = _GastoObservation(target_casilla_id=_M130_GASTOS_CASILLA, deductible_amount=apr_base)
+    off_casilla = _GastoObservation(
+        target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
+        deductible_amount=off_casilla_base,
+    )
+
+    resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
+        revision,
+        (feb, apr, off_casilla),
+    )
+
+    assert resolved[binding.id] == feb_base + apr_base
+    assert resolved[binding.id] != feb_base + apr_base + off_casilla_base, (
+        "an observation routed to casilla 03 must not feed the casilla 02 binding"
+    )
+
+
+def test_resolver_returns_zero_for_binding_with_no_matching_observations() -> None:
+    """A binding whose casilla receives no observations resolves to zero, not a missing key."""
+    revision = _modelo_130_snapshot().revision
+    binding = next(binding for binding in revision.bindings if binding.id == _GASTOS_BINDING)
+
+    off_casilla = _GastoObservation(
+        target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
+        deductible_amount=Decimal("50.00"),
+    )
+
+    resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(revision, (off_casilla,))
+
+    assert resolved[binding.id] == Decimal("0")
