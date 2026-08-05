@@ -54,6 +54,8 @@ import pytest
 from dev.ci.lane_reachability import (
     Lane,
     analyse_reachability,
+    ci_invoked_lanes,
+    ci_invoked_recipes,
     declared_lanes,
     discover_test_files,
     expression_selects,
@@ -64,6 +66,27 @@ from dev.ci.lane_reachability import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ROOT: Path = Path(__file__).resolve().parents[3]
+
+#: The markers whose tests CI genuinely cannot run, each because a PRECONDITION
+#: is absent from a headless runner rather than because nobody wired a lane.
+#: Every one is documented with its reason in pyproject's marker table, and
+#: every one has a justfile recipe that enrolls it for the environment that can.
+#: This is the honest holdout set, and it is the only accepted answer to "why
+#: does CI never run this test".
+_CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
+    {
+        # Needs LibreOffice for binary .xls conversion; not in the dependency set.
+        "external_tool",
+        # Reads a real external service; opt-in, and never enabled on CI.
+        "aeat_live",
+        # Asserts on the OS credential store, which is a property of an
+        # interactive logon session a headless runner does not have.
+        "os_keychain",
+        # Queries the resident vaultspec-rag service, a separate product this
+        # project does not install.
+        "resident_service",
+    },
+)
 
 
 def _synthetic_repository(root: Path, *, lane: str) -> None:
@@ -88,6 +111,129 @@ def test_every_test_is_selected_by_some_declared_lane() -> None:
         + "\n\nEither add a lane that names the path AND accepts the marker, or "
         "change the marker. A test nobody runs reads as coverage and is not."
     )
+
+
+def test_every_test_ci_cannot_run_declares_why() -> None:
+    """The gate that matters: DECLARED is not RUN, and only one excuse counts.
+
+    ``test_every_test_is_selected_by_some_declared_lane`` asks whether the
+    repository declares a lane, and a justfile recipe satisfies it. That is the
+    right answer to its question and a dangerously reassuring answer to the one
+    a reader usually means, because a recipe no workflow invokes is a lane that
+    has never run. Two of them proved it at once: ``just test-integration``
+    (370 integration-marked modules under ``src/`` -- every cross-layer test in
+    the product) and ``just test-dev-tooling`` (nine ``dev/`` subsystems, whose
+    own recipe docstring says "the gates that no other lane reaches") were both
+    declared, both healthy, and named by no workflow. The declared-lane gate
+    reported full coverage over tests CI had never once executed.
+
+    So this asks the stronger question, and accepts exactly one answer for a
+    test CI does not run: that a precondition is genuinely absent from a
+    headless runner, declared by one of the markers in
+    ``_CI_INCAPABLE_MARKERS``. "Nobody wired a lane" is not on the list.
+    """
+    report = analyse_reachability(_ROOT, lanes=ci_invoked_lanes(_ROOT))
+
+    unexplained = [entry for entry in report.unreachable if not (entry.markers & _CI_INCAPABLE_MARKERS)]
+
+    assert unexplained == [], (
+        "no CI lane runs these tests, and none of them carries a marker saying why:\n  "
+        + "\n  ".join(entry.describe() for entry in unexplained)
+        + "\n\nA justfile recipe is NOT enough -- a recipe no workflow invokes has "
+        "never run. Either invoke the owning recipe from a workflow, or carry a "
+        f"marker from {sorted(_CI_INCAPABLE_MARKERS)} if the precondition truly "
+        "cannot exist on a runner."
+    )
+
+
+def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> None:
+    """The two questions must not silently collapse into one.
+
+    If ``ci_invoked_lanes`` ever returned everything ``declared_lanes`` does,
+    the gate above would still pass while asking nothing -- the exact
+    false-green shape this module exists to refuse, one level up. This pins the
+    gap as real: recipes exist that no workflow invokes (``test-os-keychain``,
+    ``test-workbook-parity``, ``test-live``, ``test-resident-service``, the
+    coverage and smoke conveniences), and they must stay excluded.
+    """
+    declared = declared_lanes(_ROOT)
+    invoked = ci_invoked_lanes(_ROOT)
+
+    assert set(invoked) <= set(declared), "a CI-invoked lane that is not declared is a parser fault"
+    assert len(invoked) < len(declared), (
+        "every declared lane now reads as CI-invoked; either the parser broke or "
+        "the distinction collapsed, and the CI-reachability gate is now vacuous"
+    )
+
+    invoked_recipes = ci_invoked_recipes(_ROOT)
+    assert {"test-unit", "test-dev-ci", "test-integration", "test-dev-tooling", "docs-check"} <= invoked_recipes
+    assert not ({"test-os-keychain", "test-workbook-parity", "test-live"} & invoked_recipes)
+
+
+def test_a_recipe_no_workflow_invokes_is_declared_but_not_ci_invoked(tmp_path: Path) -> None:
+    """Anti-tautology for the distinction, against a synthetic tree.
+
+    Without this the CI-reachability gate could pass because the recipe parser
+    finds nothing rather than because CI genuinely reaches the lanes, and those
+    two outcomes are indistinguishable from the verdict alone.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "wired:\n    pytest -q src -m unit\n\norphan:\n    pytest -q other/tests -m unit\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "ci.yml").write_text(
+        "name: Probe\njobs:\n  build:\n    steps:\n      - run: just wired\n",
+        encoding="utf-8",
+    )
+
+    assert ci_invoked_recipes(tmp_path) == frozenset({"wired"})
+
+    declared = declared_lanes(tmp_path)
+    invoked = ci_invoked_lanes(tmp_path)
+    assert {lane.recipe for lane in declared} == {"wired", "orphan"}
+    assert {lane.recipe for lane in invoked} == {"wired"}
+
+    # The orphan recipe's path is covered when declaration is the question, and
+    # uncovered when execution is.
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "other" / "tests" / "test_only_the_orphan_reaches.py", module)
+    files = discover_test_files(tmp_path)
+
+    assert analyse_reachability(tmp_path, lanes=declared, files=files).unreachable == ()
+    stranded = analyse_reachability(tmp_path, lanes=invoked, files=files).unreachable
+    assert [entry.path for entry in stranded] == ["other/tests/test_only_the_orphan_reaches.py"]
+
+
+def test_recipe_discovery_reads_run_blocks_not_english_prose(tmp_path: Path) -> None:
+    """ "just" is an ordinary English word, and these workflows use it as one.
+
+    Scanning raw workflow text harvested `is`, `uses`, and `natively` as recipe
+    names, from a step named "Ensure just is available" and a comment reading
+    "provision just natively". Three phantom recipes is harmless only until one
+    of those words IS a recipe name -- at which point an unreached lane reads as
+    reached, and the gate above goes quiet about a real hole.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text("uses:\n    pytest -q src -m unit\n", encoding="utf-8")
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "ci.yml").write_text(
+        "name: Probe\n"
+        "jobs:\n"
+        "  build:\n"
+        "    steps:\n"
+        "      # taiki-e mangles its path; provision just natively\n"
+        '      - name: "Ensure just is available"\n'
+        "        run: scoop install just\n",
+        encoding="utf-8",
+    )
+
+    # `scoop install just` ends in the bare word, and the prose names a real
+    # recipe. Neither is an invocation.
+    assert ci_invoked_recipes(tmp_path) == frozenset()
 
 
 def test_no_test_file_sits_outside_every_lane_path() -> None:

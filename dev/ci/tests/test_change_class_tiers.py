@@ -24,12 +24,36 @@ _TRIGGER: Final = _WORKFLOWS_DIR / "packaging-campaign-trigger.yml"
 _CI: Final = _WORKFLOWS_DIR / "ci.yml"
 _QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"
 _FULL: Final = _WORKFLOWS_DIR / "ci-full.yml"
+_DOCS: Final = _WORKFLOWS_DIR / "docs.yml"
+_FRONTEND: Final = _WORKFLOWS_DIR / "frontend.yml"
 
-# The T0 carve-out: agent/vault/docs churn that never reaches the code or
-# artifact surface. Shared verbatim by every per-push T1 workflow so a path
-# cannot be T0 for one lane and T1 for another.
-_T0_CARVE_OUT: Final = frozenset(
-    {".vault/**", ".vaultspec/**", ".claude/**", ".codex/**", ".gemini/**", ".agents/**", "**.md"}
+# The carve-out on the PYTHON code lanes: everything that never reaches the
+# Python code or artifact surface those lanes gate. Shared verbatim by every
+# per-push T1 Python workflow so a path cannot be carved out for one lane and
+# not the other.
+#
+# `docs/**` and `frontend/**` joined the set when each gained its own lane. They
+# are not "runs nothing" paths — that is the point. Before the split the
+# carve-out was keyed on file SUFFIX rather than on role, so `**.md` held
+# `docs/index.md` out while `docs/**.rst` (1384 files) started the full Python
+# unit suite and still produced no documentation verdict; a `frontend/`
+# dependency bump did the same to both Python lanes. A path belongs here when
+# the PYTHON lanes cannot observe its regressions, and a path that belongs here
+# needs a lane of its own — which is what docs.yml and frontend.yml are, and
+# what `test_every_code_lane_carve_out_path_has_a_lane_of_its_own` enforces so
+# the set cannot become a silent dumping ground.
+_CODE_LANE_CARVE_OUT: Final = frozenset(
+    {
+        ".vault/**",
+        ".vaultspec/**",
+        ".claude/**",
+        ".codex/**",
+        ".gemini/**",
+        ".agents/**",
+        "docs/**",
+        "frontend/**",
+        "**.md",
+    }
 )
 
 # The T2 boundary: the files that define the shipped artifact set. A push
@@ -83,11 +107,133 @@ def test_t2_trigger_dispatches_the_full_campaign_and_nothing_else() -> None:
         assert forbidden not in commands, forbidden
 
 
-def test_t0_carve_out_is_shared_by_every_per_push_t1_lane() -> None:
-    """ci.yml and packaging-quick.yml agree on what counts as T0 churn."""
+def test_code_lane_carve_out_is_identical_across_every_python_lane_and_trigger() -> None:
+    """The Python lanes agree EXACTLY on what never reaches the code surface.
+
+    Equality, not superset. The previous form asserted ``>= _T0_CARVE_OUT`` per
+    lane independently, which is satisfiable by two lanes that disagree: it can
+    only catch a lane dropping a shared path, never one lane carving out
+    something the other does not. That is not a hypothetical — it is how the
+    tree actually drifted. `packaging-quick.yml` carved out `docs/**` and
+    `ci.yml` did not, for long enough that the whole documentation tree was T0
+    for one Python lane and T1 for the other, while the ci-discipline ADR (D1)
+    described the carve-out as shared and this gate reported green.
+
+    Both triggers, not just push. The old form read only ``push``, so the
+    pull-request carve-out could diverge from the push one with nothing
+    watching — the same class of hole one level down.
+    """
     for path in (_CI, _QUICK):
-        push = _triggers(_document(path))["push"]
-        assert set(push["paths-ignore"]) >= _T0_CARVE_OUT, path.name
+        triggers = _triggers(_document(path))
+        for event in ("push", "pull_request"):
+            assert event in triggers, f"{path.name} lost its {event} trigger"
+            carve_out = set(triggers[event]["paths-ignore"])
+            assert carve_out == set(_CODE_LANE_CARVE_OUT), f"{path.name}:{event}"
+
+
+def test_every_code_lane_carve_out_path_has_a_lane_of_its_own() -> None:
+    """A path carved out of the Python lanes is verified elsewhere or is inert.
+
+    The carve-out set is where verification goes to die if nobody watches it:
+    adding a path is a one-line way to make a lane green. So every carved-out
+    path must be either genuinely inert (agent config, vault records, loose
+    markdown — development scaffolding that ships nothing) or covered by a lane
+    that names it. `docs/**` and `frontend/**` are product surfaces, so they
+    are held to the second standard.
+    """
+    inert = {".vault/**", ".vaultspec/**", ".claude/**", ".codex/**", ".gemini/**", ".agents/**", "**.md"}
+    owned = {"docs/**": _DOCS, "frontend/**": _FRONTEND}
+    assert inert | set(owned) == set(_CODE_LANE_CARVE_OUT), "a carve-out path is neither inert nor lane-owned"
+
+    for carved, workflow in owned.items():
+        assert workflow.exists(), f"{carved} is carved out of the Python lanes with no lane of its own"
+        triggers = _triggers(_document(workflow))
+        for event in ("push", "pull_request"):
+            assert carved in set(triggers[event]["paths"]), f"{workflow.name}:{event} does not claim {carved}"
+
+
+def test_the_docs_lane_claims_every_input_its_build_reads() -> None:
+    """The docs lane triggers on the docs tree, its generators, and its corpus.
+
+    A docs lane keyed only on `docs/**` would miss the two surfaces that
+    GENERATE the docs tree: the builders and gates under `dev/docs`, and the
+    terminology corpus the glossary and shipped search are produced from. A
+    change to either can break the build without touching `docs/` at all.
+    """
+    triggers = _triggers(_document(_DOCS))
+    for event in ("push", "pull_request"):
+        paths = set(triggers[event]["paths"])
+        assert {"docs/**", "dev/docs/**", "src/cadrumo/_data/terminology/**"} <= paths, event
+
+    commands = "\n".join(str(step.get("run", "")) for step in _document(_DOCS)["jobs"]["cadrumo-docs"]["steps"])
+    assert "just docs-check" in commands, "the docs lane runs no docs check"
+
+
+def test_the_docs_verification_lane_never_publishes() -> None:
+    """Verification and delivery stay separate lanes with separate triggers.
+
+    docs.yml proves the build on the push that changed it; docs-publish.yml
+    ships the site on `release: published`. Conflating them is how a docs
+    defect strands a half-published release, and how a routine docs push
+    acquires deploy credentials it has no use for.
+    """
+    document = _document(_DOCS)
+    assert set(_triggers(document)) == {"workflow_dispatch", "push", "pull_request"}
+    assert document["permissions"] == {"contents": "read"}
+
+    job = document["jobs"]["cadrumo-docs"]
+    assert "environment" not in job, "the verification lane must not enter the deploy environment"
+    assert "id-token" not in (job.get("permissions") or {}), "the verification lane needs no OIDC federation"
+    commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
+    for forbidden in ("docs_static_site", "publish", "--confirm"):
+        assert forbidden not in commands, forbidden
+
+    # And the delivery lane stays free of push/PR triggers, so no ordinary
+    # commit can reach it.
+    delivery = _triggers(_document(_WORKFLOWS_DIR / "docs-publish.yml"))
+    assert set(delivery) == {"release", "workflow_dispatch"}
+
+
+def test_the_frontend_lane_verifies_the_subproject_it_claims() -> None:
+    """The frontend lane typechecks, builds, and tests the frontend subproject."""
+    document = _document(_FRONTEND)
+    job = document["jobs"]["cadrumo-frontend"]
+    assert job["defaults"]["run"]["working-directory"] == "frontend"
+    commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
+    # `npm ci` (locked) rather than `npm install`, the frontend analogue of
+    # `uv sync --frozen`.
+    assert "npm ci" in commands
+    assert "npm install" not in commands
+    assert "npm run build" in commands
+    assert "npm run test" in commands
+
+
+def test_no_workflow_installs_python_dependencies_unfrozen() -> None:
+    """Every lane installs from the committed lock, never a live resolve.
+
+    A bare `uv sync` re-resolves the whole dependency graph against the index on
+    every job. That costs real time on the lanes that run most often (measured
+    on run 30977318339: 2m03s of a 2m25s static job, 1m56s of the unit job, paid
+    independently by the two jobs on one machine against one warm cache), and it
+    costs attributability: an unfrozen resolve can pick up an index change
+    nobody pushed, so a red is not necessarily a property of the commit under
+    test.
+
+    Eleven sites across the packaging, release, and delivery lanes were already
+    frozen. The only two that were not were ci.yml and ci-full.yml — the
+    per-push lane and the full lane, i.e. exactly the ones where both costs
+    land hardest.
+    """
+    offending: list[str] = []
+    for path in sorted({*_WORKFLOWS_DIR.glob("*.yml"), *_WORKFLOWS_DIR.glob("*.yaml")}):
+        document = _document(path)
+        for job_name, job in (document.get("jobs") or {}).items():
+            for step in job.get("steps") or []:
+                for line in str(step.get("run", "")).splitlines():
+                    stripped = line.strip()
+                    if stripped.startswith("uv sync") and "--frozen" not in stripped:
+                        offending.append(f"{path.name}:{job_name}: {stripped}")
+    assert offending == [], offending
 
 
 def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> None:

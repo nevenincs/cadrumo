@@ -16,6 +16,16 @@ name: Cadrumo CI
 # push vault/docs/agent-config churn to main many times an hour; none of it
 # reaches the lint/type/test surface this workflow gates, so those paths never
 # start the suite.
+#
+# `docs/**` and `frontend/**` are carved out because neither reaches the Python
+# code or artifact surface this workflow gates, and each now has its own lane
+# (docs.yml, frontend.yml). Before that split the carve-out was suffix-keyed
+# rather than role-keyed: `**.md` held out `docs/index.md` while `docs/**.rst`
+# — 1384 files, the bulk of the surface — started the full unit suite and still
+# produced no documentation verdict, because `docs-check` runs only in the
+# dispatch-only full lane. A `frontend/` dependency bump did the same (measured:
+# an undici bump ran both Python lanes). The carve-out set is byte-identical to
+# packaging-quick.yml's and pinned equal by test_change_class_tiers.py.
 on:
   workflow_dispatch:
   push:
@@ -27,6 +37,8 @@ on:
       - ".codex/**"
       - ".gemini/**"
       - ".agents/**"
+      - "docs/**"
+      - "frontend/**"
       - "**.md"
   # SAME-REPO pull_request only: these jobs run on self-hosted runners, and a
   # fork PR would execute untrusted PR-head code on the operator's machines
@@ -44,6 +56,8 @@ on:
       - ".codex/**"
       - ".gemini/**"
       - ".agents/**"
+      - "docs/**"
+      - "frontend/**"
       - "**.md"
 
 concurrency:
@@ -81,8 +95,19 @@ jobs:
           enable-cache: false
 
       - name: CI Bootstrap
+        # `--frozen`, never a bare `uv sync`. A bare sync RE-RESOLVES the whole
+        # dependency graph against the index on every job; frozen installs from
+        # the lock the repository already committed. Measured on run
+        # 30977318339: bootstrap was 2m03s of a 2m25s job here and 1m56s of the
+        # unit job, and the two jobs paid that resolve independently on the same
+        # machine against the same warm cache. Every other workflow in this
+        # repository was already frozen (11 sites); ci.yml and ci-full.yml were
+        # the only unfrozen ones, and they are the ones that run most often.
+        # Frozen also makes the lane deterministic: an unfrozen resolve can pick
+        # up an index change nobody pushed, so a red would not be attributable
+        # to the commit under test.
         run: |
-          uv sync
+          uv sync --frozen
           uv run vaultspec-core install --force
 
       - name: Lint
@@ -158,8 +183,9 @@ jobs:
           enable-cache: false
 
       - name: CI Bootstrap
+        # `--frozen`: see the rationale on the static job's bootstrap above.
         run: |
-          uv sync
+          uv sync --frozen
           uv run vaultspec-core install --force
 
       - name: Provision Node for the duplication scan

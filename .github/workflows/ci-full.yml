@@ -56,8 +56,11 @@ jobs:
             prek-${{ runner.os }}-
 
       - name: CI Bootstrap
+        # `--frozen`: an unfrozen sync re-resolves the graph against the index
+        # on every run; the lock is committed, so frozen is both faster and
+        # attributable. Same change as ci.yml's two bootstraps.
         run: |
-          uv sync
+          uv sync --frozen
           uv run vaultspec-core install --force
 
       - name: Provision Playwright Chromium
@@ -97,6 +100,31 @@ jobs:
         # Dev-tree ceiling raised over the 300 s ini default: real install/
         # harness tests legitimately run 300-900 s (see ci.yml).
         run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/tests
+
+      - name: Test (integration)
+        # NOTHING RAN THE src/ INTEGRATION SUITE. Every lane in this repository
+        # selects `-m unit` over `src/cadrumo`; the only integration selections
+        # were path-scoped to `dev/`. That held 370 integration-marked modules
+        # out of CI entirely — the cross-layer tests (CLI conformance, educational
+        # docs conformance, file-flow) that unit tests by definition do not cover.
+        # `just test-integration` existed the whole time (it is the recipe the
+        # justfile documents as the one to run before claiming a suite is clean)
+        # and no workflow invoked it.
+        #
+        # Sized here rather than per-push: this is minutes of cross-layer work
+        # the ten-minute wall cannot absorb. The recipe runs two passes — the
+        # bulk under xdist, then the isolation-sensitive `serial` tests at -n0 —
+        # so a global-state mutator cannot flake the parallel pass.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-integration
+
+      - name: Tooling gates no other lane reaches
+        # The recipe's own docstring names it: "the dev/ tooling gates that no
+        # other lane reaches". That was literally true of CI as well — nine
+        # directories (dev/audit, dev/deploy, dev/env, dev/registry/newmodelo,
+        # dev/registry/aeip, and the four dev/docs subsystems) ran in no
+        # workflow at all, including the deploy-authority tests that gate the
+        # documentation publisher this repository ships.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-dev-tooling
 
       - name: Channel artifact conformance (Homebrew formula, Scoop manifest, mcpb bundle)
         # These fourteen tests bind the generated formula and manifest to a real

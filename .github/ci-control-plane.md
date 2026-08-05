@@ -21,6 +21,18 @@ standing invariants, each enforced by a conformance gate in the test tree:
    (load-immune on the shared machines) with wall-clock printed as advisory
    only, and run solely in the dispatch-only `ci-full.yml` lane
    (`dev/ci/tests/test_perf_gate_policy.py`).
+7. **Frozen installs only.** Every `uv sync` carries `--frozen`
+   (`test_no_workflow_installs_python_dependencies_unfrozen`). A bare sync
+   re-resolves the dependency graph against the index on every job, which costs
+   both wall-clock (measured: ~2 min per job, paid twice per push) and
+   attributability — an unfrozen resolve can pick up an index change nobody
+   pushed, so a red is not necessarily a property of the commit under test.
+8. **Declared is not run.** A justfile recipe is a declaration; a recipe no
+   workflow invokes has never executed. `dev/ci/lane_reachability.py` models
+   both, and `test_every_test_ci_cannot_run_declares_why` requires every test
+   CI does not run to carry a marker saying which precondition a headless
+   runner lacks (`external_tool`, `aeat_live`, `os_keychain`,
+   `resident_service`). "Nobody wired a lane" is not an accepted answer.
 
 ## Fleet topology and load sizing
 
@@ -57,7 +69,9 @@ on the `ci-speed-redesign` ADR (2026-07-20).
 
 | Tier | Change class | Detected by | What runs |
 | --- | --- | --- | --- |
-| T0 | vault / agent-config / markdown churn | `paths-ignore` carve-outs shared by `ci.yml` and `packaging-quick.yml` | Nothing per-push. The dispatch-only full lane (`ci-full.yml`) is the backstop for docs, vault drift, and the slow conformance surface. |
+| T0 | vault / agent-config / loose markdown churn | `paths-ignore` carve-out, byte-identical on `ci.yml` and `packaging-quick.yml` | Nothing per-push. The dispatch-only full lane (`ci-full.yml`) is the backstop for vault drift and the slow conformance surface. |
+| T1-docs | documentation surface | `docs.yml` `paths` filter (`docs/**`, `dev/docs/**`, `src/cadrumo/_data/terminology/**`) | `docs.yml` alone: the nitpicky Sphinx build, stub correspondence, CLI-reference drift, doc8, interrogate. The Python lanes carve these paths out, so a docs edit no longer starts the unit suite. |
+| T1-frontend | `frontend/` subproject | `frontend.yml` `paths` filter (`frontend/**`) | `frontend.yml` alone: `npm ci`, typecheck + build, vitest. The Python lanes carve it out. |
 | T1 | ordinary code change | any push to `main` outside the T0 carve-out | `ci.yml` (static checks ∥ full unit suite) + `packaging-quick.yml` (one cohort build + one core install probe per OS, proof-cache memoized). Ten-minute wall. |
 | T2 | release-artifact-shaping change | `packaging-campaign-trigger.yml` paths filter (`pyproject.toml`, `uv.lock`, `packaging/**`, `dev/packaging/**`, `packaging-smoke.yml`) | Everything in T1, **plus** an auto-dispatched full packaging campaign (`packaging-smoke.yml`), whose run is promotable evidence. |
 | T3 | RELEASE | operator dispatch of `publish-release.yml` | Every gate: full-campaign evidence + acquisition-lane rows + the 12-row readiness aggregation + operator preflight + the protected `release` environment. Nothing here is weakened by the tier system — T3 binds to the existing Gate 1/2/3 topology. |
@@ -74,6 +88,15 @@ the GROI oracle), `code-health-report.yml` (informational dashboard).
 - **push to `main`** — the primary discipline surface (development is
   direct-push by coordinated agents). Runs T1 always, T2 when the paths match.
   Push runs auto-supersede (`cancel-in-progress: true`).
+
+  **A path filter is evaluated over the PUSH, not per commit.** GitHub takes the
+  union of every file changed across every commit in the push, so a push that
+  bundles a vault record with a source change is T1 — the carve-out only bites
+  when a push is *entirely* carved-out paths. The agent fleet bundles routinely
+  (a "WIP snapshot" commit sweeps everything), so T0 fires less often than the
+  tier table suggests. This is a property of the trigger mechanism, not a defect
+  to route around: the failure it prevents (a code change riding along with
+  vault churn and skipping the suite) is far worse than the wasted run.
 - **pull_request** — future-proofing for a PR flow: same T1 gates, same-repo
   only. Currently exercised rarely.
 - **workflow_dispatch** — release-candidate campaigns (`packaging-smoke.yml`),
@@ -91,7 +114,10 @@ the GROI oracle), `code-health-report.yml` (informational dashboard).
 | File | Role |
 | --- | --- |
 | `workflows/ci.yml` | T1 per-push: static checks ∥ unit suite |
-| `workflows/ci-full.yml` | Dispatch-only full conformance + vault drift + roundtrip gates |
+| `workflows/ci-full.yml` | Dispatch-only full conformance: integration suite, dev tooling gates, docs, CVE, hooks, vault drift, roundtrips |
+| `workflows/docs.yml` | T1-docs per-push documentation verification (never delivery — see `docs-publish.yml`) |
+| `workflows/frontend.yml` | T1-frontend per-push typecheck / build / vitest for the `frontend/` subproject |
+| `workflows/docs-publish.yml` | Documentation DELIVERY, on `release: published` only; downstream of publication, never a gate |
 | `workflows/packaging-quick.yml` | T1 per-push install probe (no evidence) |
 | `workflows/packaging-campaign-trigger.yml` | T2 detector: auto-dispatches the full campaign |
 | `workflows/packaging-smoke.yml` | Full campaign; sole source of promotable evidence |
