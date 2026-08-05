@@ -116,6 +116,13 @@ from ._static_matrix import (
     vocabulary_fingerprint,
     write_static_embedding_matrix,
 )
+from ._model2vec_provider import (
+    POTION_MODEL_DIMENSION,
+    POTION_MODEL_LICENSE,
+    POTION_MODEL_REPOSITORY,
+    POTION_MODEL_REVISION,
+    PotionModel2VecProvider,
+)
 from ._unified_record import (
     RankingTier,
     SearchRecord,
@@ -141,6 +148,7 @@ from ._rung2_bridge import (
     load_rung2_search_bundle,
     write_rung2_search_bundle,
 )
+from ._rung2_compiler import Rung2CompilationError, compile_rung2_search_bundle
 from ._legal_projection import LegalSearchRecord, project_legal_search_records
 from ._wrangle import (
     STRONG_SIGNAL_SCORE_FLOOR,
@@ -159,6 +167,8 @@ __all__ = [
     "DEFAULT_RUNG2_MISS_RATE_THRESHOLD",
     "BRIDGE_SCHEMA_VERSION",
     "BridgeCompilationError",
+    "Rung2CompilationError",
+    "compile_rung2_search_bundle",
     "EMBEDDING_MATRIX_SCHEMA_VERSION",
     "INT8_QUANTIZATION_ALGORITHM",
     "NORMALIZATION_CONTRACT_VERSION",
@@ -219,6 +229,11 @@ __all__ = [
     "SynonymRatificationQueue",
     "StaticEmbeddingMatrix",
     "StaticEmbeddingProvider",
+    "POTION_MODEL_DIMENSION",
+    "POTION_MODEL_LICENSE",
+    "POTION_MODEL_REPOSITORY",
+    "POTION_MODEL_REVISION",
+    "PotionModel2VecProvider",
     "TokenizerProvenance",
     "TokenInventoryEntry",
     "RecordManifest",
