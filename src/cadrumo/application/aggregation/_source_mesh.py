@@ -24,7 +24,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Literal, NamedTuple, Protocol, Self, runtime_checkable
+from typing import Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
@@ -342,6 +342,17 @@ class CalculationSourceContext(BaseModel):
     calculated_at: datetime | None = None
 
 
+#: Cap on a diagnostic's operator-facing message.
+DIAGNOSTIC_MESSAGE_MAX_LENGTH: Final[int] = 512
+
+#: Appended to a message the cap truncated, so elision is VISIBLE.
+#:
+#: A silently shortened advisory is its own defect -- an operator cannot tell a
+#: terse message from a cut one, and these carry remedies. The marker costs six
+#: characters to make the difference legible.
+DIAGNOSTIC_MESSAGE_ELISION: Final[str] = " [...]"
+
+
 class CalculationSourceDiagnostic(BaseModel):
     """Diagnostic emitted while resolving source-backed calculation values."""
 
@@ -351,7 +362,7 @@ class CalculationSourceDiagnostic(BaseModel):
     source_kind: str = Field(min_length=1, max_length=64)
     binding_source: BindingSourceKind | None = None
     """Canonical binding source when ``source_kind`` names one; ``None`` for advisory categories."""
-    message: str = Field(min_length=1, max_length=512)
+    message: str = Field(min_length=1, max_length=DIAGNOSTIC_MESSAGE_MAX_LENGTH)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     binding_id: BindingId | None = None
@@ -360,6 +371,46 @@ class CalculationSourceDiagnostic(BaseModel):
     out_of_window_count: int | None = Field(default=None, ge=1)
     out_of_window_min_filing_date: date | None = None
     out_of_window_max_filing_date: date | None = None
+
+    @field_validator("message", mode="before")
+    @classmethod
+    def _bound_message_length(cls, value: object) -> object:
+        """Truncate an over-long message instead of refusing the diagnostic.
+
+        These are NON-BLOCKING advisories, and refusing one turns it into a
+        blocking failure: the model raises, ``calculate`` exits with a raw
+        validation error, and the filing stops -- at exactly the moment the
+        advisory had something to say. That is strictly worse than the
+        advisory being shortened, so the cap is enforced by cutting rather
+        than by raising.
+
+        Total by construction, which is the point. The messages are assembled
+        from fixed prose plus terms sized by data the taxpayer controls, so
+        their length is a property of the household rather than of the source.
+        Bounding each interpolated term is necessary and demonstrably not
+        sufficient: a bounded list still crossed the cap once the fixed prose
+        grew, and no author writing prose can be expected to hold a character
+        budget in their head. Making the cap a property of the TYPE removes
+        that obligation from every present and future author, and from every
+        gate that would otherwise have to find them.
+
+        It is a floor, not a licence. A message that reaches this validator has
+        already lost words an operator was meant to read, so authoring-time
+        headroom assertions still belong on the messages whose length scales
+        with taxpayer data.
+
+        Cuts on a word boundary where one is reasonably placed, never
+        mid-word, and marks the elision so a shortened advisory cannot be
+        mistaken for a terse one.
+        """
+        if not isinstance(value, str) or len(value) <= DIAGNOSTIC_MESSAGE_MAX_LENGTH:
+            return value
+        keep = DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(DIAGNOSTIC_MESSAGE_ELISION)
+        head = value[:keep].rstrip()
+        boundary = head.rfind(" ")
+        if boundary > keep // 2:
+            head = head[:boundary].rstrip()
+        return head + DIAGNOSTIC_MESSAGE_ELISION
 
     @model_validator(mode="before")
     @classmethod

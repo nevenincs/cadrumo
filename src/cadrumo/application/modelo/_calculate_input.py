@@ -978,11 +978,11 @@ def _maternidad_meses_withheld_advisory(
         source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
         message=(
             f"descendiente {_bounded_descendant_ids(withheld)} declares meses_madre_trabajo but contributes no "
-            "Art. 81.1 deducción por maternidad: it reaches a child under three OR one inside the "
-            "age-independent adopción/acogimiento entry-date window. An over-three adopción/acogimiento "
-            "with no recorded entry date is withheld for a missing INSCRIPCION or ACOGIMIENTO date, not "
-            "a birth date. Record it, or correct cohabitation or rentas, with `aeat config profile "
-            "descendiente remove <index>` then `add` to restate the row."
+            "Art. 81.1 deducción por maternidad, which reaches a child under three OR one inside the "
+            "adopción/acogimiento entry-date window. An over-three adopción/acogimiento with no entry "
+            "date is withheld for a missing INSCRIPCION or ACOGIMIENTO, not a birth date. Restate the "
+            "row with `aeat config profile descendiente remove <index>` then `add`, or correct "
+            "cohabitation or rentas."
         ),
         casilla_id=casilla_id,
     )
