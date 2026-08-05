@@ -342,7 +342,7 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
 
 
 # --------------------------------------------------------------------------- #
-# S28: the received side, carried to its filed casillas
+# The received side, carried to its filed casillas
 # --------------------------------------------------------------------------- #
 #
 # Everything above proves the projection and the aggregation agree. Neither

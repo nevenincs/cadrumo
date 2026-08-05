@@ -309,7 +309,7 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
 
 
 # --------------------------------------------------------------------------- #
-# S32: the same chain at a rate BELOW the inference bound
+# The same chain at a rate BELOW the inference bound
 # --------------------------------------------------------------------------- #
 #
 # Every case above withholds at the RIRPF art. 95.1 general rate, which is also
@@ -330,7 +330,7 @@ _INICIO_CASH = _TOTAL - _INICIO_RETENCION
 def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> None:
     """The two registry rates differ, so the case below calibrates a second point.
 
-    Cheap, and it is what makes S32 more than a duplicate: if the registry ever
+    Cheap, and it is what makes the case below more than a duplicate: if the registry ever
     published the same figure for both, this case would silently stop testing a
     sub-cap path while still passing, and the calibration claim would be false.
     """

@@ -311,7 +311,7 @@ def test_the_ungrounded_invoice_costs_the_taxpayer_in_both_directions_at_once() 
 
 
 # --------------------------------------------------------------------------- #
-# S24: the reconciliation is proven able to FAIL, not merely observed passing
+# The reconciliation is proven able to FAIL, not merely observed passing
 # --------------------------------------------------------------------------- #
 #
 # A cross-domain assertion that has only ever been seen green is
@@ -410,7 +410,7 @@ def test_the_checker_is_silent_only_on_the_true_decomposition() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# S22: the same invoice, reconciled at the BINDING level
+# The same invoice, reconciled at the BINDING level
 # --------------------------------------------------------------------------- #
 #
 # The scenario above reconciles the three projections at the OBSERVATION level,
@@ -507,7 +507,7 @@ def test_the_filed_figures_close_the_invoice_identity() -> None:
 
 
 # --------------------------------------------------------------------------- #
-# S29: the IVA leg, also at the BINDING level
+# The IVA leg, also at the BINDING level
 # --------------------------------------------------------------------------- #
 #
 # The M130 assertions above carry the income and retenciones legs to the
