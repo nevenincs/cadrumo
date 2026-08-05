@@ -76,6 +76,14 @@ missing-substrate advisory, keeping the fallback).
 - MEASURED: the withheld-amount inference requires BOTH `taxable_base` and `iva_amount`
   non-None, so a declared-exempt invoice (legitimately cuota-less) can never recover
   its retención through inference as coded.
+- MEASURED: the payer-side retención flow already has a canonical authority — the
+  `retenciones_aggregation` binding family
+  (`domain/calculations/registry/_retenciones_bindings.py`) materialises scalars from
+  a dedicated per-perceptor retención store into committed Modelo 111 bindings
+  (schemes `rendimientos_trabajo`, `actividades_economicas`,
+  `actividades_profesionales`, `premios`, …). Retención on a RECEIVED invoice is a
+  liability of the taxpayer-as-retenedor and belongs to that store's authority; this
+  record must route into it, never fork a second retención path.
 - Accepted decisions this record must compose with, not contradict:
   `2026-05-27-source-jurisdiction-axis-adr` (M100/M130 never filter on jurisdiction;
   per-modelo scope filters live downstream), `2026-07-01-modelo-151-beckham-source-scope-adr`
@@ -137,12 +145,16 @@ missing-substrate advisory, keeping the fallback).
 2. Free-form per-resolver component logic (status quo, grown case by case). Rejected —
    scattered inline knowledge of which categories carry a cuota is exactly what the
    named frozensets were created to end.
-3. **Chosen:** a two-axis model. Axis A (per-category, declared data in `domain/iva`
-   beside the existing named frozensets): a component-expectation table stating, per
-   `IvaCategory`, whether cuota is required/forbidden, whether recargo may exist, and
-   whether retención is expected/possible/not-expected, each row carrying `legal_refs`.
-   Axis B (per-family, unchanged shape): each ledger family's observation builder and
-   fact vocabulary consumes Axis A when decomposing a row for its modelo.
+3. **Chosen:** a two-axis model, with the component axis keyed by the PAIR
+   (`IvaCategory`, invoice kind). Axis A (declared data in `domain/iva` beside the
+   existing named frozensets): a component-expectation table stating, per category AND
+   kind (issued/collectible — money received — versus received/payable — money paid),
+   whether cuota is required/forbidden, who declares it, whether recargo may exist,
+   and whether retención is expected/possible/not-expected and in WHICH ROLE (credit
+   of the taxpayer on issued invoices; liability of the taxpayer-as-retenedor on
+   received ones), each row carrying `legal_refs`. Axis B (per-family, unchanged
+   shape): each ledger family's observation builder and fact vocabulary consumes
+   Axis A when decomposing a row for its modelo.
 
 **Retención derivation**
 
@@ -205,7 +217,12 @@ is the CATEGORY axis, not the amounts: a base with `iva_amount` zero and categor
 `DOMESTIC_EXEMPT` is grounded exempt income; the same amounts with no category are
 ambiguous (untagged vs exempt are indistinguishable) and the row is ungrounded.
 Counterparty residency/tax identity remains an invoice-record concern, not a row
-grounding requirement.
+grounding requirement. This grounding contract is deliberately income-side (issued
+invoices / money received): the received side already has its grounding refusal (the
+gasto `MISSING_TAXABLE_BASE` exclusion, `2026-06-19-silent-zero-base-aggregation-adr`)
+and this record aligns with it rather than restating it; what D4 adds for the
+received side is the component matrix (IVA soportado role, retenedor liability), not
+a new eligibility gate.
 
 **D2 — third outcome class and dual advisory (Site 1, rules F27 ACCEPTED).** Add a
 *declarable-but-ungrounded* class to the income pipeline. Ungrounded bank rows keep
@@ -237,34 +254,69 @@ exempt freelancer who never tags anything — that residual risk is exactly what
 always-on advisory exists to surface, and closing it fully would make the common
 state unfileable.
 
-**D4 — decomposition identity and per-category components (Site 2).** Canonical
-per-invoice identity: `total (contraprestación) = taxable_base + cuota IVA
-[+ recargo]`; `cash = total − retención`. Retención is not a price component and never
-enters `grand_total`. Component existence is Axis-A declared data per `IvaCategory` —
-a component-expectation table in `domain/iva` beside (and derived from, where
-applicable) the existing named frozensets, each row with `legal_refs`: domestic rated
-categories carry base + cuota (+ optional retención for professional services);
-`DOMESTIC_EXEMPT` (LIVA art. 20) carries base, no cuota, retención possible;
-`INTRA_COMMUNITY_SUPPLY` (art. 25) and the export categories (arts. 21/22) carry base
-only, zero cuota — cuota-less is NOT substrate-less, their bases still feed base-only
-casillas — with retención not-expected (REASONED: the withholding obligation falls on
+**D4 — decomposition identity and the (category, kind) component matrix (Site 2).**
+Canonical per-invoice identity, valid for BOTH kinds with roles inverted:
+`total (contraprestación) = taxable_base + cuota IVA [+ recargo]`;
+`cash = total − retención`. Retención is not a price component and never enters
+`grand_total`. Component existence is Axis-A declared data keyed by the PAIR
+(`IvaCategory`, kind) — a component-expectation table in `domain/iva` beside (and
+derived from, where applicable) the existing named frozensets, each row with
+`legal_refs`.
+
+Kind semantics: an ISSUED (collectible) invoice means money is received — its base
+feeds the income measure, its cuota is IVA repercutido/devengado, its retención is
+withheld BY the payer and is the taxpayer's CREDIT (RIRPF art. 110.3.a on the pago
+fraccionado; the retenciones casilla on M100/M130). A RECEIVED (payable) invoice
+means money is paid — its base feeds the gasto measure, its cuota is IVA soportado
+(deducible per M303 rules, or cost per PGC NRV 12.ª when non-deducible), and when the
+supplier is a resident professional the taxpayer is the obligated RETENEDOR: the
+retención is a LIABILITY settled to AEAT, whose canonical home is the existing
+per-perceptor retención store feeding the `retenciones_aggregation` family
+(M111/M190 committed bindings) — this record routes into that authority and forbids
+a second parallel retención path.
+
+Per-category rows (each stated for both kinds where they differ): domestic rated
+categories carry base + cuota (+ optional retención for professional services, in
+the role the kind dictates); `DOMESTIC_EXEMPT` (LIVA art. 20) carries base, no
+cuota, retención possible in either role; `INTRA_COMMUNITY_SUPPLY` (art. 25, issued
+side) and the export categories (arts. 21/22) carry base only, zero cuota —
+cuota-less is NOT substrate-less, their bases still feed base-only casillas — with
+retención not-expected (REASONED: the withholding obligation falls on
 Spanish-resident payers and permanent establishments; a foreign payer without PE is
-generally outside it — to be confirmed against LIRPF art. 99 / RIRPF art. 76 when the
-corpus entries land); reverse-charge acquisition categories carry base with the cuota
-self-assessed by the recipient (both devengada and, where deducible, soportada);
-`IMPORT_THIRD_COUNTRY` carries base with cuota settled at customs. The engine consults
-Axis A when decomposing; per-family builders (Axis B) keep their accepted shape.
+generally outside it — to be confirmed against LIRPF art. 99 / RIRPF art. 76 when
+the corpus entries land); reverse-charge and intra-community-acquisition categories
+invert who declares: on the received side the taxpayer self-assesses the cuota (both
+devengada and, where deducible, soportada), on the issued side (LIVA art. 84.Uno.2.º
+supplies) the invoice carries base only; `IMPORT_THIRD_COUNTRY` (received side)
+carries base with cuota settled at customs. Operation origin/target is expressed BY
+the (category, kind) pair plus the invoice record's counterparty country — no
+separate territory axis is invented. Selecting the category for a cross-border
+service is governed by the place-of-supply rules (LIVA arts. 68–70); that selection
+is a declared judgement (operator, or LLM-selection under the closed-list guard),
+NEVER derived by the system from counterparty country alone.
 
 **D5 — retención (Site 2).** Declared-first: an invoice or row that knows its
-retención declares amount (and optionally rate). Derivable-second: the existing
-bounded inference (invoice gross minus cash, capped by the registry maximum supported
-rate) remains the only derivation, with its precondition relaxed per Considered
-options so cuota-less categories qualify; derived values carry derivation provenance.
-Inversion-never: no path may reconstruct base from cash by assuming a retención rate.
-Retención rates (15% general professional, 7% inicio-de-actividad — live-verified
-2026-08-05 against RD 439/2007 art. 95.1) become registry parameters with `legal_refs`,
-consumed by the max-rate bound and any future rate-suggestion surface; they are never
-feature-module literals and never LLM-emitted.
+retención declares amount (and optionally rate), and a DECLARED amount or rate is
+accepted even when nonstandard — real-world retención rates are not a closed set the
+system may enforce (sector schemes, reduced rates, contractual and IRNR/convenio
+cases exist); the registry catalogue is an expectation, not a straitjacket. When a
+declared rate diverges from the registry expectation for the row's declared scheme,
+the engine surfaces a non-blocking divergence advisory — never a silent correction,
+never a block. Derivable-second: the existing bounded inference (invoice gross minus
+cash, capped by the registry maximum supported rate) remains the only derivation,
+with its precondition relaxed per Considered options so cuota-less categories
+qualify; derived values carry derivation provenance. Inversion-never: no path may
+reconstruct base from cash by assuming a retención rate. The registry retención
+catalogue is authored from RIRPF Título VII with `legal_refs` per scheme — the
+professional 15% / inicio-de-actividad 7% pair is live-verified (2026-08-05, RD
+439/2007 art. 95.1); further schemes (trabajo, arrendamientos, capital, agrícolas,
+premios — the scheme axis the retenciones store already names) are authored with the
+same discipline, each figure live-checked at authoring time; the IRNR 24%/19% family
+stays governed by the M210 ADRs. Rates are never feature-module literals and never
+LLM-emitted. IVA rates continue to resolve through the existing registry rate lookup
+(`2026-06-04-llm-ledger-classification-adr`); the rich-invoice `IvaRate` enum's
+known gaps (no 5% member) are reconciled against that registry table so an invoice
+can declare every rate the law has carried in the served window.
 
 **D6 — territory and the income measure (Site 2).** The per-family fact vocabularies
 stay (resident M100/M130 unfiltered per the source-jurisdiction axis; M151 ES-gated;
@@ -304,12 +356,18 @@ amount) is expressly out of scope.
    path notice with context; identical surfacing on pull and calculate.
 4. `taxable_base_sum` stops or-zero coercion; base-less rows join the advisory.
 5. Withheld inference precondition relaxed to category-determinable cuota; exempt
-   invoices recover retención; existing max-rate bound retained.
-6. Axis-A component-expectation table in `domain/iva` with `legal_refs`, derived
-   from/beside the named frozensets (never a third inline set).
-7. Registry retención rate parameters (RIRPF art. 95) with legal catalogue entries;
-   corpus bundling: PGC NRV 12.ª/14.ª excerpts; LIVA arts. 7/13/15/17/20/22/25/26
-   (Tier-2 gate of `2026-06-09-modelo-iva-routing-carry-adr`); LIRPF art. 99 / RIRPF
+   invoices recover retención; existing max-rate bound retained; declared-vs-expected
+   retención-rate divergence advisory (non-blocking, never a silent correction).
+6. Axis-A component-expectation table in `domain/iva`, keyed by the
+   (`IvaCategory`, invoice kind) pair, with `legal_refs`, derived from/beside the
+   named frozensets (never a third inline set); retención role (credit vs
+   retenedor-liability) declared per row.
+7. Registry retención catalogue keyed by the existing retención scheme axis, authored
+   from RIRPF Título VII with legal catalogue entries (art. 95 professional pair
+   live-verified; every further figure live-checked at authoring time); corpus
+   bundling: PGC NRV 12.ª/14.ª excerpts; LIVA arts. 7/13/15/17/20/22/25/26
+   (Tier-2 gate of `2026-06-09-modelo-iva-routing-carry-adr`); LIVA arts. 68–70
+   (place of supply) for the category-selection grounding; LIRPF art. 99 / RIRPF
    art. 76 for the retención-expectation grounding.
 8. Invoice records: consistency validator for `retention_rate`/`retention_amount` on
    the rich `Invoice` (against `base_total`, retención outside `grand_total`, both
@@ -321,6 +379,11 @@ amount) is expressly out of scope.
     corpus (a worked example with retención and an exempt-services example are the
     two anchor cases); anti-tautology per no-tautological-calculation-tests; roundtrip
     coverage for every new persisted field per aeat-roundtrip-discipline.
+11. Received-invoice retención routes into the existing per-perceptor retención store
+    behind the `retenciones_aggregation` family (M111/M190); the linkage mechanism is
+    plan-level design, the prohibition on a second retención path is not.
+12. Reconcile the rich-invoice `IvaRate` enum against the registry rate table (the
+    known 5% gap and any other rate the law carried in the served window).
 
 ## Rationale
 
@@ -380,7 +443,12 @@ amount) is expressly out of scope.
   semantics — the expense-side exclusion is deliberate and correct (no silent
   over-declaration of gastos) and has an anti-normalisation control; do not re-derive
   a local cuota-less set anywhere (consume the named frozensets); do not let the
-  verify escalation fire on undeclared-category rows.
+  verify escalation fire on undeclared-category rows; do not fork a second retención
+  write path — the per-perceptor store behind `retenciones_aggregation` is the sole
+  home for retenedor-side liabilities; do not enforce the registry retención
+  catalogue as a closed set against declared values — declared wins, divergence is
+  an advisory; do not derive an IVA category from counterparty country alone —
+  place-of-supply selection is a declared judgement.
 - **Operator questions this record declines to rule on**, each because it is a product
   or legal-authority judgement rather than an architecture one:
   1. RATIFY OR AMEND D3's severity split (advisory default; verify-blocking only for
