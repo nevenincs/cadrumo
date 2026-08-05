@@ -60,8 +60,15 @@ def _two_descendants() -> tuple[UserProfileFact, ...]:
 
 
 def _advise() -> tuple[str, ...]:
+    """The text an OPERATOR sees, not the message field alone.
+
+    A diagnostic states the problem in ``message`` and the fix in ``remedy``,
+    which the calculate CLI projects onto the notice's ``suggestion`` and renders
+    as one line. Asserting against ``message`` alone would let a remedy fall off
+    the operator-facing surface without any test noticing.
+    """
     return tuple(
-        d.message
+        d.message if d.remedy is None else f"{d.message} {d.remedy}"
         for d in collect_descendientes_count_desync_diagnostics(modelo=Modelo.M100.value, bucket_id=_BUCKET_ID)
     )
 
