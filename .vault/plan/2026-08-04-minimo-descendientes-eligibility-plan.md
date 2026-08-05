@@ -4,14 +4,13 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:a28ff8a8093db4a2dff630555271dac08450e816c9733e37b4e237033a7ffc98'
+body_hash: 'sha256:bf8833d0bfa0cf893317ee1dc9107166e7a41b0f60c0204601c56c372b91b37e'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
 ---
-
 # `minimo-descendientes-eligibility` plan
 
 ## Description
@@ -61,13 +60,14 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 
 - [x] `P04.S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface; `src/cadrumo/core/_descendant_relacion.py`.
 - [x] `P04.S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche; `src/cadrumo/domain/contribuyente/family.py`.
-- [ ] `P04.S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one; `src/cadrumo/domain/contribuyente/family.py`.
+- [ ] `P04.S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one, BLOCKED on S21 because nothing on the calculate path reads a descendant record for maternidad, so the predicate would land with no consumer and rebuild the dead shape S19 removed; `src/cadrumo/domain/contribuyente/family.py`.
 - [x] `P04.S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, and route the calculate path through the canonical record so a declared map reaches the cap terms; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/_guarderia_mensual.py, src/cadrumo/application/modelo/_profile_binding.py`.
 - [x] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S18` - Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/modelo/_profile_binding.py`.
 - [x] `P04.S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py, src/cadrumo/core/external_constants.py, src/cadrumo/core/tests/test_external_constants_centralisation_part2.py, src/cadrumo/locales/`.
 - [x] `P04.S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
-- [ ] `P04.S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-checked, because the under-three and cohabiting conditions are enforced nowhere on the live path while the profile already holds the birth dates and cohabitation facts the check would need, so an operator can today declare months for a child the statute excludes and OVER-grant, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/domain/contribuyente/family.py`.
+- [ ] `P04.S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-derived, because the engine never sees the descendants at all and takes an operator-supplied list of hijo and month pairs, so the under-three and cohabiting conditions cannot be enforced while the profile already holds the birth dates and cohabitation facts, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited, BLOCKING S15 whose window predicate has no consumer until this resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/domain/contribuyente/family.py`.
+- [ ] `P04.S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 
 ## Parallelization
 
@@ -82,10 +82,30 @@ commit, so splitting the axis from its entry surface would have left the tree
 uncollectable in between. `P04.S14` followed separately because it corrects a defect
 found by self-review after the first landed, not because the two are independent.
 
-`P04.S15` is open and unblocked. Both entry-event dates now exist, so the Art. 81.1
-adoption clause can carry the date-scoped window it actually has rather than borrowing
-the Art. 58.2 period-scoped one. The two genuinely diverge, and one predicate serving
-both would silently apply one statute's window to the other's deduction.
+`P04.S15` was recorded here as open and unblocked and is NOT. It is blocked on `S21`,
+and the dependency runs the opposite way from how `S21` was opened, which is why this
+paragraph states it rather than leaving a reader to infer it from two row texts. The
+statutory content of `S15` is sound and unchanged: both entry-event dates now exist, the
+Art. 81.1 adoption clause runs three years from the inscription DATE while Art. 58.2
+counts the entry PERIOD and the two following, the two genuinely diverge, and one
+predicate serving both would silently apply one statute's window to the other's
+deduction.
+
+What blocks it is that the predicate would have nowhere to live. Nothing on the
+calculate path reads a descendant record for maternidad: casilla 0611 has no formula
+targeting it and no binding naming a maternidad profile path, and it is set directly
+from an operator-supplied list of hijo and month pairs. A window predicate on the
+descendant record would therefore land with no consumer, which is exactly the shape
+`S19` removed five members of. `S21` decides whether maternidad derives from profile
+facts as the guardería increase now does, and only its answer gives `S15` a consumer.
+
+`P04.S22` is independent of that answer and should not wait for it. An operator who
+declares the maternidad months through the descendiente verb or the guided flow gets
+nothing: the fact round-trips, rides the JSON payload, survives the resume walk and is
+declared in the user-profile schema as a model selector, while no formula consumes it.
+Declared and unconsumed is worse than absent, because absent reads as an omission and
+declared reads to any inspector as wired. Whichever way `S21` resolves, a documented
+entry surface is today telling the operator it records something it does not use.
 
 `P04.S16` was BLOCKED on a per-comunidad regional table and no longer is. The row's own
 text still carries that clause and is stale; this paragraph is the correction, and the
@@ -185,8 +205,22 @@ reasoning about coverage.
 wherever nothing is lost: a descendant already under three, one the statute excludes
 from the limb, one not cohabiting, and one over 25 with no discapacidad.
 
-`S15` is complete when the Art. 81.1 window is date-scoped and a test shows it diverging
-from the Art. 58.2 period-scoped window for the same child.
+`S15` is complete when the Art. 81.1 window is date-scoped, a test shows it diverging
+from the Art. 58.2 period-scoped window for the same child, AND the predicate has a
+production consumer. The last clause is added because the first two are satisfiable by
+dead code: two windows that agree on every case tried are indistinguishable from one
+window, and a window nothing calls is indistinguishable from no window. The divergence
+runs both ways for an inscription late in a year — the entry year is wholly inside the
+Art. 58.2 window while its early months are outside the date window, and the fourth
+calendar year is inside the date window and outside the Art. 58.2 one — so a test
+exercising only one direction proves half the claim.
+
+`S22` is complete when the declared maternidad months either reach a casilla or stop
+being offered, and explicitly not when the entry surface merely documents that they do
+nothing. Its verification is operator-facing: declaring the months through the
+descendiente verb changes a computed value, or the verb no longer accepts them.
+Whichever way `S21` resolves, the schema declaration and the entry surface must end
+agreeing with the engine.
 
 The rule that governed `S16` and `S17` stands and is restated because both have now been
 closed against it: neither could be closed by narrowing its scope to the unblocked part,

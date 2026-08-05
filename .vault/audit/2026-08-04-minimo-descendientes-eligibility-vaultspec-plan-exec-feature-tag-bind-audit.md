@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a95f0fcc7ee17d33f4b41d4b2d4f749d5a2cade640c6116db775198f03ab07e'
+body_hash: 'sha256:62d49df78bfab8b184605ccdbe44eb709f3d075e53c16c1ad96e30f2819da68c'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]"
@@ -127,6 +127,37 @@ The smallest fix in the existing vocabulary would be a re-sync on the owning ver
 bound to that Step, or a `--resync` flag on the exec verb that refreshes heading and Scope
 from the current row without touching authored prose. Either keeps the fields
 machine-owned, which is the property that makes them trustworthy.
+
+### per-article-excerpt-omits-its-own-clause | medium | A bundled per-article corpus file is missing a clause the full consolidated text carries
+
+Not a tooling finding like the two above, but recorded here because this is where this
+feature's findings are being carried upstream and it bites the same reader.
+
+The bundled per-article excerpt for the LIRPF maternity-deduction article carries only
+its first two apartados. It runs to about fourteen hundred characters and contains no
+occurrence of acogimiento, of inscripción, or of the three-years-following phrase. The
+clause it omits is the one granting the deduction for an adoption or entitling
+acogimiento regardless of the child's age, for three years from the inscription date.
+
+That clause IS bundled, in the full consolidated statute file and in the tax authority's
+own annual manuals for two filing years. So the corpus holds it; one particular file
+that a reader would reach for first does not.
+
+The hazard is specific and this project's grounding discipline names it: the bundled
+corpus is preferred over secondary sources and is not infallible. A corpus reference
+pointed at the per-article file for this clause would fail its required-text check, or
+worse, a reader consulting that file to ground the clause would conclude it does not
+exist. That nearly happened during this campaign: a Step whose whole premise is the
+date-scoped window was almost reported as ungrounded on the strength of the excerpt
+alone, and only a wider search of the corpus found the clause.
+
+Two follow-on notes for whoever grounds this clause. Point the reference at the
+consolidated file rather than the per-article one, or refresh the excerpt. And expect
+the statute and the manual to word the entitling placements differently: the statute
+names acogimiento both preadoptivo and permanente, while the manual names acogimiento
+permanente or delegación de guarda para la convivencia, which is the post-2015
+civil-law renaming of the same arrangement. Both describe the same set. An implementer
+who grounds on one and reviews against the other will think they disagree.
 
 ## Impact
 
