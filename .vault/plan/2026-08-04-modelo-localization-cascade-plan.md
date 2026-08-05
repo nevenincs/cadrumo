@@ -4,7 +4,7 @@ tags:
   - '#modelo-localization-cascade'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:a64949e558192d35814b0fcbd8885b6965daad868e0e7b847323a4693a7b3d15'
+body_hash: 'sha256:a60ebf447b11e36449ac1ffc2feca4bbf51a763c6c9da97045545fc1ce2aa14e'
 tier: L3
 related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
@@ -24,6 +24,11 @@ This plan records the migration and certification boundary for the accepted root
 > the already-landed root-only shared-catalogue cutover. Their rows are closed
 > by explicit Step Records and the execution closeout audit, with source-aware
 > parity evidence and no claim of a post-disposal temporary-app rerun.
+
+The historical insertion of `W01.P02.S18` intentionally preserves its
+canonical identifier rather than renumbering existing Step Records. The plan
+checker may therefore report `PLAN022` for this permitted insertion ordering;
+moving the row would sever its `W01.P02` display path and produce `PLAN030`.
 
 The normal operating mode is a dry run. Every dry run writes a deterministic, self-contained proposal to a temporary output directory containing the staged tree, source fingerprint, sealed manifest, conflicts, unresolved review register, parity report, and summary. The campaign is measured by verbatim Spanish extraction, a language-neutral schema, and stopping revision N+1 from re-declaring unchanged leaves; byte compression is not its success criterion. The application must refuse a live registry destination and must not expose a production mutation path before explicit certification evidence exists.
 
