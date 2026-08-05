@@ -10,17 +10,18 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingSourceKind, RelationAggregationOp
+from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
 from ._relation_aggregation import relation_aggregation_op
+from ._relations import relation_source_requirements
 from ._schema import (
     ModeloDefinition,
     RegistryCatalogues,
     RelationPeriodAlignment,
     RelationRevisionSelector,
 )
-from ._authority import ValidatedRegistryAuthority
 from ._validate import RegistryValidator
 
 __all__ = [
@@ -170,4 +171,151 @@ def audit_registry_relation_handoffs(
 ) -> RegistryRelationHandoffAudit:
     """Validate and enumerate canonical relation declarations.
 
-    The function is deli
+    The function is deliberately an inventory, not a semantic adjudicator. It
+    records the relation declaration and the binding slot it targets. Parallel
+    paths and accepted exceptions are classified by the later handoff validator,
+    so this fold cannot turn a source/binding shape into a new legal conclusion.
+    """
+    modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
+    RegistryValidator(catalogues, source_root=source_root).validate_registry(modelo_tuple)
+
+    records: list[RelationHandoffRecord] = []
+    for modelo in modelo_tuple:
+        for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
+            bindings_by_id = {binding.id: binding for binding in revision.bindings}
+            for relation in revision.relations:
+                target_binding = bindings_by_id.get(relation.target_binding)
+                if target_binding is None:
+                    raise RegistryValidationError(
+                        f"modelo {modelo.id} revision {revision.id}: relation {relation.id!r} "
+                        f"has no target binding {relation.target_binding!r}",
+                    )
+                target_casilla_ids = tuple(
+                    sorted(
+                        casilla.id
+                        for casilla in revision.casillas
+                        if relation.target_binding in bound_casilla_binding_ids(casilla)
+                    ),
+                )
+                records.append(
+                    RelationHandoffRecord(
+                        target_modelo=modelo.id,
+                        target_revision=revision.id,
+                        relation_id=relation.id,
+                        relation_kind=relation.kind,
+                        dependency_role=relation.dependency_role,
+                        source_modelo=relation.source_modelo,
+                        source_revision_selector=relation.source_revision_selector,
+                        source_casilla_id=relation.source_casilla_id,
+                        target_binding=relation.target_binding,
+                        target_binding_source=target_binding.source,
+                        target_casilla_ids=target_casilla_ids,
+                        period_alignment=relation.period_alignment,
+                        source_periods=relation.source_periods,
+                        target_periods=relation.target_periods,
+                        source_period_offset_from_target=relation.source_period_offset_from_target,
+                        aggregation_op=relation_aggregation_op(relation),
+                        legal_refs=relation.legal_refs,
+                        source_refs=relation.source_refs,
+                        target_binding_legal_refs=target_binding.legal_refs,
+                        target_binding_source_refs=target_binding.source_refs,
+                    ),
+                )
+    return RegistryRelationHandoffAudit(records=tuple(records))
+
+
+def audit_registry_relation_handoff_applicability(
+    authority: ValidatedRegistryAuthority,
+) -> RegistryRelationHandoffApplicabilityAudit:
+    """Measure authority-selected relation periods and clean-state contracts.
+
+    Every declared relation is expanded over its target revision's declared
+    periods at the revision's representative filing year. Active rows are
+    projected from :func:`relation_source_requirements`, the same requirement
+    graph consumed by the runtime clean-state gate. This function records the
+    clean-state contract (required, conditional, or advisory) but deliberately
+    does not manufacture a taxpayer-specific runtime verdict.
+    """
+    authority.validate_registry()
+    records: list[RelationHandoffApplicabilityRecord] = []
+    for modelo in sorted(authority.modelos, key=lambda item: item.id):
+        for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
+            if not revision.relations:
+                continue
+            selector = revision.period_selector
+            filing_year = selector.years[0] if selector.years else selector.year_from
+            if filing_year is None:
+                raise RegistryValidationError(
+                    f"modelo {modelo.id} revision {revision.id} has no representative filing year",
+                )
+            classifications_by_source = {
+                classification.source_modelo: classification for classification in revision.dependency_classifications
+            }
+            for period in selector.periods:
+                snapshot = authority.snapshot(
+                    str(modelo.id),
+                    filing_year=filing_year,
+                    period=period,
+                    revision_id=str(revision.id),
+                )
+                requirements = relation_source_requirements(
+                    snapshot.revision,
+                    filing_year=snapshot.filing_year,
+                    period=snapshot.period,
+                )
+                for relation in snapshot.revision.relations:
+                    classification = classifications_by_source.get(relation.source_modelo)
+                    if classification is None:
+                        raise RegistryValidationError(
+                            f"modelo {modelo.id} revision {revision.id}: relation {relation.id!r} "
+                            f"has no dependency classification for source {relation.source_modelo!r}",
+                        )
+                    matching = tuple(
+                        requirement for requirement in requirements if relation.id in requirement.relation_ids
+                    )
+                    if len(matching) > 1:
+                        raise RegistryValidationError(
+                            f"relation {relation.id!r} produces multiple source requirements for "
+                            f"{modelo.id}/{revision.id}/{snapshot.period}",
+                        )
+                    if relation.target_periods and snapshot.period not in relation.target_periods:
+                        applicability: Literal["active", "not_applicable", "unresolved"] = "not_applicable"
+                    elif matching:
+                        applicability = "active"
+                    else:
+                        applicability = "unresolved"
+                    requirement = matching[0] if matching else None
+                    if not classification.taxpayer_files_source:
+                        clean_state_mode: Literal["required", "conditional", "advisory"] = "advisory"
+                    elif classification.conditional_on_economic_activity:
+                        clean_state_mode = "conditional"
+                    else:
+                        clean_state_mode = "required"
+                    records.append(
+                        RelationHandoffApplicabilityRecord(
+                            target_modelo=modelo.id,
+                            target_revision=revision.id,
+                            relation_id=relation.id,
+                            filing_year=snapshot.filing_year,
+                            target_period=snapshot.period,
+                            relation_target_periods=relation.target_periods,
+                            applicability=applicability,
+                            source_modelo=relation.source_modelo,
+                            source_filing_year=None if requirement is None else requirement.filing_year,
+                            source_periods=() if requirement is None else requirement.periods,
+                            source_filing_periods=()
+                            if requirement is None
+                            else tuple(period.registry_token for period in requirement.filing_periods),
+                            source_casilla_id=relation.source_casilla_id,
+                            target_binding=relation.target_binding,
+                            requirement_relation_ids=() if requirement is None else requirement.relation_ids,
+                            dependency_treatment=classification.treatment,
+                            taxpayer_files_source=classification.taxpayer_files_source,
+                            conditional_on_economic_activity=classification.conditional_on_economic_activity,
+                            clean_state_mode=clean_state_mode,
+                            aggregation_op=relation_aggregation_op(relation),
+                            legal_refs=relation.legal_refs,
+                            source_refs=relation.source_refs,
+                        ),
+                    )
+    return RegistryRelationHandoffApplicabilityAudit(records=tuple(records))

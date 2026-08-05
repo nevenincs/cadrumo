@@ -6,8 +6,10 @@ import pytest
 
 from .....core.resources import bundled_path
 from .. import (
+    RegistryRelationHandoffApplicabilityAudit,
     RegistryRelationHandoffAudit,
     RelationHandoffRecord,
+    audit_registry_relation_handoff_applicability,
     audit_registry_relation_handoffs,
     bound_casilla_binding_ids,
     bundled_authority,
@@ -86,3 +88,61 @@ def test_relation_handoff_inventory_is_finite_and_grouped_by_target_revision() -
     assert set(grouped) <= declared_revision_keys
     assert sum(len(rows) for rows in grouped.values()) == audit.relation_count
     assert all(isinstance(record, RelationHandoffRecord) for record in audit.records)
+
+
+def test_relation_handoff_applicability_measures_period_and_clean_state_contract() -> None:
+    """Authority-selected periods preserve active, excluded, and conditional rows."""
+    authority = bundled_authority()
+    audit = audit_registry_relation_handoff_applicability(authority)
+
+    assert isinstance(audit, RegistryRelationHandoffApplicabilityAudit)
+    assert audit.row_count == 108
+    assert audit.active_count == 81
+    assert audit.not_applicable_count == 27
+    assert audit.unresolved_count == 0
+    assert sum(record.clean_state_mode == "required" for record in audit.records) == 73
+    assert sum(record.clean_state_mode == "advisory" for record in audit.records) == 22
+    assert sum(record.clean_state_mode == "conditional" for record in audit.records) == 13
+    assert all(record.runtime_clean_state == "unmeasured" for record in audit.records)
+
+    m100_2025_193 = next(
+        record
+        for record in audit.records
+        if (
+            record.target_modelo,
+            record.target_revision,
+            record.relation_id,
+            record.target_period,
+        )
+        == (
+            "100",
+            "2025",
+            "renta-2025-rel-193-retenciones-anuales",
+            "0A",
+        )
+    )
+    assert m100_2025_193.applicability == "active"
+    assert m100_2025_193.source_modelo == "193"
+    assert m100_2025_193.source_filing_year == 2025
+    assert m100_2025_193.source_periods == ("0A",)
+    assert m100_2025_193.clean_state_mode == "advisory"
+
+    m100_2025_130 = next(
+        record
+        for record in audit.records
+        if (
+            record.target_modelo,
+            record.target_revision,
+            record.relation_id,
+            record.target_period,
+        )
+        == (
+            "100",
+            "2025",
+            "renta-2025-rel-130-pagos-fraccionados",
+            "0A",
+        )
+    )
+    assert m100_2025_130.applicability == "active"
+    assert m100_2025_130.clean_state_mode == "conditional"
+    assert m100_2025_130.conditional_on_economic_activity is True

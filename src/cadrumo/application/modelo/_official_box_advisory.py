@@ -6,7 +6,12 @@ predicates and mirrors the same predicate shape as a non-blocking
 :class:`~cadrumo.application.aggregation.CalculationSourceDiagnostic` on the
 calculate path. The verification predicate remains the single source of truth
 for any total-to-official-box mapping, so calculate diagnostics and verify
-findings cannot drift.
+findings cannot drift: the fire condition is not restated here but taken from
+:func:`~cadrumo.application.modelo._verification_predicates.evaluate_advisory_predicate_fires`,
+the same evaluator the verify gate runs. That call is what makes the sentence
+above structurally true rather than a claim -- this collector once carried its
+own copy of the antecedent/consequent test, which agreed with the verification
+side only for as long as nobody edited either.
 
 Modelo 303's 2023-y-siguientes revision used this mechanism in Stage 1, when
 ledger-backed semantic totals could be positive while manual official
@@ -63,7 +68,11 @@ def collect_official_box_unpopulated_diagnostics(
     """
     # Lazy import avoids the calculate/verification action cycle. The predicate
     # module owns the public DSL matcher and parser contract.
-    from ._verification_predicates import PREDICATE_IMPLIES_ANY_NONZERO, parse_predicate_casilla_ids
+    from ._verification_predicates import (
+        PREDICATE_IMPLIES_ANY_NONZERO,
+        evaluate_advisory_predicate_fires,
+        parse_predicate_casilla_ids,
+    )
 
     diagnostics: list[CalculationSourceDiagnostic] = []
     for predicate in revision.verification_predicates:
@@ -75,13 +84,16 @@ def collect_official_box_unpopulated_diagnostics(
         ids = parse_predicate_casilla_ids(match.group("ids"))
         if len(ids) < 2:
             continue
+        # The fire condition is the verification side's, called rather than
+        # restated: this collector and the verify gate must answer identically
+        # for the same casilla values, and a second copy of the antecedent /
+        # consequent test is how they would stop doing so. The regex and the id
+        # parser above are still needed here to name the boxes in the message.
+        if not evaluate_advisory_predicate_fires(predicate.expression, casilla_values):
+            continue
         antecedent_id = ids[0]
         consequent_ids = ids[1:]
         antecedent = casilla_values.get(antecedent_id, Decimal(0))
-        if antecedent <= Decimal(0):
-            continue
-        if any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in consequent_ids):
-            continue
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="official_box_unpopulated",

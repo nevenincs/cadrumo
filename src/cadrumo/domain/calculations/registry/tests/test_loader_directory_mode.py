@@ -278,7 +278,7 @@ source_refs = ["aeat-manual"]
         encoding="utf-8",
     )
 
-    with pytest.raises(RegistryValidationError, match=r"Invalid casilla id 'bad key'.*canonical casilla\.id"):
+    with pytest.raises(RegistryLoadError, match=r"casillas\.0\.id"):
         load_modelo_directory(target)
 
 
