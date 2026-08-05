@@ -12,7 +12,7 @@ from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
 from ._handoffs import RegistryRelationHandoffAudit, audit_registry_relation_handoffs
 from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
-from ._validate_relation_sources import is_iva_wallet_owned_relation_target
+from ._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 
 __all__ = [
     "HandoffPathClassification",

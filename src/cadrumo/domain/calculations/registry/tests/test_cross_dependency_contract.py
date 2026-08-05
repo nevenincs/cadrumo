@@ -26,7 +26,7 @@ from .._schema import (
 )
 from .._validate import RegistryValidator
 from .._validate_relation_periods import select_relation_source_revisions
-from .._validate_relation_sources import is_iva_wallet_owned_relation_target
+from .._iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

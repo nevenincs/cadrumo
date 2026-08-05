@@ -434,7 +434,7 @@ from ._relations import (
     resolve_relation_values,
     resolve_relation_values_from_observations,
 )
-from ._validate_relation_sources import (
+from ._iva_wallet_relation_targets import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     is_iva_wallet_owned_relation_target,
     iva_wallet_owned_binding_ids_for_revision,
