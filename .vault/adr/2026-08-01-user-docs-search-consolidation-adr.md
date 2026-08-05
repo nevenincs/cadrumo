@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:c7c6d45d65d0ad2dd7dc7fa99f36d3187e3c524aee5538bb56cedfbc917e163f'
+body_hash: 'sha256:f4bc5a35f074d3a08f3cf4aee91b6d1275f0f7a19cb1a86d770229eacb9d9df5'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -203,3 +203,44 @@ The selected shape closes the exact provenance-loss finding without widening the
 ### Consequences
 
 Every future Rung-2 bundle consumer must understand the incremented schema and refuse bundles without provenance. Existing source-only acceptance and browser contracts require coordinated updates, and any measured artifact must be regenerated after those updates. The current relevance baseline and the deployment deferral are unchanged; this amendment makes the implementation traceable but does not turn the still-unbuilt Rung-2 tier green.
+
+## Update 8 (2026-08-05): Rung-2 provider and tokenizer content attestation is a raw-byte manifest contract
+
+Update 6 requires provider and tokenizer content hashes, but the source review found that the current fields do not define which bytes they cover or how an independent verifier recomputes them. This amendment resolves that semantic gap before provider verification is implemented. It does not authorize a model download, artifact generation, or release.
+
+### Decision
+
+Introduce one versioned `RawByteManifestV1` contract for the build-time evidence behind provider and tokenizer provenance. The same primitive is used for the provider distribution source, the pinned model snapshot, the tokenizer vocabulary role, and the tokenizer configuration role.
+
+Each manifest contains a fixed purpose/role, the pinned repository/revision context, and entries with exactly `relative_path`, `byte_length`, and `sha256`. Entries cover regular files only. A verifier MUST reject symlinks, duplicate paths, absolute paths, traversal components, invalid POSIX spelling, case-colliding paths, missing evidence, unexpected files, and unclassified files consumed by the provider or tokenizer. Paths are normalized to repository-relative POSIX spelling and sorted by UTF-8 path bytes.
+
+Each per-file digest is SHA-256 over the exact raw bytes. JSON is never parsed or reserialized before file hashing. The manifest root digest is SHA-256 over UTF-8 canonical JSON with a fixed schema version and fixed keys, sorted object keys, compact separators, no timestamps, and no machine-local root paths. The existing repository corpus-manifest pattern is the implementation precedent for deterministic relative paths, byte lengths, raw-byte hashes, and self-attesting canonical JSON.
+
+The existing `ProviderProvenance.source_sha256`, `TokenizerProvenance.vocabulary_sha256`, and `TokenizerProvenance.config_sha256` fields become the roots of their corresponding manifests. The model metadata contract also gains a required whole-model snapshot root (named `model_snapshot_sha256`) because tokenizer vocabulary/config roots do not attest the embedding weights. The ADR MUST NOT guess tokenizer filenames: a reviewed manifest for the pinned revision declares the exact files and assigns their roles.
+
+Verification is local-only and occurs before provider import and before `StaticModel.from_pretrained`. Missing or changed evidence MUST fail closed; no verifier may fetch a repository, package, cache entry, or model file to complete a manifest.
+
+### Required later evidence
+
+Before matrix compilation or artifact acceptance, the implementation and gate MUST require:
+
+- the exact provider distribution identity and installed version, a provider-source manifest, and an independently recomputed `source_sha256`;
+- the pinned repository, immutable revision, MIT licence evidence, complete model-snapshot manifest, and independently recomputed `model_snapshot_sha256`;
+- reviewed vocabulary/configuration role manifests from that same snapshot, with independently recomputed `vocabulary_sha256` and `config_sha256`;
+- proof that every consumed model/tokenizer file belongs to the pinned snapshot and is covered by exactly one declared role;
+- exact agreement between recomputed roots and `ModelMetadata`; any missing, additional, changed, linked, or unclassified consumed file fails closed;
+- binding of all manifest roots into matrix/bundle identity and serialized-size accounting;
+- preservation of the local-path, no-download, immutable-revision, MIT/Apache-only, 3 MB shipped-envelope, quantization, held-out-recall, and fail-closed gates from Update 6.
+
+### Considered options
+
+- **Keep caller-supplied hashes with no byte-set contract.** Rejected: the fields are syntactically valid but cannot independently prove the implementation or loaded artifact.
+- **Name a presumed tokenizer file set in code.** Rejected: Model2Vec artifact layout is not evidence, and a guessed filename convention can attest the wrong bytes.
+- **Use one tokenizer hash for the whole model.** Rejected: tokenizer identity does not cover embedding weights and cannot replace a whole-model snapshot root.
+- **Define a versioned raw-byte manifest with reviewed role membership.** Chosen: it is deterministic, locally verifiable, fail-closed, and reuses the repository's established manifest pattern without shipping raw model bytes or vectors.
+
+### Consequences
+
+P02.S26 must be completed before P02.S06 and before any Rung-2 artifact can be accepted. The provider adapter, metadata schema, compiler, Python acceptance, and browser-visible provenance must be updated together after the manifest evidence is available. Until then, the existing source seams remain disabled/fail-closed and all Rung-2, runtime, and deployment acceptance rows remain open.
+
+This amendment is architecture authority only. It authorizes the subsequent source implementation of the manifest contract, but not tests, builds, model downloads, matrix generation, Pagefind/runtime probes, generated-artifact release, live sweeps, reindexing, or deployment.
