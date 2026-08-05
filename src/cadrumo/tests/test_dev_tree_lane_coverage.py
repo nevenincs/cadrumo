@@ -14,7 +14,17 @@ exists, reads as coverage, and is counted as coverage by anyone auditing the
 tree. This gate closes that path permanently: a new ``dev/**/tests`` directory
 that no lane names fails HERE, immediately, instead of joining an invisible set.
 
-Two construction details carry the gate's own honesty:
+The list was also declared three times over -- once in the workflow, twice in
+the justfile -- and the workflow's four directories overlapped the justfile's
+nine by NOTHING, so no single place answered "what runs under ``dev/``" and
+fifteen of sixteen directories were covered only by the accident of three
+independently maintained lists agreeing to differ. The justfile is now the sole
+declaration site: every ``dev/`` lane is a recipe there, and the workflow
+consumes the recipe instead of restating its paths. That is why this gate reads
+the justfile, the workflows, AND ``testpaths`` rather than a curated list of its
+own -- a gate with its own copy of the answer would be a fourth declaration.
+
+Three construction details carry the gate's own honesty:
 
 * The module lives under ``src/cadrumo/tests`` and is marked ``unit``
   DELIBERATELY. A guard against unreachable directories must itself sit inside
@@ -25,6 +35,13 @@ Two construction details carry the gate's own honesty:
   negative controls. A reader that silently stopped matching would otherwise
   report an empty orphan set as full coverage, which is the precise false-green
   shape this gate exists to refuse.
+* Discovery reads git-TRACKED files, not the disk. Many agents work this tree
+  concurrently, so an untracked ``dev/`` directory is a peer's in-flight work:
+  CI will never see it, and no lane can name a path that exists only in one
+  private working tree. Scanning the disk made a peer's uncommitted scratch red
+  a SHARED gate, whose only available remedies were both wrong -- wire an
+  uncommitted path into a lane, or delete a peer's work. Tracking is the line
+  that makes the finding actionable by the person who sees it.
 
 The check is textual on the lane side by design. A behavioural
 ``--collect-only`` union would be stronger against a lane that NAMES a directory
@@ -39,11 +56,25 @@ KNOWN LIMIT, stated so it is not mistaken for a guarantee: a justfile recipe
 satisfies this gate, and a justfile recipe is not CI. A directory reached only
 by a recipe nobody invokes is still a directory whose result nobody sees --
 the same defect one level up. Tightening the assertion to require a WORKFLOW
-step is the stronger invariant and is deliberately not enforced yet, because
-``just test-dev-tooling`` is currently red on failures inherited from the
-unobserved period; enforcing CI coverage before those land would put a
-knowingly-red lane in the shared pipeline. Tighten this once that lane is
-green, and delete this paragraph when you do.
+step is the stronger invariant and is still not enforced, but the reason has
+changed and the original one is spent: the 19 failures inherited from the
+unobserved period have since been fixed. What blocks the tightening now is
+that ``just test-dev-tooling`` still does not come back green, on two causes
+neither of which is rot in the directories themselves:
+
+* ``dev/docs/terminology/tests/test_static_matrix_contract.py`` is tracked and
+  carries NO execution marker, so every marker-bearing lane deselects it and
+  the marker-integrity hook errors it. It is named by a lane and still does not
+  run -- the marker half of reachability, which this path-only gate cannot see
+  and :mod:`dev.ci.lane_reachability` can.
+* Two ``dev/tests`` modules fail at COLLECTION against an in-flight refactor of
+  the ``cadrumo.locales`` surface. Both symbols resolve at HEAD, so this is a
+  working-tree state of a live campaign, not a committed defect.
+
+Tighten this to require a workflow step once that lane is green, and delete
+this paragraph when you do. Routing a lane into CI while it is red would put a
+knowingly-red lane in the shared pipeline, which is the thing this gate's whole
+argument is against.
 
 See Also:
     :mod:`dev.packaging.tests.test_preflight_recipe_selection`
@@ -53,7 +84,10 @@ See Also:
 from __future__ import annotations
 
 import re
+import shutil
+import subprocess
 import tomllib
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Final
 
@@ -62,7 +96,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT: Final = Path(__file__).resolve().parents[3]
-_DEV_ROOT: Final = _REPO_ROOT / "dev"
 _JUSTFILE: Final = _REPO_ROOT / "justfile"
 _WORKFLOWS: Final = _REPO_ROOT / ".github" / "workflows"
 _PYPROJECT: Final = _REPO_ROOT / "pyproject.toml"
@@ -81,13 +114,44 @@ _ANCHOR_DIRECTORIES: Final = frozenset(
 _DEV_PATH_TOKEN: Final = re.compile(r"dev/[A-Za-z0-9_./-]*")
 
 
+def dev_test_paths_in(entries: Iterable[str]) -> frozenset[Path]:
+    """Select the ``dev/`` test modules from a list of repository paths.
+
+    Args:
+        entries: Repo-relative paths, forward-slashed, as ``git ls-files`` emits.
+
+    Returns:
+        Every entry that is a ``test_*.py`` module under ``dev/``.
+    """
+    selected: set[Path] = set()
+    for raw in entries:
+        entry = raw.strip()
+        if not entry.endswith(".py") or not entry.startswith("dev/"):
+            continue
+        if Path(entry).name.startswith("test_"):
+            selected.add(Path(entry))
+    return frozenset(selected)
+
+
 def _tracked_dev_test_files() -> frozenset[Path]:
-    """Every ``test_*.py`` under ``dev/``, repo-relative with forward slashes."""
-    return frozenset(
-        Path(path.relative_to(_REPO_ROOT).as_posix())
-        for path in _DEV_ROOT.rglob("test_*.py")
-        if path.is_file() and "__pycache__" not in path.parts
+    """Every git-TRACKED ``test_*.py`` under ``dev/``, repo-relative.
+
+    Tracked, not merely present on disk. This worktree runs many concurrent
+    agents, so an untracked directory is a peer's in-flight work: nothing has
+    committed it, no lane could name it without naming a path that does not
+    exist for anyone else, and CI will never see it. Reading it would red a
+    shared gate on private state its owner has not landed yet -- and would
+    invite the false remedy of wiring an uncommitted path into a lane.
+    """
+    git = shutil.which("git")
+    assert git is not None, "git is not on PATH, so tracked-file discovery cannot run"
+    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
+        [git, "ls-files", "--", "dev"],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        check=True,
     )
+    return dev_test_paths_in(completed.stdout.decode("utf-8").split("\n"))
 
 
 def dev_paths_named_by(text: str) -> frozenset[Path]:
@@ -208,6 +272,32 @@ def test_lane_reader_distinguishes_a_pytest_line_from_a_bare_mention() -> None:
     assert Path("dev/quality/tests") not in found, "the reader counted a path from a non-pytest line"
     assert Path("dev/release/tests") not in found, "the reader counted a path from a non-pytest line"
     assert Path("dev/null") not in found, "the reader counted /dev/null as a repository path"
+
+
+def test_discovery_selects_only_dev_test_modules() -> None:
+    """Controls over the discovery filter, driven by injected ``git ls-files`` output.
+
+    Discovery reads tracked paths, so an untracked file never reaches this
+    filter at all -- that exclusion is structural rather than a rule here. What
+    this pins is the rest of the contract: only under ``dev/``, only modules
+    actually named ``test_*.py``, at any depth.
+    """
+    selected = dev_test_paths_in(
+        [
+            "dev/audit/tests/test_a.py",
+            "dev/docs/terminology/tests/deeper/test_b.py",
+            "dev/audit/tests/__init__.py",
+            "dev/audit/manager.py",
+            "src/cadrumo/tests/test_outside_dev.py",
+            "dev/audit/tests/contest_helper.py",
+            "",
+        ],
+    )
+
+    assert selected == {
+        Path("dev/audit/tests/test_a.py"),
+        Path("dev/docs/terminology/tests/deeper/test_b.py"),
+    }
 
 
 def test_uncovered_files_reports_exactly_the_orphans() -> None:

@@ -114,19 +114,19 @@ jobs:
 
       - name: Tooling and workflow conformance gates
         # The dev-tree unit AND integration gates (workflow structural pins,
-        # evidence-transport conformance, shard-plugin partition proof). The
-        # default addopts' `-m unit` deselected the integration-marked
-        # workflow gates from the packaging preflight invocation, so this is
-        # their one per-push home; `not serial` leaves the installed-oracles
-        # pass to the packaging campaign that builds its cohort. The dev tree
-        # carries real install/harness tests that legitimately run 300-900 s,
-        # so this invocation raises the per-test ceiling above the product
-        # suite's 300 s ini default (slowest product test: 58.7 s measured);
-        # 900 s still kills a genuine wedge in minutes.
-        # -n 8, never -n auto: the workstation's 24 logical CPUs are shared by
-        # THREE runners (win + wsl + wsl-2); worst-case co-residency is 3 jobs,
-        # so each lane gets 24/3 (machine-aware sizing, .github/ci-control-plane.md).
-        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests
+        # evidence-transport conformance, shard-plugin partition proof). This is
+        # their one per-push home.
+        #
+        # The paths and the marker expression live in the `test-dev-ci` recipe,
+        # NOT here. Every `dev/` lane is declared in the justfile and nowhere
+        # else: this step previously restated four directories inline while the
+        # justfile declared eleven more, the two sets overlapped by nothing, and
+        # no single place answered "what runs under dev/". Inlining paths back
+        # into this step puts the answer in two places again and is what
+        # `src/cadrumo/tests/test_dev_tree_lane_coverage.py` exists to catch.
+        # Routing through the recipe also makes the lane reproducible locally,
+        # which it was not while it lived here.
+        run: just test-dev-ci
 
   cadrumo-unit:
     name: Cadrumo / unit suite / Python 3.13
