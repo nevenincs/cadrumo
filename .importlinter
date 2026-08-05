@@ -289,19 +289,6 @@ ignore_imports =
     cadrumo.application.operator_output._sandbox_notice -> cadrumo.adapters.persistence.storage.bucket
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto
-    # Two further function-local edges of the same shape, surfaced when the
-    # stale `domain.**.tests.** -> cadrumo.locales` entry above was removed: an
-    # unmatched ignore aborted this contract before it evaluated, so the layered
-    # gate had been reporting nothing at all. Pinned exactly, per the D9 rule.
-    #
-    # UNLIKE the D9 entries these are NOT adjudicated debt: the D7 lazy-import
-    # policy gate that carried the declared inventory of sanctioned
-    # function-local first-party edges was deleted, so nothing now records
-    # whether these two are intended. Treat them as layer breaches to invert (a
-    # Protocol plus injection point, as the registry/renta case above did),
-    # not as permanent grants.
-    cadrumo.application.preflight -> cadrumo.adapters.outbound.storage
-    cadrumo.application.auth._certificate_sources_operator -> cadrumo.adapters.outbound.aeat.auth.certificate
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_replay_guard -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage

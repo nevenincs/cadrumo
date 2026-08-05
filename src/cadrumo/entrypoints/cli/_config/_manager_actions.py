@@ -867,13 +867,14 @@ def _suggested_tax_id(on_record: Mapping[str, str]) -> str:
     Returns:
         The identifier to suggest, or ``""`` when none is known.
     """
+    from ....adapters.outbound.aeat.auth.certificate import read_certificate_subject_nif
     from ....application.auth import certificate_source_tax_id
 
     for path in (_IDENTITY_TAX_ID_PATH, _AUTH_DNI_NIE_PATH):
         known = on_record.get(path, "").strip()
         if known:
             return known
-    return certificate_source_tax_id()
+    return certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif)
 
 
 def _provider_label(kind: AuthProviderKind) -> str:

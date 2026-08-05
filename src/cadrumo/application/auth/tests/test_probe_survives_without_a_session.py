@@ -31,6 +31,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.storage import windows_worst_case_object_path_suffix_length
 from ....adapters.persistence.storage import has_active_bucket_session
 from ....core import AuthProviderKind
 from ....core.config import override_settings
@@ -47,6 +48,11 @@ from .._operator_probes import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+#: Measured from the storage adapter's real on-disk grammar, the same value the
+#: composition root supplies in production. Reaching for it here keeps these
+#: probes exercising the true margin rather than a hand-picked sample.
+_SUFFIX_LENGTH = windows_worst_case_object_path_suffix_length()
 
 _BUCKET_ID = "99999999-9999-4999-8999-999999999999"
 _TAX_ID = "12345678Z"
@@ -123,7 +129,7 @@ def test_the_preflight_aggregate_returns_rows_without_a_session() -> None:
     broke, which the operator met as a refusal to run at all.
     """
 
-    rows = run_preflight_checks()
+    rows = run_preflight_checks(object_path_suffix_length=_SUFFIX_LENGTH)
 
     assert rows
     assert any(row.check.startswith("auth") for row in rows), (

@@ -636,6 +636,33 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     )
 
 
+
+def read_certificate_subject_nif(*, path: Path, password: SecretStr, friendly_name: str | None = None) -> str:
+    """Return the subject NIF/NIE of the PKCS#12 bundle at ``path``, or ``""``.
+
+    Bundles the load-then-extract pair behind one call so a caller needs no
+    certificate type of its own. An unreadable file, a wrong password, or a
+    subject carrying no parseable identifier all yield ``""`` rather than
+    raising: the callers are identity-display surfaces where an absent NIF is
+    an ordinary outcome, not a failure to report.
+
+    Args:
+        path: Filesystem path of the PKCS#12 bundle.
+        password: Passphrase protecting the bundle, as a :class:`SecretStr`.
+        friendly_name: Optional operator label carried on the bundle record.
+
+    Returns:
+        The uppercase NIF/NIE, or ``""`` when it cannot be read.
+    """
+    try:
+        loaded = load_certificate(
+            CertificateBundle(path=path, password=password, friendly_name=friendly_name),
+        )
+        return extract_nif_from_subject(loaded)
+    except (OSError, CertificateError):
+        return ""
+
+
 __all__ = [
     "AeatLoginAssertionError",
     "AeatSessionExpiredError",
@@ -653,4 +680,5 @@ __all__ = [
     "extract_nif_from_subject",
     "health",
     "load_certificate",
+    "read_certificate_subject_nif",
 ]

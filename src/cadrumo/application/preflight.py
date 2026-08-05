@@ -177,7 +177,11 @@ def _auth_error_remediation(provider: str, result: str) -> str:
 # ── Secure-storage, bundled-corpus, and configuration preflight ───────
 
 
-def probe_storage_corpus_env(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
+def probe_storage_corpus_env(
+    *,
+    object_path_suffix_length: int,
+    settings: Settings | None = None,
+) -> tuple[PreflightCheck, ...]:
     """Probe secure-storage reachability, bundled-corpus presence, and config sanity.
 
     Returns one :class:`PreflightCheck` per dimension: the local
@@ -194,7 +198,7 @@ def probe_storage_corpus_env(*, settings: Settings | None = None) -> tuple[Prefl
         _probe_corpus("corpus:normatives", resolved.aeat_normatives_root, "legal normatives"),
         _probe_corpus("corpus:manuals", resolved.aeat_manuals_root, "Manual práctico"),
         _probe_config_sanity(resolved),
-        _probe_windows_long_path_support(resolved),
+        _probe_windows_long_path_support(resolved, object_path_suffix_length=object_path_suffix_length),
     )
 
 
@@ -328,7 +332,7 @@ _LONG_PATH_REGISTRY_REMEDIATION = (
 )
 
 
-def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
+def _probe_windows_long_path_support(settings: Settings, *, object_path_suffix_length: int) -> PreflightCheck:
     r"""Report whether the storage root has headroom below the Windows ``MAX_PATH`` ceiling.
 
     Not applicable outside Windows: every non-Windows platform (and every
@@ -367,12 +371,10 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
             detail="LongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply",
         )
 
-    from ..adapters.outbound.storage import windows_worst_case_object_path_suffix_length
-
     root = settings.cadrumo_local_storage_root
     margin = windows_storage_root_long_path_margin(
         root,
-        object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
+        object_path_suffix_length=object_path_suffix_length,
     )
     if margin <= 0:
         return PreflightCheck(
@@ -585,7 +587,11 @@ def probe_portal_registry_health(
     )
 
 
-def run_preflight_checks(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
+def run_preflight_checks(
+    *,
+    object_path_suffix_length: int,
+    settings: Settings | None = None,
+) -> tuple[PreflightCheck, ...]:
     """Run every workstation-preflight probe and return the typed :class:`PreflightCheck` rows.
 
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
@@ -599,7 +605,7 @@ def run_preflight_checks(*, settings: Settings | None = None) -> tuple[Preflight
     resolved = settings if settings is not None else load_settings()
     return (
         *probe_auth_providers(settings=resolved),
-        *probe_storage_corpus_env(settings=resolved),
+        *probe_storage_corpus_env(settings=resolved, object_path_suffix_length=object_path_suffix_length),
         probe_registry_referential_integrity(),
         probe_portal_registry_health(),
     )
