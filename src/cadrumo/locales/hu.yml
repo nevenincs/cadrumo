@@ -925,8 +925,10 @@ application:
         kapcsolot akkor adta meg, amikor az aktiv profil mar deklaral meses_madre_trabajo
         erteket a leszarmazotti nyilvantartasaiban. Bevallasonkent egyetlen forras
         lehet: vagy hagyja el a kapcsolot, es a deklaralt nyilvantartasok adjak a
-        81.1. cikk szerinti honapokat, vagy torolje a MESES_TRABAJO erteket a nyilvantartasokbol
-        az `aeat config profile descendiente add` paranccsal.'
+        81.1. cikk szerinti honapokat, vagy torolje a MESES_TRABAJO erteket az `aeat
+        config profile descendiente remove <index>`, majd az `add` paranccsal ujra
+        deklaralva a sort nelkule -- a `descendiente add` onmagaban csak hozzaad,
+        es nem tudja szerkeszteni a mar deklaralt sort.'
       calculate_pension_inputs_incomplete: A nyugdíjterv kiváltási adatait együtt
         kell megadni.
       calculate_relation_unknown: '--relation %{key} egyik relation azonosítónak sem

@@ -996,7 +996,9 @@ application:
         mientras el perfil activo ya declara meses_madre_trabajo en sus registros
         de descendiente. Una sola autoridad por declaracion: prescinde de la opcion
         y deja que los registros declarados aporten los meses del art. 81.1, o elimina
-        MESES_TRABAJO de los registros con `aeat config profile descendiente add`.'
+        MESES_TRABAJO con `aeat config profile descendiente remove <index>` y despues
+        `add` para volver a declarar la fila sin el -- `descendiente add` por si sola
+        solo anade filas y no puede editar una fila ya declarada.'
       calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
         deben indicarse juntos.
       calculate_relation_unknown: '--relation %{key} no coincide con ninguna relation

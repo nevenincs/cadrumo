@@ -990,7 +990,9 @@ application:
         mentre el perfil actiu ja declara meses_madre_trabajo als seus registres de
         descendent. Una sola autoritat per declaracio: prescindeix de l''opcio i deixa
         que els registres declarats aportin els mesos de l''art. 81.1, o elimina MESES_TRABAJO
-        dels registres amb `aeat config profile descendiente add`.'
+        amb `aeat config profile descendiente remove <index>` i despres `add` per
+        tornar a declarar la fila sense ell -- `descendiente add` tota sola nomes
+        afegeix files i no pot editar-ne una de ja declarada.'
       calculate_pension_inputs_incomplete: Les dades del rescat del pla de pensions
         s'han d'indicar juntes.
       calculate_relation_unknown: '--relation %{key} no coincideix amb cap relation
