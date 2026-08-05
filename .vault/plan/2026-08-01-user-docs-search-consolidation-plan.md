@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-04'
-body_hash: 'sha256:8beb0a35ef3ae44159670d95a5307849c89a410061ad8f2f73f4f30affde5255'
+modified: '2026-08-05'
+body_hash: 'sha256:99054ecb6b02189d2fad508f30e6e3a40602da275184cb63e1b5f246b39a7761'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -39,6 +39,7 @@ Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model 
 - [ ] `P02.S05` - Add the client-side cosine tier over the shipped matrix to the shared search controller so both the palette host and the search-page host rank through it inside the existing compose ladder; `docs/_static/cadrumo-docs.js`.
 - [ ] `P02.S06` - Extend the licence gate to validate the shipped matrix's provenance stamp, model licence, and size bound while keeping every oracle-output and NC-ND bar intact; `dev/docs/tests/`.
 - [ ] `P02.S07` - Re-run the held-out miss-rate measurement over the rung-2-enabled ladder and commit the report as the new standing baseline beside the 0.1875 pre-rung-2 figure; `src/cadrumo/_data/terminology/evaluation/`.
+- [ ] `P02.S25` - Establish a shared canonical JSON byte contract or equivalent artifact evidence so the browser can fail closed on nested matrix, manifest, bridge, target-list, and bundle self-attestation hashes before Rung-2 artifact acceptance; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
 
 ### Phase `P03` - Verification and honest close
 
