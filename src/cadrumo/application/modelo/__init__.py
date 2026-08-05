@@ -251,6 +251,7 @@ from ._participation_index_rebuild import (
 from ._profile_binding import (
     ProfileBindingResolutionError,
     profile_resolved_binding_ids,
+    resolve_maternidad_meses,
     resolve_profile_sourced_bindings,
 )
 from ._profile_export_binding import (
@@ -874,6 +875,7 @@ __all__ = [
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
+    "resolve_maternidad_meses",
     "resolve_modelo_100_borrador_bindings",
     "resolve_modelo_calculation_revision_address",
     "resolve_modelo_calculation_revision_pick",
