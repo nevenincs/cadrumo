@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#ci-discipline'
 date: '2026-07-21'
-modified: '2026-07-21'
-body_hash: 'sha256:00c8128ae7d8a9c73181612c65a183583ef2649db379ab606e3e6cb8439b25c0'
+modified: '2026-08-05'
+body_hash: 'sha256:a78209afee0ff8d0d4d8f9fe7e8d320270088c2442222dd5135fb24e8b3ea0db'
 related:
   - '[[2026-07-21-ci-discipline-reference]]'
   - '[[2026-07-20-ci-speed-redesign-adr]]'
@@ -69,3 +69,127 @@ Path-filter classification wins because it is the only detector GitHub evaluates
 - The vault-drift gate is visible-but-informational until the 285-error backlog clears; flipping it to blocking is a one-line change recorded in the full-lane step comment.
 - With zero schedules, nothing runs unless someone pushes or dispatches: a regression in the slow surfaces (docs build, CVE audit, hook replay, live AEAT parity) is caught only at the next manual full-lane or drift-detector dispatch. That is the deliberate trade of the no-standing-compute ruling; the release path is unaffected because T3's readiness rows demand fresh evidence regardless of when it was minted.
 - The drift detector runs green-or-honestly-red again; its target-existence pin turns the silent-rot class into a per-push test failure.
+
+## D6 — Amendment 2026-08-05: two more T1 tiers, the "shared" carve-out was never true, and a coverage hole this ADR did not know it had
+
+Landed as commits `2309887d93`, `c9b0529c6a`, `73992708d5`. Recorded here rather than as a
+new ADR because it extends the D1 taxonomy this record owns — it adds tiers, corrects a
+claim, and closes gaps the taxonomy's own detection mechanism should have caught — without
+reversing any ruling. Nothing in D1–D5 is superseded; T0/T1/T2/T3 stand, and D5's
+conformance-pin discipline is exactly what this amendment extends.
+
+### D6.1 — D1's "shared" claim was false in the tree, and the gate meant to enforce it could not
+
+D1 describes the T0 `paths-ignore` carve-out as "shared" by `ci.yml` and
+`packaging-quick.yml`. That was aspirational, not measured: the carve-out was keyed on file
+**suffix** (`**.md`) rather than on **role**, so `docs/**.rst` — 1384 files, the bulk of the
+documentation surface — fell through the carve-out entirely and started the full Python
+static+unit suite on every documentation push, while producing no documentation verdict
+(`docs-check` only ran in the dispatch-only full lane). `frontend/`, a Vite/TypeScript
+subproject with its own lockfile, had no carve-out and no lane at all, so a dependency bump
+there ran both Python lanes and the three-OS packaging probe and failed both (measured: PR
+run `30895086190`).
+
+The gate that exists specifically to pin D1's shared-carve-out claim
+(`test_change_class_tiers.py`) could not have caught either gap: it asserted
+`paths-ignore >= carve_out` **per lane independently**, a predicate two disagreeing lanes
+both satisfy, and it read only the `push` trigger, never `pull_request`. The claim and its
+enforcement were both wrong in the direction that hides the defect. It is now an equality
+check across both triggers, plus a companion (`test_every_code_lane_carve_out_path_has_a_lane_of_its_own`)
+refusing a carved-out path with neither a lane nor a stated reason — closing the same class
+of gap D1 asserted was already closed.
+
+### D6.2 — Two more T1 tiers: T1-docs and T1-frontend
+
+The fix for D6.1 is not a bigger carve-out — a carved-out surface with no lane of its own has
+no verdict, which is the other half of the docs defect. Two new tiers join D1's table, each a
+dedicated per-push lane triggered by the surface it verifies, carved out of the Python lanes
+in exchange:
+
+- **T1-docs** — `docs.yml`, triggered by `docs/**`, `dev/docs/**`,
+  `src/cadrumo/_data/terminology/**`. Runs the nitpicky Sphinx build, stub correspondence,
+  CLI-reference drift, doc8, interrogate — the same `docs-check` recipe `ci-full.yml` already
+  ran, so the two lanes cannot drift apart.
+- **T1-frontend** — `frontend.yml`, triggered by `frontend/**`. Runs `npm ci`, typecheck +
+  build, vitest — the first lane of any kind for that subproject.
+
+Both are carved out of `ci.yml` and `packaging-quick.yml`, and the carve-out set is now
+pinned byte-identical across both Python lanes and both trigger types
+(`test_code_lane_carve_out_is_identical_across_every_python_lane_and_trigger`).
+
+### D6.3 — Interaction with `ci-speed-redesign` D4: complements, does not reverse
+
+`2026-07-20-ci-speed-redesign-adr` D4 moved the docs build off the per-push path onto the
+dispatch-only full lane, on the ten-minute-wall budget. T1-docs does not put it back: D4's
+ruling is about not running the (expensive, multi-minute) docs build **on every code push**,
+and T1-docs never fires on a code push — it fires only when the documentation surface itself
+changes, which is disjoint from the code paths D4's budget was protecting. A documentation
+edit previously got neither a cheap nor a correct verdict (it ran the code lane's twelve
+minutes and produced no documentation signal); it now gets a lane sized to the surface it
+verifies. D4's per-push wall for code changes is untouched — T1-docs adds no job to a `src/`
+push, because `docs/**` is carved out of `ci.yml` exactly as `.vault/**` already was under T0.
+The two records are read together as intended: D4 governs when the docs build runs relative
+to *code* changes, D6.2 governs when it runs relative to *documentation* changes.
+
+### D6.4 — Two new invariants, pinned repo-wide
+
+- **Frozen installs only.** `ci.yml` and `ci-full.yml` were the last two workflows running a
+  bare `uv sync`; every other of the eleven other sites was already `--frozen`. Measured cost
+  of the bare resolve: 2m03s of a 2m25s static job and 1m56s of the unit job on run
+  `30977318339`, paid independently by two co-resident jobs against one warm cache — and an
+  unfrozen resolve can pick up an index change nobody pushed, so a red was not necessarily a
+  property of the commit under test. Now `.github/ci-control-plane.md` invariant 7, pinned by
+  `test_no_workflow_installs_python_dependencies_unfrozen`.
+- **Declared is not run.** The prior reachability model counted a justfile recipe as covered
+  the moment a workflow named it, with no check that the naming workflow ever actually
+  invoked it. `.github/ci-control-plane.md` invariant 8 now distinguishes `declared_lanes`
+  (every recipe on disk) from `ci_invoked_lanes` (recipes actually reached by a parsed
+  workflow `run:` block, transitively), and `test_every_test_ci_cannot_run_declares_why`
+  requires every test CI cannot run to carry a marker naming the precondition a headless
+  runner lacks (`external_tool`, `aeat_live`, `os_keychain`, `resident_service`) — "nobody
+  wired a lane" is no longer an accepted answer. Building the invoked-recipe scanner surfaced
+  a latent bug in the same family the module already warned about for `-m` selection: it was
+  harvesting `is`, `uses`, and `natively` as recipe names out of step titles and YAML
+  comments; recipe discovery now reads parsed `run:` blocks only.
+
+### D6.5 — What "declared is not run" found: a coverage hole this ADR did not know it had
+
+Applying D6.4's distinction against the tree at the time found two lanes counted as covered
+by the prior (declaration-based) model that no workflow had ever invoked:
+
+- The `src/cadrumo` **integration** suite (`-m integration`) — every existing lane selected
+  `-m unit` only; the only integration selections anywhere were path-scoped to `dev/`. ~370
+  integration-marked modules under `src/cadrumo` had never once run in CI.
+- `just test-dev-tooling` — nine `dev/` subsystem gates whose own docstring already read "the
+  gates that no other lane reaches," which was equally true of CI as of any human reader who
+  took that line as reassurance rather than as a literal, unactioned gap.
+
+Both held **zero regression signal** behind a green coverage gate for as long as the prior
+model counted the recipe's existence as coverage. This is the same silent-hole shape D1's
+carve-out gate had (D6.1) — a mechanism whose predicate is satisfiable without the property
+it claims to guarantee — recurring in a different corner of the same control plane. Both are
+now enrolled in `ci-full.yml`.
+
+### D6.6 — Newly-enrolled lanes are non-blocking, and this is explicitly open, not resolved
+
+Enrolling a suite that has never run in CI surfaces its accumulated backlog on the first real
+run, not a regression introduced by this change. Measured: the integration parallel pass —
+`19 failed, 3753 passed` in 23m54s; the 58 serial-marked tests the parallel pass holds out
+were not measured at all. Landing both newly-enrolled steps blocking on this same commit
+would have meant either stopping releases on an untriaged backlog nobody had looked at, or
+(the likelier outcome) training the fleet to read a permanently red release-verdict lane as
+normal, which costs more than the signal recovers.
+
+Both steps therefore carry `continue-on-error: true` in `ci-full.yml`, with the same
+visibility-now-blocking-once-triaged contract the pre-existing vault-drift step in that file
+already uses, and an explicit code comment against flipping it off before triage completes.
+`ci-full.yml`'s job ceiling moved 120 → 180 minutes for the same reason it existed at 120: the
+lane already carried the unit suite, the dev-tree gates, real sdist/wheel builds, the docs
+build, `pip-audit`, and the ledger/storage roundtrip suite, and the newly-enrolled ~24 minutes
+of integration work left no headroom.
+
+**This amendment records the gap and its interim posture; it does not close the gap.** The
+58 unmeasured serial tests and the 19 measured failures are an open triage item tracked
+outside this ADR, not a ruling of this record. `continue-on-error` on the two steps above
+MUST flip to blocking once triage completes — that is a commitment this amendment makes, not
+a decision it defers indefinitely.
