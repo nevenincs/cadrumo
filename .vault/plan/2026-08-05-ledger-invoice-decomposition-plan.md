@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:e3183881e2cc94c57bd17c70e3a1ede44af3e31fdac64887be5162da68626476'
+body_hash: 'sha256:40d26281bf86933cccd28a5685ad8acc6b0d6cc9cf24f82086ba7f9b4dde46b4'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -38,12 +38,12 @@ Make the renta income measure explicit and its gaps visible. The fact selector s
 - `L3`: one or more `## Wave` blocks each containing Phase blocks.
 - `L4`: a `## Epic intent` block, followed by Wave blocks. -->
 
-- [ ] `P01.S01` - Remove the fact default from the renta ledger income selector so an omitting binding fails registry validation loudly; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `P01.S02` - Remove the divergent fact default from the impatriado income selector so both siblings are required; `src/cadrumo/domain/calculations/registry/_ledger_impatriado_bindings.py`.
-- [ ] `P01.S03` - Rename the renta and impatriado fact gross_income_sum to cash_received_sum, leaving the accurately-named Modelo 210 member untouched; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `P01.S04` - Add the income-side missing-substrate issue reason mirroring the gasto pipeline, with an explicit observation grounding marker; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
-- [ ] `P01.S05` - Surface the missing-substrate advisory on both the preflight and calculate paths through the typed notice channel; `src/cadrumo/application/modelo/_calculation_actions.py`.
-- [ ] `P01.S06` - Stop taxable_base_sum coercing a missing base to zero, routing base-less rows into the ungrounded class; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
+- [x] `P01.S01` - Remove the fact default from the renta ledger income selector so an omitting binding fails registry validation loudly; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
+- [x] `P01.S02` - Remove the divergent fact default from the impatriado income selector so both siblings are required; `src/cadrumo/domain/calculations/registry/_ledger_impatriado_bindings.py`.
+- [x] `P01.S03` - Rename the renta and impatriado fact gross_income_sum to cash_received_sum, leaving the accurately-named Modelo 210 member untouched; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
+- [x] `P01.S04` - Add the income-side missing-substrate issue reason mirroring the gasto pipeline, with an explicit observation grounding marker; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
+- [x] `P01.S05` - Surface the missing-substrate advisory on both the preflight and calculate paths through the typed notice channel; `src/cadrumo/application/modelo/_calculation_actions.py`.
+- [x] `P01.S06` - Stop taxable_base_sum coercing a missing base to zero, routing base-less rows into the ungrounded class; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
 
 ### Phase `P02` - Component axis and legal grounding
 
