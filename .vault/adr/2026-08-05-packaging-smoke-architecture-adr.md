@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e35e2fecf7cf651023308894dccfc74e6a95cb0eb5bbe93802ef322254163e3a'
+body_hash: 'sha256:380a3f086106f2ea8e05e653df8d3c98dfe0640036304a80cd551d70e10173d4'
 related:
   - "[[2026-08-05-packaging-smoke-architecture-audit]]"
   - "[[2026-06-28-product-packaging-research]]"
@@ -198,13 +198,28 @@ unmeasured. No economic claim is made for or against it here.
 **Migration sequencing, green at every step.**
 
 1. Replace the flat registry with the two-level one in one atomic commit: lane and form
-   types, the three lane entries, profiles rewritten to form selectors, and the
-   conformance pin re-pointed from justfile substrings to the profile-to-form sets. The
-   executed set is byte-identical because each form is the current module with its current
-   arguments, so no campaign changes what it mints. No flat `_LANES` remains anywhere.
-   This step also resolves the live collision with the peer removal of the per-lane `just`
-   recipes: the registry becomes the sole authority for what runs, and the justfile
-   carries only profile aggregates.
+   types, the three lane entries, profiles rewritten to qualified form selectors, and the
+   profile-composition pins rewritten to speak forms while pinning the same executed set.
+   The executed set is byte-identical because each form is the current module with its
+   current arguments, so no campaign changes what it mints; that identity is proven by
+   enumerating each profile's resolved argv before and after and diffing it, never
+   asserted. No flat `_LANES` remains anywhere. This step also resolves the live collision
+   with the peer removal of the per-lane `just` recipes: the registry becomes the sole
+   authority for what runs, and the justfile carries only profile aggregates.
+
+   Correction, recorded because the original instruction is a no-op at HEAD and would
+   otherwise mislead. This step first read "the conformance pin re-pointed from justfile
+   substrings to the profile-to-form sets". That per-lane substring pin existed when this
+   record was written and was retired hours later, so a reader following the instruction
+   literally would conclude the step's pin work was already done. It is not. The real
+   surface is the four profile-composition pins in `test_campaign.py`, every one of which
+   speaks lane names: the profile-entry resolution against the lane registry, the
+   quick-profile equality, the portable-set equality, and the ci-superset membership. All
+   four break the moment profiles hold form selectors, and rewriting them is exactly where
+   the byte-identical guarantee is either preserved or silently lost. The one surviving
+   justfile assertion — that the three aggregates route through the campaign driver — is
+   unaffected and stays. This corrects the implementation surface only; the decision is
+   unchanged.
 2. Land the proof ledger and the declared-contract check, manifest schema unchanged. Green
    because a correctly declared contract matches what already runs; any mismatch this step
    surfaces is a real pre-existing overstatement and is fixed in the same commit.
