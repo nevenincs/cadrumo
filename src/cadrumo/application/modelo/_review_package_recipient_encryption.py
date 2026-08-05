@@ -126,17 +126,15 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage import (
     DecryptionError,
-    SecureObjectRevisionConflictError,
 )
 from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
-from ...core import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
-from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
+from ._review_package_keypair import ensure_singleton_keypair
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
@@ -269,8 +267,10 @@ def ensure_recipient_encryption_keypair(
 ) -> RecipientEncryptionKeypair:
     """Return the bucket's X25519 encryption keypair, minting one on first use.
 
-    Mirrors :func:`~application.modelo.ensure_review_package_signing_keypair`
-    exactly: loads the existing keypair from
+    Composes :func:`~application.modelo._review_package_keypair.ensure_singleton_keypair`
+    for the mint-or-load-winner mechanic shared with
+    :func:`~application.modelo.ensure_review_package_signing_keypair`
+    (that function's Ed25519 counterpart): loads the existing keypair from
     :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`
     when present; otherwise generates a fresh keypair via
     ``X25519PrivateKey.generate()``, persists it (private key included) as
@@ -288,45 +288,34 @@ def ensure_recipient_encryption_keypair(
     """
     canonical_bucket_id = _canonical_bucket_id(bucket_id)
     object_key = _recipient_encryption_key_object_key(canonical_bucket_id)
-    existing = repository.load(
-        _NAMESPACE.namespace,
-        object_key,
-        expected_class=_NAMESPACE.sensitivity,
-        max_supported_version=_NAMESPACE.schema_version,
-    )
-    if existing is not None:
-        return _keypair_from_repository_payload(existing.payload, bucket_id=canonical_bucket_id)
 
-    private_key = X25519PrivateKey.generate()
-    public_key = private_key.public_key()
-    keypair = RecipientEncryptionKeypair(
-        bucket_id=canonical_bucket_id,
-        private_key_hex=private_key.private_bytes_raw().hex(),
-        public_key_hex=public_key.public_bytes_raw().hex(),
-        created_at=generated_at or _utc_now(),
+    def _generate() -> RecipientEncryptionKeypair:
+        private_key = X25519PrivateKey.generate()
+        public_key = private_key.public_key()
+        return RecipientEncryptionKeypair(
+            bucket_id=canonical_bucket_id,
+            private_key_hex=private_key.private_bytes_raw().hex(),
+            public_key_hex=public_key.public_bytes_raw().hex(),
+            created_at=generated_at or _utc_now(),
+        )
+
+    def _mismatch_error() -> RecipientEncryptionError:
+        return RecipientEncryptionError(
+            "stored recipient encryption keypair does not belong to the bucket it was read from",
+        )
+
+    return ensure_singleton_keypair(
+        repository=repository,
+        namespace=_NAMESPACE,
+        object_key=object_key,
+        model_type=RecipientEncryptionKeypair,
+        generate=_generate,
+        bucket_id_of=lambda keypair: keypair.bucket_id,
+        created_at_of=lambda keypair: keypair.created_at,
+        expected_bucket_id=canonical_bucket_id,
+        mismatch_error=_mismatch_error,
+        write_provenance="application.modelo.review_package_recipient_encryption.ensure_keypair",
     )
-    try:
-        repository.save(
-            namespace=_NAMESPACE.namespace,
-            object_key=object_key,
-            classification=_NAMESPACE.sensitivity,
-            schema_version=_NAMESPACE.schema_version,
-            written_at=keypair.created_at,
-            payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
-            write_provenance="application.modelo.review_package_recipient_encryption.ensure_keypair",
-            expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
-        )
-    except SecureObjectRevisionConflictError:
-        winner = repository.load(
-            _NAMESPACE.namespace,
-            object_key,
-            expected_class=_NAMESPACE.sensitivity,
-            max_supported_version=_NAMESPACE.schema_version,
-        )
-        if winner is None:
-            raise
-        return _keypair_from_repository_payload(winner.payload, bucket_id=canonical_bucket_id)
-    return keypair
 
 
 def load_recipient_encryption_keypair(
