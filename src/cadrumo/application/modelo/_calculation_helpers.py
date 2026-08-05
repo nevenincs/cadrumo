@@ -27,6 +27,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
+from ...core import Period
 from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaId,
@@ -96,15 +97,65 @@ def load_work_unit_for_calculation(
     return work_unit
 
 
+def assert_snapshot_matches_work_unit_revision(
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    *,
+    period: Period | None = None,
+) -> None:
+    """Raise when ``snapshot``'s revision diverges from ``work_unit``'s pinned revision.
+
+    This is the single home for the D1 calc-time assertion's message and
+    exception type: the law-determined revision must equal the revision the
+    work unit was created against, or :exc:`WorkUnitRevisionDivergenceError`
+    directs the operator to re-create the work unit. Divergence is possible
+    only when the registry's law-mapping was corrected after the work unit was
+    created, or for units persisted before the strengthened creation gate.
+
+    ``period`` names the AEAT natural-key coordinates the message reports;
+    most callers resolve ``snapshot`` from ``work_unit.period`` and can omit
+    it. A caller that resolves ``snapshot`` from a different, caller-supplied
+    period (see
+    :func:`cadrumo.application.modelo._result_disposition_resolution._result_disposition_values_for_revision`,
+    which threads the export path's period through for the Modelo 303
+    refund-election decision) passes that period so the message names the
+    coordinates the snapshot was actually resolved against.
+
+    See Also:
+        :func:`cadrumo.application.modelo._work_addressing.resolve_registry_revision_for_work_target`:
+            Performs the create-time counterpart of this revision identity
+            assertion.
+        :class:`cadrumo.application.modelo._action_errors.WorkUnitRevisionDivergenceError`:
+            Refusal raised when the pinned revision no longer matches the
+            law-determined snapshot.
+    """
+    if snapshot.revision.id == work_unit.revision_id:
+        return
+    resolved_period = period if period is not None else work_unit.period
+    raise WorkUnitRevisionDivergenceError(
+        f"work unit {work_unit.work_unit_id!r} was created against registry revision "
+        f"{work_unit.revision_id!r}, but the law-determined revision for "
+        f"modelo {work_unit.modelo!r} {work_unit.filing_year} {resolved_period.registry_token!r} "
+        f"is now {snapshot.revision.id!r}. "
+        f"The registry's law-mapping was corrected after this work unit was created. "
+        f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
+        f"to bind it to the current law-determined revision.",
+        context={
+            "modelo": work_unit.modelo,
+            "filing_year": str(work_unit.filing_year),
+            "period": resolved_period.registry_token,
+            "work_unit_revision_id": work_unit.revision_id,
+            "resolved_revision_id": snapshot.revision.id,
+        },
+    )
+
+
 def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot:
     """Resolve and return the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`.
 
     After resolution the snapshot's revision id is asserted equal to the work
-    unit's pinned ``revision_id`` (a calc-time assertion).  Divergence — possible only when
-    the registry's law-mapping was corrected after the work unit was created, or
-    for units persisted before the strengthened creation gate — raises
-    :exc:`WorkUnitRevisionDivergenceError` directing the operator to re-create
-    the work unit.
+    unit's pinned ``revision_id`` via :func:`assert_snapshot_matches_work_unit_revision`
+    (a calc-time assertion).
 
     The :class:`cadrumo.domain.modelos.WorkUnit` ``revision_id`` is never passed
     into the snapshot resolution call; it is only compared against the
@@ -142,19 +193,7 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
                 "period": work_unit.period.registry_token,
             },
         ) from exc
-    # D1 calc-time assertion: the law-determined revision must equal the
-    # revision the work unit was created against.  The work unit's revision_id
-    # is an identity claim, not a resolution input.
-    if snapshot.revision.id != work_unit.revision_id:
-        raise WorkUnitRevisionDivergenceError(
-            f"work unit {work_unit.work_unit_id!r} was created against registry revision "
-            f"{work_unit.revision_id!r}, but the law-determined revision for "
-            f"modelo {work_unit.modelo!r} {work_unit.filing_year} {work_unit.period.registry_token!r} "
-            f"is now {snapshot.revision.id!r}. "
-            f"The registry's law-mapping was corrected after this work unit was created. "
-            f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
-            f"to bind it to the current law-determined revision.",
-        )
+    assert_snapshot_matches_work_unit_revision(work_unit, snapshot)
     return snapshot
 
 
@@ -321,6 +360,7 @@ def amendment_observations(
 __all__ = [
     "WorkUnitRevisionDivergenceError",
     "amendment_observations",
+    "assert_snapshot_matches_work_unit_revision",
     "build_typed_observations",
     "casilla_observation_for",
     "external_filing_observations",
