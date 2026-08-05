@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f9499438721c32e46aaea7a910eb00b9a950ca4ffc374d4f7d15fffe1f3abfab'
+body_hash: 'sha256:6ace3c904e6925f8321ebaeac192da3214ba65d21b8adc8bf0f77d4557d5e47e'
 related: []
 ---
 
@@ -686,6 +686,50 @@ registrations offline — correctly, immediately, and unambiguously — while a 
 status line still read as active. A monitor built on host status would have reported this
 fleet healthy at the moment it was most degraded. The service's view is the one that
 decides whether jobs get scheduled, so it is also the only view worth alarming on.
+
+### macbook-outage-mechanism-is-a-sleep-timer | critical | One unsupervised userland process is a single point of failure for an entire machine's fleet
+
+The outage above had no stated mechanism. Durable operator notes supply one, and it is
+specific, recurrent, and fixable.
+
+The macOS build host carries a **one-minute system sleep timer**, held off solely by a
+persistent keep-awake process. Nothing supervises that process. If it dies, the machine
+sleeps within a minute, and everything running on it stops with it.
+
+That explains every symptom without remainder: six registrations across four
+repositories dropping *simultaneously* rather than drifting, the host declining SSH
+connections, the mesh ping going unanswered, and the peer record still advertising a
+stale route. A machine that slept behaves exactly like this; a machine with six
+independently failing runners does not.
+
+**Attribution is deliberately limited.** The keep-awake process could not be observed to
+have died, because the host is unreachable precisely when the question matters — the
+evidence is unavailable for the same reason the finding exists. The honest statement is
+that the documented sleep behaviour explains every observation, not that the cause was
+witnessed. The operator notes independently record this same failure recurring, which is
+corroboration rather than proof.
+
+Three things follow, and each is stronger than the untimed outage finding it refines.
+
+**It is a single point of failure at machine scale.** One unsupervised userland process
+dying silently drops six registrations belonging to four different repositories onto the
+inactivity clock. Nothing about that is proportionate: the blast radius of the failure is
+an entire build host's fleet, and the thing holding it up is a process with no restart
+policy and no alarm.
+
+**It recurs by construction.** A one-minute sleep timer held off by an unsupervised
+process is not a freak event that happened once; it is a mechanism that will fire again
+whenever that process ends, and the operator notes confirm it already has. This is the
+second concrete justification for the liveness check proposed above, and the stronger of
+the two: the failure mode is *guaranteed to recur* and emits no signal anywhere in the
+system.
+
+**The remedy is cheap at both horizons.** Waking the host recovers all six registrations,
+because the inactivity window is still open. Disabling sleep at the power-management
+level stops the recurrence permanently. Neither requires re-provisioning, and that
+distinction is what the outage timestamp already established. Both are host acts needing
+privileged access this session does not have, so both are operator work — but the durable
+one should not wait for the next occurrence to justify itself.
 
 ## Recommendations
 
