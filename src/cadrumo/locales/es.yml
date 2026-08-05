@@ -1618,20 +1618,17 @@ application:
       repository_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al
         bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad
         de perfil.
-      repository_profile_record_classification_mismatch: La clasificación del registro
-        de perfil no coincide con el contrato del repositorio.
       repository_profile_record_missing: No se encontró el registro de perfil en el
         bucket activo.
       repository_profile_record_version_unsupported: La versión del esquema del registro
         de perfil no es compatible con esta aplicación.
-      repository_profile_snapshot_classification_mismatch: La clasificación de la
-        instantánea de perfil no coincide con el contrato del repositorio.
       repository_profile_snapshot_missing: No se encontró la instantánea de perfil
         en el bucket activo.
       repository_profile_snapshot_version_unsupported: La versión del esquema de la
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      repository_classification_mismatch: 'El espacio de nombres de objeto seguro %{namespace} está registrado con sensibilidad %{expected}, pero la clasificación del registro almacenado es %{classification}.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'

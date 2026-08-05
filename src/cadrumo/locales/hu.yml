@@ -1542,18 +1542,15 @@ application:
         hosszúnak kell lennie.
       repository_profile_bucket_mismatch: A(z) %{profile_id} profil nem tartozik a(z)
         %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.
-      repository_profile_record_classification_mismatch: A profilrekord besorolása
-        nem egyezik a repository szerződésével.
       repository_profile_record_missing: Az aktív bucketben nem található profilrekord.
       repository_profile_record_version_unsupported: A profilrekord sémaverzióját
         ez az alkalmazás nem támogatja.
-      repository_profile_snapshot_classification_mismatch: A profil-pillanatkép besorolása
-        nem egyezik a repository szerződésével.
       repository_profile_snapshot_missing: Az aktív bucketben nem található profil-pillanatkép.
       repository_profile_snapshot_version_unsupported: A profil-pillanatkép sémaverzióját
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+      repository_classification_mismatch: 'A(z) %{namespace} biztonságos objektum névtér a(z) %{expected} érzékenységhez van regisztrálva, de a tárolt rekord besorolása %{classification}.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'

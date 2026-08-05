@@ -1609,20 +1609,17 @@ application:
         caràcters.
       repository_profile_bucket_mismatch: El perfil %{profile_id} no pertany al bucket
         %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.
-      repository_profile_record_classification_mismatch: La classificació del registre
-        de perfil no coincideix amb el contracte del repositori.
       repository_profile_record_missing: No s'ha trobat el registre de perfil al bucket
         actiu.
       repository_profile_record_version_unsupported: La versió de l'esquema del registre
         de perfil no és compatible amb aquesta aplicació.
-      repository_profile_snapshot_classification_mismatch: La classificació de la
-        instantània de perfil no coincideix amb el contracte del repositori.
       repository_profile_snapshot_missing: No s'ha trobat la instantània de perfil
         al bucket actiu.
       repository_profile_snapshot_version_unsupported: La versió de l'esquema de la
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      repository_classification_mismatch: 'L''espai de noms d''objecte segur %{namespace} està registrat amb sensibilitat %{expected}, però la classificació del registre emmagatzemat és %{classification}.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
