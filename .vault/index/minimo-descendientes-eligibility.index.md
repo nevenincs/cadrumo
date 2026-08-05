@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:9cd00986a9c1612b54f1f91021d72bc6657defe5fa7b2dfc81c88a49198f9d7f'
+body_hash: 'sha256:03321599bfb96907f9eb580180dd0e29ca8df920c4417fef800ecf71e8f3e676'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S14]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S16]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S17]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S19]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
@@ -66,6 +67,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche
 - `2026-08-04-minimo-descendientes-eligibility-P04-S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades
 - `2026-08-04-minimo-descendientes-eligibility-P04-S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin
+- `2026-08-04-minimo-descendientes-eligibility-P04-S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit
 
 ### plan
 
