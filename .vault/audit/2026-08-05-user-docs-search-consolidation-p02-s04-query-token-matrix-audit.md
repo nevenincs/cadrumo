@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d44e43453dcb61b0bf470e03b2df45eb7a9a31753f30a83a7bb18f460e4a7b17'
+body_hash: 'sha256:5a93534d84d018635ef4f6d1ae1d23a37083d6085887945446f029e53b0d097d'
 related: []
 ---
 
@@ -49,12 +49,20 @@ non-zero vector, including when a future artifact is loaded rather than
 compiled locally. It does not select a model or establish quantization-drift
 acceptance.
 
+### deferred-schema-gates | low | Real-behaviour tests record the invariant without executing it
+
+The source now has direct production-model coverage for accepting non-zero
+result/query-token rows and rejecting all-zero rows. The gate contains no test
+double or mirrored business logic, but it remains unexecuted under the current
+instruction not to run tests; it is not evidence of a green runtime gate.
+
 ## Recommendations
 
 - Ratify the pinned model and query-tokenisation contract, then generate and
   measure the committed matrix before adding the client-side cosine tier.
 - Retain the non-zero-row validator as a loader/compiler invariant; prove its
   behavior later through the authorized real-behaviour gate.
+- Execute the deferred schema gate only when the no-test boundary is lifted.
 
 ## Follow-up
 

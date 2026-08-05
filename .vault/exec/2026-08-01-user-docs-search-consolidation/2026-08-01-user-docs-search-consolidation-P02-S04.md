@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:26f3c331594a888d3ae2fd42051394598a9f703827a910e8c758a68b91d75d08'
+body_hash: 'sha256:db98ba8d45690d0ddb84a14189669cf8941b0d12af397a5f9ad7fd1e8b1a31f5'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -76,3 +76,12 @@ This is still source-only hardening: no provider, model, matrix artifact,
 browser reader, or measured acceptance gate was added. No tests, builds,
 model downloads, matrix generation, Pagefind compilation, browser probes, live
 sweeps, runtime gates, or deployment were run.
+
+## 2026-08-05 deferred real-behaviour gates
+
+The LUNA Extra-High worker added `test_static_matrix_contract.py` with direct
+schema coverage for accepted non-zero result/query-token rows and rejected
+all-zero rows. The tests use the production Pydantic models directly and do
+not introduce test doubles or business logic. They were intentionally not run;
+AST parsing and focused whitespace checks are the only verification for this
+continuation.
