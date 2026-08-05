@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Final
 
 from ._miss_rate import load_committed_relevance
+from ._rung2_provenance import Rung2InputProvenance, build_rung2_input_provenance
 from ._static_matrix import (
     MatrixCompilationError,
     canonical_query_tokens,
@@ -30,8 +31,9 @@ from ._sweep import SweepResult, enumerate_query_vocabulary
 from ._unified_record import SearchRecord
 
 __all__ = [
-    "Rung2InputError",
     "Rung2CompilationInputs",
+    "Rung2InputError",
+    "Rung2InputProvenance",
     "build_rung2_compilation_inputs",
 ]
 
@@ -60,6 +62,7 @@ class Rung2CompilationInputs:
     records: tuple[SearchRecord, ...]
     vocabulary_sha256: str
     query_token_sha256: str
+    provenance: Rung2InputProvenance
 
 
 def build_rung2_compilation_inputs(
@@ -77,6 +80,7 @@ def build_rung2_compilation_inputs(
     """
     root = _require_repo_root(repo_root)
     resolved_relevance = relevance_path if relevance_path is not None else root / _RELEVANCE_RELPATH
+    source_relpath = _repository_relative_source_path(root, resolved_relevance)
     try:
         sweep = load_committed_relevance(resolved_relevance)
     except (OSError, ValueError) as exc:
@@ -104,6 +108,16 @@ def build_rung2_compilation_inputs(
     if not records:
         raise Rung2InputError("the authoritative Pagefind record projection is empty")
 
+    try:
+        provenance = build_rung2_input_provenance(
+            source_relpath=source_relpath,
+            source_bytes=resolved_relevance.read_bytes(),
+            vocabulary=vocabulary,
+            query_tokens=query_tokens,
+        )
+    except (OSError, ValueError, TypeError) as exc:
+        raise Rung2InputError(f"cannot derive Rung-2 input provenance from {resolved_relevance}: {exc}") from exc
+
     return Rung2CompilationInputs(
         vocabulary=vocabulary,
         query_tokens=query_tokens,
@@ -111,15 +125,26 @@ def build_rung2_compilation_inputs(
         records=records,
         vocabulary_sha256=vocabulary_fingerprint(vocabulary),
         query_token_sha256=query_token_fingerprint(query_tokens),
+        provenance=provenance,
     )
 
 
-def _require_repo_root(repo_root: Path | None) -> Path:
+def _require_repo_root(repo_root: object | None) -> Path:
     """Require an existing source checkout root for authoritative inputs."""
-    root = _REPO_ROOT if repo_root is None else repo_root
-    if not isinstance(root, Path) or not root.is_dir():
-        raise Rung2InputError(f"Rung-2 repo_root must be an existing pathlib.Path: {root!r}")
-    return root
+    candidate: object = _REPO_ROOT if repo_root is None else repo_root
+    if not isinstance(candidate, Path) or not candidate.is_dir():
+        raise Rung2InputError(f"Rung-2 repo_root must be an existing pathlib.Path: {candidate!r}")
+    return candidate
+
+
+def _repository_relative_source_path(root: Path, source: Path) -> str:
+    """Return the canonical repository-relative identity of the relevance source."""
+    try:
+        return source.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError as exc:
+        raise Rung2InputError(
+            f"the authoritative Rung-2 relevance source must be inside the repository root: {source}"
+        ) from exc
 
 
 def _require_usable_sweep(sweep: SweepResult) -> None:
