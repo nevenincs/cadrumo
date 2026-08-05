@@ -251,6 +251,10 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
     # missing INSCRIPCION/ACOGIMIENTO date, not for being the wrong age.
     assert "INSCRIPCION" in messages[0] or "ACOGIMIENTO" in messages[0]
     assert "reaches only a descendant under three" not in messages[0]
+    # The remedy must name an editing route the paged door refuses on a piped
+    # host and `descendiente add` (append-only) cannot perform: removing the
+    # row and re-adding it.
+    assert "descendiente remove" in messages[0]
 
 
 def test_an_eligible_child_does_not_raise_the_withheld_advisory(
@@ -371,6 +375,9 @@ def test_the_flag_and_the_declared_records_together_are_refused(
 
     assert exit_code != 0, output
     assert "meses_madre_trabajo" in output
+    # `descendiente add` only appends and cannot clear a declared row; the
+    # refusal must point at an editing route that actually can.
+    assert "descendiente remove" in output
 
 
 def test_the_flag_alone_still_reaches_the_casilla(runtime_profile: TestRuntimeProfile) -> None:
@@ -406,3 +413,4 @@ def test_a_withheld_declaration_and_the_flag_together_are_also_refused(
 
     assert exit_code != 0, output
     assert "meses_madre_trabajo" in output
+    assert "descendiente remove" in output

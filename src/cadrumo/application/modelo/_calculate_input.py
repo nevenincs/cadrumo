@@ -817,6 +817,13 @@ def _maternidad_meses_withheld_advisory(
     gap for that population is a missing entry date, and a message that only
     ever suggests the birth date steers that filer toward altering a fact
     that was already correct.
+
+    Nor may the remedy name ``descendiente add`` as the way to CHANGE a
+    declared row. That verb only appends, and the paged editing door
+    (``aeat config profile descendiente`` with no subcommand) refuses on a
+    piped host, which the autonomous-agent operator this CLI is built for
+    always is. The actionable route is ``descendiente remove <index>`` then
+    ``add`` to restate the row.
     """
     if not withheld:
         return None
@@ -826,10 +833,10 @@ def _maternidad_meses_withheld_advisory(
         message=(
             f"descendiente {', '.join(withheld)} declares meses_madre_trabajo but contributes no "
             "Art. 81.1 deducción por maternidad: it reaches a child under three OR one inside the "
-            "age-independent adopción/acogimiento entry-date window, subject to cohabitation, rentas "
-            "and own-return. An over-three adopción/acogimiento with no recorded entry date is "
-            "withheld for a missing INSCRIPCION or ACOGIMIENTO date, not a birth date. Record it, or "
-            "correct cohabitation or rentas, with `aeat config profile descendiente add`."
+            "age-independent adopción/acogimiento entry-date window. An over-three adopción/acogimiento "
+            "with no recorded entry date is withheld for a missing INSCRIPCION or ACOGIMIENTO date, not "
+            "a birth date. Record it, or correct cohabitation or rentas, with `aeat config profile "
+            "descendiente remove <index>` then `add` to restate the row."
         ),
         casilla_id=casilla_id,
     )
@@ -1028,7 +1035,8 @@ def apply_calculation_shortcut_inputs(
                 "--meses-trabajo-con-hijo-menor-3 was supplied while the active profile already declares "
                 "meses_madre_trabajo on its descendiente records. One authority per filing: either drop "
                 "the flag and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO "
-                "from the records with `aeat config profile descendiente add`.",
+                "with `aeat config profile descendiente remove <index>` then `add` to restate the row "
+                "without it -- `descendiente add` alone only appends and cannot edit a declared row.",
                 translated_message="application.modelo.errors.calculate_maternidad_meses_two_authorities",
             )
         # Evaluated unconditionally rather than gated on the flag's absence: the
