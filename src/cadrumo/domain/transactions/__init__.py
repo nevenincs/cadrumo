@@ -165,6 +165,11 @@ from ._protocols import (
     TransactionCatalogueRepositoryProtocol,
 )
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ._retencion_parameters import (
+    RirpfArt95RetencionRates,
+    load_retencion_actividades_rates,
+    maximum_supported_activity_retencion_rate,
+)
 from ._service import (
     find_transaction,
     link_invoice,
@@ -244,6 +249,7 @@ __all__ = [
     "PromptSpec",
     "RawProvenance",
     "RawTransaction",
+    "RirpfArt95RetencionRates",
     "SourceFormat",
     "SplitLineage",
     "SplitRole",
@@ -282,6 +288,8 @@ __all__ = [
     "is_classified",
     "ledger_irpf_category_catalogue",
     "link_invoice",
+    "load_retencion_actividades_rates",
+    "maximum_supported_activity_retencion_rate",
     "normalise_movement_reference",
     "normalize_irpf_category",
     "parse_response",

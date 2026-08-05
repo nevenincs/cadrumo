@@ -37,15 +37,17 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
+from typing import NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
-from ...core.aggregation import LedgerIncomeGrounding
+from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
+from ...core.money import round_to_cents
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
+from ...domain.iva import InvoiceKind, category_cuota_is_zero_by_law
 from ...domain.transactions import (
     BusinessClassification,
     OutOfWindowTransactionSummary,
@@ -56,6 +58,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     has_activity_irpf_category,
     has_employment_irpf_category,
+    maximum_supported_activity_retencion_rate,
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
@@ -66,6 +69,14 @@ from ._models import CasillaAggregation, LedgerAggregationResultBase
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS: CasillaId = validated_casilla_id("01", surface="_TARGET_CASILLA_INGRESOS")
+
+_DERIVED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozenset(
+    {
+        LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
+        LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
+    },
+)
+"""The markers that assert a real derived figure, so a zero beside one is a defect."""
 
 
 class RentaIncomeLedgerAggregationIssueReason(StrEnum):
@@ -148,6 +159,7 @@ class RentaIncomeObservation(BaseModel):
     filing_date: date
     source_jurisdiction: str | None = None
     grounding: LedgerIncomeGrounding
+    withheld_derivation: LedgerWithholdingDerivation = LedgerWithholdingDerivation.NOT_APPLICABLE
 
     @model_validator(mode="after")
     def _grounding_matches_declared_base(self) -> Self:
@@ -165,6 +177,41 @@ class RentaIncomeObservation(BaseModel):
             raise ValueError(
                 f"grounding {self.grounding.value!r} contradicts taxable_base_amount="
                 f"{self.taxable_base_amount!r}; expected {expected.value!r}",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _withheld_derivation_matches_the_figure(self) -> Self:
+        """Refuse a marker that contradicts the figure beside it.
+
+        The marker exists so a zero can be read: a refused inference and a
+        genuine nothing-withheld are both ``Decimal("0")`` and mean opposite
+        things. Two pairings would destroy that and are refused here rather
+        than trusted at each consumer -- an inference marker sitting on no
+        figure, and a refusal carrying the very figure it refused.
+
+        The remaining members are deliberately permissive about the amount.
+        :attr:`LedgerWithholdingDerivation.NOT_APPLICABLE` is the field
+        default, so it is also what an observation built without reference to
+        this axis carries; refusing a figure beside it would make the default
+        unusable rather than make anything safer. The guarantee that matters
+        lives on the production path, where
+        :func:`_build_income_observation` always states a marker it derived
+        together with the amount -- pinned by
+        ``test_the_builder_never_emits_an_unmarked_withholding``.
+        """
+        if self.withheld_derivation in _DERIVED_WITHHOLDING_MARKERS and self.withheld_amount <= Decimal("0"):
+            raise ValueError(
+                f"withheld_derivation {self.withheld_derivation.value!r} claims a derived figure "
+                f"but withheld_amount is {self.withheld_amount}",
+            )
+        if (
+            self.withheld_derivation is LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE
+            and self.withheld_amount != Decimal("0")
+        ):
+            raise ValueError(
+                "a refused withholding inference must not carry the figure it refused; "
+                f"withheld_amount is {self.withheld_amount}",
             )
         return self
 
@@ -455,12 +502,15 @@ def _classify_income_transaction(
         else:
             taxable_base_amount = raw_tb
 
+    withheld = _income_withheld_amount(transaction)
+
     return RentaIncomeObservation(
         transaction_id=transaction_id,
         target_casilla_id=_TARGET_CASILLA_INGRESOS,
         gross_amount=gross_amount,
         taxable_base_amount=taxable_base_amount,
-        withheld_amount=_income_withheld_amount(transaction),
+        withheld_amount=withheld.amount,
+        withheld_derivation=withheld.derivation,
         filing_date=filing_date,
         source_jurisdiction=transaction.source_jurisdiction,
         grounding=(
@@ -506,16 +556,78 @@ def _computable_income_amount(observation: RentaIncomeObservation) -> Decimal:
     return observation.gross_amount
 
 
-def _income_withheld_amount(transaction: Transaction) -> Decimal:
+class _WithheldInference(NamedTuple):
+    """One row's derived retención and the route that produced it."""
+
+    amount: Decimal
+    derivation: LedgerWithholdingDerivation
+
+
+def _determinable_cuota(transaction: Transaction) -> Decimal | None:
+    """Return the row's IVA cuota when it can be known, else ``None``.
+
+    A recorded ``iva_amount`` is the cuota. Failing that, the declared IVA
+    category can still determine it: for a category whose cuota is zero by law
+    the absent field is not missing data, it is the operation having no cuota
+    to record. Reading the Axis-A table rather than testing for nullness is
+    what separates those two -- ``iva_amount is None`` alone cannot say whether
+    an exempt supply was declared or nothing was tagged at all.
+
+    The table is keyed on the category AND the invoice kind, because the same
+    category resolves differently on each side: a domestic reverse-charge
+    operation carries no cuota when issued and a self-assessed one when
+    received. These are actividad-económica RECEIPTS, so the taxpayer is always
+    the issuer -- an income row is the issued side by construction, which is
+    why the kind is fixed here rather than read off the row.
+
+    Returns ``None`` only when the cuota is genuinely unknown.
+    """
+    if transaction.iva_amount is not None:
+        return transaction.iva_amount
+    category = transaction.iva_category
+    if category is not None and category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED):
+        return Decimal("0")
+    return None
+
+
+def _income_withheld_amount(transaction: Transaction) -> _WithheldInference:
+    """Derive the retención practicada on one income row.
+
+    Bounded inference only: the figure is the declared invoice gross minus the
+    cash actually received. The base is never reconstructed from the cash by
+    assuming a rate -- selecting the applicable rate (15 %, 7 %, a sectoral or
+    convenio figure) is a per-row legal fact this application cannot determine,
+    and inventing it would manufacture legal behaviour rather than read it.
+
+    The result is capped by the registry maximum supported rate. That bound
+    also exists on the :class:`~cadrumo.domain.transactions.Transaction` gross
+    invariant, which refuses construction outright -- but only for rows
+    carrying BOTH a base and a cuota, since it returns early when either is
+    absent. The zero-cuota rows admitted here never meet it, so for them this
+    is the only bound, and applying it uniformly keeps one rule rather than two
+    that must be read together to know whether a row was checked.
+    """
     if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
-        return Decimal("0")
-    if transaction.taxable_base is None or transaction.iva_amount is None:
-        return Decimal("0")
-    invoice_gross = transaction.taxable_base + transaction.iva_amount
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NOT_APPLICABLE)
+    if transaction.taxable_base is None:
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NO_SUBSTRATE)
+    cuota = _determinable_cuota(transaction)
+    if cuota is None:
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NO_SUBSTRATE)
+    derivation = (
+        LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA
+        if transaction.iva_amount is not None
+        else LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA
+    )
+    invoice_gross = transaction.taxable_base + cuota
     cash_received = abs(transaction.raw.amount)
     if invoice_gross <= cash_received:
-        return Decimal("0")
-    return invoice_gross - cash_received
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NONE_WITHHELD)
+    inferred = invoice_gross - cash_received
+    maximum_supported = round_to_cents(transaction.taxable_base * maximum_supported_activity_retencion_rate())
+    if round_to_cents(inferred) > maximum_supported:
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE)
+    return _WithheldInference(inferred, derivation)
 
 
 def _income_casilla_aggregation(
