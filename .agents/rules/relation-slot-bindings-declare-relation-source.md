@@ -36,8 +36,8 @@ impossible (defence in depth per `composition-service-no-parallel-write-path`).
 - Good: a same-modelo direct carry keeps `source = "previous_filing"` and passes
   `_is_direct_previous_filing_binding`; the M303
   `modelo-303-compensacion-pendiente-anteriores` slot is the named carve-out
-  (`IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS`,
-  `_validate_relation_sources.py`) — owned pre-mesh by the iva-wallet gate.
+  (`IVA_WALLET_OWNED_RELATION_TARGETS`,
+  `_iva_wallet_relation_targets.py`) — owned pre-mesh by the iva-wallet gate.
 - Bad: a relation `target_binding` slot declaring `source = "previous_filing"`
   with a non-direct selector — the registry gate now refuses it instead of letting
   the enrolled resolver silently skip it.
