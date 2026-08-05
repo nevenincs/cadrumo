@@ -184,17 +184,36 @@ def test_a_lane_with_a_behavioural_proof_names_a_real_reference_form() -> None:
 
 
 def test_the_behavioural_proof_runs_on_the_reference_form_and_nowhere_else() -> None:
-    """The installed oracle is lane-level: exactly one form carries it.
+    """The installed oracle is lane-level: exactly one FORM carries it.
 
     This is the only invariant class that legitimately collapses — it proves a
-    property of the PRODUCT, so running it per form was triplication (it ran in
-    core, split, and the serial oracles pass against one cohort and one target).
-    Install-level invariants are deliberately not collapsed this way: the
-    installed virtualenv is what a form produces, so asserting those once would
-    leave the other installers unproven.
+    property of the PRODUCT, so running it once per form was the triplication
+    this campaign found (core, split, and the serial oracles pass, against one
+    cohort and one target). Install-level invariants are deliberately not
+    collapsed this way: the installed virtualenv is what a form produces, so
+    asserting those once would leave the other installers unproven.
+
+    "Lane-level" does NOT mean once per campaign. The oracle still runs twice:
+    here at the reference form, and again in the serial installed-oracles pass.
+    That is the intended end state — the audit dropped split's copy and kept
+    those two — and the serial pass is not a form, so this pin neither covers
+    nor should cover it.
 
     Pinned statically against each form's module source, so a second call site
     fails here rather than after a campaign has paid for it twice.
+
+    Known limitation, recorded where someone would trip on it. This keys on the
+    module, so it cannot express a behavioural proof for a lane whose forms
+    SHARE a module: ``smoke_docker`` backs both ``core/container`` and
+    ``browser/container``, and ``smoke_browser`` backs both browser host forms,
+    so ``calls_oracle`` is necessarily equal across those forms while
+    ``expected`` would differ — unsatisfiable by construction. Every browser-lane
+    form shares its module, so that lane cannot declare a behavioural proof at
+    all today. Nothing is blocked (``behavioural_proof=None`` is a legitimate
+    state the pairing test enforces), but a future "the browser really drives a
+    page" proof meets this wall. The fix then is to key on the resolved
+    ``(module, extra_args)`` invocation, the granularity the executed-set pin
+    above already uses.
     """
     oracle = "run_installed_tax_oracle"
     for lane in _LANES.values():
@@ -210,3 +229,19 @@ def test_the_behavioural_proof_runs_on_the_reference_form_and_nowhere_else() -> 
                 f"{lane.name}/{form.name} {'must' if expected else 'must not'} run the "
                 f"lane's behavioural proof; it is owned by {lane.reference_form!r}"
             )
+
+
+def test_lane_names_are_distinct_so_manifest_rows_stay_distinguishable() -> None:
+    """Manifest granularity now rides on the lane name, so it must discriminate.
+
+    Claim strings were deliberately genericised: one shared helper performs the
+    pip install for the wheel, sdist and extras forms, and an assertion cannot
+    honestly name an artifact kind it was never told about. The per-form
+    granularity did not vanish — it moved to the manifest's ``lane`` and
+    ``artifacts`` fields. That makes lane-name distinctness load-bearing: two
+    forms writing the same lane name would collapse separate proofs into
+    indistinguishable rows, silently, with every other gate still green.
+    """
+    names = [lane.name for lane in _LANES.values()]
+    assert len(names) == len(set(names)), f"lane names must discriminate manifest rows: {names}"
+    assert all(name and name.strip() == name for name in names), f"lane names must be non-empty: {names}"

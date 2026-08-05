@@ -68,6 +68,16 @@ def _declared_claims(tree: ast.AST) -> set[str]:
 
 
 def _support_claims() -> set[str]:
+    """Return every claim the shared recording helpers can emit.
+
+    Deliberately a GLOBAL allowlist, not per-form reachability: it does not ask
+    whether a given form actually calls the helper that records a claim. So this
+    static gate is a weaker author-time net than its name suggests — a form
+    declaring ten claims and recording none in-module passes here purely on
+    support. The runtime contract check is what catches a form that stops
+    calling a helper it depends on; this gate catches a claim NOTHING anywhere
+    can record, which is the over-claim class that started this work.
+    """
     claims: set[str] = set()
     for name in _RECORDING_SUPPORT:
         claims |= _recorded_claims(ast.parse((_PACKAGING / name).read_text(encoding="utf-8")))

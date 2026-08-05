@@ -15,6 +15,28 @@ This lives in its own module rather than in the shared smoke core because
 ``python_cohort`` records the install-level cohort invariant it proves, and the
 shared smoke core already imports ``python_cohort`` — putting the ledger there
 would close an import cycle.
+
+**Why the number of ``record_proof`` call sites is worth watching.** It is not
+redundant hygiene beside the contract gate; it is the only instrument pointed at
+that gate's blind spot. Drop a ``record_proof`` while its claim is still
+declared and the gate is loud: ``write_smoke_manifest`` computes the unperformed
+set and raises before writing anything. The silent case is a declaration and its
+recording removed *together* — the site count falls while every test stays green
+and every manifest stays truthful, because a smaller honest contract is still an
+honest contract. That is a scope reduction wearing the shape of a cleanup, and
+only a reader comparing counts across revisions will see it.
+
+**The mechanism degrades to one-sided wherever the two literals share a source.**
+A form that both records and declares from the same expression compares a set
+against itself, so the runtime check cannot fail and the static gate — which
+reads string constants — sees nothing. ``smoke_docker`` is the live instance:
+its per-variant claims are recorded and declared from one ``variant_claims``
+tuple, because the assertions themselves run inside a container and cannot reach
+this ledger across the process boundary. What is unbacked there is the
+GRANULARITY of the claims, not whether the work ran — the container probe is
+fail-closed, so reaching the record at all means the probe passed. Closing it
+properly means having the in-tree probe report which claims it performed and
+recording that, so the record derives from behaviour again.
 """
 
 from __future__ import annotations
