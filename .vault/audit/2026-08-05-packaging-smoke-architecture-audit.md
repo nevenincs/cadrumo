@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1d0f4decfc0700c3c6e18f6c19378433131cfe16f505a9fb3f2cbc5dbc9ba2e'
+body_hash: 'sha256:de26013e56b272db3611deda2cc32bed876b8c97a51d50aa635940406d0d66b2'
 related:
   - "[[2026-07-20-ci-speed-redesign-adr]]"
   - "[[2026-07-15-distribution-installation-readiness-research]]"
@@ -220,6 +220,62 @@ configuration where a host-leak false green is structurally impossible. `docker-
 already proves Chromium provisioning on Linux and the container adds only system-package
 closure, but it has not been measured and "it looks redundant" is not evidence.
 
+### flat-registry-lost-the-lane-form-hierarchy | critical | The design was two lanes each carrying several forms; what shipped is ten peer lanes
+
+This is the root cause the other findings are symptoms of, and it is visible only by
+diffing design intent against what shipped. The original packaging research recommended
+that the ADR "decide a release/CI gate with two lanes", and then defined the Core lane as
+one lane with several FORMS: it names, under a single bullet, "the local
+isolated-virtualenv form", "the plain-pip form", "the source-distribution form", "the
+aggregate optional-extra form", and "the Linux container form", followed by a second
+bullet for the Browser lane. The intended structure was two-level — lane, then form —
+with the lane owning the invariant proof and each form varying one axis. What shipped is
+a flat `_LANES` dict of ten peer entries in which every form was promoted to a top-level
+lane, and nothing in the structure records that core, pip-core, sdist-core, extras, and
+split are five forms of one Core lane, or that browser, browser-linux, and
+docker-browser are three forms of one Browser lane.
+
+Every other finding in this audit follows from that flattening. Because no lane owns the
+invariant, each form re-asserts the lane-invariant checks independently — which is why
+the five wheel forms share so much preamble, why the installed tax oracle runs three
+times instead of once per lane, and why `assert_installed_cohort`'s four guarantees are
+re-listed as if they were per-form proofs. Because no lane owns the question "what did
+this lane prove", each form hand-writes its own `checks=` tuple as a string literal, and
+a string literal cannot go stale loudly — which is how the split form came to claim two
+checks it does not run. The operator's assessment of accretion is therefore correct in
+substance but wrong in mechanism: the surface did not accrete redundant PROOFS, it
+accreted redundant STRUCTURE around proofs that are mostly individually justified. Eight
+of ten lanes carry real marginal proof, and yet the registry is still the wrong shape.
+
+This also answers the parameterisation question directly. The five wheel lanes ARE
+expressible as one parameterised lane over the axes {installer: uv|pip, artifact:
+wheel|sdist, extras: none|all|browser, cohort assertions: base|joined-namespace}, and
+that is not a novel proposal — it is the design the research described before the
+flattening. Note that the accepted CI-speed ADR already began correcting this from the
+other end: the `quick` profile is a one-lane per-push gate, which is exactly the small
+gate the original intent implies, with the larger set moved to dispatch cadence. The
+profile mechanism it introduced is the natural home for the lane/form distinction.
+
+### gh-retry-is-sound-but-inverts-its-retry-classes | low | The transport retry cannot mask a failure, but it retries the least-retryable class and not the most
+
+`evidence_release.run_gh_with_retry` was checked for the masking class and cleared. It
+retries on `EvidenceReleaseError`, sleeps with linear backoff, and on exhaustion raises a
+message carrying the last error's stderr verbatim, so an authorization failure surfaces
+with its diagnostic intact rather than being swallowed. The trust-critical calls are also
+correctly excluded from retry: `list_releases` and the exactly-one-draft guard call the
+bare `_run_gh`, so only asset download is retried. That split is right — retry the
+transport, never the authorization or the trust check.
+
+Two inversions are worth recording. First, `_run_gh` raises `EvidenceReleaseError` for
+ANY non-zero exit, so a deterministic 401 or 403 is retried three times with escalating
+sleeps before failing; the failure is not hidden, only delayed, which makes this a
+cosmetic defect rather than a masking one. Second and more oddly, `_run_gh` passes a
+subprocess `timeout`, and a `subprocess.TimeoutExpired` is not an `EvidenceReleaseError`,
+so it propagates immediately without any retry. The most retryable failure class — a
+transport timeout — is the one class this retry helper does not cover, while the least
+retryable class is covered. Narrowing the retry to genuine transient conditions and
+including the timeout would fix both ends at once.
+
 ## Recommendations
 
 Fix the split manifest's false claims first, because it is the cheapest change with the
@@ -263,6 +319,32 @@ cleanup commit. Consolidating the six evidence modules behind a single owner for
 did this lane prove" is likewise an ADR-scale decision; the manifest-claims defect is
 its symptom and should be fixed independently and immediately rather than waiting on the
 consolidation.
+
+Narrow the gh retry to genuinely transient conditions and bring the subprocess timeout
+inside it, so the helper stops retrying deterministic authorization failures and starts
+retrying the one class it currently drops.
+
+The structural recommendation, and the one that should shape the follow-on ADR: restore
+the lane/form hierarchy rather than delete lanes. The correct target is not a shorter
+`_LANES` list but a two-level registry in which a lane owns its invariant proof and its
+forms vary one axis each — Core lane over {uv-wheel, pip-wheel, pip-sdist, pip-extras,
+pip-joined-cohort}, Browser lane over {host, host-with-deps, container}, with `dev` and
+`docker-core` standing alone because they prove genuinely separate classes. Under that
+shape the lane-invariant checks (`assert_installed_cohort`'s four guarantees, the
+installed tax oracle, the wheel data payload and metadata assertions) are asserted once
+per lane rather than once per form, the `checks=` tuple becomes derived from what the
+lane and form actually executed rather than a hand-written literal, and the split
+question dissolves — split stops being a lane to retire and becomes a form of the Core
+lane contributing exactly its two unique probes. This reframes the earlier
+merge-into-core verdict: the merge is right, but the reason is structural rather than
+economic, and it should land as a hierarchy restoration rather than a deletion.
+
+That ADR must decide two things this audit deliberately does not: whether the lane/form
+hierarchy is worth the migration against a surface that is, proof-for-proof, mostly
+justified; and whether the six evidence modules consolidate behind a single owner for
+"what did this run prove", which is the same root cause seen from the evidence side. The
+manifest-claims defect is a symptom of both and should be fixed immediately and
+independently rather than waiting on either decision.
 
 Nothing here should be read as unblocking distribution publication, which is held behind
 separate structural blockers. Every recommendation above is scoped to the proof surface
