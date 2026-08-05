@@ -1,19 +1,26 @@
-"""Oracle + anti-tautology tests for Art. 81 LIRPF deducción maternidad (casilla 0611).
+"""What survives around the Art. 81 LIRPF deducción maternidad (casilla 0611).
 
-Art. 81 LIRPF formula: sum(min(meses_trabajados × 100, 1_200)) per eligible hijo menor de 3.
-Eligibility: is_eligible_menor_tres(filing_year) must be True (age < 3 at year-end AND
-cohabiting). Only descendants with meses_madre_trabajo_2024 > 0 contribute.
+Covers the live arithmetic, the persistence boundary and the flag: the oracle and
+anti-tautology cases for ``compute_deduccion_maternidad_0611``, the roundtrip of
+``meses_madre_trabajo_2024`` through the fact index, and what the
+``--descendiente`` flag accepts.
 
-Oracle anchoring:
-  - 2 hijos, each 12 months → min(12×100,1200) + min(12×100,1200) = 1200 + 1200 = 2400
-  - 2 hijos, 6 and 12 months → min(6×100,1200) + min(12×100,1200) = 600 + 1200 = 1800
+Art. 81 LIRPF: ``sum(min(meses_trabajados × 100, 1_200))`` per eligible hijo.
+Oracle anchoring: two hijos at twelve months each gives 1200 + 1200 = 2400; at
+six and twelve, 600 + 1200 = 1800. Anti-tautology: moving meses from zero to six
+must move the result from 0 to 600.
 
-Anti-tautology: change meses from 0 to 6 → 0611 must change from 0 to 600 (non-trivially).
+A duplicate of that oracle used to run against a profile METHOD that recomputed
+the same formula and had no production consumer. The method was retired and its
+cases went with it, keeping the ones above, which drive the function the
+calculate path actually calls.
 
-Helper function tests (CLI layer, no profile needed):
-  _compute_deduccion_maternidad_0611: same oracle + anti-tautology
-  _parse_meses_trabajo_hijo_spec: valid + invalid inputs
-  descendant_facts roundtrip: meses_madre_trabajo stored and reloaded
+Two of the retired cases asserted ELIGIBILITY -- that a child over three, or one
+not cohabiting, contributes nothing. They are not replaced here because the live
+path has no counterpart to replace them against: it consumes an
+operator-supplied list of (hijo, meses) pairs and performs no filtering of its
+own. That asymmetry is a real observation about the maternidad path rather than
+a gap in this module, and it is recorded where design questions go.
 """
 
 from __future__ import annotations
@@ -27,7 +34,7 @@ from .._descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from ..family import DescendantInfo, RentaFamilyProfile
+from ..family import DescendantInfo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,66 +57,6 @@ def _hijo_no_menor_3() -> DescendantInfo:
         birth_date=date(2020, 1, 1),
         meses_madre_trabajo_2024=12,
     )
-
-
-# ---------------------------------------------------------------------------
-# RentaFamilyProfile.deduccion_maternidad_0611 — oracle tests
-# ---------------------------------------------------------------------------
-
-
-class TestDeduccionMaternidad0611Oracle:
-    """Oracle values derived from Art. 81 LIRPF: sum(min(meses×100, 1200)) per hijo menor 3."""
-
-    def test_oracle_examples(self) -> None:
-        cases = (
-            ("two-hijos-full-year", (12, 12), 2400),
-            ("two-hijos-partial-and-full", (6, 12), 1800),
-            ("one-hijo-six-months", (6,), 600),
-            ("one-hijo-cap", (12,), 1200),
-            ("zero-months", (0,), 0),
-        )
-        for case_id, meses_por_hijo, expected in cases:
-            profile = RentaFamilyProfile(descendientes=tuple(_hijo_menor_3(meses) for meses in meses_por_hijo))
-            assert profile.deduccion_maternidad_0611(2024) == expected, case_id
-
-
-# ---------------------------------------------------------------------------
-# Anti-tautology: incrementing meses must change the result non-trivially
-# ---------------------------------------------------------------------------
-
-
-class TestDeduccionMaternidadAntiTautology:
-    """Verify the formula is actually exercised, not trivially returning a constant."""
-
-    def test_zero_vs_six_meses_differs_by_600(self) -> None:
-        """Changing meses from 0 to 6 must increase 0611 by exactly 600."""
-        p_zero = RentaFamilyProfile(descendientes=(_hijo_menor_3(0),))
-        p_six = RentaFamilyProfile(descendientes=(_hijo_menor_3(6),))
-        result_zero = p_zero.deduccion_maternidad_0611(2024)
-        result_six = p_six.deduccion_maternidad_0611(2024)
-        # If formula were broken and always returned a constant, these would match.
-        assert result_six - result_zero == 600
-
-    def test_hijo_no_menor_3_excluded(self) -> None:
-        """A 4-year-old with meses=12 must NOT contribute to 0611."""
-        profile_with_older = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(),))
-        profile_empty = RentaFamilyProfile()
-        # Both must be 0; the older child's meses_madre_trabajo_2024 must be ignored.
-        assert profile_with_older.deduccion_maternidad_0611(2024) == 0
-        assert profile_empty.deduccion_maternidad_0611(2024) == 0
-        # Anti-tautology proof: adding a qualified younger child makes it non-zero.
-        profile_mixed = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6)))
-        assert profile_mixed.deduccion_maternidad_0611(2024) == 600
-
-    def test_non_cohabiting_hijo_excluded(self) -> None:
-        """A hijo menor-3 not cohabiting with taxpayer must not contribute."""
-        non_cohabiting = DescendantInfo(
-            birth_date=date(2022, 6, 1),
-            convive_con_contribuyente=False,
-            meses_madre_trabajo_2024=12,
-        )
-        profile = RentaFamilyProfile(descendientes=(non_cohabiting,))
-        assert profile.deduccion_maternidad_0611(2024) == 0
 
 
 # ---------------------------------------------------------------------------

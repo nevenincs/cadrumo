@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile import UserProfileLifecycleRepository
-from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
+from ....domain.calculations.registry import FormulaExpression, RegistrySnapshot, resolve_parameter
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -494,3 +494,123 @@ def test_the_flag_refuses_both_spend_shapes_for_one_child(
 
     assert result.exit_code != 0
     assert "GASTOS_GUARDERIA_MENSUAL" in result.output
+
+
+def test_the_cotizaciones_term_binds_the_0613_cap(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The mother's SS cotizaciones is a real term of the cap, and it must BIND.
+
+    Art. 81.2 caps the increase at ``min(gastos_reales, hijos x 1.000,
+    cotizaciones_ss_madre)``. A test that only ever lets the spend term win would
+    pass against a formula that dropped the cotizaciones argument entirely, so
+    this pins the case where cotizaciones is the smallest of the three and is
+    therefore what the operator receives.
+
+    This assertion previously existed only against a domain-layer method that
+    duplicated the formula in Python and had no production consumer. Deleting
+    that method without replacing this would have left a real term's behaviour
+    asserted nowhere, while every gate stayed green — so the replacement lands in
+    the same change as the deletion, never after it.
+
+    The expected figure is the cotizaciones input itself, not a re-derivation of
+    the formula: the whole claim is that the smallest term is what comes out.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            # Spend of 2.400 across a child under three all year, so the spend
+            # term is 2400 and the population term is 1 x 1000 = 1000.
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            # The smallest of the three terms, so it is the one that must win.
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=450",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("450.00")
+
+
+def test_the_population_term_binds_the_0613_cap(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The per-child ceiling is the other term that must be able to win.
+
+    With spend and cotizaciones both above it, the result is the population
+    count times the registry's own per-child ceiling. Pinned for the same reason
+    as the cotizaciones case: a formula that dropped this argument would still
+    satisfy every test in which the spend term happened to be smallest.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+
+    # One eligible child, so the population term is the registry's per-child
+    # ceiling once. Read from the registry rather than restated here.
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == _registry_guarderia_per_child_cap()
+
+
+def _registry_guarderia_per_child_cap() -> Decimal:
+    """The Art. 81.2 per-child ceiling as the live 0613 formula carries it.
+
+    Read off the formula rather than restated, so a revision that moved the
+    ceiling moves this expectation with it instead of reddening a test that was
+    right about the law and stale about the figure.
+    """
+    from ....core.resources import resources
+
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    formula = next(f for f in snapshot.revision.formulas if f.target_casilla_id == "0613")
+    literals = _literals_in(formula.expression)
+    assert len(literals) == 1, f"expected exactly one literal in the 0613 formula; found {literals}"
+    return Decimal(literals[0])
+
+
+def _literals_in(node: FormulaExpression) -> list[str]:
+    """Collect every ``literal`` value in a compiled formula expression tree.
+
+    Walks the typed :class:`FormulaExpression` the registry compiles to, not a
+    raw mapping: reading the TOML shape instead would make this assert against
+    the authoring form rather than the one the engine evaluates.
+    """
+    found = [] if node.literal is None else [str(node.literal)]
+    for child in node.args:
+        found.extend(_literals_in(child))
+    return found

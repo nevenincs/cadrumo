@@ -6986,12 +6986,6 @@ profile:
       cikk) megosztott felügyelet esetén %{count} eltartott(ak)nál. Minden szülő a
       vonatkozó minimum felét vallja be (0513/0514. mező, és ahol alkalmazható, 0515/0516.
       mező).
-    deduccion_maternidad_applied: 'LIRPF 81. cikk szerinti anyasági levonás számítva:
-      %{amount} € (0611. mező). A képlet: összeg(min(hónapok × 100; 1 200)) eltartottanként,
-      akik 3 évesnél fiatalabbak és bejelentett munkahónapokkal rendelkeznek.'
-    incremento_guarderia_applied: 'Bölcsőde Art. 81.2 LIRPF pótlék kiszámítva: %{amount}
-      € (0613 rovatszám). Korlát: min(tényleges kiadások, 3 évesnél fiatalabb gyermekek
-      × 1.000 €, tb-járulék 2024).'
   errors:
     foral_regime: '{tax_region} lakosai az illetékes Hacienda Foralnál kötelesek adóbevallást
       benyújtani a Gazdasági Megállapodás (Ley 12/2002) alapján, nem az AEAT-nél.

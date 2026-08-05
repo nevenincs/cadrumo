@@ -6651,12 +6651,6 @@ profile:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for
       shared custody in %{count} dependent(s). Each parent declares half the applicable
       mínimo (casillas 0513/0514 and, where applicable, 0515/0516).
-    deduccion_maternidad_applied: 'Art. 81 LIRPF maternity deduction computed: %{amount}
-      € (casilla 0611). Formula sum(min(months × 100, 1,200)) applied per dependent
-      under 3 with declared working months.'
-    incremento_guarderia_applied: 'Nursery supplement (Art. 81.2 LIRPF) applied: %{amount}
-      EUR (box 0613). Limit: min(actual costs, children under 3 x 1000 EUR, social-security
-      contributions 2024).'
   errors:
     foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does

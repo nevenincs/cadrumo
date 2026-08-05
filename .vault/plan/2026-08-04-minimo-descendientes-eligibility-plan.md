@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:59388ed3d12bb75e5d6fd1aa0a171b39a7830a1cd20821fea4d97b9700f33e79'
+body_hash: 'sha256:cc5b4d94283274b96a599e5d1221612d10e69f69ef385706da68e9a3bf626c58'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -65,7 +65,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, and route the calculate path through the canonical record so a declared map reaches the cap terms; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/_guarderia_mensual.py, src/cadrumo/application/modelo/_profile_binding.py`.
 - [x] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S18` - Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/modelo/_profile_binding.py`.
-- [ ] `P04.S19` - Retire or enroll the RentaFamilyProfile guarderia increment property, which duplicates registry formula 0181 in Python and has no production consumer, so it is today either dead code or a second calculation authority; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py`.
+- [ ] `P04.S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py, src/cadrumo/core/external_constants.py, src/cadrumo/core/tests/test_external_constants_centralisation_part2.py, src/cadrumo/locales/`.
 - [ ] `P04.S20` - Translate the model-level refusals reaching the descendiente add verb, which surface as raw pydantic tracebacks because the handler catches only the answer-type error, so the entry-date coherence refusals this campaign shipped are the ones landing untranslated; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 
 ## Parallelization

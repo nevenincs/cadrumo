@@ -7099,12 +7099,6 @@ profile:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)
       per custòdia compartida en %{count} descendent(s). Cada progenitor declara la
       meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).
-    deduccion_maternidad_applied: 'Deducció maternitat Art. 81 LIRPF calculada: %{amount}
-      € (casella 0611). Fórmula sum(min(mesos × 100, 1.200)) per descendent menor
-      de 3 anys amb mesos de treball declarats.'
-    incremento_guarderia_applied: 'Suplement de guarderia (art. 81.2 LIRPF) aplicat:
-      %{amount} EUR (casella 0613). Límit: min(costos reals, fills menors de 3 anys
-      x 1.000 EUR, cotitzacions a la seguretat social 2024).'
   errors:
     foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
       en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI

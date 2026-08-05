@@ -7143,12 +7143,6 @@ profile:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)
       por custodia compartida en %{count} descendiente(s). Cada progenitor declara
       la mitad del mínimo correspondiente (casillas 0513/0514 y, si procede, 0515/0516).
-    deduccion_maternidad_applied: 'Deducción maternidad Art. 81 LIRPF calculada: %{amount}
-      € (casilla 0611). Comprobada la fórmula sum(min(meses × 100, 1.200)) por descendiente
-      menor de 3 años con meses de trabajo declarados.'
-    incremento_guarderia_applied: 'Incremento maternidad guardería Art. 81.2 LIRPF
-      calculado: %{amount} € (casilla 0613). Límite mínimo de gastos reales, hijos
-      menores de 3 años × 1.000 € y cotizaciones SS satisfechas.'
   errors:
     foral_regime: Los residentes en {tax_region} tributan ante la Hacienda Foral correspondiente
       bajo el Concierto Económico (Ley 12/2002), no ante la AEAT. Este CLI no modela

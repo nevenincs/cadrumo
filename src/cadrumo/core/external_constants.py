@@ -682,13 +682,6 @@ DEDUCCION_MATERNIDAD_MENSUAL_EUR: Final[int] = 100
 #: The deducción accrues at €100/month and is capped at this amount per hijo; casilla 0611.
 DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR: Final[int] = 1200
 
-#: Art. 81 LIRPF (Ley 35/2006, BOE-A-2006-20764) incremento por gastos de custodia en
-#: guardería o centro de educación infantil autorizado, per hijo menor de tres años cap.
-#: Capped at the lesser of real gastos, this amount × hijos_menores_3, and SS cotizaciones;
-#: casilla 0613.  Note: this is Art. 81 LIRPF (deducción maternidad supplemento), NOT Art. 81
-#: bis (familia numerosa / discapacidad).
-INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR: Final[int] = 1000
-
 #: Art. 58.1 LIRPF (Ley 35/2006, BOE-A-2006-20764) ordinary mínimo-por-descendientes
 #: age ceiling: a descendant qualifies for the ordinary mínimo while younger than 25
 #: (exclusive) at year end, unless disabled (which removes the age limit).
