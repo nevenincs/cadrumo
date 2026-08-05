@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5c0a776be3e8540431189c9fa9b4a4c1929328dd384079e7a20378d308dca22'
+body_hash: 'sha256:8213b308f7af73bfe037161274edd117868a647d7cb0176f76ab4f92fc3e4548'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -366,6 +366,54 @@ of legal effect. That reading is adopted because the decision cannot wait on it 
 exclusion is the stronger instrument - but it is a reading, not a measurement, and if it
 is wrong the correction is an under-grant for that population and this decision's first
 limb falls while the shape argument stands independently.
+
+
+### DECISION: casilla 0611 stays operator-supplied, and the 0613 asymmetry is not a defect
+
+The row that asked for 0611 to become registry-computed "like its 0613 sibling" rested on a
+parity premise. Research retired that premise, and the decision follows from the retirement
+rather than from cost.
+
+**0613 is not the precedent it appears to be.** Its formula is min(gastos, n x 1000,
+cotizaciones): a single flat rate times a scalar count, minned against two other scalars.
+Every eligible child contributes the identical amount, so the cap never varies per child.
+0611 after the alta-posterior increment has a cap that varies with WHICH child carries the
+increment. **0613 never had to solve 0611's problem**, so it demonstrates a
+flat-rate-times-count pattern, not a per-item-varying-cap pattern.
+
+**Two different rule shapes carried by two different mechanisms is not fragmentation.** It
+is what correct modelling looks like. Fragmentation is two mechanisms for the SAME shape,
+which is what this campaign removed elsewhere. The asymmetry was flagged in good faith and
+the flag has now been measured out of existence.
+
+**The arithmetic is not expressible with today's primitives, and that was measured rather
+than assumed.** The closed aggregation-op set passes raw per-row fields through without
+arithmetic; the formula-expression ops are fixed-arity over statically declared argument
+lists. Nothing iterates a variable-length row set applying a per-row conditional cap. That
+part necessarily stays in Python wherever it is placed.
+
+**The obvious fix reproduces the barred defect in distributed form, and this is the finding
+that settles it.** A profile-sourced resolver projecting per-hijo rows would avoid any entry
+surface change - the descendant facts already have exactly the indexed sub-record shape the
+live atribucion-member resolver reads. But if each synthesised row carries a Python-capped
+euro amount, then folding those rows in the registry is cosmetically registry-computed while
+the actual cap-selection rule sits in Python one layer FURTHER from view. That is the same
+objection that barred the single-copy route, recurring per row instead of collapsed to one
+scalar. A fix that makes a gap harder to see is worse than the honest gap.
+
+**So the only route to genuine registry computation is a new aggregation primitive** - one
+reading two selector fields per row and applying a conditional per-row cap before summing.
+That is a schema and engine extension, not a refactor, and its entire value is auditability:
+the figure 0611 produces today is correct, and no taxpayer receives a different number
+either way. That does not justify the extension on its own, and it is not this campaign's
+to take.
+
+**Recorded honestly as a closure rather than a deferral, and flagged as the shape that can
+look like scope reduction.** A campaign must not narrow its own completion criterion, so the
+distinction matters: this is not the work being judged too expensive, it is the criterion
+being measured false. "Parity with 0613" was never achievable because the two casillas do
+not share a rule shape. If a future reform makes 0611's cap uniform again, the parity
+question genuinely reopens and this decision should be revisited rather than cited.
 
 
 ## Amendment: a design review corrected all four decisions, and refuted one
