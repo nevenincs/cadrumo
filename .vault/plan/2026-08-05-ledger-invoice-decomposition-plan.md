@@ -4,22 +4,13 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:806860756b270a71325ed3dc52ddba9883976c1a5295086ac3eb8ae8f48d35d1'
+body_hash: 'sha256:bbcf1a9e0511a38ae2e85c32a922ae8364d0a3e0dc26c3ca4e33579e0bef8b80'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-reference]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `ledger-invoice-decomposition` plan
 
@@ -28,15 +19,6 @@ related:
 ### Phase `P01` - Income measure grounding
 
 Make the renta income measure explicit and its gaps visible. The fact selector stops defaulting to a legal claim, the honest name replaces the misleading one, and every row that reaches a filed casilla without invoice substrate surfaces an advisory instead of folding bank cash in silently.
-
-
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
-
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
 
 - [x] `P01.S01` - Remove the fact default from the renta ledger income selector so an omitting binding fails registry validation loudly; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
 - [x] `P01.S02` - Remove the divergent fact default from the impatriado income selector so both siblings are required; `src/cadrumo/domain/calculations/registry/_ledger_impatriado_bindings.py`.
@@ -49,13 +31,14 @@ Make the renta income measure explicit and its gaps visible. The fact selector s
 
 Declare which components an invoice of each IVA category actually has, as registry-grounded data derived from the existing category frozensets rather than a parallel list that can disagree with them. Land the legal catalogue entries and retencion rate parameters the table cites.
 
-- [ ] `P02.S07` - Declare the per-category component-expectation table as registry-grounded data derived from the existing cuota-less frozensets, never a parallel list; `src/cadrumo/domain/iva/_schema.py`.
-- [ ] `P02.S08` - Gate the table for completeness across every IvaCategory member and for non-divergence from the frozensets it derives from; `src/cadrumo/domain/iva/tests`.
-- [ ] `P02.S09` - Land the legal catalogue entries every component-expectation row cites, each resolving to bundled authoritative corpus text; `src/cadrumo/_data/registry/aeat/legal`.
-- [ ] `P02.S10` - Land the RIRPF article 95 retencion rate parameters as registry data rather than feature-module literals; `src/cadrumo/_data/registry/aeat/legal`.
+- [x] `P02.S07` - Declare the per-category component-expectation table as registry-grounded data derived from the existing cuota-less frozensets, never a parallel list; `src/cadrumo/domain/iva/_schema.py`.
+- [x] `P02.S08` - Gate the table for completeness across every IvaCategory member and for non-divergence from the frozensets it derives from; `src/cadrumo/domain/iva/tests`.
+- [x] `P02.S09` - Land the legal catalogue entries every component-expectation row cites, each resolving to bundled authoritative corpus text; `src/cadrumo/_data/registry/aeat/legal`.
+- [x] `P02.S10` - Land the RIRPF article 95 retencion rate parameters as registry data rather than feature-module literals; `src/cadrumo/_data/registry/aeat/legal`.
 - [x] `P02.S18` - Re-key the component-expectation table on the category and invoice-kind pair, declaring the retencion role per row so an issued credit and a received liability stop sharing a shape; `src/cadrumo/domain/iva/_components.py`.
 - [x] `P02.S19` - Reconcile the rich-invoice IvaRate enum against the registry rate table, closing the missing members rather than leaving a rate the registry knows and the record cannot express; `src/cadrumo/domain/invoices/_models.py`.
-- [ ] `P02.S21` - Bundle the place-of-supply articles governing cross-border category selection, so the judgement is grounded rather than derived from counterparty country; `src/cadrumo/_data/corpus/normatives/html`.
+- [x] `P02.S21` - Bundle the place-of-supply articles governing cross-border category selection, so the judgement is grounded rather than derived from counterparty country; `src/cadrumo/_data/corpus/normatives/html`.
+- [ ] `P02.S27` - Correct the six-entry LIVA batch document_id to its BOE identifier as one coherent change, then hand it to the operator for re-stamp; `src/cadrumo/_data/registry/aeat/legal`.
 
 ### Phase `P03` - Retencion derivation and invoice contracts
 
@@ -79,7 +62,8 @@ Prove the chain against external AEAT authority rather than against itself, anch
 - [ ] `P05.S15` - Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `P05.S16` - Ground the chain on an exempt-services example proving the under-declaration direction is closed; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `P05.S17` - Add strict roundtrip coverage for every new persisted field, with an anti-tautology proof that a deleted field is refused on load; `src/cadrumo/application/calculations/tests`.
-- [ ] `P05.S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition; `src/cadrumo/application/aggregation/tests`.
+- [x] `P05.S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition; `src/cadrumo/application/aggregation/tests`.
 - [x] `P05.S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded; `src/cadrumo/application/aggregation/tests`.
 - [x] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
-- [ ] `P05.S25` - Gate every advisory message builder as constructible at zero, one and many items against its own model's declared cap, read from the field rather than restated; `src/cadrumo/tests`.
+- [x] `P05.S25` - Gate every advisory message builder as constructible at zero, one and many items against its own model's declared cap, read from the field rather than restated; `src/cadrumo/tests`.
+- [ ] `P05.S26` - Name the dropped retencion credit in the ungrounded advisory, not only the income mis-measurement, since the lost credit is the larger half of the harm; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
