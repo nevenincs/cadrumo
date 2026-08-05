@@ -605,6 +605,31 @@ def unsupported_ledger_iva_observations(
 ) -> tuple[IvaLedgerObservation, ...]:
     """Return IVA observations no binding on ``revision`` can consume.
 
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family
+    carries the campaign's two documented, deliberate asymmetries against
+    its six siblings — both load-bearing, neither a gap to "fix":
+
+    1. **``extra_exclusion`` (no sibling has one).** Categories that bear no
+       Modelo 303 cuota *by law*
+       (:data:`~cadrumo.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
+       zero-rated, not-subject, exempt intra-community supplies/exports,
+       triangulation, régimen simplificado) are excluded before the binding
+       check: they correctly match no cuota binding, so flagging them would
+       be a false positive. After the M303 routing tail (domestic /
+       intra-community reverse-charge bindings, the import deducible
+       binding) landed, every cuota-bearing declarable category has a
+       consuming binding, so the residual unsupported set is empty for the
+       known declarable categories; the function still fail-closes on any
+       *new* declarable triple that no binding selects.
+    2. **``is_declarable`` is ``lambda observation: True`` — this family has
+       NO zero-amount false-fire guard, unlike every other ledger family.**
+       This is intentional, not an oversight: adding one would SUPPRESS
+       real findings the current code fires on
+       (``no-silent-under-declaration``). Do not add a zero-amount /
+       zero-cuota guard here to "match" the other six families.
+
     Args:
         revision: The :class:`ModeloRevision` whose bindings define the
             supported IVA classification triples.
@@ -612,46 +637,16 @@ def unsupported_ledger_iva_observations(
 
     Returns:
         Tuple of :class:`IvaLedgerObservation` instances not matched by any binding.
-
-    This is the fail-closed counterpart to
-    :func:`resolve_ledger_iva_aggregation_binding_values`. Empty match
-    sets on supported bindings still resolve to zero, but a concrete
-    observation whose category/rate/flow triple is not selected by any
-    ``ledger_iva_aggregation`` binding is a modelling gap and must not
-    be silently inferred into an annual or periodic form.
-
-    Categories that bear no Modelo 303 cuota *by law*
-    (:data:`~cadrumo.domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` — exempt,
-    zero-rated, not-subject, exempt intra-community supplies/exports,
-    triangulation, and régimen simplificado) are excluded: they
-    correctly match no cuota binding, so flagging them would be a false
-    positive. After the M303 routing tail (domestic / intra-community
-    reverse-charge bindings, the import deducible binding) landed, every
-    cuota-bearing declarable category has a consuming binding, so the
-    residual unsupported set is empty for the known declarable categories;
-    the function still fail-closes on any *new* declarable triple that no
-    binding selects.
     """
-    selectors = tuple(
-        _iva_ledger_selector(binding)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        parse_selector=_iva_ledger_selector,
+        build_matcher=_iva_build_matcher,
+        is_declarable=lambda observation: True,
+        extra_exclusion=lambda observation: observation.category in CUOTA_LESS_M303_IVA_CATEGORIES,
     )
-    unsupported: list[IvaLedgerObservation] = []
-    for observation in observations:
-        if observation.category in CUOTA_LESS_M303_IVA_CATEGORIES:
-            continue
-        if not any(
-            _iva_ledger_observation_matches_selector(
-                observation,
-                selector,
-                categories=set(selector.categories),
-                rate_kinds=set(selector.rate_kinds),
-            )
-            for selector in selectors
-        ):
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 # Ledger Renta estimación directa gastos aggregation source bindings.
