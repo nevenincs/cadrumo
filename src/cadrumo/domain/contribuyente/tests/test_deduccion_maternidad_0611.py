@@ -34,7 +34,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import DescendantRelacion
+from ....core import ART_58_2_ENTITLING_RELACIONES, ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
 from .._descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
@@ -589,6 +589,70 @@ class TestMaternidadContributingMeses:
         child = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo_2024=4)
 
         assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 4
+
+
+class TestArt811PopulationGate:
+    """Art. 81.1 draws its own line, and it is not the Art. 58.1 assimilated set.
+
+    The authority states the exclusion in terms, and byte-identically in every
+    manual vintage the registry serves: the deducción "no resulta aplicable … ni
+    cuando se trate de acogimientos familiares simples, de urgencia o
+    temporales". Art. 58.1 assimilates exactly that carer, so gating the
+    deducción on entitlement to the mínimo granted twelve months the statute
+    refuses.
+    """
+
+    @staticmethod
+    def _under_three(relacion: DescendantRelacion) -> DescendantInfo:
+        """A cohabiting child under three all year, differing only in relación."""
+        return DescendantInfo(
+            birth_date=date(2023, 5, 1),
+            relacion=relacion,
+            meses_madre_trabajo_2024=12,
+        )
+
+    def test_a_temporal_acogimiento_carer_contributes_nothing(self) -> None:
+        """The over-grant this gate removes: twelve months where none are due."""
+        carer = self._under_three(DescendantRelacion.ACOGIMIENTO_TEMPORAL)
+
+        assert carer.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is True
+        assert carer.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+
+    def test_the_gate_is_not_implied_by_the_minimo_test(self) -> None:
+        """Both conditions are load-bearing, which is why they are separate calls.
+
+        The temporal carer above passes the Art. 58.1 test and fails this one.
+        Were the two ever merged, that carer would collect again.
+        """
+        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in ART_81_1_MATERNIDAD_RELACIONES
+        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in ART_58_2_ENTITLING_RELACIONES
+        assert DescendantRelacion.TUTELA in ART_81_1_MATERNIDAD_RELACIONES
+        assert DescendantRelacion.TUTELA not in ART_58_2_ENTITLING_RELACIONES
+
+    def test_every_admitted_relacion_still_contributes(self) -> None:
+        """The gate must exclude one member, not narrow the population generally.
+
+        Tutela is admitted on a positive statement rather than by absence from
+        the exclusion list: "en el supuesto de tutela, el tutor tendrá derecho al
+        importe de la deducción que corresponda al tiempo que reste hasta que el
+        tutelado alcance los tres años de edad".
+        """
+        for relacion in ART_81_1_MATERNIDAD_RELACIONES:
+            contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
+            assert contributed == 12, relacion
+
+    def test_no_relacion_outside_the_declared_set_contributes(self) -> None:
+        """Anti-tautology over the axis: the excluded set is exactly the complement.
+
+        Enumerating the enum rather than restating a list means a member added
+        later defaults to contributing nothing until it is deliberately admitted,
+        which is the under-granting direction.
+        """
+        for relacion in DescendantRelacion:
+            if relacion in ART_81_1_MATERNIDAD_RELACIONES:
+                continue
+            contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
+            assert contributed == 0, relacion
 
 
 class TestMesesMaternidadPorDescendiente:

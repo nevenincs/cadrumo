@@ -107,7 +107,50 @@ from the first entitling event, not a count restarted by the adoption.
 """
 
 
+ART_81_1_MATERNIDAD_RELACIONES: frozenset[DescendantRelacion] = frozenset(
+    {
+        DescendantRelacion.DESCENDIENTE,
+        DescendantRelacion.ADOPTADO,
+        DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
+        DescendantRelacion.TUTELA,
+    },
+)
+"""The relaciones the Art. 81.1 deducción por maternidad reaches.
+
+A THIRD set on this axis, and deliberately not merged with either of the other
+two. Art. 58.1 assimilates the widest group, Art. 58.2 narrows to the entry-event
+limb, and Art. 81.1 draws its own line again — three statutes, three populations.
+Conflating any two of them is how a carer entitled under one statute silently
+collects under another, which is exactly the defect this set closes: the deducción
+gated only on the Art. 58.1 test, which assimilates temporal acogimiento, so a
+temporal carer took a full twelve months the authority excludes outright.
+
+The authority states the exclusion directly and it is byte-stable across every
+manual vintage the registry serves, 2020 through 2025: the deducción "no resulta
+aplicable en el caso de nietos y demás descendientes por consanguinidad distintos
+de los hijos, ni cuando se trate de acogimientos familiares simples, de urgencia o
+temporales, ni en los casos de menores respecto de los que se tenga la guarda y
+custodia por resolución judicial".
+
+Tutela is INCLUDED, and that is stated positively rather than inferred from the
+exclusion list: "en el supuesto de tutela, el tutor tendrá derecho al importe de
+la deducción que corresponda al tiempo que reste hasta que el tutelado alcance los
+tres años de edad". The same passage names "tutela o acogimiento permanente o de
+delegación de guarda para la convivencia preadoptiva" as the qualifying set, which
+is why the preadoptivo-or-permanente member belongs here while the temporal one
+does not.
+
+Two exclusions the axis cannot yet express, both recorded rather than silently
+approximated. A NIETO has no member, so a cohabiting grandchild under three is
+Art. 58.1-eligible and Art. 81.1-excluded but currently takes the deducción — a
+representability gap in the axis, not a gate that can be tightened here. And
+"guarda y custodia por resolución judicial" is likewise unmodelled; it is a
+distinct figure from the preadoptive delegación de guarda this set admits.
+"""
+
+
 __all__ = [
     "ART_58_2_ENTITLING_RELACIONES",
+    "ART_81_1_MATERNIDAD_RELACIONES",
     "DescendantRelacion",
 ]

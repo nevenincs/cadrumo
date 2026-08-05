@@ -19,7 +19,7 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
+from ...core import ART_58_2_ENTITLING_RELACIONES, ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     CUSTODIA_COMPARTIDA_PRORRATA_FACTOR,
@@ -859,7 +859,18 @@ class DescendantInfo(BaseModel):
         entry event. It is asked here rather than recomposed, because the union
         used to be assembled inline at this call site and that is where the
         over-grant lived.
+
+        The relación gate is SEPARATE from the mínimo test and runs first. Both
+        are necessary and neither implies the other: Art. 58.1 assimilates
+        temporal acogimiento while Art. 81.1 excludes it outright, so gating only
+        on entitlement to the mínimo granted a temporal carer a full twelve
+        months the authority refuses. Reading
+        :data:`~cadrumo.core.ART_81_1_MATERNIDAD_RELACIONES` rather than
+        restating the membership keeps the three populations on this axis
+        distinct, which is the property whose loss produced that defect.
         """
+        if self.relacion not in ART_81_1_MATERNIDAD_RELACIONES:
+            return 0
         if not self.is_eligible_ordinary(
             filing_year,
             thresholds=thresholds,
