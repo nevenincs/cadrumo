@@ -87,6 +87,11 @@ CalculationSourceDiagnosticReason = Literal[
     "unhandled_binding_source",
     "unresolved_derived_binding",
     "unrouted_observation",
+    # A row a binding DOES consume, but without the invoice substrate the
+    # binding's fact assumes: its contribution rests on bank cash (or is
+    # absent). Distinct from "unrouted_observation", which is a row no binding
+    # consumes at all.
+    "ungrounded_income_substrate",
     "oss_no_live_source",
     "missing_transaction_evidence",
     "administrador_retencion_rate_mismatch",

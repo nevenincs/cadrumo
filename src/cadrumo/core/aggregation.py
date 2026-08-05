@@ -485,6 +485,34 @@ class BindingTypedEnumKind(StrEnum):
     LEGAL_ENTITY_FORM = "LegalEntityForm"
 
 
+class LedgerIncomeGrounding(StrEnum):
+    """Whether a ledger income row's contribution rests on declared invoice substrate.
+
+    An actividad-económica income row reaches a modelo income casilla by one of
+    two structurally different routes, and the difference is a LEGAL one, not a
+    presentation detail:
+
+    - ``SUBSTRATE_DECLARED`` — the row carries an explicit ``taxable_base``
+      (the IVA-exclusive base imponible from its invoice). Every income fact
+      reads a real declared figure.
+    - ``CASH_FALLBACK`` — no base is declared, so the only measure available is
+      the raw bank-credited amount. That figure is net of any retención
+      practicada and may be IVA-inclusive, so it is neither the ingresos
+      íntegros the return asks for nor a base: the ``ingresos_integros_sum``
+      fact folds the cash in (mis-measuring in a direction that depends on the
+      invoice), while ``taxable_base_sum`` contributes nothing for the row.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract, so the domain registry protocol and the application aggregation
+    pipeline key on ONE marker rather than each re-deriving the distinction
+    from ``taxable_base_amount is None``. Consumers must branch on the member,
+    never on field-nullness: the marker is the fact.
+    """
+
+    SUBSTRATE_DECLARED = "substrate_declared"
+    CASH_FALLBACK = "cash_fallback"
+
+
 class RetencionScheme(StrEnum):
     """Closed catalogue of retenciones schemes across the retenciones family.
 

@@ -25,12 +25,17 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Modelo
-from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import (
+    LEDGER_BINDING_SOURCE_KINDS,
+    BindingAggregationOp,
+    BindingSourceKind,
+    LedgerIncomeGrounding,
+)
 from ...iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     EUMemberState,
@@ -911,7 +916,9 @@ class _RentaLedgerIncomeSelector(BaseModel):
     - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
       (the IVA-exclusive base imponible).  Observations whose
       ``taxable_base_amount`` is ``None`` declare no base and contribute
-      nothing to this sum.
+      nothing to this sum;
+      :func:`ungrounded_ledger_renta_income_observations` surfaces every such
+      row so the omission is visible rather than silent.
     - ``"withheld_amount_sum"`` sums the IRPF amount withheld at source from
       net-paid professional receipts.
     """
@@ -1015,6 +1022,9 @@ class RentaIncomeObservationProtocol(Protocol):
     @property
     def withheld_amount(self) -> Decimal: ...
 
+    @property
+    def grounding(self) -> LedgerIncomeGrounding: ...
+
 
 def _renta_income_build_matcher(
     selector: _RentaLedgerIncomeSelector,
@@ -1048,11 +1058,7 @@ def _renta_income_aggregate(
         # ``or Decimal("0")`` so a genuinely-zero declared base and an absent
         # one stop sharing a branch.
         return sum(
-            (
-                observation.taxable_base_amount
-                for observation in matched
-                if observation.taxable_base_amount is not None
-            ),
+            (observation.taxable_base_amount for observation in matched if observation.taxable_base_amount is not None),
             Decimal("0"),
         )
     if selector.fact == "withheld_amount_sum":
@@ -1131,6 +1137,89 @@ def unsupported_ledger_renta_income_observations(
         build_matcher=_renta_income_build_matcher,
         is_declarable=_renta_income_is_declarable,
     )
+
+
+# The facts that read a row's DECLARED taxable_base. Both mis-handle a row that
+# declares none, in opposite directions, which is why one screen serves both:
+# ``ingresos_integros_sum`` substitutes the raw bank cash (net of retención,
+# possibly IVA-inclusive — wrong in a direction that depends on the invoice),
+# and ``taxable_base_sum`` contributes nothing at all (always under-declares).
+# ``cash_received_sum`` and ``withheld_amount_sum`` never read the base, so a
+# base-less row is not an ungrounded contribution for them.
+_RENTA_INCOME_BASE_READING_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum", "taxable_base_sum"})
+
+
+class UngroundedRentaIncome(NamedTuple):
+    """Base-less income rows that a base-reading binding still consumes.
+
+    ``facts`` is the set of base-reading facts the revision actually declares,
+    so a caller can describe the consequence precisely rather than guessing:
+    ``ingresos_integros_sum`` means the listed rows contributed bank cash in
+    place of a base, ``taxable_base_sum`` means they contributed nothing.
+    ``observations`` are the contributing rows, in input order.
+
+    Empty ``observations`` means every consumed row declared its substrate;
+    empty ``facts`` means the revision declares no base-reading income binding,
+    in which case ``observations`` is empty too.
+    """
+
+    facts: frozenset[str]
+    observations: tuple[RentaIncomeObservationProtocol, ...]
+
+
+def ungrounded_ledger_renta_income_observations(
+    revision: ModeloRevision,
+    observations: Iterable[RentaIncomeObservationProtocol],
+) -> UngroundedRentaIncome:
+    """Return the base-less rows a base-reading income binding on ``revision`` consumes.
+
+    The companion to :func:`unsupported_ledger_renta_income_observations`, for
+    the opposite failure: that screen catches a row NO binding consumes, this
+    one catches a row a binding DOES consume but without the substrate the
+    binding's fact assumes. Both are ``no-silent-under-declaration`` screens;
+    neither changes a value.
+
+    A row reaches an income casilla through declared substrate or through the
+    cash fallback, and only the row's :class:`LedgerIncomeGrounding` marker
+    distinguishes them — this screen keys on that marker, never on
+    ``taxable_base_amount is None``, so the grounding fact has exactly one
+    definition. Rows are screened against the ``target_casilla_id`` of the
+    base-reading bindings only, so a revision whose income bindings all read
+    cash or withholdings reports nothing.
+
+    The caller surfaces the result as a NON-BLOCKING advisory: the fallback is
+    deliberately kept (dropping an untagged income row would under-declare by
+    the whole row, strictly worse than mis-measuring it), so what this screen
+    buys is visibility, not exclusion.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose renta-income bindings
+            decide which casillas and facts are in play.
+        observations: Actividad-económica income observations to screen.
+
+    Returns:
+        An :class:`UngroundedRentaIncome` pairing the declared base-reading
+        facts with the base-less rows those bindings consume.
+    """
+    matchers: list[Callable[[RentaIncomeObservationProtocol], bool]] = []
+    facts: set[str] = set()
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
+            continue
+        selector = _renta_ledger_income_selector(binding)
+        if selector.fact not in _RENTA_INCOME_BASE_READING_FACTS:
+            continue
+        facts.add(selector.fact)
+        matchers.append(_renta_income_build_matcher(selector))
+    if not matchers:
+        return UngroundedRentaIncome(facts=frozenset(), observations=())
+    ungrounded = tuple(
+        observation
+        for observation in observations
+        if observation.grounding is LedgerIncomeGrounding.CASH_FALLBACK
+        and any(matcher(observation) for matcher in matchers)
+    )
+    return UngroundedRentaIncome(facts=frozenset(facts), observations=ungrounded)
 
 
 # Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at

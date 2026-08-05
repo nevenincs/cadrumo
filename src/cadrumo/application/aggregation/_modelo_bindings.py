@@ -45,12 +45,14 @@ from ...domain.calculations.registry import (
     CasillaId,
     IvaLedgerObservation,
     ModeloRevision,
+    UngroundedRentaIncome,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_irnr_income_aggregation_binding_values,
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
+    ungrounded_ledger_renta_income_observations,
     unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_irnr_income_observations,
     unsupported_ledger_iva_observations,
@@ -414,6 +416,13 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # income whose target_casilla_id matches no ledger_renta_income_aggregation
         # binding would otherwise be silently dropped (no-silent-under-declaration).
         unrouted = unsupported_ledger_renta_income_observations(context.revision, aggregation.observations)
+        # Second, distinct screen: rows a binding DOES consume but whose
+        # contribution rests on bank cash because no invoice substrate was
+        # recorded. The fallback is deliberately kept (dropping an untagged
+        # income row under-declares by its whole value), so this is the only
+        # thing standing between the operator and a silently mis-measured
+        # income casilla.
+        ungrounded = ungrounded_ledger_renta_income_observations(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -449,7 +458,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     ),
                 )
                 for observation in unrouted
-            ),
+            )
+            + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="ledger_renta_income_aggregation",
@@ -458,6 +468,76 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 for observation in aggregation.observations
             ),
         )
+
+
+# How many contributing transaction ids the advisory names before it stops and
+# reports a remainder. The diagnostic message is length-bounded, and an operator
+# needs a handle on the rows rather than the whole list; the count and sum are
+# always exact, and the truncation is always stated (never a silent cap).
+_UNGROUNDED_INCOME_ID_SAMPLE = 5
+
+
+def _ungrounded_income_consequence(facts: frozenset[str]) -> str:
+    """Describe what a missing base does to the income casilla, per declared fact.
+
+    The two base-reading facts fail in opposite directions, so naming the
+    consequence precisely is what makes the advisory actionable: an operator
+    who reads "contributed nothing" knows the return is under-declared, while
+    "bank cash stood in for the base" warns the figure may be wrong either way.
+    """
+    folds_cash = "ingresos_integros_sum" in facts
+    contributes_zero = "taxable_base_sum" in facts
+    if folds_cash and contributes_zero:
+        return (
+            "bank cash stood in for the base imponible on the ingresos_integros_sum binding, "
+            "and the same rows contributed nothing to the taxable_base_sum binding"
+        )
+    if contributes_zero:
+        return "these rows contributed nothing to the taxable_base_sum binding, under-declaring by their full base"
+    return (
+        "bank cash stood in for the base imponible; that cash is net of any retención practicada "
+        "and may be IVA-inclusive, so it is not the ingresos íntegros this casilla declares"
+    )
+
+
+def _ungrounded_income_diagnostics(
+    ungrounded: UngroundedRentaIncome,
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project base-less income contributions into ONE advisory per aggregation.
+
+    Deliberately aggregate rather than per-row: an advisory that fires once per
+    transaction trains operators to ignore it, and the actionable unit here is
+    "how much of my declared income has no invoice behind it", not each row.
+    The count and the summed cash are exact; the transaction-id list is capped
+    at :data:`_UNGROUNDED_INCOME_ID_SAMPLE` with the remainder stated, so the
+    truncation is visible rather than silent.
+
+    Returns an empty tuple when every consumed row declared its substrate.
+    """
+    observations = ungrounded.observations
+    if not observations:
+        return ()
+    total = sum((observation.gross_amount for observation in observations), Decimal("0"))
+    sampled = sorted(observation.transaction_id for observation in observations)
+    shown = sampled[:_UNGROUNDED_INCOME_ID_SAMPLE]
+    remainder = len(sampled) - len(shown)
+    id_list = ", ".join(shown) + (f" (and {remainder} more)" if remainder else "")
+    return (
+        CalculationSourceDiagnostic(
+            reason="ungrounded_income_substrate",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(observations)} actividad-económica income row(s) totalling {total} EUR of "
+                f"bank-credited cash declare no taxable_base (IVA-exclusive base imponible), so "
+                f"{_ungrounded_income_consequence(ungrounded.facts)}. Record the invoice base with "
+                f"'aeat app ledger classify <transaction-id> --taxable-base <amount>' to ground the "
+                f"figure. Transactions: {id_list}"
+            ),
+        ),
+    )
 
 
 def _m130_retenciones_backend_inputs(

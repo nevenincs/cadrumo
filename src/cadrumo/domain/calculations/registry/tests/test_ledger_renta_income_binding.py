@@ -25,13 +25,19 @@ import pytest
 from pydantic import ValidationError
 
 from .....application.aggregation import RentaIncomeObservation
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.aggregation import (
+    BindingAggregation,
+    BindingAggregationOp,
+    BindingSourceKind,
+    LedgerIncomeGrounding,
+)
 from .....core.resources import bundled_path
 from .. import (
     CasillaId,
     DataBindingDefinition,
     build_snapshot,
     resolve_ledger_renta_income_aggregation_binding_values,
+    ungrounded_ledger_renta_income_observations,
     unsupported_ledger_renta_income_observations,
     validate_ledger_renta_income_aggregation_binding_definition,
     validated_casilla_id,
@@ -91,6 +97,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
+        grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
     untagged = RentaIncomeObservation(
         transaction_id="receipt-untagged",
@@ -98,6 +105,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
+        grounding=LedgerIncomeGrounding.CASH_FALLBACK,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (tagged, untagged))
@@ -133,6 +141,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         taxable_base_amount=Decimal("2000.00"),
         withheld_amount=Decimal("300.00"),
         filing_date=date(2026, 3, 15),
+        grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
     no_withholding = RentaIncomeObservation(
         transaction_id="inv-no-withholding",
@@ -141,6 +150,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         taxable_base_amount=Decimal("1000.00"),
         withheld_amount=Decimal("0.00"),
         filing_date=date(2026, 3, 20),
+        grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (net_paid, no_withholding))
@@ -170,6 +180,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
+        grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
     untagged = RentaIncomeObservation(
         transaction_id="receipt-untagged-base",
@@ -177,6 +188,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
+        grounding=LedgerIncomeGrounding.CASH_FALLBACK,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (tagged, untagged))
@@ -221,6 +233,7 @@ def test_cash_received_sum_fact_sums_gross_amount_unconditionally() -> None:
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
         filing_date=date(2026, 2, 10),
+        grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision_with_gross_binding, (tagged,))
@@ -280,6 +293,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
         gross_amount=Decimal("1000.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 2, 10),
+        grounding=LedgerIncomeGrounding.CASH_FALLBACK,
     )
     unrouted = RentaIncomeObservation(
         transaction_id="inv-unrouted",
@@ -287,6 +301,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
+        grounding=LedgerIncomeGrounding.CASH_FALLBACK,
     )
 
     result = unsupported_ledger_renta_income_observations(revision, (routed, unrouted))
@@ -307,7 +322,133 @@ def test_unsupported_renta_income_does_not_flag_zero_income() -> None:
         gross_amount=Decimal("0.00"),
         taxable_base_amount=None,
         filing_date=date(2026, 3, 5),
+        grounding=LedgerIncomeGrounding.CASH_FALLBACK,
     )
 
     result = unsupported_ledger_renta_income_observations(revision, (zero_unrouted,))
     assert result == ()
+
+
+def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None:
+    """A consumed row with no declared base is surfaced as ungrounded.
+
+    The complement of the unrouted screen above: this row IS consumed (it
+    targets casilla 01, which every committed M130 income binding selects),
+    so nothing vanishes — but its contribution rests on bank-credited cash
+    rather than an invoice base imponible. The M130 revision declares BOTH
+    base-reading facts, so the screen must report both: the row folded cash
+    into ``ingresos_integros_sum`` AND contributed nothing to
+    ``taxable_base_sum``.
+    """
+    revision = _modelo_130_snapshot().revision
+
+    grounded = RentaIncomeObservation(
+        transaction_id="inv-with-base",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        gross_amount=Decimal("1210.00"),
+        taxable_base_amount=Decimal("1000.00"),
+        filing_date=date(2026, 2, 10),
+        grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+    )
+    ungrounded = RentaIncomeObservation(
+        transaction_id="receipt-no-base",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        gross_amount=Decimal("500.00"),
+        taxable_base_amount=None,
+        filing_date=date(2026, 3, 5),
+        grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+    )
+
+    result = ungrounded_ledger_renta_income_observations(revision, (grounded, ungrounded))
+
+    assert result.observations == (ungrounded,), "only the substrate-less row is ungrounded"
+    assert result.facts == frozenset({"ingresos_integros_sum", "taxable_base_sum"})
+
+
+def test_ungrounded_screen_reports_nothing_when_every_row_declares_its_base() -> None:
+    """Full substrate declaration must not fire the advisory.
+
+    The advisory only earns operator trust if every fire is a real ungrounded
+    contribution; a revision whose consumed rows all carry a base has nothing
+    to report.
+    """
+    revision = _modelo_130_snapshot().revision
+
+    grounded = RentaIncomeObservation(
+        transaction_id="inv-with-base",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        gross_amount=Decimal("1210.00"),
+        taxable_base_amount=Decimal("1000.00"),
+        filing_date=date(2026, 2, 10),
+        grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+    )
+
+    result = ungrounded_ledger_renta_income_observations(revision, (grounded,))
+
+    assert result.observations == ()
+
+
+def test_ungrounded_screen_ignores_rows_no_base_reading_binding_consumes() -> None:
+    """A base-less row routed to an unbound casilla is the unrouted screen's business.
+
+    The two screens must not double-report the same row: casilla 03 is
+    selected by no committed M130 income binding, so this row is already
+    surfaced by ``unsupported_ledger_renta_income_observations`` and must not
+    also appear as an ungrounded contribution to a binding that never
+    consumed it.
+    """
+    revision = _modelo_130_snapshot().revision
+
+    unrouted = RentaIncomeObservation(
+        transaction_id="inv-unrouted-no-base",
+        target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
+        gross_amount=Decimal("500.00"),
+        taxable_base_amount=None,
+        filing_date=date(2026, 3, 5),
+        grounding=LedgerIncomeGrounding.CASH_FALLBACK,
+    )
+
+    assert ungrounded_ledger_renta_income_observations(revision, (unrouted,)).observations == ()
+    assert unsupported_ledger_renta_income_observations(revision, (unrouted,)) == (unrouted,)
+
+
+def test_selector_refuses_an_omitted_fact_and_names_the_accepted_set() -> None:
+    """A binding that omits ``fact`` is refused, listing every accepted fact.
+
+    The requiredness exists so no binding can silently inherit a legal
+    measure; the refusal is only useful if it tells the author what to
+    choose, so the message must enumerate the accepted set rather than
+    saying "Field required".
+    """
+    with pytest.raises(ValidationError) as exc_info:
+        DataBindingDefinition(
+            id="m130-income-no-fact",
+            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+            selector={"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA},
+            aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-modelo-130-instructions",),
+        )
+
+    detail = str(exc_info.value)
+    assert "requires an explicit 'fact'" in detail
+    for fact in ("ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"):
+        assert fact in detail, f"the refusal must name the accepted fact {fact!r}"
+
+
+def test_observation_refuses_a_grounding_marker_that_contradicts_its_base() -> None:
+    """The marker and the base it describes cannot drift apart.
+
+    Every consumer reads the marker rather than re-deriving nullness, so a
+    row claiming declared substrate while carrying no base would send the
+    advisory and the aggregation to opposite conclusions about the same row.
+    """
+    with pytest.raises(ValidationError, match="contradicts taxable_base_amount"):
+        RentaIncomeObservation(
+            transaction_id="inv-lying-marker",
+            target_casilla_id=_M130_INGRESOS_CASILLA,
+            gross_amount=Decimal("500.00"),
+            taxable_base_amount=None,
+            filing_date=date(2026, 3, 5),
+            grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
+        )

@@ -37,12 +37,14 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from typing import Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
+from ...core.aggregation import LedgerIncomeGrounding
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
@@ -67,7 +69,18 @@ _TARGET_CASILLA_INGRESOS: CasillaId = validated_casilla_id("01", surface="_TARGE
 
 
 class RentaIncomeLedgerAggregationIssueReason(StrEnum):
-    """Machine-readable reasons why a ledger row did not produce an income observation."""
+    """Machine-readable reasons why a ledger row did not produce an income observation.
+
+    Every member here EXCLUDES a row. The income pipeline's third outcome —
+    a row that is declarable but ungrounded — is deliberately NOT modelled as
+    an issue: such a row still contributes, so recording it as an exclusion
+    would misstate the aggregation. ``MISSING_TAXABLE_BASE`` is the shared
+    vocabulary for the ungrounded condition (spelled identically by the IVA
+    and gasto ledgers, where it genuinely does exclude), and the income
+    pipeline reports it through the
+    :class:`~cadrumo.core.aggregation.LedgerIncomeGrounding` marker on the
+    observation instead.
+    """
 
     UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
     UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
@@ -105,6 +118,18 @@ class RentaIncomeObservation(BaseModel):
     (casilla 03).  ``None`` when the transaction carries no explicit
     ``taxable_base``.
 
+    ``grounding`` states which of those two states the row is in, as a fact
+    rather than a nullness heuristic every consumer re-derives. A
+    ``CASH_FALLBACK`` row declares no invoice substrate, so the only measure
+    available is the raw bank-credited amount — net of any retención
+    practicada and possibly IVA-inclusive. It is therefore NOT ingresos
+    íntegros: the ``ingresos_integros_sum`` fact folds that cash in anyway
+    (deliberately — dropping the row would under-declare by its whole value,
+    strictly worse) while ``taxable_base_sum`` contributes nothing for it.
+    Both are surfaced as a non-blocking advisory rather than being silently
+    absorbed; the marker is what the advisory, the evidence bundle, and the
+    tests key on.
+
     ``source_jurisdiction`` propagates the per-transaction ISO 3166-1
     alpha-2 source-jurisdiction provenance from the originating ledger
     row.  LIRPF Art. 8 establishes the universal-base presumption for
@@ -122,6 +147,26 @@ class RentaIncomeObservation(BaseModel):
     withheld_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
     filing_date: date
     source_jurisdiction: str | None = None
+    grounding: LedgerIncomeGrounding
+
+    @model_validator(mode="after")
+    def _grounding_matches_declared_base(self) -> Self:
+        """Keep the marker and the base it describes from drifting apart.
+
+        The marker is the authority every consumer reads, so a row claiming
+        ``SUBSTRATE_DECLARED`` with no base (or ``CASH_FALLBACK`` while
+        carrying one) would send the advisory and the aggregation to different
+        conclusions about the same row. Refusing the pair here means no
+        consumer has to re-check it.
+        """
+        declared = self.taxable_base_amount is not None
+        expected = LedgerIncomeGrounding.SUBSTRATE_DECLARED if declared else LedgerIncomeGrounding.CASH_FALLBACK
+        if self.grounding is not expected:
+            raise ValueError(
+                f"grounding {self.grounding.value!r} contradicts taxable_base_amount="
+                f"{self.taxable_base_amount!r}; expected {expected.value!r}",
+            )
+        return self
 
 
 class RentaIncomeLedgerAggregation(
@@ -418,6 +463,11 @@ def _classify_income_transaction(
         withheld_amount=_income_withheld_amount(transaction),
         filing_date=filing_date,
         source_jurisdiction=transaction.source_jurisdiction,
+        grounding=(
+            LedgerIncomeGrounding.SUBSTRATE_DECLARED
+            if taxable_base_amount is not None
+            else LedgerIncomeGrounding.CASH_FALLBACK
+        ),
     )
 
 
