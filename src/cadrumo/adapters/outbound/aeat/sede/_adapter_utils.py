@@ -21,10 +21,9 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine, Mapping
 from re import compile
 from typing import TYPE_CHECKING, Any, Literal, Protocol
-from unicodedata import category, normalize
 from urllib.parse import urlsplit
 
-from .....core import STRICT_FROZEN_CONFIG
+from .....core import STRICT_FROZEN_CONFIG, fold_diacritics
 from .....core import is_aeat_csv as _core_is_aeat_csv
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
@@ -394,8 +393,7 @@ def normalize_response_text(text: str) -> str:
     """Casefold + strip diacritics + collapse whitespace for marker matching."""
     if not text:
         return ""
-    decomposed = normalize("NFKD", text)
-    without_accents = "".join(ch for ch in decomposed if category(ch) != "Mn")
+    without_accents = fold_diacritics(text)
     return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
 
 

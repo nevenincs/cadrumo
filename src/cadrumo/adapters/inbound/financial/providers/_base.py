@@ -44,7 +44,6 @@ from __future__ import annotations
 
 import csv
 import re
-import unicodedata
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
@@ -55,6 +54,7 @@ from typing import ClassVar, Literal
 from pydantic import BaseModel
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import fold_diacritics
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
 from .....core.errors import CadrumoError, CoreValidationError
@@ -389,8 +389,7 @@ def describe_dialect(dialect: type[csv.Dialect]) -> str:
 
 def normalize_header(value: str) -> str:
     """Normalize a column header for alias matching."""
-    normalized = unicodedata.normalize("NFKD", value.replace("\ufeff", "").strip().lower())
-    without_diacritics = "".join(char for char in normalized if not unicodedata.combining(char))
+    without_diacritics = fold_diacritics(value.replace("\ufeff", "").strip().casefold())
     return " ".join(without_diacritics.split())
 
 

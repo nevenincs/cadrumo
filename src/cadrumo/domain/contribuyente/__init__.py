@@ -14,10 +14,10 @@ from __future__ import annotations
 
 from datetime import date
 from typing import TYPE_CHECKING, cast
-from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core import fold_diacritics
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
@@ -188,9 +188,8 @@ def parse_tax_region(raw: str) -> CCAA:
 
 
 def _normalize_region_token(raw: str) -> str:
-    stripped = raw.strip().lower().replace(" ", "_").replace("-", "_")
-    decomposed = normalize("NFD", stripped)
-    return "".join(char for char in decomposed if category(char) != "Mn")
+    stripped = raw.strip().casefold().replace(" ", "_").replace("-", "_")
+    return fold_diacritics(stripped)
 
 
 __all__ = [

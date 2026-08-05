@@ -39,7 +39,6 @@ exercise the real refusal rule instead of mirroring it.
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Iterator, Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Final, Literal
@@ -49,6 +48,7 @@ from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import fold_diacritics
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.i18n import tr
@@ -143,7 +143,6 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 # auth-gate / maintenance landing rather than an empty censal record.
 _CENSAL_PAGE_MARKER: Final = "datos identificativos y censales"
 
-_COMBINING_MARK_RE: Final[re.Pattern[str]] = re.compile(r"[̀-ͯ]")
 _PARENTHETICAL_RE: Final[re.Pattern[str]] = re.compile(r"\([^)]*\)")
 
 _IDENTITY_SECTION: Final = "datos identificativos del contribuyente"
@@ -375,8 +374,7 @@ def parse_censal_datos(html: str, *, source_url: str) -> CensalDatosResult:
 
 def _deaccent(text: str) -> str:
     """Lowercase and strip diacritics so matching is accent-insensitive."""
-    normalised = unicodedata.normalize("NFKD", text)
-    return _COMBINING_MARK_RE.sub("", normalised).casefold()
+    return fold_diacritics(text).casefold()
 
 
 def _fold(text: str) -> str:

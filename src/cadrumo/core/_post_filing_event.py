@@ -27,18 +27,14 @@ any live write.
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from enum import StrEnum
 
-_COMBINING_MARK_RE = re.compile(r"[̀-ͯ]")
+from .text_fold import fold_diacritics
 
 
 def _fold(text: str) -> str:
     """Lowercase and strip diacritics so substring matching is accent-insensitive."""
-    normalised = unicodedata.normalize("NFKD", text)
-    without_marks = _COMBINING_MARK_RE.sub("", normalised)
-    return without_marks.casefold().strip()
+    return fold_diacritics(text).casefold().strip()
 
 
 class PostFilingEventKind(StrEnum):

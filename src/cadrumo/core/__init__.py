@@ -243,6 +243,7 @@ from .secure_object_write import (
     DEFAULT_WRITE_PROVENANCE,
     SecureObjectWrite,
 )
+from .text_fold import fold_diacritics
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -399,6 +400,7 @@ __all__: list[str] = [
     "derive_result_disposition",
     "exclusive_file_lock",
     "expected_floor",
+    "fold_diacritics",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",

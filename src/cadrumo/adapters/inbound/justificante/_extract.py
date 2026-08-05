@@ -24,14 +24,13 @@ do not need to parse message strings.
 from __future__ import annotations
 
 import re
-import unicodedata
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from ....core import Period, PeriodError, is_aeat_csv
+from ....core import Period, PeriodError, fold_diacritics, is_aeat_csv
 from ....core.decimal import european_thousands_reading_is_ambiguous
 from ....core.logging import get_logger
 from ....core.time import now
@@ -227,7 +226,7 @@ def _strip_accents(value: str) -> str:
     character classes, but falling back via ``_strip_accents`` lets us
     recover ``Código`` fields printed with odd combining sequences.
     """
-    return "".join(c for c in unicodedata.normalize("NFKD", value) if not unicodedata.combining(c))
+    return fold_diacritics(value)
 
 
 def _parse_decimal(raw: str, field: str | None = None) -> Decimal:

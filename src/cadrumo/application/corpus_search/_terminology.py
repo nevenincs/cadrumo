@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import re
 import tomllib
-import unicodedata
 from collections.abc import Iterable
 from functools import lru_cache
 from pathlib import Path
@@ -37,7 +36,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ConceptLifecycle
+from ...core import ConceptLifecycle, fold_diacritics
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.resources import bundled_path
 from ._errors import CorpusSearchInputError
@@ -96,9 +95,8 @@ class TerminologyHit(BaseModel):
 
 
 def _fold(text: str) -> str:
-    nfkd = unicodedata.normalize("NFKD", text)
-    stripped = "".join(char for char in nfkd if not unicodedata.combining(char))
-    return _WHITESPACE_RE.sub(" ", stripped).strip().lower()
+    stripped = fold_diacritics(text)
+    return _WHITESPACE_RE.sub(" ", stripped).strip().casefold()
 
 
 def _terminology_root() -> Path:

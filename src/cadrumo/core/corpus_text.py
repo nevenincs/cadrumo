@@ -5,17 +5,16 @@ from __future__ import annotations
 import html
 import json
 import re
-import unicodedata
 from pathlib import Path
 from typing import Final
 
 from .errors import CoreError
 from .external_constants import UTF_8_ENCODING
+from .text_fold import fold_diacritics
 
 __all__ = ["CorpusAnchorResolutionError", "normalise_corpus_text", "resolve_anchored_extracted_unit"]
 
 _HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
-_COMBINING_MARK_RE = re.compile(r"[\u0300-\u036f]+")
 _WHITESPACE_RE = re.compile(r"\s+")
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 _ARTICLE_ANCHOR_RE = re.compile(r"^(?:a|art|articulo)(\d+)$")
@@ -88,8 +87,8 @@ def normalise_corpus_text(text: str) -> str:
     """
     decoded = html.unescape(text).replace("\xa0", " ")
     without_tags = _HTML_TAG_RE.sub(" ", decoded)
-    without_marks = _COMBINING_MARK_RE.sub("", unicodedata.normalize("NFKD", without_tags))
-    return _WHITESPACE_RE.sub(" ", without_marks).strip().lower()
+    without_marks = fold_diacritics(without_tags)
+    return _WHITESPACE_RE.sub(" ", without_marks).strip().casefold()
 
 
 def resolve_anchored_extracted_unit(
