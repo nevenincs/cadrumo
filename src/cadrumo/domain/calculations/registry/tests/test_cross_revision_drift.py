@@ -131,6 +131,36 @@ def _annual_modelo(
     )
 
 
+def _three_year_modelo(
+    first: list[CasillaDefinition],
+    second: list[CasillaDefinition],
+    third: list[CasillaDefinition],
+    *,
+    evolutions: dict[str, tuple[dict[str, object], ...]] | None = None,
+    continuidad_validation: dict[str, str] | None = None,
+    shared_window: bool = False,
+) -> ModeloDefinition:
+    """Build a 2023/2024/2025 modelo, the narrowest shape a chain gap needs.
+
+    ``shared_window`` gives every revision the same period selector, modelling
+    variant schemas of one period (the M369 shape) rather than a temporal
+    sequence.
+    """
+    selector = PeriodSelector(years=(2023, 2024, 2025), periods=("0A",))
+    selectors = (
+        {"2023": selector, "2024": selector, "2025": selector}
+        if shared_window
+        else {year: PeriodSelector(years=(int(year),), periods=("0A",)) for year in ("2023", "2024", "2025")}
+    )
+    return _modelo(
+        "100",
+        {"2023": first, "2024": second, "2025": third},
+        selectors=selectors,
+        evolutions=evolutions,
+        continuidad_validation=continuidad_validation,
+    )
+
+
 def _continuity_evolution(
     *,
     evolution_kind: str = "label_evolved",
@@ -550,6 +580,113 @@ class TestCrossRevisionConsistency:
         assert len(failures) == 1
         assert "strict continuity evolution mismatch" in failures[0]
         assert "target revision still declares" in failures[0]
+
+    def test_strict_continuity_validation_rejects_chain_that_resumes_after_a_gap(self) -> None:
+        present = _casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")
+        absent = _casilla(cid="0900", label="Unrelated")
+        m = _three_year_modelo(
+            [present],
+            [absent],
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            evolutions={
+                "2024": (
+                    {
+                        "id": "la-rioja-otras-retired-2024",
+                        "continuidad_id": "la-rioja-otras",
+                        "from_revision": "2023",
+                        "to_revision": "2024",
+                        "evolution_kind": "retired",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                ),
+            },
+            continuidad_validation={"2023": "strict", "2024": "strict", "2025": "strict"},
+        )
+
+        failures = validate_registry_scope([m])
+
+        assert len(failures) == 1
+        assert "strict continuity chain is not contiguous" in failures[0]
+        assert "la-rioja-otras" in failures[0]
+        assert "2024" in failures[0]
+        assert "new grounded continuidad_id" in failures[0]
+
+    def test_strict_continuity_validation_rejects_gapped_chain_without_any_retirement_record(self) -> None:
+        """A gap declared only by absence is caught even where no retirement fires.
+
+        The disappearance boundary here is advisory-to-advisory, so the
+        retirement gate stays silent; contiguity is what makes the resumption
+        visible.
+        """
+        chained = _casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")
+        m = _three_year_modelo(
+            [chained],
+            [_casilla(cid="0900", label="Unrelated")],
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            continuidad_validation={"2025": "strict"},
+        )
+
+        failures = validate_registry_scope([m])
+
+        assert [failure for failure in failures if "strict continuity retirement missing" in failure] == []
+        assert len(failures) == 1
+        assert "strict continuity chain is not contiguous" in failures[0]
+
+    def test_strict_continuity_validation_accepts_a_contiguous_chain(self) -> None:
+        m = _three_year_modelo(
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            continuidad_validation={"2023": "strict", "2024": "strict", "2025": "strict"},
+        )
+
+        assert validate_registry_scope([m]) == ()
+
+    def test_strict_continuity_validation_accepts_two_chains_across_the_gap(self) -> None:
+        """The declared resolution: the resumed concept takes a new chain id."""
+        m = _three_year_modelo(
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras-2023")],
+            [_casilla(cid="0900", label="Unrelated")],
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras-2025")],
+            evolutions={
+                "2024": (
+                    {
+                        "id": "la-rioja-otras-2023-retired-2024",
+                        "continuidad_id": "la-rioja-otras-2023",
+                        "from_revision": "2023",
+                        "to_revision": "2024",
+                        "evolution_kind": "retired",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                ),
+            },
+            continuidad_validation={"2023": "strict", "2024": "strict", "2025": "strict"},
+        )
+
+        assert validate_registry_scope([m]) == ()
+
+    def test_strict_continuity_contiguity_ignores_variant_revisions_sharing_a_window(self) -> None:
+        """Variant schemas of one period are alternatives, not a temporal gap."""
+        m = _three_year_modelo(
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            [_casilla(cid="0900", label="Unrelated")],
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            continuidad_validation={"2023": "strict", "2024": "strict", "2025": "strict"},
+            shared_window=True,
+        )
+
+        assert [failure for failure in validate_registry_scope([m]) if "not contiguous" in failure] == []
+
+    def test_strict_continuity_contiguity_stays_silent_on_a_fully_advisory_span(self) -> None:
+        m = _three_year_modelo(
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+            [_casilla(cid="0900", label="Unrelated")],
+            [_casilla(cid="1082", label="Otras deducciones", continuidad_id="la-rioja-otras")],
+        )
+
+        assert validate_registry_scope([m]) == ()
 
     def test_directory_loaded_advisory_continuity_inventory_reports_evolution(self, tmp_path: Path) -> None:
         modelo = load_modelo_directory(
