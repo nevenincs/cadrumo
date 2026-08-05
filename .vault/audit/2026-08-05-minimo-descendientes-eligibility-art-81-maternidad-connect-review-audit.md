@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:20f41ef585e3a6e45fdff2a2b38809fda48f8d7c9971a96ee02d49092c6dd5e0'
+body_hash: 'sha256:3dcab5bd91a1116cd834e4e873efb52551431721a2b3a3f9841ddb271c8dd352'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
 ---
