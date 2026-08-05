@@ -1028,23 +1028,27 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     )
 
 
+def _renta_income_is_declarable(observation: RentaIncomeObservationProtocol) -> bool:
+    declarable = observation.gross_amount
+    if observation.taxable_base_amount is not None:
+        declarable = max(declarable, observation.taxable_base_amount)
+    return declarable != Decimal("0")
+
+
 def unsupported_ledger_renta_income_observations(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],
 ) -> tuple[RentaIncomeObservationProtocol, ...]:
     """Return the :class:`RentaIncomeObservationProtocol` rows no binding on ``revision`` can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_renta_income_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_iva_observations`. An observation whose
-    ``target_casilla_id`` matches no ``ledger_renta_income_aggregation`` binding has
-    its income silently dropped from the filing — a modelling gap, not a
-    legitimate zero.
-
-    False-fire guard: an observation whose declarable income is zero (both
-    ``gross_amount`` and any declared ``taxable_base_amount`` are zero) contributes
-    nothing whether or not it is routed and is excluded; only a non-zero income
-    reaching no casilla is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the ``target_casilla_id`` match predicate
+    (reused from the resolver's ``_renta_income_build_matcher``) and a
+    false-fire guard that excludes an observation whose declarable amount —
+    ``max(gross_amount, taxable_base_amount)`` when a base is declared,
+    ``gross_amount`` otherwise — is zero. No ``extra_exclusion``.
 
     Args:
         revision: The :class:`ModeloRevision` whose renta-income bindings define
@@ -1055,21 +1059,14 @@ def unsupported_ledger_renta_income_observations(
         Tuple of observations whose non-zero income is selected by no
         ``ledger_renta_income_aggregation`` binding.
     """
-    supported_casillas = frozenset(
-        _renta_ledger_income_selector(binding).target_casilla_id
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        parse_selector=_renta_ledger_income_selector,
+        build_matcher=_renta_income_build_matcher,
+        is_declarable=_renta_income_is_declarable,
     )
-    unsupported: list[RentaIncomeObservationProtocol] = []
-    for observation in observations:
-        declarable = observation.gross_amount
-        if observation.taxable_base_amount is not None:
-            declarable = max(declarable, observation.taxable_base_amount)
-        if declarable == Decimal("0"):
-            continue
-        if observation.target_casilla_id not in supported_casillas:
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 # Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at
