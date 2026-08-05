@@ -70,6 +70,7 @@ import sys
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Final
 
 _API_HOST: Final = "api.github.com"
@@ -191,10 +192,24 @@ def classify(
 
 
 def _epoch_of(stamp: object) -> float:
-    """Parse a GitHub ISO-8601 ``Z`` timestamp to epoch seconds."""
+    """Parse a GitHub ISO-8601 ``Z`` timestamp to epoch seconds.
+
+    The parse must not consult the local timezone. ``mktime(strptime(...)) -
+    timezone`` looks like a UTC conversion and is one only where the machine
+    runs UTC without DST: ``mktime`` reads the struct as LOCAL time and applies
+    the local DST rule, while ``time.timezone`` is the STANDARD offset and
+    carries no DST term, so the two disagree by an hour for half the year.
+    Measured on the workstation (Romance Summer Time) it returned an epoch
+    3600 s early, which inflates every ``waited`` by an hour -- past the 300 s
+    threshold on its own, so a watchdog carrying that parse would flag every
+    queued job and cancel its own run. Attaching UTC explicitly is correct on
+    any machine's clock, which matters because this runs unattended on a fleet
+    spanning three operating systems whose timezone configuration is not this
+    module's to assume.
+    """
     if not isinstance(stamp, str) or not stamp:
         return 0.0
-    return time.mktime(time.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ")) - time.timezone
+    return datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
 
 
 def _request(path: str, token: str, *, method: str = "GET") -> Any:

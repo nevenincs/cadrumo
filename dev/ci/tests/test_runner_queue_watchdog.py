@@ -16,6 +16,7 @@ endpoint.
 
 from __future__ import annotations
 
+import calendar
 import time
 from pathlib import Path
 from typing import Any, Final
@@ -25,6 +26,7 @@ import yaml
 
 from dev.ci.runner_queue_watchdog import (
     JobView,
+    _epoch_of,
     classify,
     occupied_label_keys,
     parse_jobs,
@@ -42,7 +44,15 @@ _WATCHDOG_MODULE: Final = "dev/ci/runner_queue_watchdog.py"
 # silently queued.
 _WATCHDOG_LABELS: Final = ("Linux", "X64", "self-hosted")
 
-_NOW: Final = time.mktime(time.strptime("2026-08-05T12:52:35Z", "%Y-%m-%dT%H:%M:%SZ")) - time.timezone
+# `calendar.timegm` is the stdlib's UTC-truth oracle and shares no code path
+# with the parse under test. Deriving the test's clock from the SAME idiom the
+# module used is what previously hid an hour-wide timezone defect here: both
+# sides were wrong by 3600 s and the subtraction cancelled it.
+_NOW: Final = float(calendar.timegm(time.strptime("2026-08-05T12:52:35Z", "%Y-%m-%dT%H:%M:%SZ")))
+
+#: The same instant as an independently-derived absolute epoch literal, so the
+#: parse is pinned to a number rather than to another computation.
+_NOW_EPOCH_LITERAL: Final = 1_785_934_355.0
 
 
 def _payload() -> dict[str, Any]:
@@ -110,6 +120,61 @@ def test_queued_job_reports_the_label_set_it_requested() -> None:
     assert windows.status == "queued"
     assert windows.labels == ("self-hosted", "Windows", "X64")
     assert windows.queued_since_epoch > 0.0, "a queued job must carry a usable queued-since stamp"
+
+
+def test_queued_since_is_parsed_as_utc_not_local_time() -> None:
+    """The queue clock must not depend on the machine's timezone.
+
+    `waited` is `time.time()` (true UTC epoch) minus this parse, so an error
+    here lands directly on the quantity compared against the threshold. The
+    original `mktime(strptime(...)) - timezone` parse read the stamp as LOCAL
+    time and applied the local DST rule while subtracting the non-DST STANDARD
+    offset, returning an epoch 3600 s early on this machine -- an hour of
+    phantom wait, well past the 300 s threshold, on every job. That is the
+    false-alarm direction: the watchdog would flag healthy lanes and cancel its
+    own run.
+
+    Both oracles are independent of the implementation: an absolute epoch
+    literal, and `calendar.timegm`, which is the stdlib's UTC counterpart to
+    `mktime` and shares no code path with `datetime.fromisoformat`.
+    """
+    assert _epoch_of("2026-08-05T12:52:35Z") == _NOW_EPOCH_LITERAL
+    for stamp in ("2026-01-15T03:00:00Z", "2026-08-05T12:52:35Z", "2026-12-31T23:59:59Z"):
+        expected = float(calendar.timegm(time.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ")))
+        assert _epoch_of(stamp) == expected, (
+            f"{stamp} parsed to {_epoch_of(stamp)}, not the UTC truth {expected} "
+            f"(delta {_epoch_of(stamp) - expected:+.0f}s) — the parse is reading local time"
+        )
+
+
+def test_a_freshly_queued_job_does_not_fire_on_a_timezone_offset() -> None:
+    """End-to-end guard on the defect above, at the level the operator sees.
+
+    The unit test pins the parse; this pins the CONSEQUENCE. A job queued five
+    seconds ago is classified against a real `time.time()` clock, so a parse
+    carrying any whole-hour timezone error puts it past the 300 s threshold and
+    produces a verdict. The correct answer is no verdict at all.
+    """
+    just_now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() - 5.0))
+    payload = {
+        "jobs": [
+            {
+                "name": "Cadrumo probe / just queued",
+                "status": "queued",
+                "labels": ["self-hosted", "Windows", "X64"],
+                "created_at": just_now,
+                "started_at": just_now,
+                "runner_name": None,
+            }
+        ]
+    }
+    verdicts = classify(
+        parse_jobs(payload),
+        now_epoch=time.time(),
+        threshold_seconds=300.0,
+        watchdog_job_name="",
+    )
+    assert verdicts == (), f"a job queued 5s ago was judged past a 300s threshold: {verdicts}"
 
 
 def test_label_key_is_order_independent() -> None:
