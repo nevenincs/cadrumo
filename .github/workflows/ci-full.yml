@@ -125,19 +125,55 @@ jobs:
         # bulk under xdist, then the isolation-sensitive `serial` tests at -n0 —
         # so a global-state mutator cannot flake the parallel pass.
         #
-        # NON-BLOCKING ON ARRIVAL, and this is the honest posture rather than a
-        # soft one. Measured on the parallel pass at the commit that enrolled it:
-        # 19 failed, 3753 passed in 23m54s. Those 19 are the accumulated rot of a
-        # suite that had never run in CI, not a regression from enrolling it —
-        # blocking immediately would red the release-verdict lane on a backlog
-        # nobody has triaged, and a lane that is always red is a lane everyone
-        # learns to ignore. The serial pass (58 tests the parallel pass holds
-        # out) had not been measured at all when this landed.
+        # SPLIT FROM THE SERIAL PASS DELIBERATELY, because the two passes do not
+        # deserve the same verdict. This one is deterministic: every failure
+        # triage could not attribute to a peer mid-edit was a real, reproducible
+        # defect. It can go blocking on its own once its backlog closes. The
+        # serial pass below cannot, and joining them would hold this one hostage.
         #
-        # Same precedent and same contract as the vault-drift step below: this
-        # is visibility now, blocking once triaged. FLIP `continue-on-error` OFF
-        # once the backlog is paid down; do not let it become permanent.
-        run: CADRUMO_PYTEST_WORKERS=8 just test-integration
+        # NON-BLOCKING WHILE THE BACKLOG STANDS. Triaged measurement: 13 real
+        # failures remain. Blocking now would red the release-verdict lane on
+        # defects nobody has closed, and a lane that is always red is a lane
+        # everyone learns to ignore.
+        #
+        # A NOTE ON MEASURING THIS: the first count taken here (19) was
+        # contaminated. Re-running it found 28, and intersecting the two runs
+        # showed 12 of them were a peer's transiently broken module killing every
+        # cold-subprocess test at CLI import — not rot at all. Nineteen peer
+        # commits landed during one 12-minute pass. Do not triage this lane from
+        # a single run; intersect two, or you will chase another campaign's
+        # in-flight edit.
+        #
+        # FLIP `continue-on-error` OFF once the 13 close; do not let it become
+        # permanent.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-integration-parallel
+        continue-on-error: true
+
+      - name: Test (integration, serial)
+        # The isolation-sensitive pass, at -n0 because these tests mutate or read
+        # process-global state. It had NEVER been run when it was enrolled; first
+        # measurement was 3 failed, 49 passed, 6 errors in 14m22s.
+        #
+        # HELD NON-BLOCKING LONGER THAN THE PARALLEL PASS, on purpose. Two of its
+        # three failures are WALL-CLOCK budgets (P95 4.098s against 3.0s; cold
+        # start 2.53s against 2.0s) measured on a box CI shares with the dev
+        # machine and the agent fleet — 71% CPU and ~1955 processes at the time.
+        # Those flake under load regardless of code quality, so making this
+        # blocking would wire the release verdict to a load average rather than
+        # to the code. The repository already knows the answer to that class
+        # (control-plane invariant: perf gates assert PROCESS CPU-TIME, wall
+        # advisory only); these budgets need converting the same way before this
+        # step can be trusted to block.
+        #
+        # The `perf` marker is NOT the escape hatch here: it is absent from
+        # _CI_INCAPABLE_MARKERS and the perf lane is path-scoped to
+        # dev/packaging, so marking them would make them CI-unreachable and red
+        # test_lane_reachability.py instead.
+        #
+        # SIZING WARNING: the 6 errors were a local artefact (a stale on-disk
+        # cohort directory). On CI that path is absent, so the fixture takes the
+        # BUILD branch instead — expect these to build 3 wheels and 3 sdists here.
+        run: CADRUMO_PYTEST_WORKERS=8 just test-integration-serial
         continue-on-error: true
 
       - name: Tooling gates no other lane reaches

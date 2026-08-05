@@ -504,6 +504,20 @@ test-both-lanes:
     @just test-unit
     @just test-integration
 
+# Run only the PARALLEL integration lane, holding the serial tests out.
+#
+# Exists so CI can carry a separate verdict per pass. The two are not equally
+# trustworthy: this pass is deterministic, while the serial pass includes
+# wall-clock budgets that flake on a machine CI shares with the dev box and the
+# agent fleet (measured: P95 4.098s against a 3.0s budget, samples mostly
+# 1.1-1.5s with load-driven outliers). Wiring one CI step to both means the
+# deterministic half can never go blocking without the load-sensitive half
+# dragging the release-verdict lane down with it.
+[doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
+[group('testing')]
+test-integration-parallel:
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "integration and not serial and not os_keychain"
+
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 [group('testing')]
 test-integration-serial:
