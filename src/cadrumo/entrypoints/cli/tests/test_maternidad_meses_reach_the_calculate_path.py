@@ -155,6 +155,16 @@ def _advisory_kinds(output: str) -> set[str]:
     }
 
 
+def _advisory_messages(output: str, *, source_kind: str) -> list[str]:
+    """The rendered ``message`` text of every notice carrying *source_kind*."""
+    return [
+        str(notice["message"])
+        for notice in unwrap_envelope_notices(output)
+        if notice["code"] == "modelo.work.calculate.source_advisory"
+        and notice.get("context", {}).get("source_kind") == source_kind
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Arrival: the regression this module exists for.
 # ---------------------------------------------------------------------------
@@ -233,6 +243,15 @@ def test_months_declared_for_a_child_over_three_are_withheld_and_disclosed(
         f"withheld maternidad months must be disclosed; got {_advisory_kinds(output)}"
     )
 
+    messages = _advisory_messages(output, source_kind="maternidad_meses_withheld")
+    assert messages, "the withheld advisory must carry a rendered message"
+    # The advisory names the entry-date window as a second route to the
+    # deducción, and must not steer every withheld filer toward altering their
+    # birth date -- an over-three adopción/acogimiento is withheld for a
+    # missing INSCRIPCION/ACOGIMIENTO date, not for being the wrong age.
+    assert "INSCRIPCION" in messages[0] or "ACOGIMIENTO" in messages[0]
+    assert "reaches only a descendant under three" not in messages[0]
+
 
 def test_an_eligible_child_does_not_raise_the_withheld_advisory(
     runtime_profile: TestRuntimeProfile,
@@ -289,6 +308,25 @@ def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
 
     assert exit_code == 0, output
     assert _casilla_0611(output) == Decimal("1000")
+
+
+def test_no_month_before_the_adoption_reaches_the_casilla(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The over-grant this Step removes, driven through the surface an operator uses.
+
+    Born January 2024 and adopted in October. The under-three limb runs from the
+    BIRTH month for every relacion, so unioning the two limbs granted January to
+    September -- months before the child was hers -- and the casilla resolved to
+    1.200 where 300 is due. Three eligible months at the authority's 100 euros.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2024-01-10,RELACION=adoptado,INSCRIPCION=2024-10-05,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("300")
 
 
 def test_a_child_over_the_rentas_ceiling_contributes_nothing(

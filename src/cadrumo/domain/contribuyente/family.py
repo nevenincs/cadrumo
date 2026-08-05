@@ -701,30 +701,59 @@ class DescendantInfo(BaseModel):
         return self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES
 
     def maternidad_eligible_meses(self, filing_year: int) -> int:
-        """Months of *filing_year* in which this descendant is under three (Art. 81.1).
+        """Months of *filing_year* the Art. 81.1 deducción may reach for this descendant.
+
+        The whole eligible window, not one limb of it: the under-three months
+        and the adopción/acogimiento entry months together, clipped so that no
+        month precedes the entry event.
+
+        The clip is the correction to an over-grant this method shipped. The
+        under-three limb runs from the BIRTH month for every relación, including
+        an adopted one, so unioning the limbs granted a mother the months before
+        the child was hers. A child born in January and adopted in October
+        yielded a full twelve months where three are due.
+
+        The reasoning that produced that union is worth stating because it was
+        plausible and wrong. It was argued from an infant adopted in October,
+        on the claim that neither limb alone reaches twelve — but that infant's
+        under-three limb IS twelve, so the case showed the union merely equalling
+        the wider limb and proved nothing. The union exceeds the wider limb only
+        in a year containing both the entry month and the third-birthday month,
+        and the single month that distinguishes them falls before the entry
+        event. The union therefore differed from the alternative only where it
+        was wrong.
+
+        Clipping is written as a clip rather than as "return the entry window",
+        which is what it currently reduces to: with the anchor never earlier than
+        the birth, the two are algebraically identical today. Expressing the RULE
+        — no month before the child was yours — keeps this correct if either limb
+        is later widened, where the shortcut silently would not.
+
+        A descendant with no entry date is unclipped, so an ordinary child is
+        unaffected and the method degenerates to the under-three limb.
+        """
+        return len(self._maternidad_eligible_months(filing_year))
+
+    def _maternidad_eligible_months(self, filing_year: int) -> frozenset[int]:
+        """The Art. 81.1 eligible months: both limbs, clipped to the entry anchor."""
+        months = self._maternidad_edad_months(filing_year) | self._maternidad_entry_window_months(filing_year)
+        anchor = self.art_58_2_entry_date()
+        if anchor is None:
+            return months
+        return frozenset(month for month in months if (filing_year, month) >= (anchor.year, anchor.month))
+
+    def _maternidad_edad_months(self, filing_year: int) -> frozenset[int]:
+        """The months of *filing_year* covered by the Art. 81.1 under-three limb.
 
         The article runs "hasta que el menor alcance los tres años de edad",
         which is a MONTH boundary rather than a year-end age test, and the
-        authority draws it twice:
+        authority draws it twice: the month of birth counts in full, and the
+        month in which the child turns three does not.
 
-        * the month of birth counts in full — the deduction begins in the month
-          the child arrives, not the month after; and
-        * the month in which the child turns three does NOT count, so a child
-          with an April birthday contributes January to March of that year.
-
-        Both follow from a birth date the profile already holds, so neither is
-        an operator judgement and neither should be typed. Comparing
-        ``(year, month)`` pairs rather than constructing a third-birthday date
-        is deliberate: a 29 February birth has no third-birthday date in a
-        non-leap year, and building one raises.
-
-        Returns ``0`` for a period entirely before the birth or entirely after
-        the third-birthday month.
+        Comparing ``(year, month)`` pairs rather than constructing a third-
+        birthday date is deliberate: a 29 February birth has no third-birthday
+        date in a non-leap year, and building one raises.
         """
-        return len(self._maternidad_edad_months(filing_year))
-
-    def _maternidad_edad_months(self, filing_year: int) -> frozenset[int]:
-        """The months of *filing_year* covered by the Art. 81.1 under-three limb."""
         return _months_of_year_between(
             (self.birth_date.year, self.birth_date.month),
             (self.birth_date.year + _MAX_AGE_MENOR_TRES, self.birth_date.month),
@@ -825,14 +854,11 @@ class DescendantInfo(BaseModel):
         employment months has the over-claim removed. The cap can only ever
         reduce, so it cannot invent an entitlement.
 
-        That window is the UNION of the article's two limbs — the under-three
-        months and the adopción/acogimiento entry window — because Art. 81.1
-        grants the entry limb "con independencia de la edad del menor". Taking
-        the wider of the two counts instead of their union would be wrong for a
-        child whose limbs cover different months of the same year: an infant
-        adopted in October is under three all year and inside the entry window
-        from October, and the answer is twelve months rather than either limb's
-        own count.
+        That window is :meth:`maternidad_eligible_meses`, which carries both of
+        the article's limbs and the clip that keeps a month from preceding the
+        entry event. It is asked here rather than recomposed, because the union
+        used to be assembled inline at this call site and that is where the
+        over-grant lived.
         """
         if not self.is_eligible_ordinary(
             filing_year,
@@ -840,8 +866,7 @@ class DescendantInfo(BaseModel):
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return 0
-        eligible = self._maternidad_edad_months(filing_year) | self._maternidad_entry_window_months(filing_year)
-        return min(self.meses_madre_trabajo_2024, len(eligible))
+        return min(self.meses_madre_trabajo_2024, self.maternidad_eligible_meses(filing_year))
 
     def maternidad_alta_posterior_increment_applies(self, filing_year: int) -> bool:
         """Whether Art. 81.1's post-birth alta increment applies to this child in *filing_year*.

@@ -426,9 +426,14 @@ class TestArt811EntryWindowDivergesFromArt582:
         assert self._ADOPTADO.art_81_1_entry_window_meses(2024) == 10
 
     def test_the_window_is_age_independent(self) -> None:
-        """ "Con independencia de la edad del menor": the child was five at inscription."""
-        assert self._ADOPTADO.maternidad_eligible_meses(2022) == 0
+        """ "Con independencia de la edad del menor": the child was five at inscription.
+
+        The under-three limb contributes nothing for a five-year-old, so every
+        eligible month in 2022 came from the entry window.
+        """
+        assert self._ADOPTADO._maternidad_edad_months(2022) == frozenset()
         assert self._ADOPTADO.art_81_1_entry_window_meses(2022) == 12
+        assert self._ADOPTADO.maternidad_eligible_meses(2022) == 12
 
     def test_a_relacion_the_statute_excludes_opens_no_window(self) -> None:
         """A temporal acogimiento carer takes the tranches and not this limb."""
@@ -463,11 +468,14 @@ class TestArt811EntryWindowDivergesFromArt582:
         assert fostered_then_adopted.art_81_1_entry_window_meses(2024) == 10
         assert fostered_then_adopted.art_81_1_entry_window_meses(2025) == 0
 
-    def test_the_two_limbs_union_rather_than_taking_the_wider(self) -> None:
-        """An infant adopted in October is covered by both limbs over different months.
+    def test_no_month_before_the_adoption_is_eligible(self) -> None:
+        """An infant born in January and adopted in October yields three months, not twelve.
 
-        Under three all year, and inside the entry window from October. Neither
-        limb's own count is twelve; their union is.
+        The under-three limb runs from the BIRTH month for every relación, so
+        unioning the limbs granted the mother January to September — months
+        before the child was hers. This is the over-grant case, and it is worth
+        two figures rather than one: the under-three limb alone is twelve here,
+        which is why the union looked harmless.
         """
         infant = DescendantInfo(
             birth_date=date(2024, 1, 10),
@@ -476,9 +484,39 @@ class TestArt811EntryWindowDivergesFromArt582:
             meses_madre_trabajo_2024=12,
         )
 
-        assert infant.maternidad_eligible_meses(2024) == 12
+        assert len(infant._maternidad_edad_months(2024)) == 12
         assert infant.art_81_1_entry_window_meses(2024) == 3
-        assert infant.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 12
+        assert infant.maternidad_eligible_meses(2024) == 3
+        assert infant.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 3
+
+    def test_the_year_where_union_and_wider_limb_genuinely_differ(self) -> None:
+        """The only shape that distinguishes the two candidate rules, and it favours the clip.
+
+        Born April 2021, inscribed February 2024, so 2024 contains BOTH the entry
+        month and the third-birthday month. The under-three limb is January to
+        March, the entry limb February to December: their union is twelve and the
+        wider limb is eleven. The single month that separates them is January —
+        before the adoption — so the union is wrong exactly where it differs, and
+        the answer is eleven.
+        """
+        child = DescendantInfo(
+            birth_date=date(2021, 4, 15),
+            relacion=DescendantRelacion.ADOPTADO,
+            inscripcion_registro_civil_date=date(2024, 2, 10),
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert len(child._maternidad_edad_months(2024)) == 3
+        assert child.art_81_1_entry_window_meses(2024) == 11
+        assert child.maternidad_eligible_meses(2024) == 11
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 11
+
+    def test_a_descendant_with_no_entry_date_is_unclipped(self) -> None:
+        """The clip must not touch an ordinary child, who has no entry event at all."""
+        ordinary = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo_2024=12)
+
+        assert ordinary.maternidad_eligible_meses(2024) == 12
+        assert ordinary.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 12
 
     def test_the_entry_window_reaches_the_deduccion(self) -> None:
         """The consumer clause: a window nothing calls is indistinguishable from no window.
@@ -486,7 +524,8 @@ class TestArt811EntryWindowDivergesFromArt582:
         This child is five, so the under-three limb grants nothing. Every month
         that survives here came from the entry window.
         """
-        assert self._ADOPTADO.maternidad_eligible_meses(2024) == 0
+        assert self._ADOPTADO._maternidad_edad_months(2024) == frozenset()
+        assert self._ADOPTADO.maternidad_eligible_meses(2024) == 10
         assert self._ADOPTADO.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 10
 
 
