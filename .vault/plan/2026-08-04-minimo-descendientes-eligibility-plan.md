@@ -4,13 +4,14 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:bf8833d0bfa0cf893317ee1dc9107166e7a41b0f60c0204601c56c372b91b37e'
+body_hash: 'sha256:882787da968d29b074b2f8d8afd37f1470f10d4ec4f3e2b3a0704f69d029dab9'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-research]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
 ---
+
 # `minimo-descendientes-eligibility` plan
 
 ## Description
@@ -67,7 +68,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py, src/cadrumo/core/external_constants.py, src/cadrumo/core/tests/test_external_constants_centralisation_part2.py, src/cadrumo/locales/`.
 - [x] `P04.S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `P04.S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-derived, because the engine never sees the descendants at all and takes an operator-supplied list of hijo and month pairs, so the under-three and cohabiting conditions cannot be enforced while the profile already holds the birth dates and cohabitation facts, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited, BLOCKING S15 whose window predicate has no consumer until this resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/domain/contribuyente/family.py`.
-- [ ] `P04.S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
+- [x] `P04.S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 
 ## Parallelization
 
