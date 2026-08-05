@@ -143,10 +143,17 @@ _CORE_ABSENT_NAMES = {
 # ``pillow`` is pulled into core by the base ``pdfplumber`` and ``pikepdf`` PDF
 # dependencies and is pinned directly in the dev group for reproducible README
 # GIF generation.
+# ``lxml`` is pulled into core by the base ``beautifulsoup4[lxml]`` extra - the
+# sede readers name "lxml" as BeautifulSoup's parser backend, so it is a runtime
+# reliance - and is ALSO declared in the dev group, where test support imports
+# ``lxml.etree`` to compile the bundled AEAT record-design XSDs. Two independent
+# reliances, two declarations; the dev one must not make the runtime one read as
+# a dev-only leak into core.
 _CORE_PRESENT_TRANSITIVE_NAMES = {
     "numpy",
     "anyio",
     "pillow",
+    "lxml",
 }
 _EXTRAS_PRESENT_NAMES = {
     "anthropic",
