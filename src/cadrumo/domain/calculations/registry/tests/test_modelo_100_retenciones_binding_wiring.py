@@ -326,7 +326,7 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: Reg
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == m123_retenciones, (
         f"casilla 0597 = {result.values[_M100_RETENCIONES_M123_CASILLA]!r}; expected {m123_retenciones!r} "
         f"from binding renta-2024-modelo-123-retenciones-periodicas. "
-        "Check 2024/casillas/0579-c0597.toml: must have "
+        "Check 2024/casillas/c0597.toml: must have "
         'input_kind = "bound" and binding = "renta-2024-modelo-123-retenciones-periodicas".'
     )
 
@@ -392,7 +392,7 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: Reg
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == m111_retenciones, (
         f"casilla 0596 = {result.values[_M100_RETENCIONES_M111_CASILLA]!r}; expected {m111_retenciones!r} "
         f"from binding renta-2024-modelo-111-retenciones-periodicas. "
-        "Check 2024/casillas/0578-c0596.toml: must have "
+        "Check 2024/casillas/c0596.toml: must have "
         'input_kind = "bound" and binding = "renta-2024-modelo-111-retenciones-periodicas".'
     )
 

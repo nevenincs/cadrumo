@@ -4,7 +4,7 @@ Covers the ``modelo-131-2025-modulos-indice-exceso-incompatible-*`` ADVISORY
 guards shipped on the 2025 revision. Orden HAC/1347/2024, Anexo II,
 instrucción 2.3 fixes two binding incompatibility rules the índice-exceso
 formula (``m131_resolve_modulos_indice_exceso``,
-``0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml``) applies unconditionally, without cross-checking
+``cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml``) applies unconditionally, without cross-checking
 either:
 
 - "En ningún caso será aplicable el índice corrector para empresas de pequeña
