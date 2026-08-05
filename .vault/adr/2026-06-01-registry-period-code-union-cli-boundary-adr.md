@@ -4,7 +4,7 @@ tags:
   - '#registry-period-code-union'
 date: '2026-06-01'
 modified: '2026-08-05'
-body_hash: 'sha256:690df302cfeba2d0c2bc54fd84aadc78df542a2db8f0c7eed56c8c90dc88fe0d'
+body_hash: 'sha256:1218757c4eaff3193e886dd1aa019d70f12b40046b57418843f492e43bcadc7a'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
@@ -429,3 +429,31 @@ admitted. Revisit this decision when a `period_selector` first mixes the vocabul
 `code: StandardPeriodCode`. That drifted when this ADR's D1 landed `RegistryPeriodCode`
 on the field and is not corrected here; it is flagged so the next author of that record
 does not read it as the current contract.
+
+### Why no second guard caught this
+
+Revision resolution does not backstop the type boundary, and that is by design.
+`select_revision` (`domain/calculations/registry/_temporal.py:80-103`) compares the
+requested period against the revision's declared periods **case-insensitively**, with an
+in-source rationale: the declaración parser uppercases every period string before it
+reaches the registry, producing `ALTA` / `MODIFICACION` / `BAJA` for M036 whose canonical
+registry periods are lowercase. So once `Period` admitted `ALTA`, revision resolution
+resolved the M036 revision for it and `work create` proceeded. Nothing downstream was
+positioned to refuse. This is not a defect in `select_revision` — the deliberate
+case-insensitivity serves a real import path — and it must not be tightened as an
+alternative fix. It is the reason the refusal has to be restored at the type boundary
+where it previously lived.
+
+The same comment block independently confirms A2's ruling on the event placeholder: it
+records that the shared matcher "lets symbolic `EVENT-N` selectors cover concrete
+`EVENT-1`/`EVENT-2` operator scopes". `EVENT-N` is therefore a *symbolic selector*
+covering concrete event numbers, by the registry's own documented intent — which is
+exactly why it must never itself become a `Period`. The literal placeholder standing in
+for a set of periods cannot also be a member of that set.
+
+The same block carries a standing warning worth restating here, because the split touches
+its neighbourhood: the canonical period form is normalised once at the snapshot boundary
+(`_build_validated_snapshot` via `registry_period_for_request`), and consumers such as
+`relation_source_requirements` compare the snapshot period by exact membership. Do not
+drop that snapshot-side normalisation on the strength of the comparison being
+case-insensitive.
