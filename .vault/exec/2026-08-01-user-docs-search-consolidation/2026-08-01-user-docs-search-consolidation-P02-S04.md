@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:452481979a2827a85a865c150be1352c4d712688f3e085a638a4388ddb7973a7'
+body_hash: 'sha256:26f3c331594a888d3ae2fd42051394598a9f703827a910e8c758a68b91d75d08'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -63,3 +63,16 @@ The current source-only evidence is AST parsing and focused diff whitespace
 validation. No tests, builds, model downloads, matrix generation, Pagefind
 compilation, browser probes, live sweeps, runtime gates, or deployment were
 run.
+
+## 2026-08-05 source continuation: reject zero-valued quantized rows
+
+The schema-v2 row validators now refuse an all-zero int8 result row and an
+all-zero query-token row. This closes a source-level fail-open case in which a
+positive scale and correctly sized byte vector could still carry no usable
+semantic direction. Existing model-dimension, vocabulary-count, token-id,
+hash, canonical-byte, and size checks remain unchanged.
+
+This is still source-only hardening: no provider, model, matrix artifact,
+browser reader, or measured acceptance gate was added. No tests, builds,
+model downloads, matrix generation, Pagefind compilation, browser probes, live
+sweeps, runtime gates, or deployment were run.

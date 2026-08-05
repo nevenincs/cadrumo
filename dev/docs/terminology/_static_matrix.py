@@ -193,6 +193,14 @@ class QuantizedEmbeddingRow(BaseModel):
     scale: float = Field(gt=0)
     values: tuple[_Int8Value, ...] = Field(min_length=1)
 
+    @field_validator("values")
+    @classmethod
+    def _require_non_zero_row(cls, value: tuple[int, ...]) -> tuple[int, ...]:
+        """Reject a quantized row that cannot represent a semantic vector."""
+        if not any(value):
+            raise ValueError("quantized embedding rows must contain a non-zero value")
+        return value
+
     @field_validator("scale")
     @classmethod
     def _require_finite_scale(cls, value: float) -> float:
@@ -217,6 +225,14 @@ class QuantizedQueryTokenRow(BaseModel):
     token_id: _TokenId
     scale: float = Field(gt=0)
     values: tuple[_Int8Value, ...] = Field(min_length=1)
+
+    @field_validator("values")
+    @classmethod
+    def _require_non_zero_row(cls, value: tuple[int, ...]) -> tuple[int, ...]:
+        """Reject a query-token row that cannot represent a semantic vector."""
+        if not any(value):
+            raise ValueError("quantized query-token rows must contain a non-zero value")
+        return value
 
     @field_validator("token")
     @classmethod

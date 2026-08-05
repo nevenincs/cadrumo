@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:b5eee42ebac662e567dfec7218296622bcb3b6a3a18fa3cd5574a7f715b310ee'
+body_hash: 'sha256:d44e43453dcb61b0bf470e03b2df45eb7a9a31753f30a83a7bb18f460e4a7b17'
 related: []
 ---
 
@@ -40,10 +40,21 @@ held-out recall evidence before a matrix can ship. The plan rows remain open;
 no model download, artifact generation, test, build, browser probe, sweep, or
 deployment was performed for this continuation.
 
+### nonzero-row-invariant | low | Quantized rows now fail closed when all values are zero
+
+The schema-v2 source contract now rejects all-zero int8 values for both
+candidate-result rows and browser-recognizable query-token rows. This preserves
+the RAG-grounded requirement that every admitted row represent a finite,
+non-zero vector, including when a future artifact is loaded rather than
+compiled locally. It does not select a model or establish quantization-drift
+acceptance.
+
 ## Recommendations
 
 - Ratify the pinned model and query-tokenisation contract, then generate and
   measure the committed matrix before adding the client-side cosine tier.
+- Retain the non-zero-row validator as a loader/compiler invariant; prove its
+  behavior later through the authorized real-behaviour gate.
 
 ## Follow-up
 
