@@ -4887,6 +4887,7 @@ cli:
     set_key_help: Clau de locale amb format de punts a establir.
     set_locale_help: Codi del locale a actualitzar (p. ex. en, es, ca).
     set_value_help: Valor de locale a establir.
+    set_batch_manifest_help: 'Objecte JSON que assigna codis d''idioma a mapes de claus amb punts.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.

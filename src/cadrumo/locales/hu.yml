@@ -4849,6 +4849,7 @@ cli:
     set_key_help: A beállítandó lokalizációs kulcs.
     set_locale_help: A célnyelv kódja (pl. hu, en, es).
     set_value_help: A kulcshoz beállítandó lokalizált érték.
+    set_batch_manifest_help: 'JSON objektum, amely nyelvi kódokat pontozott kulcsú skalártérképekre képez le.'
   log_levels:
     errors:
       flags_mutually_exclusive: A --quiet, --verbose és --debug kapcsolók kölcsönösen

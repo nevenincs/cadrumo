@@ -461,8 +461,12 @@ class TestRevisionViewSurfacesDetailRows:
         result = self._run_cli(tmp_path, ["app", "modelo", "work", "calculate", "--help"])
 
         assert result.returncode == 0, result.stderr
-        assert 'razon_social="DE Auto GmbH"' in result.stdout
-        assert "operador codigo_pais=DE" in result.stdout
+        # Whitespace-normalized: Click's plain help formatter wraps prose to the
+        # real terminal width, so the quoted spaced legal name legitimately
+        # spans a line break between ``razon_social="DE`` and ``Auto GmbH"``.
+        flat = " ".join(result.stdout.split())
+        assert 'razon_social="DE Auto GmbH"' in flat
+        assert "operador codigo_pais=DE" in flat
 
     def test_m349_json_calculate_materialises_operador_detail_rows(self, tmp_path: Path) -> None:
         """M349 ``--row operador`` data reaches JSON calculate and revision payloads."""

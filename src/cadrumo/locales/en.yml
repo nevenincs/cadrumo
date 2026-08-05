@@ -4567,6 +4567,7 @@ cli:
     set_key_help: Dotted locale key to set.
     set_locale_help: Locale code to update (e.g. en, es, ca).
     set_value_help: Replacement locale value.
+    set_batch_manifest_help: 'JSON object mapping locale codes to dotted-key scalar maps.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.

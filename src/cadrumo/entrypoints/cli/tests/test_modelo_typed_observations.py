@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -91,7 +91,14 @@ def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
 
 
 def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_path: Path) -> None:
-    """A malformed retencion observation is refused as a CLI argument error."""
+    """A malformed retencion observation is refused as a CLI argument error.
+
+    ``aeat app modelo aggregate`` persists observations, so it sits behind the
+    profile-bound write guard. The guard runs ahead of the command body that
+    parses ``--retencion-observation``, so the run needs a real active profile:
+    without one the guard's no-active-profile refusal preempts the argument
+    error this test exists to pin.
+    """
 
     missing_scheme = (
         '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
@@ -99,7 +106,7 @@ def test_cli_retencion_observation_schema_violation_is_argument_validation(tmp_p
         ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
     )
 
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path):
         result = invoke_cached_cli(
             [
                 "--language",

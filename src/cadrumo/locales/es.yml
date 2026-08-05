@@ -4924,6 +4924,7 @@ cli:
     set_key_help: Clave de locale con formato de puntos a establecer.
     set_locale_help: Código del locale a actualizar (p. ej. en, es, ca).
     set_value_help: Valor de locale a establecer.
+    set_batch_manifest_help: 'Objeto JSON que asigna códigos de idioma a mapas de claves con puntos.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.

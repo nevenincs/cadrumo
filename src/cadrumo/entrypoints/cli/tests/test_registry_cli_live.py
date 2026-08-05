@@ -398,7 +398,7 @@ def test_live_iva_wallet_cli_help_names_fail_closed_no_submit_policy() -> None:
     )
     assert "--as-of-year" in history.output
     assert "read-only" in pull_evidence.output or "solo lectura" in pull_evidence.output
-    assert "acquisition" in pull_evidence.output or "adquisicion" in pull_evidence.output
+    assert "acquisition" in pull_evidence.output or "adquisición" in pull_evidence.output
     assert "remote-state" not in pull_evidence.output.lower()
 
 
