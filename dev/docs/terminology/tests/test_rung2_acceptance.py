@@ -17,6 +17,8 @@ from dev.docs.terminology._rung2_acceptance import (
 from dev.docs.terminology._rung2_bridge import Rung2SearchBundle
 from dev.docs.terminology._static_matrix import NORMALIZATION_CONTRACT_VERSION
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
 
 def _acceptance_evidence_data() -> dict[str, object]:
     """Return schema-shaped evidence values for validation-only cases."""
