@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from .._constants import CSV_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
+from .._constants import CSV_EXTENSIONS, OFX_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
 from .._csv import CsvProvider
 from .._detection import provider_for_extension
 from .._ofx import OfxProvider
@@ -124,6 +124,17 @@ def test_pdf_extension_constant_returns_none_for_extension_routing() -> None:
     assert provider is None
 
 
+def test_ofx_extensions_constant_drives_ofx_provider_routing() -> None:
+    """Every extension in OFX_EXTENSIONS routes to OfxProvider via the
+    shared constant — if the constant and the dispatch branch diverge,
+    at least one of these assertions will fail."""
+    for ext in OFX_EXTENSIONS:
+        provider = provider_for_extension(Path(f"statement{ext}"))
+        assert isinstance(provider, OfxProvider), (
+            f"Expected OfxProvider for extension {ext!r} from OFX_EXTENSIONS but got {type(provider).__name__}"
+        )
+
+
 def test_csv_extensions_constant_matches_csv_provider_supported_extensions() -> None:
     """CsvProvider.supported_extensions must equal CSV_EXTENSIONS exactly.
 
@@ -142,3 +153,13 @@ def test_xlsx_extension_constant_matches_xlsx_provider_supported_extensions() ->
 def test_pdf_extension_constant_matches_pdf_provider_supported_extensions() -> None:
     """PdfN26Provider.supported_extensions is built from PDF_EXTENSION."""
     assert PDF_EXTENSION in PdfN26Provider.supported_extensions
+
+
+def test_ofx_extensions_constant_matches_ofx_provider_supported_extensions() -> None:
+    """OfxProvider.supported_extensions must equal OFX_EXTENSIONS exactly.
+
+    This is the structural invariant: both the detection router and the
+    provider instance use the same constant so a future alias addition
+    requires only one edit.
+    """
+    assert OfxProvider.supported_extensions == OFX_EXTENSIONS

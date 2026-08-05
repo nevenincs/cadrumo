@@ -18,4 +18,11 @@ from .....core.external_constants import PDF_EXTENSION, XLSX_EXTENSION
 CSV_EXTENSIONS: frozenset[str] = frozenset({".csv", ".txt"})
 """File extensions treated as CSV-compatible input by the CSV provider."""
 
-__all__ = ["CSV_EXTENSIONS", "PDF_EXTENSION", "XLSX_EXTENSION"]
+OFX_EXTENSIONS: frozenset[str] = frozenset({".ofx", ".qfx"})
+"""File extensions treated as OFX-compatible input by the OFX provider.
+
+``.qfx`` is the Quicken-flavoured OFX variant; both route to the same
+:class:`~adapters.inbound.financial.providers.OfxProvider`.
+"""
+
+__all__ = ["CSV_EXTENSIONS", "OFX_EXTENSIONS", "PDF_EXTENSION", "XLSX_EXTENSION"]
