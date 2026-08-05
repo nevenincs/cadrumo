@@ -63,10 +63,19 @@ _PAYLOAD_SYMBOL = "ResultSummaryRowPayload"
 #: gate. Hand-listing the permitted modules would decay on the next CLI surface.
 _DISPLAY_LAYER = _PACKAGE_ROOT / "entrypoints" / "cli"
 
-#: Pinned so the gate cannot pass by finding nothing. A scan that silently
-#: matches zero modules -- a moved package root, a renamed symbol -- would
-#: otherwise report an empty violation list and read as "no leak".
-_EXPECTED_PAYLOAD_IMPORTERS = 2
+#: A FLOOR, not an exact count. It exists to refuse a silently-empty scan -- a
+#: moved package root or a renamed symbol would otherwise report an empty
+#: violation list and read as "no leak". It deliberately does NOT pin the exact
+#: number: a legitimate new display-layer consumer would red an exact pin, the
+#: repair for that is to bump the number, and a number people routinely bump has
+#: stopped being a guard. The real invariant -- no consumer outside the display
+#: layer -- is asserted directly and catches the hazard regardless of the count.
+_MINIMUM_PAYLOAD_IMPORTERS = 2
+
+#: EXACT, unlike the importer floor above, and the asymmetry is deliberate. A new
+#: re-export point genuinely widens the symbol's reachable surface, which is the
+#: thing this assertion exists to surface for review; here a bump IS the review
+#: action rather than a way around one.
 _EXPECTED_PAYLOAD_REEXPORTERS = 2
 
 
@@ -131,10 +140,10 @@ def _outside_display_layer(paths: Iterable[Path]) -> list[str]:
 def test_no_module_outside_the_display_layer_consumes_the_summary_payload() -> None:
     """Only the CLI display layer may reach the localized payload row."""
     importers, _ = _scan(_PAYLOAD_SYMBOL)
-    assert len(importers) == _EXPECTED_PAYLOAD_IMPORTERS, (
-        f"expected {_EXPECTED_PAYLOAD_IMPORTERS} importers of {_PAYLOAD_SYMBOL}, found "
-        f"{len(importers)}: {[str(p) for p in importers]}. A count change is not a failure by "
-        "itself -- confirm each new importer is a display surface, then update the pin."
+    assert len(importers) >= _MINIMUM_PAYLOAD_IMPORTERS, (
+        f"found only {len(importers)} importers of {_PAYLOAD_SYMBOL}; the scan matched fewer "
+        "modules than the known consumers, so an empty violation list below would mean "
+        "'nothing was checked' rather than 'nothing is wrong'"
     )
     offenders = _outside_display_layer(importers)
     assert offenders == [], (
