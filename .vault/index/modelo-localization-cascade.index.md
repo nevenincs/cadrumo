@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a60edd5ead2373907ac6d9b8529f8e1713a5fc305a1d17bcd7e00762aaa031d3'
+body_hash: 'sha256:e0253f0560f68616f8815741d228f9bd0e25c283c1e07f47d47fa7366ab601cf'
 related:
   - '[[2026-08-04-modelo-localization-cascade-W01-P01-S01]]'
   - '[[2026-08-04-modelo-localization-cascade-W01-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-04-modelo-localization-cascade-research]]'
   - '[[2026-08-05-modelo-localization-cascade-aeip-event-keyed-continuity-research]]'
   - '[[2026-08-05-modelo-localization-cascade-gapped-continuity-chain-notation-research]]'
+  - '[[2026-08-05-modelo-localization-cascade-implementation-cutover-audit]]'
 ---
 
 # `modelo-localization-cascade` feature index
@@ -37,6 +38,7 @@ Auto-generated index of all documents tagged with `#modelo-localization-cascade`
 ### audit
 
 - `2026-08-04-modelo-localization-cascade-audit` - `modelo-localization-cascade` audit: `implementation safety and intent`
+- `2026-08-05-modelo-localization-cascade-implementation-cutover-audit` - `modelo-localization-cascade` audit: `Implementation cutover review`
 
 ### exec
 

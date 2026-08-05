@@ -11,8 +11,6 @@ related:
   - "[[2026-08-04-modelo-localization-cascade-research]]"
 ---
 
-
-
 # `modelo-localization-cascade` audit: `Implementation cutover review`
 
 ## Scope

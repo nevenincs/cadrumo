@@ -33,7 +33,6 @@ from ....domain.contribuyente import DescendantInfo, RentaMaritalStatus, descend
 from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
-from ...aggregation import CalculationSourceDiagnostic
 from ...user_profile import profile_create_storage_span, set_active_fields
 from ...workflow import workflow_state_repository
 from .._minimo_descendientes_advisory import collect_minimo_descendientes_prorrata_inferred_diagnostics
@@ -86,7 +85,7 @@ def _write_household(*descendants: DescendantInfo, signals: dict[str, str] | Non
     _write(*descendants, **(_INFERRED_SECOND_FILER if signals is None else signals))
 
 
-def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[CalculationSourceDiagnostic, ...]:
+def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[object, ...]:
     return collect_minimo_descendientes_prorrata_inferred_diagnostics(
         _revision(),
         _CLAIMED if casilla_values is None else casilla_values,
@@ -95,12 +94,8 @@ def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[Ca
     )
 
 
-def _child(*, custodia_compartida: bool = False, prorrata_minimo: bool | None = None) -> DescendantInfo:
-    return DescendantInfo(
-        birth_date=date(_FILING_YEAR - 10, 5, 1),
-        custodia_compartida=custodia_compartida,
-        prorrata_minimo=prorrata_minimo,
-    )
+def _child(**overrides: object) -> DescendantInfo:
+    return DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1), **overrides)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -113,8 +108,8 @@ def test_fires_when_the_prorrata_was_inferred_rather_than_answered() -> None:
     _write_household(_child())
     diagnostics = _collect()
     assert len(diagnostics) == 1
-    assert diagnostics[0].source_kind == _KIND
-    assert diagnostics[0].casilla_id == _ESTATAL_CASILLA
+    assert diagnostics[0].source_kind == _KIND  # type: ignore[attr-defined]
+    assert diagnostics[0].casilla_id == _ESTATAL_CASILLA  # type: ignore[attr-defined]
 
 
 def test_the_message_names_the_descendant_and_both_corrections() -> None:
@@ -126,7 +121,7 @@ def test_the_message_names_the_descendant_and_both_corrections() -> None:
     same way.
     """
     _write_household(_child())
-    message = _collect()[0].message
+    message = _collect()[0].message  # type: ignore[attr-defined]
     assert "renta_family.descendiente.0" in message
     assert "PRORRATA=false" in message
     assert "PRORRATA=true" in message
@@ -197,7 +192,7 @@ def test_silent_for_another_modelo() -> None:
 def test_names_only_the_descendants_whose_factor_was_inferred() -> None:
     """A mixed household discloses the inference and not the declared answers."""
     _write_household(_child(prorrata_minimo=False), _child(), _child(custodia_compartida=True))
-    message = _collect()[0].message
+    message = _collect()[0].message  # type: ignore[attr-defined]
     assert "renta_family.descendiente.1" in message
     assert "renta_family.descendiente.0" not in message
     assert "renta_family.descendiente.2" not in message
@@ -276,4 +271,4 @@ def test_the_message_stays_inside_its_length_bound_for_a_large_household() -> No
     _write_household(*[_child() for _ in range(12)])
     diagnostics = _collect()
     assert len(diagnostics) == 1
-    assert len(diagnostics[0].message) <= 512
+    assert len(diagnostics[0].message) <= 512  # type: ignore[attr-defined]
