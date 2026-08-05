@@ -233,6 +233,42 @@ def _filter_withholding_observations(
         yield observation
 
 
+def distinct_percepcion_keys(
+    observations: Iterable[WithholdingObservation],
+) -> set[tuple[str, RetencionClave, str]]:
+    """Return the distinct ``(perceptor, clave, subclave)`` percepción keys.
+
+    Modelo 190's "número total de percepciones" counts DISTINCT type-2
+    "registro de perceptor" records (AEAT Diseño de Registros), not distinct
+    NIFs: one perceptor paid under two claves files two percepciones. The key is
+    therefore clave-bearing.
+
+    Shared so the bound ``percepcion_count`` fact and the per-clave breakdown
+    count the same thing. Grouping by clave and keying on ``(perceptor,
+    subclave)`` yields the same per-clave counts as this key does across a
+    scope, which is why the breakdown can build on it.
+    """
+    return {(obs.perceptor_tax_id, obs.clave, obs.subclave) for obs in observations}
+
+
+def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
+    """Sum percibido dinerario plus percibido en especie.
+
+    Shared by the bound ``percibido_sum`` fact and the per-clave breakdown so
+    a change to what counts as percibido reaches both.
+    """
+    return sum((obs.percibido_dinerario + obs.percibido_especie for obs in observations), Decimal("0"))
+
+
+def retencion_total(observations: Iterable[WithholdingObservation]) -> Decimal:
+    """Sum retención practicada plus ingreso a cuenta.
+
+    Shared by the bound ``retencion_sum`` fact and the per-clave breakdown so
+    a change to what counts as retenido reaches both.
+    """
+    return sum((obs.retencion_practicada + obs.ingreso_a_cuenta for obs in observations), Decimal("0"))
+
+
 def resolve_withholding_binding_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
@@ -254,23 +290,11 @@ def resolve_withholding_binding_values(
         if selector.fact == "perceptor_count":
             resolved[binding.id] = Decimal(len({obs.perceptor_tax_id for obs in scope_filtered}))
         elif selector.fact == "percepcion_count":
-            # Modelo 190 "número total de percepciones" = the count of DISTINCT
-            # (perceptor, clave, subclave) type-2 records (AEAT Diseño de Registros),
-            # NOT the distinct-NIF perceptor count: one perceptor paid under two
-            # claves files two percepciones. Distinct on the full clave-bearing key.
-            resolved[binding.id] = Decimal(
-                len({(obs.perceptor_tax_id, obs.clave, obs.subclave) for obs in scope_filtered}),
-            )
+            resolved[binding.id] = Decimal(len(distinct_percepcion_keys(scope_filtered)))
         elif selector.fact == "percibido_sum":
-            resolved[binding.id] = sum(
-                (obs.percibido_dinerario + obs.percibido_especie for obs in scope_filtered),
-                Decimal("0"),
-            )
+            resolved[binding.id] = percibido_total(scope_filtered)
         elif selector.fact == "retencion_sum":
-            resolved[binding.id] = sum(
-                (obs.retencion_practicada + obs.ingreso_a_cuenta for obs in scope_filtered),
-                Decimal("0"),
-            )
+            resolved[binding.id] = retencion_total(scope_filtered)
         else:  # pragma: no cover - guarded by validator
             raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact")
     return resolved
@@ -397,33 +421,32 @@ def aggregate_withholding_by_clave(
     """Project withholding observations into :class:`WithholdingClaveBreakdown` rows.
 
     Pure function: identical observations in any order yield the same tuple,
-    sorted by ``clave``. No new aggregation is introduced — the magnitudes apply
-    the exact ``percepcion_count`` / ``percibido_sum`` / ``retencion_sum`` field
-    arithmetic of :func:`resolve_withholding_binding_values`, so the breakdown
-    cannot drift from the bound facts that feed the calculation. Per clave, the
-    distinct percepción key is ``(perceptor_tax_id, subclave)`` (the clave is the
-    grouping axis).
+    sorted by ``clave``. No new aggregation is introduced — each magnitude is
+    produced by the same :func:`distinct_percepcion_keys` /
+    :func:`percibido_total` / :func:`retencion_total` helper that
+    :func:`resolve_withholding_binding_values` uses for the corresponding bound
+    fact, so the breakdown cannot drift from the facts that feed the
+    calculation. The clave is the grouping axis here and part of the key there;
+    grouping first and counting the clave-bearing key within each group gives
+    the same per-clave totals.
+
+    That sentence used to be a claim rather than a guarantee: this function
+    re-implemented all three formulas inline. An operator reconciles the annual
+    Modelo 190 against the four quarterly Modelo 111 filings from this
+    breakdown, so a formula changed in the resolver alone would have shown up
+    as a reconciliation mismatch with nothing pointing at the cause.
     """
-    percepciones: dict[RetencionClave, set[tuple[str, str]]] = {}
-    percibido: dict[RetencionClave, Decimal] = {}
-    retencion: dict[RetencionClave, Decimal] = {}
+    by_clave: dict[RetencionClave, list[WithholdingObservation]] = {}
     for observation in observations:
-        clave = observation.clave
-        percepciones.setdefault(clave, set()).add((observation.perceptor_tax_id, observation.subclave))
-        percibido[clave] = (
-            percibido.get(clave, Decimal("0")) + observation.percibido_dinerario + observation.percibido_especie
-        )
-        retencion[clave] = (
-            retencion.get(clave, Decimal("0")) + observation.retencion_practicada + observation.ingreso_a_cuenta
-        )
+        by_clave.setdefault(observation.clave, []).append(observation)
     return tuple(
         WithholdingClaveBreakdown(
             clave=clave,
-            percepcion_count=len(percepciones[clave]),
-            percibido_total=percibido[clave],
-            retencion_total=retencion[clave],
+            percepcion_count=len(distinct_percepcion_keys(group)),
+            percibido_total=percibido_total(group),
+            retencion_total=retencion_total(group),
         )
-        for clave in sorted(percepciones)
+        for clave, group in sorted(by_clave.items())
     )
 
 
