@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:e10a8aaf8813ae6aef799f6a65b76516c447a270f1222c2c107e5a8ac4313252'
+body_hash: 'sha256:612c0a53a8823d165097284e00d91964cc75e81be47c66f58c069cb66bbdb87c'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -73,6 +73,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [ ] `P04.S24` - Collapse the two family-record reconstructions in _profile_binding onto their UNION rather than onto either one, because each carries what the other lacks, the guarderia path pre-checks every birth date and raises naming the row index while omitting the anualidades that suppress dependency assimilation, and the minimo and maternidad path carries the anualidades while having no pre-check, so collapsing onto the minimo variant silently loses the indexed diagnostic and collapsing onto the other silently over-grants for a filer paying judicial anualidades, and adding anualidades to the guarderia injector must be recorded as a stated no-op since the guarderia count does not read them; `src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S25` - Escalate the stale ley-35-2006 art-81 corpus excerpt for operator refresh, because its apartado 1 carries the post-2023 widened supuestos while its apartado 2 still carries the cotizaciones ceiling the bundled AEAT manual states was removed from 2023, and the 150 euro post-alta increment is absent entirely, so the excerpt is a two-vintage hybrid that cannot gate the required_text for any clause S15 or S23 implement; `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-81.html`.
 - [ ] `P04.S26` - Apply the pre-2023 cotizaciones ceiling to the computed casilla 0611 for filing years 2020 to 2022 only, or refuse to compute it for those years, because the law in force through 2022 additionally limited the deduction to the mother total Seguridad Social cotizaciones while the computation applies only the 1200 euro cap, and although the un-ceilinged arithmetic predates this campaign the wiring changed the exposed population from operators who explicitly typed the calculate flag to every operator with declared descendant months, so the defect is now reachable by default rather than newly created, and the registry declares the cotizaciones binding only in 2024 so it cannot express the ceiling for the affected years at all; `src/cadrumo/domain/contribuyente/_deduccion_maternidad.py, src/cadrumo/application/modelo/_profile_binding.py`.
+- [ ] `P04.S27` - Model the Art. 61 norma 4a fallecimiento rule for descendientes, which fixes the minimo at 2400 euros flat for a descendant who dies during the period, because the descendant record carries no death date at all so the rule cannot be expressed, and correct the aggregate docstring which asserts norma 4a is scoped to cases that do not apply here when the bundled corpus names un descendiente as its first subject, an assertion that would stop the next reader investigating; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/_descendant_facts.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
 
 ## Parallelization
 
