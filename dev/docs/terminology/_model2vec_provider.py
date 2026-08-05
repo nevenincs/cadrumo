@@ -88,8 +88,8 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
             tokenizer_config_manifest=tokenizer_config_manifest,
         )
 
-        model2vec = _import_model2vec()
         _require_installed_package_version(self._metadata)
+        model2vec = _import_model2vec()
         static_model = getattr(model2vec, "StaticModel", None)
         if static_model is None:
             raise MatrixCompilationError("model2vec.StaticModel is unavailable")
@@ -239,6 +239,7 @@ def _verify_content_manifests(
         root=provider_root,
         manifest=provider_manifest,
         role=_PROVIDER_MANIFEST_ROLE,
+        repository=metadata.provider.package,
         expected_sha256=metadata.provider.source_sha256,
     )
     _verify_manifest(
