@@ -275,6 +275,35 @@ class DescendantInfo(BaseModel):
         ``gastos_guarderia_euros`` for one child — declaring both is refused
         rather than reconciled, so a descendant always has exactly one spend
         authority.
+    death_date
+        The date this descendant died, or ``None`` (the default) for a
+        descendant who did not die. Art. 61 norma 4ª LIRPF turns on this fact
+        twice, and the two limbs read it differently, which is why one date
+        drives both rather than a bare "died this year" flag.
+
+        A death IN the filing period replaces this descendant's Art. 58.1
+        birth-order tranche with the norma 4ª flat cuantía, at any birth order
+        — the flat figure coincides with the first-child tranche, so the
+        substitution is invisible for a first child and worth 300 € to 2.100 €
+        for a later one. The Art. 58.2 menor-3 supplement is NOT replaced: the
+        AEAT manual states it "resulta aplicable en los casos en que el
+        descendiente haya fallecido durante el período impositivo", so it is
+        added on top of the flat figure exactly as it is on top of a tranche.
+
+        A death BEFORE the devengo (31 December) additionally drops this
+        descendant from the age ordering that ranks the survivors — the
+        manual's "sin computar a estos efectos aquellos descendientes que, en
+        su caso, hubieran fallecido en el ejercicio con anterioridad a la fecha
+        de devengo del impuesto". The two limbs are deliberately NOT collapsed
+        into one condition: the flat cuantía is owed on any death in the
+        period, while the ordering exclusion is expressly conditioned on the
+        death preceding the devengo, so a descendant who dies ON 31 December
+        takes the flat figure and still occupies their rank. That case is
+        degenerate but the clauses are worded differently, and reading them as
+        one would be a choice neither text supports.
+
+        A death in a PRIOR year makes this descendant no part of this period at
+        all — see :meth:`meets_non_income_conditions`.
     nif
         Optional NIF/NIE; validated for shape when present.
     """
@@ -285,6 +314,7 @@ class DescendantInfo(BaseModel):
     relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE
     inscripcion_registro_civil_date: date | None = None
     acogimiento_resolucion_date: date | None = None
+    death_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool = True
     dependencia_economica: bool | None = None
@@ -302,11 +332,50 @@ class DescendantInfo(BaseModel):
         "birth_date",
         "inscripcion_registro_civil_date",
         "acogimiento_resolucion_date",
+        "death_date",
         mode="before",
     )
     @classmethod
     def _parse_date(cls, value: object) -> object:
         return _coerce_iso_date_field(value)
+
+    @model_validator(mode="after")
+    def _validate_death_date(self) -> DescendantInfo:
+        """A death cannot precede the birth.
+
+        The only ordering this record can judge without knowing a filing year.
+        A future death date is deliberately NOT refused here: profiles are
+        effective-dated and a record may legitimately be read while resolving
+        an earlier filing year, so "after today" is not the same defect it is
+        for an entry event, and refusing it would reject a truthful record.
+        """
+        if self.death_date is not None and self.death_date < self.birth_date:
+            raise ProfileValidationError(
+                f"death_date {self.death_date.isoformat()} precedes birth_date "
+                f"{self.birth_date.isoformat()}; a descendant cannot die before being born.",
+            )
+        return self
+
+    def died_in_period(self, filing_year: int) -> bool:
+        """True when this descendant died during *filing_year*.
+
+        The Art. 61 norma 4ª trigger for the FLAT cuantía, which the statute
+        conditions on the fallecimiento alone with no reference to the devengo.
+        """
+        return self.death_date is not None and self.death_date.year == filing_year
+
+    def died_before_devengo(self, filing_year: int) -> bool:
+        """True when this descendant died in *filing_year* before its 31 December devengo.
+
+        The trigger for the ORDERING limb only, which the AEAT manual conditions
+        on the death falling "con anterioridad a la fecha de devengo del
+        impuesto". Strictly narrower than :meth:`died_in_period`, and the gap
+        between them is load-bearing rather than an oversight — see the
+        ``death_date`` field documentation.
+        """
+        if self.death_date is None or not self.died_in_period(filing_year):
+            return False
+        return self.death_date < date(filing_year, 12, 31)
 
     @model_validator(mode="before")
     @classmethod
@@ -622,6 +691,17 @@ class DescendantInfo(BaseModel):
         re-deriving it beside :meth:`is_eligible_ordinary`, which is how the two
         would drift.
 
+        A descendant who died in a year BEFORE *filing_year* fails outright,
+        ahead of every other condition. They were no part of this period, and
+        the age limb would otherwise keep answering for them indefinitely —
+        ``birth_date`` alone goes on satisfying "under 25 at year-end" for years
+        after the death, so without this gate a bereaved filer would keep
+        claiming the mínimo for a child who died long ago, and the norma 4ª
+        flat cuantía would not apply either because that limb is scoped to a
+        death IN the period. Gated here rather than in
+        :meth:`is_eligible_ordinary` so the calculate-path advisory that asks
+        this predicate directly cannot answer differently from the aggregate.
+
         The household limb is cohabitation OR assimilated economic dependency.
         The authority states the dependency case in terms: a progenitor without
         custody, not even shared, and paying no judicial anualidades, who
@@ -645,6 +725,8 @@ class DescendantInfo(BaseModel):
         ``True`` here says only that the non-income conditions hold; a caller
         that HAS a rentas figure must still apply the ceilings.
         """
+        if self.death_date is not None and self.death_date.year < filing_year:
+            return False
         if not self.qualifies_on_household_limb(
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
@@ -1469,6 +1551,7 @@ class RentaFamilyProfile(BaseModel):
         *,
         birth_order_amounts: Sequence[Decimal],
         menor_tres_supplement: Decimal,
+        fallecimiento_amount: Decimal,
         thresholds: MinimoDescendientesThresholds,
         second_filer_indicated: bool = False,
     ) -> Decimal:
@@ -1496,35 +1579,49 @@ class RentaFamilyProfile(BaseModel):
         01/01/2015, BOE-A-2014-12327) declares only the two numbered
         subsections above and no birth/adoption-date cutoff for descendientes.
 
-        Art. 61 norma 4ª IS NOT MODELLED, and it governs this aggregate rather
-        than sitting outside it. This docstring previously asserted the opposite
-        — that norma 4ª is "scoped to a mid-year death … which does not apply
-        here" — which is exactly backwards: a mid-year death of a DESCENDIENTE is
-        precisely what this method computes over. A confident wrong answer stops
-        the next reader looking, so the correction matters more than the gap.
+        Art. 61 norma 4ª governs this aggregate rather than sitting outside it,
+        and BOTH its limbs are applied here. The rule is easy to half-implement
+        because its flat figure coincides with the first-child tranche, so a
+        partial fix looks complete while leaving most of the over-grant standing.
 
-        The rule has two limbs and the second is the easier to miss. A descendant
-        who dies in the period takes a FLAT amount rather than their birth-order
-        tranche — "en caso de fallecimiento de un descendiente que genere derecho
-        al mínimo por este concepto, la cuantía aplicable es de 2.400 euros" — and
-        is additionally EXCLUDED from the ordering that ranks the survivors, "sin
-        computar a estos efectos aquellos descendientes que … hubieran fallecido
-        en el ejercicio con anterioridad a la fecha de devengo del impuesto".
-        Because the tranches ascend with rank, dropping the deceased from the
-        ordering moves every younger sibling to a cheaper rank.
+        LIMB ONE, the flat cuantía. A descendant who dies in the period takes a
+        FLAT amount rather than their birth-order tranche — "en caso de
+        fallecimiento de un descendiente que genere derecho al mínimo por este
+        concepto, la cuantía aplicable es de 2.400 euros". That figure equals
+        the first-child tranche in every revision served today, so the
+        substitution is worth nothing for a first child and 300 € to 2.100 € for
+        a later one. It is supplied as *fallecimiento_amount*, its own registry
+        parameter, and is deliberately not read off ``birth_order_amounts[0]``:
+        the two are legally distinct figures that merely coincide.
 
-        So the omission over-grants in the ordinary case, twice over: the
-        deceased keeps a tranche above the flat figure whenever they are not the
-        first child, and the survivors keep ranks the deceased should have
-        vacated. It is unreachable rather than merely unimplemented, because
-        ``death_date`` exists on the Modelo 100 profile row and never on
-        :class:`DescendantInfo`, so no caller can express the fact this method
-        would need.
+        LIMB TWO, the ordering exclusion, is the one that is invisible on
+        inspection. The deceased is dropped from the age ordering that ranks the
+        survivors — "sin computar a estos efectos aquellos descendientes que …
+        hubieran fallecido en el ejercicio con anterioridad a la fecha de devengo
+        del impuesto". Because the tranches ascend with rank, dropping the
+        deceased moves every younger sibling to a CHEAPER rank, so omitting this
+        limb over-grants the survivors as well as the deceased. A fix carrying
+        only limb one would pass any test that checks the deceased's own amount.
 
-        *birth_order_amounts*, *menor_tres_supplement* and *thresholds* are
-        registry ``money`` parameters the caller resolves per filing year; this
-        domain method performs no euro-figure lookup of its own
-        (`aeat-schema-central-config`).
+        The two limbs read ``death_date`` through different predicates and the
+        difference is deliberate: :meth:`~DescendantInfo.died_in_period` for the
+        cuantía, :meth:`~DescendantInfo.died_before_devengo` for the ordering.
+        See the ``death_date`` field documentation for why they are not one
+        condition.
+
+        The Art. 58.2 menor-3 supplement is added on top of the flat cuantía,
+        not replaced by it: the AEAT manual states the increase "resulta
+        aplicable en los casos en que el descendiente haya fallecido durante el
+        período impositivo". Replacing it would under-grant a bereaved filer.
+
+        A descendant who died in a PRIOR year contributes nothing at all — they
+        fail :meth:`~DescendantInfo.meets_non_income_conditions` and never reach
+        the ranking.
+
+        *birth_order_amounts*, *menor_tres_supplement*, *fallecimiento_amount*
+        and *thresholds* are registry ``money`` parameters the caller resolves
+        per filing year; this domain method performs no euro-figure lookup of
+        its own (`aeat-schema-central-config`).
 
         Returns ``Decimal("0")`` when no descendant is Art. 58.1-eligible
         (including an empty ``descendientes`` tuple) — the legally correct
@@ -1549,10 +1646,29 @@ class RentaFamilyProfile(BaseModel):
             return Decimal("0")
         if not birth_order_amounts:
             raise ProfileValidationError("birth_order_amounts must not be empty")
+        # Art. 61 norma 4ª limb two: the ordering that assigns "primero,
+        # segundo, tercero…" is computed over the survivors ALONE. A descendant
+        # who died before the devengo still contributes (limb one) but vacates
+        # their rank, which is what moves each younger sibling down a tranche.
+        # Keyed by POSITION rather than by the record itself: DescendantInfo is
+        # a frozen pydantic model, so two identically-declared siblings — twins
+        # with the same birth date and no distinguishing fact — compare equal,
+        # and a value-keyed lookup would give them both the elder's rank.
+        rank_by_position = {
+            position: rank
+            for rank, position in enumerate(
+                position for position, d in enumerate(eligible) if not d.died_before_devengo(filing_year)
+            )
+        }
         total = Decimal("0")
-        for ordinal, descendant in enumerate(eligible):
-            tranche_index = min(ordinal, len(birth_order_amounts) - 1)
-            amount = birth_order_amounts[tranche_index]
+        for position, descendant in enumerate(eligible):
+            if descendant.died_in_period(filing_year):
+                # Limb one: the flat cuantía displaces the tranche at any rank.
+                amount = fallecimiento_amount
+            else:
+                ordinal = rank_by_position[position]
+                tranche_index = min(ordinal, len(birth_order_amounts) - 1)
+                amount = birth_order_amounts[tranche_index]
             if descendant.is_eligible_minimo_incremento_menor_tres(filing_year):
                 amount += menor_tres_supplement
             total += amount * self.minimo_prorrata_factor(

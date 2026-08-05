@@ -32,6 +32,7 @@ from .._descendant_facts import (
 from ..family import DescendantInfo, RentaFamilyProfile
 from ._registry_thresholds import (
     registry_birth_order_amounts,
+    registry_fallecimiento_amount,
     registry_menor_tres_supplement,
     registry_thresholds,
 )
@@ -45,6 +46,7 @@ FILING_YEAR = 2024
 # the engine actually resolves (`aeat-schema-central-config`).
 _MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS = registry_birth_order_amounts(FILING_YEAR)
 _MENOR_TRES = registry_menor_tres_supplement(FILING_YEAR)
+_FALLECIMIENTO = registry_fallecimiento_amount(FILING_YEAR)
 
 _ART58_ORACLE_CASES: tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...] = (
     (
@@ -110,6 +112,7 @@ def _minimo_descendientes_estatal(profile: RentaFamilyProfile) -> Decimal:
         2024,
         birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
         menor_tres_supplement=_MENOR_TRES,
+        fallecimiento_amount=_FALLECIMIENTO,
         thresholds=_THRESHOLDS,
     )
 
@@ -305,7 +308,11 @@ class TestArt58MinimoDescendientesEstatalOracleCases:
         p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2015, 1, 1)),))
         with pytest.raises(ValueError, match="birth_order_amounts"):
             p.minimo_descendientes_estatal(
-                2024, birth_order_amounts=[], menor_tres_supplement=_MENOR_TRES, thresholds=_THRESHOLDS
+                2024,
+                birth_order_amounts=[],
+                menor_tres_supplement=_MENOR_TRES,
+                fallecimiento_amount=_FALLECIMIENTO,
+                thresholds=_THRESHOLDS,
             )
 
 

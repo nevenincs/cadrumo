@@ -1569,12 +1569,13 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento con derecho al aumento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre y mes de alta posterior, gastos de guardería y NIF."
+description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento, fecha de fallecimiento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre y mes de alta posterior, gastos de guardería y NIF."
 model_selectors = [
   "DescendantInfo.birth_date",
   "DescendantInfo.relacion",
   "DescendantInfo.inscripcion_registro_civil_date",
   "DescendantInfo.acogimiento_resolucion_date",
+  "DescendantInfo.death_date",
   "DescendantInfo.discapacidad_grado",
   "DescendantInfo.convive_con_contribuyente",
   "DescendantInfo.dependencia_economica",
@@ -1588,7 +1589,7 @@ model_selectors = [
   "DescendantInfo.gastos_guarderia_mensuales",
   "DescendantInfo.nif",
 ]
-legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1", "ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1", "ley-35-2006:art-61", "ley-35-2006:art-61-norma-2", "ley-35-2006:art-61-norma-4"]
 
 [[sections.fields]]
 key = "situacion_familiar"

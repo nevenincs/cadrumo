@@ -258,6 +258,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"relacion={descendant.relacion.value}",
                     f"inscripcion={_iso_or_dash(descendant.inscripcion_registro_civil_date)}",
                     f"acogimiento={_iso_or_dash(descendant.acogimiento_resolucion_date)}",
+                    f"fallecimiento={_iso_or_dash(descendant.death_date)}",
                     f"discapacidad={descendant.discapacidad_grado if descendant.discapacidad_grado is not None else 0}",
                     f"convivencia={str(descendant.convive_con_contribuyente).lower()}",
                     f"dependencia={_tri(descendant.dependencia_economica)}",
@@ -295,6 +296,7 @@ def _emit_descendiente_list(
                 relacion=descendant.relacion,
                 inscripcion_registro_civil_date=descendant.inscripcion_registro_civil_date,
                 acogimiento_resolucion_date=descendant.acogimiento_resolucion_date,
+                death_date=descendant.death_date,
                 discapacidad_grado=descendant.discapacidad_grado,
                 convive_con_contribuyente=descendant.convive_con_contribuyente,
                 dependencia_economica=descendant.dependencia_economica,
@@ -531,7 +533,8 @@ def descendiente_add(
             default=(
                 "NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|"
                 "acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela]"
-                "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65]"
+                "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,FALLECIMIENTO=YYYY-MM-DD]"
+                "[,DISCAPACIDAD=0|33|65]"
                 "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
                 "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
                 "[,MESES_TRABAJO=0..12][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N]"

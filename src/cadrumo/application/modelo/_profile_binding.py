@@ -523,8 +523,8 @@ def _resolved_minimo_descendientes_tranches(
     snapshot: RegistrySnapshot,
     *,
     ccaa_infix: str | None,
-) -> tuple[list[Decimal], Decimal] | None:
-    """Resolve the birth-order tranche amounts + menor-3 supplement for *ccaa_infix*.
+) -> tuple[list[Decimal], Decimal, Decimal] | None:
+    """Resolve the birth-order tranches, menor-3 supplement, and norma 4ª flat cuantía.
 
     When *ccaa_infix* is ``None`` (or the CCAA-specific parameter for a given
     tranche is absent), that tranche falls back to the estatal Art. 58
@@ -558,9 +558,19 @@ def _resolved_minimo_descendientes_tranches(
     menor_tres_supplement = _resolve_tranche(_MINIMO_DESCENDIENTES_MENOR_TRES_SUFFIX)
     if menor_tres_supplement is None:
         return None
-    return birth_order_amounts, menor_tres_supplement
+    # Art. 61 norma 4ª's death-in-period flat cuantía. Resolved through the same
+    # per-tranche CCAA fallback as the rest: no comunidad publishes a divergent
+    # death figure today, so every CCAA lands on the estatal parameter, and one
+    # that later does is picked up without changing this call. Its own
+    # parameter, never ``birth_order_amounts[0]`` — the two figures coincide in
+    # every served revision and are not the same authority.
+    fallecimiento_amount = _resolve_tranche(_MINIMO_DESCENDIENTES_FALLECIMIENTO_SUFFIX)
+    if fallecimiento_amount is None:
+        return None
+    return birth_order_amounts, menor_tres_supplement, fallecimiento_amount
 
 
+_MINIMO_DESCENDIENTES_FALLECIMIENTO_SUFFIX = "fallecimiento"
 _MINIMO_DESCENDIENTES_RENTAS_LIMITE_SUFFIX = "rentas-anuales-limite"
 _MINIMO_DESCENDIENTES_DECLARACION_PROPIA_SUFFIX = "declaracion-propia-rentas-limite"
 
@@ -714,11 +724,12 @@ def _inject_derived_minimo_descendientes_facts(
     profile = _renta_family_profile_from_facts(fact_index)
     second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
-    birth_order_amounts, menor_tres_supplement = estatal_tranches
+    birth_order_amounts, menor_tres_supplement, fallecimiento_amount = estatal_tranches
     fact_index[estatal_key] = profile.minimo_descendientes_estatal(
         snapshot.filing_year,
         birth_order_amounts=birth_order_amounts,
         menor_tres_supplement=menor_tres_supplement,
+        fallecimiento_amount=fallecimiento_amount,
         thresholds=thresholds,
         second_filer_indicated=second_filer_indicated,
     )
@@ -736,11 +747,12 @@ def _inject_derived_minimo_descendientes_facts(
         # defensive): fall back to the estatal tranches rather than
         # leaving the autonómico casilla unresolved.
         autonomico_tranches = estatal_tranches
-    birth_order_amounts, menor_tres_supplement = autonomico_tranches
+    birth_order_amounts, menor_tres_supplement, fallecimiento_amount = autonomico_tranches
     fact_index[autonomico_key] = profile.minimo_descendientes_estatal(
         snapshot.filing_year,
         birth_order_amounts=birth_order_amounts,
         menor_tres_supplement=menor_tres_supplement,
+        fallecimiento_amount=fallecimiento_amount,
         thresholds=thresholds,
         second_filer_indicated=second_filer_indicated,
     )
