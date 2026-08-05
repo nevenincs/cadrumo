@@ -744,32 +744,52 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definiti
         )
 
 
+def _renta_gastos_estimacion_directa_build_matcher(
+    selector: _RentaLedgerGastosEstimacionDirectaSelector,
+) -> Callable[[RentaGastosEstimacionDirectaObservationProtocol], bool]:
+    modelo, period, target_casilla_id = selector.modelo, selector.period, selector.target_casilla_id
+
+    def matcher(observation: RentaGastosEstimacionDirectaObservationProtocol) -> bool:
+        return (
+            observation.modelo == modelo
+            and observation.period == period
+            and observation.target_casilla_id == target_casilla_id
+        )
+
+    return matcher
+
+
+def _renta_gastos_estimacion_directa_aggregate(
+    matched: Sequence[RentaGastosEstimacionDirectaObservationProtocol],
+    selector: _RentaLedgerGastosEstimacionDirectaSelector,
+) -> Decimal:
+    del selector  # single declared fact (deductible_amount_sum); nothing to dispatch on
+    return sum((observation.deductible_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaGastosEstimacionDirectaObservationProtocol],
 ) -> dict[BindingId, Decimal]:
     """Resolve every ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on ``revision``.
 
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver.
+
     Args:
         revision: The :class:`ModeloRevision` whose gastos bindings to resolve.
         observations: Typed gastos observations the bindings aggregate
             via their declared ``selector.fact`` and ``aggregation.op``.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
-            continue
-        selector = _renta_ledger_gastos_estimacion_directa_selector(binding)
-        matched = [
-            observation
-            for observation in available
-            if observation.modelo == selector.modelo
-            and observation.period == selector.period
-            and observation.target_casilla_id == selector.target_casilla_id
-        ]
-        resolved[binding.id] = sum((observation.deductible_amount for observation in matched), Decimal("0"))
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_estimacion_directa_selector,
+        build_matcher=_renta_gastos_estimacion_directa_build_matcher,
+        aggregate=_renta_gastos_estimacion_directa_aggregate,
+    )
 
 
 def unsupported_ledger_renta_gastos_estimacion_directa_observations(
