@@ -13,7 +13,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, computed_field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ._errors import RegistryValidationError
@@ -105,7 +105,16 @@ class RegistryCoverageAudit(CoverageModel):
 
 
 ConstructEvidenceKind = Literal["formula", "parameter", "binding", "relation", "selector"]
-ConstructEvidenceStatus = Literal["grounded", "inherited", "unresolved", "unmeasured"]
+ConstructEvidenceStatus = Literal["grounded", "inherited", "unresolved", "unmeasured", "unvalidated"]
+
+
+class _AuthorityCheckProof:
+    """Opaque proof object held only by the validated audit fold."""
+
+    __slots__ = ()
+
+
+_AUTHORITY_CHECK_PROOF = _AuthorityCheckProof()
 
 
 class ConstructEvidenceRow(CoverageModel):
@@ -125,6 +134,13 @@ class ConstructEvidenceRow(CoverageModel):
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()
     reason: str = Field(min_length=1, max_length=1024)
+    _authority_proof: _AuthorityCheckProof | None = PrivateAttr(default=None)
+
+    @computed_field
+    @property
+    def authority_checked(self) -> bool:
+        """Return whether this row was created through the validated audit fold."""
+        return self._authority_proof is _AUTHORITY_CHECK_PROOF
 
     @model_validator(mode="after")
     def _validate_evidence_shape(self) -> ConstructEvidenceRow:
@@ -145,6 +161,12 @@ class ConstructEvidenceRow(CoverageModel):
                 raise RegistryValidationError("only selector evidence may be inherited")
             if not (has_legal and has_source):
                 raise RegistryValidationError("inherited selector evidence requires owning binding refs")
+        if self.status in {"grounded", "inherited"} and not self.authority_checked:
+            raise RegistryValidationError(
+                "complete construct evidence requires an authority-checked registry validation boundary",
+            )
+        if self.status == "unvalidated" and not (has_legal and has_source):
+            raise RegistryValidationError("unvalidated construct evidence requires declared legal and source refs")
         if self.status == "unresolved" and has_legal and has_source:
             raise RegistryValidationError("unresolved construct evidence cannot carry complete refs")
         if self.status == "unmeasured" and (has_legal or has_source):
@@ -169,7 +191,7 @@ class ConstructEvidenceLedger(CoverageModel):
     @property
     def gaps(self) -> tuple[ConstructEvidenceRow, ...]:
         """Return construct rows whose own or inherited evidence is incomplete."""
-        return tuple(row for row in self.rows if row.status in {"unresolved", "unmeasured"})
+        return tuple(row for row in self.rows if row.status in {"unresolved", "unmeasured", "unvalidated"})
 
 
 class RegistryConstructEvidenceAudit(CoverageModel):
@@ -179,7 +201,7 @@ class RegistryConstructEvidenceAudit(CoverageModel):
 
     @property
     def gaps(self) -> tuple[ConstructEvidenceRow, ...]:
-        """Return all unresolved or unmeasured construct rows."""
+        """Return all unresolved, unmeasured, or unvalidated construct rows."""
         return tuple(row for ledger in self.ledgers for row in ledger.gaps)
 
     @property
@@ -267,7 +289,7 @@ def audit_registry_construct_evidence(
                 period=revision.period_selector.periods[0],
                 revision_id=revision.id,
             )
-            ledgers.append(build_construct_evidence_ledger(snapshot))
+            ledgers.append(_build_construct_evidence_ledger(snapshot, authority_proof=_AUTHORITY_CHECK_PROOF))
     return RegistryConstructEvidenceAudit(ledgers=tuple(ledgers))
 
 
@@ -292,32 +314,60 @@ def build_model_law_coverage_ledger(snapshot: RegistrySnapshot) -> ModelLawCover
     )
 
 
-def build_construct_evidence_ledger(snapshot: RegistrySnapshot) -> ConstructEvidenceLedger:
-    """Build exact legal/source rows for a validated revision's constructs."""
+def build_construct_evidence_ledger(
+    snapshot: RegistrySnapshot,
+) -> ConstructEvidenceLedger:
+    """Build declared legal/source rows without claiming registry validation."""
+    return _build_construct_evidence_ledger(snapshot, authority_proof=None)
+
+
+def _build_construct_evidence_ledger(
+    snapshot: RegistrySnapshot,
+    *,
+    authority_proof: _AuthorityCheckProof | None,
+) -> ConstructEvidenceLedger:
+    """Build construct rows, optionally under the private validated-audit proof."""
     revision = snapshot.revision
     rows: list[ConstructEvidenceRow] = []
-    rows.extend(_declared_construct_evidence_row(declaration, kind="formula") for declaration in revision.formulas)
-    rows.extend(_declared_construct_evidence_row(declaration, kind="parameter") for declaration in revision.parameters)
-    rows.extend(_declared_construct_evidence_row(declaration, kind="binding") for declaration in revision.bindings)
-    rows.extend(_declared_construct_evidence_row(declaration, kind="relation") for declaration in revision.relations)
+    rows.extend(
+        _declared_construct_evidence_row(declaration, kind="formula", authority_proof=authority_proof)
+        for declaration in revision.formulas
+    )
+    rows.extend(
+        _declared_construct_evidence_row(declaration, kind="parameter", authority_proof=authority_proof)
+        for declaration in revision.parameters
+    )
+    rows.extend(
+        _declared_construct_evidence_row(declaration, kind="binding", authority_proof=authority_proof)
+        for declaration in revision.bindings
+    )
+    rows.extend(
+        _declared_construct_evidence_row(declaration, kind="relation", authority_proof=authority_proof)
+        for declaration in revision.relations
+    )
 
     for binding in revision.bindings:
-        status = _status_for_refs(binding.legal_refs, binding.source_refs)
-        if status == "grounded":
+        declared_status = _status_for_declared_refs(binding.legal_refs, binding.source_refs)
+        authority_checked = authority_proof is _AUTHORITY_CHECK_PROOF
+        if declared_status == "grounded" and authority_checked:
             selector_status: ConstructEvidenceStatus = "inherited"
             reason = f"selector evidence is inherited from binding {binding.id!r}"
+        elif declared_status == "grounded":
+            selector_status = "unvalidated"
+            reason = f"selector evidence has refs but no validated registry authority for binding {binding.id!r}"
         else:
-            selector_status = status
+            selector_status = declared_status
             reason = f"selector evidence cannot inherit complete refs from binding {binding.id!r}"
         rows.append(
-            ConstructEvidenceRow(
+            _construct_evidence_row(
                 kind="selector",
                 construct_id=binding.id,
                 binding_id=binding.id,
                 status=selector_status,
                 legal_refs=tuple(binding.legal_refs),
                 source_refs=tuple(binding.source_refs),
-                reason=reason,
+                reason=(f"authority-checked {reason}" if authority_checked else reason),
+                authority_proof=authority_proof,
             ),
         )
 
@@ -329,19 +379,66 @@ def _declared_construct_evidence_row(
     declaration: FormulaDefinition | ParameterDefinition | DataBindingDefinition | RelationDefinition,
     *,
     kind: ConstructEvidenceKind,
+    authority_proof: _AuthorityCheckProof | None,
 ) -> ConstructEvidenceRow:
-    status = _status_for_refs(declaration.legal_refs, declaration.source_refs)
-    return ConstructEvidenceRow(
+    declared_status = _status_for_declared_refs(declaration.legal_refs, declaration.source_refs)
+    authority_checked = authority_proof is _AUTHORITY_CHECK_PROOF
+    status: ConstructEvidenceStatus = (
+        declared_status if authority_checked or declared_status != "grounded" else "unvalidated"
+    )
+    return _construct_evidence_row(
         kind=kind,
         construct_id=declaration.id,
         status=status,
         legal_refs=tuple(declaration.legal_refs),
         source_refs=tuple(declaration.source_refs),
-        reason=f"{kind} declaration {declaration.id!r} carries its own legal/source refs",
+        reason=(
+            f"authority-checked {kind} declaration {declaration.id!r} carries its own legal/source refs"
+            if authority_checked
+            else f"{kind} declaration {declaration.id!r} carries its own legal/source refs"
+        ),
+        authority_proof=authority_proof,
     )
 
 
-def _status_for_refs(
+def _construct_evidence_row(
+    *,
+    kind: ConstructEvidenceKind,
+    construct_id: str,
+    binding_id: BindingId | None = None,
+    status: ConstructEvidenceStatus,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
+    reason: str,
+    authority_proof: _AuthorityCheckProof | None,
+) -> ConstructEvidenceRow:
+    """Create a row and attach the private proof only after shape validation."""
+    if authority_proof is not _AUTHORITY_CHECK_PROOF or status not in {"grounded", "inherited"}:
+        return ConstructEvidenceRow(
+            kind=kind,
+            construct_id=construct_id,
+            binding_id=binding_id,
+            status=status,
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+            reason=reason,
+        )
+
+    unvalidated_row = ConstructEvidenceRow(
+        kind=kind,
+        construct_id=construct_id,
+        binding_id=binding_id,
+        status="unvalidated",
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+        reason=reason,
+    )
+    object.__setattr__(unvalidated_row, "status", status)
+    object.__setattr__(unvalidated_row, "_authority_proof", _AUTHORITY_CHECK_PROOF)
+    return unvalidated_row
+
+
+def _status_for_declared_refs(
     legal_refs: tuple[LegalRefId, ...],
     source_refs: tuple[SourceRefId, ...],
 ) -> Literal["grounded", "unresolved", "unmeasured"]:

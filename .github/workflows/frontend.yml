@@ -63,7 +63,18 @@ jobs:
       - name: Provision Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: "20"
+          # 22, not 20. This lane first shipped pinned to 20 to match ci.yml —
+          # which was the wrong reason: ci.yml provisions Node only to shell out
+          # to `npx jscpd` for the duplication scan, so its pin says nothing
+          # about what THIS subproject needs. Measured on the first real run
+          # (2026-08-05): `npm ci` refused with `@testing-library/jest-dom@7.0.0`
+          # requiring `{"node":">=22"}` against `v20.20.2`.
+          #
+          # Note the manifest cannot be trusted for this either: `frontend/
+          # package.json` declares `engines: {"node": ">=20.19.0"}`, which
+          # under-declares its own dependency tree. The lockfile's transitive
+          # requirements are the real floor, and npm enforces them.
+          node-version: "22"
 
       - name: Install locked dependencies
         # `npm ci`, never `npm install`: ci installs exactly the committed

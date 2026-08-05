@@ -21,7 +21,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, Modelo, Period, RegistryPeriodCode
+from ...core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, FilingPeriodCode, Modelo, Period
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     CounterpartSourceKind,
@@ -69,7 +69,7 @@ class CounterpartObservation(BaseModel):
     counterparty_name: str = Field(default="", max_length=200)
     counterparty_country: str = Field(default="ES", min_length=2, max_length=2)
     operation_kind: str = Field(min_length=1)
-    operation_period: RegistryPeriodCode
+    operation_period: FilingPeriodCode
     taxable_base: Decimal = Field(ge=Decimal("0"))
     invoice_total: Decimal = Field(ge=Decimal("0"))
     accrued_on: IsoDateString = Field(min_length=10, max_length=10)

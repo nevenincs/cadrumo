@@ -384,12 +384,32 @@ def test_registry_retained_commands_reject_command_local_json_flag() -> None:
     assert "No such option" in result.output
 
 
-def test_root_output_format_is_typed_and_refuses_invalid_values_before_dispatch(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def test_rejected_json_flag_does_not_switch_a_text_invocation_to_json() -> None:
+    """The rejected ``--json`` token is not read back as an output-mode request.
+
+    ``--json`` is retired as a command-local flag, so the token can only ever
+    reach the terminal boundary as an unknown option. It must not make a
+    text-mode operator receive an error document, and an explicit
+    ``--format json`` elsewhere in argv must still be honoured.
+    """
+    base = ["app", "registry", "inspect", "--registry-root", str(_REGISTRY_ROOT), "--json"]
+
+    text_mode = invoke_cached_cli(base)
+    assert text_mode.exit_code != 0
+    assert not text_mode.output.lstrip().startswith("{")
+
+    json_mode = invoke_cached_cli(["--format", "json", *base])
+    assert json_mode.exit_code != 0
+    payload = json.loads(json_mode.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["context"]["option"] == "--json"
+
+
+def test_root_output_format_is_typed_and_refuses_invalid_values_before_dispatch() -> None:
     command = cadrumo_click_command()
-    command.get_help(click.Context(command))
-    parser_help = capsys.readouterr().out
+    # ``get_help`` RETURNS the rendered help; the CLI disables Rich rendering
+    # globally, so nothing is written to stdout for a capture to read.
+    parser_help = command.get_help(click.Context(command))
     assert "<text|json>" in parser_help
     assert "Formato de salida: text, json." in parser_help
 

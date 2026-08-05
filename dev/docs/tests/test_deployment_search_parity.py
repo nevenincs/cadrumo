@@ -526,6 +526,33 @@ def _probe_record() -> tuple[str, tuple[str, ...]]:
     pytest.fail("no bounded concept record carries a declared alias to probe cross-lingual recall with")
 
 
+def _probe_casilla_record() -> tuple[str, tuple[str, ...]]:
+    """Return one bounded casilla target plus its declared localized terms.
+
+    The title is the stable modelo/casilla navigation form; the remaining
+    terms are the four localized definitions emitted by the registry-backed
+    projection. The probe therefore exercises both the exact navigation
+    vocabulary and the localized definition content without inventing a
+    search phrase or selecting a hand-curated fixture.
+    """
+    from dev.docs.pagefind_inject import _bounded_to_sample, _materialise_records
+
+    bounded = _bounded_to_sample(_materialise_records(), _SAMPLE_PER_KIND)
+    for record in bounded.records:
+        if record.kind.value != "casilla" or not all(language in record.descriptions for language in OutputLanguage):
+            continue
+        terms = tuple(
+            dict.fromkeys(
+                (
+                    record.title,
+                    *(record.descriptions[language] for language in OutputLanguage),
+                )
+            )
+        )
+        return record.target, terms
+    pytest.fail("no bounded casilla record carries all four localized definitions to probe cross-lingual recall with")
+
+
 @pytest.mark.parametrize("language", _ROOT_LANGUAGES)
 def test_every_root_recalls_a_record_by_its_declared_terms_in_any_language(
     language: str,
@@ -546,6 +573,28 @@ def test_every_root_recalls_a_record_by_its_declared_terms_in_any_language(
     unrecalled = [term for term in terms if not any(url.endswith(target) for url in hits[term])]
     assert not unrecalled, (
         f"the {language!r} root does not recall {target!r} by its declared term(s) {unrecalled}; results were {hits}"
+    )
+
+
+@pytest.mark.parametrize("language", _ROOT_LANGUAGES)
+def test_every_root_recalls_a_casilla_by_its_declared_localized_terms(
+    language: str,
+    built_roots: dict[str, _RootBuild],
+) -> None:
+    """A localized casilla definition recalls its canonical target on every root.
+
+    This is the casilla half of the per-root worked-example contract. It reads
+    the title and all four localized descriptions from one real bounded projection, so
+    a root that carries only pages, only one locale, or the wrong language
+    index cannot satisfy the assertion by accident.
+    """
+    target, terms = _probe_casilla_record()
+    hits = _search_urls(built_roots[language].site, terms)
+
+    unrecalled = [term for term in terms if not any(url.endswith(target) for url in hits[term])]
+    assert not unrecalled, (
+        f"the {language!r} root does not recall casilla {target!r} by its declared term(s) "
+        f"{unrecalled}; results were {hits}"
     )
 
 

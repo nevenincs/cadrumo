@@ -1,23 +1,36 @@
 """Casilla fragment filenames must tell the truth about their content.
 
 Every fragment under ``modelos/<m>/revisions/<r>/casillas/`` is named
-``<ordinal>-c<first>[__c<last>].toml``: a zero-padded merge ordinal (the
-position the loader's sorted walk assigns the file), a ``-``, then the declared
-casilla span with an explicit ``c`` prefix per id. The prefix is load-bearing:
-without it a name like ``0469-0529.toml`` reads as a casilla range while the
-leading token is actually a merge ordinal that can collide with a *different*
-fragment's casilla id — the historical corpus carried ~10,800 such misleading
-names across six coexisting conventions. Windows forbids ``:`` in filenames, so
-``+`` stands in for ``:`` inside an id (``DP200014B:00592`` files as
-``cDP200014B+00592``); ``+`` occurs in no casilla id, so the mapping is
-unambiguous and reversible.
+``c<first>[__c<last>].toml``: the declared casilla span, with an explicit ``c``
+prefix per id and nothing else. The prefix is load-bearing: without it a name
+like ``0469-0529.toml`` reads as a casilla range while the leading token is
+actually a merge ordinal that can collide with a *different* fragment's casilla
+id — the historical corpus carried ~10,800 such misleading names across six
+coexisting conventions. Windows forbids ``:`` in filenames, so ``+`` stands in
+for ``:`` inside an id (``DP200014B:00592`` files as ``cDP200014B+00592``);
+``+`` occurs in no casilla id, so the mapping is unambiguous and reversible.
 
-The gate re-derives the expected name for every fragment from its parsed
-content and merge position, so a renamed casilla, a re-fragmented file, or a
-new revision landing with an ad-hoc name fails loudly with the exact expected
-name in the message. Cross-revision stem stability is intentionally NOT
-enforced: the ordinal tracks merge position by design, and stabilising stems
-across revisions is a separate, order-affecting decision.
+The name is now *purely content-derived*. It carries no merge ordinal, so a
+fragment's stem is stable across revisions: adding a casilla earlier in a
+revision no longer renames every fragment after it (which drifted 2,113 M100
+stems). The cost is that the loader's ``sorted(rglob("*.toml"))`` merge order
+becomes lexicographic by content rather than authored position — a permutation
+of 10,041 positions across 24 directories when the ordinals were dropped.
+
+That permutation is safe because compiled casilla order is presentation-only:
+the workbook layout is the sole consumer that reads the sequence, and it stays
+self-consistent, while every projection deciding what the taxpayer declares is
+keyed by ``casilla.id``. A previously exported workbook is not silently
+misread either — ``registry_sha`` hashes the ordered snapshot, so a reorder
+invalidates the sheet and the pull refuses it. Both properties are pinned by
+``test_casilla_order_invariance.py``; if that gate is ever relaxed, this naming
+convention has to be reconsidered with it.
+
+Uniqueness is what the ordinal used to guarantee for free, so the gate now
+enforces it directly: two fragments in one directory may not derive the same
+stem. The gate re-derives the expected name for every fragment from its parsed
+content, so a renamed casilla, a re-fragmented file, or a new revision landing
+with an ad-hoc name fails loudly with the exact expected name in the message.
 """
 
 from __future__ import annotations
@@ -34,7 +47,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
-_CANONICAL = re.compile(r"^(?P<ordinal>\d{4,})-c(?P<body>.+)$")
+_CANONICAL = re.compile(r"^c(?P<body>.+)$")
 _SPAN_JOIN = "__c"
 _FILENAME_SUBSTITUTIONS = {":": "+"}
 
@@ -75,11 +88,10 @@ def _declared_ids(path: Path) -> list[str]:
     return ids
 
 
-def _expected_stem(ordinal: int, width: int, declared: list[str]) -> str:
+def _expected_stem(declared: list[str]) -> str:
     first = _sanitize(declared[0])
     last = _sanitize(declared[-1])
-    body = f"c{first}" if len(declared) == 1 or first == last else f"c{first}__c{last}"
-    return f"{ordinal:0{width}d}-{body}"
+    return f"c{first}" if len(declared) == 1 or first == last else f"c{first}__c{last}"
 
 
 def _naming_violations(root: Path) -> tuple[list[str], int, int]:
@@ -92,38 +104,34 @@ def _naming_violations(root: Path) -> tuple[list[str], int, int]:
             continue
         directories += 1
         files = sorted(directory.rglob("*.toml"))
-        width = max(4, len(str(len(files))))
-        seen_ordinals: set[int] = set()
-        for position, path in enumerate(files, start=1):
+        # The ordinal used to make every stem unique for free. A content-derived
+        # stem does not, so collision is now a first-class violation: two
+        # fragments deriving one name would make the pair unaddressable.
+        claimed: dict[str, str] = {}
+        for path in files:
             total_files += 1
             rel = path.relative_to(root).as_posix()
             declared = _declared_ids(path)
-            if not declared and re.fullmatch(r"\d{4,}-casillas", path.stem):
+            if not declared and re.fullmatch(r"\d{4,}-casillas|casillas", path.stem):
                 # The new-modelo scaffolder's sanctioned skeleton: an EMPTY
                 # fragment may keep the placeholder name; authoring content
                 # into it forces the canonical content-derived name below.
                 continue
-            match = _CANONICAL.match(path.stem)
-            if match is None:
-                hint = (
-                    _expected_stem(position, width, declared) if declared else "<no casillas declared>"
-                )
+            if _CANONICAL.match(path.stem) is None:
+                hint = _expected_stem(declared) if declared else "<no casillas declared>"
                 violations.append(f"{rel}: not canonical; expected stem {hint!r}")
                 continue
-            ordinal = int(match.group("ordinal"))
-            if ordinal in seen_ordinals:
-                violations.append(f"{rel}: duplicate merge ordinal {ordinal}")
-            seen_ordinals.add(ordinal)
             if not declared:
                 violations.append(f"{rel}: canonical name but the file declares no casillas")
                 continue
-            expected = _expected_stem(ordinal, len(match.group("ordinal")), declared)
+            expected = _expected_stem(declared)
             if path.stem != expected:
                 violations.append(f"{rel}: name/content mismatch; expected stem {expected!r}")
-            if ordinal != position:
-                violations.append(
-                    f"{rel}: ordinal {ordinal} is not this fragment's merge position {position}"
-                )
+            owner = claimed.get(expected)
+            if owner is not None:
+                violations.append(f"{rel}: derives the same stem {expected!r} as {owner}")
+            else:
+                claimed[expected] = rel
     return violations, total_files, directories
 
 
@@ -154,19 +162,31 @@ def test_gate_fires_on_each_violation_class(tmp_path: Path) -> None:
 
     _write_fragment(casillas, "0001-0002.toml", ["0002"])  # pre-convention name
     violations, *_ = _naming_violations(tmp_path)
-    assert any("not canonical" in v and "'0001-c0002'" in v for v in violations)
+    assert any("not canonical" in v and "'c0002'" in v for v in violations)
 
+    # A retired ordinal prefix is exactly the shape this rename retired, so it
+    # must not pass as canonical just because it ends in the right span.
     (casillas / "0001-0002.toml").rename(casillas / "0001-c0002.toml")
+    violations, *_ = _naming_violations(tmp_path)
+    assert any("not canonical" in v and "'c0002'" in v for v in violations)
+
+    (casillas / "0001-c0002.toml").rename(casillas / "c0002.toml")
     violations, *_ = _naming_violations(tmp_path)
     assert not violations
 
-    _write_fragment(casillas, "0002-c9999.toml", ["0003"])  # name lies about content
+    # Name/content mismatch: the stem must track what the file declares.
+    _write_fragment(casillas, "c9999.toml", ["0003"])
     violations, *_ = _naming_violations(tmp_path)
-    assert any("name/content mismatch" in v for v in violations)
+    assert any("name/content mismatch" in v and "'c0003'" in v for v in violations)
+    (casillas / "c9999.toml").unlink()
 
-    (casillas / "0002-c9999.toml").rename(casillas / "0003-c0003.toml")  # wrong position
+    # Collision: the ordinal used to guarantee uniqueness for free, so the
+    # replacement check needs its own control. Two files whose declared spans
+    # derive one stem -- the second must be reported as claiming a taken name.
+    _write_fragment(casillas, "c0004.toml", ["0004"])
+    _write_fragment(casillas, "c0004__c0004.toml", ["0004", "0004"])
     violations, *_ = _naming_violations(tmp_path)
-    assert any("not this fragment's merge position" in v for v in violations)
+    assert any("derives the same stem" in v for v in violations), violations
 
 
 def test_scaffold_skeleton_is_tolerated_only_while_empty(tmp_path: Path) -> None:
@@ -180,11 +200,11 @@ def test_scaffold_skeleton_is_tolerated_only_while_empty(tmp_path: Path) -> None
 
     _write_fragment(casillas, "0001-casillas.toml", ["0007"])
     violations, *_ = _naming_violations(tmp_path)
-    assert any("'0001-c0007'" in v for v in violations), violations
+    assert any("'c0007'" in v for v in violations), violations
 
 
 def test_colon_ids_round_trip_through_the_plus_substitution(tmp_path: Path) -> None:
     casillas = tmp_path / "modelos" / "200" / "revisions" / "2024" / "casillas"
-    _write_fragment(casillas, "0001-cDP200014B+00592.toml", ["DP200014B:00592"])
+    _write_fragment(casillas, "cDP200014B+00592.toml", ["DP200014B:00592"])
     violations, *_ = _naming_violations(tmp_path)
     assert not violations

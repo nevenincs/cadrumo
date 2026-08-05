@@ -86,3 +86,14 @@ def registry_birth_order_amounts(filing_year: int) -> tuple[Decimal, ...]:
 def registry_menor_tres_supplement(filing_year: int) -> Decimal:
     """The Art. 58.2 under-three supplement the registry declares for *filing_year*."""
     return _parameter(filing_year, "menor-tres-anos")
+
+
+def registry_fallecimiento_amount(filing_year: int) -> Decimal:
+    """The Art. 61 norma 4ª death-in-period flat cuantía the registry declares for *filing_year*.
+
+    Read from its OWN parameter rather than from the first birth-order tranche,
+    which carries the same figure in every served revision. A test that took the
+    tranche would keep passing if the two were ever wrongly bound together,
+    which is precisely the confusion the separate parameter exists to prevent.
+    """
+    return _parameter(filing_year, "fallecimiento")

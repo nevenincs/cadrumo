@@ -92,14 +92,19 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_serializer, model_validator
+from pydantic_core.core_schema import SerializerFunctionWrapHandler
 
 from cadrumo.application.registry import (
+    AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
+    RevisionCasillaProducerTrace,
     RevisionConformanceRow,
+    RevisionConstructEvidence,
     audit_bundled_registry_conformance,
+    compare_annual_casilla_population,
 )
 from cadrumo.core import STRICT_FROZEN_CONFIG, RevisionReviewStatus
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
@@ -279,8 +284,45 @@ class ConformanceCoordinate(ConformanceModel):
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=32)
     law_selected_revision: str = Field(min_length=1)
+    schema_comparison: AnnualCasillaPopulationComparison
     classification: ConformanceCoordinateClassification
     provisional: bool
+
+    @model_validator(mode="after")
+    def _schema_comparison_matches_coordinate(self) -> ConformanceCoordinate:
+        """Keep the nested schema evidence on the same exact law coordinate."""
+        enclosing = (self.modelo, self.filing_year, self.period, self.law_selected_revision)
+        comparison = self.schema_comparison
+        nested = (comparison.modelo, comparison.filing_year, comparison.period, comparison.law_selected_revision)
+        if nested != enclosing:
+            raise ValueError(
+                "annual schema comparison coordinate does not match enclosing coordinate",
+            )
+        return self
+
+    @model_serializer(mode="wrap")
+    def _serialize_schema_comparison_properties(
+        self,
+        handler: SerializerFunctionWrapHandler,
+    ) -> dict[str, object]:
+        """Expose computed divergence properties in the JSON projection."""
+        payload: dict[str, object] = handler(self)
+        comparison = self.schema_comparison
+        comparison_payload = comparison.model_dump(mode="json")
+        comparison_payload.update(
+            missing_casilla_ids=list(comparison.missing_casilla_ids),
+            extra_casilla_ids=list(comparison.extra_casilla_ids),
+            identity_divergence_count=comparison.identity_divergence_count,
+        )
+        comparison_payload["layout_comparisons"] = [
+            {
+                **layout.model_dump(mode="json"),
+                "identity_divergence_count": layout.identity_divergence_count,
+            }
+            for layout in comparison.layout_comparisons
+        ]
+        payload["schema_comparison"] = comparison_payload
+        return payload
 
 
 class ConformanceCoordinateMatrix(ConformanceModel):
@@ -374,6 +416,10 @@ class RevisionConformancePayload(ConformanceModel):
             row, or :data:`None` when no probe was built.
         locale: Schema-local translation coverage, or :data:`None` when the
             locale manager could not read this modelo.
+        construct_evidence: Full construct-level legal/source ledger, or
+            :data:`None` when the validating authority was not consulted.
+        casilla_provenance: Lossless per-casilla producer traces, including
+            relation multiplicity and producer-specific provenance.
     """
 
     modelo: str
@@ -408,6 +454,8 @@ class RevisionConformancePayload(ConformanceModel):
     latest_revision_probed: str | None
     support_probe_describes_this_revision: bool | None
     locale: RevisionLocaleCoverage | None
+    construct_evidence: RevisionConstructEvidence | None
+    casilla_provenance: tuple[RevisionCasillaProducerTrace, ...]
 
 
 class OraclePayloadGapRow(ConformanceModel):
@@ -1038,13 +1086,9 @@ def _shared_locale_coverage_record(
 ) -> _SharedModeloLocaleCoverageRecord:
     """Count authored values across exact and continuity candidate keys."""
     label_required = len(casillas)
-    label_translated = sum(
-        1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="label")
-    )
+    label_translated = sum(1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="label"))
     help_required = len(casillas)
-    help_translated = sum(
-        1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="help")
-    )
+    help_translated = sum(1 for casilla in casillas if _has_authored_locale_value(casilla, locale, field="help"))
     return _SharedModeloLocaleCoverageRecord(
         locale=locale,
         modelo_id=modelo_id,
@@ -1112,21 +1156,22 @@ def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
             the validated registry authority.
     """
     authority = bundled_authority()
-    coordinates = tuple(
-        ConformanceCoordinate(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            law_selected_revision=authority.snapshot(
-                modelo,
+    coordinate_items: list[ConformanceCoordinate] = []
+    for modelo, filing_year, period in _PROVISIONAL_ANNUAL_COORDINATE_SPECS:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+        schema_comparison = compare_annual_casilla_population(snapshot, source_root=authority.source_root)
+        coordinate_items.append(
+            ConformanceCoordinate(
+                modelo=modelo,
                 filing_year=filing_year,
                 period=period,
-            ).revision.id,
-            classification="not_yet_measured",
-            provisional=True,
+                law_selected_revision=snapshot.revision.id,
+                schema_comparison=schema_comparison,
+                classification="not_yet_measured",
+                provisional=True,
+            ),
         )
-        for modelo, filing_year, period in _PROVISIONAL_ANNUAL_COORDINATE_SPECS
-    )
+    coordinates = tuple(coordinate_items)
     classification_census = {classification: 0 for classification in COORDINATE_CLASSIFICATIONS}
     for coordinate in coordinates:
         classification_census[coordinate.classification] += 1
@@ -1498,6 +1543,9 @@ def render_report(report: ConformanceReport) -> str:
                 locale_labels_translated=None if row.locale is None else row.locale.labels_translated,
                 locale_complete_locales=None if row.locale is None else row.locale.complete_locales,
                 locale_stale_keys=None if row.locale is None else row.locale.stale_keys,
+                construct_evidence_rows=(None if row.construct_evidence is None else len(row.construct_evidence.rows)),
+                construct_evidence_gaps=(None if row.construct_evidence is None else len(row.construct_evidence.gaps)),
+                casilla_provenance_traces=len(row.casilla_provenance),
             ),
         )
     lines.append(
@@ -1518,8 +1566,38 @@ def render_report(report: ConformanceReport) -> str:
                 law_selected_revision=coordinate.law_selected_revision,
                 classification=coordinate.classification,
                 provisional=coordinate.provisional,
+                schema_identity_measurement=coordinate.schema_comparison.identity_measurement,
+                schema_printed_form_membership=coordinate.schema_comparison.printed_form_membership,
+                schema_xsd_only_attributes=coordinate.schema_comparison.xsd_only_attributes,
+                schema_identity_divergence_count=coordinate.schema_comparison.identity_divergence_count,
             )
             for coordinate in report.annual_matrix.coordinates
+        )
+        lines.extend(
+            _kv_line(
+                "annual_schema_layout",
+                modelo=coordinate.modelo,
+                filing_year=coordinate.filing_year,
+                period=coordinate.period,
+                law_selected_revision=coordinate.law_selected_revision,
+                layout_id=layout.layout_id,
+                layout_format=layout.layout_format,
+                identity_measurement=layout.identity_measurement,
+                registry_casilla_count=layout.registry_casilla_count,
+                dictionary_entry_count=layout.dictionary_entry_count,
+                dictionary_casilla_count=layout.dictionary_casilla_count,
+                identity_divergence_count=layout.identity_divergence_count,
+                missing_casilla_ids=layout.missing_casilla_ids,
+                extra_casilla_ids=layout.extra_casilla_ids,
+                printed_form_membership=layout.printed_form_membership,
+                xsd_only_attributes=layout.xsd_only_attributes,
+                dictionary_source_ref=layout.dictionary_source_ref,
+                parser_exposed_attributes=layout.parser_exposed_attributes,
+                unmeasured_attributes=layout.unmeasured_attributes,
+                diagnostic=layout.diagnostic,
+            )
+            for coordinate in report.annual_matrix.coordinates
+            for layout in coordinate.schema_comparison.layout_comparisons
         )
         lines.extend(
             _kv_line(
@@ -1845,6 +1923,8 @@ def _payload_row(
         latest_revision_probed=None if support is None else support.probed_revision,
         support_probe_describes_this_revision=None if support is None else support.describes_this_revision,
         locale=locale,
+        construct_evidence=row.construct_evidence,
+        casilla_provenance=row.casilla_provenance,
     )
 
 
@@ -1882,7 +1962,8 @@ def _render_value(value: object) -> str:
     if isinstance(value, float):
         return f"{value:.4f}"
     if isinstance(value, tuple):
-        return ",".join(str(item) for item in value) if value else "-"
+        items = cast(tuple[object, ...], value)
+        return ",".join(str(item) for item in items) if items else "-"
     text = str(value)
     if not text or any(character in text for character in ' \t"='):
         return json.dumps(text)

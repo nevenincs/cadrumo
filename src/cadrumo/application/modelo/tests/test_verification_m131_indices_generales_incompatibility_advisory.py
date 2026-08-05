@@ -5,7 +5,7 @@ Covers the ``modelo-131-2025-modulos-pequena-dimension-ignorado-especial`` and
 guards shipped on the 2025 revision. Orden HAC/1347/2024, Anexo II,
 instrucción 2.3 fixes two exclusivity rules the Fase 3ª índices correctores
 generales cascade (``m131_resolve_modulos_indices_generales``,
-``0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml``) enforces STRUCTURALLY (never applies both
+``cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml``) enforces STRUCTURALLY (never applies both
 sides of an incompatible pair):
 
 - "En ningún caso será aplicable el índice corrector para empresas de

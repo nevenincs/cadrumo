@@ -402,7 +402,6 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
     return result
 
 
-
 @overload
 def redact_structured[T](value: dict[str, T], *, rules: tuple[_RedactionRule, ...]) -> dict[str, T]: ...
 

@@ -220,10 +220,10 @@
    * this seam returns no candidates and the existing Pagefind ladder remains
    * authoritative.
    *
-   * Config v1 shape (all values are required before the tier can run; the
-   * bundle it enables is schema-v2 and carries hash-covered input provenance):
+   * Config v2 shape (all values are required before the tier can run; the
+   * bundle it enables is schema-v3 and carries hash-covered input provenance):
    *   {
-   *     schema_version: "cadrumo.docs-search.rung2-config.v1",
+   *     schema_version: "cadrumo.docs-search.rung2-config.v2",
    *     enabled: true,
    *     normalization_version: RUNG2_NORMALIZATION_VERSION,
    *     bundle_url, bundle_sha256,
@@ -236,18 +236,21 @@
    *     },
    *   }
    *
-   * The bundle is the schema-v2 Rung2SearchBundle emitted by _rung2_bridge.py:
-   * it contains the schema-v3 matrix, hash-linked bridge, authoritative record
+   * The bundle is the schema-v3 Rung2SearchBundle emitted by _rung2_bridge.py:
+   * it contains the schema-v4 matrix, hash-linked bridge, authoritative record
    * manifest, and required input_provenance object
    *   { source_relpath, source_sha256, vocabulary_sha256, query_token_sha256 }
    * under one measured byte bound. Raw source bytes are not shipped, so this
    * reader validates the embedded, hash-covered source identity only. URLs
    * are consumed only from that manifest; this code never parses an id or
    * constructs a target. */
-  var RUNG2_CONFIG_SCHEMA = "cadrumo.docs-search.rung2-config.v1";
+  var RUNG2_CANONICAL_JSON_CONTRACT = "cadrumo-jcs-utf8-lf-v1";
+  var RUNG2_CONFIG_SCHEMA = "cadrumo.docs-search.rung2-config.v2";
   var RUNG2_NORMALIZATION_VERSION = "unicode-word-runs-nfkc-lower-v1";
-  var RUNG2_BUNDLE_SCHEMA_VERSION = 2;
-  var RUNG2_MATRIX_SCHEMA_VERSION = 3;
+  var RUNG2_BUNDLE_SCHEMA_VERSION = 3;
+  var RUNG2_MATRIX_SCHEMA_VERSION = 4;
+  var RUNG2_MANIFEST_SCHEMA_VERSION = 2;
+  var RUNG2_BRIDGE_SCHEMA_VERSION = 2;
   var RUNG2_MODEL_REPOSITORY = "minishlab/potion-multilingual-128M";
   var RUNG2_MODEL_REVISION = "e7421cd79c75fc506b88bb75723ae0a234994720";
   var RUNG2_MODEL_LICENSE = "MIT";
@@ -302,7 +305,7 @@
   }
 
   function rung2Finite(value, label) {
-    if (typeof value !== "number" || !isFinite(value)) {
+    if (typeof value !== "number" || !isFinite(value) || Object.is(value, -0)) {
       throw new Error(label + " must be finite");
     }
     return value;
@@ -317,7 +320,7 @@
   }
 
   function rung2Integer(value, minimum, maximum, label) {
-    if (typeof value !== "number" || !isFinite(value) || Math.floor(value) !== value) {
+    if (typeof value !== "number" || !Number.isSafeInteger(value) || Object.is(value, -0)) {
       throw new Error(label + " must be an integer");
     }
     if (value < minimum || value > maximum) {
@@ -388,6 +391,266 @@
     return a.length - b.length;
   }
 
+  function rung2Utf16Compare(left, right) {
+    var length = Math.min(left.length, right.length);
+    for (var index = 0; index < length; index++) {
+      var leftCodeUnit = left.charCodeAt(index);
+      var rightCodeUnit = right.charCodeAt(index);
+      if (leftCodeUnit !== rightCodeUnit) return leftCodeUnit - rightCodeUnit;
+    }
+    return left.length - right.length;
+  }
+
+  function rung2CanonicalString(value) {
+    if (typeof value !== "string") throw new Error("JCS value is not a string");
+    /* Validate before TextEncoder can replace an unpaired surrogate. */
+    rung2Utf8Bytes(value);
+    var output = "\"";
+    for (var index = 0; index < value.length; index++) {
+      var codeUnit = value.charCodeAt(index);
+      if (codeUnit === 0x22) {
+        output += "\\\"";
+      } else if (codeUnit === 0x5c) {
+        output += "\\\\";
+      } else if (codeUnit === 0x08) {
+        output += "\\b";
+      } else if (codeUnit === 0x09) {
+        output += "\\t";
+      } else if (codeUnit === 0x0a) {
+        output += "\\n";
+      } else if (codeUnit === 0x0c) {
+        output += "\\f";
+      } else if (codeUnit === 0x0d) {
+        output += "\\r";
+      } else if (codeUnit < 0x20) {
+        output += "\\u" + codeUnit.toString(16).padStart(4, "0");
+      } else {
+        output += value.charAt(index);
+      }
+    }
+    return output + "\"";
+  }
+
+  function rung2CanonicalNumber(value) {
+    if (typeof value !== "number" || !isFinite(value) || Object.is(value, -0)) {
+      throw new Error("JCS number is not finite and admissible");
+    }
+    if (Number.isInteger(value) && !Number.isSafeInteger(value)) {
+      throw new Error("JCS integer is outside the safe binary64 domain");
+    }
+    /* Number#toString is ECMAScript's shortest-round-trip spelling. */
+    return String(value);
+  }
+
+  function rung2CanonicalJson(value) {
+    if (value === null) return "null";
+    if (value === true) return "true";
+    if (value === false) return "false";
+    if (typeof value === "string") return rung2CanonicalString(value);
+    if (typeof value === "number") return rung2CanonicalNumber(value);
+    if (Array.isArray(value)) {
+      return "[" + value.map(function (item) { return rung2CanonicalJson(item); }).join(",") + "]";
+    }
+    if (!value || typeof value !== "object") {
+      throw new Error("JCS value has an unsupported type");
+    }
+    var keys = Object.keys(value);
+    keys.sort(rung2Utf16Compare);
+    var members = [];
+    keys.forEach(function (key) {
+      members.push(rung2CanonicalString(key) + ":" + rung2CanonicalJson(value[key]));
+    });
+    return "{" + members.join(",") + "}";
+  }
+
+  function rung2CanonicalJsonBytes(value) {
+    if (typeof TextEncoder === "undefined") throw new Error("TextEncoder unavailable");
+    return new TextEncoder().encode(rung2CanonicalJson(value) + "\n");
+  }
+
+  function rung2Without(value, excluded) {
+    var result = {};
+    Object.keys(value).forEach(function (key) {
+      if (excluded.indexOf(key) < 0) result[key] = value[key];
+    });
+    return result;
+  }
+
+  function rung2BytesEqual(left, right) {
+    if (left.byteLength !== right.byteLength) return false;
+    for (var index = 0; index < left.byteLength; index++) {
+      if (left[index] !== right[index]) return false;
+    }
+    return true;
+  }
+
+  function rung2ParseJson(text) {
+    var cursor = 0;
+
+    function skipWhitespace() {
+      while (cursor < text.length) {
+        var code = text.charCodeAt(cursor);
+        if (code !== 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) break;
+        cursor++;
+      }
+    }
+
+    function isDigit(code) {
+      return code >= 0x30 && code <= 0x39;
+    }
+
+    function parseString() {
+      if (text.charAt(cursor) !== "\"") throw new Error("JSON string expected");
+      var start = cursor;
+      cursor++;
+      while (cursor < text.length) {
+        var code = text.charCodeAt(cursor);
+        if (code === 0x22) {
+          cursor++;
+          try {
+            return JSON.parse(text.slice(start, cursor));
+          } catch (error) {
+            throw new Error("invalid JSON string");
+          }
+        }
+        if (code === 0x5c) {
+          cursor++;
+          if (cursor >= text.length) throw new Error("unterminated JSON escape");
+          var escape = text.charAt(cursor);
+          if (escape === "u") {
+            if (cursor + 4 >= text.length) throw new Error("short JSON Unicode escape");
+            for (var digit = 1; digit <= 4; digit++) {
+              var hex = text.charCodeAt(cursor + digit);
+              if (!((hex >= 0x30 && hex <= 0x39) ||
+                    (hex >= 0x41 && hex <= 0x46) ||
+                    (hex >= 0x61 && hex <= 0x66))) {
+                throw new Error("invalid JSON Unicode escape");
+              }
+            }
+            cursor += 5;
+          } else {
+            if ("\"\\/bfnrt".indexOf(escape) < 0) throw new Error("invalid JSON escape");
+            cursor++;
+          }
+          continue;
+        }
+        if (code < 0x20) throw new Error("unescaped JSON control character");
+        cursor++;
+      }
+      throw new Error("unterminated JSON string");
+    }
+
+    function parseNumber() {
+      if (text.charAt(cursor) === "-") cursor++;
+      if (cursor >= text.length) throw new Error("invalid JSON number");
+      if (text.charAt(cursor) === "0") {
+        cursor++;
+      } else if (text.charCodeAt(cursor) >= 0x31 && text.charCodeAt(cursor) <= 0x39) {
+        cursor++;
+        while (isDigit(text.charCodeAt(cursor))) cursor++;
+      } else {
+        throw new Error("invalid JSON number");
+      }
+      if (text.charAt(cursor) === ".") {
+        cursor++;
+        if (!isDigit(text.charCodeAt(cursor))) throw new Error("invalid JSON fraction");
+        while (isDigit(text.charCodeAt(cursor))) cursor++;
+      }
+      if (text.charAt(cursor) === "e" || text.charAt(cursor) === "E") {
+        cursor++;
+        if (text.charAt(cursor) === "+" || text.charAt(cursor) === "-") cursor++;
+        if (!isDigit(text.charCodeAt(cursor))) throw new Error("invalid JSON exponent");
+        while (isDigit(text.charCodeAt(cursor))) cursor++;
+      }
+    }
+
+    function parseValue() {
+      skipWhitespace();
+      var first = text.charAt(cursor);
+      if (first === "{") return parseObject();
+      if (first === "[") return parseArray();
+      if (first === "\"") {
+        parseString();
+        return;
+      }
+      if (first === "t" && text.slice(cursor, cursor + 4) === "true") {
+        cursor += 4;
+        return;
+      }
+      if (first === "f" && text.slice(cursor, cursor + 5) === "false") {
+        cursor += 5;
+        return;
+      }
+      if (first === "n" && text.slice(cursor, cursor + 4) === "null") {
+        cursor += 4;
+        return;
+      }
+      if (first === "-" || (first >= "0" && first <= "9")) {
+        parseNumber();
+        return;
+      }
+      throw new Error("invalid JSON value");
+    }
+
+    function parseArray() {
+      cursor++;
+      skipWhitespace();
+      if (text.charAt(cursor) === "]") {
+        cursor++;
+        return;
+      }
+      while (true) {
+        parseValue();
+        skipWhitespace();
+        if (text.charAt(cursor) === "]") {
+          cursor++;
+          return;
+        }
+        if (text.charAt(cursor) !== ",") throw new Error("JSON array separator expected");
+        cursor++;
+      }
+    }
+
+    function parseObject() {
+      cursor++;
+      var keys = Object.create(null);
+      skipWhitespace();
+      if (text.charAt(cursor) === "}") {
+        cursor++;
+        return;
+      }
+      while (true) {
+        skipWhitespace();
+        var key = parseString();
+        if (rung2Has(keys, key)) throw new Error("duplicate JSON object key");
+        keys[key] = true;
+        skipWhitespace();
+        if (text.charAt(cursor) !== ":") throw new Error("JSON object separator expected");
+        cursor++;
+        parseValue();
+        skipWhitespace();
+        if (text.charAt(cursor) === "}") {
+          cursor++;
+          return;
+        }
+        if (text.charAt(cursor) !== ",") throw new Error("JSON object member separator expected");
+        cursor++;
+      }
+    }
+
+    var parsed;
+    skipWhitespace();
+    parseValue();
+    skipWhitespace();
+    if (cursor !== text.length) throw new Error("trailing JSON data");
+    try {
+      parsed = JSON.parse(text);
+    } catch (error) {
+      throw new Error("invalid JSON payload");
+    }
+    return parsed;
+  }
+
   function rung2Sha256(bytes) {
     if (!window.crypto || !window.crypto.subtle) return Promise.reject(new Error("Web Crypto unavailable"));
     return window.crypto.subtle.digest("SHA-256", bytes).then(function (digest) {
@@ -405,8 +668,11 @@
       return response.arrayBuffer();
     }).then(function (buffer) {
       var bytes = new Uint8Array(buffer);
+      if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+        throw new Error("Rung-2 payload must not contain a UTF-8 BOM");
+      }
       var text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-      var payload = JSON.parse(text);
+      var payload = rung2ParseJson(text);
       return { bytes: bytes, text: text, payload: payload };
     });
   }
@@ -578,13 +844,26 @@
       queryRows[row.token] = row;
       if (index && rung2Utf8Compare(queryTokens[index - 1], row.token) >= 0) throw new Error("Rung-2 query tokens are not UTF-8 ordered");
     });
-    return { matrix: matrix, terms: terms, queryTokens: queryTokens, queryRows: queryRows, termRows: matrix.rows };
+    var canonicalBytes = rung2CanonicalJsonBytes(matrix);
+    var unsignedBytes = rung2CanonicalJsonBytes(rung2Without(matrix, ["artifact_sha256", "serialized_bytes"]));
+    if (matrix.serialized_bytes !== canonicalBytes.byteLength) {
+      throw new Error("Rung-2 matrix.serialized_bytes does not match canonical bytes");
+    }
+    return {
+      matrix: matrix,
+      terms: terms,
+      queryTokens: queryTokens,
+      queryRows: queryRows,
+      termRows: matrix.rows,
+      canonicalBytes: canonicalBytes,
+      unsignedBytes: unsignedBytes,
+    };
   }
 
   function rung2ValidateManifest(manifest) {
     rung2Object(manifest, "Rung-2 record manifest");
     rung2Keys(manifest, ["schema_version", "row_order", "record_count", "records", "records_sha256", "serialized_bytes"], "Rung-2 record manifest");
-    if (manifest.schema_version !== 1 || manifest.row_order !== RUNG2_ROW_ORDER) {
+    if (manifest.schema_version !== RUNG2_MANIFEST_SCHEMA_VERSION || manifest.row_order !== RUNG2_ROW_ORDER) {
       throw new Error("Rung-2 record manifest schema mismatch");
     }
     rung2Integer(manifest.record_count, 1, Number.MAX_SAFE_INTEGER, "Rung-2 record_count");
@@ -611,10 +890,17 @@
       }
       records[id] = record;
     });
+    var canonicalBytes = rung2CanonicalJsonBytes(manifest);
+    var recordsBytes = rung2CanonicalJsonBytes(manifest.records);
+    if (manifest.serialized_bytes !== canonicalBytes.byteLength) {
+      throw new Error("Rung-2 manifest.serialized_bytes does not match canonical bytes");
+    }
     return {
       records: records,
       recordsSha256: manifest.records_sha256,
       serializedBytes: manifest.serialized_bytes,
+      canonicalBytes: canonicalBytes,
+      recordsBytes: recordsBytes,
     };
   }
 
@@ -624,7 +910,7 @@
       "schema_version", "row_order", "matrix_vocabulary_sha256", "record_manifest_sha256",
       "term_count", "entries", "artifact_sha256", "serialized_bytes",
     ], "Rung-2 bridge");
-    if (bridge.schema_version !== 1 || bridge.row_order !== RUNG2_ROW_ORDER ||
+    if (bridge.schema_version !== RUNG2_BRIDGE_SCHEMA_VERSION || bridge.row_order !== RUNG2_ROW_ORDER ||
         bridge.matrix_vocabulary_sha256 !== matrix.vocabulary_sha256 ||
         bridge.record_manifest_sha256 !== manifest.recordsSha256) {
       throw new Error("Rung-2 bridge hash link mismatch");
@@ -636,6 +922,7 @@
       throw new Error("Rung-2 bridge counts are invalid");
     }
     var terms = Object.create(null);
+    var targetBytes = [];
     bridge.entries.forEach(function (entry, index) {
       rung2Object(entry, "Rung-2 bridge.entries[" + index + "]");
       rung2Keys(entry, ["term", "targets", "targets_sha256"], "Rung-2 bridge entry");
@@ -659,8 +946,21 @@
         }
         return { recordId: recordId, rankingWeight: target.ranking_weight };
       });
+      targetBytes.push(rung2CanonicalJsonBytes(entry.targets));
     });
-    return { terms: terms, records: manifest.records, serializedBytes: bridge.serialized_bytes };
+    var canonicalBytes = rung2CanonicalJsonBytes(bridge);
+    var unsignedBytes = rung2CanonicalJsonBytes(rung2Without(bridge, ["artifact_sha256", "serialized_bytes"]));
+    if (bridge.serialized_bytes !== canonicalBytes.byteLength) {
+      throw new Error("Rung-2 bridge.serialized_bytes does not match canonical bytes");
+    }
+    return {
+      terms: terms,
+      records: manifest.records,
+      serializedBytes: bridge.serialized_bytes,
+      targetBytes: targetBytes,
+      canonicalBytes: canonicalBytes,
+      unsignedBytes: unsignedBytes,
+    };
   }
 
   function rung2ValidateInputProvenance(provenance, matrix, bridge) {
@@ -699,6 +999,11 @@
     if (bridge.terms && Object.keys(bridge.terms).length !== matrix.terms.length) {
       throw new Error("Rung-2 bundle bridge vocabulary mismatch");
     }
+    var canonicalBytes = rung2CanonicalJsonBytes(bundle);
+    var unsignedBytes = rung2CanonicalJsonBytes(rung2Without(bundle, ["artifact_sha256", "serialized_bytes"]));
+    if (bundle.serialized_bytes !== canonicalBytes.byteLength) {
+      throw new Error("Rung-2 bundle.serialized_bytes does not match canonical bytes");
+    }
     return {
       matrix: matrix.matrix,
       queryRows: matrix.queryRows,
@@ -706,7 +1011,46 @@
       bridge: bridge,
       inputProvenance: inputProvenance,
       termVectors: rung2BuildRows(matrix),
+      matrixValidation: matrix,
+      manifestValidation: manifest,
+      bridgeValidation: bridge,
+      rawBundle: bundle,
+      rawBridge: bundle.bridge,
+      canonicalBytes: canonicalBytes,
+      unsignedBytes: unsignedBytes,
     };
+  }
+
+  function rung2AttestBundle(bundle, matrix, manifest, bridge) {
+    var targetHashes = bridge.targetBytes.map(function (bytes) {
+      return rung2Sha256(bytes);
+    });
+    return Promise.all([
+      rung2Sha256(matrix.unsignedBytes),
+      rung2Sha256(manifest.recordsBytes),
+      rung2Sha256(bridge.unsignedBytes),
+      rung2Sha256(bundle.unsignedBytes),
+    ].concat(targetHashes)).then(function (hashes) {
+      if (hashes[0] !== matrix.matrix.artifact_sha256) {
+        throw new Error("Rung-2 matrix artifact hash mismatch");
+      }
+      if (hashes[1] !== manifest.recordsSha256) {
+        throw new Error("Rung-2 record manifest hash mismatch");
+      }
+      for (var entryIndex = 0; entryIndex < bridge.targetBytes.length; entryIndex++) {
+        var expected = bundle.rawBridge.entries[entryIndex].targets_sha256;
+        if (hashes[entryIndex + 4] !== expected) {
+          throw new Error("Rung-2 bridge target-list hash mismatch");
+        }
+      }
+      if (hashes[2] !== bundle.rawBridge.artifact_sha256) {
+        throw new Error("Rung-2 bridge artifact hash mismatch");
+      }
+      if (hashes[3] !== bundle.rawBundle.artifact_sha256) {
+        throw new Error("Rung-2 bundle artifact hash mismatch");
+      }
+      return bundle;
+    });
   }
 
   function rung2Dequantize(row, dimension) {
@@ -737,21 +1081,31 @@
         if (payload.bytes.byteLength !== config.acceptance.payload_bytes || payload.bytes.byteLength > RUNG2_MAX_PAYLOAD_BYTES) {
           throw new Error("Rung-2 payload is outside the measured bound");
         }
-        if (payload.bytes.byteLength !== payload.payload.serialized_bytes) {
+          if (payload.bytes.byteLength !== payload.payload.serialized_bytes) {
           throw new Error("Rung-2 serialized byte stamps do not match");
         }
         return rung2Sha256(payload.bytes.buffer).then(function (hash) {
           if (hash !== config.bundleSha) throw new Error("Rung-2 payload hash mismatch");
           var bundle = rung2ValidateBundle(payload.payload);
-          return Promise.all([
+          if (!rung2BytesEqual(payload.bytes, bundle.canonicalBytes)) {
+            throw new Error("Rung-2 payload is not the exact canonical UTF-8 LF representation");
+          }
+          return rung2AttestBundle(
+            bundle,
+            bundle.matrixValidation,
+            bundle.manifestValidation,
+            bundle.bridgeValidation,
+          ).then(function () {
+            return Promise.all([
             rung2Sha256(new TextEncoder().encode(bundle.matrix.rows.map(function (row) { return row.term; }).join("\n")).buffer),
             rung2Sha256(new TextEncoder().encode(bundle.matrix.query_token_rows.map(function (row) { return row.token; }).join("\n")).buffer),
-          ]).then(function (fingerprints) {
-            if (fingerprints[0] !== bundle.matrix.vocabulary_sha256 || fingerprints[1] !== bundle.matrix.query_token_sha256) {
-              throw new Error("Rung-2 vocabulary fingerprint mismatch");
-            }
-            bundle.config = config;
-            return bundle;
+            ]).then(function (fingerprints) {
+              if (fingerprints[0] !== bundle.matrix.vocabulary_sha256 || fingerprints[1] !== bundle.matrix.query_token_sha256) {
+                throw new Error("Rung-2 vocabulary fingerprint mismatch");
+              }
+              bundle.config = config;
+              return bundle;
+            });
           });
         });
       });

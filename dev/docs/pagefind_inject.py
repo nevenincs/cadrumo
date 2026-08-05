@@ -189,6 +189,10 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     out.records.extend(to_search_record(rec) for rec in casilla_records)
 
     legal_records = project_legal_search_records(root)
+    if not legal_records:
+        raise SearchInjectionError(
+            "cannot inject the decided search corpus because the legal projection is empty"
+        )
     out.legal_provisions = len(legal_records)
     out.records.extend(to_search_record(rec) for rec in legal_records)
 

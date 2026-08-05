@@ -44,7 +44,7 @@ from pydantic import BaseModel
 
 from ...core import BindingSourceKind
 from ...core.decimal import coerce_decimal
-from ...core.external_constants import UTF_8_ENCODING
+from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
@@ -363,6 +363,15 @@ class MaternidadMesesResolution:
     withheld_indices: tuple[str, ...]
     ceilings_resolved: bool
     declares_meses: bool
+    cotizaciones_ceiling_inexpressible: bool = False
+    """True when the filing year predates 2023 and the engine cannot apply the ceiling.
+
+    Until 2022 Art. 81.1 limited the deducción to the mother's Social Security
+    cotizaciones devengadas in the period. Neither the registry nor the profile
+    schema can express that figure for those years -- the binding and the fact are
+    both 2024-pinned -- so the deducción is withheld rather than granted
+    un-ceilinged, and the caller discloses it.
+    """
     alta_posterior_hijos: frozenset[str] = frozenset()
     """``hijo_id`` values from :attr:`pairs` that also carry the Art. 81.1 post-birth
 
@@ -398,6 +407,20 @@ def resolve_maternidad_meses(
     declares_meses = any(
         key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo") for key in fact_index
     )
+    if snapshot.filing_year < DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR:
+        # Until 2022 the deducción was capped at the mother's cotizaciones
+        # devengadas in the period. The engine cannot apply that cap: the
+        # cotizaciones binding exists only in the 2024 revision and the profile
+        # fact is 2024-pinned, so no figure is reachable for these years.
+        # Computing anyway would grant an un-ceilinged deducción, which
+        # over-grants and therefore under-declares.
+        return MaternidadMesesResolution(
+            pairs=(),
+            withheld_indices=(),
+            ceilings_resolved=True,
+            declares_meses=declares_meses,
+            cotizaciones_ceiling_inexpressible=True,
+        )
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
         return MaternidadMesesResolution(
@@ -500,8 +523,8 @@ def _resolved_minimo_descendientes_tranches(
     snapshot: RegistrySnapshot,
     *,
     ccaa_infix: str | None,
-) -> tuple[list[Decimal], Decimal] | None:
-    """Resolve the birth-order tranche amounts + menor-3 supplement for *ccaa_infix*.
+) -> tuple[list[Decimal], Decimal, Decimal] | None:
+    """Resolve the birth-order tranches, menor-3 supplement, and norma 4ª flat cuantía.
 
     When *ccaa_infix* is ``None`` (or the CCAA-specific parameter for a given
     tranche is absent), that tranche falls back to the estatal Art. 58
@@ -535,9 +558,19 @@ def _resolved_minimo_descendientes_tranches(
     menor_tres_supplement = _resolve_tranche(_MINIMO_DESCENDIENTES_MENOR_TRES_SUFFIX)
     if menor_tres_supplement is None:
         return None
-    return birth_order_amounts, menor_tres_supplement
+    # Art. 61 norma 4ª's death-in-period flat cuantía. Resolved through the same
+    # per-tranche CCAA fallback as the rest: no comunidad publishes a divergent
+    # death figure today, so every CCAA lands on the estatal parameter, and one
+    # that later does is picked up without changing this call. Its own
+    # parameter, never ``birth_order_amounts[0]`` — the two figures coincide in
+    # every served revision and are not the same authority.
+    fallecimiento_amount = _resolve_tranche(_MINIMO_DESCENDIENTES_FALLECIMIENTO_SUFFIX)
+    if fallecimiento_amount is None:
+        return None
+    return birth_order_amounts, menor_tres_supplement, fallecimiento_amount
 
 
+_MINIMO_DESCENDIENTES_FALLECIMIENTO_SUFFIX = "fallecimiento"
 _MINIMO_DESCENDIENTES_RENTAS_LIMITE_SUFFIX = "rentas-anuales-limite"
 _MINIMO_DESCENDIENTES_DECLARACION_PROPIA_SUFFIX = "declaracion-propia-rentas-limite"
 
@@ -691,11 +724,12 @@ def _inject_derived_minimo_descendientes_facts(
     profile = _renta_family_profile_from_facts(fact_index)
     second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
-    birth_order_amounts, menor_tres_supplement = estatal_tranches
+    birth_order_amounts, menor_tres_supplement, fallecimiento_amount = estatal_tranches
     fact_index[estatal_key] = profile.minimo_descendientes_estatal(
         snapshot.filing_year,
         birth_order_amounts=birth_order_amounts,
         menor_tres_supplement=menor_tres_supplement,
+        fallecimiento_amount=fallecimiento_amount,
         thresholds=thresholds,
         second_filer_indicated=second_filer_indicated,
     )
@@ -713,11 +747,12 @@ def _inject_derived_minimo_descendientes_facts(
         # defensive): fall back to the estatal tranches rather than
         # leaving the autonómico casilla unresolved.
         autonomico_tranches = estatal_tranches
-    birth_order_amounts, menor_tres_supplement = autonomico_tranches
+    birth_order_amounts, menor_tres_supplement, fallecimiento_amount = autonomico_tranches
     fact_index[autonomico_key] = profile.minimo_descendientes_estatal(
         snapshot.filing_year,
         birth_order_amounts=birth_order_amounts,
         menor_tres_supplement=menor_tres_supplement,
+        fallecimiento_amount=fallecimiento_amount,
         thresholds=thresholds,
         second_filer_indicated=second_filer_indicated,
     )
@@ -942,6 +977,74 @@ def _inject_derived_autonomic_deduccion_facts(
         return
 
     fact_index[_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY] = weighted_count
+
+
+_GUARDERIA_CAP_PARAMETER_SUFFIX = "guarderia-incremento-cap-anual"
+
+
+def _guarderia_cap_anual(snapshot: RegistrySnapshot) -> Decimal | None:
+    """Resolve the Art. 81.2 annual cap parameter for the snapshot's filing year.
+
+    Its own registry parameter rather than the inline literal the 0613 formula
+    carries: a literal inside a formula expression is registry data the
+    application layer cannot read, and the per-child proration is computed
+    here. Returns ``None`` when the revision declares no such parameter, which
+    leaves the aggregate unresolved rather than proceeding against a guessed
+    ceiling.
+    """
+    parameter_id = f"renta-{snapshot.filing_year}-{_GUARDERIA_CAP_PARAMETER_SUFFIX}"
+    for parameter in snapshot.revision.parameters:
+        if parameter.id == parameter_id:
+            return resolve_parameter(parameter, {"filing_period": date(snapshot.filing_year, 12, 31)})
+    return None
+
+
+def _inject_derived_incremento_guarderia_facts(
+    fact_index: dict[str, UserProfileFactValue],
+    snapshot: RegistrySnapshot,
+    declared_selectors: frozenset[str],
+) -> None:
+    """Inject the Art. 81.2 guardería increment (casilla 0613) into *fact_index*.
+
+    The increment is prorated per child by the months the Art. 81.1 and 81.2
+    requirements hold simultaneously and bounded by that child's own
+    non-subsidised spend, both stated by LIRPF art. 81.3 third paragraph, which
+    caps at the spend "en relación con ese hijo". The registry schema cannot
+    express a per-child fold, so the fold happens here and the registry consumes
+    one resolved value — the same division of labour the mínimo por
+    descendientes aggregate uses.
+
+    Computes ALWAYS where a consumer is declared, overwriting whatever the index
+    holds. The path is derived, so a stored fact at this key can only be stale
+    or hand-planted, and deferring to one would substitute an operator's number
+    for the law's.
+
+    Leaves the fact ABSENT rather than writing a zero when either the cap
+    parameter or the eligibility ceilings are unresolvable. A zero would read as
+    a computed "no increment due" and silently withhold a real deducción; an
+    absent fact leaves the casilla unresolved, which is visible.
+
+    Gated on a declared consuming binding rather than a hardcoded filing year,
+    so extending coverage to another revision is registry work with no code
+    change here.
+    """
+    key = f"renta_family.incremento_guarderia_{snapshot.filing_year}"
+    if key not in declared_selectors:
+        return
+
+    cap_anual = _guarderia_cap_anual(snapshot)
+    if cap_anual is None:
+        return
+    thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
+    if thresholds is None:
+        return
+
+    profile = _renta_family_profile_from_facts(fact_index)
+    fact_index[key] = profile.incremento_guarderia_0613(
+        snapshot.filing_year,
+        thresholds=thresholds,
+        cap_anual=cap_anual,
+    )
 
 
 def _inject_derived_state_attribution_facts(
@@ -1172,6 +1275,7 @@ def _load_profile_facts(
     _inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
+    _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors)
     _inject_derived_state_attribution_facts(fact_index)
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
 

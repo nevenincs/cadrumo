@@ -52,16 +52,19 @@ Submodules
    cadrumo.domain.calculations.registry._formula_runtime_ops
    cadrumo.domain.calculations.registry._formula_text_inputs
    cadrumo.domain.calculations.registry._groi_oracle
+   cadrumo.domain.calculations.registry._handoff_paths
+   cadrumo.domain.calculations.registry._handoffs
    cadrumo.domain.calculations.registry._ids
    cadrumo.domain.calculations.registry._invoice_bindings
    cadrumo.domain.calculations.registry._irnr_ledger_bindings
+   cadrumo.domain.calculations.registry._ledger_binding_resolution
    cadrumo.domain.calculations.registry._ledger_bindings
    cadrumo.domain.calculations.registry._ledger_impatriado_bindings
    cadrumo.domain.calculations.registry._legal
    cadrumo.domain.calculations.registry._live_parity
    cadrumo.domain.calculations.registry._loader
    cadrumo.domain.calculations.registry._loader_cache
-   cadrumo.domain.calculations.registry._loader_locales
+   cadrumo.domain.calculations.registry._modelo_localization
    cadrumo.domain.calculations.registry._observation_fold
    cadrumo.domain.calculations.registry._parity_tapes
    cadrumo.domain.calculations.registry._period_offset_math

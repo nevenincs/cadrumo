@@ -36,6 +36,7 @@ from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...aggregation import CalculationSourceDiagnostic
 from ...user_profile import profile_create_storage_span, set_active_fields
 from ...workflow import workflow_state_repository
 from .._minimo_descendientes_advisory import collect_minimo_descendientes_rentas_undeclared_diagnostics
@@ -71,7 +72,7 @@ def _write(*descendants: DescendantInfo) -> None:
     workflow_state_repository().update(lambda s: set_active_fields(s, facts))
 
 
-def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[object, ...]:
+def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[CalculationSourceDiagnostic, ...]:
     return collect_minimo_descendientes_rentas_undeclared_diagnostics(
         _revision(),
         _CLAIMED if casilla_values is None else casilla_values,
@@ -80,9 +81,17 @@ def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[ob
     )
 
 
-def _contributing_child(**overrides: object) -> DescendantInfo:
+def _contributing_child(
+    *,
+    convive_con_contribuyente: bool = True,
+    rentas_anuales_euros: Decimal | None = None,
+) -> DescendantInfo:
     """A cohabiting 10-year-old: contributes on the non-income conditions alone."""
-    return DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1), **overrides)  # type: ignore[arg-type]
+    return DescendantInfo(
+        birth_date=date(_FILING_YEAR - 10, 5, 1),
+        convive_con_contribuyente=convive_con_contribuyente,
+        rentas_anuales_euros=rentas_anuales_euros,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -95,14 +104,14 @@ def test_fires_for_a_contributing_descendant_with_no_rentas_figure() -> None:
     diagnostics = _collect()
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]
-    assert diagnostic.source_kind == "minimo_descendientes_rentas_undeclared"  # type: ignore[attr-defined]
-    assert diagnostic.casilla_id == _ESTATAL_CASILLA  # type: ignore[attr-defined]
+    assert diagnostic.source_kind == "minimo_descendientes_rentas_undeclared"
+    assert diagnostic.casilla_id == _ESTATAL_CASILLA
 
 
 def test_the_advisory_names_the_descendant_and_the_way_to_answer() -> None:
     """An advisory an operator cannot act on is noise."""
     _write(_contributing_child())
-    message = _collect()[0].message  # type: ignore[attr-defined]
+    message = _collect()[0].message
     assert "renta_family.descendiente.0" in message
     assert "RENTAS=" in message
     assert "RENTAS=0" in message, "the message must say a zero is a valid answer, or it reads as unanswerable"
@@ -114,7 +123,7 @@ def test_names_only_the_descendants_actually_missing_a_figure() -> None:
         _contributing_child(rentas_anuales_euros=Decimal("500")),
         _contributing_child(),
     )
-    message = _collect()[0].message  # type: ignore[attr-defined]
+    message = _collect()[0].message
     assert "renta_family.descendiente.1" in message
     assert "renta_family.descendiente.0" not in message
 
@@ -210,7 +219,7 @@ def test_a_large_household_still_raises_a_valid_advisory() -> None:
     _write(*[_contributing_child() for _ in range(12)])
     diagnostics = _collect()
     assert len(diagnostics) == 1
-    message = diagnostics[0].message  # type: ignore[attr-defined]
+    message = diagnostics[0].message
     assert len(message) <= 512
     assert "and 9 more" in message, "the remainder must be counted, not dropped"
 

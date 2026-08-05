@@ -1,6 +1,6 @@
 [[revisions."2024".casilla_continuidad_evolutions]]
 id = "m100-1038-2023-2024-unchanged"
-continuidad_id = "irpf.deduccion-autonomica.galicia.otras"
+continuidad_id = "irpf-deduccion-autonomica-galicia-otras"
 from_revision = "2023"
 to_revision = "2024"
 evolution_kind = "unchanged"

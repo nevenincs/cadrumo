@@ -12,6 +12,8 @@ Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.inscripcion_registro_civil
                                                         ISO-8601 date string or absent
   renta_family.descendiente.{n}.acogimiento_resolucion  ISO-8601 date string or absent
+  renta_family.descendiente.{n}.fallecimiento          ISO-8601 date string or absent (absent means the
+                                                        descendant did not die)
   renta_family.descendiente.{n}.discapacidad            "0" / "33" / "65" or absent
   renta_family.descendiente.{n}.convivencia             "true" / "false"
   renta_family.descendiente.{n}.dependencia_economica   "true" / "false" or absent (absent means unset)
@@ -78,6 +80,7 @@ _DESCENDIENTE_FLAG_KEYS = frozenset(
         "RELACION",
         "INSCRIPCION",
         "ACOGIMIENTO",
+        "FALLECIMIENTO",
         "DISCAPACIDAD",
         "CONVIVENCIA",
         "DEPENDENCIA",
@@ -143,6 +146,8 @@ def descendant_facts_from_list(
             facts.append((f"{prefix}.inscripcion_registro_civil", d.inscripcion_registro_civil_date.isoformat()))
         if d.acogimiento_resolucion_date is not None:
             facts.append((f"{prefix}.acogimiento_resolucion", d.acogimiento_resolucion_date.isoformat()))
+        if d.death_date is not None:
+            facts.append((f"{prefix}.fallecimiento", d.death_date.isoformat()))
         if d.discapacidad_grado is not None:
             facts.append((f"{prefix}.discapacidad", str(d.discapacidad_grado)))
         facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
@@ -184,7 +189,7 @@ def descendant_facts_from_list(
 
 _N_RE = re.compile(
     r"^renta_family\.descendiente\.(\d+)\."
-    r"(birth_date|relacion|inscripcion_registro_civil|acogimiento_resolucion|"
+    r"(birth_date|relacion|inscripcion_registro_civil|acogimiento_resolucion|fallecimiento|"
     r"discapacidad|convivencia|dependencia_economica|custodia_compartida|"
     r"rentas_anuales|declaracion_propia|prorrata_minimo|"
     # The monthly map precedes the annual figure in the alternation because a
@@ -277,6 +282,8 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         inscripcion_date = parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None
         acogimiento_raw = row.get("acogimiento_resolucion")
         acogimiento_date = parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None
+        fallecimiento_raw = row.get("fallecimiento")
+        death_date = parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None
         discapacidad_raw = row.get("discapacidad")
         if discapacidad_raw is not None:
             disc_val = int(discapacidad_raw)
@@ -331,6 +338,7 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 **relacion_kwarg(relacion),
                 inscripcion_registro_civil_date=inscripcion_date,
                 acogimiento_resolucion_date=acogimiento_date,
+                death_date=death_date,
                 discapacidad_grado=_discapacidad_grade(disc_val),
                 convive_con_contribuyente=convive,
                 dependencia_economica=dependencia,
@@ -513,10 +521,13 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     Accepted keys (case-insensitive):
       NACIMIENTO=YYYY-MM-DD  (required) birth date
       RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|
-               acogimiento_temporal|tutela
+               acogimiento_temporal|tutela|guarda_y_custodia_judicial
                              (optional, default descendiente) Art. 58.1 / 58.2
                              relationship. A temporal acogimiento takes the
-                             tranches and NOT the under-three increase.
+                             tranches and NOT the under-three increase. A
+                             judicial guarda y custodia takes the tranches and
+                             neither the increase nor the Art. 81.1 deducción
+                             por maternidad, which excludes it by name.
       INSCRIPCION=YYYY-MM-DD (optional) Registro Civil inscription of the
                              adoption, or the resolución judicial o
                              administrativa where inscription is not required
@@ -600,6 +611,11 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     acogimiento_raw = parts.get("ACOGIMIENTO")
     if acogimiento_raw:
         acogimiento_date = parse_iso8601_date(acogimiento_raw)
+
+    death_date = None
+    fallecimiento_raw = parts.get("FALLECIMIENTO")
+    if fallecimiento_raw:
+        death_date = parse_iso8601_date(fallecimiento_raw)
 
     discapacidad_grado = None
     disc_raw = parts.get("DISCAPACIDAD")
@@ -687,6 +703,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
         **relacion_kwarg(relacion),
         inscripcion_registro_civil_date=inscripcion_date,
         acogimiento_resolucion_date=acogimiento_date,
+        death_date=death_date,
         discapacidad_grado=_discapacidad_grade(discapacidad_grado),
         convive_con_contribuyente=convive,
         dependencia_economica=dependencia,

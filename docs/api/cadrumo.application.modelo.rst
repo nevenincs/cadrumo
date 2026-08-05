@@ -84,6 +84,7 @@ Submodules
    cadrumo.application.modelo._review_package_collab_audit
    cadrumo.application.modelo._review_package_counter_sign
    cadrumo.application.modelo._review_package_feedback
+   cadrumo.application.modelo._review_package_keypair
    cadrumo.application.modelo._review_package_recipient_encryption
    cadrumo.application.modelo._review_package_recipient_registry
    cadrumo.application.modelo._review_package_recipient_replay_guard

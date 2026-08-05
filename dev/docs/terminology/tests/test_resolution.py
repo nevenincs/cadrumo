@@ -60,18 +60,19 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     assert "303" in out.record.target
 
 
-def test_diseno_source_resolves_to_the_casilla_surface(resolver: TargetResolver) -> None:
-    """A Diseno de Registro source workbook resolves to its modelo's casilla target."""
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+def test_model_only_diseno_source_is_dropped_without_casilla_locator(
+    resolver: TargetResolver,
+) -> None:
+    """A model-only Diseño workbook hit fails closed without a casilla locator."""
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
 
     path = (
         "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
         "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
     )
     out = resolver.resolve(_hit(path))
-    assert isinstance(out, ResolvedTarget)
-    assert out.surface is GroundingSurface.CASILLA
-    assert out.record.metadata.modelo == "036"
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
 
 
 def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: TargetResolver) -> None:

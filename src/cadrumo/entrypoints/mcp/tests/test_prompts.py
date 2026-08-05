@@ -21,7 +21,7 @@ import anyio
 import pytest
 
 from ....agent import iter_skill_documents, operator_rules_text
-from ....core import accepted_period_codes, accepted_period_patterns
+from ....core import accepted_filing_period_codes, accepted_filing_period_patterns
 from ....tests import connected_server_and_client_session as connect
 from .._completions import complete_prompt_argument
 from .._prompts import (
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UTF_8 = "utf-8"
 _SDK_PRESENT = importlib.util.find_spec("mcp") is not None
-_PERIOD_COMPLETIONS = tuple(str(value) for value in accepted_period_codes())
+_PERIOD_COMPLETIONS = tuple(str(value) for value in accepted_filing_period_codes())
 
 
 def _shipped_skill_texts() -> dict[str, str]:
@@ -111,7 +111,7 @@ def test_server_lists_and_serves_every_prompt() -> None:
             workflow = next(prompt for prompt in listed if prompt.name != ORIENTATION_PROMPT_NAME)
             period_argument = next(argument for argument in workflow.arguments or [] if argument.name == "period")
             assert (period_argument.description or "").startswith("The AEAT period code.")
-            assert all(pattern in (period_argument.description or "") for pattern in accepted_period_patterns())
+            assert all(pattern in (period_argument.description or "") for pattern in accepted_filing_period_patterns())
             assert "ANUAL" not in (period_argument.description or "")
 
             completion = (
@@ -196,7 +196,7 @@ def test_workflow_prompts_declare_typed_arguments_orientation_does_not() -> None
     assert arg_names == {"filing_year", "period"}
     assert all(argument.required is False for argument in workflow.arguments)
     period_argument = next(argument for argument in workflow.arguments if argument.name == "period")
-    assert all(pattern in period_argument.description for pattern in accepted_period_patterns())
+    assert all(pattern in period_argument.description for pattern in accepted_filing_period_patterns())
     assert "ANUAL" not in period_argument.description
 
 

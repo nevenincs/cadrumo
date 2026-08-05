@@ -23,7 +23,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import Period, PeriodKind, RevisionReviewStatus, TaxDomain
+from ....core import Period, PeriodKind, RevisionReviewStatus, TaxDomain, registry_period_kind
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -766,7 +766,7 @@ def _filing_schedule_period_kind_mismatches(period_kind: str, periods: tuple[str
     mismatches: list[str] = []
     for token in periods:
         try:
-            canonical_kind = Period.from_year_and_code(2000, token).kind
+            canonical_kind = registry_period_kind(token)
         except ValueError:
             mismatches.append(token)
             continue

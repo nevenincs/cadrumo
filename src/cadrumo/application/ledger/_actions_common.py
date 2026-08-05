@@ -209,7 +209,7 @@ def _required_patched[T](
     # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED:
     # getattr returns Any but the caller binds the result to a generic T
     # via the fallback parameter.
-    return value  # type: ignore[no-any-return]
+    return value
 
 
 def _optional_patched[T](
@@ -227,7 +227,7 @@ def _optional_patched[T](
     # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED:
     # getattr returns Any but the caller binds the result to a generic T
     # via the fallback parameter.
-    return getattr(patch, field)  # type: ignore[no-any-return]
+    return getattr(patch, field)
 
 
 def _blocking_modelo_references(

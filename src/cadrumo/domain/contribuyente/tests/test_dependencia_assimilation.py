@@ -48,8 +48,16 @@ _THRESHOLDS = MinimoDescendientesThresholds(
 )
 
 
-def _child(**kwargs: object) -> DescendantInfo:
-    return DescendantInfo(birth_date=date(2012, 1, 1), **kwargs)  # type: ignore[arg-type]
+def _child(
+    *,
+    convive_con_contribuyente: bool = True,
+    dependencia_economica: bool | None = None,
+) -> DescendantInfo:
+    return DescendantInfo(
+        birth_date=date(2012, 1, 1),
+        convive_con_contribuyente=convive_con_contribuyente,
+        dependencia_economica=dependencia_economica,
+    )
 
 
 def _profile(child: DescendantInfo, anualidades: Decimal | None = None) -> RentaFamilyProfile:

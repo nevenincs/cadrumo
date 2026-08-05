@@ -347,6 +347,7 @@ def _maximal_descendants() -> tuple[DescendantInfo, ...]:
     equality, and the two entitling records carry every date their relación
     permits.
     """
+
     def _member(
         *,
         birth_date: date,
@@ -444,3 +445,98 @@ def test_a_stored_entry_date_under_an_excluded_relacion_refuses_on_reload() -> N
 
     with pytest.raises((ValueError, ValidationError)):
         descendant_list_from_facts(facts)
+
+
+class TestGuardaYCustodiaJudicial:
+    """The third Art. 58.1 category, which three statutes treat three ways.
+
+    A minor whose guarda y custodia the filer holds by resolución judicial is
+    assimilated for the tranches, excluded from the entry-event window, and
+    excluded BY NAME from the deducción por maternidad. It is a distinct legal
+    BASIS, which is why it is a member here, and not a generational degree,
+    which is why nieto is not.
+    """
+
+    @staticmethod
+    def _child(**kwargs: object) -> DescendantInfo:
+        return DescendantInfo(
+            birth_date=_OLD_BIRTH,
+            relacion=DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL,
+            **kwargs,  # type: ignore[arg-type]
+        )
+
+    def test_art_58_1_assimilates_it_so_the_tranches_apply(self) -> None:
+        """Positively assimilated, as a third category beside tutela and acogimiento.
+
+        "o, fuera de los casos anteriores, a quienes tengan atribuida por
+        resolución judicial su guarda y custodia". The ordinary predicate does
+        not read relación at all, so this asserts the axis did not accidentally
+        acquire a gate that would exclude the new member from the mínimo.
+        """
+        from ._registry_thresholds import registry_thresholds
+
+        assert self._child().is_eligible_ordinary(_YEAR, thresholds=registry_thresholds(_YEAR)) is True
+
+    def test_it_never_opens_the_art_58_2_entry_event_window(self) -> None:
+        """Absent from "adopción o acogimiento, tanto preadoptivo como permanente"."""
+        assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in ART_58_2_ENTITLING_RELACIONES
+
+    def test_it_cannot_carry_an_entry_event_date(self) -> None:
+        """The record refuses the anchor, so the window is unreachable by any door.
+
+        Membership in the entitling set is the permission set for the date, so
+        this is the behavioural half of the assertion above rather than a
+        restatement of it.
+        """
+        with pytest.raises((ValueError, ValidationError)):
+            self._child(acogimiento_resolucion_date=date(2020, 1, 1))
+
+    def test_it_is_excluded_from_the_art_81_1_maternidad_population(self) -> None:
+        """Excluded by NAME, not merely by absence from the admitted set.
+
+        "la deducción no resulta aplicable ... ni en los casos de menores
+        respecto de los que se tenga la guarda y custodia por resolución
+        judicial". The whole-enum enumeration in the maternidad module already
+        proves a non-member contributes zero months; this pins WHY this member
+        is a non-member, so a later reader does not admit it on the assumption
+        that its omission was an oversight.
+        """
+        from ....core import ART_81_1_MATERNIDAD_RELACIONES
+
+        assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in ART_81_1_MATERNIDAD_RELACIONES
+
+    def test_the_entry_surface_ships_with_the_member(self) -> None:
+        """A member no operator can select is not a modelled case."""
+        parsed = parse_descendiente_flag(f"NACIMIENTO={_OLD_BIRTH.isoformat()},RELACION=guarda_y_custodia_judicial")
+
+        assert parsed.relacion is DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL
+
+    def test_it_survives_the_fact_roundtrip(self) -> None:
+        """The relación is persisted and reloaded rather than defaulting back.
+
+        The default is the ORDINARY descendant, which is Art. 81.1-admitted, so
+        a member that silently defaulted on reload would restore the very
+        over-grant this member removes.
+        """
+        original = (self._child(),)
+        reloaded = descendant_list_from_facts(dict(descendant_facts_from_list(original)))
+
+        assert reloaded == original
+        assert reloaded[0].relacion is DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL
+
+
+def test_no_grandchild_member_exists_on_the_relacion_axis() -> None:
+    """Guards the decision NOT to encode generational degree on this axis.
+
+    Hijo, nieto and bisnieto are one relationship type differing by degree of
+    descent, not three legal bases. Adding a nieto member would bolt a second,
+    differently-shaped axis onto this one — the fragmentation this axis exists
+    to remove. The Art. 81.1 grandchild exclusion is therefore a known
+    representability gap, handled by an advisory rather than by a member, and
+    this test exists so that gap is closed deliberately rather than by someone
+    reaching for the nearest-looking fix.
+    """
+    degree_tokens = ("nieto", "bisnieto", "grandchild")
+    offenders = [m.name for m in DescendantRelacion if any(tok in m.value for tok in degree_tokens)]
+
+    assert offenders == [], f"generational degree encoded on the relación axis: {offenders}"

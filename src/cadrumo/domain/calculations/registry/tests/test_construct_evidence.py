@@ -12,6 +12,7 @@ from .._coverage import (
     ConstructEvidenceLedger,
     ConstructEvidenceRow,
     audit_registry_construct_evidence,
+    build_construct_evidence_ledger,
 )
 from ._catalogue_verification_support import _registry_tree
 
@@ -28,6 +29,7 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
     assert len(audit.ledgers) == sum(len(modelo.revisions) for modelo in modelos)
     assert audit.ok
     assert audit.gaps == ()
+    assert all(row.authority_checked for ledger in audit.ledgers for row in ledger.rows)
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
@@ -88,15 +90,38 @@ def test_construct_evidence_rows_keep_incomplete_refs_explicit() -> None:
         )
 
 
+def test_complete_construct_evidence_requires_the_authority_check_marker() -> None:
+    """Reference presence alone cannot claim corpus-reconciled evidence."""
+    with pytest.raises(ValidationError, match="authority-checked registry validation boundary"):
+        ConstructEvidenceRow(
+            kind="formula",
+            construct_id="formula-without-authority-check",
+            status="grounded",
+            legal_refs=("ley-35-2006:art-1",),
+            source_refs=("aeat-source-1",),
+            reason="refs are present",
+        )
+
+
+def test_public_construct_ledger_keeps_reference_presence_unvalidated() -> None:
+    """The public snapshot projection cannot manufacture validated authority."""
+    from .._authority import bundled_authority
+
+    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    ledger = build_construct_evidence_ledger(snapshot)
+
+    assert ledger.gaps
+    assert any(row.status == "unvalidated" for row in ledger.rows)
+    assert all(not row.authority_checked for row in ledger.rows)
+
+
 def test_construct_evidence_ledger_rejects_duplicate_kind_and_identity() -> None:
     """The ledger cannot hide two rows behind one construct coordinate."""
     row = ConstructEvidenceRow(
         kind="formula",
         construct_id="formula-1",
-        status="grounded",
-        legal_refs=("ley-35-2006:art-1",),
-        source_refs=("aeat-source-1",),
-        reason="declared formula evidence",
+        status="unresolved",
+        reason="duplicate coordinate test",
     )
 
     with pytest.raises(ValidationError, match="unique kind/id coordinates"):

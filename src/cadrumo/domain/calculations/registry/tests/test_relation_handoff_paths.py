@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from .. import audit_registry_handoff_paths, bundled_authority
+from .._validate_relation_sources import is_iva_wallet_owned_relation_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -31,3 +32,34 @@ def test_bundled_handoff_paths_have_one_owner_and_preserve_provenance() -> None:
         ("303", "2023-y-siguientes", "modelo-303-compensacion-pendiente-anteriores"),
     }
     assert all(record.resolver_owner == "iva_wallet" for record in wallet_rows)
+
+
+def test_iva_wallet_exception_requires_the_exact_relation_coordinate() -> None:
+    """Reusing the binding id cannot grant the M303 wallet carve-out."""
+    binding_id = "modelo-303-compensacion-pendiente-anteriores"
+    relation_id = "modelo-303-rel-self-compensacion-anteriores"
+
+    assert is_iva_wallet_owned_relation_target(
+        modelo_id="303",
+        revision_id="2009-y-siguientes",
+        relation_id=relation_id,
+        target_binding=binding_id,
+    )
+    assert is_iva_wallet_owned_relation_target(
+        modelo_id="303",
+        revision_id="2023-y-siguientes",
+        relation_id=relation_id,
+        target_binding=binding_id,
+    )
+    assert not is_iva_wallet_owned_relation_target(
+        modelo_id="100",
+        revision_id="2025",
+        relation_id=relation_id,
+        target_binding=binding_id,
+    )
+    assert not is_iva_wallet_owned_relation_target(
+        modelo_id="303",
+        revision_id="2009-y-siguientes",
+        relation_id="reused-binding-under-another-relation",
+        target_binding=binding_id,
+    )

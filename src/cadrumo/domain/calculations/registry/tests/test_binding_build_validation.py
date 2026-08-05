@@ -142,7 +142,7 @@ _FAMILY_CASES: tuple[
     (
         "ledger_renta_income_aggregation",
         "ledger_renta_income_aggregation",
-        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "gross_income_sum"},
+        {"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
         BindingAggregationOp.SUM,
         # An unknown fact value trips the typed selector Literal at build time
         # (a shape violation is also a build-time rejection, not resolve-only).

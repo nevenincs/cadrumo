@@ -412,7 +412,7 @@ class JustificanteCaptureSnapshotService(
     # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN:
     # Subclass returns a narrower snapshot type and adds optional filter params;
     # base-class signature widening would ripple to N snapshot subclasses.
-    def list_snapshots(  # type: ignore[override]
+    def list_snapshots(
         self,
         *,
         filing_year: int | None = None,

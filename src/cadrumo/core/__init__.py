@@ -149,14 +149,18 @@ from ._optional_extras import (
     require_optional_extra,
 )
 from ._period import (
+    FilingPeriodCode,
     Period,
     PeriodError,
     PeriodKind,
     RegistryPeriodCode,
     RegistrySelectorPeriodCode,
     StandardPeriodCode,
+    accepted_filing_period_codes,
+    accepted_filing_period_patterns,
     accepted_period_codes,
     accepted_period_patterns,
+    registry_period_kind,
 )
 from ._post_filing_event import (
     ACTIONABLE_POST_FILING_EVENT_KINDS,
@@ -339,6 +343,7 @@ __all__: list[str] = [
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",
     "ExternalPathRole",
+    "FilingPeriodCode",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",
     "FormerProductStateError",
@@ -388,6 +393,8 @@ __all__: list[str] = [
     "TaxDomain",
     "TipoRentaGroundingTier",
     "TipoRentaIrnr",
+    "accepted_filing_period_codes",
+    "accepted_filing_period_patterns",
     "accepted_period_codes",
     "accepted_period_patterns",
     "assess_passphrase_strength",
@@ -426,6 +433,7 @@ __all__: list[str] = [
     "project_m210_tipo_renta_code",
     "read_pointer",
     "read_toml",
+    "registry_period_kind",
     "require_active_bucket_id",
     "require_optional_extra",
     "resolve_active_bucket_id",

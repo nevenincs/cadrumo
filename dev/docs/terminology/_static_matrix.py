@@ -20,7 +20,6 @@ after model selection and measurement have been ratified.
 
 from __future__ import annotations
 
-import json
 import math
 import re
 import struct
@@ -31,6 +30,8 @@ from pathlib import Path
 from typing import Annotated, Final, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+
+from ._jcs import canonical_json_bytes
 
 __all__ = [
     "DEFAULT_MAX_SERIALIZED_BYTES",
@@ -63,7 +64,7 @@ __all__ = [
 
 _UTF_8: Final[str] = "utf-8"
 DEFAULT_MAX_SERIALIZED_BYTES: Final[int] = 3_000_000
-EMBEDDING_MATRIX_SCHEMA_VERSION: Final[int] = 3
+EMBEDDING_MATRIX_SCHEMA_VERSION: Final[int] = 4
 INT8_QUANTIZATION_ALGORITHM: Final[str] = "symmetric-per-row-int8-f32-v1"
 NORMALIZATION_CONTRACT_VERSION: Final[str] = "unicode-word-runs-nfkc-lower-v1"
 ROW_ORDER: Final[str] = "canonical-utf8-byte-order-v1"
@@ -356,7 +357,7 @@ class StaticEmbeddingMatrix(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal[3]
+    schema_version: Literal[4]
     model: ModelMetadata
     vocabulary_sha256: _Sha256
     vocabulary_count: int = Field(ge=1)
@@ -406,7 +407,7 @@ class StaticEmbeddingMatrix(BaseModel):
             raise ValueError("query_token_sha256 does not match the query-token vocabulary")
 
         unsigned_payload = self.model_dump(mode="json", exclude={"serialized_bytes", "artifact_sha256"})
-        expected_artifact = sha256(_canonical_json_bytes(unsigned_payload)).hexdigest()
+        expected_artifact = sha256(canonical_json_bytes(unsigned_payload)).hexdigest()
         if self.artifact_sha256 != expected_artifact:
             raise ValueError("artifact_sha256 does not match the unsigned matrix payload")
         if self.serialized_bytes != len(self.to_json_bytes()):
@@ -415,7 +416,7 @@ class StaticEmbeddingMatrix(BaseModel):
 
     def to_json_bytes(self) -> bytes:
         """Return the canonical newline-terminated JSON representation."""
-        return _canonical_json_bytes(self.model_dump(mode="json"))
+        return canonical_json_bytes(self.model_dump(mode="json"))
 
 
 class StaticEmbeddingProvider(Protocol):
@@ -578,7 +579,7 @@ def compile_static_embedding_matrix(
         "rows": [row.model_dump(mode="json") for row in rows],
         "query_token_rows": [row.model_dump(mode="json") for row in query_rows],
     }
-    artifact_sha256 = sha256(_canonical_json_bytes(core)).hexdigest()
+    artifact_sha256 = sha256(canonical_json_bytes(core)).hexdigest()
     payload: dict[str, object] = {**core, "serialized_bytes": 0, "artifact_sha256": artifact_sha256}
     serialized_bytes = _fixed_point_serialized_size(payload)
     if serialized_bytes > max_serialized_bytes:
@@ -709,15 +710,9 @@ def _fixed_point_serialized_size(payload: dict[str, object]) -> int:
     size = 0
     for _ in range(8):
         payload["serialized_bytes"] = size
-        candidate = len(_canonical_json_bytes(payload))
+        candidate = len(canonical_json_bytes(payload))
         if candidate == size:
             return size
         size = candidate
     raise MatrixCompilationError("serialized byte count did not converge")
 
-
-def _canonical_json_bytes(payload: object) -> bytes:
-    """Serialize JSON with stable ordering, separators, Unicode, and newline."""
-    return (
-        json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
-    ).encode(_UTF_8)

@@ -19,7 +19,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...agent import iter_skill_documents, operator_rules_text, parse_skill_metadata
-from ...core import accepted_period_patterns
+from ...core import accepted_filing_period_patterns
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ._resources import HarnessResourceKind, resource_uri
 
@@ -29,7 +29,11 @@ _MARKDOWN = "text/markdown"
 
 ORIENTATION_PROMPT_NAME = "cadrumo-empezar"
 
-_PERIOD_ARGUMENT_DESCRIPTION = "The AEAT period code. Accepted forms: " + "; ".join(accepted_period_patterns()) + "."
+#: The prompt argument names a period the operator FILES in, so the description
+#: advertises the filing-scoped set, not the wider registry-coordinate union.
+_PERIOD_ARGUMENT_DESCRIPTION = (
+    "The AEAT period code. Accepted forms: " + "; ".join(accepted_filing_period_patterns()) + "."
+)
 
 
 class PromptNotFoundError(LookupError):

@@ -1,6 +1,6 @@
 [[revisions."2022".casilla_continuidad_evolutions]]
 id = "m100-0070-2020-2022-label-and-legal-refs-evolved"
-continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+continuidad_id = "irpf-inmueble-vivienda-habitual-flag"
 from_revision = "2020"
 to_revision = "2022"
 evolution_kind = "label_and_legal_refs_evolved"
@@ -9,7 +9,7 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary
 
 [[revisions."2022".casilla_continuidad_evolutions]]
 id = "m100-0070-2021-2022-label-evolved"
-continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+continuidad_id = "irpf-inmueble-vivienda-habitual-flag"
 from_revision = "2021"
 to_revision = "2022"
 evolution_kind = "label_evolved"

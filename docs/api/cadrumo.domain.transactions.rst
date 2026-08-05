@@ -27,4 +27,5 @@ Submodules
    cadrumo.domain.transactions._protocols
    cadrumo.domain.transactions._raw_transaction
    cadrumo.domain.transactions._repository
+   cadrumo.domain.transactions._retencion_parameters
    cadrumo.domain.transactions._service

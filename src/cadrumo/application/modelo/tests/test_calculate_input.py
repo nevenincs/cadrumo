@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -10,6 +10,7 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
+from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span
@@ -239,3 +240,180 @@ def test_period_code_casilla_override_refuses_a_malformed_token(tmp_path: Path) 
     message = str(exc_info.value)
     assert "period_code" in message
     assert "9Q" in message
+
+
+# ---------------------------------------------------------------------------
+# The pre-2023 cotizaciones ceiling withholds the deduccion outright, so the
+# ambiguous-relacion advisory -- which only ever names a descendant that
+# CONTRIBUTES months -- has nothing to name. This locks the INTERACTION rather
+# than re-proving either half: `resolve_maternidad_meses` already proves
+# `pairs == ()` for a ceilinged year regardless of relacion
+# (`test_maternidad_cotizaciones_ceiling.py`), and the ambiguous-relacion check
+# reads its candidate set from exactly that field.
+# ---------------------------------------------------------------------------
+
+_MATERNIDAD_BUCKET_ID = "20000000-0000-4000-8000-000000000611"
+_MATERNIDAD_CEILINGED_FILING_YEAR = 2022
+_MATERNIDAD_CASILLA_ID: CasillaId = validated_casilla_id("0611", surface="_MATERNIDAD_CASILLA_ID")
+
+
+def test_ambiguous_relacion_is_moot_while_the_cotizaciones_ceiling_withholds_everything(
+    tmp_path: Path,
+) -> None:
+    """A default-relacion descendant contributing declared months to a pre-2023 filing.
+
+    The descendant's relacion is the unstated default -- exactly the state the
+    ambiguous-relacion advisory exists to disclose -- but the filing year predates
+    2023, when Art. 81.1 was still capped at a cotizaciones figure this application
+    cannot express. The deduccion is withheld entirely for that reason, so there is
+    nothing left for the relacion ambiguity to threaten: only the cotizaciones
+    advisory fires, never the ambiguous-relacion one.
+    """
+    period = Period.from_year_and_code(_MATERNIDAD_CEILINGED_FILING_YEAR, "0A")
+    snapshot = resources().modelos.authority.snapshot(
+        "100",
+        filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
+        period=period.registry_token,
+    )
+    child = DescendantInfo(
+        birth_date=date(_MATERNIDAD_CEILINGED_FILING_YEAR - 1, 6, 1),
+        meses_madre_trabajo_2024=12,
+    )
+    descendant_overrides = dict(descendant_facts_from_list((child,)))
+
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(_MATERNIDAD_BUCKET_ID):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=_MATERNIDAD_BUCKET_ID,
+                overrides=descendant_overrides,
+            ),
+        )
+        work_unit = create_work_unit(
+            bucket_id=_MATERNIDAD_BUCKET_ID,
+            modelo="100",
+            filing_year=_MATERNIDAD_CEILINGED_FILING_YEAR,
+            period=period,
+            revision_id=snapshot.revision.id,
+            clock=datetime(2026, 8, 5, 12, 0, tzinfo=UTC),
+        )
+        bundle = build_work_calculate_input_bundle(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_overrides={},
+            binding_overrides={},
+            relation_overrides={},
+            detail_rows=(),
+            borrador_snapshot_id=None,
+        )
+
+    assert _MATERNIDAD_CASILLA_ID not in bundle.casilla_inputs
+    source_kinds = {diagnostic.source_kind for diagnostic in bundle.shortcut_diagnostics}
+    assert "maternidad_cotizaciones_ceiling_inexpressible" in source_kinds
+    assert "maternidad_ambiguous_relacion" not in source_kinds
+
+
+class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
+    """Both maternidad advisories interpolate one entry per descendant.
+
+    That makes their length DYNAMIC, which is what distinguishes this from the
+    cotizaciones-ceiling crash: that message was a fixed string measured once
+    and trimmed. These grow, so measuring one is measuring nothing. Past a
+    household size the message overruns the diagnostic cap, the model refuses,
+    and `calculate` exits with a raw validation error reaching the operator --
+    a NON-blocking advisory stopping the filing outright, at exactly the moment
+    it had something to say.
+
+    Every case here is constructed ABOVE the count at which the unbounded form
+    crossed the cap, never at one index, because a single-index construction is
+    what let both of these ship.
+    """
+
+    #: The pydantic cap on ``CalculationSourceDiagnostic.message``.
+    CAP = 512
+
+    #: Comfortably past both observed crossings (13 withheld, 25 ambiguous),
+    #: so a later message edit that lengthens the fixed prose is still covered.
+    MANY = 60
+
+    @staticmethod
+    def _ids(count: int) -> tuple[str, ...]:
+        return tuple(str(index) for index in range(count))
+
+    def test_withheld_advisory_stays_within_the_cap_at_many_descendants(self) -> None:
+        from .._calculate_input import _maternidad_meses_withheld_advisory
+
+        advisory = _maternidad_meses_withheld_advisory(self._ids(self.MANY), validated_casilla_id("0611"))
+
+        assert advisory is not None
+        assert len(advisory.message) <= self.CAP
+
+    def test_ambiguous_relacion_advisory_stays_within_the_cap_at_many_descendants(self) -> None:
+        from .._calculate_input import _maternidad_ambiguous_relacion_advisory
+
+        advisory = _maternidad_ambiguous_relacion_advisory(
+            frozenset(self._ids(self.MANY)),
+            validated_casilla_id("0611"),
+        )
+
+        assert advisory is not None
+        assert len(advisory.message) <= self.CAP
+
+    def test_both_advisories_hold_at_the_observed_crossing_points(self) -> None:
+        """Pinned at the counts the review measured: 13 withheld, 25 ambiguous.
+
+        Kept alongside the larger case so a regression that merely RAISES the
+        threshold rather than removing it is still caught here.
+        """
+        from .._calculate_input import (
+            _maternidad_ambiguous_relacion_advisory,
+            _maternidad_meses_withheld_advisory,
+        )
+
+        casilla = validated_casilla_id("0611")
+        for count in (13, 25, 26):
+            withheld = _maternidad_meses_withheld_advisory(self._ids(count), casilla)
+            ambiguous = _maternidad_ambiguous_relacion_advisory(frozenset(self._ids(count)), casilla)
+            assert withheld is not None
+            assert ambiguous is not None
+            assert len(withheld.message) <= self.CAP, f"withheld overran at {count}"
+            assert len(ambiguous.message) <= self.CAP, f"ambiguous overran at {count}"
+
+    def test_the_unbounded_form_would_have_overrun(self) -> None:
+        """Positive control: the bound is doing work, not decorating a short message.
+
+        Reconstructs what an unbounded join of the same ids costs and asserts it
+        exceeds the cap. Without this, every assertion above would pass equally
+        well against a message that never approached the limit, and the tests
+        would prove nothing about the defence.
+        """
+        from .._calculate_input import _bounded_descendant_ids, _maternidad_meses_withheld_advisory
+
+        ids = self._ids(self.MANY)
+        advisory = _maternidad_meses_withheld_advisory(ids, validated_casilla_id("0611"))
+        assert advisory is not None
+
+        bounded_term = _bounded_descendant_ids(ids)
+        unbounded_term = ", ".join(ids)
+        would_be = len(advisory.message) - len(bounded_term) + len(unbounded_term)
+
+        assert would_be > self.CAP, "the control does not reach the cap, so the bound proves nothing"
+
+    def test_the_bound_still_names_descendants_and_counts_the_rest(self) -> None:
+        """Bounding must keep the advisory ACTIONABLE, not reduce it to a count.
+
+        An operator needs at least one index to act on, and needs to know the
+        list was truncated rather than complete -- otherwise a household of
+        sixty reads as a household of three.
+        """
+        from .._calculate_input import _bounded_descendant_ids
+
+        rendered = _bounded_descendant_ids(self._ids(self.MANY))
+
+        assert rendered.startswith("0, 1, 2")
+        assert rendered.endswith(f"and {self.MANY - 3} more")
+
+    def test_a_small_household_is_named_in_full_with_no_remainder_clause(self) -> None:
+        """The bound must not degrade the ordinary case it was added to protect."""
+        from .._calculate_input import _bounded_descendant_ids
+
+        assert _bounded_descendant_ids(("0", "1")) == "0, 1"

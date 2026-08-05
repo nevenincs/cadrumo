@@ -1963,6 +1963,19 @@ effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-08-01
 reviewed_by = "operator"
+notes = """LIVA art 68: lugar de realizacion de las entregas de bienes. Together with \
+arts. 69 and 70 (prestaciones de servicios, reglas generales y especiales) this is the \
+place-of-supply rule set that decides WHICH IVA category a cross-border operation \
+belongs to. That selection is a declared judgement made by the operator, never derived \
+by the system from the counterparty's country: two invoices with identical counterparty \
+countries can fall in different categories depending on where the entrega or the \
+prestacion is localised under these articles.
+Bundled text checked against the live BOE consolidated text on 2026-08-05: the anchored \
+#a68 unit of the bundled ley-37-1992.html is character-identical to the current \
+redaction BOE-A-2022-22128 (in force 2023-01-01), apart from the BOE amendment-history \
+footnotes the consolidated page appends after the article body. Note that \
+effective_from below records 1993-01-01, the article's original entry into force, not \
+the redaction date of the text actually bundled."""
 required_text = [
     "Artículo 68. Lugar de realización de las entregas de bienes.",
     "El lugar de realización de las entregas de bienes",

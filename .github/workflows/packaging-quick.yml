@@ -59,6 +59,34 @@ permissions:
   contents: read
 
 jobs:
+  # A lane whose label set no ONLINE runner carries does not go red, it queues:
+  # a quick run created 2026-08-04T23:19 was still queued when it was cancelled
+  # by hand at 05:10. `timeout-minutes` cannot bound that, because its clock
+  # starts when a job runs, not when it starts waiting. This job watches the
+  # run's own job list and fails it fast instead. See dev/ci/runner_queue_watchdog.py
+  # for why the runners endpoint is not an option (403; ungrantable permission).
+  runner-queue-watchdog:
+    name: Cadrumo / runner queue watchdog
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "900"
+        run: python3 dev/ci/runner_queue_watchdog.py
+
   quick-linux:
     name: Cadrumo quick / Linux / cohort + core probe
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository

@@ -1,6 +1,6 @@
 [[revisions."2023".casilla_continuidad_evolutions]]
 id = "m100-0682-2021-2023-label-evolved"
-continuidad_id = "irpf.regularizacion.devoluciones-solicitadas-ejercicio"
+continuidad_id = "irpf-regularizacion-devoluciones-solicitadas-ejercicio"
 from_revision = "2021"
 to_revision = "2023"
 evolution_kind = "label_evolved"

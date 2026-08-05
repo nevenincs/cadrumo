@@ -141,6 +141,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._conformance import (
+    AnnualCasillaPopulationComparison,
     LatestRevisionSupportProbe,
     RegistryConformanceProfile,
     RevisionCapabilityFacts,
@@ -151,6 +152,7 @@ from ._conformance import (
     RevisionModelLawCoverage,
     audit_bundled_registry_conformance,
     build_registry_conformance_profile,
+    compare_annual_casilla_population,
 )
 from ._corpus import (
     RegistryCitationArticleProjection,
@@ -675,6 +677,7 @@ def _load_filed_observation(path: Path):
 
 
 __all__ = [
+    "AnnualCasillaPopulationComparison",
     "BindingDiff",
     "CasillaDiff",
     "FiledStateVerificationReport",
@@ -718,6 +721,7 @@ __all__ = [
     "audit_bundled_registry_conformance",
     "audit_registry_oracles",
     "build_registry_conformance_profile",
+    "compare_annual_casilla_population",
     "diff_registry_revisions",
     "inspect_registry_tree",
     "list_registry_citations",

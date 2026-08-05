@@ -47,6 +47,18 @@ _OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 
 _LINE_TOLERANCE = Decimal("0.01")
 
+_RETENCION_TOLERANCE: Final[Decimal] = Decimal("0.01")
+"""Rounding slack allowed between a declared retención amount and rate.
+
+The invoice-level totals are compared *exactly* because each is a sum of
+line figures that were themselves already rounded to the cent. A retención
+amount is not a sum: it is a rate applied to the base, so the recorded figure
+legitimately differs from the recomputed product in the last cent depending on
+where the issuer rounded. One cent is the same slack
+:data:`_LINE_TOLERANCE` grants the line-level ``subtotal * iva_rate`` product,
+for the same reason.
+"""
+
 
 def derive_invoice_id(
     *,
@@ -452,6 +464,19 @@ class Invoice(BaseModel):
         """``grand_total`` in euro, or ``None`` when the invoice is unconverted."""
         return self._in_eur(self.grand_total)
 
+    @property
+    def retention_amount_eur(self) -> Decimal | None:
+        """The declared retención in euro, or ``None`` when there is none to convert.
+
+        Returns ``None`` both when no retención was declared and when the
+        invoice is unconverted, so a caller that needs to tell those apart must
+        read :attr:`retention_amount` alongside it -- the same shape the three
+        total accessors already have.
+        """
+        if self.retention_amount is None:
+            return None
+        return self._in_eur(self.retention_amount)
+
     def _in_eur(self, amount: Decimal) -> Decimal | None:
         """Convert *amount* to euro using the stored rate.
 
@@ -535,6 +560,65 @@ class Invoice(BaseModel):
             if self.grand_total != self.base_total:
                 raise InvoiceValidationError(
                     "grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT",
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_retencion_consistency(self) -> Self:
+        """Enforce the retención invariants, holding retención outside the totals.
+
+        Retención is an IRPF settlement-side deduction, not a price component.
+        The canonical per-invoice identity is
+        ``total (contraprestación) = base_total + iva_total`` and, separately,
+        ``cash = total - retención``: the withholding changes what the payer
+        *transfers*, never what the operation *costs*. So :attr:`grand_total`
+        stays retención-inclusive, and an issuer who nets the withholding out of
+        the grand total is refused by
+        :meth:`_validate_totals_and_exempt_invariants` above, whose
+        ``grand_total == base_total + iva_total`` equality is exact. Nothing
+        here re-checks that; this validator governs only the two retención
+        fields themselves.
+
+        The retención base is the **base imponible**, not the grand total: RIRPF
+        art. 95.1 withholds "sobre los ingresos íntegros satisfechos", and the
+        IVA repercutido is not an ingreso of the issuer (PGC NRV 12.ª/14.ª). A
+        rate checked against :attr:`grand_total` would therefore over-state the
+        expected withholding by the whole cuota.
+
+        :attr:`retention_rate` is a **fraction**, matching
+        :func:`~cadrumo.domain.invoices.iva_rate_percentage` and the registry
+        RIRPF art. 95 rates, both of which express a rate as ``pct / 100``. The
+        upper bound is what catches a percentage written into a fractional
+        field: ``15`` for "15 %" is refused rather than silently read as
+        1500 %.
+
+        An amount may stand alone -- the invoice records what was withheld
+        without recording which rate produced it, which is how many issued
+        invoices actually read. A rate may not: on its own it declares a
+        proportion of nothing, and inferring the amount from it would
+        manufacture a figure the document never stated.
+        """
+        if self.retention_amount is not None and self.retention_amount < Decimal("0"):
+            raise InvoiceValidationError("retention_amount must be non-negative")
+        if self.retention_rate is not None:
+            if self.retention_rate < Decimal("0") or self.retention_rate > Decimal("1"):
+                raise InvoiceValidationError(
+                    "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
+                )
+            if self.retention_amount is None:
+                raise InvoiceValidationError(
+                    "retention_rate requires retention_amount; a rate alone declares no withheld figure",
+                )
+        if self.retention_amount is not None and self.retention_amount > self.base_total:
+            raise InvoiceValidationError(
+                "retention_amount must not exceed base_total; the retención base is the "
+                "base imponible (ingresos íntegros), not the IVA-inclusive total",
+            )
+        if self.retention_rate is not None and self.retention_amount is not None:
+            expected_retencion = (self.base_total * self.retention_rate).quantize(Decimal("0.0001"))
+            if abs(self.retention_amount - expected_retencion) > _RETENCION_TOLERANCE:
+                raise InvoiceValidationError(
+                    "retention_amount must equal base_total * retention_rate within 1 cent",
                 )
         return self
 

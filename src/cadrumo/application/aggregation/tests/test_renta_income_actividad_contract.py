@@ -342,3 +342,131 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
 
 
 # ---------------------------------------------------------------------------
+
+
+def _ungrounded_diagnostics(
+    resolution: object,
+) -> tuple[object, ...]:
+    """Every ungrounded-substrate advisory on a resolution, keyed on the reason code."""
+    return tuple(
+        diagnostic
+        for diagnostic in resolution.diagnostics  # type: ignore[attr-defined]
+        if diagnostic.reason == "ungrounded_income_substrate"
+    )
+
+
+def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A row with no declared base must SAY so, not just quietly contribute cash.
+
+    This is the safety net for the defect the whole campaign turns on: no inbound
+    statement adapter populates ``taxable_base``, so an untagged activity receipt
+    reaches casilla 01 through the ``ingresos_integros_sum`` fallback carrying the
+    bank-credited figure -- net of any retención practicada, and IVA-inclusive
+    where IVA was charged. The fallback is deliberately KEPT (dropping the row
+    would under-declare by its whole value), so the advisory is the only thing
+    standing between the operator and a silently mis-measured income casilla.
+
+    Asserted on the machine-readable ``reason`` rather than the message prose:
+    the wording is operator-facing copy and may be rephrased or localised, but
+    the reason code is the contract.
+    """
+    tx = _actividad_transaction(
+        "ae-cash-fallback-advisory",
+        value_date=date(2026, 3, 15),
+        amount=Decimal("1700.00"),
+        taxable_base=None,
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
+    context = CalculationSourceContext(
+        bucket_id="test",
+        modelo="130",
+        filing_year=2026,
+        period=_period(2026, "1T"),
+        revision=_m130_2026_q1_revision(),
+    )
+
+    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+
+    advisories = _ungrounded_diagnostics(resolution)
+    assert len(advisories) == 1, "a base-less income row must raise exactly one ungrounded-substrate advisory"
+    assert advisories[0].source_kind == "ledger_renta_income_aggregation"
+    # The row still contributes -- the advisory reports a measurement risk, it does
+    # not exclude. Proving both halves together is the point: an advisory that fired
+    # while the row was dropped would describe a different, safer bug.
+    assert resolution.binding_values[_M130_INGRESOS_BINDING] == Decimal("1700.00")
+
+
+def test_substrate_declared_income_raises_no_ungrounded_advisory(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The control: an advisory that always fires is indistinguishable from a broken one.
+
+    A tagged invoice declares its base, so the income measure is grounded and the
+    operator must NOT be warned. Without this case the test above passes just as
+    happily against a resolver that appends the advisory unconditionally, which
+    would train operators to ignore it -- the failure mode the aggregate-not-
+    per-row projection was designed to avoid in the first place.
+    """
+    tx = _actividad_transaction(
+        "ae-substrate-declared-control",
+        value_date=date(2026, 3, 15),
+        amount=Decimal("2120.00"),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("420.00"),
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
+    context = CalculationSourceContext(
+        bucket_id="test",
+        modelo="130",
+        filing_year=2026,
+        period=_period(2026, "1T"),
+        revision=_m130_2026_q1_revision(),
+    )
+
+    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+
+    assert _ungrounded_diagnostics(resolution) == (), (
+        "a row declaring its taxable_base is grounded and must raise no ungrounded-substrate advisory"
+    )
+    assert resolution.binding_values[_M130_INGRESOS_BINDING] == Decimal("2000.00")
+
+
+def test_many_ungrounded_rows_raise_one_advisory_not_one_each(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Three base-less rows must produce ONE advisory carrying their summed cash.
+
+    The projection is deliberately per-aggregation rather than per-row, because an
+    alert that fires once per transaction is an alert operators learn to skip. This
+    pins that decision so a later refactor cannot quietly turn it back into a
+    per-row emitter while every other assertion in this file keeps passing.
+    """
+    transactions = tuple(
+        _actividad_transaction(
+            f"ae-ungrounded-{index}",
+            value_date=date(2026, 3, 10 + index),
+            amount=Decimal("500.00"),
+            taxable_base=None,
+        )
+        for index in range(3)
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions(transactions))
+    context = CalculationSourceContext(
+        bucket_id="test",
+        modelo="130",
+        filing_year=2026,
+        period=_period(2026, "1T"),
+        revision=_m130_2026_q1_revision(),
+    )
+
+    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+
+    advisories = _ungrounded_diagnostics(resolution)
+    assert len(advisories) == 1, "three ungrounded rows must fold into one advisory, not three"
+    assert resolution.binding_values[_M130_INGRESOS_BINDING] == Decimal("1500.00")

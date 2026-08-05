@@ -64,6 +64,27 @@ class TestEnvExampleAlignment:
         """``env/.env.example`` must exist at the canonical env container path."""
         assert ENV_EXAMPLE_PATH.exists(), f".env.example not found at {ENV_EXAMPLE_PATH}"
 
+    def test_the_env_parity_corpora_did_not_collapse(self) -> None:
+        """A green parity result above must mean 'compared', not 'compared nothing'.
+
+        Both directions below are set differences asserted empty. If either side
+        resolved to an empty set -- the example file moved, or the line matcher
+        stopped matching -- the differences are empty too and both gates report
+        exactly what a correct tree reports. The floors are deliberately low:
+        the point is to distinguish a populated corpus from a collapsed one, not
+        to pin a count that drifts with every new setting.
+        """
+        settings_vars = Settings.env_var_names()
+        example_vars = _parse_env_example_vars()
+        assert len(settings_vars) > 5, (
+            f"Settings.env_var_names() yielded {len(settings_vars)} names; the parity gates below "
+            "compare against this set, so a collapsed one makes them vacuous"
+        )
+        assert len(example_vars) > 5, (
+            f"{ENV_EXAMPLE_PATH} parsed to {len(example_vars)} variables; the parity gates below "
+            "compare against this set, so a collapsed one makes them vacuous"
+        )
+
     def test_settings_fields_documented_in_env_example(self) -> None:
         """Every Settings field must have a corresponding entry in env/.env.example."""
         settings_vars = Settings.env_var_names()

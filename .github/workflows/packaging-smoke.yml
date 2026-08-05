@@ -26,6 +26,34 @@ permissions:
   contents: read
 
 jobs:
+  # Gated on the cohort build deliberately. Every off-lane job in this campaign
+  # (both Windows legs, both macOS legs) waits on `build-release-cohort`, and
+  # GitHub does not create a dependent job's record until its dependencies
+  # resolve — so before that point there is nothing to watch, and starting
+  # earlier would hold one of only two Linux runner slots through a long build
+  # for no coverage. See dev/ci/runner_queue_watchdog.py.
+  runner-queue-watchdog:
+    name: Cadrumo / runner queue watchdog
+    needs: build-release-cohort
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "900"
+        run: python3 dev/ci/runner_queue_watchdog.py
+
   cadrumo-packaging-smoke:
     name: Cadrumo / Ubuntu / Python 3.13 / wheel artifacts
     runs-on: [self-hosted, Linux, X64]

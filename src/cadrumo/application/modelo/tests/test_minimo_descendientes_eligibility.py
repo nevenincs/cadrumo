@@ -447,6 +447,7 @@ def test_profile_carrying_the_new_facts_produces_a_prorated_and_capped_aggregate
             _parameter(snapshot, "cuarto-y-siguientes"),
         ],
         menor_tres_supplement=_parameter(snapshot, "menor-tres-anos"),
+        fallecimiento_amount=_parameter(snapshot, "fallecimiento"),
         thresholds=thresholds,
         second_filer_indicated=True,
     )

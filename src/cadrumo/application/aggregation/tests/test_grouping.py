@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from ....core import BindingSourceKind, Modelo, Period
-from ....core.aggregation import RetencionScheme
+from ....core.aggregation import LedgerIncomeGrounding, RetencionScheme
 from ....domain.calculations.registry import validated_casilla_id
 from ....domain.transactions import TransactionCatalogue
 from .._errors import AggregationPeriodError
@@ -192,6 +192,7 @@ def _income(transaction_id: str, casilla: str, gross: str, base: str | None = No
         gross_amount=Decimal(gross),
         taxable_base_amount=None if base is None else Decimal(base),
         filing_date=date(2026, 2, 1),
+        grounding=(LedgerIncomeGrounding.CASH_FALLBACK if base is None else LedgerIncomeGrounding.SUBSTRATE_DECLARED),
     )
 
 

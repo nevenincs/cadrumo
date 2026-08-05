@@ -22,6 +22,7 @@ from typing import Final
 from ....core.aggregation import BindingSourceKind
 from ._bindings_previous_filing import is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
+from ._ids import BindingId, ModeloId, RelationId, RevisionId
 from ._relations import derive_offset_source_period
 from ._schema import (
     DataBindingDefinition,
@@ -52,15 +53,75 @@ from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 #: orchestrator (application -> domain) read one source of truth.
 MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[str] = "modelo-303-compensacion-pendiente-anteriores"
 
-#: The iva-wallet-owned relation-target slot binding set: the M303
-#: compensación-pendiente binding is owned by the iva-wallet
-#: compensación decision (resolved pre-mesh through ``_iva_wallet_gate``), NOT by
-#: the relation mesh. It legitimately remains ``source = "previous_filing"`` while
-#: also being a relation's ``target_binding`` — the iva-wallet gate strips it from
-#: the previous-filing resolution before the mesh runs. It is therefore the
-#: documented carve-out for the relation-vs-previous_filing collision gate below,
-#: and the same set the orchestrator excludes from previous-filing resolution.
-IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS: frozenset[str] = frozenset({MODELO_303_IVA_COMPENSATION_BINDING_ID})
+type IvaWalletRelationTarget = tuple[ModeloId, RevisionId, RelationId, BindingId]
+type IvaWalletRevisionRelationTarget = tuple[RelationId, BindingId]
+
+# The wallet exception is a relation coordinate, not a globally-owned binding
+# name. Keep the exact declarations here so a future reuse of the binding id in
+# another modelo, revision, or relation cannot inherit the carve-out.
+IVA_WALLET_OWNED_RELATION_TARGETS: frozenset[IvaWalletRelationTarget] = frozenset(
+    {
+        (
+            "303",
+            "2009-y-siguientes",
+            "modelo-303-rel-self-compensacion-anteriores",
+            MODELO_303_IVA_COMPENSATION_BINDING_ID,
+        ),
+        (
+            "303",
+            "2023-y-siguientes",
+            "modelo-303-rel-self-compensacion-anteriores",
+            MODELO_303_IVA_COMPENSATION_BINDING_ID,
+        ),
+    },
+)
+
+
+def is_iva_wallet_owned_relation_target(
+    *,
+    modelo_id: str,
+    revision_id: str,
+    relation_id: str,
+    target_binding: str,
+) -> bool:
+    """Return whether one validated relation coordinate belongs to the wallet."""
+    return (modelo_id, revision_id, relation_id, target_binding) in IVA_WALLET_OWNED_RELATION_TARGETS
+
+
+def iva_wallet_owned_relation_targets_for_revision(
+    *,
+    modelo_id: str,
+    revision_id: str,
+    relations: Iterable[RelationDefinition],
+) -> frozenset[IvaWalletRevisionRelationTarget]:
+    """Return exact wallet-owned relation targets declared by one revision."""
+    return frozenset(
+        (relation.id, relation.target_binding)
+        for relation in relations
+        if is_iva_wallet_owned_relation_target(
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+            relation_id=str(relation.id),
+            target_binding=str(relation.target_binding),
+        )
+    )
+
+
+def iva_wallet_owned_binding_ids_for_revision(
+    *,
+    modelo_id: str,
+    revision_id: str,
+    relations: Iterable[RelationDefinition],
+) -> frozenset[BindingId]:
+    """Return wallet-owned binding ids only within one exact revision coordinate."""
+    return frozenset(
+        target_binding
+        for _relation_id, target_binding in iva_wallet_owned_relation_targets_for_revision(
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+            relations=relations,
+        )
+    )
 
 
 def validate_relation_closure(
@@ -254,13 +315,19 @@ def validate_slot_source_hygiene(
     for modelo in modelos:
         for revision in modelo.revisions.values():
             prefix = f"modelo {modelo.id} revision {revision.id}"
-            relation_targets = {str(relation.target_binding) for relation in revision.relations}
+            relation_targets = tuple(revision.relations)
+            wallet_relation_targets = iva_wallet_owned_relation_targets_for_revision(
+                modelo_id=str(modelo.id),
+                revision_id=str(revision.id),
+                relations=relation_targets,
+            )
             for binding in revision.bindings:
                 failures.extend(
                     _validate_slot_binding_source(
                         binding,
                         binding_scope=f"{prefix}: binding {binding.id!r}",
                         relation_targets=relation_targets,
+                        wallet_relation_targets=wallet_relation_targets,
                     ),
                 )
     return failures
@@ -270,23 +337,28 @@ def _validate_slot_binding_source(
     binding: DataBindingDefinition,
     *,
     binding_scope: str,
-    relation_targets: frozenset[str] | set[str],
+    relation_targets: tuple[RelationDefinition, ...],
+    wallet_relation_targets: frozenset[IvaWalletRevisionRelationTarget],
 ) -> list[str]:
     failures: list[str] = []
     is_previous_filing = binding.source is BindingSourceKind.PREVIOUS_FILING
-    is_relation_targeted = binding.id in relation_targets
-    iva_wallet_owned = binding.id in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
+    relation_ids = {relation.id for relation in relation_targets if relation.target_binding == binding.id}
+    wallet_relation_ids = {
+        relation_id for relation_id, target_binding in wallet_relation_targets if target_binding == binding.id
+    }
     # Gate (a): a previous_filing binding must carry a DIRECT selector.
-    if is_previous_filing and not iva_wallet_owned and not is_direct_previous_filing_binding(binding):
+    if is_previous_filing and not wallet_relation_ids and not is_direct_previous_filing_binding(binding):
         failures.append(
             f"{binding_scope} declares source 'previous_filing' with a non-direct selector "
             f"(no period/source_periods/offset anchor); a relation-materialisation slot must "
             f"declare source 'relation_prefill' instead",
         )
     # Gate (b): no binding both relation-targeted and previous_filing-sourced.
-    if is_relation_targeted and is_previous_filing and not iva_wallet_owned:
+    non_wallet_relation_ids = sorted(relation_ids.difference(wallet_relation_ids))
+    if is_previous_filing and non_wallet_relation_ids:
         failures.append(
-            f"{binding_scope} is both a relation target_binding and a 'previous_filing' source; "
+            f"{binding_scope} is both a relation target_binding and a 'previous_filing' source "
+            f"(non-wallet relation target_binding(s) {non_wallet_relation_ids!r}); "
             f"a relation-targeted slot must declare source 'relation_prefill' (the relation owns "
             f"the cross-period fold-in)",
         )

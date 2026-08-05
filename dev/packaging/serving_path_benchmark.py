@@ -32,14 +32,15 @@ machine, so co-resident load steals wall-clock from a compute-bound
 measurement while its CPU seconds stay constant — a wall gate flakes under
 load without measuring any regression. In-process (server) measurements gate
 on ``time.process_time`` deltas; the subprocess first-touch cliff gates on the
-child TREE's CPU time (``getrusage(RUSAGE_CHILDREN)`` on POSIX; a Job Object's
-aggregate accounting on Windows, where the ``aeat`` exe shim spawns the real
-interpreter as a grandchild that per-process times would miss). Wall-clock
-stays MEASURED and RECORDED on every row — and printed as an advisory by the
-pytest gate — but is never asserted. Caveat stated honestly: CPU-time excludes
-wait-time but SMT/cache contention still inflates it (the loaded-machine
-steady-state measured 3.23 CPU-s vs ~1.97 quiet), so ceilings carry that
-margin.
+child TREE's CPU time, measured by the shared
+:func:`dev.ci.perf_measurement.timed_subprocess` (``getrusage(RUSAGE_CHILDREN)``
+on POSIX; a Job Object's aggregate accounting on Windows, where the ``aeat``
+exe shim spawns the real interpreter as a grandchild that per-process times
+would miss). Wall-clock stays MEASURED and RECORDED on every row — and printed
+as an advisory by the pytest gate — but is never asserted. Caveat stated
+honestly: CPU-time excludes wait-time but SMT/cache contention still inflates
+it (the loaded-machine steady-state measured 3.23 CPU-s vs ~1.97 quiet), so
+ceilings carry that margin.
 """
 
 from __future__ import annotations
@@ -59,6 +60,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Final, cast
 
+from dev.ci.perf_measurement import timed_subprocess
 from dev.packaging.installed_tax_oracle import (
     isolated_product_environment,
     profile_create_arguments,
@@ -98,68 +100,6 @@ _RESEARCH_PROJECTIONS: Final[dict[str, str]] = {
 
 class ServingPathBenchmarkError(RuntimeError):
     """Raised when the benchmark cannot execute a required measurement."""
-
-
-class _WindowsJobCpuAccounting:
-    """Total CPU seconds of a child AND its descendants via a Job Object.
-
-    The editable-tree ``aeat`` command on Windows is an exe launcher shim that
-    spawns the real python interpreter as a grandchild, so per-process
-    ``GetProcessTimes`` reads only the shim (~0 CPU). A Job Object aggregates
-    the whole tree: the shim is assigned right after spawn, its descendants
-    inherit membership, and the job's basic accounting keeps the FINAL user +
-    kernel totals (100 ns units) queryable after every member exits.
-    """
-
-    def __init__(self) -> None:
-        import ctypes
-
-        self._ctypes = ctypes
-        self._kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        self._job = self._kernel32.CreateJobObjectW(None, None)
-        if not self._job:
-            raise ServingPathBenchmarkError(f"CreateJobObject failed (error {ctypes.get_last_error()})")
-
-    def assign(self, process: Any) -> None:
-        # The private Popen handle is the point: assignment must target the
-        # live child before it spawns the interpreter grandchild.
-        if not self._kernel32.AssignProcessToJobObject(self._job, int(process._handle)):
-            raise ServingPathBenchmarkError(
-                f"AssignProcessToJobObject failed for pid {process.pid} (error {self._ctypes.get_last_error()})",
-            )
-
-    def cpu_seconds(self) -> float:
-        ctypes = self._ctypes
-
-        class _JobBasicAccounting(ctypes.Structure):
-            _fields_ = (
-                ("TotalUserTime", ctypes.c_longlong),
-                ("TotalKernelTime", ctypes.c_longlong),
-                ("ThisPeriodTotalUserTime", ctypes.c_longlong),
-                ("ThisPeriodTotalKernelTime", ctypes.c_longlong),
-                ("TotalPageFaultCount", ctypes.c_uint32),
-                ("TotalProcesses", ctypes.c_uint32),
-                ("ActiveProcesses", ctypes.c_uint32),
-                ("TotalTerminatedProcesses", ctypes.c_uint32),
-            )
-
-        accounting = _JobBasicAccounting()
-        job_object_basic_accounting_information = 1
-        ok = self._kernel32.QueryInformationJobObject(
-            self._job,
-            job_object_basic_accounting_information,
-            ctypes.byref(accounting),
-            ctypes.sizeof(accounting),
-            None,
-        )
-        if not ok:
-            raise ServingPathBenchmarkError(
-                f"QueryInformationJobObject failed (error {ctypes.get_last_error()})",
-            )
-        return (accounting.TotalUserTime + accounting.TotalKernelTime) / 10_000_000
-
-    def close(self) -> None:
-        self._kernel32.CloseHandle(self._job)
 
 
 @dataclass(frozen=True)
@@ -208,64 +148,17 @@ def _timed_subprocess(
 ) -> tuple[float, float, str]:
     """Run one child and return (wall seconds, child CPU seconds, stdout).
 
-    Child CPU is the load-immune figure: POSIX reads the ``RUSAGE_CHILDREN``
-    delta around the reaped child; Windows reads the exited child's final
-    times via ``GetProcessTimes`` on the ``subprocess.Popen`` object's
-    still-open OS handle (valid after exit while the object lives — psutil
-    refuses exited processes, so the kernel call is used directly).
+    Thin domain adapter over the shared
+    :func:`dev.ci.perf_measurement.timed_subprocess`, which owns the
+    platform-specific child-TREE CPU accounting. What is added here is only the
+    benchmark's failure vocabulary: a non-zero child is a benchmark error.
     """
-    import subprocess
-
-    if sys.platform.startswith("win"):
-        accounting = _WindowsJobCpuAccounting()
-        try:
-            started = time.monotonic()
-            process = subprocess.Popen(  # noqa: S603 - fixed resolved executable and declarative argv
-                list(argv),
-                cwd=str(cwd),
-                env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding=_UTF_8,
-                errors="strict",
-            )
-            accounting.assign(process)
-            try:
-                stdout, stderr = process.communicate(timeout=timeout_s)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                raise
-            elapsed = time.monotonic() - started
-            child_cpu = accounting.cpu_seconds()
-            returncode = process.returncode
-        finally:
-            accounting.close()
-    else:
-        import resource
-
-        before = resource.getrusage(resource.RUSAGE_CHILDREN)
-        started = time.monotonic()
-        completed = subprocess.run(  # noqa: S603 - fixed resolved executable and declarative argv
-            argv,
-            cwd=cwd,
-            env=env,
-            capture_output=True,
-            text=True,
-            encoding=_UTF_8,
-            errors="strict",
-            timeout=timeout_s,
-            check=False,
-        )
-        elapsed = time.monotonic() - started
-        after = resource.getrusage(resource.RUSAGE_CHILDREN)
-        child_cpu = (after.ru_utime - before.ru_utime) + (after.ru_stime - before.ru_stime)
-        stdout, stderr, returncode = completed.stdout, completed.stderr, completed.returncode
-    if returncode != 0:
+    timing = timed_subprocess(argv, env=env, cwd=cwd, timeout_s=timeout_s)
+    if timing.returncode != 0:
         raise ServingPathBenchmarkError(
-            f"subprocess call failed ({returncode}): {argv!r}\n{stdout}\n{stderr}",
+            f"subprocess call failed ({timing.returncode}): {argv!r}\n{timing.stdout}\n{timing.stderr}",
         )
-    return elapsed, child_cpu, stdout
+    return timing.wall_seconds, timing.cpu_seconds, timing.stdout
 
 
 def measure_subprocess(cli: Path, *, work_dir: Path, storage_root: Path, timeout_s: float) -> list[CallMeasurement]:

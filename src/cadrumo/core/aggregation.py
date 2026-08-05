@@ -485,6 +485,87 @@ class BindingTypedEnumKind(StrEnum):
     LEGAL_ENTITY_FORM = "LegalEntityForm"
 
 
+class LedgerIncomeGrounding(StrEnum):
+    """Whether a ledger income row's contribution rests on declared invoice substrate.
+
+    An actividad-económica income row reaches a modelo income casilla by one of
+    two structurally different routes, and the difference is a LEGAL one, not a
+    presentation detail:
+
+    - ``SUBSTRATE_DECLARED`` — the row carries an explicit ``taxable_base``
+      (the IVA-exclusive base imponible from its invoice). Every income fact
+      reads a real declared figure.
+    - ``CASH_FALLBACK`` — no base is declared, so the only measure available is
+      the raw bank-credited amount. That figure is net of any retención
+      practicada and may be IVA-inclusive, so it is neither the ingresos
+      íntegros the return asks for nor a base: the ``ingresos_integros_sum``
+      fact folds the cash in (mis-measuring in a direction that depends on the
+      invoice), while ``taxable_base_sum`` contributes nothing for the row.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract, so the domain registry protocol and the application aggregation
+    pipeline key on ONE marker rather than each re-deriving the distinction
+    from ``taxable_base_amount is None``. Consumers must branch on the member,
+    never on field-nullness: the marker is the fact.
+    """
+
+    SUBSTRATE_DECLARED = "substrate_declared"
+    CASH_FALLBACK = "cash_fallback"
+
+
+class LedgerWithholdingDerivation(StrEnum):
+    """How a ledger income row's retención figure was arrived at.
+
+    A ledger row never *declares* its retención -- no transaction field records
+    one -- so every non-zero figure on this surface is derived, and the reader
+    needs to know from what. Without the marker three structurally different
+    situations are one indistinguishable ``Decimal("0")``: a row that genuinely
+    had nothing withheld, a row whose substrate was too thin to tell, and a row
+    whose arithmetic implied a withholding so large the figure was refused. The
+    last is the dangerous one, because a refused inference and a real zero look
+    identical in the sum.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract, beside :class:`LedgerIncomeGrounding`, which answers the parallel
+    question for the income measure.
+    """
+
+    NOT_APPLICABLE = "not_applicable"
+    """The row is not an actividad-económica receipt, so no retención arises."""
+
+    NO_SUBSTRATE = "no_substrate"
+    """No base is declared, or the cuota is not determinable from what is.
+
+    The withholding is unknown, not zero. The row still contributes its cash to
+    the income measure, so it under-claims the offsetting credit.
+    """
+
+    NONE_WITHHELD = "none_withheld"
+    """Substrate sufficed and the cash covers the invoice: nothing was withheld."""
+
+    INFERRED_FROM_DECLARED_CUOTA = "inferred_from_declared_cuota"
+    """Derived as invoice gross minus cash, with the cuota read from the row."""
+
+    INFERRED_FROM_CATEGORY_ZERO_CUOTA = "inferred_from_category_zero_cuota"
+    """Derived the same way, with the cuota taken as zero because the declared
+    IVA category makes it zero by law.
+
+    This is what lets an IVA-exempt professional service recover its retención:
+    the operation has no cuota to record, so requiring a recorded one excluded
+    precisely the invoices whose withholding matters most.
+    """
+
+    REFUSED_ABOVE_SUPPORTED_RATE = "refused_above_supported_rate"
+    """The inference exceeded the registry maximum supported rate and was dropped.
+
+    An implied withholding above the RIRPF art. 95.1 general rate is evidence
+    that the recorded cash is the base without IVA rather than a net-of-retención
+    payment. Emitting the figure anyway would persist a fabricated withholding;
+    capping it at the bound would invent one at exactly the legal maximum. The
+    figure is therefore zero and this marker says why.
+    """
+
+
 class RetencionScheme(StrEnum):
     """Closed catalogue of retenciones schemes across the retenciones family.
 

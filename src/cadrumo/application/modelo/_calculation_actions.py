@@ -56,7 +56,6 @@ from ...core.aggregation import BindingSourceKind
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
-    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
     BindingId,
     CasillaId,
     InputKind,
@@ -65,6 +64,8 @@ from ...domain.calculations.registry import (
     bound_casilla_binding_ids,
     calculate_registry_snapshot,
     casillas_by_id,
+    iva_wallet_owned_binding_ids_for_revision,
+    iva_wallet_owned_relation_targets_for_revision,
     validated_text_input_casilla_ids,
 )
 from ...domain.modelos import (
@@ -717,7 +718,11 @@ def _resolve_bucket_source_mesh(
             # decision owns it (ruling D3).
             PreviousFilingSourceResolver(
                 registry_snapshot=snapshot,
-                excluded_binding_ids=IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+                excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
+                    modelo_id=str(snapshot.modelo.id),
+                    revision_id=str(snapshot.revision.id),
+                    relations=snapshot.revision.relations,
+                ),
             ).resolve(context),
             # Relation canonical for cross-modelo fold-in. The relation resolver
             # folds prior filed observations through each declared relation's
@@ -736,7 +741,7 @@ def _resolve_bucket_source_mesh(
             IvaCompensationAnnualPartitionSourceResolver(registry_snapshot=snapshot).resolve(context),
         ),
     )
-    source_resolution = _source_resolution_excluding_iva_compensation(snapshot.revision, source_resolution)
+    source_resolution = _source_resolution_excluding_iva_compensation(snapshot, source_resolution)
     source_resolution = _resolve_prorrata_regularizacion_sources(
         registry_snapshot=snapshot,
         work_unit=work_unit,
@@ -1236,12 +1241,22 @@ def _merge_bucket_bound_inputs(
 
 
 def _source_resolution_excluding_iva_compensation(
-    revision: ModeloRevision,
+    snapshot: RegistrySnapshot,
     resolution: CalculationSourceResolution,
 ) -> CalculationSourceResolution:
     """Keep Modelo 303 prior-compensation owned exclusively by the IVA wallet."""
-    excluded_bindings = IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
-    relation_ids = frozenset(rel.id for rel in revision.relations if rel.target_binding in excluded_bindings)
+    revision = snapshot.revision
+    excluded_bindings = iva_wallet_owned_binding_ids_for_revision(
+        modelo_id=str(snapshot.modelo.id),
+        revision_id=str(revision.id),
+        relations=revision.relations,
+    )
+    wallet_relation_targets = iva_wallet_owned_relation_targets_for_revision(
+        modelo_id=str(snapshot.modelo.id),
+        revision_id=str(revision.id),
+        relations=revision.relations,
+    )
+    relation_ids = frozenset(relation_id for relation_id, _target_binding in wallet_relation_targets)
     if not excluded_bindings.intersection(resolution.binding_values) and not relation_ids.intersection(
         resolution.relation_values,
     ):

@@ -137,10 +137,10 @@ def test_advisory_fires_when_a_selected_derived_binding_resolves_to_nothing() ->
 
     reasons = {diagnostic.reason for diagnostic in fired}
     assert reasons == {_ADVISORY_REASON}, reasons
-    # Exactly the five declared derived namespaces, and nothing else: an empty
+    # Exactly the six declared derived namespaces, and nothing else: an empty
     # fact index leaves every ordinary profile binding unresolved too, so a
     # wider count would mean the advisory had escaped its derived scope.
-    assert len(fired) == 5, sorted(str(d.binding_id) for d in fired)
+    assert len(fired) == 6, sorted(str(d.binding_id) for d in fired)
     assert all(d.source_kind == "profile" for d in fired)
     assert all("derives" in d.message or "derived" in d.message for d in fired)
 

@@ -166,7 +166,21 @@ def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> No
     )
 
     invoked_recipes = ci_invoked_recipes(_ROOT)
-    assert {"test-unit", "test-dev-ci", "test-integration", "test-dev-tooling", "docs-check"} <= invoked_recipes
+    # The integration lane is invoked as its two SEPARATE passes, not through the
+    # combined `test-integration` convenience: CI carries an independent verdict
+    # per pass, because the parallel pass is deterministic while the serial pass
+    # includes wall-clock budgets that flake on a shared machine. `test-integration`
+    # therefore stays declared-but-not-CI-invoked, which is correct rather than a
+    # hole -- the union of the two passes covers exactly what it selects.
+    expected_invoked = {
+        "test-unit",
+        "test-dev-ci",
+        "test-integration-parallel",
+        "test-integration-serial",
+        "test-dev-tooling",
+        "docs-check",
+    }
+    assert expected_invoked <= invoked_recipes
     assert not ({"test-os-keychain", "test-workbook-parity", "test-live"} & invoked_recipes)
 
 

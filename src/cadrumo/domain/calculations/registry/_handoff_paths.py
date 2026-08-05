@@ -12,7 +12,7 @@ from ._authority import ValidatedRegistryAuthority
 from ._bindings import bound_casilla_binding_ids
 from ._handoffs import RegistryRelationHandoffAudit, audit_registry_relation_handoffs
 from ._ids import BindingId, CasillaId, LegalRefId, ModeloId, RelationId, RevisionId, SourceRefId
-from ._validate_relation_sources import IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
+from ._validate_relation_sources import is_iva_wallet_owned_relation_target
 
 __all__ = [
     "HandoffPathClassification",
@@ -124,7 +124,13 @@ def audit_registry_handoff_paths(authority: ValidatedRegistryAuthority) -> Regis
             if competing:
                 parallel_casilla_ids.add(casilla.id)
                 parallel_binding_ids.update(competing)
-        if inventory_record.target_binding in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS:
+        wallet_owned = is_iva_wallet_owned_relation_target(
+            modelo_id=str(inventory_record.target_modelo),
+            revision_id=str(inventory_record.target_revision),
+            relation_id=str(inventory_record.relation_id),
+            target_binding=str(inventory_record.target_binding),
+        )
+        if wallet_owned:
             classification: Literal["canonical_relation_prefill", "iva_wallet_exception", "non_canonical"] = (
                 "iva_wallet_exception"
             )
@@ -146,10 +152,7 @@ def audit_registry_handoff_paths(authority: ValidatedRegistryAuthority) -> Regis
                 classification=classification,
                 resolver_owner=resolver_owner,
                 parallel_path=bool(parallel_binding_ids)
-                or (
-                    target_binding.source is BindingSourceKind.PREVIOUS_FILING
-                    and inventory_record.target_binding not in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
-                ),
+                or (target_binding.source is BindingSourceKind.PREVIOUS_FILING and not wallet_owned),
                 parallel_binding_ids=tuple(sorted(parallel_binding_ids)),
                 parallel_casilla_ids=tuple(sorted(parallel_casilla_ids)),
                 legal_refs=inventory_record.legal_refs,

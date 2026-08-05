@@ -1,6 +1,6 @@
 [[revisions."2025".casilla_continuidad_evolutions]]
 id = "m100-1852-2024-2025-retired"
-continuidad_id = "irpf.deduccion-autonomica.aragon.acogimiento-ucrania"
+continuidad_id = "irpf-deduccion-autonomica-aragon-acogimiento-ucrania"
 from_revision = "2024"
 to_revision = "2025"
 evolution_kind = "retired"

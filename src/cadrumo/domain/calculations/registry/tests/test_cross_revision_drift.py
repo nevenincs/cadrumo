@@ -775,13 +775,13 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded(committed_m100: Mo
         revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "0582")
         assert revision.continuidad_validation == "strict"
-        assert casilla.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
+        assert casilla.continuidad_id == "irpf-intereses-demora-regularizacion-estatal"
 
     assert (
         tuple(
             evolution
             for evolution in committed_m100.revisions["2022"].casilla_continuidad_evolutions
-            if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
+            if evolution.continuidad_id == "irpf-intereses-demora-regularizacion-estatal"
         )
         == ()
     )
@@ -789,12 +789,12 @@ def test_committed_m100_continuity_surface_for_0582_is_loaded(committed_m100: Mo
         evolution.evolution_kind
         for revision_id in ("2023", "2024", "2025")
         for evolution in committed_m100.revisions[revision_id].casilla_continuidad_evolutions
-        if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
+        if evolution.continuidad_id == "irpf-intereses-demora-regularizacion-estatal"
     ) == ("unchanged", "unchanged", "unchanged")
 
 
 def test_committed_m100_continuity_surface_for_1038_retirement_is_loaded(committed_m100: ModeloDefinition) -> None:
-    continuidad_id = "irpf.deduccion-autonomica.galicia.otras"
+    continuidad_id = "irpf-deduccion-autonomica-galicia-otras"
     for revision_id in ("2023", "2024"):
         revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "1038")
@@ -811,7 +811,7 @@ def test_committed_m100_continuity_surface_for_1038_retirement_is_loaded(committ
 
 
 def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded(committed_m100: ModeloDefinition) -> None:
-    continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+    continuidad_id = "irpf-inmueble-porcentaje-propiedad"
     for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025"):
         revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "0063")
@@ -848,7 +848,7 @@ def test_committed_m100_continuity_surface_for_0063_legal_refs_is_loaded(committ
 def test_committed_m100_continuity_surface_for_0070_label_and_legal_refs_is_loaded(
     committed_m100: ModeloDefinition,
 ) -> None:
-    continuidad_id = "irpf.inmueble.vivienda-habitual-flag"
+    continuidad_id = "irpf-inmueble-vivienda-habitual-flag"
     for revision_id in ("2020", "2021", "2022", "2023", "2024", "2025"):
         revision = committed_m100.revisions[revision_id]
         casilla = next(item for item in revision.casillas if item.id == "0070")

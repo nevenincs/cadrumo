@@ -5,11 +5,11 @@ Complements the application-layer end-to-end regression
 test_registry_binding_resolves_es_source_total_into_base``), which grounds
 the committed ``ingresos_integros_sum`` fact (the only fact the real M151
 binding declares) through the full ES/foreign-source classifier. That
-coverage never exercises the resolver's ``gross_income_sum`` branch — no
+coverage never exercises the resolver's ``cash_received_sum`` branch — no
 committed binding uses it — so
 :func:`resolve_ledger_impatriado_income_aggregation_binding_values`'s
 fact-dispatch ``else`` arm had zero test coverage before this file. This
-test constructs a synthetic binding declaring ``gross_income_sum`` (a
+test constructs a synthetic binding declaring ``cash_received_sum`` (a
 structural wiring check, not a legal-grounding claim: it asserts the
 dispatch reads ``gross_amount`` unconditionally, ignoring a declared
 ``taxable_base_amount``, which is what distinguishes it from
@@ -70,11 +70,11 @@ def _modelo_151_snapshot():
     )
 
 
-def test_gross_income_sum_fact_reads_gross_amount_unconditionally() -> None:
-    """A ``gross_income_sum`` binding sums gross_amount even when taxable_base_amount is declared.
+def test_cash_received_sum_fact_reads_gross_amount_unconditionally() -> None:
+    """A ``cash_received_sum`` binding sums gross_amount even when taxable_base_amount is declared.
 
     Reuses the committed binding's casilla and selector shape but swaps
-    ``fact`` to ``gross_income_sum`` (a fact the real M151 registry never
+    ``fact`` to ``cash_received_sum`` (a fact the real M151 registry never
     declares) to exercise the dispatch's other arm. A tagged row's
     IVA-exclusive base (1000.00) and its gross transfer amount (1210.00)
     are deliberately unequal so a regression collapsing onto the
@@ -90,7 +90,7 @@ def test_gross_income_sum_fact_reads_gross_amount_unconditionally() -> None:
             "selector": {
                 "modelo": "151",
                 "target_casilla_id": _M151_BASE_CASILLA,
-                "fact": "gross_income_sum",
+                "fact": "cash_received_sum",
             },
         },
     )
@@ -114,7 +114,7 @@ def test_gross_income_sum_fact_reads_gross_amount_unconditionally() -> None:
 
     assert resolved[gross_binding.id] == Decimal("1710.00")
     assert resolved[gross_binding.id] != Decimal("1500.00"), (
-        "gross_income_sum must not fall back to the ingresos_integros_sum base-preferring behaviour"
+        "cash_received_sum must not fall back to the ingresos_integros_sum base-preferring behaviour"
     )
 
 

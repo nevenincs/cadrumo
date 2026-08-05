@@ -78,6 +78,7 @@ class ProfileDescendientePayload(OutputSchema):
     relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE
     inscripcion_registro_civil_date: date | None = None
     acogimiento_resolucion_date: date | None = None
+    death_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool
     dependencia_economica: bool | None = None

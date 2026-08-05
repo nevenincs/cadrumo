@@ -44,15 +44,16 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.calculations.registry import (
-    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     CasillaId,
     RegistryModeloObservation,
+    iva_wallet_owned_binding_ids_for_revision,
     validated_casilla_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution
 from ...calculations import CalculationObservationRepository
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
@@ -63,6 +64,7 @@ from .. import (
 )
 from .._calculation_actions import (
     _resolve_bucket_source_mesh,
+    _source_resolution_excluding_iva_compensation,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ._file_flow_support import (
@@ -538,7 +540,11 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
 
     filtered = PreviousFilingSourceResolver(
         registry_snapshot=snapshot,
-        excluded_binding_ids=IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
+        excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
+            modelo_id=str(snapshot.modelo.id),
+            revision_id=str(snapshot.revision.id),
+            relations=snapshot.revision.relations,
+        ),
     ).resolve(context)
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
     assert all(
@@ -580,6 +586,36 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
     assert "modelo-303-rel-self-compensacion-anteriores" not in resolution.relation_values
     assert all("modelo-303-rel-self-compensacion-anteriores" not in item.source_ref for item in resolution.provenance)
+
+
+def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate() -> None:
+    """A reused wallet binding id is retained when the validated snapshot is not M303."""
+    from ....core.resources import resources
+
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2025, period="0A")
+    reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
+    reused_relation_id = "modelo-303-rel-self-compensacion-anteriores"
+    resolution = CalculationSourceResolution(
+        resolver_id="reused-binding-regression",
+        binding_values={reused_binding_id: Decimal("42.00")},
+        relation_values={reused_relation_id: Decimal("17.00")},
+        provenance=(
+            CalculationSourceProvenance(
+                source_kind="previous_filing",
+                source_ref=f"100:2025:0A:{reused_binding_id}",
+            ),
+            CalculationSourceProvenance(
+                source_kind="relation_prefill",
+                source_ref=f"{reused_relation_id}:100:2025:0A",
+            ),
+        ),
+    )
+
+    filtered = _source_resolution_excluding_iva_compensation(snapshot, resolution)
+
+    assert filtered.binding_values == resolution.binding_values
+    assert filtered.relation_values == resolution.relation_values
+    assert filtered.provenance == resolution.provenance
 
 
 def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos: _Repos) -> None:

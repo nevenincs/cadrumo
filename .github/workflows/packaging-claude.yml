@@ -24,6 +24,29 @@ permissions:
   contents: read
 
 jobs:
+  # This lane is Windows-only, so an offline Windows runner leaves the whole
+  # dispatch queued rather than failed. See dev/ci/runner_queue_watchdog.py.
+  runner-queue-watchdog:
+    name: Cadrumo / runner queue watchdog
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Fail fast on a lane no online runner can serve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WATCHDOG_JOB_NAME: Cadrumo / runner queue watchdog
+          THRESHOLD_SECONDS: "300"
+          MAX_WATCH_SECONDS: "900"
+        run: python3 dev/ci/runner_queue_watchdog.py
+
   cadrumo-claude-acquisition:
     name: Cadrumo / Windows / Claude plugin and MCPB
     runs-on: [self-hosted, Windows, X64]

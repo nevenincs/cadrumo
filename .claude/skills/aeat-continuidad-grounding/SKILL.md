@@ -45,17 +45,29 @@ carry semantics.
     the box — the event, the column, the distinguishing clause — joined with
     `-`, e.g. `irpf-aeip-centenario-del-hockey-1923-2023-aplicado`. The anexo-A
     family is the worked case: 71 boxes share `irpf_anexo_a_aeip_aplicado` and
-    the ids repack yearly. (`dev/registry/aeip` still declares
-    `CHAIN_PREFIX = "irpf.aeip."` — dotted, and therefore wrong under the
-    cascade. Flatten it before that planner grounds anything.)
+    the ids repack yearly. `dev/registry/aeip/manager.py:96` now declares
+    `CHAIN_PREFIX = "irpf-aeip-"`, so that planner already emits the flat form.
   Both errors are real: a role-derived id on a role-ambiguous chain silently
   merges two legal concepts, and a dotted id on any chain silently produces an
   opaque locale key.
+  Corpus state 2026-08-05: 814 distinct chain ids, 11 of them still dotted, all
+  in Modelo 100 — the `irpf.inmueble.*`, `irpf.regularizacion.*`,
+  `irpf.deduccion-autonomica.*` and `irpf.intereses-demora-regularizacion.*`
+  pilots. They are the conversion backlog, not a second convention to copy.
 - Evolution kinds are a closed set: `unchanged`, `label_evolved`,
   `legal_refs_evolved`, `label_and_legal_refs_evolved`, `repurposed`,
   `retired`. Two are safety-critical: `retired` ends a chain (the target
   revision MUST NOT declare the id — validated), and `repurposed` is an
   inheritance BARRIER: no value, translation, or carry crosses it.
+- **`section` drift is ungroundable.** The engine compares five fields but the
+  kinds only cover two: `_evolution_covers_field` maps `label_evolved`→label,
+  `legal_refs_evolved`→legal_refs, `label_and_legal_refs_evolved`→both. The only
+  kind that covers `section` is `repurposed`, which asserts an inheritance
+  barrier — the opposite of what a same-concept chain claims. So a chain with any
+  `section`-drifting pair cannot be stamped under the current contract at all:
+  it would produce a strict failure no record can close. Park it and say so;
+  do not reach for `repurposed` to silence the gate. Measured 2026-08-05: 16 such
+  chains in Modelo 100. Widening the kind set is an ADR question.
 - `label` is no longer stored on the casilla. The cascade removed the Spanish
   string from the schema; `CasillaDefinition.label` is now a property resolving
   `get_label("es")` through the shared catalogues, and the drift engine reads it
@@ -94,6 +106,18 @@ carry semantics.
    or legal refs moved, pick the matching evolution kind. Verify against the
    official sources for BOTH endpoint years; the dossier's suggestion is a
    hypothesis, not a decision.
+
+   For a legal-refs delta, the question that decides rubber-stamp versus
+   adjudication is whether the delta is MONOTONE: does every later revision keep
+   the earlier refs and add to them? A pure addition is the honest annual shape —
+   a stable statutory article with that year's implementing orden layered on
+   (`ley-35-2006:art-31` holding while HFP/1359/2023 → HAC/1347/2024 →
+   HAC/1425/2025 rotate beneath it; or `orden-hac-277-2026:art-3` appearing across
+   Modelo 100's 2025 revision). A delta that REMOVES or REPLACES a ref is not
+   rubber-stampable: `art-66-2015` giving way to `art-66`, or
+   `orden-hac-248-2021:art-10` to `orden-hac-265-2024:art-11`, is a displaced
+   provision and needs checking against BOE per chain. Measured 2026-08-05 on the
+   Modelo 100 tranche: 593 monotone, 19 not.
 4. **Author** (shapes below): stamp every occurrence, add evolution records,
    flip the strict flag once the revision's surfaces are covered.
 5. **Verify** with the registry gates, then commit with an explicit pathspec
@@ -361,36 +385,58 @@ for rev in sorted(occ):
   `rg -l '^id = "0063"' src/cadrumo/_data/registry/aeat/modelos/100/revisions/`
 - Concept-naming precedent by meaning (semantic search before naming):
   `uv run --no-sync vaultspec-rag search "<concept in words>" --type code --port 8766 --timeout 120`
-- Localization-side register (the migration campaign's classified candidates —
-  richer locale drift context): the `dev.registry.migration.manager` API
-  (`extract_resolved_localization_matrix`,
-  `generate_canonical_occurrence_candidates`,
-  `classify_canonical_occurrence_candidates`, `build_source_manifest`,
-  `build_unresolved_review_register`), driven from the production loader.
+- Chains still on the dotted form (the conversion backlog):
+  `rg -oh 'continuidad_id = "[^"]*\.[^"]*"' src/cadrumo/_data/registry/aeat/modelos/ | sort -u`
+- The anexo-A planner's naming, before hand-authoring an instance-keyed id:
+  `dev/registry/aeip/manager.py` (`CHAIN_PREFIX`, and the slug builder at :254).
+
+`dev.registry.migration.manager` was deleted with the cascade's migration
+package; earlier revisions of this skill pointed at it for locale drift context.
+Resolve labels through the loader instead — `casilla.get_label("es")`, as both
+scripts above do.
 
 ## Authoring shapes (exact, from the live corpus)
 
-**Stamp every occurrence** — one line in each revision's casilla fragment:
+**Stamp every occurrence** — one line in each revision's casilla fragment,
+inserted immediately after `semantic_role`:
 
 ```toml
-continuidad_id = "irpf.inmueble.porcentaje-propiedad"
+continuidad_id = "irpf-pf-modulos-1-unidades"
 ```
 
-**Evolution records** — a fragment file in the NEWEST revision's
-`continuidad/` directory (convention: declared under the `to_revision`;
-one file per casilla, named `<casilla>-<from>-<to>-<kind>.toml`), records
-pairwise per revision pair, adjacent pairs at minimum plus any drifting
-non-adjacent pair the strict validator reports:
+**Evolution records** — one record per DRIFTING pair, over ALL revision pairs,
+each declared under that pair's own `to_revision`.
+
+Two details here are easy to get wrong and both fail silently:
+
+- *All pairs, not adjacent pairs.* `iter_cross_revision_casilla_divergences`
+  compares every combination `(i, j)` of a chain's occurrences and skips any
+  pair whose five-field signature matches. A six-revision chain that drifts at
+  every step needs 15 records, not 5. Authoring only adjacent pairs leaves the
+  non-adjacent ones uncovered, which reds the strict gate; authoring `unchanged`
+  records for pairs that do not drift is harmless but pointless — the engine
+  never yields them.
+- *Declared under the pair's own `to_revision`, not the newest revision.*
+  `_matching_evolution` searches only `left_revision` and `right_revision` for
+  a record. A 2024→2025 record filed under `revisions."2026"` is invisible to
+  the matcher and the pair stays uncovered. So a chain spanning 2024/2025/2026
+  files its 2024→2025 record under 2025, and its 2024→2026 and 2025→2026
+  records under 2026.
+
+File one per `(to_revision, casilla, kind)` in that revision's `continuidad/`
+directory, named `<casilla>-<from>-<to>-<kind>.toml` after the adjacent pair it
+carries. `legal_refs` is the `to_revision` casilla's own refs; `source_refs` is
+the `to_revision`'s revision-level source set.
 
 ```toml
 [[revisions."2025".casilla_continuidad_evolutions]]
-id = "m100-0063-2023-2024-unchanged"
-continuidad_id = "irpf.inmueble.porcentaje-propiedad"
-from_revision = "2023"
-to_revision = "2024"
-evolution_kind = "unchanged"
-legal_refs = ["ley-35-2006:art-22"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd"]
+id = "m131-modulos-1-unidades-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-1-unidades"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-procedure"]
 ```
 
 `from_revision != to_revision` is validated; `legal_refs`/`source_refs` must
@@ -408,14 +454,31 @@ continuidad_validation = "strict"
 ## Verification gates
 
 ```
-uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py -q
-uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests -q -k "continuidad or locales_parity"
-uv run --no-sync pytest --collect-only -q src/cadrumo/domain/calculations 2>&1 | tail -3
+uv run --no-sync pytest \
+  src/cadrumo/domain/calculations/registry/tests/test_cross_revision_drift.py \
+  src/cadrumo/domain/calculations/registry/tests/test_registry_locales_parity.py \
+  src/cadrumo/domain/calculations/registry/tests/test_casilla_fragment_naming.py \
+  src/cadrumo/domain/calculations/registry/tests/test_continuidad_completeness_ratchet.py \
+  -q -m "integration or not integration" -p no:randomly -n 0
 ```
 
-A stamped surface that drifts without a covering evolution record fails the
-first gate under strict mode — that failure is the tool telling you which
-evolution record is missing, not an obstacle to silence.
+Run these sequentially (`-n 0`). Under `-n auto` the registry suite races its own
+loader cache, and a peer landing registry fragments mid-run makes the same test
+pass and fail in one session — re-run sequentially before triaging anything as a
+regression.
+
+A stamped surface that drifts without a covering evolution record fails the drift
+gate under strict mode — that failure is the tool telling you which evolution
+record is missing, not an obstacle to silence.
+
+The ratchet gate is the one that will stop you: it pins the ungrounded backlog
+per modelo to an exact committed baseline, so a grounding commit MUST lower its
+modelo's entry in `_UNGROUNDED_BASELINE` in the same commit. The failure prints
+the replacement literal. Lower only your own modelo — in a shared worktree the
+count for another modelo can move because a peer's uncommitted work is in the
+tree, and adopting their delta claims their progress under your commit. Confirm
+by re-reading the affected files from HEAD before you touch a number that is not
+yours.
 
 ## Safety rails
 
@@ -428,6 +491,19 @@ evolution record is missing, not an obstacle to silence.
   protects against cross-year contamination. Record it, do not skip it.
 - Partially-stamped chains (some occurrences stamped, some not) are
   inconsistencies to resolve first — the worklist flags them.
+- Park loudly, with a counted reason per bucket. A batch pass is judged by what
+  it declined as much as by what it stamped, and a silent scope-out reads as
+  completed work. The Modelo 100 tranche stamped 593 of 1,221 and reported the
+  other 628 as 593 role-collision, 19 replaced-legal-ref, 16 `section`-drift.
+  Never let a park bucket be inferred from a subtraction.
+- Never stamp a chain that skips a revision, and never reuse the id across the
+  gap: a chain asserts one concept running continuously, so the later concept
+  takes a NEW grounded id. `_validate_cross_revision_contiguity` enforces this
+  and a resuming chain now fails rather than passing silently.
+- Never stamp a chain whose occurrences stop before the modelo's latest
+  revision. Under strict validation the adjacent-pair check demands a `retired`
+  record, and retirement-versus-renumbering is a legal judgment, not a batch
+  step. Exclude those and report them as their own tier.
 - Commit stamps + evolution records + strict flips for one modelo revision
   set together, with an explicit `git commit -- <pathspec>` naming only your
   files; never a bare commit in the shared worktree.

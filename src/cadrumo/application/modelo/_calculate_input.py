@@ -29,7 +29,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Literal
@@ -39,6 +39,7 @@ from ...core import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
     M347_THRESHOLD_EUR,
+    DescendantRelacion,
     M210GrossIncomeSourceMode,
     Modelo,
     RescateType,
@@ -63,7 +64,7 @@ from ...domain.calculations.registry import (
     revision_date_binding_ids,
     validate_registry_text_scalar,
 )
-from ...domain.contribuyente import compute_deduccion_maternidad_0611
+from ...domain.contribuyente import compute_deduccion_maternidad_0611, descendant_list_from_facts
 from ...domain.modelos import (
     CalculationRevision,
     Dt12WindowEligibility,
@@ -81,6 +82,7 @@ from ...domain.modelos import (
     validate_m347_threshold,
 )
 from ..aggregation import CalculationSourceDiagnostic
+from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS
 from ._profile_binding import MaternidadMesesResolution
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
@@ -93,6 +95,8 @@ _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternida
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
 _MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
+_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND = "maternidad_cotizaciones_ceiling_inexpressible"
+_MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND = "maternidad_ambiguous_relacion"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
 _DECLARANTE_SELECTOR_SEMANTIC_ROLE = "irpf_toma_datos_declarante_selector"
@@ -791,6 +795,153 @@ def _maternidad_ceilings_unresolved_advisory(
     )
 
 
+def _maternidad_cotizaciones_ceiling_advisory(
+    withheld_for_ceiling: bool,
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic | None:
+    """Advise when a pre-2023 deducción is withheld because its ceiling is unreachable.
+
+    Until 2022 Art. 81.1 capped the deducción at the mother's "cotizaciones y
+    cuotas totales a la Seguridad Social y mutualidades devengadas en cada
+    período impositivo"; the Manual Práctico de Renta 2024 records the removal
+    "desde el 1 de enero de 2023". The engine cannot apply that cap for the
+    affected years, because the cotizaciones binding exists only in the 2024
+    revision and the profile fact is 2024-pinned, so no figure is reachable.
+
+    Granting an un-ceilinged deducción for those years would over-grant and
+    therefore under-declare. Withholding is the safe direction; withholding
+    SILENTLY is not, because the operator declared months and would otherwise
+    see them vanish with no reason given. The remedy is theirs rather than the
+    engine's: the figure is computable by hand from the certificate they hold.
+    """
+    if not withheld_for_ceiling:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_MATERNIDAD_COTIZACIONES_CEILING_SOURCE_KIND,
+        message=(
+            "the active profile declares meses_madre_trabajo but this filing year predates 2023, when "
+            "Art. 81.1 was still capped at the mother's Social Security cotizaciones devengadas in the "
+            "period. This application holds no cotizaciones figure for years before 2024, so the cap "
+            "cannot be applied and the deducción is withheld rather than granted un-capped. Compute it "
+            "by hand as min(months x 100, 1200, cotizaciones devengadas) and enter the result with "
+            "`--casilla` if filing this year."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
+def _ambiguous_relacion_hijo_ids(work_unit_id: str, contributing_hijo_ids: frozenset[str]) -> frozenset[str]:
+    """*contributing_hijo_ids* whose stored ``relacion`` is the unstated default.
+
+    Reads the active profile's descendiente records directly through the same
+    canonical reconstruction (:func:`~domain.contribuyente.descendant_list_from_facts`)
+    every other consumer of this fact set uses, rather than adding a field to
+    :class:`~application.modelo._profile_binding.MaternidadMesesResolution`: this
+    module already owns loading the profile record for
+    :func:`_resolved_maternidad_meses`, and the question this asks — which
+    contributing descendant's relación is unstated — is orthogonal to the
+    months resolution that function answers.
+
+    ``DESCENDIENTE`` is the ONLY ambiguous value. The AEAT manual positively
+    documents, for Art. 58.1, a grandchild or other descendant by consanguinidad
+    other than a child as a literal "descendiente", and a minor held under
+    guarda y custodia by judicial resolución as a third assimilated category
+    distinct from tutela and acogimiento — both mínimo-eligible, and both
+    excluded from Art. 81.1 by the same manual, in terms, across every served
+    filing year. The relación axis has no member for either population today
+    (a representability decision recorded separately), so a filer with either
+    child has no truthful value but ``DESCENDIENTE`` to record — and that is
+    also the value a filer with a genuine hijo gets by never being asked, since
+    the fact is never written for the default even when the operator typed it
+    explicitly. The two cases are indistinguishable at the stored fact; every
+    other :class:`~cadrumo.core.DescendantRelacion` member names a relationship
+    the manual resolves unambiguously and is excluded from this check.
+
+    Returns the empty set when *contributing_hijo_ids* is empty, without
+    loading the profile at all — this question only has cost for a filing that
+    already has months to lose.
+    """
+    if not contributing_hijo_ids:
+        return frozenset()
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ._work_lifecycle import get_work_unit
+
+    unit = get_work_unit(work_unit_id)
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
+    except ProfileNotFoundError:
+        return frozenset()
+    facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    descendientes = descendant_list_from_facts(facts)
+    return frozenset(
+        hijo_id
+        for hijo_id in contributing_hijo_ids
+        if hijo_id.isdigit()
+        and int(hijo_id) < len(descendientes)
+        and descendientes[int(hijo_id)].relacion is DescendantRelacion.DESCENDIENTE
+    )
+
+
+def _bounded_descendant_ids(ids: Sequence[str]) -> str:
+    """Render a descendant-id list for a diagnostic, bounded regardless of household size.
+
+    The diagnostic message is length-capped by contract, and an interpolated
+    per-descendant list is the only unbounded term in the messages below. Left
+    unbounded it makes household size decide whether the advisory can be raised
+    at all: past a threshold the message overruns the cap, the model refuses,
+    and a NON-blocking advisory becomes a hard validation error that stops the
+    filing -- at exactly the moment it had something to say.
+
+    Shares :data:`_MAX_NAMED_DESCENDANTS` with the sibling advisory module that
+    first hit this rather than restating the number, so the two bounds cannot
+    drift apart. The rendering differs (bare ids here, fact paths there) but the
+    judgement being made is one judgement.
+    """
+    shown = ", ".join(ids[:_MAX_NAMED_DESCENDANTS])
+    remainder = len(ids) - _MAX_NAMED_DESCENDANTS
+    return f"{shown} and {remainder} more" if remainder > 0 else shown
+
+
+def _maternidad_ambiguous_relacion_advisory(
+    ambiguous_hijo_ids: frozenset[str],
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic | None:
+    """Advise when a contributing descendant's relación cannot rule out an Art. 81.1 exclusion.
+
+    Non-blocking rather than a refusal that withholds the figure or demands an
+    explicit override flag before calculating. The overwhelming majority of
+    descendientes recorded under the default relación genuinely are a hijo, and
+    calculate is a draft step an operator iterates on repeatedly before verify
+    and export — a repeated refusal on every recalculation of the ordinary case
+    would obstruct the majority for the sake of a minority this application
+    cannot itself distinguish. The Notice channel this advisory rides is the
+    operator harness's own structured, machine-readable surface (never a
+    scrolled terminal line an autonomous operator might miss), matching the
+    established shape of every other unmodelled-eligibility-condition advisory
+    on this same casilla (the cotizaciones ceiling above, and the DT 12ª
+    antiquity condition elsewhere): disclose rather than silently grant, and
+    disclose rather than silently block a filer this application cannot prove
+    is wrong.
+    """
+    if not ambiguous_hijo_ids:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_MATERNIDAD_AMBIGUOUS_RELACION_SOURCE_KIND,
+        message=(
+            f"descendiente {_bounded_descendant_ids(sorted(ambiguous_hijo_ids))} contributes to the Art. 81.1 "
+            "deducción por maternidad under the unstated relación. The manual grants the mínimo but "
+            "excludes the deducción for a grandchild/other consanguinidad descendant, or a minor "
+            "under judicial guarda y custodia -- the stored fact cannot distinguish either from a "
+            "true hijo. Confirm this descendant is a hijo, or correct it with `aeat config profile "
+            "descendiente remove <index>` then `add`."
+        ),
+        casilla_id=casilla_id,
+    )
+
+
 def _maternidad_meses_withheld_advisory(
     withheld: tuple[str, ...],
     casilla_id: CasillaId,
@@ -826,12 +977,12 @@ def _maternidad_meses_withheld_advisory(
         reason="source_issue",
         source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
         message=(
-            f"descendiente {', '.join(withheld)} declares meses_madre_trabajo but contributes no "
-            "Art. 81.1 deducción por maternidad: it reaches a child under three OR one inside the "
-            "age-independent adopción/acogimiento entry-date window. An over-three adopción/acogimiento "
-            "with no recorded entry date is withheld for a missing INSCRIPCION or ACOGIMIENTO date, not "
-            "a birth date. Record it, or correct cohabitation or rentas, with `aeat config profile "
-            "descendiente remove <index>` then `add` to restate the row."
+            f"descendiente {_bounded_descendant_ids(withheld)} declares meses_madre_trabajo but contributes no "
+            "Art. 81.1 deducción por maternidad, which reaches a child under three OR one inside the "
+            "adopción/acogimiento entry-date window. An over-three adopción/acogimiento with no entry "
+            "date is withheld for a missing INSCRIPCION or ACOGIMIENTO, not a birth date. Restate the "
+            "row with `aeat config profile descendiente remove <index>` then `add`, or correct "
+            "cohabitation or rentas."
         ),
         casilla_id=casilla_id,
     )
@@ -1028,6 +1179,14 @@ def apply_calculation_shortcut_inputs(
                 maternidad_casilla_id,
             ),
             _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
+            _maternidad_cotizaciones_ceiling_advisory(
+                maternidad.declares_meses and maternidad.cotizaciones_ceiling_inexpressible,
+                maternidad_casilla_id,
+            ),
+            _maternidad_ambiguous_relacion_advisory(
+                _ambiguous_relacion_hijo_ids(work_unit_id, frozenset(hijo_id for hijo_id, _ in maternidad.pairs)),
+                maternidad_casilla_id,
+            ),
         ):
             if advisory is not None:
                 advisories.append(advisory)
