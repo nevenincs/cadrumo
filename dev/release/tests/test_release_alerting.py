@@ -237,10 +237,24 @@ def _needs_own_alert(workflow_dir: Path, *, module_root: Path | None = None) -> 
         document = yaml.safe_load((workflow_dir / name).read_text(encoding="utf-8"))
         for job in document.get("jobs", {}).values():
             for step in job.get("steps", []) or []:
-                # Comments are dropped: the orchestrator's prose deliberately
-                # names workflows it must never dispatch.
+                # Comments AND printed prose are dropped: the orchestrator
+                # deliberately names workflows it must never dispatch, in
+                # comments and in operator-facing log lines alike. The seal
+                # stage's dry-run branch echoes why it is NOT dispatching, and
+                # names packaging-smoke.yml while doing so - a line that writes
+                # to the run log cannot start a workflow, so counting it as a
+                # dispatch demanded an alert on a lane the campaign stage waits
+                # for. This is the same NAMING-is-not-DISPATCHING distinction
+                # the module scan below already makes, applied to the step body.
+                #
+                # Only pure output lines are dropped, not every line without a
+                # dispatch verb: the campaign stage assigns its workflow to a
+                # variable and dispatches through it, so a mention must still
+                # count when it is nowhere near the dispatch itself.
                 body = "\n".join(
-                    line for line in str(step.get("run", "")).splitlines() if not line.lstrip().startswith("#")
+                    line
+                    for line in str(step.get("run", "")).splitlines()
+                    if not line.lstrip().startswith(("#", "echo ", "printf "))
                 )
                 if not body:
                     continue
@@ -332,6 +346,61 @@ def test_reachability_gate_reds_on_a_planted_unalerted_workflow(tmp_path: Path) 
 
     unalerted = [name for name in sorted(release_path) if not _has_failure_alert(_load(planted / name))]
     assert "new-lane.yml" in unalerted, "the gate must red on a release-path workflow with no alert"
+
+
+def _plant(workflow_dir: Path, name: str, run_body: str) -> None:
+    indented = "\n".join(f"          {line}" for line in run_body.splitlines())
+    workflow_dir.joinpath(name).write_text(
+        f"name: {name}\non:\n  workflow_dispatch:\njobs:\n"
+        f"  go:\n    runs-on: [self-hosted]\n    steps:\n      - run: |\n{indented}\n",
+        encoding="utf-8",
+    )
+
+
+def test_a_workflow_named_only_in_printed_prose_is_not_counted_as_dispatched(tmp_path: Path) -> None:
+    """Explaining why a lane is NOT being started is not starting it.
+
+    The seal stage's dry-run branch echoes the reason it is withholding the
+    publication dispatch, and names packaging-smoke.yml in that sentence. Read
+    as a dispatch, it demanded an alert on a lane the campaign stage waits for
+    - which the exclusion assertion below simultaneously forbids. Both tests
+    encode the same model; only the derivation was wrong.
+    """
+    planted = tmp_path / "workflows"
+    planted.mkdir()
+    _plant(
+        planted,
+        "release-orchestrator.yml",
+        'echo "not dispatching quiet-lane.yml on a rehearsal"\ngh workflow run loud-lane.yml\n',
+    )
+    _plant(planted, "quiet-lane.yml", "echo hi\n")
+    _plant(planted, "loud-lane.yml", "echo hi\n")
+
+    needs = _needs_own_alert(planted)
+
+    assert "loud-lane.yml" in needs, "a real fire-and-forget dispatch must still be discovered"
+    assert "quiet-lane.yml" not in needs, "a workflow named only in an echo was never dispatched"
+
+
+def test_a_lane_dispatched_through_a_variable_is_still_discovered(tmp_path: Path) -> None:
+    """Control for the narrowing above: it must not collapse to dispatch-line-only.
+
+    The campaign stage assigns its workflow to a shell variable and dispatches
+    through it, so a mention that sits nowhere near the dispatch verb is still
+    a real dispatch. A derivation that only believed names appearing ON the
+    dispatch line would go quiet on exactly that shape - and would look
+    identical to a correctly narrowed one in the test above.
+    """
+    planted = tmp_path / "workflows"
+    planted.mkdir()
+    _plant(
+        planted,
+        "release-orchestrator.yml",
+        'target=".github/workflows/indirect-lane.yml"\ngh workflow run "$target"\n',
+    )
+    _plant(planted, "indirect-lane.yml", "echo hi\n")
+
+    assert "indirect-lane.yml" in _needs_own_alert(planted)
 
 
 def test_multi_job_workflows_alert_from_a_dedicated_job_not_a_trailing_step() -> None:
