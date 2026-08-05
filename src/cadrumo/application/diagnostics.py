@@ -453,7 +453,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
             # get_master_key_provider returns a runtime context object;
             # __enter__/__exit__ are not statically visible here.
-            provider_context.__exit__(None, None, None)
+            provider_context.__exit__(None, None, None)  # pyrefly: ignore[missing-attribute]  # reason: runtime context-manager protocol, see the rationale above
 
     checks.append(_registry_cross_domain_integrity_check(root))
 
