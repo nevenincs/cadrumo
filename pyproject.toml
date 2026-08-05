@@ -858,6 +858,13 @@ exclude = ["**/tests"]
 extraPaths = ["src", "stubs"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
+# A suppression that no longer suppresses anything is indistinguishable from one
+# that does, and it silently widens as the code under it changes. Reporting the
+# dead ones keeps this checker adversarial about its own escape hatches rather
+# than trusting them. Note `# type: ignore` IS honoured here even though ty
+# matches only its own rule names, so a mypy-shaped comment can hide a
+# diagnostic from this checker while looking inert.
+reportUnnecessaryTypeIgnoreComment = "error"
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]

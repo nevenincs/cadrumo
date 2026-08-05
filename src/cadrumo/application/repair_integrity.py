@@ -278,7 +278,7 @@ def active_bucket_repair_session() -> Generator[None]:
         # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
         # get_master_key_provider returns object; __enter__/__exit__ are correct
         # at runtime but unverifiable without a typed Protocol.
-        provider.__enter__()  # type: ignore[attr-defined]
+        provider.__enter__()
     except Exception as exc:
         _log.debug("repair integrity could not open active bucket session: %s", type(exc).__name__)
         yield
@@ -289,7 +289,7 @@ def active_bucket_repair_session() -> Generator[None]:
         # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
         # get_master_key_provider returns object; __enter__/__exit__ are correct
         # at runtime but unverifiable without a typed Protocol.
-        provider.__exit__(None, None, None)  # type: ignore[attr-defined]
+        provider.__exit__(None, None, None)
 
 
 def build_repair_list_report(

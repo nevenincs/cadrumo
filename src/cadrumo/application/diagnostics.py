@@ -404,7 +404,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                 # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
                 # get_master_key_provider returns a runtime context object;
                 # __enter__/__exit__ are not statically visible here.
-                provider_context.__enter__()  # type: ignore[attr-defined]
+                provider_context.__enter__()
             state = workflow_state_repository().load()
             checks.append(
                 DiagnosticCheck(
@@ -453,7 +453,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
             # get_master_key_provider returns a runtime context object;
             # __enter__/__exit__ are not statically visible here.
-            provider_context.__exit__(None, None, None)  # type: ignore[attr-defined]
+            provider_context.__exit__(None, None, None)
 
     checks.append(_registry_cross_domain_integrity_check(root))
 
