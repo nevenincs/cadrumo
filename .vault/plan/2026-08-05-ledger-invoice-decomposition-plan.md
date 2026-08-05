@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:372fd03ba6db8c361d6f76f996a91edf30a234bc577a8a1c31008b4067fe8cfd'
+body_hash: 'sha256:a6ed4d40910418804b8edf2544eda737fd5678d072e9b8c5c1f3a9402b57d2f2'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -61,10 +61,10 @@ Declare which components an invoice of each IVA category actually has, as regist
 
 Let exempt invoices recover their retencion by relaxing the inference precondition to category-determinable cuota, keeping the registry max-rate bound and never inverting a rate from cash. Give the invoice record its decomposition contract so a partial declaration is excluded but visible.
 
-- [ ] `P03.S11` - Relax the withheld-inference precondition to category-determinable cuota so exempt invoices recover their retencion, keeping the registry max-rate bound; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
+- [x] `P03.S11` - Relax the withheld-inference precondition to category-determinable cuota so exempt invoices recover their retencion, keeping the registry max-rate bound; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
 - [x] `P03.S12` - Add the invoice retencion consistency validator, holding retencion outside the grand total; `src/cadrumo/domain/transactions`.
 - [x] `P03.S13` - Add the partial-invoice decomposition contract so an ungrounded record is excluded but visible rather than silently dropped; `src/cadrumo/domain/transactions`.
-- [ ] `P03.S20` - Route received-invoice retencion into the existing per-perceptor store behind retenciones_aggregation, never a second parallel retencion path; `src/cadrumo/application/aggregation`.
+- [x] `P03.S20` - Route received-invoice retencion into the existing per-perceptor store behind retenciones_aggregation, never a second parallel retencion path; `src/cadrumo/application/aggregation`.
 
 ### Phase `P04` - Verify severity escalation
 
@@ -82,3 +82,4 @@ Prove the chain against external AEAT authority rather than against itself, anch
 - [ ] `P05.S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition; `src/cadrumo/application/aggregation/tests`.
 - [ ] `P05.S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded; `src/cadrumo/application/aggregation/tests`.
 - [ ] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
+- [ ] `P05.S25` - Gate every advisory message builder as constructible at zero, one and many items against its own model's declared cap, read from the field rather than restated; `src/cadrumo/tests`.
