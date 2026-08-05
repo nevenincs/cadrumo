@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:cfa3712be300c3c9bc40b923c95ae437e6b9b9d96a15ff4f2133ce9efc4ba66a'
+body_hash: 'sha256:77821dc6a5b1ea68982d05fd6fe8f9981b4c3ad05586d7e2d4716d2464be4d30'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -92,3 +92,9 @@ The plan remains at 12 of 24 steps closed (50 percent), with P02.S04 and the rem
 RAG confirmed that the projection's non-Spanish display labels intentionally use the shared Spanish fallback resolver, while the registry conformance surface already distinguishes authored locale values with `lookup_translation_entry`. The casilla census now keeps the display fallback unchanged but resolves each projected record's latest registry definition and counts locale coverage only when an authored `en`, `ca`, or `hu` label key has a non-null catalogue value. Missing modelos or casilla definitions fail closed as uncovered. Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, and diff checks. No tests or runtime projection were run.
 
 The `casilla-locale-fallback` finding is therefore source-remediated at the census boundary; the P06.S24 acceptance row remains open until its authorized evidence gate runs.
+
+## 2026-08-05 bridge-order parity remediation
+
+RAG confirmed that the browser already requires each semantic bridge target list to be non-increasing by ranking weight and UTF-8 record-id order on ties, while the Python `SemanticBridgeEntry` validator checked only uniqueness and `targets_sha256`. The Python validator now enforces the same deterministic ordering. Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, and diff checks. No tests or artifact loading were run.
+
+The `bridge-order-parity` finding is source-remediated; the browser nested-content hash parity finding remains open and no acceptance row is closed by this source-only change.

@@ -148,12 +148,20 @@ class SemanticBridgeEntry(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_entry_invariants(self) -> SemanticBridgeEntry:
-        """Validate canonical term identity and ordered target uniqueness."""
+        """Validate canonical term identity, target order, and uniqueness."""
         if canonical_vocabulary((self.term,)) != (self.term,):
             raise ValueError("bridge terms must use the canonical vocabulary form")
         record_ids = tuple(target.record_id for target in self.targets)
         if len(record_ids) != len(set(record_ids)):
             raise ValueError("a semantic bridge entry cannot repeat a record id")
+        expected_order = tuple(
+            sorted(
+                self.targets,
+                key=lambda target: (-target.ranking_weight, target.record_id.encode(_UTF_8)),
+            ),
+        )
+        if self.targets != expected_order:
+            raise ValueError("semantic bridge targets must be deterministically ordered")
         expected_hash = _hash_json([target.model_dump(mode="json") for target in self.targets])
         if self.targets_sha256 != expected_hash:
             raise ValueError("targets_sha256 does not match the ordered target list")
