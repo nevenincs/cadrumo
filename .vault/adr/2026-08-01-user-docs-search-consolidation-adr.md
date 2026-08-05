@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-02'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b578dcea0570e1ab826a0c42096605d7578fed39b991365f8eafaa0b3836484'
+body_hash: 'sha256:4682f39602d7be9a58e3e5a8afc2ef96b80b49a4eb14d460fb8614b562edd8b8'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -91,6 +91,18 @@ The operator's directive and the corpus's oldest accepted doctrine coincide exac
 - Multilingual expectations are pinned to what is built: query-level recall in four languages, English pages, Spanish authoritative labels. A future localised-site ambition is a separate decision.
 - The two 2026-08-01 commits' work products are acknowledged as overtaken, not refuted: `4dd9810c8f` correctly implemented a recommendation that was valid when written; `71a89d0d2d` correctly deduplicated a surface that was live when audited. Their deletion by the boundary plan is the ruling working as intended.
 - A future ADR wanting open-vocabulary semantic recall (rung 3 or a search service) must supersede both this record and the boundary ADR explicitly.
+
+## Update 6 (2026-08-05): Rung-2 contract ratified; source implementation authorized
+
+The Rung-2 research record leaves the operative model, tokenizer, query encoding, result bridge, and acceptance boundary as ADR questions. The operator has now approved this in-place refinement of R5. It concretizes the implementation contract without changing the precompile-only architecture or waiving the evidence gates.
+
+**R8 - Pinned model and query encoding.** Rung 2 selects `minishlab/potion-multilingual-128M` at immutable revision `e7421cd79c75fc506b88bb75723ae0a234994720`, SPDX `MIT`, and dimension `256`, subject to immutable-revision and licence verification before an artifact is accepted. The provider and tokenizer implementation are pinned by package/version and content hashes, not by a mutable repository name. One versioned normalization algorithm is shared across the compiler and browser: NFKC normalization, Unicode lowercase, accent preservation, Unicode letter/number token extraction, and separator collapsing. Query words may map to multiple model subword ids; query-token rows therefore carry the exact token text, the complete ordered model-token-id tuple, and its count. Covered rows are dequantized, pooled by deterministic equal mean in query order with multiplicity preserved, and L2-normalized using float32 arithmetic. Special-token insertion, silent truncation, unknown-token substitution, IDF weighting, and stopword suppression are not permitted by this contract.
+
+**R9 - Coverage and stable result bridge.** A query is eligible for semantic scoring only when it has covered tokens and passes the separately measured minimum coverage rule; empty, unknown, non-finite, zero-vector, and below-coverage queries abstain. Each semantic term row is linked by hash to ordered `record_id` and ranking-weight targets derived from the same authoritative `SearchRecord` projection that feeds Pagefind. A compact manifest hydrates those ids and metadata; the browser never reconstructs URLs, parses opaque ids, or invents a second destination authority. A unique structured modelo/casilla match remains first refusal. Exact identity, title, and declared-alias matches precede semantic candidates; semantic results are deduplicated by `record_id`, capped at five, and enter the existing display-class bands without overriding them. Ties resolve by direct-match strength, descending cosine, existing relevance weight, and canonical UTF-8 `record_id` order.
+
+**R10 - Bounded acceptance and fail-closed release.** The matrix, query-token rows, result bridge, and manifest share one measured serialized-data envelope capped at 3,000,000 bytes; splitting the payload cannot evade that bound. The float32 and int8 paths are compared, and no expected held-out top-five result may be lost to quantization. The cosine floor, best-versus-runner-up margin, minimum token-coverage ratio, maximum allowed cosine drift, and payload headroom remain evidence-derived acceptance values rather than invented defaults. Until those values are measured and separately accepted, the browser semantic tier is disabled and fail-closed. Rung 2 may not be declared shipped until the held-out miss-rate is at or below the ratified 0.10 line with no locale or record-kind regression.
+
+This amendment authorizes source implementation only. It does not authorize tests, builds, model downloads, Pagefind or runtime probes, generated-artifact release, deployment, or live publication.
 
 ## Update 1 (2026-08-01): deployed-contract ground truth folded in
 

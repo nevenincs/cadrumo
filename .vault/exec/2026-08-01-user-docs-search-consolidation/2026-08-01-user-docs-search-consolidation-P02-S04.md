@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:db98ba8d45690d0ddb84a14189669cf8941b0d12af397a5f9ad7fd1e8b1a31f5'
+body_hash: 'sha256:d8b1b6c937dc922f05662af356cb1b559fc4c69960ae1fd72d1ce3c785057a5e'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -85,3 +85,19 @@ all-zero rows. The tests use the production Pydantic models directly and do
 not introduce test doubles or business logic. They were intentionally not run;
 AST parsing and focused whitespace checks are the only verification for this
 continuation.
+
+## 2026-08-05 source continuation: ratified Rung-2 bridge and browser contract
+
+The approved ADR Update 6 is now reflected in the source seam. The matrix contract carries schema-v3 provider/tokenizer provenance, the shared Unicode normalization contract, complete ordered model-token-id tuples and counts, and the existing float32/int8 and 3,000,000-byte guards. The new bridge projects the same authoritative SearchRecord identities used by Pagefind, links terms to ordered record_id/ranking-weight targets, and nests the matrix, bridge, and manifest in one bounded Rung2SearchBundle.
+
+The shared browser controller now reads that bundle shape, validates the pinned model/licence/provenance/normalization markers, validates manifest and bridge hash links, performs the covered-token mean/L2/cosine seam, preserves exact structured casilla refusal and lexical-before-semantic precedence, deduplicates by record_id, and caps semantic candidates at five. Malformed or unavailable semantic data disables only the semantic tier and preserves Pagefind results.
+
+The source-only formal review initially found four contract defects; the owned source was corrected for bundle-shape alignment, normalization/provenance alignment, Pagefind-preserving semantic failure, and direct-match precedence. The bridge target list is deterministically ordered and no longer imposes an unratified five-target source limit; the browser caps surfaced candidates at five.
+
+Static verification only: Python AST parsing, JavaScript syntax checking, and focused diff whitespace validation passed. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, deployment, or generated-artifact release were run. P02.S04 remains open because the pinned provider artifact, licence acceptance, measured thresholds/drift/payload evidence, and runtime gates are still absent; P02.S05-P02.S07 remain open.
+
+## 2026-08-05 post-fix review: alias precedence
+
+The remaining medium review finding is closed by commit `96ba221c43`. The weight-sorted Pagefind card pass now marks injected records as lexical-card matches, covering declared alias hits even when the title differs; title matching remains the stronger intra-band signal, and semantic candidates remain additive and visible. The focused post-fix formal review returned PASS with no remaining findings.
+
+Verification remains static-only: JavaScript syntax and focused diff whitespace checks passed. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, deployment, or generated-artifact release were run.
