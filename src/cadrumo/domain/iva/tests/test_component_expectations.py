@@ -57,11 +57,11 @@ from .. import (
     iva_category_components,
 )
 
-if TYPE_CHECKING:
-    from collections.abc import Iterable
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 #: Sentinel categories that declare no IVA treatment at all. They are the only
 #: rows permitted to answer ``UNKNOWN``; every other category must commit.

@@ -54,11 +54,12 @@ from typing import TYPE_CHECKING, NamedTuple
 import pytest
 from pydantic import BaseModel
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping
     from pathlib import Path
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: Field names that carry prose an operator is meant to read. A cap on one of
 #: these bounds a sentence, not an identifier, so a floor that breaches it

@@ -55,13 +55,14 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 from ..core import elided_prose
 from .test_advisory_message_constructibility import _PROSE_FIELDS, _prose_caps
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
     from pathlib import Path
 
     from pydantic.fields import FieldInfo
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: A probe long enough to cross every cap the tree declares, with word breaks so
 #: a boundary-aware clamp has somewhere to cut.

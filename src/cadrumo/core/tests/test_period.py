@@ -20,6 +20,9 @@ from .. import (
     accepted_period_patterns,
 )
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
 #: The tokens a registry ``period_selector`` declares to address a censo or
 #: comunicación revision (Modelo 036 declares the first three, Modelo 145 the
 #: last two). They name a registration event, never a period a taxpayer files in.
@@ -29,9 +32,6 @@ ADMINISTRATIVE_TOKENS = ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIAC
 #: registry's revision matcher treats it as COVERING the concrete ``EVENT-1`` /
 #: ``EVENT-2`` operator scopes, so it stands for a set of periods, not one.
 SYMBOLIC_EVENT_SELECTOR = "EVENT-N"
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
 
 class TestStandardPeriodCode:
     """Verify StandardPeriodCode enum covers expected members."""
