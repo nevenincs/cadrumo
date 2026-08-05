@@ -1,6 +1,5 @@
 [[revisions."2003-y-siguientes".constructs]]
 id = "modelo-840-iae-declaration"
-title = "Modelo 840 IAE censal declaration (alta, variacion, baja)"
 legal_refs = [
     "rdl-2-2004:art-78",
     "rdl-2-2004:art-82",

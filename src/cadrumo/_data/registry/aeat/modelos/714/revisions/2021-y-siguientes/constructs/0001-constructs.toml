@@ -10,7 +10,6 @@
 
 [[revisions."2021-y-siguientes".constructs]]
 id = "m714-patrimonio-calculation"
-title = "Modelo 714 Impuesto sobre el Patrimonio cuota"
 legal_refs = [
     "ley-19-1991:art-4-9",
     "ley-19-1991:art-28",

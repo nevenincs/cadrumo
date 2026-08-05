@@ -1,6 +1,5 @@
 [[revisions."2018-y-siguientes".constructs]]
 id = "modelo-233-informative"
-title = "Modelo 233 declaración informativa"
 legal_refs = ["orden-hac-1400-2018:art-1", "orden-hac-1400-2018:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-233-procedure", "enrolled-modelo-233-layout"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]

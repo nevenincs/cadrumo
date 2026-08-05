@@ -1,6 +1,5 @@
 [[revisions."2021-y-siguientes".constructs]]
 id = "modelo-604-autoliquidacion"
-title = "Modelo 604 autoliquidación del Impuesto sobre las Transacciones Financieras"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-604-procedure", "enrolled-modelo-604-layout"]
 casilla_ids = ["decl.ejercicio", "decl.periodo"]

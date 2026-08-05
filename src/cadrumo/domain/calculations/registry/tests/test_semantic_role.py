@@ -221,10 +221,10 @@ class TestSemanticRoleFieldShape:
         with pytest.raises(ValidationError, match="localization_keys"):
             CasillaDefinition.model_validate({**casilla.model_dump(), "localization_keys": ()})
 
-    def test_blank_alias_label_rejected(self) -> None:
-        with pytest.raises(ValidationError, match="official Spanish text"):
+    def test_empty_alias_localization_key_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="localization_key"):
             CasillaAlias(
-                label="   ",
+                localization_key="",
                 legal_refs=("ley-58-2003:art-29",),
                 source_refs=("aeat-manual",),
             )
@@ -243,13 +243,17 @@ class TestSemanticRoleFieldShape:
 
     def test_aliases_round_trip(self) -> None:
         alias = CasillaAlias(
-            label="NIF declarante",
+            localization_key=_write_test_label("NIF declarante"),
             legal_refs=("ley-58-2003:art-29",),
             source_refs=("aeat-manual",),
         )
         c = _casilla(semantic_role="taxpayer_nif", data_type="nif", aliases=[alias])
         rebuilt = CasillaDefinition.model_validate(
-            {**c.model_dump(), "localization_keys": c.localization_keys},
+            {
+                **c.model_dump(),
+                "localization_keys": c.localization_keys,
+                "aliases": ({**alias.model_dump(), "localization_key": alias.localization_key},),
+            },
         )
         assert len(rebuilt.aliases) == 1
         assert rebuilt.aliases[0].label == "NIF declarante"

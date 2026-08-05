@@ -7203,6 +7203,10 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Vigència normativa des del 3 de febrer de 2025
+          construct:
+            modelo-036-censo-foundation:
+              field:
+                title: null
           field:
             label: null
     038:
@@ -7218,6 +7222,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-038-informative:
+              field:
+                title: null
           field:
             label: null
     '100':
@@ -13647,6 +13655,37 @@ modelo:
             '1654':
               help: null
               label: null
+          construct:
+            renta-2020-dependent-modelos:
+              field:
+                title: null
+            renta-2020-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2020-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2020-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2020-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2020-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2020-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2020-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2020-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2021':
@@ -18730,6 +18769,37 @@ modelo:
             '1799':
               help: null
               label: null
+          construct:
+            renta-2021-dependent-modelos:
+              field:
+                title: null
+            renta-2021-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2021-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2021-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2021-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2021-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2021-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2021-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2021-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2022':
@@ -24292,6 +24362,37 @@ modelo:
             '1916':
               help: null
               label: null
+          construct:
+            renta-2022-dependent-modelos:
+              field:
+                title: null
+            renta-2022-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2022-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2022-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2022-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2022-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2022-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2022-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2022-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2023':
@@ -30085,6 +30186,37 @@ modelo:
             '1995':
               help: null
               label: null
+          construct:
+            renta-2023-dependent-modelos:
+              field:
+                title: null
+            renta-2023-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2023-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2023-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2023-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2023-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2023-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2023-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2023-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2024':
@@ -38838,6 +38970,46 @@ modelo:
             ZRUE2:
               help: null
               label: null
+          construct:
+            renta-2024-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: null
+            renta-2024-dependent-modelos:
+              field:
+                title: null
+            renta-2024-final-settlement:
+              field:
+                title: null
+            renta-2024-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2024-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2024-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2024-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2024-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2024-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2024-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2024-mini-model-trabajo:
+              field:
+                title: null
+            renta-2024-personal-family:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2025':
@@ -46442,6 +46614,64 @@ modelo:
                 en aquest único període impositivo (base sobre la que es s'aplica
                 la reducció del 30 per 100 de l'article 32.1 de la Llei de l'Impost;
                 import declarat per l'operador — véase la casella [1554])
+          construct:
+            renta-2025-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2025-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2025-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2025-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion:
+              field:
+                title: null
+            renta-2025-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2025-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
+            renta-dependent-modelos:
+              field:
+                title: null
+            renta-economic-activities:
+              field:
+                title: null
+            renta-final-settlement:
+              field:
+                title: null
+            renta-movable-capital:
+              field:
+                title: null
+            renta-observation-parsing:
+              field:
+                title: null
+            renta-payments-retentions:
+              field:
+                title: null
+            renta-personal-family:
+              field:
+                title: null
+            renta-real-estate-capital:
+              field:
+                title: null
+            renta-source-foundation:
+              field:
+                title: null
+            renta-work-income:
+              field:
+                title: null
           field:
             label: null
     '111':
@@ -46543,6 +46773,10 @@ modelo:
             '30':
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: null
           field:
             label: null
     '115':
@@ -46567,6 +46801,10 @@ modelo:
             '05':
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: null
           field:
             label: null
     '117':
@@ -46618,6 +46856,10 @@ modelo:
             '11':
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-117-total-liquidacion-calculation:
+              field:
+                title: null
           field:
             label: null
     '121':
@@ -46633,6 +46875,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de comunicació (alta / modificació / baixa)
+          construct:
+            modelo-121-comunicacion:
+              field:
+                title: null
           field:
             label: null
     '122':
@@ -46648,6 +46894,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-122-regularizacion:
+              field:
+                title: null
           field:
             label: null
     '123':
@@ -46681,6 +46931,10 @@ modelo:
             08:
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: null
           field:
             label: null
         2024-y-siguientes:
@@ -46727,6 +46981,10 @@ modelo:
             '14':
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: null
           field:
             label: null
     '126':
@@ -46774,6 +47032,10 @@ modelo:
             '12':
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-126-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '128':
@@ -46805,6 +47067,10 @@ modelo:
             '07':
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-128-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '130':
@@ -46891,6 +47157,10 @@ modelo:
                 com a deducció a la casella 15 d'un trimestre posterior.
               label: Saldo negatiu traslladable a períodes posteriors (màx. 0, -casella
                 17)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
     '131':
@@ -47037,6 +47307,10 @@ modelo:
               help: null
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
+          construct:
+            modelo-131-2019-2023-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2024':
@@ -47187,6 +47461,10 @@ modelo:
               help: null
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
+          construct:
+            modelo-131-2024-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2025':
@@ -47337,6 +47615,10 @@ modelo:
               help: null
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
+          construct:
+            modelo-131-2025-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2026':
@@ -47450,6 +47732,10 @@ modelo:
               help: null
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
+          construct:
+            modelo-131-2026-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
     '136':
@@ -47532,6 +47818,10 @@ modelo:
             provincia-residencia-irpf:
               help: null
               label: Codi de la província de residència habitual del contribuent IRPF
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '140':
@@ -47547,6 +47837,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de sol·licitud (alta / modificació / baixa)
+          construct:
+            modelo-140-informative:
+              field:
+                title: null
           field:
             label: null
     '143':
@@ -47562,6 +47856,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de sol·licitud (alta / modificació / baixa)
+          construct:
+            modelo-143-informative:
+              field:
+                title: null
           field:
             label: null
     '145':
@@ -47777,6 +48075,10 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: null
               label: Retencions i ingressos a compte (pagaments a compte, art. 93.2.f)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: null
           field:
             label: null
         2025-y-siguientes:
@@ -47811,6 +48113,10 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: null
               label: Retencions i ingressos a compte (pagaments a compte, art. 93.2.f)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: null
           field:
             label: null
     '156':
@@ -47826,6 +48132,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-156-informative:
+              field:
+                title: null
           field:
             label: null
     '165':
@@ -47841,6 +48151,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-165-informative:
+              field:
+                title: null
           field:
             label: null
     '179':
@@ -47856,6 +48170,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-179-informative:
+              field:
+                title: null
           field:
             label: null
     '180':
@@ -48035,6 +48353,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Situació de l'immoble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
           field:
             label: null
         2023-y-siguientes:
@@ -48129,6 +48451,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Situació de l'immoble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '181':
@@ -48144,6 +48470,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-181-informative:
+              field:
+                title: null
           field:
             label: null
     '182':
@@ -48178,6 +48508,10 @@ modelo:
               help: null
               label: Indicador de donatiu recurrent (donatiu plurianual a la mateixa
                 entitat donatària, dos o més exercicis consecutius)
+          construct:
+            modelo-182-informative:
+              field:
+                title: null
           field:
             label: null
     '184':
@@ -48212,6 +48546,10 @@ modelo:
               help: null
               label: Subclau del tipus de renda atribuïda (granularitat per origen
                 geogràfic Espanya/estranger, reduccions aplicables, etc.)
+          construct:
+            modelo-184-informative:
+              field:
+                title: null
           field:
             label: null
     '185':
@@ -48227,6 +48565,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-185-informative:
+              field:
+                title: null
           field:
             label: null
     '186':
@@ -48242,6 +48584,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-186-informative:
+              field:
+                title: null
           field:
             label: null
     '187':
@@ -48260,6 +48606,10 @@ modelo:
             '05':
               help: null
               label: Total de retencions del resum anual
+          construct:
+            modelo-187-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '188':
@@ -48278,6 +48628,10 @@ modelo:
             '05':
               help: null
               label: Total de retencions del resum anual
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '189':
@@ -48332,6 +48686,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Nombre total de percepcions
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '193':
@@ -48350,6 +48708,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               help: null
               label: Nombre total de perceptors
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '194':
@@ -48368,6 +48730,10 @@ modelo:
             '05':
               help: null
               label: Total de retencions del resum anual
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '200':
@@ -62984,6 +63350,10 @@ modelo:
               help: null
               label: Tributació conjunta Estat i Adm. Forals - Càlcul de percentatges
                 de tributació - Adm. de l'Estat [00625]
+          construct:
+            modelo-200-2024-foundation:
+              field:
+                title: null
           field:
             label: null
     '202':
@@ -63278,6 +63648,10 @@ modelo:
               help: null
               label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
                 LIS) — Disminucions
+          construct:
+            modelo-202-2019-2022-foundation:
+              field:
+                title: null
           field:
             label: null
         2023-2024:
@@ -63430,6 +63804,10 @@ modelo:
               help: null
               label: Modalitat art. 40.3 LIS B2 — Reserva de nivellació (art. 105
                 LIS) — Disminucions
+          construct:
+            modelo-202-2023-2024-foundation:
+              field:
+                title: null
           field:
             label: null
         2025-y-siguientes:
@@ -63606,6 +63984,10 @@ modelo:
               help: null
               label: Modalitat art. 40.3 LIS — Correccions per l'Impost Complementari
                 (IC) — Augments
+          construct:
+            modelo-202-foundation:
+              field:
+                title: null
           field:
             label: null
     '210':
@@ -63718,6 +64100,10 @@ modelo:
             valor_comprobado_administracion:
               help: null
               label: Valor comprovat per l'Administració
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: null
           field:
             label: null
     '216':
@@ -63752,6 +64138,10 @@ modelo:
             '21':
               help: null
               label: Resultat a ingressar
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '220':
@@ -63767,6 +64157,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: null
           field:
             label: null
     '222':
@@ -63783,6 +64177,10 @@ modelo:
               help: null
               label: Modalitat del pagament fraccionat (art. 40.2 quota íntegra /
                 art. 40.3 base imposable)
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: null
           field:
             label: null
     '231':
@@ -63853,6 +64251,10 @@ modelo:
               help: null
               label: Tipus d'exercici (12 mesos naturals / 12 mesos de 365 dies /
                 inferior a 12 mesos)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
           field:
             label: null
         2018-y-siguientes:
@@ -64017,6 +64419,10 @@ modelo:
               help: null
               label: Tipus d'exercici (12 mesos naturals / 12 mesos 365 dies / inferior
                 a 12 mesos)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
           field:
             label: null
     '233':
@@ -64032,6 +64438,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-233-informative:
+              field:
+                title: null
           field:
             label: null
     '234':
@@ -64047,6 +64457,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-234-informative:
+              field:
+                title: null
           field:
             label: null
     '238':
@@ -64062,6 +64476,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-238-informative:
+              field:
+                title: null
           field:
             label: null
     '270':
@@ -64077,6 +64495,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-270-informative:
+              field:
+                title: null
           field:
             label: null
     '280':
@@ -64200,6 +64622,10 @@ modelo:
             '05':
               help: null
               label: Total de retencions del resum anual
+          construct:
+            modelo-296-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '303':
@@ -64968,6 +65394,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Quota IVA suportat en operacions interiors corrents
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
         2023-y-siguientes:
@@ -65474,6 +65904,10 @@ modelo:
               help: Total d'IVA suportat pagat en compres interiors de béns i serveis
                 corrents.
               label: Quota IVA suportat en operacions interiors corrents
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '308':
@@ -65490,6 +65924,10 @@ modelo:
               help: null
               label: Tipus de sol·licitud (recàrrec d'equivalència / art. 30 bis /
                 art. 21.4 / subjecte passiu ocasional / règim simplificat de transport)
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
           field:
             label: null
     '309':
@@ -65517,6 +65955,10 @@ modelo:
               help: null
               label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
                 (devolució a viatgers)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
           field:
             label: null
     '322':
@@ -65557,6 +65999,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Quota d'IVA suportat en operacions interiors corrents
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: null
           field:
             label: null
     '341':
@@ -65572,6 +66018,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període de liquidació a què es refereix l'autoliquidació
+          construct:
+            modelo-341-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '345':
@@ -65709,6 +66159,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-347-informative:
+              field:
+                title: null
           field:
             label: null
     '349':
@@ -65757,6 +66211,10 @@ modelo:
             x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
               help: null
               label: Període rectificat
+          construct:
+            modelo-349-informative:
+              field:
+                title: null
           field:
             label: null
     '353':
@@ -65811,6 +66269,10 @@ modelo:
               help: null
               label: Quota d'IVA suportat en operacions interiors corrents - agregat
                 del grup
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
           field:
             label: null
     '360':
@@ -65826,6 +66288,10 @@ modelo:
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
               help: null
               label: Estat membre de devolució on es van suportar les quotes
+          construct:
+            modelo-360-iva-devolucion-ue:
+              field:
+                title: null
           field:
             label: null
     '361':
@@ -65876,6 +66342,10 @@ modelo:
               help: null
               label: Quota d'IVA repercutit a la destinació DE — serveis prestats
                 (Règim exterior)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: null
           field:
             label: null
         esquema-importacion:
@@ -65894,6 +66364,10 @@ modelo:
               help: null
               label: Quota d'IVA IOSS a la destinació DE — vendes a distància de béns
                 importats ≤ 150 EUR (LIVA art. 163 quinvicies)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: null
           field:
             label: null
         esquema-union:
@@ -65920,6 +66394,10 @@ modelo:
               help: null
               label: Quota d'IVA OSS Unió a la destinació FR — serveis prestats (LIVA
                 art. 163 unvicies)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: null
           field:
             label: null
     '379':
@@ -65998,6 +66476,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període de liquidació a què es refereix l'autoliquidació
+          construct:
+            modelo-380-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '390':
@@ -66080,6 +66562,10 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: Quota d'IVA suportat en operacions interiors corrents - anual
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
           field:
             label: null
     '490':
@@ -66095,6 +66581,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (trimestre natural)
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '576':
@@ -66110,6 +66600,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus d'autoliquidació (originària / substitutiva / complementària)
+          construct:
+            modelo-576-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '592':
@@ -66125,6 +66619,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus d'autoliquidació (originària / substitutiva / complementària)
+          construct:
+            modelo-592-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '604':
@@ -66140,6 +66638,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (mes natural)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '714':
@@ -66209,6 +66711,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidació - Total quota íntegra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: null
           field:
             label: null
     '720':
@@ -66240,6 +66746,10 @@ modelo:
             x-epgmorriclpistj1dhnn4ob3d5nms:
               help: null
               label: Valoració de valors, drets, assegurances o rendes situats a l'estranger
+          construct:
+            modelo-720-informative:
+              field:
+                title: null
           field:
             label: null
     '721':
@@ -66274,6 +66784,10 @@ modelo:
               help: null
               label: Saldo o valor de la moneda virtual a l'inici del període (per
                 a variacions significatives)
+          construct:
+            modelo-721-informative:
+              field:
+                title: null
           field:
             label: null
     '763':
@@ -66289,6 +66803,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Període (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '840':
@@ -66304,6 +66822,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (alta / variació / baixa)
+          construct:
+            modelo-840-iae-declaration:
+              field:
+                title: null
           field:
             label: null
     '848':
@@ -66319,6 +66841,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipus de declaració (originària / substitutiva / complementària)
+          construct:
+            modelo-848-informative:
+              field:
+                title: null
           field:
             label: null
 profile:

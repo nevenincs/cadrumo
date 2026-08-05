@@ -7092,6 +7092,10 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Jogszabályi hatály 2025. február 3-tól
+          construct:
+            modelo-036-censo-foundation:
+              field:
+                title: null
           field:
             label: null
     038:
@@ -7107,6 +7111,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-038-informative:
+              field:
+                title: null
           field:
             label: null
     '100':
@@ -13533,6 +13541,37 @@ modelo:
             '1654':
               help: null
               label: null
+          construct:
+            renta-2020-dependent-modelos:
+              field:
+                title: null
+            renta-2020-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2020-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2020-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2020-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2020-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2020-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2020-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2020-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2021':
@@ -18616,6 +18655,37 @@ modelo:
             '1799':
               help: null
               label: null
+          construct:
+            renta-2021-dependent-modelos:
+              field:
+                title: null
+            renta-2021-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2021-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2021-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2021-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2021-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2021-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2021-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2021-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2022':
@@ -24177,6 +24247,37 @@ modelo:
             '1916':
               help: null
               label: null
+          construct:
+            renta-2022-dependent-modelos:
+              field:
+                title: null
+            renta-2022-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2022-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2022-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2022-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2022-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2022-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2022-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2022-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2023':
@@ -29969,6 +30070,37 @@ modelo:
             '1995':
               help: null
               label: null
+          construct:
+            renta-2023-dependent-modelos:
+              field:
+                title: null
+            renta-2023-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2023-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2023-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2023-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2023-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2023-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2023-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2023-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2024':
@@ -38715,6 +38847,46 @@ modelo:
             ZRUE2:
               help: null
               label: null
+          construct:
+            renta-2024-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: null
+            renta-2024-dependent-modelos:
+              field:
+                title: null
+            renta-2024-final-settlement:
+              field:
+                title: null
+            renta-2024-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2024-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2024-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2024-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2024-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2024-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2024-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2024-mini-model-trabajo:
+              field:
+                title: null
+            renta-2024-personal-family:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2025':
@@ -46403,6 +46575,64 @@ modelo:
                 ebben az egyetlen adóévben beszámítva (az az alap, amelyre a törvény
                 32.1. cikke szerinti 30%-os csökkentést alkalmazzák; az üzemeltető
                 által bevallott összeg — lásd az [1554] rovatot)
+          construct:
+            renta-2025-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2025-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2025-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2025-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion:
+              field:
+                title: null
+            renta-2025-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2025-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
+            renta-dependent-modelos:
+              field:
+                title: null
+            renta-economic-activities:
+              field:
+                title: null
+            renta-final-settlement:
+              field:
+                title: null
+            renta-movable-capital:
+              field:
+                title: null
+            renta-observation-parsing:
+              field:
+                title: null
+            renta-payments-retentions:
+              field:
+                title: null
+            renta-personal-family:
+              field:
+                title: null
+            renta-real-estate-capital:
+              field:
+                title: null
+            renta-source-foundation:
+              field:
+                title: null
+            renta-work-income:
+              field:
+                title: null
           field:
             label: null
     '111':
@@ -46512,6 +46742,10 @@ modelo:
             '30':
               help: null
               label: Befizetendő eredmény
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: null
           field:
             label: null
     '115':
@@ -46536,6 +46770,10 @@ modelo:
             '05':
               help: null
               label: Befizetendő eredmény
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: null
           field:
             label: null
     '117':
@@ -46578,6 +46816,10 @@ modelo:
             '11':
               help: null
               label: null
+          construct:
+            modelo-117-total-liquidacion-calculation:
+              field:
+                title: null
           field:
             label: null
     '121':
@@ -46593,6 +46835,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bejelentés típusa (bejegyzés / módosítás / törlés)
+          construct:
+            modelo-121-comunicacion:
+              field:
+                title: null
           field:
             label: null
     '122':
@@ -46608,6 +46854,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-122-regularizacion:
+              field:
+                title: null
           field:
             label: null
     '123':
@@ -46641,6 +46891,10 @@ modelo:
             08:
               help: null
               label: Befizetendő eredmény
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: null
           field:
             label: null
         2024-y-siguientes:
@@ -46688,6 +46942,10 @@ modelo:
             '14':
               help: null
               label: Befizetendő eredmény
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: null
           field:
             label: null
     '126':
@@ -46733,6 +46991,10 @@ modelo:
             '12':
               help: null
               label: null
+          construct:
+            modelo-126-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '128':
@@ -46764,6 +47026,10 @@ modelo:
             '07':
               help: null
               label: Befizetendő összeg
+          construct:
+            modelo-128-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '130':
@@ -46849,6 +47115,10 @@ modelo:
               help: Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben
                 a 15. mező levonásaként használható.
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
     '131':
@@ -46993,6 +47263,10 @@ modelo:
             saldo-negativo-fin-periodo:
               help: null
               label: null
+          construct:
+            modelo-131-2019-2023-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2024':
@@ -47146,6 +47420,10 @@ modelo:
             saldo-negativo-fin-periodo:
               help: null
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
+          construct:
+            modelo-131-2024-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2025':
@@ -47299,6 +47577,10 @@ modelo:
             saldo-negativo-fin-periodo:
               help: null
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
+          construct:
+            modelo-131-2025-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2026':
@@ -47413,6 +47695,10 @@ modelo:
             saldo-negativo-fin-periodo:
               help: null
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
+          construct:
+            modelo-131-2026-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
     '136':
@@ -47497,6 +47783,10 @@ modelo:
               help: null
               label: Az SZJA-adózó szokásos tartózkodási helye szerinti tartomány
                 kódja
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '140':
@@ -47512,6 +47802,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Kérelem típusa (bejegyzés / módosítás / törlés)
+          construct:
+            modelo-140-informative:
+              field:
+                title: null
           field:
             label: null
     '143':
@@ -47527,6 +47821,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Kérelem típusa (bejegyzés / módosítás / törlés)
+          construct:
+            modelo-143-informative:
+              field:
+                title: null
           field:
             label: null
     '145':
@@ -47735,6 +48033,10 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: null
               label: Visszatartások és előlegfizetések (93.2.f cikk)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: null
           field:
             label: null
         2025-y-siguientes:
@@ -47770,6 +48072,10 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: null
               label: Levonások és előlegfizetések (előlegfizetések, 93.2.f cikk)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: null
           field:
             label: null
     '156':
@@ -47785,6 +48091,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-156-informative:
+              field:
+                title: null
           field:
             label: null
     '165':
@@ -47800,6 +48110,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-165-informative:
+              field:
+                title: null
           field:
             label: null
     '179':
@@ -47815,6 +48129,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-179-informative:
+              field:
+                title: null
           field:
             label: null
     '180':
@@ -47995,6 +48313,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Az ingatlan helyzete
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
           field:
             label: null
         2023-y-siguientes:
@@ -48090,6 +48412,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Az ingatlan helyzete
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '181':
@@ -48105,6 +48431,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-181-informative:
+              field:
+                title: null
           field:
             label: null
     '182':
@@ -48139,6 +48469,10 @@ modelo:
               help: null
               label: Ismétlődő adomány jelzője (több évre szóló adomány ugyanazon
                 kedvezményezett szervezetnek, két vagy több egymást követő adóévben)
+          construct:
+            modelo-182-informative:
+              field:
+                title: null
           field:
             label: null
     '184':
@@ -48173,6 +48507,10 @@ modelo:
               help: null
               label: A hozzárendelt jövedelem altípuskódja (belföldi/külföldi eredet
                 szerinti részletezés, alkalmazandó csökkentések stb.)
+          construct:
+            modelo-184-informative:
+              field:
+                title: null
           field:
             label: null
     '185':
@@ -48188,6 +48526,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-185-informative:
+              field:
+                title: null
           field:
             label: null
     '186':
@@ -48203,6 +48545,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-186-informative:
+              field:
+                title: null
           field:
             label: null
     '187':
@@ -48221,6 +48567,10 @@ modelo:
             '05':
               help: null
               label: Az éves összesítő teljes levonása
+          construct:
+            modelo-187-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '188':
@@ -48239,6 +48589,10 @@ modelo:
             '05':
               help: null
               label: Az éves összesítő teljes levonása
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '189':
@@ -48293,6 +48647,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: A kifizetések teljes száma
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '193':
@@ -48311,6 +48669,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               help: null
               label: A kedvezményezettek teljes száma
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '194':
@@ -48329,6 +48691,10 @@ modelo:
             '05':
               help: null
               label: Az éves összesítő teljes levonása
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '200':
@@ -63030,6 +63396,10 @@ modelo:
               help: null
               label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási
                 százalékok számítása - Állami közigazgatás [00625]
+          construct:
+            modelo-200-2024-foundation:
+              field:
+                title: null
           field:
             label: null
     '202':
@@ -63349,6 +63719,10 @@ modelo:
               help: null
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk — Kiegyenlítési
                 tartalék (LIS 105. cikk) — Csökkenések
+          construct:
+            modelo-202-2019-2022-foundation:
+              field:
+                title: null
           field:
             label: null
         2023-2024:
@@ -63511,6 +63885,10 @@ modelo:
               help: null
               label: A LIS 40.3. cikke szerinti módszer, B2 blokk — Kiegyenlítési
                 tartalék (LIS 105. cikk) — Csökkenések
+          construct:
+            modelo-202-2023-2024-foundation:
+              field:
+                title: null
           field:
             label: null
         2025-y-siguientes:
@@ -63697,6 +64075,10 @@ modelo:
               help: null
               label: A LIS 40.3. cikke szerinti módszer — Kiegészítő adó (IC) szerinti
                 korrekciók — Növekedések
+          construct:
+            modelo-202-foundation:
+              field:
+                title: null
           field:
             label: null
     '210':
@@ -63812,6 +64194,10 @@ modelo:
             valor_comprobado_administracion:
               help: null
               label: Az adóhatóság által megállapított érték
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: null
           field:
             label: null
     '216':
@@ -63847,6 +64233,10 @@ modelo:
             '21':
               help: null
               label: Befizetendő eredmény
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '220':
@@ -63862,6 +64252,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: null
           field:
             label: null
     '222':
@@ -63878,6 +64272,10 @@ modelo:
               help: null
               label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
                 adóalap)
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: null
           field:
             label: null
     '231':
@@ -63948,6 +64346,10 @@ modelo:
               help: null
               label: Üzleti év típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
                 rövidebb)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
           field:
             label: null
         2018-y-siguientes:
@@ -64112,6 +64514,10 @@ modelo:
               help: null
               label: Adóév típusa (12 naptári hónap / 12 hónap 365 nap / 12 hónapnál
                 rövidebb)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
           field:
             label: null
     '233':
@@ -64127,6 +64533,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-233-informative:
+              field:
+                title: null
           field:
             label: null
     '234':
@@ -64142,6 +64552,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-234-informative:
+              field:
+                title: null
           field:
             label: null
     '238':
@@ -64157,6 +64571,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-238-informative:
+              field:
+                title: null
           field:
             label: null
     '270':
@@ -64172,6 +64590,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-270-informative:
+              field:
+                title: null
           field:
             label: null
     '280':
@@ -64295,6 +64717,10 @@ modelo:
             '05':
               help: null
               label: Az éves összesítő teljes levonása
+          construct:
+            modelo-296-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '303':
@@ -65079,6 +65505,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Levonható ÁFA összeg belföldi folyó ügyletek után
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
         2023-y-siguientes:
@@ -65587,6 +66017,10 @@ modelo:
               help: A belföldi termékbeszerzések és szolgáltatásigénybevételek után
                 fizetett, levonható ÁFA.
               label: Levonható ÁFA összeg belföldi folyó ügyletek után
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '308':
@@ -65603,6 +66037,10 @@ modelo:
               help: null
               label: Kérelem típusa (egyenértékűségi felár / 30a. cikk / 21.4. cikk
                 / eseti adóalany / egyszerűsített szállítási szabályozás)
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
           field:
             label: null
     '309':
@@ -65631,6 +66069,10 @@ modelo:
               help: null
               label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
                 felár keretében (utasoknak járó visszatérítés)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
           field:
             label: null
     '322':
@@ -65672,6 +66114,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Előzetesen felszámított HÉA belföldi folyó ügyletek után
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: null
           field:
             label: null
     '341':
@@ -65687,6 +66133,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Az önadózás elszámolási időszaka
+          construct:
+            modelo-341-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '345':
@@ -65824,6 +66274,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-347-informative:
+              field:
+                title: null
           field:
             label: null
     '349':
@@ -65872,6 +66326,10 @@ modelo:
             x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
               help: null
               label: Helyesbített időszak
+          construct:
+            modelo-349-informative:
+              field:
+                title: null
           field:
             label: null
     '353':
@@ -65924,6 +66382,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Folyó belföldi ügyletek után viselt ÁFA - csoportösszesítés
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
           field:
             label: null
     '360':
@@ -65939,6 +66401,10 @@ modelo:
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
               help: null
               label: A visszatérítés szerinti tagállam, ahol az adót megfizették
+          construct:
+            modelo-360-iva-devolucion-ue:
+              field:
+                title: null
           field:
             label: null
     '361':
@@ -65989,6 +66455,10 @@ modelo:
               help: null
               label: DE célországba áthárított HÉA — nyújtott szolgáltatások (nem
                 uniós szabályozás)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: null
           field:
             label: null
         esquema-importacion:
@@ -66007,6 +66477,10 @@ modelo:
               help: null
               label: IOSS HÉA a DE célországba — behozott áruk távértékesítése ≤ 150
                 EUR (LIVA 163. quinvicies cikk)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: null
           field:
             label: null
         esquema-union:
@@ -66033,6 +66507,10 @@ modelo:
               help: null
               label: OSS uniós rendszer IVA-összege FR célországba — nyújtott szolgáltatások
                 (LIVA 163. unvicies cikk)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: null
           field:
             label: null
     '379':
@@ -66111,6 +66589,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Az önadózás elszámolási időszaka
+          construct:
+            modelo-380-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '390':
@@ -66192,6 +66674,10 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: Folyó belföldi ügyletek után viselt ÁFA - éves
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
           field:
             label: null
     '490':
@@ -66207,6 +66693,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (naptári negyedév)
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '576':
@@ -66222,6 +66712,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Önadózás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-576-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '592':
@@ -66237,6 +66731,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Önadózás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-592-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '604':
@@ -66252,6 +66750,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (naptári hónap)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '714':
@@ -66320,6 +66822,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Elszámolás - Bruttó adó összesen
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: null
           field:
             label: null
     '720':
@@ -66352,6 +66858,10 @@ modelo:
               help: null
               label: Külföldön található értékpapírok, jogok, biztosítások vagy jövedelmek
                 értékelése
+          construct:
+            modelo-720-informative:
+              field:
+                title: null
           field:
             label: null
     '721':
@@ -66386,6 +66896,10 @@ modelo:
               help: null
               label: A virtuális pénznem egyenlege vagy értéke az időszak elején (jelentős
                 változások esetén)
+          construct:
+            modelo-721-informative:
+              field:
+                title: null
           field:
             label: null
     '763':
@@ -66401,6 +66915,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Időszak (naptári negyedév)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '840':
@@ -66416,6 +66934,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (bejegyzés / módosítás / törlés)
+          construct:
+            modelo-840-iae-declaration:
+              field:
+                title: null
           field:
             label: null
     '848':
@@ -66431,6 +66953,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          construct:
+            modelo-848-informative:
+              field:
+                title: null
           field:
             label: null
 profile:

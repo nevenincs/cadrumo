@@ -1,6 +1,5 @@
 [[revisions."2025-y-siguientes".constructs]]
 id = "modelo-185-informative"
-title = "Modelo 185 declaración informativa"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure", "enrolled-modelo-185-layout"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]

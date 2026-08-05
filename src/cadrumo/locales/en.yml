@@ -6756,6 +6756,10 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Regulation in force from 3 February 2025
+          construct:
+            modelo-036-censo-foundation:
+              field:
+                title: null
           field:
             label: null
     038:
@@ -6771,6 +6775,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-038-informative:
+              field:
+                title: null
           field:
             label: null
     '100':
@@ -13198,6 +13206,37 @@ modelo:
             '1654':
               help: null
               label: null
+          construct:
+            renta-2020-dependent-modelos:
+              field:
+                title: null
+            renta-2020-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2020-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2020-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2020-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2020-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2020-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2020-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2020-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2021':
@@ -18281,6 +18320,37 @@ modelo:
             '1799':
               help: null
               label: null
+          construct:
+            renta-2021-dependent-modelos:
+              field:
+                title: null
+            renta-2021-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2021-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2021-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2021-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2021-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2021-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2021-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2021-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2022':
@@ -23843,6 +23913,37 @@ modelo:
             '1916':
               help: null
               label: null
+          construct:
+            renta-2022-dependent-modelos:
+              field:
+                title: null
+            renta-2022-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2022-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2022-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2022-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2022-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2022-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2022-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2022-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2023':
@@ -29636,6 +29737,37 @@ modelo:
             '1995':
               help: null
               label: null
+          construct:
+            renta-2023-dependent-modelos:
+              field:
+                title: null
+            renta-2023-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2023-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2023-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2023-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2023-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2023-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2023-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2023-mini-model-trabajo:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2024':
@@ -38179,6 +38311,46 @@ modelo:
             ZRUE2:
               help: null
               label: null
+          construct:
+            renta-2024-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: null
+            renta-2024-dependent-modelos:
+              field:
+                title: null
+            renta-2024-final-settlement:
+              field:
+                title: null
+            renta-2024-mini-model-actividades-economicas-directa:
+              field:
+                title: null
+            renta-2024-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2024-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2024-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2024-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2024-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2024-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-2024-mini-model-trabajo:
+              field:
+                title: null
+            renta-2024-personal-family:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
           field:
             label: null
         '2025':
@@ -45768,6 +45940,64 @@ modelo:
                 single tax period (the base to which the 30% reduction of article
                 32.1 of the Tax Law applies; amount declared by the filer — see box
                 [1554])
+          construct:
+            renta-2025-mini-model-actividades-economicas-objetiva:
+              field:
+                title: null
+            renta-2025-mini-model-base-y-cuota:
+              field:
+                title: null
+            renta-2025-mini-model-capital-inmobiliario:
+              field:
+                title: null
+            renta-2025-mini-model-capital-mobiliario:
+              field:
+                title: null
+            renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion:
+              field:
+                title: null
+            renta-2025-mini-model-ganancias-patrimoniales:
+              field:
+                title: null
+            renta-2025-mini-model-regimenes-especiales:
+              field:
+                title: null
+            renta-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: null
+            renta-cuota-chain:
+              field:
+                title: null
+            renta-dependent-modelos:
+              field:
+                title: null
+            renta-economic-activities:
+              field:
+                title: null
+            renta-final-settlement:
+              field:
+                title: null
+            renta-movable-capital:
+              field:
+                title: null
+            renta-observation-parsing:
+              field:
+                title: null
+            renta-payments-retentions:
+              field:
+                title: null
+            renta-personal-family:
+              field:
+                title: null
+            renta-real-estate-capital:
+              field:
+                title: null
+            renta-source-foundation:
+              field:
+                title: null
+            renta-work-income:
+              field:
+                title: null
           field:
             label: null
     '111':
@@ -45867,6 +46097,10 @@ modelo:
             '30':
               help: null
               label: Result payable
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: null
           field:
             label: null
     '115':
@@ -45891,6 +46125,10 @@ modelo:
             '05':
               help: null
               label: Result payable
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: null
           field:
             label: null
     '117':
@@ -45933,6 +46171,10 @@ modelo:
             '11':
               help: null
               label: null
+          construct:
+            modelo-117-total-liquidacion-calculation:
+              field:
+                title: null
           field:
             label: null
     '121':
@@ -45948,6 +46190,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Notification type (registration / amendment / deregistration)
+          construct:
+            modelo-121-comunicacion:
+              field:
+                title: null
           field:
             label: null
     '122':
@@ -45963,6 +46209,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-122-regularizacion:
+              field:
+                title: null
           field:
             label: null
     '123':
@@ -45996,6 +46246,10 @@ modelo:
             08:
               help: null
               label: Result payable
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: null
           field:
             label: null
         2024-y-siguientes:
@@ -46042,6 +46296,10 @@ modelo:
             '14':
               help: null
               label: Result payable
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: null
           field:
             label: null
     '126':
@@ -46087,6 +46345,10 @@ modelo:
             '12':
               help: null
               label: null
+          construct:
+            modelo-126-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '128':
@@ -46118,6 +46380,10 @@ modelo:
             '07':
               help: null
               label: Amount due
+          construct:
+            modelo-128-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '130':
@@ -46204,6 +46470,10 @@ modelo:
                 as deductible casilla 15 in a later quarter.
               label: Negative balance transferable to later periods (max 0, -casilla
                 17)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
     '131':
@@ -46348,6 +46618,10 @@ modelo:
             saldo-negativo-fin-periodo:
               help: null
               label: null
+          construct:
+            modelo-131-2019-2023-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2024':
@@ -46498,6 +46772,10 @@ modelo:
               help: null
               label: Negative balance carried forward to later periods (max. 0, -box
                 10)
+          construct:
+            modelo-131-2024-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2025':
@@ -46648,6 +46926,10 @@ modelo:
               help: null
               label: Negative balance carried forward to later periods (max. 0, -box
                 10)
+          construct:
+            modelo-131-2025-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
         '2026':
@@ -46761,6 +47043,10 @@ modelo:
               help: null
               label: Negative balance carried forward to later periods (max. 0, -box
                 10)
+          construct:
+            modelo-131-2026-objective-estimation-instalment:
+              field:
+                title: null
           field:
             label: null
     '136':
@@ -46845,6 +47131,10 @@ modelo:
             provincia-residencia-irpf:
               help: null
               label: Code of the taxpayer's habitual residence province for IRPF purposes
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '140':
@@ -46860,6 +47150,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Request type (registration / amendment / deregistration)
+          construct:
+            modelo-140-informative:
+              field:
+                title: null
           field:
             label: null
     '143':
@@ -46875,6 +47169,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Request type (registration / amendment / deregistration)
+          construct:
+            modelo-143-informative:
+              field:
+                title: null
           field:
             label: null
     '145':
@@ -47082,6 +47380,10 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: null
               label: Withholdings and advance payments (art. 93.2.f)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: null
           field:
             label: null
         2025-y-siguientes:
@@ -47117,6 +47419,10 @@ modelo:
               help: null
               label: Withholdings and advance payments (payments on account, art.
                 93.2.f)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: null
           field:
             label: null
     '156':
@@ -47132,6 +47438,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-156-informative:
+              field:
+                title: null
           field:
             label: null
     '165':
@@ -47147,6 +47457,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-165-informative:
+              field:
+                title: null
           field:
             label: null
     '179':
@@ -47162,6 +47476,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-179-informative:
+              field:
+                title: null
           field:
             label: null
     '180':
@@ -47341,6 +47659,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Status of the property
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
           field:
             label: null
         2023-y-siguientes:
@@ -47435,6 +47757,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Status of the property
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '181':
@@ -47450,6 +47776,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-181-informative:
+              field:
+                title: null
           field:
             label: null
     '182':
@@ -47484,6 +47814,10 @@ modelo:
               help: null
               label: Recurring donation indicator (multi-year donation to the same
                 donee entity, two or more consecutive tax years)
+          construct:
+            modelo-182-informative:
+              field:
+                title: null
           field:
             label: null
     '184':
@@ -47517,6 +47851,10 @@ modelo:
               help: null
               label: Attributed-income subtype key (granularity by domestic/foreign
                 geographic origin, applicable reductions, etc.)
+          construct:
+            modelo-184-informative:
+              field:
+                title: null
           field:
             label: null
     '185':
@@ -47532,6 +47870,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-185-informative:
+              field:
+                title: null
           field:
             label: null
     '186':
@@ -47547,6 +47889,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-186-informative:
+              field:
+                title: null
           field:
             label: null
     '187':
@@ -47565,6 +47911,10 @@ modelo:
             '05':
               help: null
               label: Total withholdings on the annual summary
+          construct:
+            modelo-187-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '188':
@@ -47583,6 +47933,10 @@ modelo:
             '05':
               help: null
               label: Total withholdings on the annual summary
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '189':
@@ -47638,6 +47992,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Total number of payments made
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '193':
@@ -47656,6 +48014,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               help: null
               label: Total number of recipients
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: null
           field:
             label: null
     '194':
@@ -47674,6 +48036,10 @@ modelo:
             '05':
               help: null
               label: Total withholdings on the annual summary
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '200':
@@ -62567,6 +62933,10 @@ modelo:
               help: null
               label: Joint taxation, State and regional (foral) administrations -
                 Calculation of taxation percentages - State Administration [00625]
+          construct:
+            modelo-200-2024-foundation:
+              field:
+                title: null
           field:
             label: null
     '202':
@@ -62876,6 +63246,10 @@ modelo:
               help: null
               label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
                 105 LIS) — Decreases
+          construct:
+            modelo-202-2019-2022-foundation:
+              field:
+                title: null
           field:
             label: null
         2023-2024:
@@ -63033,6 +63407,10 @@ modelo:
               help: null
               label: Method under art. 40.3 LIS, block B2 — Levelling reserve (art.
                 105 LIS) — Decreases
+          construct:
+            modelo-202-2023-2024-foundation:
+              field:
+                title: null
           field:
             label: null
         2025-y-siguientes:
@@ -63213,6 +63591,10 @@ modelo:
             '67':
               help: null
               label: Method under art. 40.3 LIS — Top-up Tax (IC) adjustments — Increases
+          construct:
+            modelo-202-foundation:
+              field:
+                title: null
           field:
             label: null
     '210':
@@ -63327,6 +63709,10 @@ modelo:
             valor_comprobado_administracion:
               help: null
               label: Value assessed by the Tax Administration
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: null
           field:
             label: null
     '216':
@@ -63361,6 +63747,10 @@ modelo:
             '21':
               help: null
               label: Result payable
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '220':
@@ -63376,6 +63766,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: null
           field:
             label: null
     '222':
@@ -63392,6 +63786,10 @@ modelo:
               help: null
               label: Instalment payment method (art. 40.2 gross tax liability / art.
                 40.3 taxable base)
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: null
           field:
             label: null
     '231':
@@ -63460,6 +63858,10 @@ modelo:
               help: null
               label: Financial year type (12 calendar months / 12 months of 365 days
                 / less than 12 months)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
           field:
             label: null
         2018-y-siguientes:
@@ -63624,6 +64026,10 @@ modelo:
               help: null
               label: Type of tax year (12 calendar months / 12 months of 365 days
                 / fewer than 12 months)
+          construct:
+            modelo-232-informative:
+              field:
+                title: null
           field:
             label: null
     '233':
@@ -63639,6 +64045,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-233-informative:
+              field:
+                title: null
           field:
             label: null
     '234':
@@ -63654,6 +64064,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-234-informative:
+              field:
+                title: null
           field:
             label: null
     '238':
@@ -63669,6 +64083,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-238-informative:
+              field:
+                title: null
           field:
             label: null
     '270':
@@ -63684,6 +64102,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-270-informative:
+              field:
+                title: null
           field:
             label: null
     '280':
@@ -63807,6 +64229,10 @@ modelo:
             '05':
               help: null
               label: Total withholdings on the annual summary
+          construct:
+            modelo-296-calculation-construct:
+              field:
+                title: null
           field:
             label: null
     '303':
@@ -64562,6 +64988,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Deductible input VAT on domestic current transactions
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
         2023-y-siguientes:
@@ -65053,6 +65483,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Deductible input VAT borne on domestic current transactions.
               label: Deductible input VAT on domestic current transactions
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '308':
@@ -65069,6 +65503,10 @@ modelo:
               help: null
               label: Request type (equivalence surcharge / art 30 bis / art 21.4 /
                 occasional taxable person / simplified transport regime)
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: null
           field:
             label: null
     '309':
@@ -65096,6 +65534,10 @@ modelo:
               help: null
               label: Input VAT borne by retailers under the equivalence surcharge
                 (traveller refund)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: null
           field:
             label: null
     '322':
@@ -65136,6 +65578,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Input VAT on domestic current transactions
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: null
           field:
             label: null
     '341':
@@ -65151,6 +65597,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Settlement period to which the self-assessment relates
+          construct:
+            modelo-341-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '345':
@@ -65288,6 +65738,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-347-informative:
+              field:
+                title: null
           field:
             label: null
     '349':
@@ -65337,6 +65791,10 @@ modelo:
             x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
               help: null
               label: Corrected period
+          construct:
+            modelo-349-informative:
+              field:
+                title: null
           field:
             label: null
     '353':
@@ -65386,6 +65844,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: VAT borne on ordinary domestic transactions - group aggregate
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: null
           field:
             label: null
     '360':
@@ -65401,6 +65863,10 @@ modelo:
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
               help: null
               label: Member State of refund where the tax was borne
+          construct:
+            modelo-360-iva-devolucion-ue:
+              field:
+                title: null
           field:
             label: null
     '361':
@@ -65451,6 +65917,10 @@ modelo:
               help: null
               label: VAT output tax to destination DE — services supplied (Non-Union
                 scheme)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: null
           field:
             label: null
         esquema-importacion:
@@ -65468,6 +65938,10 @@ modelo:
               help: null
               label: IOSS VAT to destination DE — distance sales of imported goods
                 ≤ EUR 150 (LIVA art. 163 quinvicies)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: null
           field:
             label: null
         esquema-union:
@@ -65494,6 +65968,10 @@ modelo:
               help: null
               label: OSS Union scheme VAT amount to destination FR — services supplied
                 (LIVA art. 163 unvicies)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: null
           field:
             label: null
     '379':
@@ -65572,6 +66050,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Settlement period to which the self-assessment relates
+          construct:
+            modelo-380-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '390':
@@ -65653,6 +66135,10 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: VAT borne on ordinary domestic transactions - annual
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: null
           field:
             label: null
     '490':
@@ -65668,6 +66154,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (calendar quarter)
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '576':
@@ -65683,6 +66173,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Self-assessment type (original / substitute / supplementary)
+          construct:
+            modelo-576-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '592':
@@ -65698,6 +66192,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Self-assessment type (original / substitute / supplementary)
+          construct:
+            modelo-592-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '604':
@@ -65713,6 +66211,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (calendar month)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '714':
@@ -65783,6 +66285,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Settlement - Total gross tax liability
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: null
           field:
             label: null
     '720':
@@ -65815,6 +66321,10 @@ modelo:
               help: null
               label: Valuation of securities, rights, insurance policies or income
                 located abroad
+          construct:
+            modelo-720-informative:
+              field:
+                title: null
           field:
             label: null
     '721':
@@ -65847,6 +66357,10 @@ modelo:
               help: null
               label: Balance or value of the virtual currency at the start of the
                 period (for significant variations)
+          construct:
+            modelo-721-informative:
+              field:
+                title: null
           field:
             label: null
     '763':
@@ -65862,6 +66376,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Period (calendar quarter)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: null
           field:
             label: null
     '840':
@@ -65877,6 +66395,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (registration / change / deregistration)
+          construct:
+            modelo-840-iae-declaration:
+              field:
+                title: null
           field:
             label: null
     '848':
@@ -65892,6 +66414,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Return type (original / substitute / supplementary)
+          construct:
+            modelo-848-informative:
+              field:
+                title: null
           field:
             label: null
 profile:

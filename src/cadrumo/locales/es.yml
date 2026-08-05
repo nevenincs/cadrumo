@@ -7270,6 +7270,10 @@ modelo:
             x-chim6r1eepkmepbecdkm2b9i60p3a:
               help: null
               label: Vigencia normativa desde 3 de febrero de 2025
+          construct:
+            modelo-036-censo-foundation:
+              field:
+                title: Modelo 036 censo foundation
           field:
             label: Modelo 036 desde 3 de febrero de 2025
     038:
@@ -7287,6 +7291,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-038-informative:
+              field:
+                title: Modelo 038 declaración informativa
           field:
             label: Modelo 038 (orden-hac-66-2002), ejercicios 2002 y siguientes
     '100':
@@ -14669,6 +14677,38 @@ modelo:
             '1654':
               help: null
               label: Ganancia patrimonial reducida no exenta imputable a 2020
+          construct:
+            renta-2020-dependent-modelos:
+              field:
+                title: Modelo 100 2020 retenciones, pagos fraccionados and withholding
+                  cross-modelo inputs
+            renta-2020-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2020 estimacion directa aggregators
+            renta-2020-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2020 estimacion objetiva aggregators
+            renta-2020-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2020 base imponible / base liquidable / cuota aggregators
+            renta-2020-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2020 capital inmobiliario aggregators
+            renta-2020-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2020 capital mobiliario aggregators
+            renta-2020-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2020 ganancias y perdidas patrimoniales aggregators
+            renta-2020-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2020 atribucion / imputacion de rentas aggregators
+            renta-2020-mini-model-trabajo:
+              field:
+                title: Modelo 100 2020 rendimientos del trabajo aggregators
+            renta-cuota-chain:
+              field:
+                title: Modelo 100 cuota-chain calculation
           field:
             label: Ejercicio 2020
         '2021':
@@ -20563,6 +20603,38 @@ modelo:
             '1799':
               help: null
               label: Código País/Country code
+          construct:
+            renta-2021-dependent-modelos:
+              field:
+                title: Modelo 100 2021 retenciones, pagos fraccionados and withholding
+                  cross-modelo inputs
+            renta-2021-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2021 estimacion directa aggregators
+            renta-2021-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2021 estimacion objetiva aggregators
+            renta-2021-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2021 base imponible / base liquidable / cuota aggregators
+            renta-2021-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2021 capital inmobiliario aggregators
+            renta-2021-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2021 capital mobiliario aggregators
+            renta-2021-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2021 ganancias y perdidas patrimoniales aggregators
+            renta-2021-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2021 atribucion / imputacion de rentas aggregators
+            renta-2021-mini-model-trabajo:
+              field:
+                title: Modelo 100 2021 rendimientos del trabajo aggregators
+            renta-cuota-chain:
+              field:
+                title: Modelo 100 cuota-chain calculation
           field:
             label: Ejercicio 2021
         '2022':
@@ -27028,6 +27100,38 @@ modelo:
               help: null
               label: Incremento por gastos en guarderías o centros de educación infantil
                 autorizados (cantidades no aplicadas en el ejercicio 2021)
+          construct:
+            renta-2022-dependent-modelos:
+              field:
+                title: Modelo 100 2022 retenciones, pagos fraccionados and withholding
+                  cross-modelo inputs
+            renta-2022-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2022 estimacion directa aggregators
+            renta-2022-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2022 estimacion objetiva aggregators
+            renta-2022-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2022 base imponible / base liquidable / cuota aggregators
+            renta-2022-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2022 capital inmobiliario aggregators
+            renta-2022-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2022 capital mobiliario aggregators
+            renta-2022-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2022 ganancias y perdidas patrimoniales aggregators
+            renta-2022-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2022 atribucion / imputacion de rentas aggregators
+            renta-2022-mini-model-trabajo:
+              field:
+                title: Modelo 100 2022 rendimientos del trabajo aggregators
+            renta-cuota-chain:
+              field:
+                title: Modelo 100 cuota-chain calculation
           field:
             label: Ejercicio 2022
         '2023':
@@ -33777,6 +33881,38 @@ modelo:
               help: null
               label: 'Deducción por adopción: Importe pendiente a solicitar por el
                 contribuyente'
+          construct:
+            renta-2023-dependent-modelos:
+              field:
+                title: Modelo 100 2023 retenciones, pagos fraccionados and withholding
+                  cross-modelo inputs
+            renta-2023-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2023 estimacion directa aggregators
+            renta-2023-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2023 estimacion objetiva aggregators
+            renta-2023-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2023 base imponible / base liquidable / cuota aggregators
+            renta-2023-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2023 capital inmobiliario aggregators
+            renta-2023-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2023 capital mobiliario aggregators
+            renta-2023-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2023 ganancias y perdidas patrimoniales aggregators
+            renta-2023-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2023 atribucion / imputacion de rentas aggregators
+            renta-2023-mini-model-trabajo:
+              field:
+                title: Modelo 100 2023 rendimientos del trabajo aggregators
+            renta-cuota-chain:
+              field:
+                title: Modelo 100 cuota-chain calculation
           field:
             label: Ejercicio 2023
         '2024':
@@ -41021,6 +41157,47 @@ modelo:
             ZRUE2:
               help: null
               label: Pais UE o EEE del conyuge
+          construct:
+            renta-2024-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: Modelo 100 Anexo C base liquidable general negativa carry-forward
+            renta-2024-dependent-modelos:
+              field:
+                title: Modelo 100 2024 retenciones, pagos fraccionados and withholding
+                  cross-modelo inputs
+            renta-2024-final-settlement:
+              field:
+                title: Modelo 100 2024 final settlement result
+            renta-2024-mini-model-actividades-economicas-directa:
+              field:
+                title: Modelo 100 2024 estimacion directa aggregators
+            renta-2024-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2024 estimacion objetiva aggregators
+            renta-2024-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2024 base imponible / base liquidable / cuota aggregators
+            renta-2024-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2024 capital inmobiliario aggregators
+            renta-2024-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2024 capital mobiliario aggregators
+            renta-2024-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2024 ganancias y perdidas patrimoniales aggregators
+            renta-2024-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2024 atribucion / imputacion de rentas aggregators
+            renta-2024-mini-model-trabajo:
+              field:
+                title: Modelo 100 2024 rendimientos del trabajo aggregators
+            renta-2024-personal-family:
+              field:
+                title: Modelo 100 2024 personal and family profile inputs
+            renta-cuota-chain:
+              field:
+                title: Modelo 100 cuota-chain calculation
           field:
             label: Ejercicio 2024
         '2025':
@@ -48674,6 +48851,65 @@ modelo:
                 en este único período impositivo (base sobre la que se aplica la reducción
                 del 30 por 100 del artículo 32.1 de la Ley del Impuesto; importe declarado
                 por el operador — véase la casilla [1554])
+          construct:
+            renta-2025-mini-model-actividades-economicas-objetiva:
+              field:
+                title: Modelo 100 2025 estimacion objetiva aggregators
+            renta-2025-mini-model-base-y-cuota:
+              field:
+                title: Modelo 100 2025 base imponible / base liquidable / cuota aggregators
+            renta-2025-mini-model-capital-inmobiliario:
+              field:
+                title: Modelo 100 2025 capital inmobiliario aggregators
+            renta-2025-mini-model-capital-mobiliario:
+              field:
+                title: Modelo 100 2025 capital mobiliario aggregators
+            renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion:
+              field:
+                title: Modelo 100 2025 Comunidad de Madrid nacimiento/adopción deducción
+                  (casilla 1039)
+            renta-2025-mini-model-ganancias-patrimoniales:
+              field:
+                title: Modelo 100 2025 ganancias y perdidas patrimoniales aggregators
+            renta-2025-mini-model-regimenes-especiales:
+              field:
+                title: Modelo 100 2025 atribucion / imputacion de rentas aggregators
+            renta-anexo-c-base-liquidable-negativa-general:
+              field:
+                title: Modelo 100 Anexo C base liquidable general negativa carry-forward
+            renta-cuota-chain:
+              field:
+                title: Modelo 100 cuota-chain calculation
+            renta-dependent-modelos:
+              field:
+                title: Modelo 100 dependent modelo inputs
+            renta-economic-activities:
+              field:
+                title: Modelo 100 economic-activity dependency evidence
+            renta-final-settlement:
+              field:
+                title: Modelo 100 final settlement result
+            renta-movable-capital:
+              field:
+                title: Modelo 100 movable-capital dependency evidence
+            renta-observation-parsing:
+              field:
+                title: Modelo 100 filed-data observation capture
+            renta-payments-retentions:
+              field:
+                title: Modelo 100 retentions and payments on account
+            renta-personal-family:
+              field:
+                title: Modelo 100 personal and family profile inputs
+            renta-real-estate-capital:
+              field:
+                title: Modelo 100 real-estate capital dependency evidence
+            renta-source-foundation:
+              field:
+                title: Modelo 100 source, layout, and simulator evidence
+            renta-work-income:
+              field:
+                title: Modelo 100 work income dependency evidence
           field:
             label: Ejercicio 2025
     '111':
@@ -48779,6 +49015,10 @@ modelo:
             '30':
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-111-withholding-workflow:
+              field:
+                title: Modelo 111 withholding filing workflow
           field:
             label: Orden EHA/586/2011, ejercicios 2019 y siguientes
     '115':
@@ -48804,6 +49044,10 @@ modelo:
             '05':
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-115-quarterly-rental-withholding:
+              field:
+                title: Modelo 115 quarterly urban rental withholding filing
           field:
             label: Modelo 115 vigente (Orden de 20 de noviembre de 2000, BOE-A-2000-21430),
               ejercicios 2019 y siguientes
@@ -48859,6 +49103,10 @@ modelo:
             '11':
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-117-total-liquidacion-calculation:
+              field:
+                title: Modelo 117 total liquidación / resultado a ingresar
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 y siguientes
     '121':
@@ -48878,6 +49126,11 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de comunicación (alta / modificación / baja)
+          construct:
+            modelo-121-comunicacion:
+              field:
+                title: Modelo 121 comunicación de la cesión de la deducción por familia
+                  numerosa / discapacidad
           field:
             label: Modelo 121 (orden-hfp-105-2017), ejercicios 2017 y siguientes
     '122':
@@ -48896,6 +49149,11 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-122-regularizacion:
+              field:
+                title: Modelo 122 regularización de la deducción por familia numerosa
+                  / discapacidad
           field:
             label: Modelo 122 (orden-hfp-105-2017), ejercicios 2017 y siguientes
     '123':
@@ -48931,6 +49189,11 @@ modelo:
             08:
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-123-2019-capital-withholding:
+              field:
+                title: Modelo 123 historical quarterly capital-income withholding
+                  filing
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 a 2023
         2024-y-siguientes:
@@ -48977,6 +49240,10 @@ modelo:
             '14':
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-123-current-capital-withholding:
+              field:
+                title: Modelo 123 current quarterly capital-income withholding filing
           field:
             label: Orden HAC/56/2024, ejercicios 2024 y siguientes
     '126':
@@ -49027,6 +49294,10 @@ modelo:
             '12':
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-126-calculation-construct:
+              field:
+                title: Modelo 126 calculation construct
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 y siguientes
     '128':
@@ -49061,6 +49332,10 @@ modelo:
             '07':
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-128-calculation-construct:
+              field:
+                title: Modelo 128 calculation construct
           field:
             label: Orden EHA/3435/2007, ejercicios 2019 y siguientes
     '130':
@@ -49132,6 +49407,10 @@ modelo:
               help: null
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 17)
+          construct:
+            modelo-130-direct-estimation-instalment:
+              field:
+                title: Modelo 130 direct-estimation instalment filing
           field:
             label: Orden HAP/258/2015, ejercicios 2019 y siguientes
     '131':
@@ -49279,6 +49558,11 @@ modelo:
               help: null
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
+          construct:
+            modelo-131-2019-2023-objective-estimation-instalment:
+              field:
+                title: Modelo 131 objective-estimation instalment filing for 2019
+                  to 2023
           field:
             label: Ejercicios 2019 a 2023
         '2024':
@@ -49429,6 +49713,10 @@ modelo:
               help: null
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
+          construct:
+            modelo-131-2024-objective-estimation-instalment:
+              field:
+                title: Modelo 131 objective-estimation instalment filing for 2024
           field:
             label: Ejercicio 2024
         '2025':
@@ -49579,6 +49867,10 @@ modelo:
               help: null
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
+          construct:
+            modelo-131-2025-objective-estimation-instalment:
+              field:
+                title: Modelo 131 objective-estimation instalment filing for 2025
           field:
             label: Ejercicio 2025
         '2026':
@@ -49692,6 +49984,10 @@ modelo:
               help: null
               label: Saldo negativo trasladable a periodos posteriores (max 0, -casilla
                 10)
+          construct:
+            modelo-131-2026-objective-estimation-instalment:
+              field:
+                title: Modelo 131 objective-estimation instalment filing for 2026
           field:
             label: Ejercicio 2026
     '136':
@@ -49778,6 +50074,10 @@ modelo:
               help: null
               label: Codigo de la provincia de residencia habitual del contribuyente
                 IRPF
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: Modelo 136 gravamen especial premios calculation construct
           field:
             label: Modelo 136 ejercicio 2026 (Orden HAP/70/2013 y Orden HAC/763/2018)
     '140':
@@ -49794,6 +50094,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de solicitud (alta / modificación / baja)
+          construct:
+            modelo-140-informative:
+              field:
+                title: Modelo 140 solicitud de abono anticipado (deducción por maternidad)
           field:
             label: Modelo 140 (orden-hac-177-2020), ejercicios 2020 y siguientes
     '143':
@@ -49812,6 +50116,11 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de solicitud (alta / modificación / baja)
+          construct:
+            modelo-143-informative:
+              field:
+                title: Modelo 143 solicitud de abono anticipado (familia numerosa
+                  / discapacidad)
           field:
             label: Modelo 143 (orden-hap-2486-2014), ejercicios 2014 y siguientes
     '145':
@@ -50038,6 +50347,10 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: null
               label: Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: Modelo 151 IRPF régimen impatriados cuota
           field:
             label: Modelo 151 ejercicios 2015 a 2024 (régimen impatriados, escala
               general plana 24/47 tras Ley 26/2014; parte del ahorro no modelada en
@@ -50074,6 +50387,10 @@ modelo:
             x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
               help: null
               label: Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)
+          construct:
+            m151-impatriado-calculation:
+              field:
+                title: Modelo 151 IRPF régimen impatriados cuota
           field:
             label: Modelo 151 ejercicios 2025 y siguientes (régimen impatriados; escala
               general plana 24/47 art. 93.2.e.1º + escala del ahorro art. 93.2.e.2º
@@ -50094,6 +50411,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-156-informative:
+              field:
+                title: Modelo 156 declaración informativa
           field:
             label: Modelo 156 (orden-hac-3580-2003), ejercicios 2003 y siguientes
     '165':
@@ -50111,6 +50432,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-165-informative:
+              field:
+                title: Modelo 165 declaración informativa
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
     '179':
@@ -50127,6 +50452,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-179-informative:
+              field:
+                title: Modelo 179 declaración informativa
           field:
             label: Modelo 179 (orden-hac-612-2021), ejercicios 2021 y siguientes
     '180':
@@ -50308,6 +50637,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Situacion del inmueble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: Modelo 180 annual summary from Modelo 115 quarterly filings
           field:
             label: Orden HAP/1732/2014, ejercicios 2019 a 2022
         2023-y-siguientes:
@@ -50402,6 +50735,10 @@ modelo:
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
               help: null
               label: Situacion del inmueble
+          construct:
+            modelo-180-annual-summary:
+              field:
+                title: Modelo 180 annual summary from Modelo 115 quarterly filings
           field:
             label: Orden HAP/1732/2014 actualizada por Orden HFP/1284/2023
     '181':
@@ -50419,6 +50756,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-181-informative:
+              field:
+                title: Modelo 181 declaración informativa
           field:
             label: Modelo 181 (orden-eha-3514-2009), ejercicios 2009 y siguientes
     '182':
@@ -50457,6 +50798,11 @@ modelo:
               help: null
               label: Indicador de donativo recurrente (donativo plurianual a la misma
                 entidad donataria, dos o mas ejercicios consecutivos)
+          construct:
+            modelo-182-informative:
+              field:
+                title: Modelo 182 informative declaration of donativos, donaciones
+                  y aportaciones recibidas
           field:
             label: Modelo 182 ejercicios 2007 y siguientes (Orden EHA/3021/2007)
     '184':
@@ -50492,6 +50838,11 @@ modelo:
               help: null
               label: Subclave del tipo de renta atribuida (granularidad por origen
                 geografico Espana/extranjero, reducciones aplicables, etc.)
+          construct:
+            modelo-184-informative:
+              field:
+                title: Modelo 184 informative declaration of entidades en regimen
+                  de atribucion de rentas
           field:
             label: Modelo 184 ejercicios 2015 y siguientes (Orden HAP/2250/2015, modificada
               por HFP/1923/2016, HFP/1106/2017, HAC/1276/2019, HFP/1284/2023 y HAC/1430/2025)
@@ -50509,6 +50860,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-185-informative:
+              field:
+                title: Modelo 185 declaración informativa
           field:
             label: Modelo 185 (orden-hac-1197-2025), ejercicios 2025 y siguientes
     '186':
@@ -50524,6 +50879,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-186-informative:
+              field:
+                title: Modelo 186 declaración informativa
           field:
             label: Modelo 186 (orden-hac-539-2003), ejercicios 2003 y siguientes
     '187':
@@ -50545,6 +50904,10 @@ modelo:
             '05':
               help: null
               label: Total retenciones del resumen anual
+          construct:
+            modelo-187-calculation-construct:
+              field:
+                title: Modelo 187 calculation construct
           field:
             label: Orden EHA/3377/2011, ejercicios 2019 y siguientes
     '188':
@@ -50565,6 +50928,10 @@ modelo:
             '05':
               help: null
               label: Total retenciones del resumen anual
+          construct:
+            modelo-188-calculation-construct:
+              field:
+                title: Modelo 188 calculation construct
           field:
             label: Orden EHA/3377/2011, ejercicios 2019 y siguientes
     '189':
@@ -50624,6 +50991,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
               help: null
               label: Número total de percepciones
+          construct:
+            modelo-190-annual-summary:
+              field:
+                title: Modelo 190 annual summary from Modelo 111 quarterly filings
           field:
             label: Modelo 190 ejercicio 2024 y siguientes
     '193':
@@ -50644,6 +51015,10 @@ modelo:
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
               help: null
               label: Número total de perceptores
+          construct:
+            modelo-193-annual-summary:
+              field:
+                title: Modelo 193 annual summary from Modelo 123 quarterly filings
           field:
             label: Modelo 193 ejercicio 2024 y siguientes
     '194':
@@ -50667,6 +51042,10 @@ modelo:
             '05':
               help: null
               label: Total retenciones del resumen anual
+          construct:
+            modelo-194-calculation-construct:
+              field:
+                title: Modelo 194 calculation construct
           field:
             label: Orden EHA/3377/2011, ejercicios 2019 y siguientes
     '200':
@@ -65339,6 +65718,11 @@ modelo:
               help: null
               label: Tributación conjunta Estado y Adm.Forales - Cálculo porcentajes
                 tributación - Admón.del Estado [00625]
+          construct:
+            modelo-200-2024-foundation:
+              field:
+                title: Modelo 200 IS annual settlement foundation (2024 y siguientes)
+                  — pagos fraccionados deduction chain
           field:
             label: Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)
     '202':
@@ -65612,6 +65996,11 @@ modelo:
             '52':
               help: null
               label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+          construct:
+            modelo-202-2019-2022-foundation:
+              field:
+                title: Modelo 202 registry-backed fractional payment construct (ejercicios
+                  2019-2022)
           field:
             label: Modelo 202 ejercicios 2019 a 2022 (DR202v52.xlsx, Orden HAC/941/2018)
         2023-2024:
@@ -65749,6 +66138,11 @@ modelo:
             '52':
               help: null
               label: Mod. 40.3 LIS B2 — Reserva de nivelacion (art. 105 LIS) — Disminuciones
+          construct:
+            modelo-202-2023-2024-foundation:
+              field:
+                title: Modelo 202 registry-backed fractional payment construct (ejercicios
+                  2023-2024)
           field:
             label: Modelo 202 ejercicios 2023 a 2024 (DR202e23.xlsx)
         2025-y-siguientes:
@@ -65908,6 +66302,10 @@ modelo:
               help: null
               label: Mod. 40.3 LIS — Correcciones por Impuesto Complementario (IC)
                 — Aumentos
+          construct:
+            modelo-202-foundation:
+              field:
+                title: Modelo 202 registry-backed fractional payment foundation
           field:
             label: Modelo 202 vigente, ejercicios 2025 y siguientes (DR202e25.xlsx)
     '210':
@@ -66022,6 +66420,10 @@ modelo:
             valor_comprobado_administracion:
               help: null
               label: Valor comprobado por la Administración
+          construct:
+            m210-irnr-calculation:
+              field:
+                title: Modelo 210 IRNR calculation
           field:
             label: Ejercicio 2025 y siguientes
     '216':
@@ -66058,6 +66460,10 @@ modelo:
             '21':
               help: null
               label: Resultado a ingresar
+          construct:
+            modelo-216-calculation-construct:
+              field:
+                title: Modelo 216 calculation construct
           field:
             label: Orden HAC/56/2024, ejercicios 2024 y siguientes
     '220':
@@ -66074,6 +66480,11 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-220-declaration-construct:
+              field:
+                title: Modelo 220 declaración anual del grupo fiscal en régimen de
+                  consolidación fiscal
           field:
             label: Orden HAC/657/2025 (modelo 220), ejercicios 2024 y siguientes
     '222':
@@ -66091,6 +66502,10 @@ modelo:
               help: null
               label: Modalidad del pago fraccionado (art. 40.2 cuota íntegra / art.
                 40.3 base imponible)
+          construct:
+            modelo-222-declaration-construct:
+              field:
+                title: Modelo 222 pago fraccionado en régimen de consolidación fiscal
           field:
             label: Orden HFP/227/2017 (modelo 222), ejercicios 2025 y siguientes
     '231':
@@ -66164,6 +66579,11 @@ modelo:
               help: null
               label: Tipo de ejercicio (12 meses naturales / 12 meses 365 días / inferior
                 a 12 meses)
+          construct:
+            modelo-232-informative:
+              field:
+                title: Modelo 232 informative declaration of operaciones vinculadas
+                  and paraisos fiscales
           field:
             label: Modelo 232 ejercicios 2016-2017 (Orden HFP/816/2017 v13)
         2018-y-siguientes:
@@ -66328,6 +66748,11 @@ modelo:
               help: null
               label: Tipo de ejercicio (12 meses naturales / 12 meses 365 dias / inferior
                 a 12 meses)
+          construct:
+            modelo-232-informative:
+              field:
+                title: Modelo 232 informative declaration of operaciones vinculadas
+                  and paraisos fiscales
           field:
             label: Modelo 232 ejercicios 2018 y siguientes (Orden HFP/816/2017 v14)
     '233':
@@ -66345,6 +66770,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-233-informative:
+              field:
+                title: Modelo 233 declaración informativa
           field:
             label: Modelo 233 (orden-hac-1400-2018), ejercicios 2018 y siguientes
     '234':
@@ -66361,6 +66790,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-234-informative:
+              field:
+                title: Modelo 234 declaración informativa
           field:
             label: Modelo 234 (orden-hac-342-2021), ejercicios 2021 y siguientes
     '238':
@@ -66377,6 +66810,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-238-informative:
+              field:
+                title: Modelo 238 declaración informativa
           field:
             label: Modelo 238 (orden-hac-72-2024), ejercicios 2024 y siguientes
     '270':
@@ -66394,6 +66831,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-270-informative:
+              field:
+                title: Modelo 270 declaración informativa
           field:
             label: Modelo 270 (orden-hap-2368-2013), ejercicios 2013 y siguientes
     '280':
@@ -66524,6 +66965,10 @@ modelo:
             '05':
               help: null
               label: Total retenciones del resumen anual
+          construct:
+            modelo-296-calculation-construct:
+              field:
+                title: Modelo 296 calculation construct
           field:
             label: Orden HAC/56/2024, ejercicios 2024 y siguientes
     '303':
@@ -67286,6 +67731,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: Modelo 303 IVA quarterly autoliquidacion
           field:
             label: Modelo 303 ejercicios 2009 y siguientes (Orden EHA/3786/2008, modificada
               por sucesivas ordenes anuales)
@@ -67703,6 +68152,10 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes
+          construct:
+            modelo-303-iva-autoliquidacion:
+              field:
+                title: Modelo 303 IVA autoliquidacion
           field:
             label: Modelo 303 ejercicios 2023 y siguientes (Orden EHA/3786/2008, modificada
               por sucesivas ordenes anuales)
@@ -67723,6 +68176,10 @@ modelo:
               help: null
               label: Tipo de solicitud (recargo de equivalencia / art 30 bis / art
                 21.4 / sujeto pasivo ocasional / régimen simplificado transporte)
+          construct:
+            modelo-308-iva-solicitud-devolucion:
+              field:
+                title: Modelo 308 IVA solicitud de devolucion
           field:
             label: Modelo 308 ejercicios 2009 y siguientes (Orden EHA/3786/2008, ad-hoc
               segun tipo de operador)
@@ -67752,6 +68209,10 @@ modelo:
               help: null
               label: Cuota IVA soportado por minoristas en recargo de equivalencia
                 (devolución a viajeros)
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: Modelo 309 IVA declaracion-liquidacion no periodica
           field:
             label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
               primero y tercero). Ad-hoc por trigger de obligacion no periodica.
@@ -67794,6 +68255,11 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes
+          construct:
+            modelo-322-iva-grupo-individual:
+              field:
+                title: Modelo 322 IVA grupo de entidades modelo individual autoliquidacion
+                  mensual
           field:
             label: Modelo 322 ejercicios 2008 y siguientes (Orden EHA/3434/2007)
     '341':
@@ -67811,6 +68277,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo de liquidación al que se refiere la autoliquidación
+          construct:
+            modelo-341-autoliquidacion:
+              field:
+                title: Modelo 341 autoliquidación del IVA
           field:
             label: Modelo 341 (orden-min-2000-12-15-m341), ejercicios 2000 y siguientes
     '345':
@@ -67950,6 +68420,11 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-347-informative:
+              field:
+                title: Modelo 347 informative declaration of operaciones con terceras
+                  personas
           field:
             label: Modelo 347 ejercicios 2008 y siguientes (Orden EHA/3012/2008, modificada
               por EHA/3378/2011 y HAC/1431/2025)
@@ -68000,6 +68475,10 @@ modelo:
             x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
               help: null
               label: Periodo rectificado
+          construct:
+            modelo-349-informative:
+              field:
+                title: Modelo 349 informative intra-community operations declaration
           field:
             label: Modelo 349 ejercicio 2020 y siguientes (Orden HAC/174/2020)
     '353':
@@ -68056,6 +68535,11 @@ modelo:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes - agregado
                 del grupo
+          construct:
+            modelo-353-iva-grupo-agregado:
+              field:
+                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidacion
+                  mensual
           field:
             label: Modelo 353 ejercicios 2008 y siguientes (Orden EHA/3434/2007 art
               2 y 8)
@@ -68076,6 +68560,11 @@ modelo:
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
               help: null
               label: Estado miembro de devolución donde se soportaron las cuotas
+          construct:
+            modelo-360-iva-devolucion-ue:
+              field:
+                title: Modelo 360 IVA solicitud de devolucion 8a Directiva (cuotas
+                  soportadas en otros Estados miembros)
           field:
             label: Modelo 360 ejercicios 2010 y siguientes (Orden EHA/789/2010, modificada
               por HAP/841/2016). Ad-hoc por trigger de devolucion solicitada.
@@ -68133,6 +68622,11 @@ modelo:
               help: null
               label: Cuota IVA repercutido al destino DE — servicios prestados (Esquema
                 Exterior)
+          construct:
+            modelo-369-esquema-exterior:
+              field:
+                title: Modelo 369 - Esquema Exterior (regimen especial servicios prestados
+                  por no establecidos)
           field:
             label: Modelo 369 - Esquema Exterior - regimen especial servicios prestados
               por sujetos pasivos no establecidos en la Comunidad (LIVA art 163 octiesdecies
@@ -68153,6 +68647,10 @@ modelo:
               help: null
               label: Cuota IVA IOSS al destino DE — ventas a distancia de bienes importados
                 ≤ 150 EUR (LIVA art 163 quinvicies)
+          construct:
+            modelo-369-esquema-importacion:
+              field:
+                title: Modelo 369 - Esquema Importacion (regimen especial IOSS)
           field:
             label: Modelo 369 - Esquema Importacion (IOSS) - regimen especial ventas
               a distancia de bienes importados (LIVA art 163 quinvicies a octovicies).
@@ -68181,6 +68679,10 @@ modelo:
               help: null
               label: Cuota IVA OSS Unión al destino FR — servicios prestados (LIVA
                 art 163 unvicies)
+          construct:
+            modelo-369-esquema-union:
+              field:
+                title: Modelo 369 - Esquema Union (regimen especial OSS Union)
           field:
             label: Modelo 369 - Esquema Union - regimen especial ventas intracomunitarias
               a distancia, interfaces electronicas y servicios establecidos en la
@@ -68264,6 +68766,10 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo de liquidación al que se refiere la autoliquidación
+          construct:
+            modelo-380-autoliquidacion:
+              field:
+                title: Modelo 380 autoliquidación del IVA
           field:
             label: Modelo 380 (orden-eha-1308-2005), ejercicios 2005 y siguientes
     '390':
@@ -68348,6 +68854,10 @@ modelo:
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: null
               label: Cuota IVA soportado en operaciones interiores corrientes - anual
+          construct:
+            modelo-390-iva-resumen-anual:
+              field:
+                title: Modelo 390 IVA annual summary declaration
           field:
             label: Modelo 390 ejercicios 2010 y siguientes (Orden EHA/3111/2009, modificada
               por sucesivas ordenes incluida HAP/2373/2014)
@@ -68365,6 +68875,11 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (trimestre natural)
+          construct:
+            modelo-490-autoliquidacion:
+              field:
+                title: Modelo 490 autoliquidación del Impuesto sobre Determinados
+                  Servicios Digitales
           field:
             label: Modelo 490 (orden-hac-590-2021), ejercicios 2021 y siguientes
     '576':
@@ -68382,6 +68897,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de autoliquidación (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-576-autoliquidacion:
+              field:
+                title: Modelo 576 autoliquidación del IEDMT por matriculación
           field:
             label: Modelo 576 (orden-eha-3851-2007), ejercicios 2007 y siguientes
     '592':
@@ -68398,6 +68917,11 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de autoliquidación (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-592-autoliquidacion:
+              field:
+                title: Modelo 592 autoliquidación del Impuesto especial sobre envases
+                  de plástico no reutilizables
           field:
             label: Modelo 592 (orden-hfp-1314-2022), ejercicios 2022 y siguientes
     '604':
@@ -68413,6 +68937,11 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (mes natural)
+          construct:
+            modelo-604-autoliquidacion:
+              field:
+                title: Modelo 604 autoliquidación del Impuesto sobre las Transacciones
+                  Financieras
           field:
             label: Modelo 604 (orden-hac-510-2021), ejercicios 2021 y siguientes
     '714':
@@ -68482,6 +69011,10 @@ modelo:
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
               help: null
               label: Liquidacion - Total cuota integra
+          construct:
+            m714-patrimonio-calculation:
+              field:
+                title: Modelo 714 Impuesto sobre el Patrimonio cuota
           field:
             label: Modelo 714 ejercicios 2021-2025 (Orden HAC/1023/2021; art. 31 M100
               same-year coverage)
@@ -68517,6 +69050,10 @@ modelo:
               help: null
               label: Valoracion de valores, derechos, seguros o rentas situados en
                 el extranjero
+          construct:
+            modelo-720-informative:
+              field:
+                title: Modelo 720 informative declaration of foreign assets and rights
           field:
             label: Modelo 720 ejercicios 2012 y siguientes (Orden HAP/72/2013)
     '721':
@@ -68553,6 +69090,11 @@ modelo:
               help: null
               label: Saldo o valor de la moneda virtual al inicio del periodo (para
                 variaciones significativas)
+          construct:
+            modelo-721-informative:
+              field:
+                title: Modelo 721 informative declaration of virtual currencies held
+                  abroad through custodian
           field:
             label: Modelo 721 ejercicios 2023 y siguientes (Orden HFP/886/2023; anexo
               sustituido por Orden HAC/1504/2024 desde ejercicio 2024)
@@ -68570,6 +69112,11 @@ modelo:
             x-chim6r1ee1in4qbfchng:
               help: null
               label: Periodo (trimestre natural)
+          construct:
+            modelo-763-autoliquidacion:
+              field:
+                title: Modelo 763 autoliquidación del Impuesto sobre actividades de
+                  juego
           field:
             label: Modelo 763 (orden-eha-1881-2011), ejercicios 2011 y siguientes
     '840':
@@ -68586,6 +69133,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (alta / variación / baja)
+          construct:
+            modelo-840-iae-declaration:
+              field:
+                title: Modelo 840 IAE censal declaration (alta, variacion, baja)
           field:
             label: Modelo 840 ejercicios 2003 y siguientes (Orden HAC/2572/2003)
     '848':
@@ -68603,6 +69154,10 @@ modelo:
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
               help: null
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
+          construct:
+            modelo-848-informative:
+              field:
+                title: Modelo 848 comunicación del importe neto de la cifra de negocios
           field:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
 profile:
