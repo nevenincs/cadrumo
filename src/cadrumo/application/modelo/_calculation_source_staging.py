@@ -34,7 +34,6 @@ from types import MappingProxyType
 
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry import (
-    IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS,
     BindingId,
     CasillaId,
     InputKind,
@@ -44,6 +43,7 @@ from ...domain.calculations.registry import (
     calculate_registry_snapshot,
     casillas_by_id,
     initial_value_casilla_ids,
+    iva_wallet_owned_binding_ids_for_revision,
 )
 from ...domain.modelos import WorkUnit
 from ..aggregation import (
@@ -243,7 +243,11 @@ def materialise_prorrata_regularizacion_current_year_values(
         unresolved_binding_ids=unresolved_binding_ids,
         staging_binding_defaults={
             binding_id: Decimal("0.00")
-            for binding_id in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
+            for binding_id in iva_wallet_owned_binding_ids_for_revision(
+                modelo_id=str(registry_snapshot.modelo.id),
+                revision_id=str(revision.id),
+                relations=revision.relations,
+            )
             if binding_id not in binding_values
         },
         filing_period_date=filing_period_date,
@@ -397,6 +401,19 @@ def expected_but_missing_binding_ids(
 
     ``revision`` is the compiled :class:`ModeloRevision` whose bindings and
     casillas are scanned for present-source, no-value gaps.
+
+    This is the generic, all-modelos, non-blocking silent-zero advisory. It is
+    deliberately narrower than the M202-only hard-blocking gate in
+    :func:`~cadrumo.application.modelo._required_binding_gate.require_modelo_required_bindings_resolved`,
+    which refuses outright on ANY declared non-constant binding with no
+    resolved value at all and carries no exclusion for the three source kinds
+    below. The two gates are not duplicates: this one flags a narrower
+    "present source produced no value" shape without blocking, appropriate for
+    modelos where a missing binding does not by itself invalidate the filing;
+    M202's stricter gate reflects that a pago fraccionado cannot be computed
+    with any declared input absent (Ley 27/2014 art. 40.2/40.3). Do not widen
+    this advisory to M202-level strictness, and do not narrow M202's gate to
+    this advisory's exclusions — the divergence is intentional.
     """
     non_silent_sources = frozenset({"previous_filing", "relation_prefill", "manual_input"})
     bindings_by_id = {binding.id: binding for binding in revision.bindings}

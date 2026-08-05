@@ -36,7 +36,7 @@ import hashlib
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from pydantic import SecretStr
 
@@ -424,7 +424,28 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
         return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
 
 
-def certificate_source_tax_id(*, name: str = "", settings: Settings | None = None) -> str:
+
+class CertificateSubjectNifReader(Protocol):
+    """Reads the subject NIF/NIE out of a PKCS#12 bundle on disk.
+
+    The port exists so this layer can report a certificate's holder without
+    naming a certificate type: PKCS#12 parsing belongs to the outbound AEAT
+    auth adapter, which supplies the concrete reader at the composition root.
+    An unreadable bundle, a wrong password, and a subject with no parseable
+    identifier all come back as ``""``.
+    """
+
+    def __call__(self, *, path: Path, password: SecretStr, friendly_name: str | None = None) -> str:
+        """Return the bundle's subject NIF/NIE, or ``""`` when it cannot be read."""
+        ...
+
+
+def certificate_source_tax_id(
+    *,
+    read_subject_nif: CertificateSubjectNifReader,
+    name: str = "",
+    settings: Settings | None = None,
+) -> str:
     """Return the taxpayer identifier a registered certificate names, or ``""``.
 
     An FNMT *persona física* certificate carries its holder's NIF or NIE
@@ -453,6 +474,8 @@ def certificate_source_tax_id(*, name: str = "", settings: Settings | None = Non
     report their failures in their own vocabulary.
 
     Args:
+        read_subject_nif: Adapter-supplied reader for a PKCS#12 bundle's
+            subject identifier; see :class:`CertificateSubjectNifReader`.
         name: The registered source to read. Blank reads whichever
             source is currently selected.
         settings: Resolved settings, or ``None`` to load them.
@@ -461,12 +484,6 @@ def certificate_source_tax_id(*, name: str = "", settings: Settings | None = Non
         The uppercase NIF/NIE the certificate's subject carries, or ``""``
         when it cannot be read.
     """
-    from ...adapters.outbound.aeat.auth.certificate import (
-        CertificateBundle,
-        CertificateError,
-        extract_nif_from_subject,
-        load_certificate,
-    )
     from ..workflow import workflow_state_repository
 
     resolved_settings = settings or load_settings()
@@ -490,17 +507,11 @@ def certificate_source_tax_id(*, name: str = "", settings: Settings | None = Non
             return ""
         if secret is None:
             return ""
-        try:
-            loaded = load_certificate(
-                CertificateBundle(
-                    path=path,
-                    password=secret,
-                    friendly_name=record.friendly_name,
-                ),
-            )
-            return extract_nif_from_subject(loaded)
-        except (OSError, CertificateError):
-            return ""
+        return read_subject_nif(
+            path=path,
+            password=secret,
+            friendly_name=record.friendly_name,
+        )
 
 
 def _selected_certificate_record(state: WorkflowState, *, name: str) -> CertificateSourceRecord | None:
@@ -839,6 +850,7 @@ def _finalize_certificate_secret_mutation(
 
 __all__ = [
     "ActiveCertificateCredentials",
+    "CertificateSubjectNifReader",
     "certificate_source_tax_id",
     "check_operator_certificate_sources",
     "list_operator_certificate_sources",

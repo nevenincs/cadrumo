@@ -15,7 +15,7 @@ different claims and only the second one protects a taxpayer.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
@@ -42,6 +42,23 @@ def _register_active() -> None:
             overrides={"identity.tax_id": "12345678Z"},
         ),
     )
+
+
+def _refusal_context_sequence(
+    refusal: pytest.ExceptionInfo[ProfileSchemaValidationError],
+    key: str,
+) -> Sequence[object]:
+    """Read one sequence off a refusal's structured context.
+
+    ``CadrumoError.context`` is ``dict[str, object] | None``, so the two narrowing
+    asserts are what let the membership checks below be checked rather than
+    inferred against ``object``.
+    """
+    context = refusal.value.context
+    assert context is not None, "the refusal carried no structured context"
+    values = context[key]
+    assert isinstance(values, Sequence), f"context[{key!r}] is not a sequence: {values!r}"
+    return values
 
 
 def _socio_row(share_pct: str, *, index: int = 0) -> tuple[UserProfileFact, ...]:
@@ -78,7 +95,7 @@ def test_the_door_refuses_a_value_its_declaration_does_not_admit(share_pct: str)
     with pytest.raises(ProfileSchemaValidationError) as refusal:
         _write(*_socio_row(share_pct))
 
-    assert NUMERIC_VALUE_ISSUE_CODE in refusal.value.context["issue_codes"]
+    assert NUMERIC_VALUE_ISSUE_CODE in _refusal_context_sequence(refusal, "issue_codes")
     assert _stored_share_pct() is None
 
 
@@ -123,7 +140,7 @@ def test_the_refusal_tells_the_operator_what_would_be_accepted() -> None:
     with pytest.raises(ProfileSchemaValidationError) as refusal:
         _write(*_socio_row("999"))
 
-    assert f"{_SOCIOS}.0.share_pct" in refusal.value.context["issue_paths"]
+    assert f"{_SOCIOS}.0.share_pct" in _refusal_context_sequence(refusal, "issue_paths")
 
 
 @pytest.fixture(autouse=True)

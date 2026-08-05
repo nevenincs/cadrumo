@@ -248,25 +248,23 @@ def _evaluate_out_of_sample(case: HeldOutQueryCase, relevance: SweepResult) -> M
 
 def adjudicate_rung2(
     evaluation: MissRateEvaluation,
-    *,
-    miss_rate_threshold: float = DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
 ) -> Rung2Adjudication:
-    """Adjudicate whether the static rung-2 matrix is justified by measurements."""
+    """Adjudicate rung 2 against the ratified materiality line."""
 
     if evaluation.compiled_failed_query_count > 0:
         return Rung2Adjudication(
             decision=Rung2Decision.REFRESH_RELEVANCE_FIRST,
-            miss_rate_threshold=miss_rate_threshold,
+            miss_rate_threshold=DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
             measured_miss_rate=evaluation.miss_rate,
             rationale=(
                 "The compiled relevance artifact records failed sweep queries, so misses first require a full "
                 "relevance refresh from the resident RAG service before they can justify a static embedding matrix."
             ),
         )
-    if evaluation.miss_rate > miss_rate_threshold:
+    if evaluation.miss_rate > DEFAULT_RUNG2_MISS_RATE_THRESHOLD:
         return Rung2Adjudication(
             decision=Rung2Decision.IMPLEMENT_RUNG2,
-            miss_rate_threshold=miss_rate_threshold,
+            miss_rate_threshold=DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
             measured_miss_rate=evaluation.miss_rate,
             rationale=(
                 "The relevance artifact is not marked degraded and the held-out miss-rate exceeds the accepted "
@@ -275,7 +273,7 @@ def adjudicate_rung2(
         )
     return Rung2Adjudication(
         decision=Rung2Decision.KEEP_DEFERRED,
-        miss_rate_threshold=miss_rate_threshold,
+        miss_rate_threshold=DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
         measured_miss_rate=evaluation.miss_rate,
         rationale=(
             "The relevance artifact is not marked degraded and the held-out miss-rate is within the accepted "

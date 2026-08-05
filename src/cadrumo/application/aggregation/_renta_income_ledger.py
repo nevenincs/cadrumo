@@ -37,9 +37,8 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -61,7 +60,7 @@ from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
-from ._models import CasillaAggregation
+from ._models import CasillaAggregation, LedgerAggregationResultBase
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.
 _TARGET_CASILLA_INGRESOS: CasillaId = validated_casilla_id("01", surface="_TARGET_CASILLA_INGRESOS")
@@ -125,7 +124,9 @@ class RentaIncomeObservation(BaseModel):
     source_jurisdiction: str | None = None
 
 
-class RentaIncomeLedgerAggregation(BaseModel):
+class RentaIncomeLedgerAggregation(
+    LedgerAggregationResultBase[RentaIncomeObservation, RentaIncomeLedgerAggregationIssue],
+):
     """Cumulative income observations for one M130 quarter window.
 
     ``out_of_window_summary`` is populated by repository-backed date partitions.
@@ -133,52 +134,7 @@ class RentaIncomeLedgerAggregation(BaseModel):
     is already loaded for classification.
     """
 
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1, max_length=16)
-    period: Period
-    observations: Sequence[RentaIncomeObservation] = Field(default_factory=tuple)
-    issues: Sequence[RentaIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
-    casilla_aggregation: CasillaAggregation
-
-    @field_validator("observations")
-    @classmethod
-    def _freeze_observations(
-        cls,
-        value: Sequence[RentaIncomeObservation],
-    ) -> tuple[RentaIncomeObservation, ...]:
-        return tuple(value)
-
-    @field_validator("issues")
-    @classmethod
-    def _freeze_issues(
-        cls,
-        value: Sequence[RentaIncomeLedgerAggregationIssue],
-    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @model_validator(mode="after")
-    def _validate_casilla_period(self) -> Self:
-        if self.casilla_aggregation.modelo != self.modelo:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.modelo_mismatch"))
-        if self.casilla_aggregation.period != self.period:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.period_mismatch"))
-        return self
-
-    @field_serializer("observations")
-    def _serialize_observations(
-        self,
-        value: Sequence[RentaIncomeObservation],
-    ) -> tuple[RentaIncomeObservation, ...]:
-        return tuple(value)
-
-    @field_serializer("issues")
-    def _serialize_issues(
-        self,
-        value: Sequence[RentaIncomeLedgerAggregationIssue],
-    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
 
 
 def aggregate_renta_income_ledger_from_repositories(

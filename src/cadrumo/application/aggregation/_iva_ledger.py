@@ -686,12 +686,7 @@ def _apply_especial_apportionment(
     if not deducible_binding_ids:
         return binding_values
     general_percentage = apportionment.percentage
-    partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
-        classification: [] for classification in InputClassification
-    }
-    for observation in observations:
-        classification = observation.input_classification or InputClassification.COMMON
-        partitions[classification].append(observation)
+    partitions = _partition_by_input_classification(observations)
     apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
     for classification, partition_observations in partitions.items():
         if not partition_observations:
@@ -707,6 +702,25 @@ def _apply_especial_apportionment(
         binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
         for binding_id, value in binding_values.items()
     }
+
+
+def _partition_by_input_classification(
+    observations: Sequence[IvaLedgerObservation],
+) -> dict[InputClassification, list[IvaLedgerObservation]]:
+    """Bucket ``observations`` by their art. 106 input classification.
+
+    An unclassified observation defaults to :attr:`InputClassification.COMMON`
+    (the mixed-use default). Shared by the general especial-regime
+    apportionment and the per-partition primitive so both partition
+    identically.
+    """
+    partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
+        classification: [] for classification in InputClassification
+    }
+    for observation in observations:
+        classification = observation.input_classification or InputClassification.COMMON
+        partitions[classification].append(observation)
+    return partitions
 
 
 def _apportioned_deducible_cuota(
@@ -730,12 +744,7 @@ def _apportioned_deducible_cuota(
     """
     result: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
     if regime is ProrrataRegisterRegime.ESPECIAL:
-        partitions: dict[InputClassification, list[IvaLedgerObservation]] = {
-            classification: [] for classification in InputClassification
-        }
-        for observation in observations:
-            classification = observation.input_classification or InputClassification.COMMON
-            partitions[classification].append(observation)
+        partitions = _partition_by_input_classification(observations)
         for classification, partition_observations in partitions.items():
             if not partition_observations:
                 continue

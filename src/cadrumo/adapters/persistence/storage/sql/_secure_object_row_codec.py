@@ -45,7 +45,11 @@ from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware
 from .._namespace_registry import SecureObjectNamespaceDefinition
-from .._schema_lineage import ensure_schema_version_readable, upgrade_secure_object_payload
+from .._schema_lineage import (
+    ensure_schema_version_readable,
+    inner_envelope_classification_is_expected,
+    upgrade_secure_object_payload,
+)
 from ..crypto import decrypt_secure_object_payload, secure_object_payload_aad
 from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError, SecureObjectUnreadableError
 from . import _orm
@@ -226,7 +230,7 @@ def decode_secure_object_row(
             },
             translated_message="errors.storage.namespace.unknown_classification",
         ) from exc
-    if classification is not expected_class:
+    if not inner_envelope_classification_is_expected(classification, expected_class):
         raise ClassificationError(
             context={
                 "namespace": namespace,

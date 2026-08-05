@@ -312,7 +312,7 @@ class TestAggregationInvariants:
     def test_totals_must_match_rollups(self) -> None:
         from pydantic import ValidationError
 
-        with pytest.raises(ValidationError, match="does not match"):
+        with pytest.raises(ValidationError, match="!= sum of rollups"):
             RetencionesAggregation(
                 modelo="111",
                 period=_P_2025_Q1,

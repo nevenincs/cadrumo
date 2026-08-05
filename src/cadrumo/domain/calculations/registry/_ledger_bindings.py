@@ -12,11 +12,17 @@ invariants are enforced at registry-build time only. The
 the invariant body — each re-parses the selector independently through its own
 private ``_<family>_selector`` helper, which raises on a malformed selector but
 re-checks no op/fact invariant.
+
+Each resolver delegates its filter/aggregate skeleton to
+:func:`~.registry._ledger_binding_resolution.resolve_ledger_family_binding_values`,
+the shape shared by every ledger family (this module's five plus IRNR and
+impatriado in their own family modules); the family supplies only its
+selector parser, match predicate, and fact-dispatch aggregation.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
@@ -43,6 +49,10 @@ from ._binding_selector_utils import invariant_diagnostics, selector_against_mod
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
+from ._ledger_binding_resolution import (
+    resolve_ledger_family_binding_values,
+    unsupported_ledger_family_observations,
+)
 from ._schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
@@ -734,32 +744,52 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definiti
         )
 
 
+def _renta_gastos_estimacion_directa_build_matcher(
+    selector: _RentaLedgerGastosEstimacionDirectaSelector,
+) -> Callable[[RentaGastosEstimacionDirectaObservationProtocol], bool]:
+    modelo, period, target_casilla_id = selector.modelo, selector.period, selector.target_casilla_id
+
+    def matcher(observation: RentaGastosEstimacionDirectaObservationProtocol) -> bool:
+        return (
+            observation.modelo == modelo
+            and observation.period == period
+            and observation.target_casilla_id == target_casilla_id
+        )
+
+    return matcher
+
+
+def _renta_gastos_estimacion_directa_aggregate(
+    matched: Sequence[RentaGastosEstimacionDirectaObservationProtocol],
+    selector: _RentaLedgerGastosEstimacionDirectaSelector,
+) -> Decimal:
+    del selector  # single declared fact (deductible_amount_sum); nothing to dispatch on
+    return sum((observation.deductible_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaGastosEstimacionDirectaObservationProtocol],
 ) -> dict[BindingId, Decimal]:
     """Resolve every ``ledger_renta_gastos_estimacion_directa_aggregation`` binding on ``revision``.
 
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver.
+
     Args:
         revision: The :class:`ModeloRevision` whose gastos bindings to resolve.
         observations: Typed gastos observations the bindings aggregate
             via their declared ``selector.fact`` and ``aggregation.op``.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
-            continue
-        selector = _renta_ledger_gastos_estimacion_directa_selector(binding)
-        matched = [
-            observation
-            for observation in available
-            if observation.modelo == selector.modelo
-            and observation.period == selector.period
-            and observation.target_casilla_id == selector.target_casilla_id
-        ]
-        resolved[binding.id] = sum((observation.deductible_amount for observation in matched), Decimal("0"))
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_estimacion_directa_selector,
+        build_matcher=_renta_gastos_estimacion_directa_build_matcher,
+        aggregate=_renta_gastos_estimacion_directa_aggregate,
+    )
 
 
 def unsupported_ledger_renta_gastos_estimacion_directa_observations(
@@ -768,17 +798,13 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
 ) -> tuple[RentaGastosEstimacionDirectaObservationProtocol, ...]:
     """Return the :class:`RentaGastosEstimacionDirectaObservationProtocol` rows no binding on ``revision`` can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_iva_observations`. An observation whose
-    modelo/period/target_casilla_id triple matches no
-    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding has its deductible amount
-    silently dropped from the filing — a modelling gap, not a legitimate zero.
-
-    False-fire guard (``ledger-iva-advisory-only-on-cuota-bearing-categories``
-    precedent): an observation that carries a zero ``deductible_amount`` contributes
-    nothing whether or not it is routed, so it is excluded — only a non-zero
-    declarable expense that reaches no casilla is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the (modelo, period, target_casilla_id)
+    match predicate (reused from the resolver's
+    ``_renta_gastos_estimacion_directa_build_matcher``) and a
+    zero-``deductible_amount`` false-fire guard. No ``extra_exclusion``.
 
     Args:
         revision: The :class:`ModeloRevision` whose gastos bindings define
@@ -789,23 +815,14 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
         Tuple of observations whose non-zero deductible amount is selected by no
         ``ledger_renta_gastos_estimacion_directa_aggregation`` binding.
     """
-    selectors = tuple(
-        _renta_ledger_gastos_estimacion_directa_selector(binding)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_estimacion_directa_selector,
+        build_matcher=_renta_gastos_estimacion_directa_build_matcher,
+        is_declarable=lambda observation: observation.deductible_amount != Decimal("0"),
     )
-    unsupported: list[RentaGastosEstimacionDirectaObservationProtocol] = []
-    for observation in observations:
-        if observation.deductible_amount == Decimal("0"):
-            continue
-        if not any(
-            observation.modelo == selector.modelo
-            and observation.period == selector.period
-            and observation.target_casilla_id == selector.target_casilla_id
-            for selector in selectors
-        ):
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
@@ -1118,6 +1135,25 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
         )
 
 
+def _renta_gastos_pago_fraccionado_build_matcher(
+    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+) -> Callable[[RentaGastosPagoFraccionadoObservationProtocol], bool]:
+    target_casilla_id = selector.target_casilla_id
+
+    def matcher(observation: RentaGastosPagoFraccionadoObservationProtocol) -> bool:
+        return observation.target_casilla_id == target_casilla_id
+
+    return matcher
+
+
+def _renta_gastos_pago_fraccionado_aggregate(
+    matched: Sequence[RentaGastosPagoFraccionadoObservationProtocol],
+    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+) -> Decimal:
+    del selector  # single declared fact (deductible_amount_sum); nothing to dispatch on
+    return sum((observation.deductible_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaGastosPagoFraccionadoObservationProtocol],
@@ -1126,56 +1162,51 @@ def resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
 
     Matches observations by ``target_casilla_id`` and sums their
     ``deductible_amount``, mirroring the income resolver's casilla-keyed fold.
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver.
 
     Args:
         revision: The :class:`ModeloRevision` whose gasto bindings are resolved.
         observations: M130 deductible gastos observations to aggregate over.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION:
-            continue
-        selector = _renta_ledger_gastos_pago_fraccionado_selector(binding)
-        matched = [
-            observation for observation in available if observation.target_casilla_id == selector.target_casilla_id
-        ]
-        resolved[binding.id] = sum((observation.deductible_amount for observation in matched), Decimal("0"))
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_pago_fraccionado_selector,
+        build_matcher=_renta_gastos_pago_fraccionado_build_matcher,
+        aggregate=_renta_gastos_pago_fraccionado_aggregate,
+    )
 
 
 def unsupported_ledger_renta_gastos_pago_fraccionado_observations(
     revision: ModeloRevision,
     observations: Iterable[RentaGastosPagoFraccionadoObservationProtocol],
 ) -> tuple[RentaGastosPagoFraccionadoObservationProtocol, ...]:
-    """Return the gasto observations no binding on the :class:`ModeloRevision` ``revision`` can consume.
+    """Return the gasto observations no ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_renta_income_observations`. An observation whose
-    ``target_casilla_id`` matches no ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding has
-    its deductible expense silently dropped — a modelling gap, not a legitimate
-    zero (no-silent-under-declaration).
-
-    False-fire guard: a zero-``deductible_amount`` observation contributes
-    nothing whether or not it is routed and is excluded; only a non-zero
-    declarable gasto reaching no casilla is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the ``target_casilla_id`` match predicate
+    (reused from the resolver's ``_renta_gastos_pago_fraccionado_build_matcher``)
+    and a zero-``deductible_amount`` false-fire guard — a gasto that
+    contributes nothing declarable is excluded whether or not it is routed.
+    No ``extra_exclusion``; unlike the IVA family this family has no
+    category-level carve-out.
 
     Returns:
         Unsupported :class:`RentaGastosPagoFraccionadoObservationProtocol` observations.
     """
-    supported_casillas = frozenset(
-        _renta_ledger_gastos_pago_fraccionado_selector(binding).target_casilla_id
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_pago_fraccionado_selector,
+        build_matcher=_renta_gastos_pago_fraccionado_build_matcher,
+        is_declarable=lambda observation: observation.deductible_amount != Decimal("0"),
     )
-    unsupported: list[RentaGastosPagoFraccionadoObservationProtocol] = []
-    for observation in observations:
-        if observation.deductible_amount == Decimal("0"):
-            continue
-        if observation.target_casilla_id not in supported_casillas:
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> list[str]:

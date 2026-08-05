@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-import unicodedata
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
@@ -23,7 +22,7 @@ from pydantic import (
 )
 from pydantic_core import core_schema
 
-from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
+from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion, fold_diacritics
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
@@ -143,9 +142,8 @@ def normalise_movement_reference(value: str) -> str:
     characters is squeezed out. Two narratives that differ only in
     accents, casing, punctuation, or whitespace map to the same token.
     """
-    decomposed = unicodedata.normalize("NFKD", value)
-    stripped = "".join(char for char in decomposed if not unicodedata.combining(char))
-    return _REFERENCE_NOISE.sub("", stripped.lower())
+    stripped = fold_diacritics(value)
+    return _REFERENCE_NOISE.sub("", stripped.casefold())
 
 
 def derive_import_fingerprint(raw: RawTransaction, *, direction: TransactionDirection | str | None = None) -> str:

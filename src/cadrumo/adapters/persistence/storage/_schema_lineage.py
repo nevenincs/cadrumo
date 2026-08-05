@@ -19,6 +19,19 @@ than a lineage gap. The two layers are not interchangeable: layer one is
 deliberately absent from the storage package facade so a layer-two caller
 cannot reach for the wrong gate.
 
+Layer two carries a second equality alongside the version one:
+:func:`inner_envelope_classification_is_expected` re-checks the inner
+envelope's :class:`~adapters.persistence.storage.SensitivityClass` against
+what the caller's own namespace declares, as defense-in-depth against a row
+whose embedded payload metadata has drifted from the outer columns layer one
+already gated. Twenty-nine call sites hand-rolled this same comparison
+independently before this predicate existed — six of them under their own
+domain-specific exception class rather than the shared
+:class:`~adapters.persistence.storage.ClassificationError`, which is why an
+inventory keyed on the raise could not find them; the AST gate in
+``tests/test_classification_enrollment_inventory.py`` is keyed on the
+comparison instead, for exactly that reason.
+
 The upgrader registry is EMPTY while every registered namespace sits at
 schema version 1. A future schema bump MUST land the one-hop upgrader for
 its namespace in the same change, or the lineage gate
@@ -40,6 +53,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Final
 
+from ....core.classification import SensitivityClass
 from .errors import EnvelopeVersionError, StorageValidationError
 
 #: Upgrades one decrypted plaintext payload from ``from_version`` to
@@ -256,11 +270,49 @@ def inner_envelope_version_is_current(stored_version: int, current_version: int)
     return stored_version == current_version
 
 
+def inner_envelope_classification_is_expected(
+    stored: SensitivityClass,
+    expected: SensitivityClass,
+) -> bool:
+    """Return whether a decrypted payload's inner envelope carries the expected class.
+
+    The classification sibling of :func:`inner_envelope_version_is_current`: the
+    same *layer two* defense-in-depth re-check, on the same equality contract,
+    for the same reason. By the time a consumer validates the inner
+    :class:`~adapters.persistence.storage.Envelope`, the outer SQL row's
+    ``expected_class`` argument has already gated the row once; this predicate
+    is the second, independent look at the payload's own embedded statement, so
+    a row whose payload bytes drifted from its own columns is still caught.
+
+    The predicate **does not raise**, by contract — the same contract as its
+    version sibling, and for the same reason. Callers own their refusal: each
+    read path raises its own exception class (``ClassificationError`` at most
+    sites, but six catalogue repositories raise their own domain-specific
+    ``*PersistenceError`` instead) carrying its own translated message key and
+    per-object diagnostics. A raising helper would silently re-route every one
+    of those differently-typed refusals even though the comparison itself is
+    identical everywhere.
+
+    Args:
+        stored: The classification read from the inner envelope.
+        expected: The classification the caller's namespace declares, which
+            every caller derives from its own
+            :class:`~adapters.persistence.storage.SensitivityClass` constant or
+            :class:`~adapters.persistence.storage.SecureObjectNamespaceDefinition`
+            rather than restating as a literal.
+
+    Returns:
+        ``True`` when the stored classification is exactly the expected one.
+    """
+    return stored is expected
+
+
 __all__ = [
     "SECURE_OBJECT_DURABILITY_FLOOR",
     "SecureObjectSchemaUpgrader",
     "deregister_secure_object_schema_upgrader",
     "ensure_schema_version_readable",
+    "inner_envelope_classification_is_expected",
     "inner_envelope_version_is_current",
     "missing_upgrade_hops",
     "register_secure_object_schema_upgrader",

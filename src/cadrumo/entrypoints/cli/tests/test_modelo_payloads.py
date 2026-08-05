@@ -42,9 +42,10 @@ from .._modelo_payloads import (
     WorkCalculateResult,
     WorkObservationsResult,
     WorkRevisionResult,
+    WorkWizardResult,
 )
 from .._modelo_rendering import calculation_revision_payload
-from .._modelo_revision_payload_parts import DetailRowPayload
+from .._modelo_revision_payload_parts import CalculationRevisionProjectionFields, DetailRowPayload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -457,3 +458,53 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
     restored_by_casilla = {row.casilla_id: row for row in restored.observations}
     assert restored_by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
     assert restored_by_casilla[_INPUT_EJERCICIO_CASILLA].absent_by_design is False
+
+
+# ---------------------------------------------------------------------------
+# CalculationRevisionProjectionFields — the shared base WorkCalculateResult,
+# WorkRevisionResult, and WorkWizardResult all subclass, so the projection of
+# a persisted CalculationRevision is declared once instead of hand-copied
+# across three command payloads.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("result_cls", (WorkCalculateResult, WorkRevisionResult, WorkWizardResult))
+def test_calculation_revision_result_shapes_subclass_the_shared_projection_base(
+    result_cls: type[CalculationRevisionProjectionFields],
+) -> None:
+    """Every calculate/revision/wizard result carries the full shared field set.
+
+    Guards against a future edit re-declaring one of these fields locally
+    (shadowing the base) or a new sibling command result skipping the shared
+    base and hand-copying the fields again.
+    """
+    assert issubclass(result_cls, CalculationRevisionProjectionFields)
+    assert set(CalculationRevisionProjectionFields.model_fields) <= set(result_cls.model_fields)
+
+
+def test_work_wizard_result_input_values_by_casilla_id_roundtrips() -> None:
+    """WorkWizardResult.input_values_by_casilla_id dict[CasillaId, str] roundtrips through JSON.
+
+    The wizard result previously had no dedicated roundtrip coverage even
+    though it carries the same strict casilla-keyed dict fields as its
+    ``WorkCalculateResult`` / ``WorkRevisionResult`` siblings.
+    """
+    payload = WorkWizardResult(
+        saved=True,
+        saved_confirmation="Saved revision via wizard",
+        **_base_revision_fields(),
+    )
+    restored = WorkWizardResult.model_validate_json(payload.model_dump_json())
+
+    assert restored == payload
+    assert isinstance(restored.input_values_by_casilla_id, dict)
+    assert all(isinstance(v, str) for v in restored.input_values_by_casilla_id.values())
+    assert restored.prompted_casillas == ()
+
+
+def test_work_wizard_result_input_values_by_casilla_id_rejects_non_string_values() -> None:
+    fields = _base_revision_fields()
+    fields["input_values_by_casilla_id"] = {_INPUT_EJERCICIO_CASILLA: 2024}
+
+    with pytest.raises(ValidationError):
+        WorkWizardResult(saved=True, saved_confirmation="Saved", **fields)

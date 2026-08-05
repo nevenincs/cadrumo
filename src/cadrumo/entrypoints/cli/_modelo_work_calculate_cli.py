@@ -167,10 +167,12 @@ _MesesTrabajoHijoOpt = Annotated[
         help=tr(
             "cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help",
             default=(
-                "Meses trabajados mientras el hijo menor de 3 años estaba en la unidad familiar "
-                "(Art. 81 LIRPF deducción maternidad). Formato: HIJO_ID=MESES. Repetible por "
-                "cada hijo. HIJO_ID es un identificador libre. Se calcula sum(min(MESES x 100, 1200)) "
-                "y se inyecta en casilla 0611. Solo para perfiles que no declaran descendientes: si "
+                "Meses trabajados mientras el hijo cumplía los requisitos de la deducción por "
+                "maternidad del art. 81 LIRPF -- menor de 3 años, o una adopción/acogimiento "
+                "dentro de su ventana de fecha de entrada, con independencia de la edad -- y "
+                "estaba en la unidad familiar. Formato: HIJO_ID=MESES. Repetible por cada hijo. "
+                "HIJO_ID es un identificador libre. Se calcula sum(min(MESES x 100, 1200)) y se "
+                "inyecta en casilla 0611. Solo para perfiles que no declaran descendientes: si "
                 "el perfil activo ya declara MESES_TRABAJO con `aeat config profile descendiente add`, "
                 "esos registros aportan los meses y esta opción se rechaza."
             ),

@@ -8,8 +8,8 @@ authority:
 * every id is validated against a compact manifest built from the authoritative
   :class:`~dev.docs.terminology._unified_record.SearchRecord` projection;
 * the bridge hashes the matrix vocabulary and manifest it depends on; and
-* the complete matrix, bridge, and manifest are measured together under the
-  one 3,000,000-byte envelope.
+* input provenance and the complete matrix, bridge, and manifest are measured
+  together under the one 3,000,000-byte envelope.
 
 No URL is reconstructed from an opaque id.  The only target URL retained for a
 semantic result comes from the same ``SearchRecord`` object that Pagefind
@@ -27,6 +27,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ._rung2_provenance import Rung2InputProvenance
 from ._search_record import ResultDisplayClass, SearchRecordKind
 from ._static_matrix import (
     DEFAULT_MAX_SERIALIZED_BYTES,
@@ -39,6 +40,7 @@ from ._unified_record import SearchRecord, derive_display_class
 
 __all__ = [
     "BRIDGE_SCHEMA_VERSION",
+    "BUNDLE_SCHEMA_VERSION",
     "BridgeCompilationError",
     "RecordManifest",
     "RecordManifestEntry",
@@ -54,6 +56,7 @@ __all__ = [
 
 _UTF_8: Final[str] = "utf-8"
 BRIDGE_SCHEMA_VERSION: Final[int] = 1
+BUNDLE_SCHEMA_VERSION: Final[int] = 2
 _ROW_ORDER: Final[str] = "canonical-utf8-byte-order-v1"
 _SHA256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 _RecordId = Annotated[str, StringConstraints(min_length=1, max_length=320)]
@@ -145,12 +148,20 @@ class SemanticBridgeEntry(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_entry_invariants(self) -> SemanticBridgeEntry:
-        """Validate canonical term identity and ordered target uniqueness."""
+        """Validate canonical term identity, target order, and uniqueness."""
         if canonical_vocabulary((self.term,)) != (self.term,):
             raise ValueError("bridge terms must use the canonical vocabulary form")
         record_ids = tuple(target.record_id for target in self.targets)
         if len(record_ids) != len(set(record_ids)):
             raise ValueError("a semantic bridge entry cannot repeat a record id")
+        expected_order = tuple(
+            sorted(
+                self.targets,
+                key=lambda target: (-target.ranking_weight, target.record_id.encode(_UTF_8)),
+            ),
+        )
+        if self.targets != expected_order:
+            raise ValueError("semantic bridge targets must be deterministically ordered")
         expected_hash = _hash_json([target.model_dump(mode="json") for target in self.targets])
         if self.targets_sha256 != expected_hash:
             raise ValueError("targets_sha256 does not match the ordered target list")
@@ -193,14 +204,15 @@ class SemanticBridge(BaseModel):
 
 
 class Rung2SearchBundle(BaseModel):
-    """The complete matrix/bridge/manifest envelope with one byte bound."""
+    """The complete matrix/bridge/manifest/provenance envelope with one byte bound."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal[1]
+    schema_version: Literal[2]
     matrix: StaticEmbeddingMatrix
     bridge: SemanticBridge
     record_manifest: RecordManifest
+    input_provenance: Rung2InputProvenance
     serialized_bytes: int = Field(gt=0, le=DEFAULT_MAX_SERIALIZED_BYTES)
     artifact_sha256: _SHA256
 
@@ -211,6 +223,10 @@ class Rung2SearchBundle(BaseModel):
             raise ValueError("bridge vocabulary hash does not match the matrix")
         if self.bridge.record_manifest_sha256 != self.record_manifest.records_sha256:
             raise ValueError("bridge manifest hash does not match the record manifest")
+        if self.input_provenance.vocabulary_sha256 != self.matrix.vocabulary_sha256:
+            raise ValueError("input provenance vocabulary hash does not match the matrix")
+        if self.input_provenance.query_token_sha256 != self.matrix.query_token_sha256:
+            raise ValueError("input provenance query-token hash does not match the matrix")
         matrix_terms = tuple(row.term for row in self.matrix.rows)
         bridge_terms = tuple(entry.term for entry in self.bridge.entries)
         if bridge_terms != matrix_terms:
@@ -277,6 +293,7 @@ def build_rung2_search_bundle(
     sweep: SweepResult,
     records: Iterable[SearchRecord],
     *,
+    provenance: object,
     max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
 ) -> Rung2SearchBundle:
     """Build a fully linked source payload without trusting mapping URLs.
@@ -286,8 +303,12 @@ def build_rung2_search_bundle(
     authoritative manifest, and the laundering target's kind and URL must
     still agree with that projection.  The URL is never serialized into the
     bridge entry; the manifest's ``SearchRecord.target`` is the sole copy.
+    The required provenance object is included in the bundle identity and
+    must match the matrix's canonical vocabulary and query-token fingerprints.
     """
     _validate_max_serialized_bytes(max_serialized_bytes)
+    if not isinstance(provenance, Rung2InputProvenance):
+        raise BridgeCompilationError("Rung-2 input provenance must be a validated Rung2InputProvenance")
     if sweep.failed_query_count:
         raise BridgeCompilationError("cannot build a Rung-2 bundle from a degraded sweep")
     if sweep.query_count != len(sweep.mappings):
@@ -368,10 +389,11 @@ def build_rung2_search_bundle(
     bridge = SemanticBridge.model_validate(bridge_core)
 
     bundle_core: dict[str, object] = {
-        "schema_version": BRIDGE_SCHEMA_VERSION,
+        "schema_version": BUNDLE_SCHEMA_VERSION,
         "matrix": matrix.model_dump(mode="json"),
         "bridge": bridge.model_dump(mode="json"),
         "record_manifest": manifest.model_dump(mode="json"),
+        "input_provenance": provenance.model_dump(mode="json"),
         "serialized_bytes": 0,
         "artifact_sha256": "0" * 64,
     }
@@ -381,7 +403,7 @@ def build_rung2_search_bundle(
     bundle_core["serialized_bytes"] = _fixed_point_serialized_size(bundle_core)
     if bundle_core["serialized_bytes"] > max_serialized_bytes:
         raise BridgeCompilationError(
-            f"matrix, bridge, and manifest serialize to {bundle_core['serialized_bytes']} bytes; "
+            f"matrix, bridge, manifest, and input provenance serialize to {bundle_core['serialized_bytes']} bytes; "
             f"maximum is {max_serialized_bytes}"
         )
     return Rung2SearchBundle.model_validate(bundle_core)

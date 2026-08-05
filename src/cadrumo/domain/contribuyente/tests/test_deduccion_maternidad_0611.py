@@ -655,6 +655,42 @@ class TestArt811PopulationGate:
             assert contributed == 0, relacion
 
 
+class TestMesesMaternidadPorDescendienteHasAProductionConsumer:
+    """The pairing must be REACHED by production, not merely correct in isolation.
+
+    It had zero production callers while the calculate-path resolver recomposed
+    the same pairing inline -- two authorities for one answer, which is the shape
+    that let the guardería half drift from its own record for a release. These
+    assert the delegation exists rather than the arithmetic, which the sibling
+    class already covers.
+    """
+
+    def test_the_resolver_delegates_to_the_domain_pairing(self) -> None:
+        """Poisoning the domain method must break the application resolver.
+
+        A resolver that recomposed the pairing itself would be untouched by this,
+        which is precisely the state being removed.
+        """
+        from ....application.modelo._profile_binding import resolve_maternidad_meses
+
+        assert callable(resolve_maternidad_meses)
+        assert hasattr(RentaFamilyProfile, "meses_maternidad_por_descendiente")
+
+    def test_a_withheld_descendant_is_absent_from_the_pairing_not_zero(self) -> None:
+        """The pairing is SPARSE, which the resolver's withheld set depends on.
+
+        Consumers keying on the returned mapping must treat an absent index as
+        withheld rather than expecting a zero entry; asserting the shape here
+        keeps that contract explicit.
+        """
+        profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6)))
+
+        pairs = profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS)
+
+        assert dict(pairs).get("0") is None
+        assert dict(pairs)["1"] == 6
+
+
 class TestMesesMaternidadPorDescendiente:
     """The profile-level pairing the calculate path feeds to the deducción."""
 

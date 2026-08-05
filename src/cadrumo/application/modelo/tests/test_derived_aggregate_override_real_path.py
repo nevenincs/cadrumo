@@ -119,7 +119,7 @@ _MESH_OWNED_SOURCES = frozenset(
 _UNRELATED_PROFILE_BINDINGS: tuple[BindingId, ...] = (
     f"renta-{_YEAR}-profile-guarderia-gastos-reales",
     f"renta-{_YEAR}-profile-cotizaciones-ss-madre",
-    f"renta-{_YEAR}-profile-descendientes-menores-3",
+    f"renta-{_YEAR}-profile-descendientes-guarderia",
 )
 
 

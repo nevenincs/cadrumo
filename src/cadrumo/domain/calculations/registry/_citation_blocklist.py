@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import unicodedata
 from typing import Literal, NamedTuple
 
+from ....core import fold_diacritics
 from ....core.i18n import Translatable as tr
 
 CitationSource = Literal[
@@ -33,7 +33,7 @@ TOML authoring tree. Values are lowercase identifiers:
 
 
 def _fold_diacritics(text: str) -> str:
-    return unicodedata.normalize("NFKD", text.lower()).encode("ascii", "ignore").decode("ascii")
+    return fold_diacritics(text).casefold()
 
 
 class KnownBadCitation(NamedTuple):

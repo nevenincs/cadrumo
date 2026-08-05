@@ -255,14 +255,31 @@ class TargetResolver:
             record.legal_id: to_search_record(record)
             for record in project_legal_search_records(_REPO_ROOT)
         }
-        # Reverse index: a normatives corpus html path -> the legal id whose
-        # corpus_ref points at it.
-        self._legal_by_corpus_path: dict[str, str] = {}
+        # Index the exact unified records consumed by Pagefind injection. A
+        # CLI family source page may resolve only to an actually emitted
+        # record; the resolver must not invent a family-level record.
+        from ..pagefind_inject import materialise_search_records
+
+        cli_projection = materialise_search_records(_REPO_ROOT)
+        self._cli_records_by_target: dict[str, tuple[SearchRecord, ...]] = {}
+        for record in cli_projection.records:
+            if record.kind is not SearchRecordKind.CLI:
+                continue
+            target_records = self._cli_records_by_target.get(record.target, ())
+            self._cli_records_by_target[record.target] = (*target_records, record)
+        self._cli_projection_skipped_reason = cli_projection.cli_skipped_reason
+
+        # Reverse index: a normatives corpus html path -> every legal id whose
+        # corpus_ref points at it. The anchor is not present in a source hit,
+        # so it is removed only from the lookup key, never used to discard
+        # competing legal ids.
+        self._legal_by_corpus_path: dict[str, tuple[str, ...]] = {}
         for legal_id, entry in self._authority.catalogues.legal.items():
             corpus_ref = getattr(entry, "corpus_ref", None)
             if corpus_ref:
                 corpus_path = corpus_ref.split("#", 1)[0]
-                self._legal_by_corpus_path.setdefault(corpus_path, legal_id)
+                legal_ids = self._legal_by_corpus_path.get(corpus_path, ())
+                self._legal_by_corpus_path[corpus_path] = (*legal_ids, legal_id)
         # The set of legal ids the authority knows, for cross-checking a
         # file-declared id against the validated catalogue.
         self._known_legal_ids: frozenset[str] = frozenset(self._authority.catalogues.legal)
@@ -423,14 +440,24 @@ class TargetResolver:
                 reason=DropReason.NO_TARGET_ENTITY,
                 detail=f"normatives source outside the corpus root: {path}",
             )
-        legal_id = self._legal_by_corpus_path.get(corpus_rel)
-        if legal_id is None:
+        legal_ids = self._legal_by_corpus_path.get(corpus_rel)
+        if not legal_ids:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
                 detail=f"no legal catalogue entry references corpus path {corpus_rel!r}",
             )
-        return self._legal_target(hit, legal_id)
+        if len(legal_ids) != 1:
+            ids = ", ".join(repr(legal_id) for legal_id in legal_ids)
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"normatives source path {corpus_rel!r} maps to multiple legal provisions "
+                    f"({ids}); no unambiguous provision locator is available"
+                ),
+            )
+        return self._legal_target(hit, legal_ids[0])
 
     def _resolve_legal_toml(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
         path = hit.posix_path.as_posix()
@@ -516,23 +543,27 @@ class TargetResolver:
         )
         return ResolvedTarget(surface=surface, record=record, source_hit=hit)
 
-    def _resolve_cli_reference(self, hit: ChunkHit, family: str) -> ResolvedTarget:
-        from ._unified_record import RankingTier, SearchRecordMetadata
-
-        # docs/cli/app.rst -> the generated CLI-reference family page (the CLI
-        # grounding surface). This resolves WITHOUT the live CLI tree walk: the
-        # reference page is a generated docs surface, so a hit there links to
-        # the family page where every command's section lives.
+    def _resolve_cli_reference(self, hit: ChunkHit, family: str) -> ResolvedTarget | DroppedHit:
+        # Resolve only to an exact CLI record already emitted by the
+        # authoritative Pagefind projection. A family page has no individual
+        # command locator, so it must not fabricate a family-level record.
         target = f"cli/{family}.html"
-        record = SearchRecord(
-            id=f"cli-ref:{family}",
-            kind=SearchRecordKind.CLI,
-            tier=RankingTier.NAVIGATION,
-            title=f"aeat {family} command reference",
-            descriptions=_plain_descriptions(f"aeat {family} command reference"),
-            target=target,
-            ranking_weight=_reweight(SearchRecordKind.CLI, hit.score),
-            metadata=SearchRecordMetadata(command_path=f"aeat {family}"),
+        matching = self._cli_records_by_target.get(target, ())
+        if not matching:
+            detail = f"no authoritative CLI search record was emitted for exact target {target!r}"
+            if self._cli_projection_skipped_reason is not None:
+                detail += f" (CLI projection skipped: {self._cli_projection_skipped_reason})"
+            return DroppedHit(hit=hit, reason=DropReason.NO_TARGET_ENTITY, detail=detail)
+        if len(matching) != 1:
+            ids = ", ".join(repr(record.id) for record in matching)
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"multiple authoritative CLI records were emitted for exact target {target!r} ({ids})",
+            )
+        (base,) = matching
+        record = base.model_copy(
+            update={"ranking_weight": _reweight(SearchRecordKind.CLI, hit.score)},
         )
         return ResolvedTarget(surface=GroundingSurface.CLI, record=record, source_hit=hit)
 

@@ -30,7 +30,7 @@ from ...core.aggregation import (
     counterpart_source_kind,
 )
 from ...core.parsing import IsoDateString
-from ._grouping import filter_observations_for_modelo, group_and_collect_names
+from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 _CANONICAL_SOURCE_KINDS = COUNTERPART_SOURCE_KINDS
 
@@ -135,16 +135,13 @@ class CounterpartAggregation(BaseModel):
 
     @model_validator(mode="after")
     def _totals_match_rollups(self) -> CounterpartAggregation:
-        computed_base = sum((row.total_taxable_base for row in self.rollups), Decimal("0"))
-        computed_total = sum((row.total_invoice_total for row in self.rollups), Decimal("0"))
-        if computed_base != self.total_taxable_base:
-            raise ValueError(
-                f"total_taxable_base {self.total_taxable_base} != sum of rollups {computed_base}",
-            )
-        if computed_total != self.total_invoice_total:
-            raise ValueError(
-                f"total_invoice_total {self.total_invoice_total} != sum of rollups {computed_total}",
-            )
+        assert_rollup_totals_match(
+            self.rollups,
+            checks=(
+                ("total_taxable_base", self.total_taxable_base, lambda row: row.total_taxable_base),
+                ("total_invoice_total", self.total_invoice_total, lambda row: row.total_invoice_total),
+            ),
+        )
         unique_counterparties = {row.counterparty_nif for row in self.rollups}
         if len(unique_counterparties) != self.total_counterparties:
             raise ValueError(

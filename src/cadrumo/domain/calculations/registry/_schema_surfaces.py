@@ -58,12 +58,6 @@ type OneBasedExportOffset = Annotated[int, Field(ge=1)]
 """A positive one-based byte coordinate in an AEAT fixed-width export record."""
 
 
-def _require_official_text(value: str, field_name: str) -> None:
-    """Assert an official registry text field is not blank."""
-    if not value.strip():
-        raise RegistryValidationError(f"{field_name} must contain official Spanish text")
-
-
 class CasillaContinuidadEvolutionDefinition(RegistryModel):
     """Declared cross-revision evolution for one casilla continuity chain."""
 

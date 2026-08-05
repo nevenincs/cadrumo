@@ -50,8 +50,7 @@ from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...application.auth import select_provider
 from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
-from ...domain.calculations.registry import RegistrySnapshotError
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile, resolve_filing_window
 from ...domain.modelos import CalculationRevision, WorkUnit
 from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue
@@ -85,26 +84,15 @@ def _deadline_window_period_for_registry_period(
 ) -> Period | None:
     """Return the typed :class:`~cadrumo.core.Period` declared by the registry deadline window.
 
-    A :class:`~cadrumo.domain.calculations.registry.RegistrySnapshotError` means
-    the registry cannot supply a deadline window for that filing tuple, so the
-    helper returns ``None`` instead of a :class:`~cadrumo.core.Period`.
+    Delegates entirely to :func:`~cadrumo.domain.deadlines.resolve_filing_window`,
+    the single matching authority for "which registry deadline window covers this
+    filing target" — this helper only projects the matched window's
+    :class:`~cadrumo.core.Period` rather than its dates. Returns ``None`` when the
+    registry declares no window for the combination.
     """
-    from ...core.resources import resources
-
-    try:
-        snapshot = resources().modelos.authority.snapshot(
-            modelo,
-            filing_year=filing_year,
-            period=registry_period,
-        )
-    except RegistrySnapshotError:
-        return None
-
     target = Period.from_year_and_code(filing_year, registry_period)
-    for window in snapshot.revision.deadline_windows:
-        if window.period == target:
-            return window.period
-    return None
+    window = resolve_filing_window(modelo, filing_year, target)
+    return None if window is None else window.period
 
 
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> Period:

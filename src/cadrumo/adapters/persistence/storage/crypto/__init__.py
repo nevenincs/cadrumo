@@ -38,6 +38,7 @@ from ._encrypted_columns import (
     decrypt_encrypted_bytes_column,
     decrypt_secure_object_payload,
     encrypt_secure_object_payload,
+    hkdf_hmac_digest,
     secure_object_key_digest,
     secure_object_payload_aad,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "derive_key",
     "encrypt_record",
     "encrypt_secure_object_payload",
+    "hkdf_hmac_digest",
     "secure_object_key_digest",
     "secure_object_payload_aad",
 ]

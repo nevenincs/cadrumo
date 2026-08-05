@@ -26,7 +26,7 @@ from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
 from ...core.aggregation import RetencionScheme
 from ...core.identity import TaxIdIdentityToken
 from ...core.parsing import IsoDateString
-from ._grouping import filter_observations_for_modelo, group_and_collect_names
+from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 _CANONICAL_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.LEDGER_TRANSACTION,
@@ -132,16 +132,13 @@ class RetencionesAggregation(BaseModel):
 
     @model_validator(mode="after")
     def _totals_match_rollups(self) -> RetencionesAggregation:
-        computed_base = sum((row.total_taxable_base for row in self.rollups), Decimal("0"))
-        computed_ret = sum((row.total_retencion for row in self.rollups), Decimal("0"))
-        if computed_base != self.total_taxable_base:
-            raise ValueError(
-                f"total_taxable_base {self.total_taxable_base} does not match sum of rollups {computed_base}",
-            )
-        if computed_ret != self.total_retencion:
-            raise ValueError(
-                f"total_retencion {self.total_retencion} does not match sum of rollups {computed_ret}",
-            )
+        assert_rollup_totals_match(
+            self.rollups,
+            checks=(
+                ("total_taxable_base", self.total_taxable_base, lambda row: row.total_taxable_base),
+                ("total_retencion", self.total_retencion, lambda row: row.total_retencion),
+            ),
+        )
         unique_perceptors = {row.perceptor_nif for row in self.rollups}
         if len(unique_perceptors) != self.total_perceptors:
             raise ValueError(

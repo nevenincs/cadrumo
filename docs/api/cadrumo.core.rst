@@ -109,4 +109,5 @@ Submodules
    cadrumo.core.secure_object_write
    cadrumo.core.setup_answers
    cadrumo.core.storage_route_guidance
+   cadrumo.core.text_fold
    cadrumo.core.wizard_catalogue

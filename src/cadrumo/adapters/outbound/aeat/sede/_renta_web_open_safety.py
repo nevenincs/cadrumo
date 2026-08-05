@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from playwright.async_api import Dialog, Locator, Page, Request
 
+from .....core import fold_diacritics
 from .....core.logging import get_logger
 from .....domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from ._errors import SedeFailureMode, SedeNavigationError
@@ -104,10 +105,27 @@ ALLOWED_CLICK_OVERRIDES: frozenset[str] = frozenset()
 
 
 def _normalise(text: str) -> str:
-    """Lowercase + strip + accent-fold."""
-    import unicodedata as _ud
+    """Lowercase + strip + accent-fold + drop any remaining non-ASCII noise.
 
-    return _ud.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii").lower().strip()
+    Composes the shared ``core.text_fold.fold_diacritics`` primitive (which
+    strips only combining marks, e.g. turns ``"ó"`` into ``"o"``) with an
+    additional ``encode("ascii", "ignore")`` pass that is DELIBERATELY kept
+    here rather than retired: this text comes from a live AEAT page, and a
+    codepoint with no combining-mark decomposition (a soft hyphen from
+    browser auto-hyphenation, an em dash, a stray glyph) can land mid-word
+    in a scraped button label. ``fold_diacritics`` alone would leave such a
+    codepoint in place and could split a forbidden token in two, silently
+    weakening this denylist. The trailing ascii-ignore pass discards it
+    instead, matching the original implementation byte-for-byte -- see
+    ``test_normalise_still_drops_non_ascii_noise_between_letters_of_a_forbidden_word``
+    for the proof. This is the one call site that keeps the ascii-ignore
+    step after adopting ``fold_diacritics``; every other former ascii-ignore
+    site (``domain.calculations.registry._citation_blocklist``) reads
+    registry-authored TOML prose rather than browser-rendered text and
+    carries none of this exposure, so it dropped the ascii-ignore step
+    outright.
+    """
+    return fold_diacritics(text).encode("ascii", "ignore").decode("ascii").casefold().strip()
 
 
 def _matches_forbidden_token(normalised_text: str) -> str | None:

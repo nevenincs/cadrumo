@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
     Envelope,
     EnvelopeVersionError,
     HashedLookup,
+    inner_envelope_classification_is_expected,
     inner_envelope_version_is_current,
     secure_object_repository_for_bucket,
 )
@@ -300,7 +301,10 @@ class VerifyObservationRepository:
         requested_observation_id: str | None = None,
     ) -> VerifyObservation:
         envelope = Envelope[VerifyObservation].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity:
+        if not inner_envelope_classification_is_expected(
+            envelope.classification,
+            LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+        ):
             observation_label = requested_observation_id or envelope.payload.observation_id
             raise ClassificationError(
                 f"verify observation {observation_label!r} has classification {envelope.classification}; "

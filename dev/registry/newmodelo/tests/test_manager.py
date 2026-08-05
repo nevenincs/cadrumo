@@ -50,8 +50,7 @@ def test_scaffold_writes_full_skeleton_and_is_idempotent(tmp_path: Path) -> None
         assert fragments, f"section {section} has no scaffolded fragment file"
 
     locales_dir = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "locales"
-    for language in ("en", "ca", "hu"):
-        assert (locales_dir / f"{language}.toml").is_file()
+    assert not locales_dir.exists(), "new Modelo scaffolding must not recreate legacy locale storage"
 
     # Second run: nothing new written, everything reported as already present.
     second = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")

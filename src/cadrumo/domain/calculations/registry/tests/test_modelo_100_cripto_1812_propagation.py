@@ -80,7 +80,7 @@ def _binding_values_2024() -> dict[BindingId, Decimal]:
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.

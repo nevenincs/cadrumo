@@ -47,6 +47,7 @@ from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
+from .._schema_lineage import inner_envelope_classification_is_expected
 from ..crypto import (
     EncryptedBlob,
     decrypt_record,
@@ -254,7 +255,7 @@ def load_envelope[PayloadT: BaseModel](
     """
     raw = _read_envelope_text(path)
     envelope = _parse_model_json(envelope_type, raw, label="plaintext")
-    if envelope.classification != expected_class:
+    if not inner_envelope_classification_is_expected(envelope.classification, expected_class):
         raise ClassificationError(
             f"envelope classification {envelope.classification}; consumer expected {expected_class}",
         )
@@ -464,7 +465,7 @@ def load_encrypted_envelope[PayloadT: BaseModel](
     """
     raw = _read_envelope_text(path)
     cipher_envelope = _parse_model_json(CipherEnvelope, raw, label="cipher")
-    if cipher_envelope.classification != expected_class:
+    if not inner_envelope_classification_is_expected(cipher_envelope.classification, expected_class):
         raise ClassificationError(
             f"cipher envelope classification {cipher_envelope.classification}; consumer expected {expected_class}",
         )
@@ -492,7 +493,7 @@ def load_encrypted_envelope[PayloadT: BaseModel](
         inner = envelope_type.model_validate_json(plaintext.decode(_UTF_8_ENCODING))
     except (UnicodeDecodeError, ValidationError, ValueError) as exc:
         raise DecryptionError("inner envelope plaintext is not valid JSON") from exc
-    if inner.classification != expected_class:
+    if not inner_envelope_classification_is_expected(inner.classification, expected_class):
         raise ClassificationError(
             f"inner envelope drifted to {inner.classification}; consumer expected {expected_class}",
         )
@@ -565,7 +566,7 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
     else:
         return False
     plaintext_envelope = _parse_model_json(envelope_type, raw, label="plaintext")
-    if plaintext_envelope.classification != expected_class:
+    if not inner_envelope_classification_is_expected(plaintext_envelope.classification, expected_class):
         raise ClassificationError(
             f"plaintext envelope classification {plaintext_envelope.classification}; "
             f"consumer expected {expected_class}",

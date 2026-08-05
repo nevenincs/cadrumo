@@ -86,7 +86,9 @@ def status(
     """Print the honest per-leaf state partition for every locale surface.
 
     Catalogue rows partition required keys into authored, key-echo,
-    unbindable, identical-to-English, and absent states.
+    unbindable, identical-to-source, and absent states. Generic keys use
+    English as the source; Modelo schema keys use the mandatory Spanish
+    source.
     """
     manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     for record in catalogue_status(manager):
@@ -190,12 +192,12 @@ def allow_identical(
         typer.Argument(
             help=tr(
                 "cli.locales.allow_identical_reason_help",
-                default="Why this string is legitimately identical to English.",
+                default="Why this string is legitimately identical to its canonical source.",
             )
         ),
     ],
 ) -> None:
-    """Record one key as deliberately identical to English."""
+    """Record one key as deliberately identical to its canonical source."""
     try:
         path = _default_manager().allow_identical(locale, key, reason)
     except LocaleError as exc:

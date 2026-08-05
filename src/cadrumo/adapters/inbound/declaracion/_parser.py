@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any
 
 from ....core import Period
+from ....core.decimal import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
@@ -597,6 +598,16 @@ def _classify_target(
         # whether that is tolerable) rather than malformed (which raises hard).
         if target.match_strategy == "named_label" and _is_own_box_number_of_blank_box(raw_value, printed_number):
             return _TargetClassification(missing=casilla_id)
+        # Only the `casilla` strategy's regex embeds SPANISH_AMOUNT_GROUP and so
+        # guarantees the ``,NN`` tail that makes a printed Spanish amount
+        # unambiguous. `bbox_anchored` takes the raw PDF word text and
+        # `named_label` takes the line's last word, both unvalidated, so a bare
+        # ``1.234`` can reach the permissive parser here and decode as one point
+        # two three four -- a filed box read a thousandfold small. Refuse the
+        # two-way reading rather than guess; the box is reported malformed, which
+        # is what an unreadable printed value is.
+        if european_thousands_reading_is_ambiguous(raw_value.strip()):
+            return _TargetClassification(malformed=casilla_id)
         parsed = parse_spanish_decimal(raw_value)
         if parsed is None:
             return _TargetClassification(malformed=casilla_id)

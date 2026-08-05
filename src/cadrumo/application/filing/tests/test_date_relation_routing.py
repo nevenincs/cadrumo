@@ -168,7 +168,7 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
             "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-            "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+            "renta-2024-profile-descendientes-guarderia": Decimal("0"),
             "renta-2024-profile-marriage-full-year": Decimal("0"),
             "renta-2024-profile-marriage-month-start": Decimal("0"),
             "renta-2024-profile-marriage-month-end": Decimal("0"),

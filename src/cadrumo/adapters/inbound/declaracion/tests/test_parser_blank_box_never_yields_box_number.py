@@ -315,3 +315,31 @@ def test_the_guard_is_actually_armed_for_semantically_named_casillas(
             f"{printed.get(casilla_id)!r}, but the AEAT render prints {expected!r}; a blank "
             f"box would be read as {expected} euros"
         )
+
+
+@pytest.mark.parametrize("ambiguous", ["1.234", "45.678", "100.000"])
+def test_ambiguous_thousands_amount_is_malformed_not_a_thousandfold_misread(ambiguous: str) -> None:
+    """A dot-only printed amount is refused rather than read a thousandfold small.
+
+    Only the ``casilla`` strategy's regex embeds ``SPANISH_AMOUNT_GROUP`` and so
+    guarantees the ``,NN`` tail. ``named_label`` takes the line's last word
+    unvalidated, so a bare ``1.234`` reaches the permissive parser, where it
+    decodes as one point two three four. On a filed declaración that is a box
+    read a thousandfold small, behind an otherwise successful extraction.
+    """
+    outcome = _classify("0150", r"Rendimiento", f"Rendimiento neto ......... {ambiguous}", "0150")
+    assert outcome.malformed == validated_casilla_id("0150", surface="ambiguity regression")
+    assert outcome.value is None
+
+
+def test_the_ambiguity_guard_does_not_swallow_a_well_formed_amount() -> None:
+    """The guard must reject only the two-way token, or it would eat real boxes.
+
+    A comma settles the reading, so the canonical Spanish form still extracts.
+    Without this the previous test would pass against a parser that had simply
+    stopped reading amounts at all.
+    """
+    outcome = _classify("0150", r"Rendimiento", "Rendimiento neto ......... 1.234,56", "0150")
+    assert outcome.malformed is None
+    assert outcome.value is not None
+    assert outcome.value.printed_value == Decimal("1234.56")

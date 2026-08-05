@@ -44,7 +44,7 @@ import pytest
 
 from .....core import StorageCategory, storage_location
 from .....tests import literal_directory_runs
-from .. import STORAGE_NAMESPACE_REGISTRY, StoragePathAnchor, StoragePathKind
+from .. import STORAGE_NAMESPACE_REGISTRY, StoragePathAnchor, StoragePathDefinition, StoragePathKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -62,7 +62,7 @@ future entry is proven genuine rather than trusted on the comment beside it.
 """
 
 
-def _anchored_definitions() -> list[object]:
+def _anchored_definitions() -> list[StoragePathDefinition]:
     """Every filesystem-kind (``<root>``-anchored) definition, any anchor value.
 
     Filters on ``anchor is not None`` rather than naming a specific

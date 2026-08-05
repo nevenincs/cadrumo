@@ -36,7 +36,6 @@ from ._registry_payloads import (
     RegistryParityReplayResult,
     RegistryParityRunResult,
     RegistryVerifyFiledStateResult,
-    RegistryVerifyResult,
     RegistryWorkbooksVerifyResult,
 )
 
@@ -167,7 +166,7 @@ def verify_registry_cmd(
     _emit_envelope(
         ctx,
         command="registry.verify",
-        result=strict_round_trip(RegistryVerifyResult, report),
+        result=strict_round_trip(RegistryInspectResult, report),
         lines=(
             _metric_line("verified", report.verified),
             *_registry_tree_metric_lines(report),

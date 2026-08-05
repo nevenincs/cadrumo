@@ -1,7 +1,7 @@
 [[revisions."2024".bindings]]
-id = "renta-2024-profile-descendientes-menores-3"
+id = "renta-2024-profile-descendientes-guarderia"
 source = "profile"
-selector = { profile_key = "renta_family.descendientes_menores_3_2024" }
+selector = { profile_key = "renta_family.descendientes_guarderia_2024" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-58"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]

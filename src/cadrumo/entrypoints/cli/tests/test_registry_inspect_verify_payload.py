@@ -4,7 +4,10 @@
 ``extra="allow"`` shells declaring only a subset of
 ``RegistryTreeReport``'s fields, so a negative count, a malformed nested
 detail row, or an unrecognised top-level key crossed the envelope. They now
-project the canonical report in full through typed rows.
+project the canonical report in full through typed rows, and -- since the
+two commands' schemas are field-identical -- through the single
+``RegistryInspectResult`` class, registered under both ``registry.inspect``
+and ``registry.verify``.
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .._registry_payloads import RegistryInspectResult, RegistryVerifyResult
+from .._registry_payloads import RegistryInspectResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,15 +47,13 @@ def _report_kwargs(**overrides: object) -> dict[str, object]:
     return base
 
 
-@pytest.mark.parametrize("schema", (RegistryInspectResult, RegistryVerifyResult))
-def test_registry_tree_result_round_trips_valid_report(schema: type[RegistryInspectResult]) -> None:
-    result = schema.model_validate(_report_kwargs())
+def test_registry_tree_result_round_trips_valid_report() -> None:
+    result = RegistryInspectResult.model_validate(_report_kwargs())
 
     assert result.registry_root == "registry"
     assert result.modelos == ["303"]
 
 
-@pytest.mark.parametrize("schema", (RegistryInspectResult, RegistryVerifyResult))
 @pytest.mark.parametrize(
     "mutation",
     (
@@ -63,21 +64,15 @@ def test_registry_tree_result_round_trips_valid_report(schema: type[RegistryInsp
         {"unknown_extra_key": "x"},
     ),
 )
-def test_registry_tree_result_refuses_malformed_report(
-    schema: type[RegistryInspectResult],
-    mutation: dict[str, object],
-) -> None:
+def test_registry_tree_result_refuses_malformed_report(mutation: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        schema.model_validate({**_report_kwargs(), **mutation})
+        RegistryInspectResult.model_validate({**_report_kwargs(), **mutation})
 
 
-@pytest.mark.parametrize("schema", (RegistryInspectResult, RegistryVerifyResult))
-def test_registry_tree_result_refuses_a_minimal_payload_missing_roots_and_detail(
-    schema: type[RegistryInspectResult],
-) -> None:
+def test_registry_tree_result_refuses_a_minimal_payload_missing_roots_and_detail() -> None:
     """A payload carrying only a stray count, missing the canonical roots/detail contract, is refused."""
     with pytest.raises(ValidationError):
-        schema.model_validate({"modelo_count": 1})
+        RegistryInspectResult.model_validate({"modelo_count": 1})
 
 
 def test_registry_tree_result_round_trips_a_populated_revision_detail_row() -> None:

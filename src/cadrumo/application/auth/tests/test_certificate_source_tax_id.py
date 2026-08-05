@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ....adapters.outbound.aeat.auth.certificate import read_certificate_subject_nif
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -80,7 +81,7 @@ def test_the_selected_certificate_names_its_holder(tmp_path: Path) -> None:
     _registered(tmp_path, name="personal", nif=_HOLDER_NIF)
     select_operator_certificate_source(name="personal")
 
-    assert certificate_source_tax_id() == _HOLDER_NIF
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif) == _HOLDER_NIF
 
 
 def test_a_named_source_is_read_over_the_selected_one(tmp_path: Path) -> None:
@@ -89,19 +90,19 @@ def test_a_named_source_is_read_over_the_selected_one(tmp_path: Path) -> None:
     _registered(tmp_path, name="work", nif=_OTHER_NIF)
     select_operator_certificate_source(name="personal")
 
-    assert certificate_source_tax_id(name="work") == _OTHER_NIF
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif, name="work") == _OTHER_NIF
 
 
 def test_nothing_registered_answers_empty_rather_than_raising() -> None:
     """The common case on a fresh profile, and it must not be an error."""
-    assert certificate_source_tax_id() == ""
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif) == ""
 
 
 def test_a_registered_but_unselected_source_answers_empty(tmp_path: Path) -> None:
     """Registering does not select, so an unnamed read has nothing to read."""
     _registered(tmp_path, name="personal", nif=_HOLDER_NIF)
 
-    assert certificate_source_tax_id() == ""
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif) == ""
 
 
 def test_an_unknown_name_answers_empty_rather_than_raising(tmp_path: Path) -> None:
@@ -109,7 +110,7 @@ def test_an_unknown_name_answers_empty_rather_than_raising(tmp_path: Path) -> No
     _registered(tmp_path, name="personal", nif=_HOLDER_NIF)
     select_operator_certificate_source(name="personal")
 
-    assert certificate_source_tax_id(name="absent") == ""
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif, name="absent") == ""
 
 
 def test_a_source_with_no_stored_passphrase_answers_empty(tmp_path: Path) -> None:
@@ -118,7 +119,7 @@ def test_a_source_with_no_stored_passphrase_answers_empty(tmp_path: Path) -> Non
     register_operator_certificate_source(name="personal", certificate_path=path)
     select_operator_certificate_source(name="personal")
 
-    assert certificate_source_tax_id() == ""
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif) == ""
 
 
 def test_a_wrong_passphrase_answers_empty(tmp_path: Path) -> None:
@@ -126,7 +127,7 @@ def test_a_wrong_passphrase_answers_empty(tmp_path: Path) -> None:
     _registered(tmp_path, name="personal", nif=_HOLDER_NIF, secret=_WRONGCERTIFICATE_BUNDLE_PASSPHRASE)
     select_operator_certificate_source(name="personal")
 
-    assert certificate_source_tax_id() == ""
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif) == ""
 
 
 def test_a_missing_certificate_file_answers_empty(tmp_path: Path) -> None:
@@ -137,7 +138,7 @@ def test_a_missing_certificate_file_answers_empty(tmp_path: Path) -> None:
     select_operator_certificate_source(name="personal")
     path.unlink()
 
-    assert certificate_source_tax_id() == ""
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif) == ""
 
 
 def test_a_subject_carrying_no_individual_identifier_answers_empty(tmp_path: Path) -> None:
@@ -151,7 +152,7 @@ def test_a_subject_carrying_no_individual_identifier_answers_empty(tmp_path: Pat
     set_operator_certificate_source_secret(name="entity", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="entity")
 
-    assert certificate_source_tax_id() == ""
+    assert certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif) == ""
 
 
 def test_the_read_is_pure_and_leaves_the_registry_untouched(tmp_path: Path) -> None:
@@ -160,6 +161,6 @@ def test_the_read_is_pure_and_leaves_the_registry_untouched(tmp_path: Path) -> N
     select_operator_certificate_source(name="personal")
     before = workflow_state_repository().load().auth
 
-    certificate_source_tax_id()
+    certificate_source_tax_id(read_subject_nif=read_certificate_subject_nif)
 
     assert workflow_state_repository().load().auth == before

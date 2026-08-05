@@ -287,6 +287,7 @@ class TransactionCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
         from ..storage.crypto import secure_object_key_digest
@@ -327,7 +328,18 @@ class TransactionCatalogueRepository:
                     exc_info=True,
                 )
                 raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-            if envelope.classification is not _TX_CATALOGUE_SENSITIVITY:
+            if not inner_envelope_classification_is_expected(envelope.classification, _TX_CATALOGUE_SENSITIVITY):
+                # errors.integrity.integrity_storage_classification is this
+                # adapters/persistence/profile layer's own classification-mismatch
+                # key (shared with buckets.py at this same layer). It is
+                # deliberately NOT merged with
+                # application.user_profile.errors.repository_classification_mismatch
+                # (see application/user_profile/_repository.py) even though both
+                # report the same abstract condition: that key belongs to a
+                # different architectural layer (the application-layer profile
+                # repository, not this raw secure-object storage adapter), and
+                # unifying across the adapter/application boundary would blur
+                # which layer owns the message.
                 raise ClassificationError(
                     context={
                         "namespace": TX_BUCKET_NAMESPACE,

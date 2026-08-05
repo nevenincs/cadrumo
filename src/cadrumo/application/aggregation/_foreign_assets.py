@@ -40,6 +40,7 @@ from .._foreign_asset_thresholds import (
     foreign_asset_declaration_thresholds,
     foreign_asset_declaration_thresholds_for_revision,
 )
+from ._grouping import assert_rollup_totals_match, group_observations
 from ._source_mesh import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 
 _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
@@ -188,19 +189,13 @@ class ForeignAssetsAggregation(BaseModel):
 
     @model_validator(mode="after")
     def _totals_match_rollups(self) -> ForeignAssetsAggregation:
-        computed_assets = sum(row.assets_count for row in self.rollups)
-        computed_valuation = sum(
-            (row.total_valuation_eur for row in self.rollups),
-            Decimal("0"),
+        assert_rollup_totals_match(
+            self.rollups,
+            checks=(
+                ("total_assets", self.total_assets, lambda row: row.assets_count),
+                ("total_valuation_eur", self.total_valuation_eur, lambda row: row.total_valuation_eur),
+            ),
         )
-        if computed_assets != self.total_assets:
-            raise ValueError(
-                f"total_assets {self.total_assets} != sum of rollups {computed_assets}",
-            )
-        if computed_valuation != self.total_valuation_eur:
-            raise ValueError(
-                f"total_valuation_eur {self.total_valuation_eur} != sum of rollups {computed_valuation}",
-            )
         cohorts = [(row.source_kind, row.asset_class) for row in self.rollups]
         if len(cohorts) != len(set(cohorts)):
             raise ValueError("each source_kind and ForeignAssetClass cohort may appear at most once in rollups")
@@ -266,9 +261,7 @@ def aggregate_foreign_assets_720(
     :func:`declarable_class` to filter rollups by obligation block before binding to
     Modelo 720 casillas.
     """
-    grouped: dict[tuple[BindingSourceKind, ForeignAssetClass], list[ForeignAssetIngestObservation]] = {}
-    for obs in observations:
-        grouped.setdefault((obs.source_kind, obs.asset_class), []).append(obs)
+    grouped = group_observations(observations, group_key_fn=lambda obs: (obs.source_kind, obs.asset_class))
     rollups: list[ForeignAssetClassRollup] = []
     for source_kind, asset_class in sorted(grouped, key=lambda c: (c[0], c[1].value)):
         group = grouped[(source_kind, asset_class)]

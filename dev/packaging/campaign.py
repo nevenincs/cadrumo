@@ -57,8 +57,15 @@ _TEST_WORKERS_ENV: Final[str] = "CADRUMO_TEST_WORKERS"
 
 
 @dataclass(frozen=True)
-class Lane:
-    """One flavor lane: a module invocation proving one install surface."""
+class Form:
+    """One executable unit of a lane: its invariant reached by one varied axis.
+
+    A form is the thing a profile actually selects and the campaign actually
+    runs. Forms of the same lane differ along exactly one axis — the installer,
+    the artifact kind, the extras closure, the cohort assertions, or the
+    environment — so what a form uniquely proves is what varying that axis
+    catches.
+    """
 
     name: str
     module: str
@@ -66,7 +73,7 @@ class Lane:
     takes_cohort: bool = True
 
     def command(self) -> list[str]:
-        """Return the subprocess argv for this lane."""
+        """Return the subprocess argv for this form."""
         argv = [sys.executable, "-m", self.module]
         if self.takes_cohort:
             argv += ["--cohort-dir", _COHORT_DIR]
@@ -74,34 +81,96 @@ class Lane:
         return argv
 
 
+@dataclass(frozen=True)
+class Lane:
+    """One invariant, plus every form that reaches it.
+
+    The lane owns the invariant; a form owns one way of reaching it. A proof
+    belongs to a lane when it is a property of the product (does the shipped
+    cohort install and do grounded tax work), and to a form when it is a
+    property of one route to that product state.
+    """
+
+    name: str
+    invariant: str
+    forms: tuple[Form, ...]
+
+    def form(self, name: str) -> Form:
+        """Return this lane's form by name, refusing an unregistered one."""
+        for form in self.forms:
+            if form.name == name:
+                return form
+        raise KeyError(f"lane {self.name!r} has no form {name!r}: {[f.name for f in self.forms]}")
+
+
 _LANES: Final[dict[str, Lane]] = {
-    "core": Lane("core", "dev.packaging.smoke_core"),
-    "pip-core": Lane("pip-core", "dev.packaging.smoke_pip_core"),
-    "sdist-core": Lane("sdist-core", "dev.packaging.smoke_sdist_core"),
-    "extras": Lane("extras", "dev.packaging.smoke_extras"),
-    "split": Lane("split", "dev.packaging.smoke_split_install"),
-    "browser": Lane("browser", "dev.packaging.smoke_browser"),
-    "browser-linux": Lane("browser-linux", "dev.packaging.smoke_browser", ("--with-deps",)),
-    "dev": Lane("dev", "dev.packaging.smoke_dev", takes_cohort=False),
-    "docker-core": Lane("docker-core", "dev.packaging.smoke_docker"),
-    "docker-browser": Lane("docker-browser", "dev.packaging.smoke_docker", ("--browser",)),
+    "core": Lane(
+        name="core",
+        invariant="the exact-version wheel cohort installs and the installed CLI does grounded tax work",
+        forms=(
+            Form("uv-venv", "dev.packaging.smoke_core"),
+            Form("plain-pip", "dev.packaging.smoke_pip_core"),
+            Form("sdist", "dev.packaging.smoke_sdist_core"),
+            Form("extras", "dev.packaging.smoke_extras"),
+            Form("joined-cohort", "dev.packaging.smoke_split_install"),
+            Form("container", "dev.packaging.smoke_docker"),
+        ),
+    ),
+    "browser": Lane(
+        name="browser",
+        invariant="the installed wheel provisions Chromium and drives a real browser session",
+        forms=(
+            Form("host", "dev.packaging.smoke_browser"),
+            Form("host-with-deps", "dev.packaging.smoke_browser", ("--with-deps",)),
+            Form("container", "dev.packaging.smoke_docker", ("--browser",)),
+        ),
+    ),
+    # Standalone rather than a core form: its invariant is not shipped-artifact
+    # installability and it consumes no cohort. The precedent for refusing the
+    # pressure to force every proof into a form.
+    "dev": Lane(
+        name="dev",
+        invariant="the frozen lock materialises a working developer toolchain",
+        forms=(Form("frozen-lock", "dev.packaging.smoke_dev", takes_cohort=False),),
+    ),
 }
 
+# Profiles select executable units, so they name qualified ``lane/form``
+# selectors. The lane, never the profile, owns the invariant.
 _PROFILES: Final[dict[str, tuple[str, ...]]] = {
-    "portable": ("core", "pip-core", "sdist-core", "extras", "split", "browser"),
-    "ci": (
-        "dev",
-        "core",
-        "pip-core",
-        "sdist-core",
-        "extras",
-        "split",
-        "browser-linux",
-        "docker-core",
-        "docker-browser",
+    "portable": (
+        "core/uv-venv",
+        "core/plain-pip",
+        "core/sdist",
+        "core/extras",
+        "core/joined-cohort",
+        "browser/host",
     ),
-    "quick": ("core",),
+    "ci": (
+        "dev/frozen-lock",
+        "core/uv-venv",
+        "core/plain-pip",
+        "core/sdist",
+        "core/extras",
+        "core/joined-cohort",
+        "browser/host-with-deps",
+        "core/container",
+        "browser/container",
+    ),
+    "quick": ("core/uv-venv",),
 }
+
+
+def resolve_form(selector: str) -> tuple[Lane, Form]:
+    """Resolve a ``lane/form`` selector to its lane and form, refusing anything else."""
+    lane_name, separator, form_name = selector.partition("/")
+    if not separator:
+        raise KeyError(f"profile entry {selector!r} is not a qualified 'lane/form' selector")
+    try:
+        lane = _LANES[lane_name]
+    except KeyError:
+        raise KeyError(f"profile entry {selector!r} names unknown lane {lane_name!r}") from None
+    return lane, lane.form(form_name)
 
 
 def _run_step(argv: list[str], repo_root: Path, label: str) -> None:
@@ -112,13 +181,14 @@ def _run_step(argv: list[str], repo_root: Path, label: str) -> None:
         raise SystemExit(f"campaign step failed ({label}): exit {result.returncode}")
 
 
-def _run_lane(lane: Lane, repo_root: Path, log_dir: Path) -> tuple[Lane, int, float, Path]:
-    """Run one lane to a captured log; return (lane, exit, seconds, log path)."""
-    log_path = log_dir / f"{lane.name}.log"
+def _run_form(selector: str, repo_root: Path, log_dir: Path) -> tuple[str, int, float, Path]:
+    """Run one form to a captured log; return (selector, exit, seconds, log path)."""
+    _lane, form = resolve_form(selector)
+    log_path = log_dir / f"{selector.replace('/', '-')}.log"
     started = time.monotonic()
     with log_path.open("wb") as sink:
-        result = subprocess.run(lane.command(), cwd=repo_root, stdout=sink, stderr=subprocess.STDOUT, check=False)
-    return lane, result.returncode, time.monotonic() - started, log_path
+        result = subprocess.run(form.command(), cwd=repo_root, stdout=sink, stderr=subprocess.STDOUT, check=False)
+    return selector, result.returncode, time.monotonic() - started, log_path
 
 
 def _worker_count(requested: int | None) -> int:
@@ -168,8 +238,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo_root = Path(__file__).resolve().parents[2]
-    lane_names = _PROFILES[args.profile]
-    lanes = [_LANES[name] for name in lane_names]
+    selectors = _PROFILES[args.profile]
+    # Resolve every selector up front so an unknown lane or form refuses before
+    # the cohort build, not after several minutes of wheel work.
+    for selector in selectors:
+        resolve_form(selector)
     workers = _worker_count(args.max_workers)
 
     # Do-once memoization (operator directive 2026-07-20): the quick profile's
@@ -247,22 +320,24 @@ def main(argv: list[str] | None = None) -> int:
 
     log_dir = repo_root / "var" / "packaging-smoke" / "lane-logs"
     log_dir.mkdir(parents=True, exist_ok=True)
-    print(f"[campaign] profile={args.profile} lanes={', '.join(lane_names)} workers={workers}", flush=True)
+    print(f"[campaign] profile={args.profile} forms={', '.join(selectors)} workers={workers}", flush=True)
+    for lane_name in dict.fromkeys(selector.split("/", 1)[0] for selector in selectors):
+        print(f"[campaign]   lane {lane_name}: {_LANES[lane_name].invariant}", flush=True)
 
     failures: list[str] = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(_run_lane, lane, repo_root, log_dir) for lane in lanes]
+        futures = [pool.submit(_run_form, selector, repo_root, log_dir) for selector in selectors]
         for future in futures:
-            lane, exit_code, seconds, log_path = future.result()
+            selector, exit_code, seconds, log_path = future.result()
             verdict = "ok" if exit_code == 0 else f"FAILED exit {exit_code}"
-            print(f"[campaign] lane {lane.name}: {verdict} in {seconds / 60:.1f} min", flush=True)
+            print(f"[campaign] form {selector}: {verdict} in {seconds / 60:.1f} min", flush=True)
             sys.stdout.write(log_path.read_text(encoding=_UTF_8, errors="replace"))
             sys.stdout.flush()
             if exit_code != 0:
-                failures.append(lane.name)
+                failures.append(selector)
 
     if failures:
-        raise SystemExit(f"packaging lanes failed: {', '.join(sorted(failures))}")
+        raise SystemExit(f"packaging forms failed: {', '.join(sorted(failures))}")
 
     if args.profile == "quick":
         # The per-push probe ends here: the installed-oracles pytest pass is

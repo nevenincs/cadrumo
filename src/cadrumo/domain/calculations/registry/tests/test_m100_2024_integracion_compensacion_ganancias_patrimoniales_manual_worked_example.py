@@ -101,7 +101,7 @@ _BASE_BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
     "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-    "renta-2024-profile-descendientes-menores-3": Decimal("0"),
+    "renta-2024-profile-descendientes-guarderia": Decimal("0"),
     "renta-2024-profile-marriage-full-year": Decimal("0"),
     "renta-2024-profile-marriage-month-start": Decimal("0"),
     "renta-2024-profile-marriage-month-end": Decimal("0"),

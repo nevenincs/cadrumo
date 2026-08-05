@@ -63,9 +63,24 @@ runtime; dropping it during the merge would have been a regression wearing a
 consolidation's clothes, which is the same shape as the ``os_keychain`` hole
 this module was corrected to expose.
 
+DECLARED IS NOT RUN, and the difference is a third question this module now
+answers. A justfile recipe is a declaration, and for the reachability question
+that is correct -- but a recipe no workflow ever invokes has never executed, so
+a gate that accepts it reports coverage over tests CI has never run. That was
+not hypothetical either: ``just test-integration`` (370 integration-marked
+modules under ``src/`` -- every cross-layer test the product has) and
+``just test-dev-tooling`` (nine ``dev/`` subsystems, whose own recipe docstring
+reads "the gates that no other lane reaches") were both declared, both healthy,
+and named by no workflow at all. :func:`ci_invoked_lanes` narrows the lane set
+to what CI actually reaches, so the two questions can be asked separately and
+neither can quietly answer for the other.
+
 See Also:
     :func:`declared_lanes`
         Every lane the repository declares, from config, recipes, and workflows.
+    :func:`ci_invoked_lanes`
+        The subset CI actually runs: workflow-inline invocations plus the
+        recipes workflows name, transitively.
     :func:`analyse_reachability`
         The gate's finding: individual tests no declared lane can select, plus
         the files no lane names at all.
@@ -83,6 +98,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+import yaml
+
 _UTF_8: Final[str] = "utf-8"
 
 #: Directories that never contain runnable project tests.
@@ -92,6 +109,13 @@ _PRUNED: Final[frozenset[str]] = frozenset(
 
 #: Where lane declarations live. Anything else is not a lane.
 _WORKFLOW_DIR: Final[str] = ".github/workflows"
+
+#: A justfile recipe header: a name at column zero, optional parameters and
+#: attributes, then a bare `:` -- never `:=`, which is a variable assignment.
+_RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\b[^:\n]*:(?![=])")
+
+#: A `just <recipe>` call, in a workflow `run:` or in another recipe's body.
+_JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>[a-z][\w-]*)")
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,11 +167,18 @@ class ReachabilityReport:
 
 @dataclass(frozen=True, slots=True)
 class Lane:
-    """One declared pytest invocation: what it reaches and what it accepts."""
+    """One declared pytest invocation: what it reaches and what it accepts.
+
+    ``recipe`` names the justfile recipe the invocation sits in, or None when
+    the invocation is written inline in a workflow. It is what makes
+    :func:`ci_invoked_lanes` able to ask whether CI actually reaches a lane,
+    rather than only whether the repository declares one.
+    """
 
     source: str
     paths: tuple[str, ...]
     marker_expression: str | None
+    recipe: str | None = None
 
     def covers(self, relative_path: str) -> bool:
         """Return whether this lane's path scope reaches ``relative_path``."""
@@ -216,6 +247,131 @@ def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...
     return lanes
 
 
+def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
+    """Return the justfile's pytest lanes, each attributed to its recipe.
+
+    Attribution is what lets a caller ask whether CI reaches a lane. A recipe
+    header sits at column zero and ends in a bare ``:`` (``:=`` is a variable
+    assignment); every indented line beneath it belongs to that recipe.
+    """
+    lanes: list[Lane] = []
+    current: str | None = None
+    for raw in text.splitlines():
+        header = _RECIPE_HEADER.match(raw)
+        if header is not None:
+            current = header.group("name")
+            continue
+        # A non-indented, non-header, non-comment line ends the preceding recipe
+        # body: an attribute (`[group('testing')]`) or a variable assignment.
+        # Comments do not, because a `#` line between a doc attribute and its
+        # header sits at column zero without interrupting anything.
+        if raw[:1] not in {" ", "\t", "@"} and raw.strip() and not raw.lstrip().startswith("#"):
+            current = None
+        for lane in _pytest_invocations(raw, source="justfile", default_paths=default_paths):
+            lanes.append(
+                Lane(source=lane.source, paths=lane.paths, marker_expression=lane.marker_expression, recipe=current)
+            )
+    return lanes
+
+
+def _recipes_invoked_by(text: str) -> set[str]:
+    """Return every recipe name a ``just <recipe>`` call in ``text`` names."""
+    return {match.group("recipe") for match in _JUST_CALL.finditer(text)}
+
+
+def _recipe_bodies(text: str) -> dict[str, str]:
+    """Return each justfile recipe's body, keyed by recipe name."""
+    bodies: dict[str, list[str]] = {}
+    current: str | None = None
+    for raw in text.splitlines():
+        header = _RECIPE_HEADER.match(raw)
+        if header is not None:
+            current = header.group("name")
+            bodies.setdefault(current, [])
+            continue
+        if current is not None:
+            if raw.strip() and raw[:1] not in {" ", "\t", "@"} and not raw.lstrip().startswith("#"):
+                current = None
+                continue
+            bodies[current].append(raw)
+    return {name: "\n".join(lines) for name, lines in bodies.items()}
+
+
+def _workflow_run_commands(text: str) -> str:
+    """Return every ``run:`` command in a workflow, and nothing else.
+
+    Read from the parsed document rather than the raw file, for the same reason
+    :func:`_pytest_invocations` refuses to treat every ``-m`` as a marker flag:
+    the word "just" is ordinary English, and these workflows use it that way in
+    step names and comments ("Ensure just is available", "provision just
+    natively"). Scanning raw text harvested `is`, `uses`, and `natively` as
+    recipe names -- three recipes that do not exist -- which is harmless only
+    until one of those words happens to BE a recipe name, at which point an
+    unreached lane reads as reached.
+    """
+    document = yaml.safe_load(text)
+    if not isinstance(document, dict):
+        return ""
+    commands: list[str] = []
+    for job in (document.get("jobs") or {}).values():
+        if not isinstance(job, dict):
+            continue
+        for step in job.get("steps") or []:
+            if isinstance(step, dict) and "run" in step:
+                commands.append(str(step["run"]))
+    return "\n".join(commands)
+
+
+def ci_invoked_recipes(root: Path) -> frozenset[str]:
+    """Return every justfile recipe a workflow reaches, transitively.
+
+    A recipe is CI-invoked when a workflow ``run:`` names it, or when a
+    CI-invoked recipe's own body names it. The transitive step matters: the
+    recipes workflows call are increasingly thin wrappers, and stopping at the
+    first hop would report a delegated lane as unreached.
+    """
+    justfile = root / "justfile"
+    if not justfile.exists():
+        return frozenset()
+    bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8))
+
+    reached: set[str] = set()
+    workflow_dir = root / _WORKFLOW_DIR
+    if workflow_dir.is_dir():
+        for workflow in sorted(workflow_dir.glob("*.yml")):
+            reached |= _recipes_invoked_by(_workflow_run_commands(workflow.read_text(encoding=_UTF_8)))
+
+    # Close over recipe-to-recipe calls until nothing new is reached.
+    frontier = set(reached)
+    while frontier:
+        nxt: set[str] = set()
+        for name in frontier:
+            for called in _recipes_invoked_by(bodies.get(name, "")):
+                if called not in reached:
+                    reached.add(called)
+                    nxt.add(called)
+        frontier = nxt
+    return frozenset(reached)
+
+
+def ci_invoked_lanes(root: Path) -> tuple[Lane, ...]:
+    """Return only the lanes CI actually runs.
+
+    The distinction this draws is the whole point. :func:`declared_lanes`
+    answers "does the repository declare a lane for this test", and a justfile
+    recipe counts — which is correct for its question and dangerously
+    reassuring for the one a reader usually means. Two lanes proved that:
+    ``just test-integration`` (370 integration-marked modules under ``src/``)
+    and ``just test-dev-tooling`` (nine ``dev/`` subsystems, including the
+    deploy-authority tests) were both declared, both healthy, and invoked by no
+    workflow at all, so the declared-lane gate reported full coverage over
+    tests CI had never once run.
+    """
+    resolved = declared_lanes(root)
+    invoked = ci_invoked_recipes(root)
+    return tuple(lane for lane in resolved if lane.recipe is None or lane.recipe in invoked)
+
+
 def configured_testpaths(root: Path) -> tuple[str, ...]:
     """Return the ``testpaths`` a pathless invocation inherits."""
     text = (root / "pyproject.toml").read_text(encoding=_UTF_8)
@@ -243,9 +399,7 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
 
     justfile = root / "justfile"
     if justfile.exists():
-        lanes.extend(
-            _pytest_invocations(justfile.read_text(encoding=_UTF_8), source="justfile", default_paths=testpaths)
-        )
+        lanes.extend(_justfile_lanes(justfile.read_text(encoding=_UTF_8), default_paths=testpaths))
 
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():
@@ -262,7 +416,9 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
     resolved: list[Lane] = []
     for lane in lanes:
         expression = lane.marker_expression if lane.marker_expression is not None else default_expression
-        resolved.append(Lane(source=lane.source, paths=lane.paths, marker_expression=expression))
+        resolved.append(
+            Lane(source=lane.source, paths=lane.paths, marker_expression=expression, recipe=lane.recipe),
+        )
     return tuple(resolved)
 
 

@@ -21,9 +21,8 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import M210PayerMode, Modelo, Period
@@ -42,7 +41,7 @@ from ...domain.transactions import (
 from . import _shared_issue_reasons
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import fold_casilla_observations
-from ._models import CasillaAggregation
+from ._models import CasillaAggregation, LedgerAggregationResultBase
 
 _TARGET_CASILLA_RENDIMIENTOS_INTEGROS: CasillaId = validated_casilla_id(
     "rendimientos_integros",
@@ -90,56 +89,11 @@ class IrnrIncomeObservation(BaseModel):
     source_jurisdiction: str = Field(min_length=2, max_length=2)
 
 
-class IrnrIncomeLedgerAggregation(BaseModel):
+class IrnrIncomeLedgerAggregation(LedgerAggregationResultBase[IrnrIncomeObservation, IrnrIncomeLedgerAggregationIssue]):
     """Selected-code M210 observations for one filing period."""
 
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1, max_length=16)
-    period: Period
     selected_official_tipo_renta_code: str = Field(min_length=2, max_length=2)
-    observations: Sequence[IrnrIncomeObservation] = Field(default_factory=tuple)
-    issues: Sequence[IrnrIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
-    casilla_aggregation: CasillaAggregation
-
-    @field_validator("observations")
-    @classmethod
-    def _freeze_observations(
-        cls,
-        value: Sequence[IrnrIncomeObservation],
-    ) -> tuple[IrnrIncomeObservation, ...]:
-        return tuple(value)
-
-    @field_validator("issues")
-    @classmethod
-    def _freeze_issues(
-        cls,
-        value: Sequence[IrnrIncomeLedgerAggregationIssue],
-    ) -> tuple[IrnrIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
-
-    @model_validator(mode="after")
-    def _validate_casilla_period(self) -> Self:
-        if self.casilla_aggregation.modelo != self.modelo:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.modelo_mismatch"))
-        if self.casilla_aggregation.period != self.period:
-            raise AggregationValidationError(t("aggregation.renta_ledger.errors.period_mismatch"))
-        return self
-
-    @field_serializer("observations")
-    def _serialize_observations(
-        self,
-        value: Sequence[IrnrIncomeObservation],
-    ) -> tuple[IrnrIncomeObservation, ...]:
-        return tuple(value)
-
-    @field_serializer("issues")
-    def _serialize_issues(
-        self,
-        value: Sequence[IrnrIncomeLedgerAggregationIssue],
-    ) -> tuple[IrnrIncomeLedgerAggregationIssue, ...]:
-        return tuple(value)
 
 
 def aggregate_irnr_income_ledger_from_repositories(

@@ -1,12 +1,23 @@
-"""Canonical encrypted persistence kernel for profile singleton Pydantic documents.
+"""Canonical encrypted persistence kernel for BARE-document profile singletons.
 
-Profile adapters that persist one whole typed document share the same durable
-contract: bytes are serialised directly from the strict Pydantic model, then
-encrypted by :class:`SecureObjectRepository` under a registry-owned namespace.
-This module owns that mechanical boundary so individual repositories retain
-only their domain mutations and translated load failures. It deliberately
-exposes :class:`SecureObjectWrite` construction for callers such as the
-prorrata filing path that co-commit the document with sibling writes.
+Profile adapters that persist one whole typed document as bare JSON bytes
+(``document.model_dump_json()``, with classification/schema-version/written-at
+carried only as SQL-row columns, nothing duplicated inside the payload) share
+the same durable contract. This module owns that mechanical boundary so
+individual repositories retain only their domain mutations and translated
+load failures. It deliberately exposes :class:`SecureObjectWrite` construction
+for callers such as the prorrata filing path that co-commit the document with
+sibling writes.
+
+This is NOT the only singleton-document persistence kernel: a namespace whose
+on-disk rows are wrapped in :class:`~adapters.persistence.storage.Envelope`
+(classification/schema-version/written-at duplicated inside the JSON payload
+itself) is a different wire shape and belongs on
+:class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+(``_secure_enveloped_document.py``) instead — enrolling an Envelope-wrapped
+namespace here would change what bytes get written and fail to read what is
+already on disk. See that module's docstring for the two shapes compared side
+by side and the rule for which one a given namespace belongs to.
 """
 
 from __future__ import annotations
@@ -16,7 +27,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ....core import ABSENT_SECURE_OBJECT_REVISION_ID
+from ....core import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ..storage import (
@@ -56,12 +67,24 @@ def resolve_profile_secure_object_repository(
 
 
 class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
-    """Persist one strict Pydantic document through a governed secure object.
+    """Persist one strict Pydantic document, stored bare, through a governed secure object.
+
+    "Stored bare" means ``document.model_dump_json()`` is written directly as
+    the row payload — no :class:`~adapters.persistence.storage.Envelope`
+    wrapper. Use this kernel only for a namespace whose on-disk rows are
+    already in that shape, or a brand-new namespace with no format to
+    preserve; an Envelope-wrapped namespace belongs on
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    instead (see the module docstring).
 
     The namespace definition remains the authority for object key, sensitivity,
     and schema version. ``save`` always delegates to ``save_many`` so an
     ordinary singleton save and a caller-composed ``to_secure_object_write``
-    follow the same encrypted SQL write path.
+    follow the same encrypted SQL write path. ``write_provenance`` is optional
+    and defaults to the substrate's own default; a caller that already stamps
+    a specific provenance string on its writes (an audit-trail identifier
+    naming the owning module) passes it through the constructor rather than
+    losing it to enrollment.
     """
 
     def __init__(
@@ -71,11 +94,13 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         definition: SecureObjectNamespaceDefinition,
         model_type: type[DocumentT],
         empty_document: Callable[[], DocumentT],
+        write_provenance: str = DEFAULT_WRITE_PROVENANCE,
     ) -> None:
         self._objects = objects
         self._definition = definition
         self._model_type = model_type
         self._empty_document = empty_document
+        self._write_provenance = write_provenance
 
     @property
     def object_key(self) -> str:
@@ -116,6 +141,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
             schema_version=self._definition.schema_version,
             written_at=now(),
             payload=document.model_dump_json().encode(UTF_8_ENCODING),
+            write_provenance=self._write_provenance,
         )
 
     def save(self, document: DocumentT) -> None:

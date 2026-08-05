@@ -220,7 +220,8 @@
    * this seam returns no candidates and the existing Pagefind ladder remains
    * authoritative.
    *
-   * Config v1 shape (all values are required before the tier can run):
+   * Config v1 shape (all values are required before the tier can run; the
+   * bundle it enables is schema-v2 and carries hash-covered input provenance):
    *   {
    *     schema_version: "cadrumo.docs-search.rung2-config.v1",
    *     enabled: true,
@@ -235,13 +236,17 @@
    *     },
    *   }
    *
-   * The bundle is the schema-v1 Rung2SearchBundle emitted by _rung2_bridge.py:
-   * it contains the schema-v3 matrix, hash-linked bridge, and authoritative
-   * record manifest under one measured byte bound. URLs are consumed only
-   * from that manifest; this code never parses an id or constructs a target. */
+   * The bundle is the schema-v2 Rung2SearchBundle emitted by _rung2_bridge.py:
+   * it contains the schema-v3 matrix, hash-linked bridge, authoritative record
+   * manifest, and required input_provenance object
+   *   { source_relpath, source_sha256, vocabulary_sha256, query_token_sha256 }
+   * under one measured byte bound. Raw source bytes are not shipped, so this
+   * reader validates the embedded, hash-covered source identity only. URLs
+   * are consumed only from that manifest; this code never parses an id or
+   * constructs a target. */
   var RUNG2_CONFIG_SCHEMA = "cadrumo.docs-search.rung2-config.v1";
   var RUNG2_NORMALIZATION_VERSION = "unicode-word-runs-nfkc-lower-v1";
-  var RUNG2_BUNDLE_SCHEMA_VERSION = 1;
+  var RUNG2_BUNDLE_SCHEMA_VERSION = 2;
   var RUNG2_MATRIX_SCHEMA_VERSION = 3;
   var RUNG2_MODEL_REPOSITORY = "minishlab/potion-multilingual-128M";
   var RUNG2_MODEL_REVISION = "e7421cd79c75fc506b88bb75723ae0a234994720";
@@ -657,15 +662,39 @@
     return { terms: terms, records: manifest.records, serializedBytes: bridge.serialized_bytes };
   }
 
+  function rung2ValidateInputProvenance(provenance, matrix, bridge) {
+    rung2Object(provenance, "Rung-2 input_provenance");
+    rung2Keys(provenance, [
+      "source_relpath", "source_sha256", "vocabulary_sha256", "query_token_sha256",
+    ], "Rung-2 input_provenance");
+    var sourceRelpath = rung2RequiredString(provenance, "source_relpath", "Rung-2 input_provenance");
+    var normalisedPath = sourceRelpath.trim().replace(/\\/g, "/");
+    if (sourceRelpath.length > 512 || sourceRelpath !== normalisedPath ||
+        !normalisedPath || normalisedPath.charAt(0) === "/" || /^[A-Za-z]:/.test(normalisedPath) ||
+        normalisedPath.split("/").some(function (part) { return !part || part === "." || part === ".."; })) {
+      throw new Error("Rung-2 input_provenance.source_relpath must be repository-relative and non-escaping");
+    }
+    rung2Hex(provenance.source_sha256, "Rung-2 input_provenance.source_sha256");
+    rung2Hex(provenance.vocabulary_sha256, "Rung-2 input_provenance.vocabulary_sha256");
+    rung2Hex(provenance.query_token_sha256, "Rung-2 input_provenance.query_token_sha256");
+    if (provenance.vocabulary_sha256 !== matrix.vocabulary_sha256 ||
+        provenance.vocabulary_sha256 !== bridge.matrix_vocabulary_sha256 ||
+        provenance.query_token_sha256 !== matrix.query_token_sha256) {
+      throw new Error("Rung-2 input provenance fingerprint mismatch");
+    }
+    return provenance;
+  }
+
   function rung2ValidateBundle(bundle) {
     rung2Object(bundle, "Rung-2 bundle");
-    rung2Keys(bundle, ["schema_version", "matrix", "bridge", "record_manifest", "serialized_bytes", "artifact_sha256"], "Rung-2 bundle");
+    rung2Keys(bundle, ["schema_version", "matrix", "bridge", "record_manifest", "input_provenance", "serialized_bytes", "artifact_sha256"], "Rung-2 bundle");
     if (bundle.schema_version !== RUNG2_BUNDLE_SCHEMA_VERSION) throw new Error("Rung-2 bundle schema mismatch");
     rung2Hex(bundle.artifact_sha256, "Rung-2 bundle.artifact_sha256");
     rung2Integer(bundle.serialized_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "Rung-2 bundle.serialized_bytes");
     var matrix = rung2ValidateMatrix(bundle.matrix);
     var manifest = rung2ValidateManifest(bundle.record_manifest);
     var bridge = rung2ValidateBridge(bundle.bridge, matrix.matrix, manifest);
+    var inputProvenance = rung2ValidateInputProvenance(bundle.input_provenance, matrix.matrix, bundle.bridge);
     if (bridge.terms && Object.keys(bridge.terms).length !== matrix.terms.length) {
       throw new Error("Rung-2 bundle bridge vocabulary mismatch");
     }
@@ -674,6 +703,7 @@
       queryRows: matrix.queryRows,
       termRows: matrix.termRows,
       bridge: bridge,
+      inputProvenance: inputProvenance,
       termVectors: rung2BuildRows(matrix),
     };
   }

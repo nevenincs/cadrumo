@@ -46,6 +46,7 @@ from ...adapters.persistence.storage import (
     EnvelopeVersionError,
     HashedLookup,
     SecureObjectNamespaceDefinition,
+    inner_envelope_classification_is_expected,
     inner_envelope_version_is_current,
     secure_object_repository_for_bucket,
 )
@@ -540,7 +541,10 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         requested_snapshot_id: str | None = None,
     ) -> TPayload:
         envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not self._namespace_definition.sensitivity:
+        if not inner_envelope_classification_is_expected(
+            envelope.classification,
+            self._namespace_definition.sensitivity,
+        ):
             snapshot_label = requested_snapshot_id or _snapshot_id_of(envelope.payload)
             raise ClassificationError(
                 f"{self._domain_label} snapshot {snapshot_label!r} has classification "

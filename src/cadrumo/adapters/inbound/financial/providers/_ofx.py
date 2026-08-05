@@ -54,6 +54,7 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
+from ._constants import OFX_EXTENSIONS
 
 _logger = get_logger(__name__)
 _INPUT_OFX_SOURCE_LABEL = "<input-ofx>"
@@ -66,7 +67,7 @@ def _looks_like_ofx(path: Path) -> bool:
     uses) so the missing-extra refusal fires only for sources the operator
     actually meant as OFX, while non-OFX probe candidates degrade to a miss.
     """
-    if path.suffix.lower() in {".ofx", ".qfx"}:
+    if path.suffix.lower() in OFX_EXTENSIONS:
         return True
     try:
         head = path.read_bytes()[:256].upper()
@@ -159,7 +160,7 @@ class OfxProvider(FinancialProvider):
     """
 
     name = "OFX provider"
-    supported_extensions = frozenset({".ofx", ".qfx"})
+    supported_extensions = OFX_EXTENSIONS
     source_format = SourceFormat.OFX
     # Corpus fixture is a synthetic OFX generated from the standard OFX 1.x spec;
     # the format is self-describing so structural fidelity is confirmed by parsing.

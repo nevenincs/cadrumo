@@ -25,6 +25,7 @@ def register(app: typer.Typer) -> None:
     @app.command("check", help=tr("cli.config.check.help"))
     def config_check(ctx: typer.Context) -> None:
         """Report external-dependency availability + the active profile's capability posture."""
+        from ....adapters.outbound.storage import windows_worst_case_object_path_suffix_length
         from ....application.preflight import run_preflight_checks
         from ....application.provisioning import (
             probe_ollama_vision,
@@ -53,7 +54,15 @@ def register(app: typer.Typer) -> None:
         # registry referential integrity. Report-only: a red preflight row is
         # surfaced for operator visibility but does not, on its own, flip the
         # capability/dependency exit contract below.
-        preflight = [row.model_dump(mode="python") for row in run_preflight_checks()]
+        # The worst-case object-path suffix is measured from the on-disk grammar the
+        # storage adapter owns, so it is supplied here at the composition root rather
+        # than reached for from the application layer.
+        preflight = [
+            row.model_dump(mode="python")
+            for row in run_preflight_checks(
+                object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
+            )
+        ]
         any_provider = any(p.available for p in providers)
         extra_available = {status.service: status.available for status in extras}
 

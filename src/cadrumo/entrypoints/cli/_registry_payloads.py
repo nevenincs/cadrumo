@@ -76,48 +76,24 @@ class RegistryRevisionDetailPayload(OutputSchema):
 
 
 @register_schema("registry.inspect")
-class RegistryInspectResult(OutputSchema):
-    """JSON envelope for ``aeat app registry inspect``.
-
-    Projects :class:`RegistryTreeReport` returned by
-    :func:`inspect_registry_tree` in full: the registry/source roots, every
-    inventory count (bounded non-negative -- a count can never be negative,
-    even though the canonical report does not itself declare that bound),
-    and the typed :class:`RegistryRevisionDetailPayload` rows. A malformed or
-    missing detail row, or an unrecognised top-level key, is refused rather
-    than forwarded.
-    """
-
-    registry_root: str
-    source_root: str | None = None
-    modelo_count: int = Field(ge=0)
-    revision_count: int = Field(ge=0)
-    legal_reference_count: int = Field(ge=0)
-    source_reference_count: int = Field(ge=0)
-    casilla_count: int = Field(ge=0)
-    formula_count: int = Field(ge=0)
-    extraction_profile_count: int = Field(ge=0)
-    cross_reference_count: int = Field(ge=0)
-    workbook_parity_ref_count: int = Field(ge=0)
-    verification_expectation_count: int = Field(ge=0)
-    application_link_count: int = Field(ge=0)
-    application_link_surfaces: list[str] = []
-    relation_count: int = Field(ge=0)
-    relation_dependency_roles: list[str] = []
-    filing_schedule_count: int = Field(ge=0)
-    modelos: list[str] = []
-    revision_details: list[RegistryRevisionDetailPayload] = []
-    verified: bool
-
-
 @register_schema("registry.verify")
-class RegistryVerifyResult(OutputSchema):
-    """JSON envelope for ``aeat app registry verify``.
+class RegistryInspectResult(OutputSchema):
+    """JSON envelope shared by ``aeat app registry inspect`` and ``... verify``.
 
-    Projects the validated :class:`RegistryTreeReport` returned by
-    :func:`verify_registry_tree` in full, at parity with
-    :class:`RegistryInspectResult`. ``verified`` marks the fail-fast
-    registry/corpus validation branch.
+    Both commands project the same :class:`RegistryTreeReport` shape in
+    full -- ``inspect`` from :func:`inspect_registry_tree`, ``verify`` from
+    the validated result of :func:`verify_registry_tree` -- so one schema is
+    registered under both command paths (the pattern
+    :class:`~cadrumo.entrypoints.cli._payloads_modelo_reconcile.ModeloReconcileResult`
+    already established for ``modelo reconcile pull``/``file``). Carries the
+    registry/source roots, every inventory count (bounded non-negative -- a
+    count can never be negative, even though the canonical report does not
+    itself declare that bound), the typed :class:`RegistryRevisionDetailPayload`
+    rows, and ``verified`` (only meaningful for ``verify``, which is the
+    fail-fast registry/corpus validation branch; ``inspect`` always reports
+    it ``True``, as :func:`inspect_registry_tree` does not validate). A
+    malformed or missing detail row, or an unrecognised top-level key, is
+    refused rather than forwarded.
     """
 
     registry_root: str

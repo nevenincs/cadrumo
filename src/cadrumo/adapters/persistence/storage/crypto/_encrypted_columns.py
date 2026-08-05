@@ -80,6 +80,36 @@ _AAD_JSON = b"cadrumo.column.encrypted_json.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"cadrumo.column.hashed_lookup.v1"
 
 
+def hkdf_hmac_digest(master_key: bytes, *, context: bytes, material: bytes) -> bytes:
+    """Return the deterministic HMAC-SHA256 digest of ``material`` under a master-derived sub-key.
+
+    The canonical "keyed lookup digest" recipe used across the storage
+    layer: derive a per-consumer 32-byte sub-key from ``master_key`` via
+    HKDF-SHA256 (empty salt, ``context`` as the HKDF info/context), then
+    HMAC-SHA256 ``material`` under that sub-key. Distinct ``context``
+    values produce unrelated digest spaces from the same master key, so
+    :class:`HashedLookup` columns and the secret store's own lookup/witness
+    digests share this one construction while remaining cryptographically
+    independent of each other.
+
+    Args:
+        master_key: The active master key (or an injected equivalent) bytes
+            are derived from. Never persisted; the caller resolves it.
+        context: Stable per-consumer HKDF context bytes distinguishing this
+            digest space from every other caller's.
+        material: The bytes to digest. Callers digesting a natural-key
+            string encode it themselves (``plaintext.encode("utf-8")``); a
+            caller digesting a composite witness passes its own concatenated
+            byte material directly.
+
+    Returns:
+        32 raw bytes. Callers needing a hex-encoded lookup key call
+        ``.hex()`` on the result.
+    """
+    sub_key = derive_key(key_material=master_key, salt=b"", context=context)
+    return hmac.new(sub_key, material, hashlib.sha256).digest()
+
+
 _AAD_SECURE_OBJECT_PAYLOAD = b"cadrumo.secure-object.payload.v2"
 
 
@@ -308,14 +338,6 @@ class HashedLookup(TypeDecorator[bytes]):
     impl = LargeBinary
     cache_ok = True
 
-    @staticmethod
-    def _derive_lookup_key(master_key: bytes) -> bytes:
-        return derive_key(
-            key_material=master_key,
-            salt=b"",
-            context=_HKDF_CONTEXT_COLUMN_LOOKUP,
-        )
-
     @classmethod
     def compute(cls, plaintext: str) -> bytes:
         """Compute the HMAC-SHA256 digest of ``plaintext``.
@@ -332,8 +354,7 @@ class HashedLookup(TypeDecorator[bytes]):
         if not isinstance(plaintext, str):
             raise _storage_validation_error(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
         key = _resolve_master_key()
-        sub_key = cls._derive_lookup_key(key)
-        return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
+        return hkdf_hmac_digest(key, context=_HKDF_CONTEXT_COLUMN_LOOKUP, material=plaintext.encode("utf-8"))
 
     @override
     def process_bind_param(self, value: str | bytes | None, dialect: Dialect) -> bytes | None:

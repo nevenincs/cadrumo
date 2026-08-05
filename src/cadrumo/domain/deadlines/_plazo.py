@@ -3,8 +3,8 @@
 Provides a profile-free function to ask "when does the plazo voluntario
 close for this modelo + filing year + period?" directly from the registry
 deadline windows.  The result feeds the extemporaneidad detection surface
-in :func:`cadrumo.entrypoints.cli._modelo._work_unit_plazo_lines` and in the
-anti-tautology test suite.
+in :mod:`cadrumo.application.modelo._work_plazo` and in the anti-tautology
+test suite.
 """
 
 from __future__ import annotations

@@ -46,7 +46,7 @@ _YEAR = 2024
 
 #: The two bindings the 0613 formula multiplies and minimises over.
 _SPEND_BINDING = "renta-2024-profile-guarderia-gastos-reales"
-_COUNT_BINDING = "renta-2024-profile-descendientes-menores-3"
+_COUNT_BINDING = "renta-2024-profile-descendientes-guarderia"
 
 
 @lru_cache

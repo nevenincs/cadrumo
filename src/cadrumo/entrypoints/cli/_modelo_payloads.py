@@ -90,7 +90,12 @@ from ._modelo_iva_wallet_payloads import (
     IvaWalletOverrideResult,
     IvaWalletSeedResult,
 )
-from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
+from ._modelo_revision_payload_parts import (
+    CalculationRevisionProjectionFields,
+    DetailRowPayload,
+    ObservationPayload,
+    ResultSummaryRowPayload,
+)
 from ._modelo_support_matrix_payloads import (
     ModeloPortalCompatibilityRefPayload,
     ModeloRenamePayload,
@@ -538,12 +543,13 @@ class WorkDiscardResult(OutputSchema):
 
 
 @register_schema("modelo.work.calculate")
-class WorkCalculateResult(OutputSchema):
+class WorkCalculateResult(CalculationRevisionProjectionFields):
     """Successful ``modelo work calculate`` result payload.
 
     The calculate CLI flattens the persisted
     :class:`CalculationRevision` fields from
-    :class:`CalculationRevisionPayload`,
+    :class:`CalculationRevisionPayload`
+    (carried by the shared :class:`CalculationRevisionProjectionFields` base),
     then adds the presentation-only values
     carried by
     :class:`ModeloWorkCalculationServiceResult`: Modelo
@@ -556,23 +562,6 @@ class WorkCalculateResult(OutputSchema):
     operation: str = "modelo.work.calculate"
     saved: bool = True
     saved_confirmation: str
-    calculation_revision_id: CalculationRevisionId
-    work_unit_id: WorkUnitId
-    state: str
-    casilla_values: dict[CasillaId, str]
-    observations: tuple[ObservationPayload, ...]
-    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
-    detail_rows: tuple[DetailRowPayload, ...] = ()
-    binding_overrides: dict[BindingId, str]
-    relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
-    input_values_by_casilla_id: dict[CasillaId, str]
-    created_at: str
-    updated_at: str
-    verified_at: str | None = None
-    verified_by: str | None = None
-    filed_at: str | None = None
-    filed_by: str | None = None
-    superseded_at: str | None = None
     modality: str | None = None
     modality_reason: str | None = None
     authorization_state: str | None = None

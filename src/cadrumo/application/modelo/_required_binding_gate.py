@@ -4,6 +4,22 @@ The gate compares required binding declarations on a registry
 :class:`ModeloRevision` with the binding ids resolved for a work-unit action.
 Persisted replay checks derive those ids from a saved
 :class:`CalculationRevision`.
+
+This gate is deliberately M202-only and hard-blocking, with no exclusion for
+``previous_filing`` / ``relation_prefill`` / ``manual_input`` sources — it is
+NOT a stricter reimplementation of the generic, all-modelos, non-blocking
+silent-zero advisory in
+:func:`~cadrumo.application.modelo._calculation_source_staging.expected_but_missing_binding_ids`,
+which explicitly excludes those three source kinds. The two gates answer
+different questions for different reasons: this one refuses M202 lifecycle
+actions outright when a declared non-constant binding has no resolved value at
+all (Ley 27/2014 art. 40.2/40.3 modalidad-cuota requires every input present
+before a pago fraccionado can be computed), while the generic advisory flags a
+narrower "present source produced no value" silent-zero shape across every
+modelo without blocking. Collapsing either gate into the other would either
+silence M202's hard stop or over-block every other modelo's advisory path —
+this is a constraint-shape mismatch, not duplication, and the divergence is
+intentional. Do not "fix" it by aligning the two.
 """
 
 from __future__ import annotations

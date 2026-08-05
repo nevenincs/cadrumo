@@ -655,9 +655,6 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     )
 
 
-_legacy_m210_tipo_renta_validator = _validated_m210_tipo_renta_code
-
-
 def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_def: CasillaDefinition) -> str:
     """Refuse a purely-numeric value routed to a declarante-selector text casilla.
 

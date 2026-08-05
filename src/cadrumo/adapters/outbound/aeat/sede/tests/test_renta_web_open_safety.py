@@ -92,6 +92,33 @@ def test_normalise_folds_accents_and_lowercases() -> None:
     assert _normalise("  Pagar  ") == "pagar"
 
 
+def test_normalise_still_drops_non_ascii_noise_between_letters_of_a_forbidden_word() -> None:
+    """Pins the safety property a naive swap to the shared ``fold_diacritics``
+    primitive alone would silently lose.
+
+    ``_normalise`` composes ``core.text_fold.fold_diacritics`` (which only
+    strips COMBINING marks and otherwise preserves every codepoint) with an
+    additional ``encode("ascii", "ignore")`` pass. That second pass is
+    deliberately kept: a live AEAT page can render a button label with a
+    non-decomposable codepoint injected mid-word by the browser or its CSS
+    (a soft hyphen from ``hyphens: auto`` auto-hyphenation is the realistic
+    case; an em dash or stray glyph are others). ``fold_diacritics`` alone
+    would leave that codepoint in place and split the forbidden token in
+    two, so the substring match would silently MISS it -- a safety
+    denylist that matches less is worse than nine spellings of a helper.
+    The trailing ascii-ignore pass discards it instead, exactly as the
+    pre-refactor implementation did, so the match still fires.
+    """
+    soft_hyphen_label = "Pre­sentación"  # U+00AD SOFT HYPHEN mid-word
+    em_dash_label = "Presentación – confirmar"
+    euro_label = "Pagar 100€ ahora"
+
+    for label in (soft_hyphen_label, em_dash_label, euro_label):
+        normalised = _normalise(label)
+        assert normalised.isascii(), (label, normalised)
+        assert _matches_forbidden_token(normalised) is not None, (label, normalised)
+
+
 def test_matches_forbidden_token_catches_substring_in_button_label() -> None:
     """Real button labels often combine words: 'Presentar declaración',
     'Firmar y enviar', 'Pagar con tarjeta'. The matcher must catch these."""

@@ -17,6 +17,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ...adapters.outbound.storage import windows_worst_case_object_path_suffix_length
 from ...core.config import override_settings
 from ..preflight import (
     HealthSeverity,
@@ -29,6 +30,11 @@ from ..preflight import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+#: Measured from the storage adapter's real on-disk grammar, the same value the
+#: composition root supplies in production. Reaching for it here keeps these
+#: probes exercising the true margin rather than a hand-picked sample.
+_SUFFIX_LENGTH = windows_worst_case_object_path_suffix_length()
 
 
 def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
@@ -77,7 +83,7 @@ def test_auth_provider_clave_invalid_identity_is_error() -> None:
 def test_storage_root_healthy_when_ancestor_writable(tmp_path: Path) -> None:
     """A storage root under a writable directory is reachable and OK."""
     with override_settings(cadrumo_local_storage_root=tmp_path / "storage" / "nested"):
-        rows = probe_storage_corpus_env()
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     storage = _row(rows, "storage:local-root")
     assert storage.healthy is True
     assert storage.severity is HealthSeverity.OK
@@ -88,7 +94,7 @@ def test_storage_root_error_when_ancestor_is_a_file(tmp_path: Path) -> None:
     blocker = tmp_path / "not-a-dir"
     blocker.write_text("x", encoding="utf-8")
     with override_settings(cadrumo_local_storage_root=blocker / "sub"):
-        rows = probe_storage_corpus_env()
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     storage = _row(rows, "storage:local-root")
     assert storage.healthy is False
     assert storage.severity is HealthSeverity.ERROR
@@ -97,7 +103,7 @@ def test_storage_root_error_when_ancestor_is_a_file(tmp_path: Path) -> None:
 
 def test_corpus_row_healthy_for_bundled_normatives() -> None:
     """The bundled legal-normatives corpus ships with the package and is present."""
-    rows = probe_storage_corpus_env()
+    rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     normatives = _row(rows, "corpus:normatives")
     assert normatives.healthy is True
     assert normatives.severity is HealthSeverity.OK
@@ -106,7 +112,7 @@ def test_corpus_row_healthy_for_bundled_normatives() -> None:
 def test_corpus_row_error_when_corpus_root_missing(tmp_path: Path) -> None:
     """A missing corpus root surfaces an error row with a reinstall remediation."""
     with override_settings(aeat_normatives_root=tmp_path / "absent-corpus"):
-        rows = probe_storage_corpus_env()
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     normatives = _row(rows, "corpus:normatives")
     assert normatives.healthy is False
     assert normatives.severity is HealthSeverity.ERROR
@@ -116,7 +122,7 @@ def test_corpus_row_error_when_corpus_root_missing(tmp_path: Path) -> None:
 def test_env_configuration_warns_without_passphrase() -> None:
     """An absent master-key passphrase is a non-blocking advisory (locked store)."""
     with override_settings(cadrumo_secret_passphrase=None):
-        rows = probe_storage_corpus_env()
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     env = _row(rows, "env:configuration")
     assert env.healthy is True
     assert env.severity is HealthSeverity.WARN
@@ -125,7 +131,7 @@ def test_env_configuration_warns_without_passphrase() -> None:
 def test_env_configuration_ok_with_passphrase() -> None:
     """A configured master-key passphrase reports an OK configuration row."""
     with override_settings(cadrumo_secret_passphrase=SecretStr("workstation-secret")):
-        rows = probe_storage_corpus_env()
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     env = _row(rows, "env:configuration")
     assert env.healthy is True
     assert env.severity is HealthSeverity.OK
@@ -144,7 +150,7 @@ def test_registry_row_healthy_when_all_references_resolve() -> None:
 
 def test_run_preflight_checks_never_raises_and_covers_every_dimension() -> None:
     """The aggregate returns typed rows for every dimension and never raises."""
-    rows = run_preflight_checks()
+    rows = run_preflight_checks(object_path_suffix_length=_SUFFIX_LENGTH)
     ids = {row.check for row in rows}
     assert {
         "auth-provider:certificate",
@@ -166,7 +172,7 @@ def test_run_preflight_checks_never_raises_and_covers_every_dimension() -> None:
 def test_windows_long_path_row_ok_when_root_has_ample_headroom(tmp_path: Path) -> None:
     """A short, shallow storage root leaves ample MAX_PATH headroom (or is OK off-Windows)."""
     with override_settings(cadrumo_local_storage_root=tmp_path / "s"):
-        rows = probe_storage_corpus_env()
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     row = _row(rows, "storage:windows-long-path")
     assert row.healthy is True
 
@@ -190,7 +196,7 @@ def test_windows_long_path_row_flags_a_deep_root(tmp_path: Path) -> None:
     for segment in range(6):
         deep_root = deep_root / f"segment-{segment}-{'x' * 30}"
     with override_settings(cadrumo_local_storage_root=deep_root):
-        rows = probe_storage_corpus_env()
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
     row = _row(rows, "storage:windows-long-path")
 
     if sys.platform != "win32" or windows_long_paths_enabled():

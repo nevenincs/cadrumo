@@ -133,12 +133,13 @@ class ModeloAmendmentRepository:
             Envelope,
             EnvelopeVersionError,
             SecureObjectRowIdentityError,
+            inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
         from ..storage.crypto import secure_object_key_digest
 
         envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not _AMENDMENT_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _AMENDMENT_SENSITIVITY):
             raise ClassificationError(
                 f"filing amendment row has classification {envelope.classification}; "
                 f"consumer expected {_AMENDMENT_SENSITIVITY}",

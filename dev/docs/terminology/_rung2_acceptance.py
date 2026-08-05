@@ -25,6 +25,7 @@ from ._model2vec_provider import (
     POTION_MODEL_REVISION,
 )
 from ._rung2_bridge import Rung2SearchBundle
+from ._rung2_provenance import Rung2InputProvenance
 from ._static_matrix import DEFAULT_MAX_SERIALIZED_BYTES, NORMALIZATION_CONTRACT_VERSION, ModelMetadata
 
 __all__ = [
@@ -141,6 +142,15 @@ def validate_rung2_browser_config(
         raise Rung2AcceptanceError("validated Rung-2 bundle exceeds the shared byte bound")
 
     model = bundle.matrix.model
+    try:
+        provenance = Rung2InputProvenance.model_validate(bundle.input_provenance)
+    except ValueError as exc:
+        raise Rung2AcceptanceError("validated Rung-2 bundle has invalid input provenance") from exc
+    if (
+        provenance.vocabulary_sha256 != bundle.matrix.vocabulary_sha256
+        or provenance.query_token_sha256 != bundle.matrix.query_token_sha256
+    ):
+        raise Rung2AcceptanceError("Rung-2 input provenance fingerprints do not match the matrix")
     try:
         ModelMetadata.model_validate(model)
     except ValueError as exc:

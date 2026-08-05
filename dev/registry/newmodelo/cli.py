@@ -78,7 +78,7 @@ def scaffold(
     Writes ``manifest.toml`` and a ``revisions/<revision_id>/`` fragment
     directory tree (casillas, formulas, bindings, completeness_manifest,
     verification_expectations, export_layouts, extraction_profiles,
-    application_links, locales) under
+    application_links) under
     ``src/cadrumo/_data/registry/aeat/modelos/<modelo_id>/``. The tree is a
     skeleton only: it does not validate as calc-grade until a contributor
     fills in the 12-item checklist (``python -m dev.registry.newmodelo

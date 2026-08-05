@@ -10,13 +10,27 @@ encrypted via the active
 :class:`~adapters.persistence.storage.MasterKeyProvider`.
 
 Artefact bytes are stored under
-:data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`;
-filed-declaration observation envelopes are stored under
-:data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`;
-IVA wallet observation envelopes are stored under
-:data:`adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
-Those namespace definitions provide the schema version, key grammar, profile
-scope, and full-custody disposition for each row family.
+:data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`
+directly through :class:`~adapters.persistence.storage.SecureObjectRepository`
+(a raw, digest-keyed blob with no ``Envelope`` wrapper -- out of scope for the
+two families below). The two Envelope-wrapped observation families --
+:data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`
+and
+:data:`adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE` --
+are each a :class:`~adapters.persistence.storage.SecureBoundRepository`
+subclass (:class:`FiledDeclaracionObservationRepository`,
+:class:`IvaCompensationWalletObservationRepository`): the natural-key
+derivation, envelope classification/version gate, and row-identity check
+that used to be hand-rolled here (~150 lines, and a row-identity check that
+raised its own ``SedeValidationError`` instead of the canonical
+``SecureObjectRowIdentityError``) now come from that shared base, with
+``_translate_row_identity_error`` preserving this module's domain-specific
+error type for the single-row ``load`` path. The base class has no
+translation hook for its enumeration path (``iter_records``/``iter_ids``
+raise ``SecureObjectRowIdentityError`` directly, unlike ``load``), so
+:class:`FiledDeclaracionObservationStore`'s ``list_*`` methods catch and
+translate it themselves rather than letting the untyped storage error leak
+through this module's boundary.
 """
 
 from __future__ import annotations
@@ -35,15 +49,12 @@ from ....persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
-    ClassificationError,
-    Envelope,
-    EnvelopeVersionError,
     MasterKeyProvider,
+    SecureBoundRepository,
     SecureObjectRepository,
-    inner_envelope_version_is_current,
+    SecureObjectRowIdentityError,
     secure_object_repository_for_active_bucket,
 )
-from ....persistence.storage.crypto import secure_object_key_digest
 from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
@@ -52,24 +63,142 @@ _ARTEFACT_NAMESPACE = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace
 _ARTEFACT_CLASSIFICATION = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.sensitivity
 _ARTEFACT_ENVELOPE_VERSION = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.schema_version
 _OBSERVATION_NAMESPACE = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace
-_OBSERVATION_CLASSIFICATION = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.sensitivity
-_OBSERVATION_ENVELOPE_VERSION = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.schema_version
 _IVA_WALLET_OBSERVATION_NAMESPACE = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.namespace
-_IVA_WALLET_CLASSIFICATION = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.sensitivity
-_IVA_WALLET_ENVELOPE_VERSION = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.schema_version
 _STORAGE_REF_PREFIX = "secure-object:financial:"
+
+
+def filed_declaracion_observation_object_key(
+    modelo: str,
+    ejercicio: int,
+    period: Period,
+    expediente_id: str,
+) -> str:
+    """Return the secure-object natural key for a filed-declaration observation.
+
+    The key is the hash grammar declared by
+    :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
+    """
+    key = "\x1f".join(
+        (
+            _safe_segment(modelo),
+            str(ejercicio),
+            _safe_segment(period.registry_token),
+            _safe_segment(expediente_id),
+        ),
+    )
+    return sha256_hex(key.encode(_UTF_8_ENCODING))
+
+
+def iva_compensation_wallet_observation_object_key(
+    taxpayer_nif: str,
+    target_year: int,
+    target_period: Period,
+    captured_at: str,
+) -> str:
+    """Return the secure-object natural key for an IVA-wallet observation.
+
+    The key is the hash grammar declared by
+    :data:`adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
+    """
+    key = "\x1f".join(
+        (
+            _safe_segment(taxpayer_nif),
+            str(target_year),
+            _safe_segment(target_period.registry_token),
+            captured_at,
+        ),
+    )
+    return sha256_hex(key.encode(_UTF_8_ENCODING))
+
+
+def _safe_segment(value: str) -> str:
+    cleaned = _SAFE_SEGMENT_RE.sub("_", value.strip())
+    cleaned = cleaned.strip("._")
+    if not cleaned:
+        raise SedeValidationError("filed-declaration store path segment is empty")
+    return cleaned
+
+
+class FiledDeclaracionObservationRepository(SecureBoundRepository[FiledDeclaracionObservation]):
+    """Envelope-bound repository for filed-declaration observations.
+
+    Governed by
+    :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
+    The natural key is the SHA-256 grammar
+    :func:`filed_declaracion_observation_object_key` computes from a
+    declaration's identity fields; a row whose decrypted payload rebuilds a
+    different key surfaces as :class:`~._errors.SedeValidationError` (the
+    ``load`` path only -- see the module docstring for why enumeration is
+    handled separately).
+    """
+
+    namespace = _OBSERVATION_NAMESPACE
+    sensitivity = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.sensitivity
+    schema_version = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.schema_version
+    payload_type = FiledDeclaracionObservation
+
+    def extract_identifier(self, payload: FiledDeclaracionObservation) -> str:
+        """Return the natural key ``payload`` claims to be filed under."""
+        return filed_declaracion_observation_object_key(
+            payload.modelo,
+            payload.ejercicio,
+            payload.period,
+            payload.expediente_id,
+        )
+
+    def _translate_row_identity_error(self, error: SecureObjectRowIdentityError) -> Exception:
+        """Preserve this module's domain error for a single-row identity mismatch."""
+        return SedeValidationError(
+            "filed-declaration observation does not belong to the requested row: "
+            f"asked for {error.expected_identifier!r}, "
+            f"decrypted payload is filed under {error.payload_identifier!r}",
+        )
+
+
+class IvaCompensationWalletObservationRepository(SecureBoundRepository[IvaCompensationWalletObservation]):
+    """Envelope-bound repository for read-only IVA compensation-wallet observations.
+
+    Governed by
+    :data:`adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
+    The natural key is the SHA-256 grammar
+    :func:`iva_compensation_wallet_observation_object_key` computes from the
+    wallet snapshot's identity fields.
+    """
+
+    namespace = _IVA_WALLET_OBSERVATION_NAMESPACE
+    sensitivity = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.sensitivity
+    schema_version = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.schema_version
+    payload_type = IvaCompensationWalletObservation
+
+    def extract_identifier(self, payload: IvaCompensationWalletObservation) -> str:
+        """Return the natural key ``payload`` claims to be filed under."""
+        return iva_compensation_wallet_observation_object_key(
+            payload.taxpayer_nif,
+            payload.target_year,
+            payload.target_period,
+            payload.captured_at.isoformat(),
+        )
+
+    def _translate_row_identity_error(self, error: SecureObjectRowIdentityError) -> Exception:
+        """Preserve this module's domain error for a single-row identity mismatch."""
+        return SedeValidationError(
+            "IVA wallet observation does not belong to the requested row: "
+            f"asked for {error.expected_identifier!r}, "
+            f"decrypted payload is filed under {error.payload_identifier!r}",
+        )
 
 
 class FiledDeclaracionObservationStore:
     """Persist captured AEAT filed data through encrypted SQL namespaces.
 
     The store writes raw captured artefact bytes to
-    :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`.
-    It wraps :class:`FiledDeclaracionObservation` and
-    :class:`IvaCompensationWalletObservation` payloads in
-    :class:`~adapters.persistence.storage.Envelope` records before writing
-    them to their dedicated FINANCIAL namespaces through
-    :class:`~adapters.persistence.storage.SecureObjectRepository`.
+    :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`
+    directly. :class:`FiledDeclaracionObservation` and
+    :class:`IvaCompensationWalletObservation` persistence is delegated to
+    :class:`FiledDeclaracionObservationRepository` and
+    :class:`IvaCompensationWalletObservationRepository` respectively, both
+    :class:`~adapters.persistence.storage.SecureBoundRepository` subclasses
+    bound to this store's own secure-object backend.
     """
 
     def __init__(
@@ -82,12 +211,26 @@ class FiledDeclaracionObservationStore:
         del master_key_provider
         self._root = Path(root)
         self._objects = objects
+        self._observation_repository: FiledDeclaracionObservationRepository | None = None
+        self._wallet_repository: IvaCompensationWalletObservationRepository | None = None
 
     @property
     def _repository(self) -> SecureObjectRepository:
         if self._objects is None:
             self._objects = secure_object_repository_for_active_bucket()
         return self._objects
+
+    @property
+    def _observations(self) -> FiledDeclaracionObservationRepository:
+        if self._observation_repository is None:
+            self._observation_repository = FiledDeclaracionObservationRepository(objects=self._repository)
+        return self._observation_repository
+
+    @property
+    def _wallet_observations(self) -> IvaCompensationWalletObservationRepository:
+        if self._wallet_repository is None:
+            self._wallet_repository = IvaCompensationWalletObservationRepository(objects=self._repository)
+        return self._wallet_repository
 
     def persist_artefact(
         self,
@@ -172,28 +315,9 @@ class FiledDeclaracionObservationStore:
         :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
         """
         _validate_observation_casilla_ids(observation)
-        object_key = self._observation_key(
-            observation.modelo,
-            observation.ejercicio,
-            observation.period,
-            observation.expediente_id,
-        )
-        envelope = Envelope[FiledDeclaracionObservation](
-            schema_version=_OBSERVATION_ENVELOPE_VERSION,
-            written_at=now(),
-            classification=_OBSERVATION_CLASSIFICATION,
-            payload=observation,
-        )
         with self._crypto_scope():
-            self._repository.save(
-                namespace=_OBSERVATION_NAMESPACE,
-                object_key=object_key,
-                classification=_OBSERVATION_CLASSIFICATION,
-                schema_version=_OBSERVATION_ENVELOPE_VERSION,
-                written_at=envelope.written_at,
-                payload=envelope.model_dump_json().encode(_UTF_8_ENCODING),
-            )
-        return _logical_path(_OBSERVATION_NAMESPACE, object_key)
+            self._observations.save(observation)
+        return _logical_path(_OBSERVATION_NAMESPACE, self._observations.extract_identifier(observation))
 
     def load_observation(self, path: Path) -> FiledDeclaracionObservation:
         """Load and decrypt a :class:`FiledDeclaracionObservation` from the encrypted store.
@@ -203,31 +327,10 @@ class FiledDeclaracionObservationStore:
         """
         object_key = Path(path).name
         with self._crypto_scope():
-            record = self._repository.load(
-                _OBSERVATION_NAMESPACE,
-                object_key,
-                expected_class=_OBSERVATION_CLASSIFICATION,
-                max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
-            )
-        if record is None:
+            observation = self._observations.load(object_key)
+        if observation is None:
             raise ExpedienteNotFoundError(f"filed-declaration observation not found: {object_key}")
-        envelope = Envelope[FiledDeclaracionObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
-        if envelope.classification is not _OBSERVATION_CLASSIFICATION:
-            raise ClassificationError(
-                f"filed-declaration observation {object_key} has classification {envelope.classification}; "
-                f"consumer expected {_OBSERVATION_CLASSIFICATION}",
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _OBSERVATION_ENVELOPE_VERSION):
-            raise EnvelopeVersionError(
-                f"filed-declaration observation {object_key} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
-            )
-        _assert_payload_is_the_requested_row(
-            self._key_of_observation(envelope.payload),
-            object_key,
-            "filed-declaration observation",
-        )
-        return envelope.payload
+        return observation
 
     def list_observations(self) -> tuple[FiledDeclaracionObservation, ...]:
         """Return :class:`FiledDeclaracionObservation` records from the active encrypted backend.
@@ -235,31 +338,14 @@ class FiledDeclaracionObservationStore:
         Rows are scanned from
         :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
         """
-        observations: list[FiledDeclaracionObservation] = []
         with self._crypto_scope():
-            records = self._repository.list_records(
-                _OBSERVATION_NAMESPACE,
-                expected_class=_OBSERVATION_CLASSIFICATION,
-                max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
-            )
-        for record in records:
-            envelope = Envelope[FiledDeclaracionObservation].model_validate_json(record.payload.decode(_UTF_8_ENCODING))
-            if envelope.classification is not _OBSERVATION_CLASSIFICATION:
-                raise ClassificationError(
-                    f"filed-declaration observation {record.object_key!r} has classification "
-                    f"{envelope.classification}; consumer expected {_OBSERVATION_CLASSIFICATION}",
-                )
-            if not inner_envelope_version_is_current(envelope.schema_version, _OBSERVATION_ENVELOPE_VERSION):
-                raise EnvelopeVersionError(
-                    f"filed-declaration observation {record.object_key!r} is at version "
-                    f"{envelope.schema_version}; consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
-                )
-            _assert_payload_is_its_own_row(
-                self._key_of_observation(envelope.payload),
-                record.object_key,
-                "filed-declaration observation",
-            )
-            observations.append(envelope.payload)
+            try:
+                observations = list(self._observations.iter_records())
+            except SecureObjectRowIdentityError as exc:
+                raise SedeValidationError(
+                    "filed-declaration observation does not derive the row it is stored in; "
+                    f"decrypted payload is filed under {exc.expected_identifier!r}",
+                ) from exc
         return tuple(
             sorted(
                 observations,
@@ -279,28 +365,12 @@ class FiledDeclaracionObservationStore:
         The envelope row is stored under
         :data:`adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
         """
-        object_key = self._iva_wallet_observation_key(
-            observation.taxpayer_nif,
-            observation.target_year,
-            observation.target_period,
-            observation.captured_at.isoformat(),
-        )
-        envelope = Envelope[IvaCompensationWalletObservation](
-            schema_version=_IVA_WALLET_ENVELOPE_VERSION,
-            written_at=now(),
-            classification=_IVA_WALLET_CLASSIFICATION,
-            payload=observation,
-        )
         with self._crypto_scope():
-            self._repository.save(
-                namespace=_IVA_WALLET_OBSERVATION_NAMESPACE,
-                object_key=object_key,
-                classification=_IVA_WALLET_CLASSIFICATION,
-                schema_version=_IVA_WALLET_ENVELOPE_VERSION,
-                written_at=envelope.written_at,
-                payload=envelope.model_dump_json().encode(_UTF_8_ENCODING),
-            )
-        return _logical_path(_IVA_WALLET_OBSERVATION_NAMESPACE, object_key)
+            self._wallet_observations.save(observation)
+        return _logical_path(
+            _IVA_WALLET_OBSERVATION_NAMESPACE,
+            self._wallet_observations.extract_identifier(observation),
+        )
 
     def load_iva_wallet_observation(self, path: Path) -> IvaCompensationWalletObservation:
         """Load and decrypt an :class:`IvaCompensationWalletObservation` from ``path``.
@@ -310,33 +380,10 @@ class FiledDeclaracionObservationStore:
         """
         object_key = Path(path).name
         with self._crypto_scope():
-            record = self._repository.load(
-                _IVA_WALLET_OBSERVATION_NAMESPACE,
-                object_key,
-                expected_class=_IVA_WALLET_CLASSIFICATION,
-                max_supported_version=_IVA_WALLET_ENVELOPE_VERSION,
-            )
-        if record is None:
+            observation = self._wallet_observations.load(object_key)
+        if observation is None:
             raise ExpedienteNotFoundError(f"IVA wallet observation not found: {object_key}")
-        envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
-            record.payload.decode(_UTF_8_ENCODING),
-        )
-        if envelope.classification is not _IVA_WALLET_CLASSIFICATION:
-            raise ClassificationError(
-                f"IVA wallet observation {object_key} has classification {envelope.classification}; "
-                f"consumer expected {_IVA_WALLET_CLASSIFICATION}",
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _IVA_WALLET_ENVELOPE_VERSION):
-            raise EnvelopeVersionError(
-                f"IVA wallet observation {object_key} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",
-            )
-        _assert_payload_is_the_requested_row(
-            self._key_of_iva_wallet_observation(envelope.payload),
-            object_key,
-            "IVA wallet observation",
-        )
-        return envelope.payload
+        return observation
 
     def list_iva_wallet_observations(self) -> tuple[IvaCompensationWalletObservation, ...]:
         """Return :class:`IvaCompensationWalletObservation` records from the active encrypted backend.
@@ -344,33 +391,14 @@ class FiledDeclaracionObservationStore:
         Rows are scanned from
         :data:`adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
         """
-        observations: list[IvaCompensationWalletObservation] = []
         with self._crypto_scope():
-            records = self._repository.list_records(
-                _IVA_WALLET_OBSERVATION_NAMESPACE,
-                expected_class=_IVA_WALLET_CLASSIFICATION,
-                max_supported_version=_IVA_WALLET_ENVELOPE_VERSION,
-            )
-        for record in records:
-            envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
-                record.payload.decode(_UTF_8_ENCODING),
-            )
-            if envelope.classification is not _IVA_WALLET_CLASSIFICATION:
-                raise ClassificationError(
-                    f"IVA wallet observation {record.object_key!r} has classification {envelope.classification}; "
-                    f"consumer expected {_IVA_WALLET_CLASSIFICATION}",
-                )
-            if not inner_envelope_version_is_current(envelope.schema_version, _IVA_WALLET_ENVELOPE_VERSION):
-                raise EnvelopeVersionError(
-                    f"IVA wallet observation {record.object_key!r} is at version {envelope.schema_version}; "
-                    f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",
-                )
-            _assert_payload_is_its_own_row(
-                self._key_of_iva_wallet_observation(envelope.payload),
-                record.object_key,
-                "IVA wallet observation",
-            )
-            observations.append(envelope.payload)
+            try:
+                observations = list(self._wallet_observations.iter_records())
+            except SecureObjectRowIdentityError as exc:
+                raise SedeValidationError(
+                    "IVA wallet observation does not derive the row it is stored in; "
+                    f"decrypted payload is filed under {exc.expected_identifier!r}",
+                ) from exc
         return tuple(
             sorted(
                 observations,
@@ -378,142 +406,8 @@ class FiledDeclaracionObservationStore:
             ),
         )
 
-    def _observation_key(
-        self,
-        modelo: str,
-        ejercicio: int,
-        period: Period,
-        expediente_id: str,
-    ) -> str:
-        return filed_declaracion_observation_object_key(modelo, ejercicio, period, expediente_id)
-
-    def _key_of_observation(self, observation: FiledDeclaracionObservation) -> str:
-        """Return the natural key a decrypted filed observation claims to be filed under."""
-        return self._observation_key(
-            observation.modelo,
-            observation.ejercicio,
-            observation.period,
-            observation.expediente_id,
-        )
-
-    def _key_of_iva_wallet_observation(self, observation: IvaCompensationWalletObservation) -> str:
-        """Return the natural key a decrypted wallet observation claims to be filed under."""
-        return self._iva_wallet_observation_key(
-            observation.taxpayer_nif,
-            observation.target_year,
-            observation.target_period,
-            observation.captured_at.isoformat(),
-        )
-
     def _crypto_scope(self):
         return nullcontext()
-
-    def _iva_wallet_observation_key(
-        self,
-        taxpayer_nif: str,
-        target_year: int,
-        target_period: Period,
-        captured_at: str,
-    ) -> str:
-        return iva_compensation_wallet_observation_object_key(
-            taxpayer_nif,
-            target_year,
-            target_period,
-            captured_at,
-        )
-
-
-def _assert_payload_is_the_requested_row(derived_key: str, requested_key: str, subject: str) -> None:
-    """Refuse a decrypted payload whose own identity is not the row asked for.
-
-    Both observation families derive their natural key from identity fields
-    the payload itself carries, but nothing re-derived it after decryption:
-    ``load_*`` validated only the envelope's class and version, so a valid
-    payload re-encrypted under another row's key was returned as that row.
-    Custody consumers would then associate filing evidence with the wrong
-    declaration, or a wallet balance with the wrong period — with no error
-    anywhere, because every layer beneath answered correctly about the row it
-    was handed.
-
-    Raises:
-        SedeValidationError: When the payload belongs to a different row.
-    """
-    if derived_key != requested_key:
-        raise SedeValidationError(
-            f"{subject} does not belong to the requested row: "
-            f"asked for {requested_key!r}, decrypted payload is filed under {derived_key!r}",
-        )
-
-
-def _assert_payload_is_its_own_row(derived_key: str, stored_key: bytes, subject: str) -> None:
-    """Refuse an enumerated payload whose identity does not derive its stored row.
-
-    The enumeration counterpart of :func:`_assert_payload_is_the_requested_row`.
-    Listing has no requested key to compare against, so the comparison is made
-    against the row's stored key digest — the same digest the write path
-    produced from the natural key. Without it, a substituted row is carried
-    into every consumer that enumerates instead of looking up, which is the
-    wider of the two doors.
-
-    Raises:
-        SedeValidationError: When the payload does not derive its own row key.
-    """
-    if secure_object_key_digest(derived_key) != stored_key:
-        raise SedeValidationError(
-            f"{subject} does not derive the row it is stored in; decrypted payload is filed under {derived_key!r}",
-        )
-
-
-def filed_declaracion_observation_object_key(
-    modelo: str,
-    ejercicio: int,
-    period: Period,
-    expediente_id: str,
-) -> str:
-    """Return the secure-object natural key for a filed-declaration observation.
-
-    The key is the hash grammar declared by
-    :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE`.
-    """
-    key = "\x1f".join(
-        (
-            _safe_segment(modelo),
-            str(ejercicio),
-            _safe_segment(period.registry_token),
-            _safe_segment(expediente_id),
-        ),
-    )
-    return sha256_hex(key.encode(_UTF_8_ENCODING))
-
-
-def iva_compensation_wallet_observation_object_key(
-    taxpayer_nif: str,
-    target_year: int,
-    target_period: Period,
-    captured_at: str,
-) -> str:
-    """Return the secure-object natural key for an IVA-wallet observation.
-
-    The key is the hash grammar declared by
-    :data:`adapters.persistence.storage.AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE`.
-    """
-    key = "\x1f".join(
-        (
-            _safe_segment(taxpayer_nif),
-            str(target_year),
-            _safe_segment(target_period.registry_token),
-            captured_at,
-        ),
-    )
-    return sha256_hex(key.encode(_UTF_8_ENCODING))
-
-
-def _safe_segment(value: str) -> str:
-    cleaned = _SAFE_SEGMENT_RE.sub("_", value.strip())
-    cleaned = cleaned.strip("._")
-    if not cleaned:
-        raise SedeValidationError("filed-declaration store path segment is empty")
-    return cleaned
 
 
 def _logical_path(namespace: str, object_key: str) -> Path:
@@ -554,4 +448,10 @@ def _parse_storage_ref(storage_ref: str) -> str:
     return storage_ref.removeprefix(_STORAGE_REF_PREFIX)
 
 
-__all__ = ["FiledDeclaracionObservationStore"]
+__all__ = [
+    "FiledDeclaracionObservationRepository",
+    "FiledDeclaracionObservationStore",
+    "IvaCompensationWalletObservationRepository",
+    "filed_declaracion_observation_object_key",
+    "iva_compensation_wallet_observation_object_key",
+]

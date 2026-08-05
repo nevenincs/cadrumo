@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
     EnvelopeVersionError,
     SecureObjectRepository,
     SecureObjectWrite,
+    inner_envelope_classification_is_expected,
     inner_envelope_version_is_current,
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
@@ -65,10 +66,30 @@ _USER_PROFILE_VALUE_SENSITIVITY = USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivi
 _USER_PROFILE_SNAPSHOT_VERSION = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version
 _USER_PROFILE_SNAPSHOT_SENSITIVITY = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 _PROFILE_RECORD_MISSING_MESSAGE = "profile record not found in secure storage"
-_PROFILE_RECORD_CLASSIFICATION_MESSAGE = "profile record classification is incompatible with this repository"
+# repository_classification_mismatch (below) is the ONE shared i18n key for
+# the classification-mismatch condition raised for both stored artifact kinds
+# this repository owns (the profile record proper and its point-in-time
+# snapshot). It was formerly two near-identical keys
+# (repository_profile_record_classification_mismatch /
+# ..._snapshot_classification_mismatch); they collapsed onto one because the
+# diagnostic specificity a support engineer needs — WHICH secure-object
+# namespace failed — is carried by the ``namespace`` context field (a
+# technical dotted identifier, e.g. USER_PROFILE_VALUE_NAMESPACE /
+# USER_PROFILE_SNAPSHOT_NAMESPACE, never translated) substituted into the
+# message, exactly mirroring the already-shipped, already-parameterized
+# errors.storage.namespace.classification_mismatch one layer below (see
+# adapters/persistence/storage/sql/_secure_object_row_codec.py). This is NOT
+# merged with the adapters/persistence/profile layer's own
+# errors.integrity.integrity_storage_classification (see
+# adapters/persistence/profile/transactions.py): that key belongs to a
+# different architectural layer (the raw secure-object storage adapter, not
+# this application-layer repository), and unifying across the
+# adapter/application boundary would blur which layer owns the message.
+_PROFILE_CLASSIFICATION_MISMATCH_MESSAGE = (
+    "secure-object namespace classification does not match the repository contract"
+)
 _PROFILE_RECORD_VERSION_MESSAGE = "profile record schema version is not supported"
 _PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
-_PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE = "profile snapshot classification is incompatible with this repository"
 _PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
 _OUTPUT_LANGUAGE_FACT_PATH = "preferences.output_language"
 _log = get_logger(__name__)
@@ -394,11 +415,12 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
         except ValidationError as exc:
             raise StoredProfileDriftError(profile_id, exc) from exc
-        if envelope.classification is not _USER_PROFILE_VALUE_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _USER_PROFILE_VALUE_SENSITIVITY):
             raise ClassificationError(
-                _PROFILE_RECORD_CLASSIFICATION_MESSAGE,
-                translated_message="application.user_profile.errors.repository_profile_record_classification_mismatch",
+                _PROFILE_CLASSIFICATION_MISMATCH_MESSAGE,
+                translated_message="application.user_profile.errors.repository_classification_mismatch",
                 context={
+                    "namespace": USER_PROFILE_VALUE_NAMESPACE,
                     "profile_id": profile_id,
                     "classification": envelope.classification.value,
                     "expected": _USER_PROFILE_VALUE_SENSITIVITY.value,
@@ -702,11 +724,12 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                 context={"snapshot_id": snapshot_id, "bucket_id": self._bucket_id},
             )
         envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not _USER_PROFILE_SNAPSHOT_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _USER_PROFILE_SNAPSHOT_SENSITIVITY):
             raise ClassificationError(
-                _PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE,
-                translated_message="application.user_profile.errors.repository_profile_snapshot_classification_mismatch",
+                _PROFILE_CLASSIFICATION_MISMATCH_MESSAGE,
+                translated_message="application.user_profile.errors.repository_classification_mismatch",
                 context={
+                    "namespace": USER_PROFILE_SNAPSHOT_NAMESPACE,
                     "snapshot_id": snapshot_id,
                     "classification": envelope.classification.value,
                     "expected": _USER_PROFILE_SNAPSHOT_SENSITIVITY.value,

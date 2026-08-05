@@ -124,10 +124,10 @@ def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
     rendered = _render_recipe("packaging-smoke")
     assert "dev.packaging.campaign --profile portable" in rendered
 
-    from dev.packaging.campaign import _COHORT_DIR, _LANES, _PROFILES
+    from dev.packaging.campaign import _COHORT_DIR, _PROFILES, resolve_form
 
     assert _COHORT_DIR == "var/packaging-smoke-cohort/python"
-    assert all(_LANES[name].takes_cohort for name in _PROFILES["portable"])
+    assert all(resolve_form(selector)[1].takes_cohort for selector in _PROFILES["portable"])
 
     driver_source = (_REPO_ROOT / "dev" / "packaging" / "campaign.py").read_text(encoding="utf-8")
     assert driver_source.count('"build-cohort"') == 1

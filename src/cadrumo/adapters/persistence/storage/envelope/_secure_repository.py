@@ -35,6 +35,7 @@ from .....core.config import Settings
 from .....core.logging import get_logger
 from .....core.time import now
 from .._path_safety import safe_repository_id
+from .._schema_lineage import inner_envelope_classification_is_expected
 from ..crypto import secure_object_key_digest
 from ..errors import (
     ClassificationError,
@@ -199,7 +200,7 @@ class SecureBoundRepository[T: BaseModel]:
                 repository's exact schema version.
         """
         envelope = self._envelope_cls().model_validate_json(payload.decode("utf-8"))
-        if envelope.classification is not self.sensitivity:
+        if not inner_envelope_classification_is_expected(envelope.classification, self.sensitivity):
             raise ClassificationError(
                 f"{subject} has classification {envelope.classification}; consumer expected {self.sensitivity}",
             )

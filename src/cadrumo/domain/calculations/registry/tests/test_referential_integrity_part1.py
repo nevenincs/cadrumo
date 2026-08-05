@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
 
 import pytest
@@ -54,6 +55,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _TEXT_CASILLA: CasillaId = validated_casilla_id("text-casilla", surface="_TEXT_CASILLA")
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
+#: These cases assert on an alias's REF resolution, never on its rendered text,
+#: so the key only has to be a well-formed non-empty catalogue key; nothing here
+#: calls ``CasillaAlias.get_label``.
+_ALTERNATE_ALIAS_KEY = "test.schema.casilla.alternate.label"
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
 _EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
@@ -191,7 +196,7 @@ def test_dangling_casilla_source_refs() -> None:
 def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation() -> None:
     """Nested casilla alias and constraints refs are catalogue-checked at registry validation."""
     alias = CasillaAlias(
-        label="alternate",
+        localization_key=_ALTERNATE_ALIAS_KEY,
         legal_refs=(_MISSING_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
@@ -208,7 +213,7 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
     failures = _modelo_validation_failures(minimal_modelo(revision))
 
     assert any(
-        "casilla 01 alias 'alternate' references unknown legal id 'ley-35-2006:art-9999'" in failure
+        f"casilla 01 alias '{_ALTERNATE_ALIAS_KEY}' references unknown legal id '{_MISSING_LEGAL_ID}'" in failure
         for failure in failures
     ), f"alias legal_refs must be checked against the legal catalogue; got: {failures}"
     assert any(
@@ -245,7 +250,7 @@ def test_modelo_validation_rejects_casilla_constraints_sourced_only_by_executabl
 
 def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_parity() -> None:
     alias = CasillaAlias(
-        label="alternate",
+        localization_key=_ALTERNATE_ALIAS_KEY,
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(_PARITY_SOURCE_ID,),
     )
@@ -255,7 +260,7 @@ def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_pari
     with pytest.raises(
         RegistryValidationError,
         match=(
-            r"casilla 01 alias 'alternate' "
+            rf"casilla 01 alias '{re.escape(_ALTERNATE_ALIAS_KEY)}' "
             r"requires one of official_source_guidance, layout_authority source evidence"
         ),
     ):
@@ -265,7 +270,7 @@ def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_pari
 def test_snapshot_carries_casilla_alias_and_constraints_refs() -> None:
     """Slice snapshots retain nested casilla alias and constraints legal/source evidence."""
     alias = CasillaAlias(
-        label="alternate",
+        localization_key=_ALTERNATE_ALIAS_KEY,
         legal_refs=(_EXTRA_LEGAL_ID,),
         source_refs=(_EXTRA_SOURCE_ID,),
     )
@@ -300,7 +305,7 @@ def test_snapshot_carries_casilla_alias_and_constraints_refs() -> None:
 def test_snapshot_integrity_checks_casilla_alias_refs() -> None:
     """Snapshot integrity rejects alias refs missing from the slice catalogue."""
     alias = CasillaAlias(
-        label="alternate",
+        localization_key=_ALTERNATE_ALIAS_KEY,
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
@@ -308,7 +313,7 @@ def test_snapshot_integrity_checks_casilla_alias_refs() -> None:
     revision = minimal_revision(casillas=(casilla,))
     snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
 
-    with pytest.raises(RegistryValidationError, match=r"casilla 01\.alias alternate\.legal_refs"):
+    with pytest.raises(RegistryValidationError, match=rf"casilla 01\.alias {re.escape(_ALTERNATE_ALIAS_KEY)}\.legal_refs"):
         check_all_id_references(snapshot)
 
 

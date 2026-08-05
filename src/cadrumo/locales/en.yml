@@ -898,7 +898,9 @@ application:
         was supplied while the active profile already declares meses_madre_trabajo
         on its descendiente records. One authority per filing: either drop the flag
         and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO
-        from the records with `aeat config profile descendiente add`.'
+        with `aeat config profile descendiente remove <index>` then `add` to restate
+        the row without it -- `descendiente add` alone only appends and cannot edit
+        a declared row.'
       calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all
         be supplied together.
       calculate_relation_unknown: '--relation %{key} does not match any relation id
@@ -1481,20 +1483,17 @@ application:
         characters long.
       repository_profile_bucket_mismatch: Profile %{profile_id} does not belong to
         bucket %{bucket_id}; a profile bucket holds exactly one profile identity.
-      repository_profile_record_classification_mismatch: Profile record classification
-        does not match the repository contract.
       repository_profile_record_missing: Profile record was not found in the active
         bucket.
       repository_profile_record_version_unsupported: Profile record schema version
         is not supported by this application.
-      repository_profile_snapshot_classification_mismatch: Profile snapshot classification
-        does not match the repository contract.
       repository_profile_snapshot_missing: Profile snapshot was not found in the active
         bucket.
       repository_profile_snapshot_version_unsupported: Profile snapshot schema version
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      repository_classification_mismatch: 'Secure-object namespace %{namespace} is registered for sensitivity %{expected}, but the stored record''s classification is %{classification}.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -2761,14 +2760,15 @@ cli:
           económica) casilla %{casilla} (LIRPF arts. 86-89).'
         m210_gross_income_source_help: 'Modelo 210 [5] authority: manual (default)
           or Spanish-source ledger aggregation.'
-        meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child under
-          3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
-          Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
-          sum(min(MESES × 100, 1200)) and injects into casilla 0611. Example: --meses-trabajo-con-hijo-menor-3
-          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Only for profiles
-          that declare no descendants: when the active profile already declares MESES_TRABAJO
-          through `aeat config profile descendiente add`, those records carry the
-          months and this option is refused.'
+        meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child qualified
+          for the Art. 81 LIRPF maternity deduction -- under 3, or an adopcion/acogimiento
+          inside its age-independent entry-date window -- and was in the family unit.
+          Format: HIJO_ID=MESES. Repeatable per child. HIJO_ID is a free label (e.g.
+          0, 1, ''laia''). Computes sum(min(MESES x 100, 1200)) and injects into casilla
+          0611. Example: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3
+          1=6 -> 0611 = 1800. Only for profiles that declare no descendants: when
+          the active profile already declares MESES_TRABAJO through `aeat config profile
+          descendiente add`, those records carry the months and this option is refused.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requires
           HIJO_ID=MESES format; received: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESES in --meses-trabajo-con-hijo-menor-3
@@ -4573,28 +4573,8 @@ cli:
     allow_identical_locale_help: Locale code to update.
     allow_identical_reason_help: Why this string is legitimately identical to English.
     app_help: Audit and scaffold locale catalogues
-    audit:
-      locale_help: Restrict the schema-local scan to selected locales.
-      modelo_help: Restrict the schema-local scan to one modelo id.
-      modelos_help: Include the schema-local state of every directory-mode modelo.
-      revision_help: Restrict the schema-local scan to one revision id.
     canonicalize_product_identity:
       locale_help: Update only this supported locale catalogue.
-    modelo:
-      app_help: Manage modelo schema-local translations.
-      audit_help: Audit modelo schema translations.
-      coverage_help: Print modelo schema coverage.
-      field_help: Translation field.
-      key_help: Schema key.
-      locale_help: Locale code.
-      modelo_help: Modelo id.
-      registry_root_help: AEAT registry root override.
-      remove_help: Remove one modelo schema translation.
-      revision_help: Revision id.
-      scaffold_check_help: Check without writing.
-      scaffold_help: Scaffold modelo schema translation files.
-      set_help: Set one modelo schema translation.
-      value_help: Translated value.
     remove_key_help: Dotted locale key to remove.
     remove_locale_help: Locale code to update.
     scaffold_check_help: Report drift without writing locale files
@@ -5666,8 +5646,6 @@ errors:
       could not be saved or loaded.
     fail_modelo_filing_record_persistence: The filing-record catalogue could not be
       saved or loaded.
-    fail_modelo_locale_manager: 'Internal error: modelo schema-local translation management
-      failed.'
     fail_modelo_verification_report_persistence: The verification-report catalogue
       could not be saved or loaded.
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
@@ -6581,22 +6559,6 @@ locales:
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
       key_missing: '  missing %{key}'
-    modelo:
-      audit:
-        missing: missing locale=%{locale_code} modelo=%{modelo} revision=%{revision}
-          scope=%{scope} field=%{field} key=%{key}
-        stale: stale locale=%{locale_code} modelo=%{modelo} revision=%{revision} scope=%{scope}
-          field=%{field} key=%{key}
-      coverage:
-        row: locale=%{locale_code} modelo=%{modelo} revision=%{revision} labels=%{label_translated}/%{label_required}
-          help=%{help_translated}/%{help_required}
-      remove:
-        removed: Removed %{path} %{field} %{key}
-      scaffold:
-        no_changes: Modelo locale scaffold already aligned.
-        updated: Updated %{path}
-      set:
-        updated: Updated %{path} %{field} %{key}
     remove:
       removed: removed %{locale_file}:%{key}
     scaffold_updated: locale scaffold updated
@@ -6784,6 +6746,9 @@ modelo:
     '100':
       casilla:
         continuidad:
+          irpf-aeip-centenario-del-hockey-1923-2023-aplicado:
+            help: null
+            label: null
           irpf-anexo-a-ceuta-melilla-deduccion-importe:
             help: null
             label: null
@@ -8567,9 +8532,6 @@ modelo:
             help: null
             label: null
           irpf-vehiculo-electrico-vendedor-nif:
-            help: null
-            label: null
-          x-d5p70phec5imis1ecdimst35dpgn4qbf5li6ar1dd1nm6qr5f4mj2e9i6cmj4c1i6cn62s3cd5hm2p3f:
             help: null
             label: null
           x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
@@ -67166,9 +67128,11 @@ wizard:
         prompt: Registro Civil inscription date
       meses-madre-trabajo:
         help: 'For the maternity deduction (Art. 81 LIRPF): months (0-12) the mother
-          paid Social Security while this child was under 3.'
+          paid Social Security while this child qualified -- under 3, or (age-independent)
+          inside the adopcion/acogimiento entry-date window recorded via INSCRIPCION/ACOGIMIENTO.'
         invalid_range: Enter a whole number of months between %{minimum} and %{maximum}.
-        prompt: Months the mother worked while the child was under 3 (filing year)
+        prompt: Months the mother worked while entitled -- child under 3, or adopcion/acogimiento
+          inside its entry-date window (filing year)
       nif:
         prompt: Descendant's NIF/NIE (leave blank if none)
       prorrata-minimo:

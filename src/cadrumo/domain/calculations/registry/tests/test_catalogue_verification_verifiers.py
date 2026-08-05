@@ -12,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.config import Settings
-from .._citation_blocklist import KnownBadCitation, find_known_bad, known_bad_citations
+from .._citation_blocklist import KnownBadCitation, _fold_diacritics, find_known_bad, known_bad_citations
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
@@ -159,6 +159,45 @@ def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
 
 def test_known_bad_citation_matching_allows_different_role_for_same_article() -> None:
     assert find_known_bad("ley", "77", "cuota líquida autonómica total") is None
+
+
+def test_known_bad_citation_role_substrings_are_pure_ascii_after_folding() -> None:
+    """Every blocklist ``role_substring`` folds to plain ASCII.
+
+    ``find_known_bad`` folds diacritics via the shared ``core.text_fold``
+    primitive (NFKD-decompose + drop combining marks), not the
+    ``encode("ascii", "ignore")`` transliteration this module used to run
+    inline. The two agree on every real entry -- each one is ordinary
+    accented Spanish prose, and standard Spanish accented letters always
+    carry a canonical combining-mark decomposition -- so this asserts the
+    folded form is unsurprising for a reader who has not seen the swap.
+    A registry-authored ``role_substring`` containing a codepoint with no
+    ASCII-compatible decomposition (an em dash, a currency sign) would fail
+    this assertion, which is the intended tripwire: it means folding no
+    longer produces the same comparison key the ascii-ignore predecessor did.
+    """
+    for blocked in known_bad_citations():
+        folded = _fold_diacritics(blocked.role_substring)
+        assert folded.isascii(), (blocked.role_substring, folded)
+
+
+def test_known_bad_citation_matching_preserves_non_decomposable_characters() -> None:
+    """Diacritic folding no longer discards a character NFKD cannot decompose.
+
+    This is the deliberate behaviour difference from the retired
+    ``encode("ascii", "ignore")`` implementation: an em dash or currency
+    sign used to vanish from the comparison text; it now survives. That
+    can only ever make a match easier to find (the token is compared as a
+    substring, and removing noise around it never helps), never harder --
+    unlike the live-scraped click-safety guard in
+    ``adapters.outbound.aeat.sede._renta_web_open_safety``, this module
+    reads registry-authored TOML prose, not browser-rendered text, so it
+    carries none of that guard's soft-hyphen/decorative-glyph exposure.
+    """
+    blocked = find_known_bad("ley", "103", "la cuota diferencial – recalculada")
+
+    assert blocked is not None
+    assert blocked.article == "103"
 
 
 def test_verify_legal_catalogue_rejects_key_mismatch() -> None:

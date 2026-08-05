@@ -162,7 +162,7 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile() -> No
         "renta-2024-profile-minimo-descendientes-estatal",
         "renta-2024-profile-minimo-descendientes-autonomico",
         "renta-2024-profile-anualidades-sin-minimo-descendientes",
-        "renta-2024-profile-descendientes-menores-3",
+        "renta-2024-profile-descendientes-guarderia",
         "renta-2024-profile-guarderia-gastos-reales",
     ):
         assert binding_id in resolved, f"{binding_id} was not resolved at all"
@@ -170,4 +170,4 @@ def test_every_derived_binding_actually_resolves_for_an_ordinary_profile() -> No
     # The guardería aggregate is the one that legitimately lands on zero for
     # this profile, and it must be a real zero rather than an absence.
     assert resolved["renta-2024-profile-guarderia-gastos-reales"] == Decimal("0")
-    assert resolved["renta-2024-profile-descendientes-menores-3"] == Decimal("1")
+    assert resolved["renta-2024-profile-descendientes-guarderia"] == Decimal("1")
