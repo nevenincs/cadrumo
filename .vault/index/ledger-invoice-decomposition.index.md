@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:e4058748106601d08967de163d1ad226893a0e516f7a0b470ade3ff8657bd177'
+body_hash: 'sha256:f67d3d331df8c6cc2a6ae2ef97ebcf2ed137846bd16755e64af83f7652746f02'
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S01]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S02]]'
@@ -29,6 +29,9 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S15]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S16]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S17]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S22]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S23]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S24]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-loader-fingerprint-format-trap-audit]]'
   - '[[2026-08-05-ledger-invoice-decomposition-plan]]'
@@ -73,6 +76,9 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 - `2026-08-05-ledger-invoice-decomposition-P05-S15` - Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test
 - `2026-08-05-ledger-invoice-decomposition-P05-S16` - Ground the chain on an exempt-services example proving the under-declaration direction is closed
 - `2026-08-05-ledger-invoice-decomposition-P05-S17` - Add strict roundtrip coverage for every new persisted field, with an anti-tautology proof that a deleted field is refused on load
+- `2026-08-05-ledger-invoice-decomposition-P05-S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition
+- `2026-08-05-ledger-invoice-decomposition-P05-S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded
+- `2026-08-05-ledger-invoice-decomposition-P05-S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously
 
 ### plan
 
