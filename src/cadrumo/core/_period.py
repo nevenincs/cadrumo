@@ -14,11 +14,11 @@ calendar spans and instalment claves, so callers that need date boundaries
 must still check :meth:`Period.has_date_span`. :data:`RegistryPeriodCode`
 is the pydantic field annotation for the full registry union: standard
 members plus extended OSS/IOSS literals, ``AD-HOC``, the open-ended event
-shape, the administrative censo tokens, and the ``EVENT-N`` selector
-placeholder. :data:`FilingPeriodCode` is the narrower annotation for a period
-a taxpayer files in — the same union minus the administrative tokens and the
-placeholder, both of which address a registry revision rather than name a
-period. Two boundaries with different value spaces need two annotations:
+shape, the administrative censo tokens, and the symbolic ``EVENT-N`` selector.
+:data:`FilingPeriodCode` is the narrower annotation for a period a taxpayer
+files in — the same union minus the administrative tokens and the symbolic
+selector, neither of which names one concrete filing period. Two boundaries
+with different value spaces need two annotations:
 widening one to admit a registry coordinate must not widen the other.
 :class:`Period` combines one accepted FILING code with a filing year, and
 :class:`PeriodKind` classifies the resulting cadence.
@@ -84,9 +84,11 @@ _STANDARD_PERIOD_SET = frozenset(StandardPeriodCode)
 _EXTENDED_PERIOD_SET = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _AD_HOC_PERIOD = "AD-HOC"
 _ADMINISTRATIVE_PERIOD_SET = frozenset(("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"))
-#: The literal placeholder a registry ``period_selector`` declares to mean "an
-#: event number". It addresses a revision; it is not itself a filing period.
-_EVENT_SELECTOR_PLACEHOLDER = "EVENT-N"
+#: The symbolic token a registry ``period_selector`` declares to COVER the
+#: concrete event periods (``EVENT-1``, ``EVENT-2``, ...) an operator scope may
+#: carry — see the shared-matcher rationale in the registry's ``select_revision``.
+#: It stands for a SET of periods, so it is not itself one.
+_SYMBOLIC_EVENT_SELECTOR = "EVENT-N"
 _EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
 _EVENT_NUMBER_PERIOD_RE = re.compile(r"^EVENT-\d+$")
 _DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
@@ -105,10 +107,11 @@ def _validate_filing_period(value: str) -> str:
     Accepts StandardPeriodCode members, extended OSS/IOSS forms (EXT-1T..EXT-4T),
     the ad-hoc literal (AD-HOC), and event-driven forms carrying a concrete event
     NUMBER (EVENT-3). It admits neither the administrative censo/comunicación
-    tokens nor the ``EVENT-N`` selector placeholder: both address a registry
-    revision rather than name a period a filing occupies, so admitting them here
-    would let a registration event or a documentation placeholder become a typed
-    filing period.
+    tokens nor the symbolic ``EVENT-N`` selector: an administrative token names a
+    registration event rather than a period, and ``EVENT-N`` is declared to COVER
+    the concrete ``EVENT-1``/``EVENT-2`` scopes rather than to be one of them. A
+    symbolic stand-in for a set is a type error at a boundary whose whole contract
+    is "exactly one filing period", not merely an odd value.
 
     Raises ValueError with the filing-scoped accepted set on rejection; pydantic
     wraps it into a ValidationError at the BeforeValidator boundary.
@@ -134,7 +137,7 @@ def _validate_period_against_registry(value: str) -> str:
     This is the REGISTRY coordinate's vocabulary: every filing period plus the
     two sub-vocabularies that address a revision without naming a filing period —
     the administrative censo/comunicación tokens (Modelo 036, Modelo 145) and the
-    ``EVENT-N`` selector placeholder (Modelo 210). Use :func:`_validate_filing_period`
+    symbolic ``EVENT-N`` selector (Modelo 210). Use :func:`_validate_filing_period`
     for anything that represents a period a taxpayer files in.
 
     Raises ValueError with the full accepted-set list on rejection; pydantic
@@ -144,7 +147,7 @@ def _validate_period_against_registry(value: str) -> str:
 
     if normalized in _ADMINISTRATIVE_PERIOD_SET:
         return normalized
-    if normalized == _EVENT_SELECTOR_PLACEHOLDER:
+    if normalized == _SYMBOLIC_EVENT_SELECTOR:
         return normalized
     try:
         return _validate_filing_period(normalized)
@@ -181,7 +184,7 @@ def accepted_period_patterns() -> tuple[str, ...]:
     return (
         *accepted_filing_period_patterns(),
         f"Administrative ({', '.join(sorted(_ADMINISTRATIVE_PERIOD_SET))})",
-        f"Registry selector placeholder (the literal {_EVENT_SELECTOR_PLACEHOLDER}, a registry coordinate only)",
+        f"Symbolic registry selector (the literal {_SYMBOLIC_EVENT_SELECTOR}, which covers the EVENT-<n> scopes)",
     )
 
 
@@ -213,7 +216,7 @@ def _format_accepted_period_set() -> str:
     lines = [
         _format_accepted_filing_period_set(),
         f"Administrative: {', '.join(sorted(_ADMINISTRATIVE_PERIOD_SET))}",
-        f"Registry selector placeholder: the literal {_EVENT_SELECTOR_PLACEHOLDER}",
+        f"Symbolic registry selector: the literal {_SYMBOLIC_EVENT_SELECTOR}",
     ]
     return "; ".join(lines)
 
@@ -225,7 +228,7 @@ RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_reg
 
 #: Pydantic field annotation for a bare period token a taxpayer can file in.
 #: Narrower than :data:`RegistryPeriodCode`: the administrative censo tokens and
-#: the ``EVENT-N`` selector placeholder are refused.
+#: the symbolic ``EVENT-N`` selector are refused.
 FilingPeriodCode = Annotated[str, BeforeValidator(_validate_filing_period)]
 
 
@@ -300,7 +303,7 @@ def registry_period_kind(token: str) -> PeriodKind:
     Accepts the full :data:`RegistryPeriodCode` vocabulary, so a registry-facing
     consistency check (a ``filing_schedules`` declaration reconciling its
     ``period_kind`` against its ``periods``) can classify an administrative censo
-    token or the ``EVENT-N`` selector placeholder. Both classify as
+    token or the symbolic ``EVENT-N`` selector. Both classify as
     :attr:`PeriodKind.EXTENDED`, matching what a :class:`Period` reported for them
     while one validator still served both boundaries.
 
@@ -308,7 +311,7 @@ def registry_period_kind(token: str) -> PeriodKind:
         ValueError: When ``token`` is not an accepted registry period code.
     """
     normalized = _validate_period_against_registry(token)
-    if normalized in _ADMINISTRATIVE_PERIOD_SET or normalized == _EVENT_SELECTOR_PLACEHOLDER:
+    if normalized in _ADMINISTRATIVE_PERIOD_SET or normalized == _SYMBOLIC_EVENT_SELECTOR:
         return PeriodKind.EXTENDED
     return _period_kind_for_code(normalized)
 
@@ -355,8 +358,8 @@ class Period(BaseModel):
                 an extended union member (``EXT-1T``-``EXT-4T`` / ``AD-HOC`` /
                 ``EVENT-3``). The code is validated against
                 :data:`FilingPeriodCode`; a combined calendar string, an
-                administrative censo token, and the ``EVENT-N`` selector
-                placeholder are all refused.
+                administrative censo token, and the symbolic ``EVENT-N``
+                selector are all refused.
 
         Raises:
             PeriodError: When ``code`` is not an accepted filing period code or

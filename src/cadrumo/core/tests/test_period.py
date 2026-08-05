@@ -25,9 +25,10 @@ from .. import (
 #: last two). They name a registration event, never a period a taxpayer files in.
 ADMINISTRATIVE_TOKENS = ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION")
 
-#: The literal placeholder Modelo 210's 2025 ``period_selector`` declares. It
-#: stands for "an event number"; it is not an event number.
-EVENT_SELECTOR_PLACEHOLDER = "EVENT-N"
+#: The symbolic token Modelo 210's 2025 ``period_selector`` declares. The
+#: registry's revision matcher treats it as COVERING the concrete ``EVENT-1`` /
+#: ``EVENT-2`` operator scopes, so it stands for a set of periods, not one.
+SYMBOLIC_EVENT_SELECTOR = "EVENT-N"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -232,11 +233,11 @@ class TestPeriodTypeBoundarySplit:
             with pytest.raises(ValidationError):
                 _validate_filing_test_model(spelling)
 
-    def test_event_selector_placeholder_is_not_a_filing_period(self) -> None:
+    def test_symbolic_event_selector_is_not_a_filing_period(self) -> None:
         with pytest.raises(PeriodError):
-            Period.from_year_and_code(2025, EVENT_SELECTOR_PLACEHOLDER)
+            Period.from_year_and_code(2025, SYMBOLIC_EVENT_SELECTOR)
         with pytest.raises(ValidationError):
-            _validate_filing_test_model(EVENT_SELECTOR_PLACEHOLDER)
+            _validate_filing_test_model(SYMBOLIC_EVENT_SELECTOR)
 
     @pytest.mark.parametrize("token", ("EVENT-3", "EVENT-27", "EVENT-142"))
     def test_concrete_event_numbers_remain_filing_periods(self, token: str) -> None:
@@ -252,7 +253,7 @@ class TestPeriodTypeBoundarySplit:
         # The filing-scoped listing must not advertise the vocabulary it refuses.
         assert "Administrative" not in message
 
-    @pytest.mark.parametrize("token", (*ADMINISTRATIVE_TOKENS, EVENT_SELECTOR_PLACEHOLDER))
+    @pytest.mark.parametrize("token", (*ADMINISTRATIVE_TOKENS, SYMBOLIC_EVENT_SELECTOR))
     def test_registry_coordinate_still_admits_the_administrative_vocabulary(self, token: str) -> None:
         """The other direction: the registry must keep loading."""
         from ...domain.calculations.registry import RegistrySnapshotRef
