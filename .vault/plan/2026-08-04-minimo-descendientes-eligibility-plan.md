@@ -195,6 +195,36 @@ field is precisely what bites when a predicate widens — and this campaign has 
 the widening-population shape three separate times. `S24` is held behind `S18` because
 both move the same file and `S18` must move it atomically.
 
+`S18` was attempted and stopped before its first edit, and two things it established
+must not be lost. The first corrects this plan's own instruction. The dead-looking
+binding-compatible property on the family record was to be deleted if dead and renamed
+if live — but renaming it would be wrong even in the live case, because it delegates to
+the STATUTORY Art. 58.2 count while the binding it names is fed the wider guardería
+population. The two disagree about the VALUE, not merely the name, so a rename would
+preserve a method computing the wrong count for the binding it serves. The live branch
+is therefore "re-point at the guardería count", never a rename. The property was found
+to have zero Python references and resolution to run entirely through the fact index,
+so it is dead on static evidence; the dynamic confirmation is still owed.
+
+The second is why `S18` cannot be forced. Its verification is a clean collect-only
+observed immediately before its atomic commit, and the working tree could not produce
+one: an uncommitted `descendiente` description of 554 characters against a 512 cap made
+`load_user_profile_schema()` raise, so the profile schema did not load at all and every
+profile-binding consumer failed on a length constraint that named nothing about the
+change causing it. Re-measuring a baseline against that tree would have recorded a
+peer's breakage as this Step's. Nor is the apply-cached route available: it stages one
+agent's hunks while leaving the other's working tree stale, so the next pathspec commit
+of the same file silently reverts the rename — and this rename degrades silently rather
+than raising, which is exactly the half-reverted state `S18`'s atomicity requirement
+exists to prevent.
+
+The collision itself was a planning error rather than a discovery. `S23`'s scope clause
+names only the constants module and the deducción helper, while the Step as briefed
+required the family record, the profile-binding injector and the profile schema — the
+three files `S18` must move. The scope line understated the work, and a file-set
+disjointness proved before `S23` began was then relayed to `S18` as a standing fact.
+`S18` is released only when those three files are clean and a fresh baseline is taken.
+
 ## Verification
 
 The plan is complete when every Step is closed and all of the following hold: the two
