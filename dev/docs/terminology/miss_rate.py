@@ -10,8 +10,8 @@ Usage::
 
     python -m dev.docs.terminology.miss_rate report --output PATH --note TEXT
 
-The threshold is the ratified ADR D3 default; overriding it is a deliberate
-act that must cite a superseding decision.
+The threshold is the ratified ADR D3 default and cannot be supplied by a
+caller; a superseding decision must change this source contract.
 """
 
 from __future__ import annotations
@@ -23,7 +23,6 @@ from typing import Annotated, Final
 import typer
 
 from ._miss_rate import (
-    DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
     adjudicate_rung2,
     evaluate_held_out_miss_rate,
 )
@@ -34,7 +33,7 @@ app = typer.Typer(add_completion=False, no_args_is_help=True)
 
 
 @app.callback()
-def _root() -> None:
+def _root() -> None:  # pyright: ignore[reportUnusedFunction]  # Typer registers the callback through its decorator.
     """Held-out miss-rate reporting for the compiled relevance mapping."""
 
 
@@ -42,11 +41,10 @@ def write_miss_rate_report(
     output: Path,
     *,
     note: str,
-    threshold: float = DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
 ) -> None:
     """Evaluate, adjudicate, and write the canonical report JSON."""
     evaluation = evaluate_held_out_miss_rate()
-    adjudication = adjudicate_rung2(evaluation, miss_rate_threshold=threshold)
+    adjudication = adjudicate_rung2(evaluation)
     payload = {
         "note": note,
         "evaluation": json.loads(evaluation.model_dump_json()),
@@ -63,18 +61,15 @@ def write_miss_rate_report(
 def report(
     output: Annotated[Path, typer.Option("--output", help="Report JSON path.")],
     note: Annotated[str, typer.Option("--note", help="One-line report provenance note.")],
-    threshold: Annotated[
-        float,
-        typer.Option("--threshold", help="Rung-2 materiality threshold (ADR D3 default)."),
-    ] = DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
 ) -> None:
     """Write the miss-rate report and print the adjudicated decision."""
-    write_miss_rate_report(output, note=note, threshold=threshold)
+    write_miss_rate_report(output, note=note)
     evaluation = evaluate_held_out_miss_rate()
-    adjudication = adjudicate_rung2(evaluation, miss_rate_threshold=threshold)
+    adjudication = adjudicate_rung2(evaluation)
     typer.echo(
         f"cases {evaluation.case_count}  hits {evaluation.hit_count}  "
-        f"miss-rate {evaluation.miss_rate:.4f}  threshold {threshold}  "
+        f"miss-rate {evaluation.miss_rate:.4f}  "
+        f"threshold {adjudication.miss_rate_threshold}  "
         f"decision {adjudication.decision.value}"
     )
     typer.echo(f"wrote miss-rate report -> {output}")
