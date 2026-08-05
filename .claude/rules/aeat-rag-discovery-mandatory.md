@@ -36,19 +36,27 @@ different modules.
 
 ## Why
 
-The wizard prompter proved the cost. `application/wizard/_prompter.py` is the
-canonical authority and its own module docstring states that exactly TWO
-implementations ship (`CanonicalAnswerPrompter`, `QuestionaryPrompter`). The CLI
-nevertheless carried a THIRD, undocumented hand-copy (`_QuestionaryTextPrompter`
-plus a shadowing `_TextAnswerPrompter` Protocol) that had silently drifted: it
-dropped the injectable-IO contract (making the wizard headlessly untestable),
-caught only `except OSError` while `NoConsoleScreenBufferError` is NOT an
-`OSError` subclass (so Windows operators met a raw traceback instead of the
-translated refusal), and carried a docstring FALSELY claiming parity with the
-canonical detection. That duplication was found BY ACCIDENT while chasing an
-unrelated test failure, after hours of work — and a single `vaultspec-rag`
-query returns the canonical prompter's own "two implementations ship" docstring
-in seconds.
+The wizard prompter proved the cost. The since-retired
+`application/wizard/_prompter.py` was the canonical authority, and its own module
+docstring stated that exactly TWO implementations shipped
+(`CanonicalAnswerPrompter`, `QuestionaryPrompter`). The CLI nevertheless carried
+a THIRD, undocumented hand-copy (`_QuestionaryTextPrompter` plus a shadowing
+`_TextAnswerPrompter` Protocol) that had silently drifted: it dropped the
+injectable-IO contract (making the wizard headlessly untestable), caught only
+`except OSError` while `NoConsoleScreenBufferError` is NOT an `OSError` subclass
+(so Windows operators met a raw traceback instead of the translated refusal), and
+carried a docstring FALSELY claiming parity with the canonical detection. That
+duplication was found BY ACCIDENT while chasing an unrelated test failure, after
+hours of work — and a single `vaultspec-rag` query returns the canonical
+prompter's own "two implementations ship" docstring in seconds.
+
+The one-shot prompter was retired and the flow substrate
+(`application/flows/_line_frontend.py` for line-mode prompting,
+`_capability.py` for the single console-capability probe) is now the sole prompt
+authority. The episode is preserved as an enforced gate rather than as prose:
+`src/cadrumo/tests/test_wizard_prompter_singularity.py` carries this same worked
+example and fails the build if a second prompt surface appears. Read it for the
+detail; what follows is why the search comes first regardless.
 
 The same session found the duplication measurement itself false-green (a
 duplication report that built a SECOND jscpd command — the instrument had
