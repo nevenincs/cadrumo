@@ -798,17 +798,13 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
 ) -> tuple[RentaGastosEstimacionDirectaObservationProtocol, ...]:
     """Return the :class:`RentaGastosEstimacionDirectaObservationProtocol` rows no binding on ``revision`` can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_iva_observations`. An observation whose
-    modelo/period/target_casilla_id triple matches no
-    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding has its deductible amount
-    silently dropped from the filing — a modelling gap, not a legitimate zero.
-
-    False-fire guard (``ledger-iva-advisory-only-on-cuota-bearing-categories``
-    precedent): an observation that carries a zero ``deductible_amount`` contributes
-    nothing whether or not it is routed, so it is excluded — only a non-zero
-    declarable expense that reaches no casilla is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the (modelo, period, target_casilla_id)
+    match predicate (reused from the resolver's
+    ``_renta_gastos_estimacion_directa_build_matcher``) and a
+    zero-``deductible_amount`` false-fire guard. No ``extra_exclusion``.
 
     Args:
         revision: The :class:`ModeloRevision` whose gastos bindings define
@@ -819,23 +815,14 @@ def unsupported_ledger_renta_gastos_estimacion_directa_observations(
         Tuple of observations whose non-zero deductible amount is selected by no
         ``ledger_renta_gastos_estimacion_directa_aggregation`` binding.
     """
-    selectors = tuple(
-        _renta_ledger_gastos_estimacion_directa_selector(binding)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_estimacion_directa_selector,
+        build_matcher=_renta_gastos_estimacion_directa_build_matcher,
+        is_declarable=lambda observation: observation.deductible_amount != Decimal("0"),
     )
-    unsupported: list[RentaGastosEstimacionDirectaObservationProtocol] = []
-    for observation in observations:
-        if observation.deductible_amount == Decimal("0"):
-            continue
-        if not any(
-            observation.modelo == selector.modelo
-            and observation.period == selector.period
-            and observation.target_casilla_id == selector.target_casilla_id
-            for selector in selectors
-        ):
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
