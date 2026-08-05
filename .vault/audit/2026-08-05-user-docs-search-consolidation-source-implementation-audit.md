@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad51263872643de35f965b140e37b173abf5e97a498d9a29229cf783e821d0f0'
+body_hash: 'sha256:7f50c11c60dbfb591c232246c36f0e92c73f6f57d78ddb70242ed18df96a621a'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -64,6 +64,34 @@ Malformed relevance data can become empty boosts, and CLI projection exceptions 
 
 The matrix/provider/bridge/browser/legal/casilla source seams are directionally aligned, but the plan rows remain unaccepted. The current source review cannot prove the pinned model artifact, content hashes, quantization drift, held-out recall, locale parity, generated targets, or live behavior.
 
+### shared-manifest-canonicalizer | low | Source remediation; independent parity remains open
+
+Fresh vaultspec-rag grounding against ADR Update 10 and the raw-byte manifest implementation found that the manifest module retained a second compact `json.dumps` serializer after the shared `cadrumo-jcs-utf8-lf-v1` contract was introduced. `_content_manifest.py` now delegates both manifest-root hashing and complete-manifest bytes to the shared canonicalizer, so the provider/tokenizer attestation path no longer has Python-only serialization semantics.
+
+Static evidence is limited to post-edit vaultspec-rag discovery, AST parsing, and focused whitespace validation. This does not close the broader `browser-hash-parity` finding: the language-neutral golden-vector corpus and independent Python/JavaScript reproduction are still absent, and no tests, artifacts, model/provider evidence, runtime probes, sweeps, reindexing, or deployment were run.
+
+### per-root-casilla-recall-gate | low | Source gate added; runtime acceptance remains open
+
+RAG and source inspection confirm the existing built-site gate already exercises one real concept record on each root, but its bounded per-kind sample was not asserted for casillas. A source-only continuation adds `_probe_casilla_record()` and a per-root browser/Pagefind gate that uses one real bounded casilla target, its stable title, and each available localized `OutputLanguage` description. The gate reads through the production `_materialise_records()`, `_bounded_to_sample()`, injector, and `pagefind.js` path; it does not invent a query or use a fake record.
+
+Static Ruff, AST, and diff checks passed. The step remains open: no tests, builds, Pagefind/runtime probes, generated artifacts, live sweeps, reindexing, model downloads, or deployment were run, and the deployed-root re-probe is still deferred.
+
+### current-plan-count | low | Current status trace supersedes the older snapshot
+
+The earlier audit sentence stating “12 of 24 steps” predates four later plan additions. The current VaultSpec trace is authoritative for the live plan: 28 total steps, 12 closed, 16 open, 42.9 percent, with P02.S04 next. No step is closed by this source-only continuation.
+
+### focused-source-review | low | No new concrete source defect; artifact and runtime acceptance remain open
+
+Fresh vaultspec-rag grounding over the active plan, the accepted Rung-2 contract, the P02.S04-S07 execution records, and the legal/casilla source seams was followed by exact reads of the current matrix, provider, bridge, browser-controller, legal projection, and casilla-resolution paths. The source contracts are present and fail closed at their current boundaries: P02.S05 has no enabled artifact without an explicit accepted config and validated bundle; P02.S06 validates the ratified provenance/licence/size boundary while awaiting real manifests and provider evidence; legal records use the dedicated `LEGAL` kind and generated targets; and deterministic casilla enrollment remains separate from sparse relevance coverage. No additional source edit is justified by this review. P02.S04 through P02.S07, P03.S08, P04.S12-S13, P05.S14-S17, and P06.S24 remain open until their named artifact, build, behavioural, live, or deployment evidence is authorized and observed. No tests, builds, model downloads, generated artifacts, Pagefind/runtime probes, live sweeps, reindexing, or deployment were run.
+
+### source-lint-hygiene | low | Focused static cleanup leaves the Rung-2 contracts unchanged
+
+After fresh vaultspec-rag grounding of the exact Rung-2 modules, the project Ruff gate surfaced six hygiene findings in concurrent WIP: one unused canonical-number tuple binding, three export-order issues, one import-order issue, and one ambiguous boolean-precedence expression in the browser-equivalent evaluator. These were corrected with a bounded source-only patch; the canonical JSON algorithm, public contracts, and ranking semantics were not changed. `uv run --no-sync ruff check` now passes for the task-scoped Python modules, `node --check` passes for the shared controller, and focused `git diff --check` passes. No tests, builds, artifacts, runtime probes, model/provider work, reindexing, live sweeps, or deployment were run.
+
+### assembled-input-authority | low | Rung-2 input handoff now rejects mismatched or degraded source payloads
+
+Fresh vaultspec-rag grounding of the P02.S04 contract showed that `Rung2CompilationInputs` relied on annotations plus fingerprint checks, while direct dataclass construction could still carry the wrong runtime model, an empty/degraded sweep, or vocabulary/query-token tuples that did not come from the committed sweep mappings. The source boundary now enforces exact validated runtime types, a non-empty authoritative record projection, a consistent non-degraded sweep, and equality between the canonical sweep-derived identities and the supplied identities before provider compilation. `basedpyright`, Ruff, and focused diff checks pass. This is source remediation only; P02.S04 remains open until the real provider, matrix artifact, licence, and acceptance evidence exists.
+
 ## 2026-08-05 RAG-grounded Pagefind narrowing remediation
 
 A fresh vaultspec-rag search over `dev/docs/pagefind_inject.py` confirmed that the authoritative projection reports a skipped CLI projection while the ordinary Pagefind injector previously continued with concepts, casillas, legal provisions, and pages. The same source contract treats the committed relevance file as optional only when absent; a present but malformed sweep file must not silently become an unreviewed base-weight build.
@@ -78,6 +106,24 @@ Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 note
 - Correct the threshold lock, locale census semantics, bridge validation parity, pagefind omission handling, legal ambiguity behavior, and CLI authoritative-record resolution as disjoint source-only fixes, subject to RAG grounding and formal review.
 - Resolve the Disenos locator contract from the actual preprocessor/RAG payload before adding fields or fallback logic; fail closed until an individual locator is available.
 - Keep P02.S04 through P02.S07, P03.S08, P04.S12 through P04.S13, P05.S14 through P05.S17, and P06.S24 open until their authorized artifacts and runtime gates exist.
+
+## 2026-08-05 live refresh: no additional source defect justified
+
+Fresh vaultspec-rag code and vault searches, followed by exact reads of the current Rung-2 compiler/acceptance/browser/controller seams and the legal resolver/projection, found no new source defect within the authorized boundary. The client cosine tier remains an additive, fail-closed path shared by the palette and inline search page; the legal resolver returns the generated `LEGAL` projection target with BOE retained as typed provenance. P02.S04 through P02.S07 and P02.S25 remain open for provider/artifact, behavioural, measurement, and independent cross-runtime parity evidence rather than missing source scaffolding.
+
+The code RAG index reported a transient live/index count mismatch during refresh; no reindex or alias bypass was used, and exact source reads supplied the confirmation boundary. No tests, builds, golden-vector verification, matrix generation, Pagefind/runtime probes, live sweeps, reindexing, model downloads, or deployment were run.
+
+## 2026-08-05 scoped static typing cleanup
+
+Fresh vaultspec-rag grounding of the Rung-2 evaluator confirmed that its composition and held-out functions are source-only measurement seams with explicit fail-closed input validation. The runtime guards were retained while the public parameters at those boundaries were widened to `object` and narrowed with explicit casts only after validation, removing four unnecessary-type-check and unknown-type diagnostics. The JCS serializer likewise retains its canonical contract while using explicit casts for mapping and sequence values after the existing type checks.
+
+The scoped Rung-2/casilla Python surface now passes Ruff and basedpyright with zero errors, warnings, or notes; the shared controller passes Node syntax and the unstaged focused diff check. The staged focused diff check still reports one new blank line at EOF in the peer-modified `_static_matrix.py`; it was not altered to preserve that staged WIP. No tests, builds, runtime probes, generated artifacts, Pagefind runs, live sweeps, reindexing, model downloads, or deployment were run.
+
+## 2026-08-05 casilla projection locale-stat remediation
+
+Fresh vaultspec-rag grounding of the casilla projection and coverage contracts confirmed that `records_with_localized` is a source-statistic for authored non-Spanish registry labels, while reader-facing descriptions may legitimately use Spanish fallback. The projection was still deriving that statistic from `len(record.descriptions) > 1`, which counted fallback labels as authored localization. The bounded Luna Extra High review corrected the projection to consult the registry localization catalogue with `lookup_translation_entry` for the selected latest casilla definition; missing or fallback-only locales are no longer counted. The display projection remains unchanged.
+
+Ruff, basedpyright, and focused diff checks pass for the changed projection. No tests, builds, runtime projection, generated artifacts, Pagefind probes, live sweeps, reindexing, model downloads, or deployment were run. P06.S24 remains open until its authorized real-behaviour gate is observed.
 
 ## 2026-08-05 continuation — bounded source remediation
 

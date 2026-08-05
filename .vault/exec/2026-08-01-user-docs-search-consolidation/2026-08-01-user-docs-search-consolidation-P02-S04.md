@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b546121c3d918ec77fcc75a7f6bd9cec9ecfad8891d06555e2621e50e7f624e'
+body_hash: 'sha256:3847919913f74ccc48ef502892d2d84870318fb340043961e212fd65d87b9c6b'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -52,6 +52,10 @@ Independent static verification passed: vaultspec-rag grounding, Ruff, basedpyri
 The authoritative `Rung2CompilationInputs` dataclass now revalidates canonical vocabulary/query-token order, recomputes both fingerprints, and requires the embedded provenance fingerprints to match before the provider-backed compiler can consume the assembled inputs. This strengthens the source-authority handoff without selecting a provider or generating an artifact. It does not close the remaining provider, model, matrix, or measured-acceptance gates for P02.S04.
 
 Static evidence only: fresh vaultspec-rag grounding, AST parsing, and focused diff checks. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run.
+
+### 2026-08-05 source continuation: authoritative assembled-input guard
+
+Fresh vaultspec-rag grounding over the P02.S04 static-matrix audit, execution record, accepted ADR, and current input/compiler modules identified a remaining handoff weakness: the typed `Rung2CompilationInputs` dataclass revalidated fingerprints but did not fail closed when constructed with a non-authoritative runtime payload or when its sweep mappings disagreed with its stamped vocabulary/query-token identities. The source boundary now requires the exact validated `SweepResult`, `Rung2InputProvenance`, and tuple of authoritative `SearchRecord` values; rejects an empty or degraded sweep; and derives both canonical vocabulary surfaces from the committed sweep mappings before accepting the supplied fingerprints. This strengthens the existing project-authoritative handoff without changing provider, artifact, browser, or acceptance behavior. Static `basedpyright`, Ruff, and focused diff checks pass. No tests, builds, model downloads, matrix generation, runtime probes, live sweeps, reindexing, or deployment were run.
 
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 

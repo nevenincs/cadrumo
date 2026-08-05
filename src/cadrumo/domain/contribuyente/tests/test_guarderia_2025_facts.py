@@ -12,6 +12,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FILING_YEAR = 2025
 
+# AEAT Manual práctico de Renta 2025, Parte 1, pp. 1391 and 1393:
+# both worked cases use 500 euros for each complete month and report 2,290
+# euros of effective non-subsidised custody spend.  The manual's 166.67 and
+# 500 euro cap results are deliberately not calculated or asserted here.
+# Keep the child under three for the whole filing period so this source test
+# isolates month aggregation from the separate turning-three eligibility rule.
+_OFFICIAL_CHILD_BIRTH_DATE = date(2023, 1, 1)
+_OFFICIAL_COMPLETE_MONTH_SPEND_EUROS = 500
+_OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS = 2_290
+
 
 def _monthly_spend(amounts: tuple[int, ...]) -> tuple[GuarderiaMonthSpend, ...]:
     """Build the real month-granular spend objects used by the profile."""
@@ -49,3 +59,51 @@ def test_2025_spend_outside_the_qualifying_period_yields_zero() -> None:
     profile = RentaFamilyProfile(descendientes=(child,))
 
     assert profile.gastos_guarderia_reales(_FILING_YEAR) == 0
+
+
+@pytest.mark.parametrize(
+    "qualifying_month_spend",
+    [
+        pytest.param(
+            ((5, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS), (6, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS)),
+            id="manual-case-a-two-qualifying-months",
+        ),
+        pytest.param(
+            (
+                (1, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS),
+                (2, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS),
+                (3, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS),
+                (4, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS),
+                (5, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS),
+                (6, _OFFICIAL_COMPLETE_MONTH_SPEND_EUROS),
+            ),
+            id="manual-case-b-six-qualifying-months",
+        ),
+    ],
+)
+def test_2025_manual_examples_retain_raw_months_and_effective_spend_inputs(
+    qualifying_month_spend: tuple[tuple[int, int], ...],
+) -> None:
+    """The canonical source retains both accepted spend-input shapes.
+
+    ``DescendantInfo`` deliberately makes annual and monthly spend authorities
+    mutually exclusive.  Keep the raw qualifying-month map and the official
+    effective annual spend in separate real profiles here; combining them would
+    invent a source contract that production does not currently expose.
+    """
+    raw_child = DescendantInfo(
+        birth_date=_OFFICIAL_CHILD_BIRTH_DATE,
+        gastos_guarderia_mensuales=tuple(
+            GuarderiaMonthSpend(month=month, amount_euros=amount) for month, amount in qualifying_month_spend
+        ),
+    )
+    raw_profile = RentaFamilyProfile(descendientes=(raw_child,))
+
+    effective_child = DescendantInfo(
+        birth_date=_OFFICIAL_CHILD_BIRTH_DATE,
+        gastos_guarderia_euros=_OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS,
+    )
+    effective_profile = RentaFamilyProfile(descendientes=(effective_child,))
+
+    assert raw_profile.gastos_guarderia_reales(_FILING_YEAR) == sum(amount for _month, amount in qualifying_month_spend)
+    assert effective_profile.gastos_guarderia_reales(_FILING_YEAR) == _OFFICIAL_EFFECTIVE_CUSTODY_SPEND_EUROS

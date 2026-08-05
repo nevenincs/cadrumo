@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f47dd327bcab5daf7f9df6e8bf23e6c69b6ae18477f33a733c0601b4bb544ddb'
+body_hash: 'sha256:94a30f1694148f4c80035c1cd69db969f8b45551b8d9c8d152345b8ee41dd5dc'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
@@ -91,3 +91,9 @@ The earlier HIGH resolver conflict and MEDIUM deployment-parity omission remain 
 The remaining BOE-target issue is deliberately outside this final S15 gate cleanup: P05.S16 still owns reconciliation of the committed legal relevance targets and the target-resolution gate (`.vault/plan/2026-08-01-user-docs-search-consolidation-plan.md:67`). The current producer continues to use generated site-relative legal targets with BOE provenance, while the unreconciled relevance artifact and its assertions still contain BOE destination URLs (`dev/docs/terminology/tests/test_sweep.py:143-156`, `dev/docs/terminology/tests/test_relevance_data.py:12-14,123-179,371-373`, `src/cadrumo/_data/terminology/relevance/relevance.json:51-52`). This is the previously recorded, explicitly pending S16 follow-up, not a new S15 authority split. P05.S17 remains separately pending for legal per-kind anchor and destination-grounding parity (`.vault/plan/2026-08-01-user-docs-search-consolidation-plan.md:68`); this review supplies no runtime or parity result.
 
 Final outcome: PASS for S15 source review. The two changed gates now verify the legal projection and generated legal destination scope; only the deliberately pending P05.S16 relevance reconciliation, P05.S17 parity gate, and runtime/build acceptance remain open.
+
+### Current P05.S16 static reconciliation note (2026-08-05)
+
+Fresh vaultspec-rag grounding over the P05 execution records, the legal projection, the generated legal-reference authority, and the current relevance artifact identified that the earlier BOE-target finding is now historical rather than current source state. The current JSON contains 112 mappings, 724 total target slots, and 336 legal target slots; all 336 legal slots carry `kind: legal`, `surface: legal`, generated `_generated/legal/` targets, and no direct `boe.es` search target. The P05.S16 execution record also records removal of the two stale `legal:rd-1007-2023` objects without inventing replacement identities.
+
+This note supersedes the earlier pending-S16 wording for the static artifact state. P05.S16 and P05.S17 remain plan-open until their authorized target/parity gates and runtime/build evidence are executed; no tests, builds, Pagefind runs, live probes, deployment, sweeps, or reindexing were run here.

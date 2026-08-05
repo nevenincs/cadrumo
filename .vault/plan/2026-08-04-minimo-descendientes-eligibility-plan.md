@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:899774af5085f3ce207f11ae0d9943a396d12c5547fad51050384b2b141bc49c'
+body_hash: 'sha256:3205785f8c0042ae46b0c55474c18831d3a2e6f0ca0ff8a8a9164dcecf38c30b'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -91,6 +91,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [ ] `P04.S42` - Add guided-walk pages for the alta-posterior completion month and the fallecimiento date, because both facts exist only in the descendiente flag grammar so an operator using the guided door or the setup flow is never asked, making the 150 euro increment and the 2400 euro flat minimo unreachable that way, and correct the S39 exec record which claims an entry surface while silently narrowing it to the flag; `src/cadrumo/application/wizard/_descendant_group.py, src/cadrumo/locales/`.
 - [x] `P04.S43` - Amend the S16 exec record heading which still names the regional table as a blocker the plan retired in terms, and the Parallelization paragraph which says S16 is still open while its row is checked, because the exec record is now the surviving carrier of exactly the stale premise the plan warns readers not to reinstate; `.vault/exec/2026-08-04-minimo-descendientes-eligibility/, .vault/plan/2026-08-04-minimo-descendientes-eligibility-plan.md`.
 - [ ] `P04.S44` - Give the Art. 81.1 qualifying months month identity rather than a bare count, because the guarderia increment prorates by the months in which 81.1 and 81.2 hold SIMULTANEOUSLY and only the 81.2 side records which months those are, so the intersection cannot be computed and the minimum of the two counts is an upper bound that over-grants whenever the two spans do not overlap, and this is a persisted-shape change carrying its own roundtrip, anti-tautology and entry-surface obligations; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/_descendant_facts.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py, src/cadrumo/application/wizard/`.
+- [ ] `P04.S45` - Author the Art. 81.2 annual cap as a registry money parameter across the served revisions with its legal-catalogue grounding, because the 1000 figure exists only as an inline literal inside the 0613 formula which registry TOML can read but the application layer cannot, so the injector that must call the prorated aggregate has no way to obtain it, and this is regulatory-value authoring with its own grounding obligations rather than wiring; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/*/parameters/, src/cadrumo/_data/registry/aeat/legal/`.
 
 ## Parallelization
 

@@ -16,7 +16,7 @@ from __future__ import annotations
 import math
 import re
 from collections.abc import Mapping
-from typing import Final
+from typing import Final, cast
 
 __all__ = ["CANONICAL_JSON_CONTRACT", "CanonicalJsonError", "canonical_json_bytes"]
 
@@ -64,9 +64,10 @@ def _serialize(value: object) -> str:
     if isinstance(value, float):
         return _ecmascript_number(value)
     if isinstance(value, Mapping):
-        return _object(value)
+        return _object(cast(Mapping[object, object], value))
     if isinstance(value, (list, tuple)):
-        return "[" + ",".join(_serialize(item) for item in value) + "]"
+        items = cast(list[object] | tuple[object, ...], value)
+        return "[" + ",".join(_serialize(item) for item in items) + "]"
     raise CanonicalJsonError(f"unsupported JSON value type: {type(value).__name__}")
 
 
@@ -166,7 +167,7 @@ def _ecmascript_number(value: float) -> str:
         sign = "-"
         mantissa = mantissa[1:]
 
-    integer_part, dot, fractional_part = mantissa.partition(".")
+    integer_part, _dot, fractional_part = mantissa.partition(".")
     digits = integer_part + fractional_part
     decimal_position = len(integer_part) + exponent
 

@@ -41,8 +41,8 @@ from ._unified_record import SearchRecord, derive_display_class
 __all__ = [
     "BRIDGE_SCHEMA_VERSION",
     "BUNDLE_SCHEMA_VERSION",
-    "BridgeCompilationError",
     "RECORD_MANIFEST_SCHEMA_VERSION",
+    "BridgeCompilationError",
     "RecordManifest",
     "RecordManifestEntry",
     "Rung2SearchBundle",

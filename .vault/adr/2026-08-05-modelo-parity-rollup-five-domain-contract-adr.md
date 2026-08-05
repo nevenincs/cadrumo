@@ -5,23 +5,24 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:2d88ac361875f56b4bcf5d9cb52f85bbc87f4df4dbfd05b05a0d3d4c5707419d'
+body_hash: 'sha256:f8150fcc53e7e337e277d50d00a478d86e1ac50ced37fbe0feba69f6c103849a'
 related:
-  - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
-  - "[[2026-08-04-modelo-100-casilla-implementation-audit]]"
-  - "[[2026-04-21-casilla-schema-completeness-adr]]"
-  - "[[2026-06-03-executable-parity-evidence-tier-contract-adr]]"
-  - "[[2026-06-03-modelo-export-evidence-parity-adr]]"
-  - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
-  - "[[2026-07-01-modelo-131-eo-modulos-engine-adr]]"
+  - '[[2026-08-05-modelo-parity-rollup-denominator-research]]'
+  - '[[2026-08-04-modelo-100-casilla-implementation-audit]]'
+  - '[[2026-04-21-casilla-schema-completeness-adr]]'
+  - '[[2026-06-03-executable-parity-evidence-tier-contract-adr]]'
+  - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
+  - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
+  - '[[2026-07-01-modelo-131-eo-modulos-engine-adr]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-source-contract-research]]'
 ---
 # `modelo-parity-rollup` adr: `Five-domain modelo revision parity ledger and bounded execution` | (**status:** `accepted`)
 
 ## Problem Statement
 
-The registry lacks one measurable contract for distinguishing schema coverage, deterministic production, legal grounding, cross-model handoffs, and independent behavioral verification. Collapsing these domains into one score—or treating the newest revision as canonical—would misclassify lawful annual differences, honest manual inputs, and unsupported behavior as implementation defects.
+The registry lacks one measurable contract for distinguishing schema coverage, deterministic production, legal grounding, cross-model handoffs, and independent behavioral verification. Collapsing these domains into one scoreâ€”or treating the newest revision as canonicalâ€”would misclassify lawful annual differences, honest manual inputs, and unsupported behavior as implementation defects.
 
 This ADR formalizes the bounded campaign grounded by `2026-08-05-modelo-parity-rollup-denominator-research`. It authorizes measurement and exact enrollment of already-proven oracle evidence. It does not authorize unresolved production semantics.
 
@@ -46,7 +47,7 @@ This ADR formalizes the bounded campaign grounded by `2026-08-05-modelo-parity-r
 
 The portfolio denominator is the accepted baseline inventory of 73 modelos and 90 revision rows. It is reported separately from the behavioral denominator, which is a finite, explicitly enumerated matrix of exact `(modelo, ejercicio, period)` coordinates. Open-ended revisions do not prove unspecified future years. Missing, unsupported, deferred, and not-yet-measured coordinates remain visible and must not be omitted.
 
-Every coordinate selects its registry revision through the law-determined authority. Schema parity uses that year’s official form or layout denominator, never the newest or largest revision.
+Every coordinate selects its registry revision through the law-determined authority. Schema parity uses that yearâ€™s official form or layout denominator, never the newest or largest revision.
 
 `D2025` means provisionally and only: Modelo 100, ejercicio 2025, period `0A`, registry revision `2025`. It is not a repository-wide identifier, annex name, or global revision class.
 
@@ -102,3 +103,25 @@ The campaign gains explicit denominators, visible unsupported populations, enfor
 Initial results may remain low, deferred, or unmeasured. Building the annual matrix, matching official layouts, tracing construct-level provenance, and obtaining independent numeric examples remain substantive work.
 
 M100 `0150`, `0613`, and `1481` remain open. Their production closure requires focused legal, profile, or aggregation addenda, independent evidence, and SOL approval.
+
+## Amendment (2026-08-05): S16 rental source-contract boundary
+
+### Decision
+
+The 2025 Modelo 100 `0150` producer remains `manual`, and fincas source readiness remains false. This amendment authorizes only the source-contract definition and its independent-oracle gate; it authorizes no registry, formula, binding, relation, profile, persistence, application, or `0150` producer change.
+
+Before `0150` can become computed, the future implementation must expose one typed rental-source contract through the application aggregation boundary. The contract must:
+
+- represent movable-property and furniture amortization as a separate typed asset and ledger identity, with basis, in-service and disposal dates, rate provenance, cumulative cap, and the contract-use interval; it must not overload the building-specific amortization ledger;
+- persist the asset, contract-use interval, source identity, and source fingerprints in the canonical secure repository for the active profile bucket;
+- allocate income, expenses, building amortization, and furniture amortization through explicit contract/date intersections exactly once, retaining source identity and reconciling allocated amounts to their persisted totals;
+- expose one resolver with the canonical `BindingSourceKind`, typed provenance and fingerprints, stable repeated-row identity for `0150`, and parity between pull and calculate paths;
+- apply explicit rounding stages and enforce the reduction boundary: only a positive qualifying per-contract yield is reducible; non-qualifying and negative yields produce zero.
+
+### Promotion gate
+
+No source-backed `0150` producer may be promoted until a real secure-storage-to-calculate oracle independently verifies the official worked example, a zero-reduction case, multiple contracts, partial-year contract boundaries, and repeated `0150` row identity. The oracle must prove source resolution, calculation, provenance, and reconciliation; a fixture that precomputes the result or bypasses the source path is insufficient. The accepted grounding for this contract is `2026-08-05-modelo-parity-rollup-s16-source-contract-research`.
+
+### Scope boundary
+
+This amendment does not decide the concurrent registry/application-wide IRP invocation-shape remediation and must not alter its files or public contract. The eventual rental resolver may integrate with the resulting calculation boundary only after that remediation has stabilized and the source-contract gate above is satisfied. Any new legal producer or manual-to-computed transition still returns to SOL under the five-domain execution contract.

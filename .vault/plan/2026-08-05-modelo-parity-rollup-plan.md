@@ -4,7 +4,7 @@ tags:
   - '#modelo-parity-rollup'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:df7fed99ebe547389a4054fcf710d5ae51b38f4fc2d4d1100bc1e6221766a8d0'
+body_hash: 'sha256:ec0f1e71a832b05e14bfb695c91a16f846d60c4cb50955c061a44000ea9ee097'
 tier: L3
 related:
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
@@ -16,6 +16,8 @@ related:
   - '[[2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-oracle-code-review-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s17-0613-cap-rounding-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-source-contract-research]]'
 ---
 
 <!-- RETIRED: W02, P02 -->
@@ -80,9 +82,9 @@ Adjudicate M100 0150, 0613, and 1481 with focused legal, profile, aggregation, a
 
 Prepare and obtain focused SOL decisions for M100 0150, 0613, and 1481 before any manual-to-computed, profile, or cross-model production change.
 
-- [x] `W03.P08.S16` - Adjudicate M100 0150 against the 2025 profile and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
-- [x] `W03.P08.S17` - Adjudicate M100 0613 against monthly facts, profile capability, and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
-- [x] `W03.P08.S18` - Adjudicate M100 1481 against Modelo 131 relation and aggregation semantics; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [ ] `W03.P08.S16` - Adjudicate M100 0150 against the 2025 profile and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [ ] `W03.P08.S17` - Adjudicate M100 0613 against monthly facts, profile capability, and applicable legal evidence; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
+- [ ] `W03.P08.S18` - Adjudicate M100 1481 against Modelo 131 relation and aggregation semantics; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025`.
 
 ## Wave `W04` - Execute accepted closure work
 
@@ -111,6 +113,29 @@ Run the real conformance, coverage, oracle, and focused test gates, complete cod
 - [x] `W04.P11.S25` - Record exact oracle enrollment only for certified coordinate and payload mappings; `src/cadrumo/_data/registry/aeat/modelos`.
 - [x] `W04.P11.S26` - Run full conformance, coverage, oracle, and audit gates and capture their exact outputs; `dev/registry/conformance/manager.py`.
 - [x] `W04.P11.S27` - Complete code review and record the final parity closure report with open and deferred populations; `.vault/audit/2026-08-05-modelo-parity-rollup-audit.md`.
+
+## Wave `W05` - Ground remaining producer contracts and parity closures
+
+Execute the actionable semantic findings that remain open after the initial parity closure, with SOL-bounded contracts, VaultSpec-RAG evidence, Luna Max implementation, and honest non-promotion gates when authoritative numeric semantics are incomplete.
+
+### Phase `W05.P12` - Close 0613 evidence contract before promotion
+
+Adjudicate the exact per-child qualifying-month cap, effective non-subsidized spend semantics, decimal precision, and rounding stage with independent grounded evidence before any 2025 registry producer is authorized.
+
+- [x] `W05.P12.S28` - Build and verify an evidence-only 2025 0613 cap and rounding addendum without changing production schema wiring; `src/cadrumo/domain/contribuyente/tests and .vault/research/2026-08-05-modelo-parity-rollup-s17-0613-cap-oracle-research.md`.
+
+## Wave `W06` - Execute SOL-authorized evidence gates
+
+Advance S16 source-contract grounding, S17 independent cap and rounding oracle acquisition, and S18 annual shared-engine mapping without changing unresolved production producers.
+
+### Phase `W06.P13` - Ground source contracts and annual engine mapping
+
+Create only research, proposed ADR content, and independent real-runtime oracle evidence authorized by SOL; retain all unresolved M100 2025 producers as manual.
+
+- [x] `W06.P13.S29` - Draft the SOL-bounded S16 rental source-contract research and a proposed ADR without changing fincas models, persistence, source readiness, or M100 0150 wiring; `src/cadrumo/domain/fincas; src/cadrumo/application/aggregation; .vault/research; .vault/adr`.
+- [x] `W06.P13.S30` - Build and verify an evidence-only 2025 0613 source-capability tranche without changing 2025 schema or formula wiring; `src/cadrumo/domain/contribuyente/tests; src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf.extracted.md; .vault/research`.
+- [x] `W06.P13.S31` - Ground the annual shared-engine 2025 per-activity path for M100 1481 and produce only an independent oracle or research artifact without adding an M131 casilla-01 relation; `src/cadrumo/domain/calculations/registry/tests; src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025; .vault/research`.
+- [ ] `W06.P13.S32` - Acquire the complete authoritative 2025 0613 cap and rounding oracle matrix and return it to SOL before any producer promotion; `src/cadrumo/_data/corpus/manual_oracles; src/cadrumo/domain/contribuyente/tests; .vault/research`.
 
 ## Parallelization
 

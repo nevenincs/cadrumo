@@ -30,6 +30,7 @@ from datetime import date
 
 from cadrumo.core import Modelo
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.domain.calculations.registry import (
     CasillaDefinition,
     ModeloDefinition,
@@ -114,7 +115,7 @@ def project_casilla_search_records(
             item.revision_id for item in sorted(sources[key], key=lambda c: (c.valid_from, c.revision_id), reverse=True)
         )
         record = _build_record(chosen, revisions_latest_first)
-        if len(record.descriptions) > 1:
+        if _has_authored_locale(chosen.casilla):
             localized += 1
         records.append(record)
 
@@ -210,4 +211,14 @@ def _build_record(entry: _RevisionCasilla, source_revisions: tuple[str, ...]) ->
         legal_refs=tuple(casilla.legal_refs),
         source_refs=tuple(casilla.source_refs),
         source_revisions=source_revisions,
+    )
+
+
+def _has_authored_locale(casilla: CasillaDefinition) -> bool:
+    """Return whether a non-Spanish label is authored for this casilla."""
+    return any(
+        present and value is not None
+        for locale in _LOCALE_TO_LANGUAGE
+        for key in casilla.localization_keys
+        for present, value in (lookup_translation_entry(key, locale=locale),)
     )

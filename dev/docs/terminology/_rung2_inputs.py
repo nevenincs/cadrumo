@@ -66,13 +66,33 @@ class Rung2CompilationInputs:
 
     def __post_init__(self) -> None:
         """Keep the assembled source identity internally self-consistent."""
+        if type(self.sweep) is not SweepResult:
+            raise Rung2InputError("Rung-2 compilation inputs must carry a validated SweepResult")
+        if type(self.provenance) is not Rung2InputProvenance:
+            raise Rung2InputError("Rung-2 compilation inputs must carry validated input provenance")
+        if type(self.records) is not tuple or any(
+            type(record) is not SearchRecord for record in self.records
+        ):
+            raise Rung2InputError("Rung-2 compilation inputs must carry authoritative SearchRecord instances")
+        if not self.records:
+            raise Rung2InputError("Rung-2 compilation inputs cannot have an empty record projection")
+        if self.sweep.query_count != len(self.sweep.mappings):
+            raise Rung2InputError("Rung-2 compilation inputs carry an inconsistent sweep query count")
+        if self.sweep.failed_query_count:
+            raise Rung2InputError("Rung-2 compilation inputs cannot carry a degraded sweep")
         try:
             canonical_terms = canonical_vocabulary(self.vocabulary)
             canonical_tokens = canonical_query_tokens(self.query_tokens)
+            sweep_terms = canonical_vocabulary(mapping.query for mapping in self.sweep.mappings)
+            sweep_tokens = canonical_query_tokens(mapping.query for mapping in self.sweep.mappings)
         except MatrixCompilationError as exc:
             raise Rung2InputError(f"Rung-2 compilation inputs are not canonical: {exc}") from exc
         if canonical_terms != self.vocabulary or canonical_tokens != self.query_tokens:
             raise Rung2InputError("Rung-2 compilation inputs must retain canonical vocabulary order")
+        if sweep_terms != self.vocabulary:
+            raise Rung2InputError("Rung-2 vocabulary must be derived from the committed sweep mappings")
+        if sweep_tokens != self.query_tokens:
+            raise Rung2InputError("Rung-2 query tokens must be derived from the committed sweep mappings")
         if self.vocabulary_sha256 != vocabulary_fingerprint(canonical_terms):
             raise Rung2InputError("Rung-2 vocabulary fingerprint does not match the assembled vocabulary")
         if self.query_token_sha256 != query_token_fingerprint(canonical_tokens):

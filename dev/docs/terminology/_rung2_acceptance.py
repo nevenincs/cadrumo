@@ -29,10 +29,10 @@ from ._rung2_provenance import Rung2InputProvenance
 from ._static_matrix import DEFAULT_MAX_SERIALIZED_BYTES, NORMALIZATION_CONTRACT_VERSION, ModelMetadata
 
 __all__ = [
+    "RUNG2_CONFIG_SCHEMA_VERSION",
     "Rung2AcceptanceError",
     "Rung2AcceptanceEvidence",
     "Rung2BrowserConfig",
-    "RUNG2_CONFIG_SCHEMA_VERSION",
     "validate_rung2_browser_config",
 ]
 

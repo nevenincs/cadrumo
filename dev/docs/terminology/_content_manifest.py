@@ -8,7 +8,6 @@ explicit relative paths approved for the pinned revision.
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import Iterable
 from hashlib import sha256
@@ -16,6 +15,8 @@ from pathlib import Path, PurePosixPath
 from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+
+from ._jcs import CanonicalJsonError, canonical_json_bytes
 
 __all__ = [
     "RAW_BYTE_MANIFEST_SCHEMA_VERSION",
@@ -199,9 +200,10 @@ def _manifest_sha256(
 
 
 def _canonical_json_bytes(payload: object) -> bytes:
+    """Return the shared Rung-2 canonical bytes for manifest hashing."""
     try:
-        return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-    except (TypeError, ValueError) as exc:
+        return canonical_json_bytes(payload)
+    except CanonicalJsonError as exc:
         raise RawByteManifestError("raw-byte manifest payload is not canonical JSON") from exc
 
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:238baec10ca1dd95ac29778ee079521c5f1e99ed223d7672880f67e1f974abd0'
+body_hash: 'sha256:fb1a325cbb533c1cf3879bae11d956eb832ff9ca042cf5ccc855faf5e8a461c4'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -47,6 +47,10 @@ Fresh vaultspec-rag grounding confirms that `rung2SemanticCandidates` is an addi
 ### composition-seam | low | PASS within the source-only boundary
 
 The follow-up composition seam accepts only explicitly supplied lexical observations and the already validated semantic result. Its comparator mirrors the RAG-grounded browser contract for cross-tier direct-match precedence, tier ordering, semantic score/weight ordering, and deterministic ties, then deduplicates record ids and preserves the browser result cap. Source-shape validation rejects semantic rows carrying lexical identity. The seam performs no Pagefind access, artifact loading, acceptance adjudication, or report generation. This is a bounded source improvement; P02.S07 remains open until real Pagefind evidence, the accepted artifact/config, and the authorized post-Rung-2 measurement exist.
+
+### coverage-evidence | low | PASS within the source-only boundary
+
+Fresh vaultspec-rag grounding over the evaluator, browser semantic seam, matrix query-token rows, acceptance contract, and P02.S04/P02.S07 records found that per-query coverage counts existed without an aggregate evidence object. `Rung2CoverageEvidence` and `aggregate_rung2_coverage` now validate the row partition and token arithmetic, reject zero-token or over-covered rows, report full/zero/below-threshold query counts and aggregate coverage, and bind the evidence to the exact validated matrix and bundle identities. The primitive performs no I/O and makes no release decision. P02.S07 remains open pending an authorized full-ladder measurement and accepted artifact evidence.
 
 ## Recommendations
 

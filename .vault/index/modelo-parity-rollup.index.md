@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce5ec730885c76bcd5c412b2b483f7ba49cf56813e66de564e7038520eacd08f'
+body_hash: 'sha256:5b83a17adf43d8aeb479c6ab8b7b974184ae72986b63ead03f92f88ecea2a63a'
 related:
   - '[[2026-08-05-modelo-parity-rollup-W01-P03-S01]]'
   - '[[2026-08-05-modelo-parity-rollup-W01-P03-S02]]'
@@ -36,6 +36,10 @@ related:
   - '[[2026-08-05-modelo-parity-rollup-W04-P11-S26]]'
   - '[[2026-08-05-modelo-parity-rollup-W04-P11-S27]]'
   - '[[2026-08-05-modelo-parity-rollup-W04-P11-summary]]'
+  - '[[2026-08-05-modelo-parity-rollup-W05-P12-S28]]'
+  - '[[2026-08-05-modelo-parity-rollup-W06-P13-S29]]'
+  - '[[2026-08-05-modelo-parity-rollup-W06-P13-S30]]'
+  - '[[2026-08-05-modelo-parity-rollup-W06-P13-S31]]'
   - '[[2026-08-05-modelo-parity-rollup-denominator-research]]'
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
   - '[[2026-08-05-modelo-parity-rollup-m100-2021-audit]]'
@@ -59,8 +63,11 @@ related:
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-boundary-guard-review-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-evidence-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-s18-fourth-sol-boundary-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-oracle-code-review-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit]]'
+  - '[[2026-08-05-modelo-parity-rollup-s16-source-contract-research]]'
+  - '[[2026-08-05-modelo-parity-rollup-s17-0613-cap-rounding-research]]'
   - '[[2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research]]'
   - '[[2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit]]'
   - '[[2026-08-05-modelo-parity-rollup-tranche-review-audit]]'
@@ -95,6 +102,7 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 - `2026-08-05-modelo-parity-rollup-s13-review-audit` - 2026-08-05-modelo-parity-rollup-s13-review-audit
 - `2026-08-05-modelo-parity-rollup-s15-review-audit` - 2026-08-05-modelo-parity-rollup-s15-review-audit
 - `2026-08-05-modelo-parity-rollup-s16-s18-boundary-guard-review-audit` - 2026-08-05-modelo-parity-rollup-s16-s18-boundary-guard-review-audit
+- `2026-08-05-modelo-parity-rollup-s16-s18-fourth-sol-boundary-audit` - `modelo-parity-rollup` audit: `S16 S17 S18 fourth SOL authorization boundary`
 - `2026-08-05-modelo-parity-rollup-s16-s18-oracle-code-review-audit` - `modelo-parity-rollup` audit: `S16 S18 oracle code review`
 - `2026-08-05-modelo-parity-rollup-s16-s18-third-adjudication-audit` - `modelo-parity-rollup` audit: `S16 S18 third SOL adjudication`
 - `2026-08-05-modelo-parity-rollup-semantic-decision-boundary-audit` - `modelo-parity-rollup` audit: `Modelo parity rollup semantic decision boundary`
@@ -130,6 +138,10 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 - `2026-08-05-modelo-parity-rollup-W04-P11-S26` - Modelo parity rollup S26 full conformance, coverage, oracle, and audit gates
 - `2026-08-05-modelo-parity-rollup-W04-P11-S27` - Modelo parity rollup S27 final parity closure report
 - `2026-08-05-modelo-parity-rollup-W04-P11-summary` - `modelo-parity-rollup` P11 summary
+- `2026-08-05-modelo-parity-rollup-W05-P12-S28` - Build and verify an evidence-only 2025 0613 cap and rounding addendum without changing production schema wiring
+- `2026-08-05-modelo-parity-rollup-W06-P13-S29` - Draft the SOL-bounded S16 rental source-contract research and a proposed ADR without changing fincas models, persistence, source readiness, or M100 0150 wiring
+- `2026-08-05-modelo-parity-rollup-W06-P13-S30` - Acquire an authoritative independent 2025 0613 cap and rounding oracle matrix, including per-child effective spend and profile-to-calculate evidence without changing 2025 schema or formula wiring
+- `2026-08-05-modelo-parity-rollup-W06-P13-S31` - Ground the annual shared-engine 2025 per-activity path for M100 1481 and produce only an independent oracle or research artifact without adding an M131 casilla-01 relation
 
 ### plan
 
@@ -141,4 +153,6 @@ Auto-generated index of all documents tagged with `#modelo-parity-rollup`.
 - `2026-08-05-modelo-parity-rollup-s16-0150-oracle-addendum-research` - `modelo-parity-rollup` research: `S16 0150 rental oracle addendum`
 - `2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research` - 2026-08-05-modelo-parity-rollup-s16-s18-candidate-contract-matrix-research
 - `2026-08-05-modelo-parity-rollup-s16-s18-evidence-research` - modelo-parity-rollup research: M100 2025 semantic evidence tranche
+- `2026-08-05-modelo-parity-rollup-s16-source-contract-research` - `modelo-parity-rollup` research: `S16 rental source contract`
+- `2026-08-05-modelo-parity-rollup-s17-0613-cap-rounding-research` - `modelo-parity-rollup` research: `S17 0613 cap and rounding evidence`
 - `2026-08-05-modelo-parity-rollup-s18-1481-oracle-addendum-research` - `modelo-parity-rollup` research: `S18 1481 activity oracle addendum`

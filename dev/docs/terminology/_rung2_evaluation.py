@@ -15,11 +15,11 @@ does not capture Pagefind or establish release acceptance.
 
 from __future__ import annotations
 
-from functools import cmp_to_key
 import math
 import struct
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from functools import cmp_to_key
+from typing import Annotated, Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -34,14 +34,14 @@ from ._static_matrix import (
 
 __all__ = [
     "Rung2CandidateStatus",
+    "Rung2CompositionEntry",
+    "Rung2CompositionResult",
     "Rung2CoverageEvidence",
     "Rung2Evaluation",
     "Rung2EvaluationError",
     "Rung2EvaluationPolicy",
     "Rung2EvaluationReason",
     "Rung2EvaluationRow",
-    "Rung2CompositionEntry",
-    "Rung2CompositionResult",
     "Rung2LexicalObservation",
     "Rung2SemanticCandidate",
     "Rung2SemanticCandidateResult",
@@ -431,7 +431,7 @@ def rung2_semantic_candidates(
             if (
                 prior is None
                 or score > prior.semantic_score
-                or score == prior.semantic_score and target.ranking_weight > prior.semantic_ranking_weight
+                or (score == prior.semantic_score and target.ranking_weight > prior.semantic_ranking_weight)
             ):
                 by_record[target.record_id] = Rung2SemanticCandidate(
                     record_id=target.record_id,
@@ -453,8 +453,8 @@ def rung2_semantic_candidates(
 
 
 def compose_rung2_candidates(
-    lexical_candidates: tuple[Rung2LexicalObservation, ...],
-    semantic_result: Rung2SemanticCandidateResult,
+    lexical_candidates: object,
+    semantic_result: object,
 ) -> Rung2CompositionResult:
     """Compose a caller-supplied Pagefind tuple with an existing semantic result.
 
@@ -463,15 +463,18 @@ def compose_rung2_candidates(
     artifact, and reports no release or acceptance evidence.
     """
 
-    if not isinstance(lexical_candidates, tuple) or any(
-        not isinstance(candidate, Rung2LexicalObservation) for candidate in lexical_candidates
-    ):
+    if not isinstance(lexical_candidates, tuple):
+        raise Rung2EvaluationError("lexical_candidates must be a tuple of validated Rung2LexicalObservation values")
+    candidate_values = cast(tuple[object, ...], lexical_candidates)
+    if any(not isinstance(candidate, Rung2LexicalObservation) for candidate in candidate_values):
         raise Rung2EvaluationError("lexical_candidates must be a tuple of validated Rung2LexicalObservation values")
     if not isinstance(semantic_result, Rung2SemanticCandidateResult):
         raise Rung2EvaluationError("semantic_result must be a validated Rung2SemanticCandidateResult")
+    validated_lexical_candidates = cast(tuple[Rung2LexicalObservation, ...], candidate_values)
+    validated_semantic_result = semantic_result
 
-    entries = tuple(_composition_entry(candidate) for candidate in lexical_candidates) + tuple(
-        _composition_entry(candidate) for candidate in semantic_result.candidates
+    entries = tuple(_composition_entry(candidate) for candidate in validated_lexical_candidates) + tuple(
+        _composition_entry(candidate) for candidate in validated_semantic_result.candidates
     )
     ordered = sorted(entries, key=cmp_to_key(_compare_composition_entries))
     seen_record_ids: set[str] = set()
@@ -491,7 +494,7 @@ def compose_rung2_candidates(
 
 def evaluate_rung2_held_out(
     bundle: Rung2SearchBundle,
-    query_set: HeldOutQuerySet,
+    query_set: object,
     policy: Rung2EvaluationPolicy,
 ) -> Rung2Evaluation:
     """Measure held-out expected ids against browser-equivalent top-five ids."""
@@ -499,9 +502,10 @@ def evaluate_rung2_held_out(
     _require_inputs(bundle, policy)
     if not isinstance(query_set, HeldOutQuerySet):
         raise Rung2EvaluationError("query_set must be a validated HeldOutQuerySet")
+    validated_query_set = query_set
 
     rows: list[Rung2EvaluationRow] = []
-    for case in query_set.cases:
+    for case in validated_query_set.cases:
         result = rung2_semantic_candidates(bundle, case.query, policy)
         candidate_ids = tuple(candidate.record_id for candidate in result.candidates)
         matched = next((record_id for record_id in case.expected_record_ids if record_id in candidate_ids), None)
@@ -528,7 +532,7 @@ def evaluate_rung2_held_out(
     hits = sum(1 for row in rows if row.hit)
     misses = len(rows) - hits
     return Rung2Evaluation(
-        query_set_version=query_set.version,
+        query_set_version=validated_query_set.version,
         policy=policy,
         case_count=len(rows),
         hit_count=hits,

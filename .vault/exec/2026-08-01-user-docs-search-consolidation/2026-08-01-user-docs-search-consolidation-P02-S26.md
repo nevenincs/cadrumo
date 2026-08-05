@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:c0607873569028ceda832227d3ddc3c59312201b1f547245a9281885216606bf'
+body_hash: 'sha256:cb3513992ba6fcddab663500e6c9810220940d52772b13127b59db24938fc7ff'
 step_id: 'S26'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -35,3 +35,9 @@ This closes the source-only implementation/review tranche, not the plan step. Re
 ## Notes
 
 No tests, builds, model downloads, manifest generation, matrix generation, artifact release, Pagefind/runtime probes, live sweeps, reindexing, or deployment were run. Concurrent shared-worktree changes were not cleaned, reset, staged broadly, or incorporated.
+
+### 2026-08-05 source continuation: shared canonical manifest bytes
+
+The raw-byte manifest implementation now delegates both its self-attesting root digest and complete-envelope bytes to the shared `cadrumo-jcs-utf8-lf-v1` canonicalizer. This removes the second Python serializer from the provider/tokenizer attestation path and aligns P02.S26 with ADR Update 10's cross-runtime hash contract. It does not create manifest evidence or authorize provider/model use.
+
+Static evidence only: post-edit vaultspec-rag search, Python AST parsing, and focused diff whitespace validation passed. No tests, builds, model downloads, manifest or matrix generation, runtime probes, sweeps, reindexing, deployment, or artifact release were run.

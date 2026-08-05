@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:b5c8e36eb423c120df12e94a3929357401e10c18fe43f6ce903de27efefa239d'
+body_hash: 'sha256:e0761f5702c04b616beeab2cf03b60f47b5a5bd6923c108d1cd908a34e21cc27'
 step_id: 'S25'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -37,3 +37,9 @@ The formal configured SOL review failed closure because the Python and browser n
 P02.S25 remains open. The current Python number spelling uses Python `repr(float)` plus normalization and therefore needs independent parity evidence against the browser implementation before it can be accepted as the contract. Shared-worktree peer changes were preserved and no broad staging or cleanup was performed.
 
 A second validated LUNA Max pass re-grounded the Python and browser implementations and made no edit: exact ECMAScript shortest-round-trip and tie-breaking parity cannot be claimed without the independently checked vectors that the current no-verification boundary prohibits. No tests, builds, runtime probes, golden vectors, artifacts, sweeps, reindexing, or deployment were run.
+
+### 2026-08-05 source continuation: manifest canonicalizer alignment
+
+Fresh vaultspec-rag grounding over the accepted cross-runtime canonical JSON amendment and the raw-byte manifest implementation identified one remaining duplicate serializer: the raw-byte manifest root and envelope used a local compact `json.dumps` path instead of the shared `cadrumo-jcs-utf8-lf-v1` contract. `_content_manifest.py` now delegates manifest canonical bytes and root hashing to the shared canonicalizer, preserving the existing error boundary and preventing Python-only hash semantics from entering P02.S26 evidence.
+
+Static evidence only: post-edit vaultspec-rag search, Python AST parsing, and focused diff whitespace validation passed. The independent Python/JavaScript golden-vector parity gate remains open. No tests, builds, model downloads, manifest or matrix generation, runtime probes, sweeps, reindexing, deployment, or artifact release were run.
