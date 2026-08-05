@@ -49,7 +49,10 @@ from ._binding_selector_utils import invariant_diagnostics, selector_against_mod
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, validated_casilla_id
-from ._ledger_binding_resolution import resolve_ledger_family_binding_values
+from ._ledger_binding_resolution import (
+    resolve_ledger_family_binding_values,
+    unsupported_ledger_family_observations,
+)
 from ._schema import DataBindingDefinition, ModeloRevision
 
 # Ledger-aggregation binding source kinds. Re-exported from
@@ -1174,34 +1177,29 @@ def unsupported_ledger_renta_gastos_pago_fraccionado_observations(
     revision: ModeloRevision,
     observations: Iterable[RentaGastosPagoFraccionadoObservationProtocol],
 ) -> tuple[RentaGastosPagoFraccionadoObservationProtocol, ...]:
-    """Return the gasto observations no binding on the :class:`ModeloRevision` ``revision`` can consume.
+    """Return the gasto observations no ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding can consume.
 
-    Fail-closed counterpart to
-    :func:`resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values`, mirroring
-    :func:`unsupported_ledger_renta_income_observations`. An observation whose
-    ``target_casilla_id`` matches no ``ledger_renta_gastos_pago_fraccionado_aggregation`` binding has
-    its deductible expense silently dropped — a modelling gap, not a legitimate
-    zero (no-silent-under-declaration).
-
-    False-fire guard: a zero-``deductible_amount`` observation contributes
-    nothing whether or not it is routed and is excluded; only a non-zero
-    declarable gasto reaching no casilla is surfaced.
+    Delegates the screen to :func:`unsupported_ledger_family_observations` —
+    see that function for the shared fail-closed contract (why an unmatched
+    observation is a modelling gap, not a legitimate zero). This family's
+    own contribution is narrow: the ``target_casilla_id`` match predicate
+    (reused from the resolver's ``_renta_gastos_pago_fraccionado_build_matcher``)
+    and a zero-``deductible_amount`` false-fire guard — a gasto that
+    contributes nothing declarable is excluded whether or not it is routed.
+    No ``extra_exclusion``; unlike the IVA family this family has no
+    category-level carve-out.
 
     Returns:
         Unsupported :class:`RentaGastosPagoFraccionadoObservationProtocol` observations.
     """
-    supported_casillas = frozenset(
-        _renta_ledger_gastos_pago_fraccionado_selector(binding).target_casilla_id
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
+    return unsupported_ledger_family_observations(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+        parse_selector=_renta_ledger_gastos_pago_fraccionado_selector,
+        build_matcher=_renta_gastos_pago_fraccionado_build_matcher,
+        is_declarable=lambda observation: observation.deductible_amount != Decimal("0"),
     )
-    unsupported: list[RentaGastosPagoFraccionadoObservationProtocol] = []
-    for observation in observations:
-        if observation.deductible_amount == Decimal("0"):
-            continue
-        if observation.target_casilla_id not in supported_casillas:
-            unsupported.append(observation)
-    return tuple(unsupported)
 
 
 def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
