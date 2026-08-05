@@ -267,6 +267,30 @@ def test_a_child_turning_three_mid_year_contributes_its_months_before_the_birthd
     assert _casilla_0611(output) == Decimal("300")
 
 
+def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The adopcion limb, driven through the surface an operator uses.
+
+    Art. 81.1 grants the deduccion "con independencia de la edad del menor,
+    durante los tres anos siguientes a la fecha de la inscripcion en el Registro
+    Civil". This child was five at inscription, so the under-three limb grants
+    nothing and every month reaching the casilla came from the entry window.
+
+    Inscribed 15 November 2021, so the window runs to October 2024 inclusive:
+    ten months of the 2024 period at the authority's 100 euros is 1.000. The
+    Art. 58.2 window, which counts whole tax PERIODS from the entry period, has
+    already closed on 2023 -- which is the divergence this case exists to show.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2016-03-02,RELACION=adoptado,INSCRIPCION=2021-11-15,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("1000")
+
+
 def test_a_child_over_the_rentas_ceiling_contributes_nothing(
     runtime_profile: TestRuntimeProfile,
 ) -> None:

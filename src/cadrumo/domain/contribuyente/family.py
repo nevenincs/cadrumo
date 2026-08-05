@@ -70,6 +70,28 @@ def within_multi_year_applicability_window(
 _MAX_AGE_ORDINARY = MINIMO_DESCENDIENTE_MAX_AGE
 _MAX_AGE_MENOR_TRES = MINIMO_MENOR_TRES_MAX_AGE
 
+# Art. 81.1 LIRPF: the adopción/acogimiento limb runs "durante los tres años
+# siguientes a la fecha de la inscripción en el Registro Civil". Counted in
+# YEARS from a date, unlike the Art. 58.2 limb above, which counts whole tax
+# PERIODS from the entry period — hence a separate constant rather than a reuse
+# of the period count, which would read as the same rule and is not.
+_ART_81_1_ENTRY_WINDOW_YEARS = 3
+
+
+def _months_of_year_between(
+    start: tuple[int, int],
+    end: tuple[int, int],
+    filing_year: int,
+) -> frozenset[int]:
+    """Months of *filing_year* inside the half-open ``(year, month)`` span ``[start, end)``.
+
+    Compares ``(year, month)`` pairs rather than dates so a span anchored on a 29
+    February event resolves in a non-leap year, where constructing the
+    anniversary date raises. Half-open by design: both Art. 81.1 windows count
+    their opening month in full and exclude the month the span runs out.
+    """
+    return frozenset(month for month in range(1, 13) if start <= (filing_year, month) < end)
+
 
 def _coerce_iso_date_field(value: object) -> object:
     """Delegate for @field_validator date fields: parse ISO strings, pass through everything else."""
@@ -656,9 +678,66 @@ class DescendantInfo(BaseModel):
         Returns ``0`` for a period entirely before the birth or entirely after
         the third-birthday month.
         """
-        start = (self.birth_date.year, self.birth_date.month)
-        end = (self.birth_date.year + _MAX_AGE_MENOR_TRES, self.birth_date.month)
-        return sum(1 for month in range(1, 13) if start <= (filing_year, month) < end)
+        return len(self._maternidad_edad_months(filing_year))
+
+    def _maternidad_edad_months(self, filing_year: int) -> frozenset[int]:
+        """The months of *filing_year* covered by the Art. 81.1 under-three limb."""
+        return _months_of_year_between(
+            (self.birth_date.year, self.birth_date.month),
+            (self.birth_date.year + _MAX_AGE_MENOR_TRES, self.birth_date.month),
+            filing_year,
+        )
+
+    def art_81_1_entry_window_meses(self, filing_year: int) -> int:
+        """Months of *filing_year* inside the Art. 81.1 adopción/acogimiento window.
+
+        A SEPARATE window from the Art. 58.2 one, and separate because the two
+        statutes measure differently for the same child. Art. 58.2 counts whole
+        tax PERIODS — "en el período impositivo en que se inscriba en el Registro
+        Civil y en los dos siguientes" — so annual granularity suffices there.
+        Art. 81.1 instead runs "durante los tres años siguientes a la FECHA de la
+        inscripción en el Registro Civil", and where no inscription is required,
+        "durante los tres años posteriores a la fecha de la resolución judicial o
+        administrativa que la declare". That is a date, so the window opens and
+        closes mid-year and the two disagree in BOTH directions for the same
+        child: the entry period is granted whole by Art. 58.2 while its months
+        before the inscription fall outside this one, and the fourth calendar
+        year is inside this one while Art. 58.2 has already closed.
+
+        The window is age-independent — "con independencia de la edad del menor"
+        — which is the whole point of the limb: it reaches a child adopted well
+        after their third birthday, for whom the ordinary limb grants nothing.
+
+        Anchors on :meth:`art_58_2_entry_date`, the FIRST entitling event, rather
+        than on whichever date the record happens to carry. A fostered-then-
+        adopted child anchored on the adoption would draw a second three-year
+        window after the first, granting up to six years where the statute allows
+        three. Sharing the anchor keeps the cap intact.
+
+        The entitling relación set is shared with Art. 58.2 as well, and that is
+        a reading rather than an assumption. The two statutes enumerate
+        differently on their face — Art. 58.2 says "acogimiento, tanto
+        preadoptivo como permanente" while Art. 81.1 says "acogimiento
+        permanente o delegación de guarda para la convivencia" — but the
+        delegación de guarda IS the successor figure to the abolished acogimiento
+        preadoptivo, so the two enumerations cover the same placements under
+        their respective vocabularies.
+
+        Returns ``0`` for a relación the statutes exclude and for an entitling
+        relación whose entry date is not yet recorded.
+        """
+        return len(self._maternidad_entry_window_months(filing_year))
+
+    def _maternidad_entry_window_months(self, filing_year: int) -> frozenset[int]:
+        """The months of *filing_year* covered by the Art. 81.1 entry-event limb."""
+        anchor = self.art_58_2_entry_date()
+        if anchor is None:
+            return frozenset()
+        return _months_of_year_between(
+            (anchor.year, anchor.month),
+            (anchor.year + _ART_81_1_ENTRY_WINDOW_YEARS, anchor.month),
+            filing_year,
+        )
 
     def maternidad_contributing_meses(
         self,
@@ -697,11 +776,20 @@ class DescendantInfo(BaseModel):
         silently skipping the two income conditions, which inflates the
         deducción.
 
-        The declared months are CAPPED by :meth:`maternidad_eligible_meses`
-        rather than trusted outright. An operator who counted correctly is
-        unaffected, because their figure already lies inside the window; one who
-        declared raw employment months has the over-claim removed. The cap can
-        only ever reduce, so it cannot invent an entitlement.
+        The declared months are CAPPED by the eligible window rather than
+        trusted outright. An operator who counted correctly is unaffected,
+        because their figure already lies inside the window; one who declared raw
+        employment months has the over-claim removed. The cap can only ever
+        reduce, so it cannot invent an entitlement.
+
+        That window is the UNION of the article's two limbs — the under-three
+        months and the adopción/acogimiento entry window — because Art. 81.1
+        grants the entry limb "con independencia de la edad del menor". Taking
+        the wider of the two counts instead of their union would be wrong for a
+        child whose limbs cover different months of the same year: an infant
+        adopted in October is under three all year and inside the entry window
+        from October, and the answer is twelve months rather than either limb's
+        own count.
         """
         if not self.is_eligible_ordinary(
             filing_year,
@@ -709,7 +797,8 @@ class DescendantInfo(BaseModel):
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return 0
-        return min(self.meses_madre_trabajo_2024, self.maternidad_eligible_meses(filing_year))
+        eligible = self._maternidad_edad_months(filing_year) | self._maternidad_entry_window_months(filing_year)
+        return min(self.meses_madre_trabajo_2024, len(eligible))
 
     def guarderia_contributing_spend(self, filing_year: int) -> int:
         """Art. 81.2 guardería spend this descendant contributes in *filing_year*.
