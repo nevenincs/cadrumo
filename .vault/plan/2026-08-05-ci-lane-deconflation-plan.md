@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:63d247ff1aabbcc249311b79bed11e240f0be176fe78825f047c9dadcf5fe46d'
+body_hash: 'sha256:a312a533e8ce9289503b1aae1e601241aa6e9db644c63fcebfa1314b89e741c1'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -50,7 +50,7 @@ Enrolling the integration suite and the dev tooling gates exposed accumulated ro
 - [ ] `P02.S08` - Measure the dev tooling gates at a clean HEAD, the local count of 55 is contaminated because 32 belong to an uncommitted peer legal entry and the true figure is nearer 23; `dev/audit, dev/deploy, dev/env, dev/registry, dev/docs`.
 - [ ] `P02.S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass; `.github/workflows/ci-full.yml`.
 - [ ] `P02.S10` - Flip continue-on-error off the integration serial step once one runner execution is observed, its build branch producing three wheels and three sdists has never been watched; `.github/workflows/ci-full.yml`.
-- [ ] `P02.S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom; `src/cadrumo/entrypoints/mcp`.
+- [x] `P02.S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom; `src/cadrumo/entrypoints/mcp`.
 - [ ] `P02.S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it; `src/cadrumo/entrypoints/mcp`.
 
 ### Phase `P03` - Registry and core follow-through
@@ -75,7 +75,8 @@ Work this campaign found and cannot close, recorded so it is not silently droppe
 - [ ] `P04.S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent; `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`.
 - [ ] `P04.S24` - Confirm with the localization cascade owner that the result-summary application row is meant to follow the active output language, the repair is stronger than what it replaced but it crosses another campaign's surface; `src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py`.
 - [ ] `P04.S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in; `src/cadrumo/entrypoints/cli/tests`.
-- [ ] `P04.S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero; `.vaultspec/templates`.
+- [x] `P04.S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero; `.vaultspec/templates`.
+- [x] `P04.S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads; `src/cadrumo/entrypoints/mcp/tests`.
 
 ## Parallelization
 
