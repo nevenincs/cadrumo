@@ -41,17 +41,22 @@ is NOT a machine, and jobs from other repositories co-reside on the same boxes:
 
 | Machine | Cores | This repository's runners on it |
 | --- | --- | --- |
-| Windows/WSL build host (Ryzen 5900X, 12C/24T) | 24 logical | the Windows runner (Windows X64), plus one Linux X64 container runner |
+| Windows/WSL build host (Ryzen 5900X, 12C/24T) | 24 logical | the Windows runner (Windows X64), plus two Linux X64 container runners |
 | macOS build host (Apple silicon) | 6 | the macOS ARM64 runner and a Linux ARM64 runner (via colima, VM capped at 4 CPUs) |
 
 **The workstation is NOT ours alone.** It hosts self-hosted runners for three
 other repositories under four distinct mechanisms — Windows services, logon
 scheduled tasks, WSL systemd units, and Docker containers. Measured 2026-08-05:
-**seven runners online, nine at ceiling** once the two logon-triggered tasks
-start. Only two of those nine belong to this repository, and one of the two (the
+**eight runners online, ten at ceiling** once the two logon-triggered tasks
+start. Only three of those belong to this repository, and one of the three (the
 Windows runner) was offline at the time of measurement. Enumerating Windows
-services alone finds two of the nine; any question of the form "what else runs
-on this box" must enumerate all four mechanisms.
+services alone finds two of them; any question of the form "what else runs on
+this box" must enumerate all four mechanisms.
+
+**The two Linux X64 container runners carry identical labels**, so a job
+requesting `[self-hosted, Linux, X64]` lands on whichever is free. Provision
+them as a pair and keep their tooling at parity — a capability present on one
+and absent on the other is a failure that reproduces only half the time.
 
 **Sizing rule:** the sum of co-resident workers must fit the machine's CPUs —
 size every parallel knob for worst-case co-residency, never for the whole box.

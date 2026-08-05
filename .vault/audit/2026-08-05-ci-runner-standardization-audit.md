@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:0bd0968c31b290287ff669aed9a459add0065586ee933284c5282051efdf6899'
+body_hash: 'sha256:b7d1e2bcedcbdde0f15532f252d32f7dbe361e2c3aceb23222ee0e259d75e1eb'
 related: []
 ---
 
@@ -381,6 +381,76 @@ same window as the provisioning of three other repositories' runners on this box
 directories were created across the two following days. A container stopped during that
 work and never restarted fits every observation, but the logs do not name who stopped
 it, and no evidence here raises that from consistent to established.
+
+### linux-pair-restored | high | The second Linux runner is restored, named to convention, and verified at capability parity
+
+A fresh registration was created under operator authority: a new state volume, the
+tracked entrypoint, and the runner configured from a registration token that was never
+written to output. The orphaned volume was not reused and was not touched; it remains
+in place for the operator to dispose of. The container came up, created a session, and
+is listening for jobs; the service reports it online.
+
+It was named to the convention at birth — product-led, no host name. That is the one
+naming change in this campaign with **zero** cost: a new registration can be named
+correctly for free, where renaming an existing one is a deregister/re-register cycle.
+The fleet now contains its first conforming runner name, which is a better argument for
+the convention than any amount of prose.
+
+**Capability parity turned out to be the load-bearing part, and verifying rather than
+assuming caught a hazard this restore itself introduced.** Both Linux runners carry
+identical labels, so a job takes whichever is free. A newly built runner is missing
+everything the base image does not ship, and the repository's own documentation lists
+exactly what that is. The new runner initially lacked Homebrew, which the acquisition
+lane requires and which fails at that lane's first step — a coin-flip failure
+reproducing only half the time, the worst debugging shape available. It was installed
+at the canonical path per the documented procedure, and both runners now verify
+equivalent on every documented axis.
+
+One earlier reading is corrected here: an initial check appeared to show the existing
+runner carrying its tooling only in the container's writable layer. That was an
+artefact of the probe — a login shell resets the path and resolved a redundant copy
+first. The volume-resident install is present on both. The general caution stands and is
+now written into the runners README, but the existing runner was not defective.
+
+### fleet-has-no-liveness-signal | high | Nothing detects a runner that stops; this is the condition that must change
+
+The restore rebuilds capacity but does not address why the loss went unnoticed for two
+weeks, and that gap is the more durable defect. A runner stopped, was deregistered for
+inactivity, crash-looped, and was reaped, and the first thing to observe any step was an
+unrelated inventory audit. Nothing polls, nothing alerts, and the only evidence lived in
+a log inside a container nobody opens.
+
+A design is proposed rather than landed, because a monitor is a standing surface and
+adding one unasked is how the next unwatched signal gets created.
+
+**What it queries.** The per-repository runners endpoint, comparing the set of names
+reporting online against an expected set. Cheap, authoritative, and independent of the
+host — it observes what the service believes, which is the thing that actually decides
+whether jobs get scheduled.
+
+**Where the expectation is declared.** In the repository, beside the runner
+documentation, as data rather than prose — the same file the fleet table is generated
+from, so a runner added or retired updates the expectation in the same change. An
+expectation living only in the monitor drifts from the fleet the moment someone
+provisions without touching it.
+
+**How it fails loudly, and to whom.** As a scheduled workflow job that fails when the
+observed set does not match the expected one. A failing job on the repository's own
+Actions tab is a signal the team already watches for other reasons, which is the whole
+point — it inherits an existing habit rather than asking for a new one. It must name
+which runner is missing, not merely that the count is wrong.
+
+**How it avoids becoming another unwatched signal.** Three properties. It must fail the
+job rather than log a warning, because warnings in green runs are read by nobody. It
+must run somewhere that does not depend on the fleet it is checking — a hosted runner,
+not a self-hosted one, or a total outage silences the very alarm meant to report it.
+And it must be quiet when healthy: a check that fires routinely trains its audience to
+ignore it, which is the failure mode one level up from the one it was built to fix.
+
+**Cost.** One scheduled API call per interval against a rate limit measured in
+thousands per hour, on a hosted runner, consuming nothing from the box that already
+carries eight runners. A daily interval would have caught this loss inside the window
+before deregistration, when a restart would still have been sufficient.
 
 ## Recommendations
 
