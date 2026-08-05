@@ -225,7 +225,7 @@
    *     schema_version: "cadrumo.docs-search.rung2-config.v1",
    *     enabled: true,
    *     normalization_version: RUNG2_NORMALIZATION_VERSION,
-   *     matrix_url, bridge_url, matrix_sha256, bridge_sha256,
+   *     bundle_url, bundle_sha256,
    *     acceptance: {
    *       approved: true,
    *       minimum_coverage_ratio, cosine_floor, runner_up_margin,
@@ -235,15 +235,14 @@
    *     },
    *   }
    *
-   * The matrix is the schema-v2 artifact emitted by _static_matrix.py. The
-   * bridge v1 is a separate bounded JSON payload whose term rows link to
-   * ordered opaque record_ids and whose manifest hydrates those ids to the
-   * already-authoritative href/title/display metadata. URLs are consumed only
+   * The bundle is the schema-v1 Rung2SearchBundle emitted by _rung2_bridge.py:
+   * it contains the schema-v3 matrix, hash-linked bridge, and authoritative
+   * record manifest under one measured byte bound. URLs are consumed only
    * from that manifest; this code never parses an id or constructs a target. */
   var RUNG2_CONFIG_SCHEMA = "cadrumo.docs-search.rung2-config.v1";
-  var RUNG2_BRIDGE_SCHEMA = "cadrumo.docs-search.rung2-bridge.v1";
-  var RUNG2_NORMALIZATION_VERSION = "cadrumo.docs-search-tokenization.v1";
-  var RUNG2_MATRIX_SCHEMA_VERSION = 2;
+  var RUNG2_NORMALIZATION_VERSION = "unicode-word-runs-nfkc-lower-v1";
+  var RUNG2_BUNDLE_SCHEMA_VERSION = 1;
+  var RUNG2_MATRIX_SCHEMA_VERSION = 3;
   var RUNG2_MODEL_REPOSITORY = "minishlab/potion-multilingual-128M";
   var RUNG2_MODEL_REVISION = "e7421cd79c75fc506b88bb75723ae0a234994720";
   var RUNG2_MODEL_LICENSE = "MIT";
@@ -251,12 +250,13 @@
   var RUNG2_MAX_PAYLOAD_BYTES = 3000000;
   var RUNG2_QUANTIZATION = "symmetric-per-row-int8-f32-v1";
   var RUNG2_ROW_ORDER = "canonical-utf8-byte-order-v1";
+  var RUNG2_HEX40 = /^[0-9a-f]{40}$/;
   var RUNG2_HEX64 = /^[0-9a-f]{64}$/;
   var RUNG2_TOKEN_PATTERN = null;
   try {
     /* Property escapes are part of the pinned browser algorithm. An older
      * engine therefore disables Rung 2 instead of silently changing recall. */
-    RUNG2_TOKEN_PATTERN = new RegExp("[\\p{L}\\p{N}]+", "gu");
+    RUNG2_TOKEN_PATTERN = new RegExp("[\\p{L}\\p{N}][\\p{L}\\p{N}\\p{M}]*", "gu");
   } catch (e) {
     RUNG2_TOKEN_PATTERN = null;
   }
@@ -326,14 +326,14 @@
       return null;
     }
     var normalized = value.normalize("NFKC").toLowerCase();
+    if (Array.from(normalized).length > 160) return null;
     var tokens = normalized.match(RUNG2_TOKEN_PATTERN) || [];
     return { text: tokens.join(" "), tokens: tokens };
   }
 
   function rung2NormalizeTerm(value) {
-    if (typeof value !== "string" || typeof value.normalize !== "function") return null;
-    var normalized = value.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
-    return normalized || null;
+    var normalized = rung2Normalize(value);
+    return normalized && normalized.text ? normalized.text : null;
   }
 
   function rung2Utf8Bytes(value) {
@@ -416,8 +416,7 @@
   function rung2ValidateConfig(config) {
     rung2Object(config, "Rung-2 config");
     rung2Keys(config, [
-      "schema_version", "enabled", "normalization_version", "matrix_url", "bridge_url",
-      "matrix_sha256", "bridge_sha256", "acceptance",
+      "schema_version", "enabled", "normalization_version", "bundle_url", "bundle_sha256", "acceptance",
     ], "Rung-2 config");
     if (config.schema_version !== RUNG2_CONFIG_SCHEMA || config.enabled !== true) {
       throw new Error("Rung-2 config is not explicitly enabled");
@@ -425,10 +424,8 @@
     if (config.normalization_version !== RUNG2_NORMALIZATION_VERSION) {
       throw new Error("Rung-2 normalization version mismatch");
     }
-    var matrixUrl = rung2SameOriginUrl(rung2RequiredString(config, "matrix_url", "Rung-2 config"));
-    var bridgeUrl = rung2SameOriginUrl(rung2RequiredString(config, "bridge_url", "Rung-2 config"));
-    var matrixSha = rung2Hex(rung2RequiredString(config, "matrix_sha256", "Rung-2 config"), "matrix_sha256");
-    var bridgeSha = rung2Hex(rung2RequiredString(config, "bridge_sha256", "Rung-2 config"), "bridge_sha256");
+    var bundleUrl = rung2SameOriginUrl(rung2RequiredString(config, "bundle_url", "Rung-2 config"));
+    var bundleSha = rung2Hex(rung2RequiredString(config, "bundle_sha256", "Rung-2 config"), "bundle_sha256");
     var acceptance = rung2Object(config.acceptance, "Rung-2 acceptance");
     rung2Keys(acceptance, [
       "approved", "minimum_coverage_ratio", "cosine_floor", "runner_up_margin",
@@ -451,17 +448,17 @@
     rung2Bounded(acceptance.held_out_miss_rate, 0, 0.1, "held_out_miss_rate");
     rung2Integer(acceptance.payload_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "payload_bytes");
     return {
-      matrixUrl: matrixUrl,
-      bridgeUrl: bridgeUrl,
-      matrixSha: matrixSha,
-      bridgeSha: bridgeSha,
+      bundleUrl: bundleUrl,
+      bundleSha: bundleSha,
       acceptance: acceptance,
     };
   }
 
-  function rung2ValidateInt8Row(row, dimension, label, tokenKey) {
+  function rung2ValidateInt8Row(row, dimension, label, tokenKey, queryRow) {
     rung2Object(row, label);
-    rung2Keys(row, [tokenKey, "scale", "values", "model_token_ids", "token_count"], label);
+    var keys = [tokenKey, "scale", "values"];
+    if (queryRow) keys.push("model_token_ids", "token_count");
+    rung2Keys(row, keys, label);
     rung2RequiredString(row, tokenKey, label);
     rung2Finite(row.scale, label + ".scale");
     if (row.scale <= 0 || Math.fround(row.scale) !== row.scale) {
@@ -473,6 +470,10 @@
     row.values.forEach(function (value) {
       rung2Integer(value, -127, 127, label + ".values");
     });
+    if (queryRow) {
+      rung2Integer(row.token_count, 1, Number.MAX_SAFE_INTEGER, label + ".token_count");
+      rung2ValidateTokenIds(row.model_token_ids, row.token_count, label + ".model_token_ids");
+    }
   }
 
   function rung2ValidateTokenIds(value, expectedCount, label) {
@@ -496,10 +497,36 @@
       throw new Error("Rung-2 matrix schema or model dimension mismatch");
     }
     var model = rung2Object(matrix.model, "Rung-2 matrix.model");
-    rung2Keys(model, ["repository", "revision", "spdx_license", "dimension"], "Rung-2 matrix.model");
+    rung2Keys(model, ["repository", "revision", "spdx_license", "dimension", "provider", "tokenizer"], "Rung-2 matrix.model");
     if (model.repository !== RUNG2_MODEL_REPOSITORY || model.revision !== RUNG2_MODEL_REVISION ||
         model.spdx_license !== RUNG2_MODEL_LICENSE || model.dimension !== RUNG2_DIMENSION) {
       throw new Error("Rung-2 model provenance mismatch");
+    }
+    rung2RequiredString(model, "repository", "Rung-2 matrix.model");
+    if (!RUNG2_HEX40.test(model.revision)) throw new Error("Rung-2 model revision is not immutable");
+    rung2Integer(model.dimension, 1, Number.MAX_SAFE_INTEGER, "Rung-2 model.dimension");
+    var provider = rung2Object(model.provider, "Rung-2 matrix.model.provider");
+    rung2Keys(provider, ["package", "version", "source_sha256"], "Rung-2 matrix.model.provider");
+    rung2RequiredString(provider, "package", "Rung-2 matrix.model.provider");
+    rung2RequiredString(provider, "version", "Rung-2 matrix.model.provider");
+    rung2Hex(provider.source_sha256, "Rung-2 provider.source_sha256");
+    var tokenizer = rung2Object(model.tokenizer, "Rung-2 matrix.model.tokenizer");
+    rung2Keys(tokenizer, ["package", "version", "repository", "revision", "vocabulary_sha256", "config_sha256", "normalization"], "Rung-2 matrix.model.tokenizer");
+    rung2RequiredString(tokenizer, "package", "Rung-2 matrix.model.tokenizer");
+    rung2RequiredString(tokenizer, "version", "Rung-2 matrix.model.tokenizer");
+    rung2RequiredString(tokenizer, "repository", "Rung-2 matrix.model.tokenizer");
+    if (!RUNG2_HEX40.test(rung2RequiredString(tokenizer, "revision", "Rung-2 matrix.model.tokenizer"))) {
+      throw new Error("Rung-2 tokenizer revision is not immutable");
+    }
+    rung2Hex(tokenizer.vocabulary_sha256, "Rung-2 tokenizer.vocabulary_sha256");
+    rung2Hex(tokenizer.config_sha256, "Rung-2 tokenizer.config_sha256");
+    var normalization = rung2Object(tokenizer.normalization, "Rung-2 tokenizer.normalization");
+    rung2Keys(normalization, ["algorithm", "unicode_form", "case_mapping", "accent_policy", "token_boundaries", "separator_policy"], "Rung-2 tokenizer.normalization");
+    if (normalization.algorithm !== RUNG2_NORMALIZATION_VERSION || normalization.unicode_form !== "NFKC" ||
+        normalization.case_mapping !== "lower" || normalization.accent_policy !== "preserve" ||
+        normalization.token_boundaries !== "unicode-letter-number-runs-v1" ||
+        normalization.separator_policy !== "collapse-to-boundary-v1") {
+      throw new Error("Rung-2 tokenizer normalization contract mismatch");
     }
     rung2Hex(matrix.vocabulary_sha256, "vocabulary_sha256");
     rung2Hex(matrix.query_token_sha256, "query_token_sha256");
@@ -516,7 +543,7 @@
     var terms = [];
     var termSet = Object.create(null);
     matrix.rows.forEach(function (row, index) {
-      rung2ValidateInt8Row(row, matrix.dimension, "Rung-2 matrix.rows[" + index + "]", "term");
+      rung2ValidateInt8Row(row, matrix.dimension, "Rung-2 matrix.rows[" + index + "]", "term", false);
       var canonical = rung2NormalizeTerm(row.term);
       if (canonical !== row.term || termSet[row.term]) throw new Error("Rung-2 terms are not canonical and unique");
       termSet[row.term] = true;
@@ -535,9 +562,7 @@
     var querySet = Object.create(null);
     var queryRows = Object.create(null);
     matrix.query_token_rows.forEach(function (row, index) {
-      rung2ValidateInt8Row(row, matrix.dimension, "Rung-2 query_token_rows[" + index + "]", "token");
-      rung2Integer(row.token_count, 1, Number.MAX_SAFE_INTEGER, "Rung-2 query token_count");
-      rung2ValidateTokenIds(row.model_token_ids, row.token_count, "Rung-2 query model_token_ids");
+      rung2ValidateInt8Row(row, matrix.dimension, "Rung-2 query_token_rows[" + index + "]", "token", true);
       var normalized = rung2Normalize(row.token);
       if (!normalized || normalized.tokens.length !== 1 || normalized.tokens[0] !== row.token || querySet[row.token]) {
         throw new Error("Rung-2 query tokens are not canonical and unique");
@@ -550,44 +575,65 @@
     return { matrix: matrix, terms: terms, queryTokens: queryTokens, queryRows: queryRows, termRows: matrix.rows };
   }
 
-  function rung2ValidateBridge(bridge, matrix, config) {
-    rung2Object(bridge, "Rung-2 bridge");
-    rung2Keys(bridge, [
-      "schema_version", "normalization_version", "matrix_sha256", "matrix_artifact_sha256",
-      "vocabulary_sha256", "query_token_sha256", "serialized_bytes", "terms", "records",
-    ], "Rung-2 bridge");
-    if (bridge.schema_version !== RUNG2_BRIDGE_SCHEMA || bridge.normalization_version !== RUNG2_NORMALIZATION_VERSION ||
-        bridge.matrix_sha256 !== config.matrixSha || bridge.matrix_artifact_sha256 !== matrix.artifact_sha256 ||
-        bridge.vocabulary_sha256 !== matrix.vocabulary_sha256 || bridge.query_token_sha256 !== matrix.query_token_sha256) {
-      throw new Error("Rung-2 bridge hash or normalization link mismatch");
+  function rung2ValidateManifest(manifest) {
+    rung2Object(manifest, "Rung-2 record manifest");
+    rung2Keys(manifest, ["schema_version", "row_order", "record_count", "records", "records_sha256", "serialized_bytes"], "Rung-2 record manifest");
+    if (manifest.schema_version !== 1 || manifest.row_order !== RUNG2_ROW_ORDER) {
+      throw new Error("Rung-2 record manifest schema mismatch");
     }
-    rung2Integer(bridge.serialized_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "bridge.serialized_bytes");
-    if (!Array.isArray(bridge.terms) || bridge.terms.length !== matrix.rows.length || !Array.isArray(bridge.records)) {
-      throw new Error("Rung-2 bridge counts are invalid");
+    rung2Integer(manifest.record_count, 1, Number.MAX_SAFE_INTEGER, "Rung-2 record_count");
+    rung2Hex(manifest.records_sha256, "Rung-2 records_sha256");
+    rung2Integer(manifest.serialized_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "Rung-2 manifest.serialized_bytes");
+    if (!Array.isArray(manifest.records) || manifest.records.length !== manifest.record_count) {
+      throw new Error("Rung-2 record manifest count mismatch");
     }
     var records = Object.create(null);
-    bridge.records.forEach(function (record, index) {
+    manifest.records.forEach(function (record, index) {
       rung2Object(record, "Rung-2 records[" + index + "]");
-      rung2Keys(record, ["record_id", "href", "title", "display_class", "weight", "summary", "crumb", "kind", "modelo", "number", "segmento", "domain", "command_path"], "Rung-2 records[" + index + "]");
+      rung2Keys(record, ["record_id", "kind", "display_class", "title", "target", "ranking_weight"], "Rung-2 records[" + index + "]");
       var id = rung2RequiredString(record, "record_id", "Rung-2 record");
       if (records[id]) throw new Error("Rung-2 manifest contains duplicate record_id");
-      rung2RequiredString(record, "href", "Rung-2 record");
       rung2RequiredString(record, "title", "Rung-2 record");
-      rung2RequiredString(record, "display_class", "Rung-2 record");
-      if (["casilla", "modelo", "cli", "technical", "doc"].indexOf(record.display_class) < 0) throw new Error("Rung-2 record has an invalid display class");
-      rung2Bounded(record.weight, 0, 1, "Rung-2 record.weight");
+      rung2RequiredString(record, "target", "Rung-2 record");
       var kind = rung2RequiredString(record, "kind", "Rung-2 record");
       if (["concept", "casilla", "cli", "page", "legal"].indexOf(kind) < 0) throw new Error("Rung-2 record has an invalid kind");
-      ["summary", "crumb", "kind", "modelo", "number", "segmento", "domain", "command_path"].forEach(function (key) {
-        if (rung2Has(record, key) && typeof record[key] !== "string") throw new Error("Rung-2 record metadata is not text");
-      });
+      var displayClass = rung2RequiredString(record, "display_class", "Rung-2 record");
+      if (["casilla", "modelo", "cli", "technical", "doc"].indexOf(displayClass) < 0) throw new Error("Rung-2 record has an invalid display class");
+      rung2Bounded(record.ranking_weight, 0, 1, "Rung-2 record.ranking_weight");
+      if (index && rung2Utf8Compare(manifest.records[index - 1].record_id, id) >= 0) {
+        throw new Error("Rung-2 manifest records are not UTF-8 ordered");
+      }
       records[id] = record;
     });
+    return {
+      records: records,
+      recordsSha256: manifest.records_sha256,
+      serializedBytes: manifest.serialized_bytes,
+    };
+  }
+
+  function rung2ValidateBridge(bridge, matrix, manifest) {
+    rung2Object(bridge, "Rung-2 bridge");
+    rung2Keys(bridge, [
+      "schema_version", "row_order", "matrix_vocabulary_sha256", "record_manifest_sha256",
+      "term_count", "entries", "artifact_sha256", "serialized_bytes",
+    ], "Rung-2 bridge");
+    if (bridge.schema_version !== 1 || bridge.row_order !== RUNG2_ROW_ORDER ||
+        bridge.matrix_vocabulary_sha256 !== matrix.vocabulary_sha256 ||
+        bridge.record_manifest_sha256 !== manifest.recordsSha256) {
+      throw new Error("Rung-2 bridge hash link mismatch");
+    }
+    rung2Integer(bridge.term_count, 1, Number.MAX_SAFE_INTEGER, "Rung-2 bridge.term_count");
+    rung2Hex(bridge.artifact_sha256, "Rung-2 bridge.artifact_sha256");
+    rung2Integer(bridge.serialized_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "Rung-2 bridge.serialized_bytes");
+    if (!Array.isArray(bridge.entries) || bridge.entries.length !== bridge.term_count || bridge.entries.length !== matrix.rows.length) {
+      throw new Error("Rung-2 bridge counts are invalid");
+    }
     var terms = Object.create(null);
-    var referencedRecords = Object.create(null);
-    bridge.terms.forEach(function (entry, index) {
-      rung2Object(entry, "Rung-2 bridge.terms[" + index + "]");
-      rung2Keys(entry, ["term", "targets"], "Rung-2 bridge term");
+    bridge.entries.forEach(function (entry, index) {
+      rung2Object(entry, "Rung-2 bridge.entries[" + index + "]");
+      rung2Keys(entry, ["term", "targets", "targets_sha256"], "Rung-2 bridge entry");
+      rung2Hex(entry.targets_sha256, "Rung-2 bridge.targets_sha256");
       if (entry.term !== matrix.rows[index].term || terms[entry.term] || !Array.isArray(entry.targets) || !entry.targets.length) {
         throw new Error("Rung-2 bridge term order or targets are invalid");
       }
@@ -596,21 +642,40 @@
         rung2Object(target, "Rung-2 bridge target");
         rung2Keys(target, ["record_id", "ranking_weight"], "Rung-2 bridge target");
         var recordId = rung2RequiredString(target, "record_id", "Rung-2 target");
-        if (!records[recordId]) throw new Error("Rung-2 target has no manifest record");
+        if (!manifest.records[recordId]) throw new Error("Rung-2 target has no manifest record");
         if (targetIds[recordId]) throw new Error("Rung-2 term has duplicate record_id targets");
         targetIds[recordId] = true;
-        referencedRecords[recordId] = true;
         rung2Bounded(target.ranking_weight, 0, 1, "Rung-2 target.ranking_weight");
-        if (targetIndex && entry.targets[targetIndex - 1].ranking_weight < target.ranking_weight) {
-          throw new Error("Rung-2 targets are not ordered by ranking weight");
+        if (targetIndex && (entry.targets[targetIndex - 1].ranking_weight < target.ranking_weight ||
+            entry.targets[targetIndex - 1].ranking_weight === target.ranking_weight &&
+            rung2Utf8Compare(entry.targets[targetIndex - 1].record_id, recordId) > 0)) {
+          throw new Error("Rung-2 targets are not deterministically ordered");
         }
         return { recordId: recordId, rankingWeight: target.ranking_weight };
       });
     });
-    Object.keys(records).forEach(function (recordId) {
-      if (!referencedRecords[recordId]) throw new Error("Rung-2 manifest contains an unreferenced record_id");
-    });
-    return { terms: terms, records: records, serializedBytes: bridge.serialized_bytes };
+    return { terms: terms, records: manifest.records, serializedBytes: bridge.serialized_bytes };
+  }
+
+  function rung2ValidateBundle(bundle) {
+    rung2Object(bundle, "Rung-2 bundle");
+    rung2Keys(bundle, ["schema_version", "matrix", "bridge", "record_manifest", "serialized_bytes", "artifact_sha256"], "Rung-2 bundle");
+    if (bundle.schema_version !== RUNG2_BUNDLE_SCHEMA_VERSION) throw new Error("Rung-2 bundle schema mismatch");
+    rung2Hex(bundle.artifact_sha256, "Rung-2 bundle.artifact_sha256");
+    rung2Integer(bundle.serialized_bytes, 1, RUNG2_MAX_PAYLOAD_BYTES, "Rung-2 bundle.serialized_bytes");
+    var matrix = rung2ValidateMatrix(bundle.matrix);
+    var manifest = rung2ValidateManifest(bundle.record_manifest);
+    var bridge = rung2ValidateBridge(bundle.bridge, matrix.matrix, manifest);
+    if (bridge.terms && Object.keys(bridge.terms).length !== matrix.terms.length) {
+      throw new Error("Rung-2 bundle bridge vocabulary mismatch");
+    }
+    return {
+      matrix: matrix.matrix,
+      queryRows: matrix.queryRows,
+      termRows: matrix.termRows,
+      bridge: bridge,
+      termVectors: rung2BuildRows(matrix),
+    };
   }
 
   function rung2Dequantize(row, dimension) {
@@ -637,39 +702,25 @@
     if (!rawConfig) return (RUNG2_BUNDLE_PROMISE = Promise.resolve(null));
     RUNG2_BUNDLE_PROMISE = Promise.resolve().then(function () {
       var config = rung2ValidateConfig(rawConfig);
-      return Promise.all([rung2FetchJson(config.matrixUrl), rung2FetchJson(config.bridgeUrl)]).then(function (payloads) {
-        var matrixPayload = payloads[0];
-        var bridgePayload = payloads[1];
-        var combinedBytes = matrixPayload.bytes.byteLength + bridgePayload.bytes.byteLength;
-        if (combinedBytes !== config.acceptance.payload_bytes || combinedBytes > RUNG2_MAX_PAYLOAD_BYTES) {
+      return rung2FetchJson(config.bundleUrl).then(function (payload) {
+        if (payload.bytes.byteLength !== config.acceptance.payload_bytes || payload.bytes.byteLength > RUNG2_MAX_PAYLOAD_BYTES) {
           throw new Error("Rung-2 payload is outside the measured bound");
         }
-        if (matrixPayload.bytes.byteLength !== matrixPayload.payload.serialized_bytes ||
-            bridgePayload.bytes.byteLength !== bridgePayload.payload.serialized_bytes) {
+        if (payload.bytes.byteLength !== payload.payload.serialized_bytes) {
           throw new Error("Rung-2 serialized byte stamps do not match");
         }
-        return Promise.all([
-          rung2Sha256(matrixPayload.bytes.buffer),
-          rung2Sha256(bridgePayload.bytes.buffer),
-        ]).then(function (hashes) {
-          if (hashes[0] !== config.matrixSha || hashes[1] !== config.bridgeSha) throw new Error("Rung-2 payload hash mismatch");
-          var matrix = rung2ValidateMatrix(matrixPayload.payload);
-          var bridge = rung2ValidateBridge(bridgePayload.payload, matrix.matrix, config);
+        return rung2Sha256(payload.bytes.buffer).then(function (hash) {
+          if (hash !== config.bundleSha) throw new Error("Rung-2 payload hash mismatch");
+          var bundle = rung2ValidateBundle(payload.payload);
           return Promise.all([
-            rung2Sha256(new TextEncoder().encode(matrix.terms.join("\n")).buffer),
-            rung2Sha256(new TextEncoder().encode(matrix.queryTokens.join("\n")).buffer),
+            rung2Sha256(new TextEncoder().encode(bundle.matrix.rows.map(function (row) { return row.term; }).join("\n")).buffer),
+            rung2Sha256(new TextEncoder().encode(bundle.matrix.query_token_rows.map(function (row) { return row.token; }).join("\n")).buffer),
           ]).then(function (fingerprints) {
-            if (fingerprints[0] !== matrix.matrix.vocabulary_sha256 || fingerprints[1] !== matrix.matrix.query_token_sha256) {
+            if (fingerprints[0] !== bundle.matrix.vocabulary_sha256 || fingerprints[1] !== bundle.matrix.query_token_sha256) {
               throw new Error("Rung-2 vocabulary fingerprint mismatch");
             }
-            return {
-              config: config,
-              matrix: matrix.matrix,
-              queryRows: matrix.queryRows,
-              termRows: matrix.termRows,
-              bridge: bridge,
-              termVectors: rung2BuildRows(matrix),
-            };
+            bundle.config = config;
+            return bundle;
           });
         });
       });
@@ -734,18 +785,14 @@
     return Object.keys(byRecord).map(function (recordId) {
       var candidate = byRecord[recordId];
       var record = bundle.bridge.records[recordId];
-      var crumb = record.crumb || "";
-      if (!crumb && record.modelo && record.number) {
-        crumb = "Modelo " + record.modelo + " · " + record.number + (record.segmento ? " · " + record.segmento : "");
-      }
       return {
         title: record.title,
-        href: record.href,
-        crumb: crumb,
-        excerpt: record.summary || "",
+        href: record.target,
+        crumb: "",
+        excerpt: "",
         kind: record.kind,
         displayClass: record.display_class,
-        tierRank: 1 + record.weight,
+        tierRank: 1 + record.ranking_weight,
         recordId: candidate.recordId,
         semanticScore: candidate.semanticScore,
         semanticRankingWeight: candidate.semanticRankingWeight,
@@ -1197,10 +1244,14 @@
           return loadRung2Bundle().then(function (bundle) {
             var semantic = rung2SemanticCandidates(bundle, query);
             return result.cards.concat(semantic);
+          }).catch(function () {
+            /* A malformed or unavailable semantic payload disables only that
+             * optional tier; already-resolved Pagefind cards remain visible. */
+            return result.cards;
           });
         })
         .catch(function () {
-          /* Any semantic/configuration failure also degrades to the ordinary
+          /* Any earlier controller failure degrades to the ordinary
            * nav/Pagefind ladder; it never breaks the palette or leaves an
            * unhandled rejection. */
           return [];
@@ -1259,31 +1310,32 @@
       var seenRecordId = {};
       var ordered = [];
       var cards = (pagefindCards || []).slice().sort(function (a, b) {
-        /* Primary axis: the shipped-weight tier rank (D8 ladder doc > modelo >
-         * casilla > cli, every card above full-text pages), so cards always sit
-         * above full-text pages and casilla now outranks cli. Secondary: an
-         * exact/prefix title match, so the concept the operator literally typed
-         * leads its band (the IVA concept for "iva", not VIES). Tertiary: the
-         * PERF-003 relevance rank, which orders the remaining within-band ties
-         * and cross-lingual matches (e.g. "pro rata" -> prorrata) whose title is
-         * in another language. */
-        if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
+        /* A declared lexical identity (including an exact title or alias
+         * returned by Pagefind) precedes a semantic fallback. Once both rows
+         * are in the same source class, retain the existing display-class
+         * ladder and its relevance tie-break; semantic rows therefore never
+         * become a second display-class authority. */
         var ma = typeof a.directMatchStrength === "number" ? a.directMatchStrength : titleMatch(a.title, query);
         var mb = typeof b.directMatchStrength === "number" ? b.directMatchStrength : titleMatch(b.title, query);
-        if (mb !== ma) return mb - ma;
         var aSemantic = typeof a.semanticScore === "number";
         var bSemantic = typeof b.semanticScore === "number";
+        if (aSemantic !== bSemantic) {
+          var aDirect = ma > 0;
+          var bDirect = mb > 0;
+          if (aDirect !== bDirect) return aDirect ? -1 : 1;
+          if (aDirect && bDirect && mb !== ma) return mb - ma;
+          /* With no direct identity/title/alias signal, fall through to the
+           * existing display-class band. This keeps semantic results above
+           * ordinary full-text pages while direct lexical answers still win. */
+        }
+        if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
+        if (mb !== ma) return mb - ma;
         if (aSemantic && bSemantic) {
           if (b.semanticScore !== a.semanticScore) return b.semanticScore - a.semanticScore;
           if ((b.semanticRankingWeight || 0) !== (a.semanticRankingWeight || 0)) {
             return (b.semanticRankingWeight || 0) - (a.semanticRankingWeight || 0);
           }
           if (a.recordId && b.recordId) return rung2Utf8Compare(a.recordId, b.recordId);
-        } else if (aSemantic !== bSemantic) {
-          /* Pagefind's lexical cards include declared aliases; those direct
-           * results precede the semantic fallback when their direct-match
-           * strength is otherwise tied. */
-          return aSemantic ? 1 : -1;
         }
         return (a.relRank || 0) - (b.relRank || 0);
       });
