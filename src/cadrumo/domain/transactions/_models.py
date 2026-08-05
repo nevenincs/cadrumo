@@ -66,10 +66,8 @@ from ._model_validation import (
     validate_non_negative_decimal,
 )
 from ._raw_transaction import RawTransaction
+from ._retencion_parameters import maximum_supported_activity_retencion_rate
 
-# LIRPF art. 101.5 / RIRPF art. 95: supported professional activity
-# withholding rates are 15% or lower reduced rates, not the 21% IVA delta.
-_MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE = Decimal("0.15")
 _OBJECT_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 _STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
     dict[str, object],
@@ -1180,7 +1178,7 @@ class Transaction(BaseModel):
             inferred_withholding = round_to_cents(reconstituted - expected)
             if has_activity_irpf_category(self.irpf_category, direction=self.direction):
                 maximum_supported_withholding = round_to_cents(
-                    self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
+                    self.taxable_base * maximum_supported_activity_retencion_rate(),
                 )
                 if inferred_withholding > maximum_supported_withholding:
                     raise TransactionValidationError(
@@ -1196,7 +1194,7 @@ class Transaction(BaseModel):
         ):
             inferred_withholding = round_to_cents(reconstituted - expected)
             maximum_supported_withholding = round_to_cents(
-                self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
+                self.taxable_base * maximum_supported_activity_retencion_rate(),
             )
             if inferred_withholding > maximum_supported_withholding:
                 raise TransactionValidationError(

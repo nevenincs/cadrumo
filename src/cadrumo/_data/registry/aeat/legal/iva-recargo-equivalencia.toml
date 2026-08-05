@@ -20,6 +20,26 @@ required_text = [
     "1,75 por ciento",
 ]
 
+[legal."ley-37-1992:art-158"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a158"
+document_id = "BOE-A-1992-28740"
+article = "158"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a158"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-05
+reviewed_by = "agent-review"
+notes = "LIVA art 158: sujetos pasivos del recargo de equivalencia. Apartado 1o obliga al proveedor que efectua la entrega sometida al recargo. Apartado 2o obliga al propio comerciante minorista acogido al regimen especial en sus adquisiciones intracomunitarias de bienes, en sus importaciones, y en los supuestos de inversion del sujeto pasivo del articulo 84 apartado uno numero 2o. Es la base por la que un recargo de equivalencia puede existir tanto en una entrega interior repercutida como en una adquisicion intracomunitaria, una importacion o una operacion con inversion del sujeto pasivo. Texto cotejado contra el consolidado vivo del BOE el 2026-08-05."
+required_text = [
+    "Sujetos pasivos del recargo de equivalencia",
+    "adquisiciones intracomunitarias de bienes e importaciones",
+    "artículo 84, apartado uno, número 2.º",
+]
+
 [parameters."liva-art-161:recargo-rate-general"]
 evidence_tier = "legal_authority"
 value = "0.052"
