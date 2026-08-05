@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from datetime import date
+from pathlib import Path
 
 import pytest
 
+from .....tests.locales_root_fixture import locales_root_scope
 from .. import CasillaId, validated_casilla_id
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
@@ -16,6 +20,30 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("0001", surface="_TEST_CASILLA_ID")
+_TEST_LOCALES_ROOT: Path | None = None
+
+
+def _write_test_label(label: str) -> str:
+    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
+    if _TEST_LOCALES_ROOT is not None:
+        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
+    return key
+
+
+@pytest.fixture(autouse=True)
+def _synthetic_locale_scope(tmp_path: Path, request):  # type: ignore[no-untyped-def]
+    global _TEST_LOCALES_ROOT
+    if "committed" in request.node.nodeid:
+        yield
+        return
+    (tmp_path / "es.yml").write_text("", encoding="utf-8")
+    with locales_root_scope(tmp_path):
+        _TEST_LOCALES_ROOT = tmp_path
+        try:
+            yield
+        finally:
+            _TEST_LOCALES_ROOT = None
 
 
 def _modelo_with_label(label: str) -> ModeloDefinition:
@@ -23,7 +51,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
         {
             "id": _TEST_CASILLA_ID,
             "number": "0001",
-            "label": label,
+            "localization_keys": (_write_test_label(label),),
             "section": ("test",),
             "data_type": "money",
             "legal_refs": ("ley-58-2003:art-29",),
@@ -33,6 +61,7 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
     revision = ModeloRevision.model_validate(
         {
             "id": "2025",
+            "localization_key": "test.schema.revision.2025.label",
             "valid_from": date(2025, 1, 1),
             "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
             "legal_refs": ("ley-58-2003:art-29",),
@@ -43,8 +72,8 @@ def _modelo_with_label(label: str) -> ModeloDefinition:
     return ModeloDefinition.model_validate(
         {
             "id": "999",
-            "title": "Test modelo",
-            "official_name": "Test modelo",
+            "title_localization_key": "test.schema.modelo.999.title",
+            "official_name_localization_key": "test.schema.modelo.999.official_name",
             "tax_domain": "iva",
             "cadence": "annual",
             "jurisdiction": "ES-AEAT",

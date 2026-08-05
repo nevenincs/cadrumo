@@ -32,7 +32,7 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
         {
             "id": "nif_test_casilla",
             "number": "01",
-            "label": "NIF declarante",
+            "localization_keys": ("test.schema.casilla.label",),
             "section": ("identificacion",),
             "data_type": data_type,
             "legal_refs": ("ley-58-2003:art-29",),
@@ -113,7 +113,9 @@ class TestCasillaDefinitionDataType:
         casilla = _casilla_with("nif")
         # Strict frozen pydantic v2: round-trip through model_dump / model_validate
         # without losing the `nif` tag.
-        round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
+        round_tripped = CasillaDefinition.model_validate(
+            {**casilla.model_dump(), "localization_keys": casilla.localization_keys},
+        )
         assert round_tripped.data_type == "nif"
         assert round_tripped == casilla
 

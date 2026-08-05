@@ -50,6 +50,7 @@ _M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_
 def _revision(*, bindings: tuple[DataBindingDefinition, ...]) -> ModeloRevision:
     return ModeloRevision(
         id="test-previous-filing-revision",
+        localization_key="test.schema.revision.test-previous-filing.label",
         valid_from=date(2025, 1, 1),
         period_selector=PeriodSelector(years=(2025,), periods=("1T", "2T", "3T", "4T")),
         legal_refs=(_REFERENCE_LEGAL_ID,),

@@ -12,6 +12,8 @@ year-to-year drift can be treated as a load-time error.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import warnings
 from datetime import date
 from pathlib import Path
@@ -19,8 +21,10 @@ from pathlib import Path
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.locales_root_fixture import locales_root_scope
 from .. import LegalRefId, load_modelo_directory
 from .._errors import RegistryValidationError
+from .._modelo_localization import casilla_occurrence_locale_key
 from .._schema import (
     CasillaDefinition,
     ModeloDefinition,
@@ -40,6 +44,33 @@ from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_TEST_LOCALES_ROOT: Path | None = None
+
+
+def _write_test_label(label: str) -> str:
+    """Enroll one synthetic Spanish value in the test-only catalogue."""
+    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
+    if _TEST_LOCALES_ROOT is not None:
+        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
+    return key
+
+
+@pytest.fixture(autouse=True)
+def _synthetic_locale_scope(tmp_path: Path, request):  # type: ignore[no-untyped-def]
+    """Give synthetic schema fixtures a real shared Spanish catalogue."""
+    global _TEST_LOCALES_ROOT
+    if "committed" in request.node.nodeid:
+        yield
+        return
+    (tmp_path / "es.yml").write_text("", encoding="utf-8")
+    with locales_root_scope(tmp_path):
+        _TEST_LOCALES_ROOT = tmp_path
+        try:
+            yield
+        finally:
+            _TEST_LOCALES_ROOT = None
+
 
 def _casilla(
     *,
@@ -54,7 +85,7 @@ def _casilla(
     payload = {
         "id": cid,
         "number": cid,
-        "label": label,
+        "localization_keys": (_write_test_label(label),),
         "section": section,
         "data_type": data_type,
         "semantic_role": semantic_role,
@@ -80,6 +111,7 @@ def _modelo(
         revision_payloads[revision_id] = ModeloRevision.model_validate(
             {
                 "id": revision_id,
+                "localization_key": f"test.schema.revision.{revision_id}.label",
                 "valid_from": date(revision_year, 1, 1),
                 "period_selector": selectors[revision_id] if selectors is not None else default_selector,
                 "legal_refs": ("ley-58-2003:art-29",),
@@ -96,8 +128,8 @@ def _modelo(
     return ModeloDefinition.model_validate(
         {
             "id": modelo_id,
-            "title": f"Modelo {modelo_id}",
-            "official_name": f"Modelo {modelo_id}",
+            "title_localization_key": f"test.schema.modelo.{modelo_id}.title",
+            "official_name_localization_key": f"test.schema.modelo.{modelo_id}.official_name",
             "tax_domain": "iva",
             "cadence": "annual",
             "jurisdiction": "ES-AEAT",
@@ -289,6 +321,13 @@ source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
     )
+    _write_test_label("Old")
+    _write_test_label("New")
+    for revision_id, label in (("2024", "Old"), ("2025", "New")):
+        key = casilla_occurrence_locale_key("999", revision_id, "0700", "label")
+        if _TEST_LOCALES_ROOT is not None:
+            with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+                handle.write(f"{json.dumps(key)}: {json.dumps(label)}\n")
     return target
 
 
@@ -852,8 +891,19 @@ def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift(
 ) -> None:
     modelos, _catalogues = committed_registry
     revision_2025 = committed_m100.revisions["2025"]
+    source_0582 = next(casilla for casilla in revision_2025.casillas if casilla.id == "0582")
+    drift_key, drift_label = next(
+        (casilla.localization_keys[0], casilla.label)
+        for casilla in revision_2025.casillas
+        if casilla.id != "0582" and casilla.label != source_0582.label
+    )
+    assert drift_label != source_0582.label
     mutated_casillas = tuple(
-        casilla.model_copy(update={"label": f"{casilla.label} drift"}) if casilla.id == "0582" else casilla
+        casilla.model_copy(
+            update={"localization_keys": (drift_key,)},
+        )
+        if casilla.id == "0582"
+        else casilla
         for casilla in revision_2025.casillas
     )
     mutated_revision = revision_2025.model_copy(update={"casillas": mutated_casillas})

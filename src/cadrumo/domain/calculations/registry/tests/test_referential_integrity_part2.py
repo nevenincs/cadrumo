@@ -149,7 +149,9 @@ def test_single_segment_casilla_validates_unchanged_with_segmento_unset() -> Non
     """
     casilla = single_segment_casilla()
 
-    round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
+    round_tripped = CasillaDefinition.model_validate(
+        {**casilla.model_dump(), "localization_keys": casilla.localization_keys},
+    )
 
     assert round_tripped == casilla
     assert round_tripped.segmento is None
@@ -186,7 +188,7 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
         id=_SEGMENTED_LIQUIDACION_CASILLA,
         number="00562",
         segmento="DP200014",
-        label="Liquidación III - Base imponible - Cuota íntegra [00562]",
+        localization_keys=("test.schema.casilla.label",),
         section=("liquidacion_iii", "base_imponible"),
         data_type="money",
         semantic_role="is_liquidacion_iii_cuota_integra",
@@ -203,7 +205,9 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
     assert casilla.segmento == "DP200014"
 
     frozen_payload = freeze_toml(casilla.model_dump(mode="python"))
-    round_tripped = CasillaDefinition.model_validate(frozen_payload)
+    round_tripped = CasillaDefinition.model_validate(
+        {**frozen_payload, "localization_keys": casilla.localization_keys},
+    )
 
     assert round_tripped == casilla
     assert round_tripped.segmento == "DP200014"
@@ -439,7 +443,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
         id=_NUMERIC_CASILLA_01,
         number="01",
         segmento=None,
-        label="Casilla 01",
+        localization_keys=("test.schema.casilla.label",),
         section=("test",),
         input_kind=InputKind.MANUAL,
         legal_refs=(),

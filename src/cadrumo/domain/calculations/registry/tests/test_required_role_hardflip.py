@@ -11,10 +11,15 @@ consumers.
 
 from __future__ import annotations
 
+import hashlib
+import importlib.resources
+import json
 from datetime import date
+from pathlib import Path
 
 import pytest
 
+from .....tests.locales_root_fixture import locales_root_scope
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_semantic_roles import (
     REQUIRED_ROLE_LABEL_PATTERNS,
@@ -23,6 +28,29 @@ from .._validate_semantic_roles import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_TEST_LOCALES_ROOT: Path | None = None
+
+
+def _write_test_label(label: str) -> str:
+    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
+    if _TEST_LOCALES_ROOT is not None:
+        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
+    return key
+
+
+@pytest.fixture(autouse=True)
+def _synthetic_locale_scope(tmp_path: Path):  # type: ignore[no-untyped-def]
+    global _TEST_LOCALES_ROOT
+    packaged_es = importlib.resources.files("cadrumo").joinpath("locales", "es.yml")
+    (tmp_path / "es.yml").write_text(packaged_es.read_text(encoding="utf-8"), encoding="utf-8")
+    with locales_root_scope(tmp_path):
+        _TEST_LOCALES_ROOT = tmp_path
+        try:
+            yield
+        finally:
+            _TEST_LOCALES_ROOT = None
 
 
 def _casilla(
@@ -36,7 +64,7 @@ def _casilla(
         {
             "id": cid,
             "number": "01",
-            "label": label,
+            "localization_keys": (_write_test_label(label),),
             "section": ("test",),
             "data_type": data_type,
             "semantic_role": semantic_role,
@@ -50,6 +78,7 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDef
     revision = ModeloRevision.model_validate(
         {
             "id": revision_id,
+            "localization_key": f"test.schema.revision.{revision_id}.label",
             "valid_from": date(2025, 1, 1),
             "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
             "legal_refs": ("ley-58-2003:art-29",),
@@ -60,8 +89,8 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDef
     return ModeloDefinition.model_validate(
         {
             "id": modelo_id,
-            "title": f"Modelo {modelo_id}",
-            "official_name": f"Modelo {modelo_id}",
+            "title_localization_key": f"test.schema.modelo.{modelo_id}.title",
+            "official_name_localization_key": f"test.schema.modelo.{modelo_id}.official_name",
             "tax_domain": "iva",
             "cadence": "annual",
             "jurisdiction": "ES-AEAT",

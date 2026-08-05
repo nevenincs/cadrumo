@@ -25,7 +25,7 @@ def _casilla_with(data_type: str) -> CasillaDefinition:
         {
             "id": "country_test_casilla",
             "number": "01",
-            "label": "Codigo pais",
+            "localization_keys": ("test.schema.casilla.label",),
             "section": ("operador",),
             "data_type": data_type,
             "legal_refs": ("ley-37-1992:art-25",),
@@ -57,6 +57,8 @@ class TestCountryCodeRejects:
 class TestCasillaDefinitionDataType:
     def test_country_code_data_type_round_trips_through_strict_validation(self) -> None:
         casilla = _casilla_with("country_code")
-        round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
+        round_tripped = CasillaDefinition.model_validate(
+            {**casilla.model_dump(), "localization_keys": casilla.localization_keys},
+        )
         assert round_tripped.data_type == "country_code"
         assert round_tripped == casilla

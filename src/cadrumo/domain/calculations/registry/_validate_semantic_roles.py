@@ -14,6 +14,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
+from ....core.i18n import MissingTranslationError
 from . import _validate_semantic_role_typos as _semantic_role_typos
 from ._ids import CasillaId
 from ._schema import CasillaDefinition, ModeloDefinition
@@ -67,7 +68,13 @@ class _RoleObservation:
         self.casilla_id = casilla.id
         self.data_type = casilla.data_type
         self.constraints = casilla.constraints
-        self.label = casilla.label
+        try:
+            self.label = casilla.label
+        except MissingTranslationError:
+            # Semantic-role axes are structural. A custom registry root can be
+            # checked before its shared catalogue is enrolled; label-derived
+            # required-role checks handle their own missing-key boundary.
+            self.label = ""
         self.semantic_role_cardinality = casilla.semantic_role_cardinality
         self.semantic_role_cardinality_reason = casilla.semantic_role_cardinality_reason
 

@@ -119,7 +119,7 @@ def test_casilla_roundtrip_valid_input_kind() -> None:
             payload: dict[str, object] = {
                 "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
-                "label": "Test casilla",
+                "localization_keys": ("test.schema.casilla.label",),
                 "section": ("test",),
                 "input_kind": raw_string,
                 "formula": "test.formula",
@@ -130,7 +130,7 @@ def test_casilla_roundtrip_valid_input_kind() -> None:
             payload = {
                 "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
-                "label": "Test casilla",
+                "localization_keys": ("test.schema.casilla.label",),
                 "section": ("test",),
                 "input_kind": raw_string,
                 "binding": "test.binding",
@@ -141,7 +141,7 @@ def test_casilla_roundtrip_valid_input_kind() -> None:
             payload = {
                 "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
-                "label": "Test casilla",
+                "localization_keys": ("test.schema.casilla.label",),
                 "section": ("test",),
                 "input_kind": raw_string,
                 "legal_refs": (_SCHEMA_LEGAL_ID,),
@@ -168,7 +168,7 @@ def test_casilla_rejects_unknown_input_kind() -> None:
             {
                 "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
-                "label": "Test casilla",
+                "localization_keys": ("test.schema.casilla.label",),
                 "section": ("test",),
                 "input_kind": "garbage",
                 "legal_refs": (_SCHEMA_LEGAL_ID,),
@@ -184,7 +184,7 @@ def test_casilla_rejects_empty_string_input_kind() -> None:
             {
                 "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
-                "label": "Test casilla",
+                "localization_keys": ("test.schema.casilla.label",),
                 "section": ("test",),
                 "input_kind": "",
                 "legal_refs": (_SCHEMA_LEGAL_ID,),
@@ -200,7 +200,7 @@ def test_casilla_rejects_numeric_input_kind() -> None:
             {
                 "id": _SCHEMA_CASILLA_ID,
                 "number": "01",
-                "label": "Test casilla",
+                "localization_keys": ("test.schema.casilla.label",),
                 "section": ("test",),
                 "input_kind": 42,
                 "legal_refs": (_SCHEMA_LEGAL_ID,),
@@ -219,7 +219,7 @@ def test_casilla_default_input_kind_is_manual() -> None:
     casilla = CasillaDefinition(
         id=_SCHEMA_CASILLA_ID,
         number="01",
-        label="Test casilla",
+        localization_keys=("test.schema.casilla.label",),
         section=("test",),
         legal_refs=(_SCHEMA_LEGAL_ID,),
         source_refs=(_SCHEMA_SOURCE_ID,),

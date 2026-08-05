@@ -14,15 +14,19 @@ round-trip.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import warnings
 from collections.abc import Iterable
 from datetime import date
+from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import pytest
 from pydantic import ValidationError
 
 from .....core.resources import bundled_path
+from .....tests.locales_root_fixture import locales_root_scope
 from .. import CasillaId, load_modelo_path, validated_casilla_id
 from .._schema import (
     CasillaAlias,
@@ -49,6 +53,36 @@ from .._validate_semantic_roles import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _TEST_CASILLA_ID: CasillaId = validated_casilla_id("test_casilla", surface="_TEST_CASILLA_ID")
+_TEST_LOCALES_ROOT: Path | None = None
+
+
+def _write_test_label(label: str) -> str:
+    key = f"test.schema.casilla.{hashlib.sha256(label.encode('utf-8')).hexdigest()}.label"
+    if _TEST_LOCALES_ROOT is not None:
+        with (_TEST_LOCALES_ROOT / "es.yml").open("a", encoding="utf-8") as handle:
+            handle.write(f"{json.dumps(key)}: {json.dumps(label, ensure_ascii=False)}\n")
+    return key
+
+
+@pytest.fixture(autouse=True)
+def _synthetic_locale_scope(tmp_path: Path, request):  # type: ignore[no-untyped-def]
+    global _TEST_LOCALES_ROOT
+    bundled_markers = (
+        "committed",
+        "m100_2024_2025",
+        "reviewed_singleton_markers",
+        "quarterly_contraparte",
+    )
+    if any(marker in request.node.nodeid for marker in bundled_markers):
+        yield
+        return
+    (tmp_path / "es.yml").write_text("", encoding="utf-8")
+    with locales_root_scope(tmp_path):
+        _TEST_LOCALES_ROOT = tmp_path
+        try:
+            yield
+        finally:
+            _TEST_LOCALES_ROOT = None
 
 
 def _casilla(
@@ -66,7 +100,7 @@ def _casilla(
         {
             "id": cid,
             "number": "01",
-            "label": label,
+            "localization_keys": (_write_test_label(label),),
             "section": ("test",),
             "data_type": data_type,
             "semantic_role": semantic_role,
@@ -84,6 +118,7 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[Casill
     revision = ModeloRevision.model_validate(
         {
             "id": revision_id,
+            "localization_key": f"test.schema.revision.{revision_id}.label",
             "valid_from": date(2025, 1, 1),
             "period_selector": PeriodSelector(years=(2025,), periods=("0A",)),
             "legal_refs": ("ley-58-2003:art-29",),
@@ -94,8 +129,8 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: Iterable[Casill
     return ModeloDefinition.model_validate(
         {
             "id": modelo_id,
-            "title": f"Modelo {modelo_id}",
-            "official_name": f"Modelo {modelo_id}",
+            "title_localization_key": f"test.schema.modelo.{modelo_id}.title",
+            "official_name_localization_key": f"test.schema.modelo.{modelo_id}.official_name",
             "tax_domain": "iva",
             "cadence": "annual",
             "jurisdiction": "ES-AEAT",
@@ -129,7 +164,9 @@ class TestSemanticRoleFieldShape:
 
     def test_role_round_trips(self) -> None:
         c = _casilla(semantic_role="taxpayer_nif", data_type="nif")
-        rebuilt = CasillaDefinition.model_validate(c.model_dump())
+        rebuilt = CasillaDefinition.model_validate(
+            {**c.model_dump(), "localization_keys": c.localization_keys},
+        )
         assert rebuilt.semantic_role == "taxpayer_nif"
         assert rebuilt == c
 
@@ -179,9 +216,10 @@ class TestSemanticRoleFieldShape:
                 continue
             raise AssertionError(f"{case_id} accepted an invalid semantic-role shape")
 
-    def test_blank_primary_label_rejected(self) -> None:
-        with pytest.raises(ValidationError, match="official Spanish text"):
-            _casilla(label="   ")
+    def test_empty_localization_keys_rejected(self) -> None:
+        casilla = _casilla()
+        with pytest.raises(ValidationError, match="localization_keys"):
+            CasillaDefinition.model_validate({**casilla.model_dump(), "localization_keys": ()})
 
     def test_blank_alias_label_rejected(self) -> None:
         with pytest.raises(ValidationError, match="official Spanish text"):
@@ -197,7 +235,9 @@ class TestSemanticRoleFieldShape:
             semantic_role_cardinality="intentional_singleton",
             semantic_role_cardinality_reason="2025-only legal slot",
         )
-        rebuilt = CasillaDefinition.model_validate(c.model_dump())
+        rebuilt = CasillaDefinition.model_validate(
+            {**c.model_dump(), "localization_keys": c.localization_keys},
+        )
         assert rebuilt.semantic_role_cardinality == "intentional_singleton"
         assert rebuilt.semantic_role_cardinality_reason == "2025-only legal slot"
 
@@ -208,7 +248,9 @@ class TestSemanticRoleFieldShape:
             source_refs=("aeat-manual",),
         )
         c = _casilla(semantic_role="taxpayer_nif", data_type="nif", aliases=[alias])
-        rebuilt = CasillaDefinition.model_validate(c.model_dump())
+        rebuilt = CasillaDefinition.model_validate(
+            {**c.model_dump(), "localization_keys": c.localization_keys},
+        )
         assert len(rebuilt.aliases) == 1
         assert rebuilt.aliases[0].label == "NIF declarante"
         assert rebuilt.aliases[0].legal_refs == ("ley-58-2003:art-29",)

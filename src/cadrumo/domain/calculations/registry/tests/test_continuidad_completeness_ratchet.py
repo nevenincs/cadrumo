@@ -251,7 +251,7 @@ def _write_casilla_fragment(
     directory.mkdir(parents=True, exist_ok=True)
     blocks: list[str] = []
     for casilla_id, continuidad_id in casillas.items():
-        block = f'[[revisions."{revision_id}".casillas]]\nid = "{casilla_id}"\nlabel = "x"'
+        block = f'[[revisions."{revision_id}".casillas]]\nid = "{casilla_id}"'
         if continuidad_id is not None:
             block += f'\ncontinuidad_id = "{continuidad_id}"'
         blocks.append(block)

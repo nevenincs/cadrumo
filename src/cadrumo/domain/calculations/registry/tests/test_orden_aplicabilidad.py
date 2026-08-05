@@ -95,6 +95,7 @@ def _make_revision(
     effective_legal_refs: tuple[LegalRefId, ...] = legal_refs if legal_refs is not None else (_NON_ORDEN_LEGAL_REF,)
     return ModeloRevision(
         id=revision_id,
+        localization_key=f"test.schema.revision.{revision_id}.label",
         valid_from=valid_from,
         valid_to=valid_to,
         period_selector=selector,

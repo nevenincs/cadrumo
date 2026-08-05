@@ -28,12 +28,12 @@ from .._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _casilla_with(data_type: str, label: str = "Test casilla") -> CasillaDefinition:
+def _casilla_with(data_type: str) -> CasillaDefinition:
     return CasillaDefinition.model_validate(
         {
             "id": "test_casilla",
             "number": "01",
-            "label": label,
+            "localization_keys": ("test.schema.casilla.label",),
             "section": ("test",),
             "data_type": data_type,
             "legal_refs": ("ley-58-2003:art-29",),
@@ -43,13 +43,11 @@ def _casilla_with(data_type: str, label: str = "Test casilla") -> CasillaDefinit
 
 
 def test_semantic_role_accepts_long_cross_modelo_domain_identifier() -> None:
-    casilla = _casilla_with(
-        "decimal",
-        label="Rendimiento capital mobiliario general propiedad intelectual no autor",
-    )
+    casilla = _casilla_with("decimal")
     rebuilt = CasillaDefinition.model_validate(
         {
             **casilla.model_dump(),
+            "localization_keys": casilla.localization_keys,
             "semantic_role": "irpf_rendimiento_capital_mobiliario_general_propiedad_intelectual_no_autor",
         },
     )
@@ -264,6 +262,8 @@ def test_casilla_definition_round_trips_with_long_tail_data_types() -> None:
 
     for tag in tags:
         casilla = _casilla_with(tag)
-        round_tripped = CasillaDefinition.model_validate(casilla.model_dump())
+        round_tripped = CasillaDefinition.model_validate(
+            {**casilla.model_dump(), "localization_keys": casilla.localization_keys},
+        )
         assert round_tripped.data_type == tag, tag
         assert round_tripped == casilla

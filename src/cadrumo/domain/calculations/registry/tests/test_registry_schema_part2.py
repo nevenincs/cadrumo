@@ -48,6 +48,7 @@ def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() 
     revision = ModeloRevision.model_validate(
         {
             "id": "2025",
+            "localization_key": "test.schema.revision.2025.label",
             "valid_from": date(2025, 1, 1),
             "period_selector": {"years": (2025,), "periods": ("0A",)},
             "legal_refs": ("ley-35-2006:art-48",),
