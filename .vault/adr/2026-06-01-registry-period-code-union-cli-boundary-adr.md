@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#registry-period-code-union'
 date: '2026-06-01'
-modified: '2026-07-17'
-body_hash: 'sha256:aafb2cd62ab1d8cd248fa3da20de4a5871676016682d5333a6db1237d7e8b6d2'
+modified: '2026-08-05'
+body_hash: 'sha256:690df302cfeba2d0c2bc54fd84aadc78df542a2db8f0c7eed56c8c90dc88fe0d'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
@@ -197,3 +197,235 @@ The period axis is unique in carrying a regex-member (`EVENT-N`). No other CLI a
 ## Decision summary
 
 ACCEPT Candidate 3. `RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]`. Single source of truth. CLI `--help` carries the accepted set. CLI parse failure routes the accepted set through the validator's error message. Roundtrip-clean (underlying type is `str`). Future extension is one regex / one literal added to the validator. Candidate 2 (discriminated union) reserved for if-and-when a runtime needs to dispatch on period-kind. Candidate 1 (wider StrEnum) rejected because `EVENT-N` is unbounded.
+
+## Amendment (2026-08-05): the union is five sub-vocabularies, and one validator cannot serve two boundaries
+
+Two statements this record makes about the accepted value space are now false, and the
+falsehood is a live regression rather than a documentation lag. Everything below was
+measured at HEAD on 2026-08-05, not inferred.
+
+### What happened
+
+Commit `972e8636ff` ("fix(core): define the registry selector period code its export
+already names", 2026-08-01) repaired a genuine break: `cadrumo.core` exported
+`RegistrySelectorPeriodCode` while the name was undefined, so `import cadrumo.core`
+failed on a clean checkout. The repair was necessary and its admission of the
+administrative tokens was necessary too — this amendment does **not** call for a revert.
+Three registry declarations that all predate the commit require those tokens at the
+registry coordinate:
+
+- `_data/registry/aeat/modelos/036/revisions/2025-02-03-y-siguientes/revision.toml:4` —
+  `periods = ["alta", "modificacion", "baja"]`
+- `_data/registry/aeat/modelos/145/revisions/2012-01-31-y-siguientes/revision.toml:3` —
+  `periods = ["comunicacion", "variacion"]`
+- `_data/registry/aeat/modelos/210/revisions/2025/revision.toml:8` —
+  `periods = ["EVENT-N", "0A"]`
+
+`PeriodSelector.periods` had been typed `RegistrySelectorPeriodCode` at commit
+`fa16c86f66` (it was a bare `tuple[str, ...]` before that), so once the alias was
+defined, the registry could not load unless the validator admitted those tokens. The
+defect is not the admission. The defect is that the admission was made in
+`_validate_period_against_registry` — the validator that **also** backs `Period.code`
+(`core/_period.py:231`). One validator was serving two boundaries with genuinely
+different value spaces, and widening it for the registry coordinate silently widened the
+typed filing period.
+
+### The regression, measured
+
+`Period.from_year_and_code(2025, "alta")` now returns `Period(filing_year=2025,
+code='ALTA')`. Before the widening it raised `PeriodError`. That refusal was
+load-bearing: `_resolve_year_period` (`entrypoints/cli/_modelo.py:312-331`) catches
+`PeriodError` and only then builds the instructive refusal that names the modelo and
+enumerates its declared tokens. With no exception raised, the whole cascade is dead.
+Confirmed directly:
+
+    _resolve_year_period(2025, "alta",         modelo="036") -> Period(2025, 'ALTA')
+    _resolve_year_period(2025, "comunicacion", modelo="036") -> Period(2025, 'COMUNICACION')
+    _resolve_year_period(2025, "EVENT-N",      modelo="036") -> Period(2025, 'EVENT-N')
+    _resolve_year_period(2025, "bogus",        modelo="036") -> BadParameter (still correct)
+
+So `aeat app modelo work create --modelo 036 --period alta` accepts a censo registration
+event as a filing period. The command still fails, but downstream and generically: the
+JSON envelope carries `ERROR_MODELOS` and no longer carries the `--period '<token>'`
+parse-boundary refusal. That is a direct breach of `aeat-architecture-boundaries` — "the
+refusal MUST list the accepted set in the error message — never a bare 'value invalid'
+without options". The instructive surface was replaced by a late generic one.
+`test_work_create_rejects_censo_tokens_as_non_filing_periods` fails on all three
+parametrised cases (`entrypoints/cli/tests/test_modelo_discovery_defects.py:225`); the
+undeclared-token and quarterly-token siblings still pass, isolating the fault to declared
+administrative tokens rather than to the validator in general.
+
+For precision, one thing this regression is **not**: it is not a silent
+under-declaration. `Period(code='ALTA').has_date_span()` returns `False` and
+`.contains(date)` raises `PeriodError` with an instructive message, so an administrative
+period that reaches the aggregation boundary fails late and loudly rather than silently
+folding a wrong span. `no-silent-under-declaration` is therefore not breached today; its
+relevance here is prospective, and it is the reason the fix must restore a type-level
+refusal rather than rely on the downstream `contains()` guard as the safety net.
+
+### Scope corrections to this record's own text
+
+**The set is five tokens, not three.** `_ADMINISTRATIVE_PERIOD_SET`
+(`core/_period.py:80`) carries `ALTA`, `MODIFICACION`, `BAJA`, `COMUNICACION`,
+`VARIACION`. Only M036's three appear in the failing test because they are the ones M036
+declares; M145 supplies the other two. `accepted_period_patterns()`
+(`core/_period.py:132`) under-reports the set as "Administrative (ALTA, MODIFICACION,
+BAJA)" while `accepted_period_codes()` returns all five — the operator-facing pattern
+listing and the machine-readable code listing already disagree.
+
+**A second widening rode the same commit, unrelated to the administrative tokens.**
+`_EVENT_PERIOD_RE` went from `^EVENT-\d+$` to `^EVENT-(?:N|\d+)$`, admitting the literal
+placeholder `EVENT-N`. That token is M210's declared *selector* string — a pattern
+placeholder standing for "an event number", not an event number. `Period(code='EVENT-N')`
+is therefore a filing period whose code is a documentation placeholder. This is the same
+defect class as the administrative leak (registry-selector vocabulary reaching the typed
+filing boundary), it arrived by the same conflation, and any fix scoped to the
+administrative branch alone will leave it standing.
+
+**The record's Problem statement and Future-proofing sections are corrected** to read
+five sub-vocabularies at the registry coordinate: standard, extended OSS/IOSS, ad-hoc,
+event-driven, and administrative (censo/comunicación registration events). The claim in
+Operator surface that "the validator accepts the full union regardless of which command
+invoked it" is superseded by A2 below: from this amendment there are two validators, and
+which one applies is decided by the boundary, not by the command.
+
+### A1 — The administrative sub-vocabulary is ratified at the registry coordinate
+
+`RegistryPeriodCode` keeps the wide validator, administrative set included. The registry
+snapshot coordinate (`RegistrySnapshotRef.period`,
+`domain/calculations/registry/_schema_references.py:53`) genuinely addresses M036 and
+M145 revisions by their administrative tokens, and `RegistrySelectorPeriodCode`
+(`core/_period.py:164`) is unchanged — including its lowercasing of administrative
+tokens, which is itself the tell that the code already treats these as a distinct
+vocabulary. It applies a different casing rule to them; what it lacked was a different
+*type* at the filing boundary.
+
+### A2 — Split the validator: `Period.code` moves to a narrow `FilingPeriodCode`
+
+Introduce `FilingPeriodCode` in `core/_period.py` alongside the existing aliases: the
+same `Annotated[str, BeforeValidator(...)]` shape this ADR's D1 adopted, running the
+standard / extended / ad-hoc / event-number checks and **never** the administrative
+branch, and rejecting the literal `EVENT-N` placeholder while continuing to accept
+`EVENT-3`. `Period.code` is retyped to it. This restores the pre-`972e8636ff` refusal and
+with it the entire `_resolve_year_period` cascade, contained to one module — no change to
+the CLI support modules, the declaración parser, or `RegistrySnapshotRef`.
+
+D1 is not overturned. Candidate 3's shape survives intact; what changes is that the
+single alias becomes two, one per boundary. D3 anticipated exactly this pressure —
+"if a future need arises to dispatch on period-kind at runtime" — and it has arrived as a
+defect rather than as a feature request. The split is the cheap half of D3's migration
+path: it separates the vocabularies without paying for the discriminated union.
+
+`ManualCounterpartObservation.operation_period`
+(`application/aggregation/_counterpart.py:72`) also moves to `FilingPeriodCode`. An M347
+counterpart operation period is a real filing period — every construction site in the
+tree passes `0A` — and there is no production writer that could feed it an
+administrative token, so it inherits the widening with no compensating benefit. Extend
+the existing `test_non_registry_operation_periods_are_refused`
+(`application/aggregation/tests/test_counterpart.py:285`) rather than adding a parallel
+guard.
+
+**Naming.** `FilingPeriodCode` joins the established `*PeriodCode` family
+(`StandardPeriodCode`, `RegistryPeriodCode`, `RegistrySelectorPeriodCode`), which is
+English throughout. `aeat-spanish-stem-naming` does not push toward a Spanish stem here:
+its trigger is a concept mapping 1:1 to an AEAT surface, and the AEAT noun `periodo`
+covers the filing period and the administrative event alike, so it cannot discriminate
+the two types this amendment is separating. The rule's generic-vocabulary exception
+applies.
+
+### A3 — Acceptance gate: pin both directions, or this returns
+
+The implementing change is not complete without a type-boundary regression test pinning
+**both** halves in one place, because the failure mode is a future well-intentioned
+widening, exactly as this one arrived:
+
+- `Period.from_year_and_code(year, "alta")` raises `PeriodError`, parametrised across all
+  five administrative tokens, not just M036's three.
+- `Period.from_year_and_code(year, "EVENT-N")` raises `PeriodError`, while
+  `Period.from_year_and_code(year, "EVENT-3")` still builds.
+- `RegistrySnapshotRef(period="ALTA")` still validates, and a `PeriodSelector` carrying
+  `["alta", "modificacion", "baja"]` and one carrying `["EVENT-N", "0A"]` both still
+  validate — the registry must keep loading.
+- The M036 CLI refusal is instructive again: `test_work_create_rejects_censo_tokens_as_non_filing_periods`
+  passes on all three cases.
+
+A test pinning only the refusal direction would let a later patch re-widen the shared
+validator to fix a registry-load failure and re-break the filing boundary; a test pinning
+only the registry direction is what we had. Both, adjacent, with the reason stated.
+
+### A4 — The accessors split with the validators
+
+`accepted_period_codes()` / `accepted_period_patterns()` currently describe the wide
+union and are consumed by the MCP completion surface
+(`entrypoints/mcp/_completions.py:20`), which therefore offers `ALTA`, `BAJA`,
+`COMUNICACION`, `MODIFICACION` and `VARIACION` as period completions for filing
+arguments. Each accessor gains a filing-scoped counterpart, and every operator-facing
+surface that describes *what may be filed* — CLI `--help`, CLI parse-failure text, MCP
+completions — consumes the filing-scoped set. Registry-facing surfaces keep the wide set.
+Fix the `accepted_period_patterns()` under-report of the administrative set to all five
+members in the same change.
+
+### Rejected alternative, and the condition that would revive it
+
+The considered alternative was to leave the validator wide and generalise
+`unsupported_local_work_period_refusal`
+(`entrypoints/cli/_modelo_cli_support.py:201`) to fire on a case-folded administrative
+match independent of `PeriodError`. Rejected — and on stronger grounds than call-site
+count.
+
+That helper is gated on `modelo_work_create_refusal_locale_key`, which returns non-`None`
+only for `STUB_ONLY_MODELOS` = {151, 210, 600, 620, 650, 660, 714, 721}
+(`application/modelo/_work_create_policy.py:36-47`). **M036 is not in that set, and
+neither is M145.** The helper returns `None` for M036 today; the refusal the failing test
+asserts comes from the `_period_token_error` fallback branch of `_resolve_year_period`,
+not from this helper at all. Generalising it would therefore require decoupling it from
+the stub-only policy as well — and its message is stub-modelo copy ("this modelo is not
+supported for local work"), which is the wrong thing to tell an operator about M036,
+whose `describe` and `casillas` surfaces legitimately accept these tokens
+(`test_describe_and_casillas_accept_censo_period_tokens` passes and must keep passing).
+The alternative is not merely more expensive; it is mis-targeted.
+
+It becomes the right answer under one condition: **if a modelo ever declares a
+`period_selector` mixing real filing periods with administrative tokens.** Then a type
+that refuses administrative tokens outright is too blunt, because the same modelo needs
+both admitted at the CLI and only one admitted as a `Period`, and the discrimination has
+to move to a per-modelo registry-driven check. Today no modelo does this: M036 declares
+three administrative tokens and nothing else, M145 declares two and nothing else. M210 is
+the near miss — `["EVENT-N", "0A"]` mixes a placeholder with a real annual period — and
+it is handled by A2's rule that the placeholder is refused while event *numbers* are
+admitted. Revisit this decision when a `period_selector` first mixes the vocabularies.
+
+### Consequences
+
+- One module changes for the core fix: `core/_period.py` (new alias, retyped
+  `Period.code`, split accessors), plus the one-line retype in
+  `application/aggregation/_counterpart.py` and the completion-surface accessor swap in
+  `entrypoints/mcp/_completions.py`.
+- No change to `RegistrySnapshotRef`, `PeriodSelector`, the previous-filing selectors
+  (`domain/calculations/registry/_bindings_previous_filing.py:333`), or any CLI support
+  module. The same parse site builds both a `RegistrySnapshotRef` carrying the raw
+  `snapshot.period` and a `Period` carrying the normalised one
+  (`adapters/inbound/declaracion/_parser.py:295-303`), which is A1 and A2 already
+  co-existing correctly in one function.
+- **One implementation caveat the implementer must resolve before landing.**
+  `_filing_period_for_observation` (`adapters/inbound/declaracion/_parser.py:318-323`)
+  normalises only `ALTA` / `MODIFICACION` / `MODIFICACIÓN` / `BAJA` to `AD-HOC`; a
+  `comunicacion` or `variacion` selector falls through to line 323 and builds a `Period`
+  directly. That call succeeds today only because of the widening, and will raise
+  `PeriodError` once `Period.code` narrows. Confirm whether an M145 template can reach
+  this parser; if it can, extend the normalisation set to all five administrative tokens
+  in the same change. If it cannot, the new refusal is correct and wanted. Do not
+  discover this from a red suite.
+- `period-filter-single-boundary-authority` is reinforced rather than altered:
+  `Period.contains()` remains the single date-boundary authority, and the narrow type
+  keeps values that have no date span from reaching it in the first place.
+- This record's D4 (harmonise M308/M309/M360 to `AD-HOC`) and D5 (period-vocabulary TOML
+  registry) are untouched and still open. D5 gains a data point: when the vocabularies do
+  move to TOML, they must move as *two* declared sets, not one.
+
+### Observation, not a ruling
+
+`2026-06-11-period-grammar-standardisation-adr` describes `Period` as carrying
+`code: StandardPeriodCode`. That drifted when this ADR's D1 landed `RegistryPeriodCode`
+on the field and is not corrected here; it is flagged so the next author of that record
+does not read it as the current contract.
