@@ -894,6 +894,11 @@ application:
       calculate_m347_threshold_not_met: Modelo 347 counterparty %{nif} total %{total}
         does not exceed the EUR %{threshold} threshold required by RD 1065/2007 art.
         31.1.
+      calculate_maternidad_meses_two_authorities: '--meses-trabajo-con-hijo-menor-3
+        was supplied while the active profile already declares meses_madre_trabajo
+        on its descendiente records. One authority per filing: either drop the flag
+        and let the declared records carry the Art. 81.1 months, or clear MESES_TRABAJO
+        from the records with `aeat config profile descendiente add`.'
       calculate_pension_inputs_incomplete: The plan-pension rescue inputs must all
         be supplied together.
       calculate_relation_unknown: '--relation %{key} does not match any relation id
@@ -2760,7 +2765,10 @@ cli:
           3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
           Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
           sum(min(MESES × 100, 1200)) and injects into casilla 0611. Example: --meses-trabajo-con-hijo-menor-3
-          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Only for profiles
+          that declare no descendants: when the active profile already declares MESES_TRABAJO
+          through `aeat config profile descendiente add`, those records carry the
+          months and this option is refused.'
         meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requires
           HIJO_ID=MESES format; received: {spec}.'
         meses_trabajo_hijo_not_integer: 'MESES in --meses-trabajo-con-hijo-menor-3
@@ -3445,7 +3453,7 @@ cli:
         %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
       descendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repeatable. Run `aeat config profile descendiente` with no subcommand to
           enter these guided.
         add_help: Add one or more descendants to the active profile.
@@ -6651,12 +6659,6 @@ profile:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for
       shared custody in %{count} dependent(s). Each parent declares half the applicable
       mínimo (casillas 0513/0514 and, where applicable, 0515/0516).
-    deduccion_maternidad_applied: 'Art. 81 LIRPF maternity deduction computed: %{amount}
-      € (casilla 0611). Formula sum(min(months × 100, 1,200)) applied per dependent
-      under 3 with declared working months.'
-    incremento_guarderia_applied: 'Nursery supplement (Art. 81.2 LIRPF) applied: %{amount}
-      EUR (box 0613). Limit: min(actual costs, children under 3 x 1000 EUR, social-security
-      contributions 2024).'
   errors:
     foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
@@ -6888,6 +6890,8 @@ profile:
         valid_to:
           label: Valid to
       renta_family:
+        anualidades_alimentos_euros:
+          label: Court-ordered child maintenance annuities paid
         ascendants:
           label: Ascendants
         cotizaciones_ss_madre_2024:
@@ -7320,10 +7324,12 @@ wizard:
         provenance: Your setup answer
       title: Cross-check with your censo certificate
     descendientes:
-      adoption-date:
-        before_birth: The adoption date cannot be earlier than the date of birth.
-        in_future: The adoption date cannot be in the future.
-        prompt: Adoption date (leave blank if not adopted)
+      acogimiento-resolucion:
+        help: 'Date of the first preadoptive or permanent fostering resolution. Give
+          it even if the child was later adopted: the under-three increase is counted
+          from the first fostering and runs for three periods in total, and the adoption
+          does not restart it.'
+        prompt: First fostering resolution date
       birth-date:
         prompt: Date of birth
       convivencia:
@@ -7338,6 +7344,18 @@ wizard:
         help: This only removes the allowance if their income also exceeds the legal
           limit.
         prompt: Does the descendant file their own income tax return?
+      dependencia-economica:
+        choices:
+          'false':
+            label: No, I do not contribute to their upkeep
+          'true':
+            label: Yes, I contribute to their upkeep
+        help: Answer only if the descendant does not live with you. A parent without
+          custody, not even shared, who pays no court-ordered anualidades por alimentos
+          but contributes to the child's upkeep, is entitled to the mínimo por descendientes.
+          If you declare anualidades por alimentos, this assimilation does not apply
+          to any descendant while the application cannot attribute them per child.
+        prompt: Do you contribute to this descendant's economic upkeep?
       discapacidad:
         choices:
           '0':
@@ -7347,12 +7365,39 @@ wizard:
           '65':
             label: 65% or more
         prompt: Disability grade
+      entry-event:
+        before_birth: The entry date cannot be earlier than the date of birth.
+        in_future: The entry date cannot be in the future.
+        relacion_mismatch: This date does not match the relationship you gave. The
+          Registro Civil inscription applies only to an adopted descendant, and the
+          fostering resolution only to preadoptive or permanent fostering, or to an
+          adopted child previously fostered. Correct the relationship or clear the
+          date.
       gastos-guarderia:
+        both_declared: Give either the annual guardería total or the month-by-month
+          amounts for this child, not both. The monthly detail is the only one that
+          can express the year the child turns three, so clear the annual total.
         help: Amounts paid to an authorised nursery (Art. 81.2 LIRPF) that increase
           the maternity deduction; whole euros.
         invalid_negative: Nursery expenses cannot be negative; enter 0 or a positive
           amount in euros.
         prompt: Nursery expenses paid in the filing year (euros)
+      gastos-guarderia-mensuales:
+        help: 'Use this instead of the annual total when the child turns three during
+          the year: only the months after the birthday count, and an annual figure
+          cannot be split across the birthday. Write each month and its amount as
+          MM:AMOUNT separated by semicolons, or a span as MM-MM:AMOUNT, for example
+          9-12:210;1:180. The eligible months are the ones your childcare centre certifies.'
+        invalid_grammar: Enter each month and its amount as MM:AMOUNT separated by
+          semicolons; a span may be written MM-MM:AMOUNT. For example 9-12:210;1:180.
+          Months run 1 to 12, amounts are whole euros, and each month may appear only
+          once.
+        prompt: Guardería spend for this child, month by month (optional)
+      inscripcion-registro-civil:
+        help: Date the adoption was inscribed in the Registro Civil. Where inscription
+          was not required, give the date of the judicial or administrative resolution
+          instead. The under-three increase is counted from that date.
+        prompt: Registro Civil inscription date
       meses-madre-trabajo:
         help: 'For the maternity deduction (Art. 81 LIRPF): months (0-12) the mother
           paid Social Security while this child was under 3.'
@@ -7369,6 +7414,23 @@ wizard:
         help: Leave blank to derive it from your marital status, a spouse record and
           the declaration type.
         prompt: Is another taxpayer also entitled to the allowance for this descendant?
+      relacion:
+        choices:
+          acogimiento_preadoptivo_o_permanente:
+            label: Preadoptive or permanent fostering
+          acogimiento_temporal:
+            label: Temporary fostering
+          adoptado:
+            label: Adopted
+          descendiente:
+            label: Descendant (child or grandchild)
+          tutela:
+            label: Guardianship or legal representation
+        help: Choose the legal relationship. All of them entitle you to the mínimo
+          por descendientes. Only adoption and preadoptive or permanent fostering
+          also entitle you to the under-three increase regardless of the child's age;
+          temporary fostering and guardianship do not.
+        prompt: Relationship to this descendant
       rentas-anuales:
         help: Leave blank if unknown. High income can remove the descendant allowance.
         invalid_negative: The descendant's income cannot be negative.
@@ -7411,8 +7473,7 @@ wizard:
         help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
           DE, FR). Required when fiscal-residency is non_resident_irnr.
       descendiente:
-        help: 'Per-descendant data for Art. 58 LIRPF mínimo (repeatable). Format:
-          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:

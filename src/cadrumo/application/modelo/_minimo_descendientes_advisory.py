@@ -45,6 +45,9 @@ from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casill
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
+    "collect_guarderia_spend_shape_diagnostics",
+    "collect_minimo_descendientes_dependencia_diagnostics",
+    "collect_minimo_descendientes_entry_date_missing_diagnostics",
     "collect_minimo_descendientes_prorrata_inferred_diagnostics",
     "collect_minimo_descendientes_rentas_undeclared_diagnostics",
     "collect_minimo_descendientes_undeclared_diagnostics",
@@ -58,6 +61,13 @@ _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
 _COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
 _PRORRATA_INFERRED_SOURCE_KIND = "minimo_descendientes_prorrata_inferred"
 _RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
+_ENTRY_DATE_MISSING_SOURCE_KIND = "minimo_descendientes_entry_date_missing"
+_DEPENDENCIA_ASSIMILATED_SOURCE_KIND = "minimo_descendientes_dependencia_assimilated"
+_DEPENDENCIA_SUPPRESSED_SOURCE_KIND = "minimo_descendientes_dependencia_suppressed"
+_GUARDERIA_SHAPE_SOURCE_KIND = "guarderia_spend_needs_monthly_detail"
+
+#: The Art. 81.2 guardería increase (Modelo 100 casilla 0613).
+_INCREMENTO_GUARDERIA_SEMANTIC_ROLE = "irpf_incremento_maternidad_guarderia"
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -348,6 +358,248 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
             casilla_id=estatal_id,
         ),
     )
+
+
+def collect_minimo_descendientes_entry_date_missing_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise when an adopted or fostered descendant has no Art. 58.2 entry date.
+
+    Art. 58.2 grants the under-three increase "con independencia de la edad del
+    menor" for an adopción or an acogimiento preadoptivo o permanente, in the
+    period the entry event falls and the two following. The window therefore
+    needs an anchor: the Registro Civil inscription (or the resolución where
+    inscription is not required) for an adoption, the first entitling resolución
+    for an acogimiento.
+
+    Recording the relación WITHOUT its date is a state the model deliberately
+    accepts rather than refuses — an operator may know a child is adopted before
+    they hold the inscription date, and refusing the record would be worse than
+    deferring the grant. The consequence is that the age-independent limb cannot
+    fire, so the household the sentence was written for receives nothing, which
+    is an under-grant and therefore the safe direction — but a silent one unless
+    something says so (`no-silent-under-declaration`).
+
+    Narrow by construction, on the same reasoning as its siblings: a descendant
+    already under three takes the increase through the ordinary limb regardless,
+    a non-cohabiting one takes no mínimo at all, and a relación the statute
+    excludes from the limb (tutela, temporal acogimiento) has no anchor to be
+    missing. Only the older adopted or fostered child — exactly the case the
+    age-independent clause exists for — is reported.
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated. Its ``valid_to``
+            supplies the devengo year the age limb is anchored to.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        A one-element tuple carrying the advisory, or an empty tuple.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    if estatal_id is None:
+        return ()
+    if revision.valid_to is None:
+        # An open-ended revision fixes no devengo date, so the age limb of the
+        # report test has no anchor. Silent rather than guessing a year.
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+    filing_year = revision.valid_to.year
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    missing = [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
+        if descendant.art_58_2_window_anchor_missing(filing_year)
+    ]
+    if not missing:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_ENTRY_DATE_MISSING_SOURCE_KIND,
+            message=(
+                f"casilla {estatal_id!r} (mínimo por descendientes) withholds the Art. 58.2 LIRPF increase "
+                f"for {_name_indices(missing)}: the relación is an adopción or an entitling acogimiento, "
+                "which the statute grants regardless of the child's age in the entry period and the two "
+                "following, but no entry date is on record so the window cannot be measured. Declare it "
+                "with `descendiente add --descendiente INSCRIPCION=YYYY-MM-DD` (Registro Civil "
+                "inscription, or the resolución where inscription is not required) or ACOGIMIENTO="
+                "YYYY-MM-DD for the first entitling acogimiento resolución"
+            ),
+            casilla_id=estatal_id,
+        ),
+    )
+
+
+def collect_guarderia_spend_shape_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise when a declared guardería figure contributes nothing because of its SHAPE.
+
+    Art. 81.2 extends the increase into the period the child turns three, but
+    only for spend "incurridos con posterioridad al cumplimiento de dicha edad".
+    An ANNUAL total spans that birthday and cannot be apportioned across it, so
+    a child in that period whose spend is on record only as an annual figure
+    contributes zero.
+
+    That is the one state where a taxpayer declared real spend, sees it stored,
+    and receives nothing — and nothing about the computed value says why. It is
+    not a withheld window: the operator can replace the annual figure with the
+    month-by-month detail their childcare centre already certified, and the
+    months on that certificate are exactly the eligible ones, because the centre
+    determines them and reports them to the authority on its own informative
+    return. So the advisory points at the document that settles the question
+    rather than at a rule this application cannot state (`no-silent-under-declaration`).
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated. Its ``valid_to``
+            supplies the devengo year the turning-three test is anchored to.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        A one-element tuple carrying the advisory, or an empty tuple.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    casilla_id = _casilla_id_for_role(revision, _INCREMENTO_GUARDERIA_SEMANTIC_ROLE, modelo_id=modelo)
+    if casilla_id is None:
+        return ()
+    if revision.valid_to is None:
+        # An open-ended revision fixes no devengo date, so the turning-three
+        # test has no anchor. Silent rather than guessing a year.
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+    filing_year = revision.valid_to.year
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    affected = [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
+        if descendant.guarderia_needs_monthly_detail(filing_year)
+    ]
+    if not affected:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_GUARDERIA_SHAPE_SOURCE_KIND,
+            message=(
+                f"casilla {casilla_id!r} (incremento por gastos de guardería) counts nothing for "
+                f"{_name_indices(affected)}: the child turns three in this period, so Art. 81.2 LIRPF "
+                "admits only the spend after the birthday and an annual total cannot be split across "
+                "it. Restate it month by month with `descendiente add --descendiente "
+                "GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N`. The eligible months are the ones your centre "
+                "determined and reported, so the certificate you hold is the authority"
+            ),
+            casilla_id=casilla_id,
+        ),
+    )
+
+
+def collect_minimo_descendientes_dependencia_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Disclose the Art. 58 dependency assimilation, in both directions.
+
+    Two advisories from one collector because they are the two sides of one
+    staged rule and an operator needs to see whichever applies.
+
+    GRANTED: a non-cohabiting filer is taking the mínimo on a declared
+    economic-dependency fact. The authority states that entitlement in terms,
+    so this is correct rather than doubtful - but it rests on a judgement the
+    operator made, not on an observation, and it is the judgement AEAT would
+    ask about. Surfacing it is what keeps a declared fact from behaving like a
+    silent one.
+
+    SUPPRESSED: the filer declared judicial anualidades, so every declared
+    dependency is withheld. That is this model's staged narrowing rather than
+    the law: the statutory carve-out is per-child, and until per-child
+    attribution exists a filer paying for one child loses the assimilation for
+    another they support outside any court order. It under-grants, which is the
+    safe direction, and this is what stops it being a silent one.
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated; its ``valid_to``
+            supplies the devengo year.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        Up to two diagnostics, or an empty tuple when neither state applies.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    if estatal_id is None or revision.valid_to is None:
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+
+    from ...domain.contribuyente import RentaFamilyProfile
+
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    raw_anualidades = facts.get("renta_family.anualidades_alimentos_euros")
+    profile = RentaFamilyProfile(
+        descendientes=descendant_list_from_facts(descendant_facts),
+        anualidades_alimentos_euros=coerce_decimal(raw_anualidades) if raw_anualidades is not None else None,
+    )
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    granted = profile.dependencia_assimilated_indices(revision.valid_to.year)
+    if granted:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=_DEPENDENCIA_ASSIMILATED_SOURCE_KIND,
+                message=(
+                    f"casilla {estatal_id!r} (mínimo por descendientes) grants the Art. 58 allowance for "
+                    f"{_name_indices(list(granted))} on DECLARED economic dependency rather than "
+                    "cohabitation. The authority allows this for a progenitor without custody who pays no "
+                    "judicial anualidades and still contributes to the descendant's upkeep. Confirm the "
+                    "declaration holds for the filing year before filing"
+                ),
+                casilla_id=estatal_id,
+            ),
+        )
+    suppressed = profile.dependencia_suppressed_indices()
+    if suppressed:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=_DEPENDENCIA_SUPPRESSED_SOURCE_KIND,
+                message=(
+                    f"casilla {estatal_id!r} (mínimo por descendientes) WITHHOLDS the Art. 58 dependency "
+                    f"assimilation for {_name_indices(list(suppressed))} because the profile declares "
+                    "judicial anualidades por alimentos. The statutory carve-out is per-child, but this "
+                    "model cannot yet attribute a payment to one descendant, so a declared amount "
+                    "suppresses the assimilation for all of them. This under-grants where the anualidades "
+                    "are paid for a different descendant"
+                ),
+                casilla_id=estatal_id,
+            ),
+        )
+    return tuple(diagnostics)
 
 
 def _declared_descendant_row_count(bucket_id: str) -> int | None:

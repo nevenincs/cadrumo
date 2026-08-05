@@ -1569,18 +1569,22 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos de cada descendiente: fecha de nacimiento o adopción, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, si presenta declaración propia, si otro contribuyente tiene derecho al mismo mínimo, meses de trabajo de la madre, gastos de guardería y NIF. Se utilizan para calcular los mínimos familiares y las deducciones aplicables."
+description = "Datos de cada descendiente: fecha de nacimiento, relación (descendiente, adoptado, acogimiento preadoptivo o permanente, acogimiento temporal o tutela), fecha de inscripción en el Registro Civil o resolución equivalente, fecha de la primera resolución de acogimiento con derecho al aumento, discapacidad, convivencia, custodia compartida, rentas anuales excluidas las exentas, declaración propia, prorrata del mínimo, meses de trabajo de la madre, gastos de guardería anuales o mensuales y NIF."
 model_selectors = [
   "DescendantInfo.birth_date",
-  "DescendantInfo.adoption_date",
+  "DescendantInfo.relacion",
+  "DescendantInfo.inscripcion_registro_civil_date",
+  "DescendantInfo.acogimiento_resolucion_date",
   "DescendantInfo.discapacidad_grado",
   "DescendantInfo.convive_con_contribuyente",
+  "DescendantInfo.dependencia_economica",
   "DescendantInfo.custodia_compartida",
   "DescendantInfo.rentas_anuales_euros",
   "DescendantInfo.presenta_declaracion_propia",
   "DescendantInfo.prorrata_minimo",
   "DescendantInfo.meses_madre_trabajo_2024",
   "DescendantInfo.gastos_guarderia_euros",
+  "DescendantInfo.gastos_guarderia_mensuales",
   "DescendantInfo.nif",
 ]
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1", "ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
@@ -1630,6 +1634,17 @@ effective_dated = false
 description = "Base imponible de los demás miembros de la unidad familiar para el límite de renta de la deducción de la Comunidad de Madrid (DL 1/2010 art. 18.1). En una unidad individual o monoparental equivale a cero; en una unidad conyugal solo se aplica cuando constan las bases necesarias."
 model_selectors = ["renta_family.unidad_familiar_otros_miembros_base"]
 legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
+
+[[sections.fields]]
+key = "anualidades_alimentos_euros"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+nullable = true
+description = "Anualidades por alimentos a favor de los hijos satisfechas por decisión judicial. Un importe positivo suspende la asimilación por dependencia económica del artículo 58 para todos los descendientes mientras no pueda repartirse por hijo."
+model_selectors = ["RentaFamilyProfile.anualidades_alimentos_euros"]
+legal_refs = ["ley-35-2006:art-58"]
 
 [[sections.fields]]
 key = "cotizaciones_ss_madre_2024"

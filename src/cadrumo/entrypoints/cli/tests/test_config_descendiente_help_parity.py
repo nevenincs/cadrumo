@@ -58,15 +58,35 @@ _BIRTH = "NACIMIENTO=2015-01-01"
 #: with a predicate that is True only when the parser HONOURED it.
 _PROBES: dict[str, tuple[str, str]] = {
     "NACIMIENTO": ("NACIMIENTO=2015-01-01", "birth_date"),
-    "ADOPCION": ("ADOPCION=2016-01-01", "adoption_date"),
+    # RELACION probes with a NON-entitling member on purpose. An entitling one
+    # would also be produced by the INSCRIPCION probe's inference, so a parser
+    # that dropped RELACION entirely could still look honoured; temporal
+    # acogimiento is reachable only by reading the token itself.
+    "RELACION": ("RELACION=acogimiento_temporal", "relacion"),
+    "INSCRIPCION": ("INSCRIPCION=2016-01-01", "inscripcion_registro_civil_date"),
+    # The acogimiento date needs an entitling relación to be accepted at all, so
+    # its probe carries one. That makes the fragment a two-key probe, which is
+    # correct here: the coherence rule is part of what the key means.
+    "ACOGIMIENTO": (
+        "RELACION=acogimiento_preadoptivo_o_permanente,ACOGIMIENTO=2016-01-01",
+        "acogimiento_resolucion_date",
+    ),
     "DISCAPACIDAD": ("DISCAPACIDAD=33", "discapacidad_grado"),
     "CONVIVENCIA": ("CONVIVENCIA=false", "convive_con_contribuyente"),
+    # Probes the TRI-STATE: the baseline leaves it unset (None), so an
+    # explicit false is a real change. A parser that collapsed unset onto
+    # false would make this probe indistinguishable from a dropped token.
+    "DEPENDENCIA": ("DEPENDENCIA=false", "dependencia_economica"),
     "CUSTODIA": ("CUSTODIA=true", "custodia_compartida"),
     "RENTAS": ("RENTAS=9500", "rentas_anuales_euros"),
     "DECLARACION_PROPIA": ("DECLARACION_PROPIA=true", "presenta_declaracion_propia"),
     "PRORRATA": ("PRORRATA=true", "prorrata_minimo"),
     "MESES_TRABAJO": ("MESES_TRABAJO=6", "meses_madre_trabajo_2024"),
     "GASTOS_GUARDERIA": ("GASTOS_GUARDERIA=900", "gastos_guarderia_euros"),
+    # Probes the RANGE form as well as the map, because the range is the shape a
+    # taxpayer reads off a certificate (a constant fee across an enrolment span)
+    # and it is the half a parser could drop while still honouring bare months.
+    "GASTOS_GUARDERIA_MENSUAL": ("GASTOS_GUARDERIA_MENSUAL=9-12:210;1:180", "gastos_guarderia_mensuales"),
     "NIF": ("NIF=12345678Z", "nif"),
 }
 

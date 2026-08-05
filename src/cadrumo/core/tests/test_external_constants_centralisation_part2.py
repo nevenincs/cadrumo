@@ -199,9 +199,8 @@ _MODELO_GROUP_LITERAL_CASES: tuple[tuple[str, tuple[str, ...], str], ...] = (
 _IRPF_INT_CONSTANT_CASES: tuple[tuple[str, int], ...] = (
     ("DEDUCCION_MATERNIDAD_MENSUAL_EUR", 100),
     ("DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR", 1200),
-    ("INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR", 1000),
 )
-_IRPF_INT_CONSTANT_IDS = ("maternidad-mensual", "maternidad-anual-cap", "guarderia-cap")
+_IRPF_INT_CONSTANT_IDS = ("maternidad-mensual", "maternidad-anual-cap")
 
 _IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
     (
@@ -216,41 +215,13 @@ _IRPF_INT_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "_deduccion_maternidad must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from cadrumo.core.external_constants",
     ),
-    (
-        "cadrumo.domain.contribuyente.family",
-        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
-        "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
-        "family must import DEDUCCION_MATERNIDAD_MENSUAL_EUR from cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.contribuyente.family",
-        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-        "family must import DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR from cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.contribuyente.family",
-        "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
-        "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
-        "family must import INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR from cadrumo.core.external_constants",
-    ),
 )
 _IRPF_INT_ALIAS_IDS = (
     "deduccion-maternidad-mensual",
     "deduccion-maternidad-anual-cap",
-    "family-maternidad-mensual",
-    "family-maternidad-anual-cap",
-    "family-guarderia-cap",
 )
 
 _MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
-    (
-        "src/cadrumo/domain/contribuyente/family.py",
-        "family.py",
-        1200,
-        "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
-        "Bare 1200 maternidad cap literals found in family.py",
-    ),
     (
         "src/cadrumo/domain/contribuyente/_deduccion_maternidad.py",
         "_deduccion_maternidad.py",
@@ -258,15 +229,8 @@ _MIN_LITERAL_CASES: tuple[tuple[str, str, int, str, str], ...] = (
         "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR",
         "Bare 1200 maternidad cap literals found in _deduccion_maternidad.py",
     ),
-    (
-        "src/cadrumo/domain/contribuyente/family.py",
-        "family.py",
-        1000,
-        "INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR",
-        "Bare 1000 guarderia cap literals found in family.py",
-    ),
 )
-_MIN_LITERAL_IDS = ("family-maternidad", "deduccion-maternidad", "family-guarderia")
+_MIN_LITERAL_IDS = ("deduccion-maternidad",)
 
 _DECIMAL_CONSTANT_CASES: tuple[tuple[str, str], ...] = (
     ("DEFAULT_IVA_GENERAL_RATE_PCT", "21.00"),
@@ -485,7 +449,7 @@ def test_irpf_int_constant_consumers_alias_core_constants() -> None:
 
 
 # ---------------------------------------------------------------------------
-# contract — INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR centralisation tests
+# contract — IRPF cap-literal centralisation tests
 # ---------------------------------------------------------------------------
 
 

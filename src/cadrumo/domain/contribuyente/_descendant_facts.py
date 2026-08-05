@@ -8,15 +8,21 @@ not stored here; see the note below the fact table.
 
 Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.birth_date              ISO-8601 date string
-  renta_family.descendiente.{n}.adoption_date           ISO-8601 date string or absent
+  renta_family.descendiente.{n}.relacion                DescendantRelacion token (absent means ordinary)
+  renta_family.descendiente.{n}.inscripcion_registro_civil
+                                                        ISO-8601 date string or absent
+  renta_family.descendiente.{n}.acogimiento_resolucion  ISO-8601 date string or absent
   renta_family.descendiente.{n}.discapacidad            "0" / "33" / "65" or absent
   renta_family.descendiente.{n}.convivencia             "true" / "false"
+  renta_family.descendiente.{n}.dependencia_economica   "true" / "false" or absent (absent means unset)
   renta_family.descendiente.{n}.custodia_compartida     "true" / "false" (absent means False)
   renta_family.descendiente.{n}.rentas_anuales          decimal euros or absent (absent means undeclared)
   renta_family.descendiente.{n}.declaracion_propia      "true" / "false" (absent means False)
   renta_family.descendiente.{n}.prorrata_minimo         "true" / "false" or absent (absent means unanswered)
   renta_family.descendiente.{n}.meses_madre_trabajo     "0".."12" (absent means 0)
   renta_family.descendiente.{n}.gastos_guarderia        non-negative integer euros (absent means 0)
+  renta_family.descendiente.{n}.gastos_guarderia_mensuales
+                                                        canonical MM:AMOUNT[;MM:AMOUNT...] map or absent
   renta_family.descendiente.{n}.nif                     NIF string or absent
 
 Aggregate facts stored:
@@ -24,9 +30,10 @@ Aggregate facts stored:
 
 The Art. 81.2 guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
 is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
-the calculate-time injector recomputes it from the per-child
-``gastos_guarderia`` figures above and overwrites whatever the index holds,
-precisely so an operator's number can never be substituted for the law's. The
+the calculate-time injector recomputes it from the per-child spend above —
+through the canonical record, so the annual figure and the monthly map are
+weighed by the same Art. 81.2 month rules — and overwrites whatever the index
+holds, precisely so an operator's number can never be substituted for the law's. The
 profile write door refuses that path outright, so projecting it from here would
 refuse the whole batch rather than persist a second, divergent copy.
 """
@@ -39,9 +46,15 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
+from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing import parse_bool, parse_iso8601_date
+from ._guarderia_mensual import (
+    is_plain_whole_number,
+    parse_guarderia_mensual,
+    serialise_guarderia_mensual,
+)
 from .family import DescendantInfo
 
 #: Localised refusal for a rentas figure outside the canonical euro grammar.
@@ -59,15 +72,19 @@ _COUNT_PATH = "renta_family.descendientes_count"
 _DESCENDIENTE_FLAG_KEYS = frozenset(
     {
         "NACIMIENTO",
-        "ADOPCION",
+        "RELACION",
+        "INSCRIPCION",
+        "ACOGIMIENTO",
         "DISCAPACIDAD",
         "CONVIVENCIA",
+        "DEPENDENCIA",
         "CUSTODIA",
         "RENTAS",
         "DECLARACION_PROPIA",
         "PRORRATA",
         "MESES_TRABAJO",
         "GASTOS_GUARDERIA",
+        "GASTOS_GUARDERIA_MENSUAL",
         "NIF",
     },
 )
@@ -113,11 +130,24 @@ def descendant_facts_from_list(
     for idx, d in enumerate(descendientes):
         prefix = f"{_DESCENDANT_FACT_PREFIX}.{idx}"
         facts.append((f"{prefix}.birth_date", d.birth_date.isoformat()))
-        if d.adoption_date is not None:
-            facts.append((f"{prefix}.adoption_date", d.adoption_date.isoformat()))
+        # The ordinary relación is the default, so it emits no fact: an absent
+        # token means an ordinary descendant on the read side too, and writing
+        # the default would make every existing profile look re-declared.
+        if d.relacion is not DescendantRelacion.DESCENDIENTE:
+            facts.append((f"{prefix}.relacion", d.relacion.value))
+        if d.inscripcion_registro_civil_date is not None:
+            facts.append((f"{prefix}.inscripcion_registro_civil", d.inscripcion_registro_civil_date.isoformat()))
+        if d.acogimiento_resolucion_date is not None:
+            facts.append((f"{prefix}.acogimiento_resolucion", d.acogimiento_resolucion_date.isoformat()))
         if d.discapacidad_grado is not None:
             facts.append((f"{prefix}.discapacidad", str(d.discapacidad_grado)))
         facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
+        # Tri-state: an UNSET dependency emits no fact, because unset and an
+        # explicit "no" are different answers and only unset may later be
+        # answered. Collapsing them would lose the distinction the
+        # assimilation turns on.
+        if d.dependencia_economica is not None:
+            facts.append((f"{prefix}.dependencia_economica", "true" if d.dependencia_economica else "false"))
         if d.custodia_compartida:
             facts.append((f"{prefix}.custodia_compartida", "true"))
         if d.rentas_anuales_euros is not None:
@@ -130,6 +160,16 @@ def descendant_facts_from_list(
             facts.append((f"{prefix}.meses_madre_trabajo", str(d.meses_madre_trabajo_2024)))
         if d.gastos_guarderia_euros > 0:
             facts.append((f"{prefix}.gastos_guarderia", str(d.gastos_guarderia_euros)))
+        # Emitted in the canonical expanded form regardless of how it was typed,
+        # so a map entered as a range and one entered month-by-month store the
+        # same bytes and a save-then-reload round-trip is stable.
+        if d.gastos_guarderia_mensuales:
+            facts.append(
+                (
+                    f"{prefix}.gastos_guarderia_mensuales",
+                    serialise_guarderia_mensual(d.gastos_guarderia_mensuales),
+                ),
+            )
         if d.nif is not None:
             facts.append((f"{prefix}.nif", d.nif))
     facts.append((_COUNT_PATH, str(len(descendientes))))
@@ -138,10 +178,60 @@ def descendant_facts_from_list(
 
 _N_RE = re.compile(
     r"^renta_family\.descendiente\.(\d+)\."
-    r"(birth_date|adoption_date|discapacidad|convivencia|custodia_compartida|"
+    r"(birth_date|relacion|inscripcion_registro_civil|acogimiento_resolucion|"
+    r"discapacidad|convivencia|dependencia_economica|custodia_compartida|"
     r"rentas_anuales|declaracion_propia|prorrata_minimo|"
-    r"meses_madre_trabajo|gastos_guarderia|nif)$",
+    # The monthly map precedes the annual figure in the alternation because a
+    # regex alternation is ordered: with `gastos_guarderia` first, every
+    # `gastos_guarderia_mensuales` path would match the shorter branch, fail the
+    # `$` anchor, and be DROPPED from the row -- a declared map silently absent
+    # on every reload.
+    r"meses_madre_trabajo|gastos_guarderia_mensuales|gastos_guarderia|nif)$",
 )
+
+
+def relacion_kwarg(relacion: DescendantRelacion | None) -> dict[str, DescendantRelacion]:
+    """Render an optional relación as the constructor keyword, OMITTING it when unstated.
+
+    "Unstated" and "ordinary descendant" are different inputs and the record
+    treats them differently: an unstated relación carrying a Registro Civil
+    inscription is read as an adoption, while an explicitly-ordinary one
+    carrying the same date is a contradiction the coherence rule refuses. The
+    only way to express "unstated" to a pydantic constructor is to leave the
+    keyword out, so every door routes through this rather than inventing a
+    sentinel — and the type checker sees a plain
+    :class:`~cadrumo.core.DescendantRelacion` at each call site.
+    """
+    return {} if relacion is None else {"relacion": relacion}
+
+
+def _stored_relacion(raw: str | None, *, index: int) -> DescendantRelacion | None:
+    """Read one descendant's stored relación, refusing a token outside the closed set.
+
+    Returns ``None`` for an absent token — UNSTATED, not "ordinary". The two
+    differ: :class:`~domain.contribuyente.DescendantInfo` reads an unstated
+    relación carrying an inscription date as an adoption, and defaults it to the
+    ordinary descendant otherwise. Resolving absence to the ordinary member here
+    would pre-empt that reading and turn the adoption record into a
+    contradiction the coherence validator then refuses.
+
+    A PRESENT but unreadable token refuses rather than falling back, for the
+    reason every other guard in this module refuses: the fallback points in the
+    claiming direction on one side and the excluded direction on the other, and
+    neither is a reading of what the operator wrote. A corrupted
+    ``acogimiento_temporal`` resolving to the default would additionally strip
+    the record of the one distinction keeping the Art. 58.2 increase away from
+    it.
+    """
+    if raw is None:
+        return None
+    try:
+        return DescendantRelacion(raw.strip().lower())
+    except ValueError:
+        accepted = ", ".join(member.value for member in DescendantRelacion)
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.relacion must be one of {accepted}; got {raw!r}.",
+        ) from None
 
 
 def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, ...]:
@@ -175,8 +265,11 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         # on a malformed non-empty string); birth_raw is non-empty here.
         birth_date = parse_iso8601_date(birth_raw)
         assert birth_date is not None
-        adoption_raw = row.get("adoption_date")
-        adoption_date = parse_iso8601_date(adoption_raw) if adoption_raw else None
+        relacion = _stored_relacion(row.get("relacion"), index=idx)
+        inscripcion_raw = row.get("inscripcion_registro_civil")
+        inscripcion_date = parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None
+        acogimiento_raw = row.get("acogimiento_resolucion")
+        acogimiento_date = parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None
         discapacidad_raw = row.get("discapacidad")
         if discapacidad_raw is not None:
             disc_val = int(discapacidad_raw)
@@ -186,6 +279,12 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
             disc_val = None
         convivencia_raw = row.get("convivencia", "true")
         convive = convivencia_raw.lower() not in ("false", "0")
+        dependencia_raw = row.get("dependencia_economica")
+        dependencia = (
+            _flag_bool(dependencia_raw, key=f"renta_family.descendiente.{idx}.dependencia_economica")
+            if dependencia_raw is not None
+            else None
+        )
         custodia_raw = row.get("custodia_compartida", "false")
         custodia = custodia_raw.lower() not in ("false", "0")
         rentas_anuales = _stored_rentas_anuales(row.get("rentas_anuales"), index=idx)
@@ -205,27 +304,83 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         meses = int(meses_raw) if meses_raw is not None else 0
         if not (0 <= meses <= 12):
             meses = 0
-        gastos_raw = row.get("gastos_guarderia")
-        gastos = int(gastos_raw) if gastos_raw is not None else 0
-        if gastos < 0:
-            gastos = 0
+        gastos = _stored_gastos_guarderia(row.get("gastos_guarderia"), index=idx)
+        # A stored map that will not parse REFUSES rather than resolving to the
+        # empty tuple, on this module's standing reading of which direction a
+        # silent fallback points. Empty means "no monthly breakdown declared",
+        # which in the turning-three period makes the spend contribute nothing
+        # at all -- so a corrupted map would quietly withhold the whole Art.
+        # 81.2 increase from the household the extension exists for, and the
+        # operator would see a deduction disappear with nothing said.
+        mensuales = parse_guarderia_mensual(
+            row.get("gastos_guarderia_mensuales") or "",
+            field=f"renta_family.descendiente.{idx}.gastos_guarderia_mensuales",
+        )
         nif = row.get("nif")
         result.append(
             DescendantInfo(
                 birth_date=birth_date,
-                adoption_date=adoption_date,
+                **relacion_kwarg(relacion),
+                inscripcion_registro_civil_date=inscripcion_date,
+                acogimiento_resolucion_date=acogimiento_date,
                 discapacidad_grado=_discapacidad_grade(disc_val),
                 convive_con_contribuyente=convive,
+                dependencia_economica=dependencia,
                 custodia_compartida=custodia,
                 rentas_anuales_euros=rentas_anuales,
                 presenta_declaracion_propia=declaracion_propia,
                 prorrata_minimo=prorrata_minimo,
                 meses_madre_trabajo_2024=meses,
                 gastos_guarderia_euros=gastos,
+                gastos_guarderia_mensuales=mensuales,
                 nif=nif,
             ),
         )
     return tuple(result)
+
+
+def _stored_gastos_guarderia(raw: str | None, *, index: int) -> int:
+    """Read one descendant's stored ANNUAL guardería figure, refusing a bad value.
+
+    Absent means zero — no annual spend declared for this child.
+
+    A present but unreadable value refuses INSTRUCTIVELY and by index, where a
+    bare ``int()`` raised an untranslated ``ValueError`` naming neither the row
+    nor the accepted form. That mattered once this became the canonical reader
+    for the calculate path: the derived-facts injector used to carry its own
+    tolerant coercion and its own named refusal, and folding it onto this reader
+    would otherwise have traded a diagnostic naming the row for a raw traceback.
+
+    A negative figure refuses rather than clamping to zero, for this module's
+    standing reason: a clamp is a value the operator never wrote, and silently
+    substituting one is how a figure stops meaning what was typed.
+
+    The sign is read rather than stripped. An earlier form of this guard used
+    ``lstrip("-")``, which removes EVERY leading dash, so ``"--5"`` satisfied the
+    digit test and fell through to ``int``, which rejects a double sign with the
+    exact bare ``ValueError`` the paragraph above says this function exists to
+    replace. That is the shape where an almost-right guard is worse than none,
+    because the test proving it works passes. ``removeprefix`` takes one dash
+    and no more, so a second one is left in the text and fails the shape test.
+    """
+    if raw is None:
+        return 0
+    text = raw.strip()
+    negative = text.startswith("-")
+    digits = text.removeprefix("-")
+    if not is_plain_whole_number(digits):
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.gastos_guarderia must be a whole number of euros; got {raw!r}.",
+        )
+    if negative:
+        # Reached for a signed zero too, deliberately. ``"-0"`` is numerically
+        # the default and harmless, but accepting it while refusing ``"-5"``
+        # would make the sign sometimes readable and sometimes not, and a reader
+        # cannot tell which from the code. One rule: a sign here is refused.
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.gastos_guarderia must be zero or more; got {raw!r}.",
+        )
+    return int(digits)
 
 
 def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
@@ -318,9 +473,28 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
 
     Accepted keys (case-insensitive):
       NACIMIENTO=YYYY-MM-DD  (required) birth date
-      ADOPCION=YYYY-MM-DD    (optional) adoption finalisation date
+      RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|
+               acogimiento_temporal|tutela
+                             (optional, default descendiente) Art. 58.1 / 58.2
+                             relationship. A temporal acogimiento takes the
+                             tranches and NOT the under-three increase.
+      INSCRIPCION=YYYY-MM-DD (optional) Registro Civil inscription of the
+                             adoption, or the resolución judicial o
+                             administrativa where inscription is not required
+                             — the Art. 58.2 anchor for RELACION=adoptado.
+                             Supplying it without RELACION reads as adoptado.
+      ACOGIMIENTO=YYYY-MM-DD (optional) first ENTITLING acogimiento resolución
+                             — the Art. 58.2 anchor for a preadoptivo or
+                             permanente placement, and retained on an adoptado
+                             record so a fostered-then-adopted child's window
+                             is capped at three periods rather than restarted.
       DISCAPACIDAD=0|33|65   (optional) discapacidad grade
       CONVIVENCIA=true|false (optional, default true) cohabitation flag
+      DEPENDENCIA=true|false (optional) the taxpayer contributes to this
+                             descendant's upkeep without cohabiting. Omit to
+                             leave UNSET, which never assimilates; only an
+                             explicit true does, and only when no anualidades
+                             are declared.
       CUSTODIA=true|false    (optional, default false) custodia compartida (Art. 61 LIRPF)
       RENTAS=N               (optional) annual rentas excluding exempt income — Art. 58.1 ceiling
       DECLARACION_PROPIA=true|false
@@ -330,7 +504,19 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
                              contribuyente also entitled to this descendant's mínimo?
                              Omit to let the engine derive it from profile signals.
       MESES_TRABAJO=0..12    (optional, default 0) months mother worked — Art. 81 deducción maternidad
-      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613
+      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613,
+                             as an ANNUAL total. Sufficient only while the
+                             child is under three for the whole period.
+      GASTOS_GUARDERIA_MENSUAL=MM:N[;MM-MM:N...]
+                             (optional) the same spend month by month, sparse.
+                             Entries are separated by ';' rather than ',' because
+                             ',' already separates this flag's own keys, and a
+                             month specification may be a range (9-12:210) for
+                             the ordinary case of a constant fee across an
+                             enrolment span. Required for the period in which the
+                             child turns three, whose post-birthday months an
+                             annual total cannot be apportioned across. Mutually
+                             exclusive with GASTOS_GUARDERIA for one child.
       NIF=XXXXXXXXX          (optional) NIF/NIE
 
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``
@@ -353,10 +539,21 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     birth_date = parse_iso8601_date(nacimiento_raw)
     assert birth_date is not None
 
-    adoption_date: date | None = None
-    adopcion_raw = parts.get("ADOPCION")
-    if adopcion_raw:
-        adoption_date = parse_iso8601_date(adopcion_raw)
+    # RELACION is read through the same stored-token authority the fact-index
+    # path uses, so the flag door and the profile-read door refuse an unknown
+    # value identically rather than each inventing a tolerance.
+    relacion_raw = parts.get("RELACION")
+    relacion = _stored_relacion(relacion_raw.strip() or None if relacion_raw else None, index=0)
+
+    inscripcion_date: date | None = None
+    inscripcion_raw = parts.get("INSCRIPCION")
+    if inscripcion_raw:
+        inscripcion_date = parse_iso8601_date(inscripcion_raw)
+
+    acogimiento_date: date | None = None
+    acogimiento_raw = parts.get("ACOGIMIENTO")
+    if acogimiento_raw:
+        acogimiento_date = parse_iso8601_date(acogimiento_raw)
 
     discapacidad_grado = None
     disc_raw = parts.get("DISCAPACIDAD")
@@ -370,6 +567,11 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     conv_raw = parts.get("CONVIVENCIA")
     if conv_raw is not None:
         convive = _flag_bool(conv_raw, key="CONVIVENCIA")
+
+    dependencia: bool | None = None
+    dependencia_raw = parts.get("DEPENDENCIA")
+    if dependencia_raw is not None:
+        dependencia = _flag_bool(dependencia_raw, key="DEPENDENCIA")
 
     custodia = False
     custodia_raw = parts.get("CUSTODIA")
@@ -404,6 +606,23 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
             raise ProfileAnswerTypeError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_val!r}")
         gastos_guarderia_euros = gastos_val
 
+    gastos_guarderia_mensuales = parse_guarderia_mensual(
+        parts.get("GASTOS_GUARDERIA_MENSUAL") or "",
+        field="GASTOS_GUARDERIA_MENSUAL",
+    )
+    # Raised HERE as well as by the record, and the flag door's copy is the one
+    # the operator reads. A refusal left to the model surfaces as a pydantic
+    # ValidationError, which this verb's handler does not translate -- so the
+    # operator would meet a raw traceback instead of a sentence naming the two
+    # keys and which one to drop. The record keeps its own refusal for every
+    # other door.
+    if gastos_guarderia_mensuales and gastos_guarderia_euros > 0:
+        raise ProfileAnswerTypeError(
+            "--descendiente accepts GASTOS_GUARDERIA or GASTOS_GUARDERIA_MENSUAL for one "
+            "descendant, not both. The monthly breakdown is the authority where it exists, "
+            "so drop GASTOS_GUARDERIA rather than stating the same spend twice.",
+        )
+
     nif: str | None = None
     nif_raw = parts.get("NIF")
     if nif_raw:
@@ -411,15 +630,19 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
 
     return DescendantInfo(
         birth_date=birth_date,
-        adoption_date=adoption_date,
+        **relacion_kwarg(relacion),
+        inscripcion_registro_civil_date=inscripcion_date,
+        acogimiento_resolucion_date=acogimiento_date,
         discapacidad_grado=_discapacidad_grade(discapacidad_grado),
         convive_con_contribuyente=convive,
+        dependencia_economica=dependencia,
         custodia_compartida=custodia,
         rentas_anuales_euros=rentas_anuales_euros,
         presenta_declaracion_propia=presenta_declaracion_propia,
         prorrata_minimo=prorrata_minimo,
         meses_madre_trabajo_2024=meses_madre_trabajo_2024,
         gastos_guarderia_euros=gastos_guarderia_euros,
+        gastos_guarderia_mensuales=gastos_guarderia_mensuales,
         nif=nif,
     )
 
@@ -428,4 +651,5 @@ __all__ = [
     "descendant_facts_from_list",
     "descendant_list_from_facts",
     "parse_descendiente_flag",
+    "relacion_kwarg",
 ]

@@ -25,7 +25,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.terminology._resolution import ChunkHit
+from dev.docs.terminology._resolution import (
+    ChunkHit,
+    GroundingSurface,
+    TargetResolver,
+    resolve_chunk_hits,
+)
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import (
     RagSearchClient,
@@ -137,23 +142,52 @@ def test_real_sweep_maps_prorrata_to_its_grounding_targets() -> None:
 
     Replays a response CAPTURED FROM THE LIVE service through the real
     resolver + wrangler. The mapping's targets must deep-link to the prorrata
-    grounding across surfaces -- the BOE art-104 article (the legal grounding
-    the code is grounded against) and/or the prorrata concept card -- proving
-    the precompiled-RAG pipeline works on genuine data.
+    grounding across surfaces -- the generated legal-reference destinations
+    for the BOE art-102/art-104 provisions and/or the prorrata concept card --
+    proving the precompiled-RAG pipeline works on genuine data.
     """
     query, hits = _load_recorded("sweep-regla-de-prorrata.json")
     client: RagSearchClient = _RecordedClient({query: hits})
+    resolver = TargetResolver()
 
-    result = run_sweep(client=client, concept_ids={"prorrata"}, reindex=False, score_floor=0.5)
+    result = run_sweep(
+        client=client,
+        concept_ids={"prorrata"},
+        resolver=resolver,
+        reindex=False,
+        score_floor=0.5,
+    )
 
     mapping = next(m for m in result.mappings if m.query == query)
     assert mapping.targets, "the real prorrata sweep produced no targets"
     targets = mapping.targets
 
-    # A legal grounding target deep-links to the BOE prorrata article (art 102/104).
-    legal_targets = [t for t in targets if t.surface == "legal"]
-    assert any("boe.es" in t.target for t in legal_targets), "no BOE legal grounding target"
-    assert any("#a104" in t.target or "#a102" in t.target for t in legal_targets), "no prorrata article anchor"
+    # A legal target deep-links to the exact generated prorrata destination.
+    legal_targets = [t for t in targets if t.surface == GroundingSurface.LEGAL.value]
+    expected_legal_targets = {
+        "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-102",
+        "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-104",
+    }
+    assert any(t.target in expected_legal_targets for t in legal_targets), "no generated legal grounding target"
+    assert all(t.kind is SearchRecordKind.LEGAL for t in legal_targets)
+
+    # Check BOE provenance independently on the real resolved records. The
+    # laundered TermTargetRef intentionally carries no metadata beyond its
+    # five shipped fields, while the resolver's SearchRecord does.
+    resolved = resolve_chunk_hits(hits, resolver=resolver)
+    legal_records = {
+        target.record.id: target.record
+        for target in resolved.resolved
+        if target.surface is GroundingSurface.LEGAL
+    }
+    assert legal_records, "recorded prorrata hits did not resolve to a legal record"
+    for target in legal_targets:
+        record = legal_records.get(target.record_id)
+        assert record is not None, f"no resolved legal record for {target.record_id}"
+        assert record.kind is SearchRecordKind.LEGAL
+        assert record.target == target.target
+        assert record.metadata.legal_permalink is not None
+        assert record.metadata.legal_permalink.startswith("https://www.boe.es/")
 
     # A concept card target deep-links to the glossary anchor.
     concept_targets = [t for t in targets if t.kind is SearchRecordKind.CONCEPT]

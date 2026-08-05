@@ -27,6 +27,7 @@ Submodules
    cadrumo.domain.contribuyente._deduccion_maternidad
    cadrumo.domain.contribuyente._descendant_facts
    cadrumo.domain.contribuyente._errors
+   cadrumo.domain.contribuyente._guarderia_mensual
    cadrumo.domain.contribuyente._keys
    cadrumo.domain.contribuyente._marriage_facts
    cadrumo.domain.contribuyente._normalise

@@ -418,7 +418,7 @@ def _rioja_adopted_child(*, adoption_year: int) -> dict[str, object]:
     """
     return {
         "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 5}-01-01",
-        "renta_family.descendiente.0.adoption_date": f"{adoption_year}-05-05",
+        "renta_family.descendiente.0.inscripcion_registro_civil": f"{adoption_year}-05-05",
         "renta_family.descendiente.0.convivencia": "true",
     }
 
@@ -462,17 +462,18 @@ def test_the_supplement_lapses_once_the_third_period_has_passed() -> None:
 
 
 def test_a_child_over_three_without_an_adoption_date_takes_no_supplement() -> None:
-    """The tutela guard, and the reason this limb keys on the adoption date.
+    """The tutela guard, and the reason this limb keys on the inscription date.
 
     Art. 58.1 assimilates "tutela y acogimiento"; Art. 58.2's age-independent
     sentence names "adopcion o acogimiento" and NOT tutela. A descendant under
     tutela therefore generates the tranche but never this increase. Keying the
-    limb on ``adoption_date`` -- a field documented as the adoption's
-    finalisation date, which a tutela placement does not have -- is what keeps
+    limb on ``inscripcion_registro_civil_date`` -- the Registro Civil
+    inscription that both anchors the window and infers the adoptado
+    relación, and which a tutela placement does not have -- is what keeps
     that outcome correct without a relationship-kind fact.
     """
     facts = _rioja_adopted_child(adoption_year=_ORACLE_YEAR)
-    del facts["renta_family.descendiente.0.adoption_date"]
+    del facts["renta_family.descendiente.0.inscripcion_registro_civil"]
     estatal, _ = _aggregates(facts)
     assert estatal < _expected(_RIOJA_ORACLE, "0513")
 

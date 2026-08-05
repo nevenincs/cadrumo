@@ -35,20 +35,16 @@ from ._validate_dependency_sections import (
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_exports import validate_export_layout_section
+from ._validate_formulas import validate_formula_section
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_record_sections import (
     validate_binding_section,
     validate_casilla_section,
     validate_extraction_profile_section,
-    validate_formula_section,
     validate_parameter_section,
 )
-from ._validate_revision_closure import (
-    validate_revision_closure_sections as _validate_revision_closure_sections,
-)
-from ._validate_revision_closure import (
-    validate_revision_reference_surfaces as _validate_revision_reference_surfaces,
-)
+from ._validate_revision_closure import validate_revision_closure_sections as _validate_revision_closure_sections
+from ._validate_revision_closure import validate_revision_reference_surfaces as _validate_revision_reference_surfaces
 from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_identity import (
     emit_revision_payload_failures as _emit_revision_payload_failures,
@@ -103,6 +99,7 @@ def _validate_revision_surface_sections(
         prefix=prefix,
         revision=revision,
         casillas=context.casillas,
+        casilla_by_id=context.casilla_by_id,
         bindings=context.bindings,
         parameters=context.parameters,
         relations=context.relations,

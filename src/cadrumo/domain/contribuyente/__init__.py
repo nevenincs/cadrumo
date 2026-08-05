@@ -22,8 +22,18 @@ from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ._ccaa import CCAA
 from ._constants import ProfileName
 from ._deduccion_maternidad import compute_deduccion_maternidad_0611
-from ._descendant_facts import descendant_facts_from_list, descendant_list_from_facts, parse_descendiente_flag
+from ._descendant_facts import (
+    descendant_facts_from_list,
+    descendant_list_from_facts,
+    parse_descendiente_flag,
+    relacion_kwarg,
+)
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
+from ._guarderia_mensual import (
+    GUARDERIA_MENSUAL_ACCEPTED_FORM,
+    parse_guarderia_mensual,
+    serialise_guarderia_mensual,
+)
 from ._keys import (
     ProfileKey,
     ProfileKeyRequirement,
@@ -56,6 +66,7 @@ from ._renta_codes import (
 )
 from .family import (
     DescendantInfo,
+    GuarderiaMonthSpend,
     MinimoDescendientesThresholds,
     RentaAscendantProfile,
     RentaDescendantProfile,
@@ -184,12 +195,14 @@ def _normalize_region_token(raw: str) -> str:
 
 __all__ = [
     "CCAA",
+    "GUARDERIA_MENSUAL_ACCEPTED_FORM",
     "PROFILE_KEYS",
     "RENTA_MODELO100_CCAA_CODIGOS",
     "UE_EEA_COUNTRY_CODES",
     "DescendantInfo",
     "FiscalResidency",
     "ForalRegimeError",
+    "GuarderiaMonthSpend",
     "MinimoDescendientesThresholds",
     "ProfileKey",
     "ProfileKeyRequirement",
@@ -221,10 +234,13 @@ __all__ = [
     "normalise_key",
     "optional_profile_keys",
     "parse_descendiente_flag",
+    "parse_guarderia_mensual",
     "parse_marriage_date_flag",
     "parse_tax_region",
     "profile_keys",
     "register_profile_keys",
+    "relacion_kwarg",
     "required_profile_keys",
+    "serialise_guarderia_mensual",
     "within_multi_year_applicability_window",
 ]

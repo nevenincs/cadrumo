@@ -19,12 +19,10 @@ from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.external_constants import (
     CUSTODIA_COMPARTIDA_PRORRATA_FACTOR,
-    DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
-    DEDUCCION_MATERNIDAD_MENSUAL_EUR,
-    INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR,
     MINIMO_DESCENDIENTE_MAX_AGE,
     MINIMO_MENOR_TRES_MAX_AGE,
 )
@@ -108,6 +106,28 @@ class MinimoDescendientesThresholds(BaseModel):
     declaracion_propia_rentas_limite: Decimal = Field(ge=0)
 
 
+class GuarderiaMonthSpend(BaseModel):
+    """One month's guardería spend for one descendant (Art. 81.2 LIRPF).
+
+    Month-granular because the statute is: the increase runs while the child is
+    under three and, in the period the child TURNS three, extends to the spend
+    "incurridos con posterioridad al cumplimiento de dicha edad" up to the month
+    before the second cycle of infant education may begin. An annual total
+    cannot express either boundary.
+
+    The map these build is SPARSE by construction — a month with no spend simply
+    has no entry — so nothing here encodes a window. That is deliberate and is
+    the whole reason the shape is monthly primaries rather than a pre-split
+    figure: every split shape would bake a boundary into stored data, and the
+    upper boundary is not this application's to determine.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    month: int = Field(ge=1, le=12)
+    amount_euros: int = Field(ge=0)
+
+
 class DescendantInfo(BaseModel):
     """Structured per-descendant data for Art. 58 mínimo-por-descendientes.
 
@@ -119,14 +139,54 @@ class DescendantInfo(BaseModel):
     ------
     birth_date
         Required date of birth.
-    adoption_date
-        Finalisation date of the adoption, or ``None`` for a biological child.
-        When present it must be ≥ ``birth_date`` and ≤ today.
+    relacion
+        The legal relationship linking this descendant to the contribuyente
+        (:class:`~cadrumo.core.DescendantRelacion`). Defaults to
+        :attr:`~cadrumo.core.DescendantRelacion.DESCENDIENTE`, so an absent
+        fact means an ordinary descendant. Art. 58.1 assimilates tutela and
+        acogimiento for the tranches while Art. 58.2 names only "adopción o
+        acogimiento, tanto preadoptivo como permanente" for the increase, so
+        the two clauses need this distinction drawn rather than inferred.
+    inscripcion_registro_civil_date
+        The Art. 58.2 entry event for an ADOPTION: the date the adoption was
+        inscribed in the Registro Civil, or — where inscription is not
+        required — the date of the resolución judicial o administrativa. One
+        anchor with two legal sources, not two meanings, which is why it is one
+        field. Permitted only on an
+        :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` record.
+
+        This is a RE-ANCHORING rather than a rename of the retired
+        ``adoption_date``: that field was documented as the adoption's
+        *finalisation*, while Art. 58.2 anchors on the *inscription*. Where a
+        profile previously carried a finalisation date the two can differ, and
+        the inscription is the one the statute counts from.
+    acogimiento_resolucion_date
+        The Art. 58.2 entry event for an acogimiento: the date of the FIRST
+        ENTITLING resolución — preadoptivo or permanente, the two shapes the
+        statute names. Permitted on those records and on an ``ADOPTADO``
+        record, because Art. 58.2's three periods are a CAP measured from the
+        first entitling event rather than a count the later adoption restarts:
+        a fostered-then-adopted child holds both dates and gets three periods
+        in total, not six. A temporal placement is not entitling and therefore
+        has no truthful value for this field.
     discapacidad_grado
         0 = sin discapacidad, 33 = grado ≥ 33 % < 65 %, 65 = grado ≥ 65 %.
         A disabled descendant remains mínimo-eligible regardless of age.
     convive_con_contribuyente
         Whether the descendant cohabits with the taxpayer (Art. 58.1 condition).
+        Stays a FACT about the household and is never overloaded to carry the
+        dependency case; the two are separate fields precisely so a filer who
+        does not cohabit is not forced to misstate cohabitation to reach the
+        allowance they are entitled to.
+    dependencia_economica
+        Whether the taxpayer contributes to this descendant's economic upkeep
+        without cohabiting. ``None`` (the default) means UNSET, which never
+        assimilates; only an explicit ``True`` does, and only when the filer
+        declares no judicial anualidades. The authority states the entitled
+        case in terms — a progenitor with no custody, not even shared, paying
+        no anualidades, who nonetheless contributes economically. ``False`` is
+        a real answer distinct from unset: it records that the question was put
+        and declined.
     custodia_compartida
         Art. 61 LIRPF: when ``True``, both progenitors share custody under a
         judicial or administrative arrangement. The mínimo-por-descendientes
@@ -162,8 +222,18 @@ class DescendantInfo(BaseModel):
         Default ``0`` (no deducción contribution from this child).
     gastos_guarderia_euros
         Actual guardería / centro educación infantil autorizado expenses paid
-        for this child (Art. 81.2 LIRPF).  Integer euros, ≥ 0.
-        Default ``0`` (no guardería expenses declared for this child).
+        for this child (Art. 81.2 LIRPF), as an ANNUAL total.  Integer euros,
+        ≥ 0. Default ``0`` (no guardería expenses declared for this child).
+        Sufficient only while the child is under three for the whole period; it
+        cannot express either month boundary the statute draws.
+    gastos_guarderia_mensuales
+        The same spend broken down by month, sparse: only months with spend
+        appear. Required for the period in which the child turns three, because
+        that period needs the post-birthday months separated and an annual total
+        cannot be apportioned across a birthday. Mutually exclusive with
+        ``gastos_guarderia_euros`` for one child — declaring both is refused
+        rather than reconciled, so a descendant always has exactly one spend
+        authority.
     nif
         Optional NIF/NIE; validated for shape when present.
     """
@@ -171,21 +241,164 @@ class DescendantInfo(BaseModel):
     model_config = _STRICT_FROZEN
 
     birth_date: date
-    adoption_date: date | None = None
+    relacion: DescendantRelacion = DescendantRelacion.DESCENDIENTE
+    inscripcion_registro_civil_date: date | None = None
+    acogimiento_resolucion_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool = True
+    dependencia_economica: bool | None = None
     custodia_compartida: bool = False
     rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
+    gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
     nif: str | None = None
 
-    @field_validator("birth_date", "adoption_date", mode="before")
+    @field_validator(
+        "birth_date",
+        "inscripcion_registro_civil_date",
+        "acogimiento_resolucion_date",
+        mode="before",
+    )
     @classmethod
     def _parse_date(cls, value: object) -> object:
         return _coerce_iso_date_field(value)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _infer_relacion_from_inscripcion(cls, data: object) -> object:
+        """Read an unstated relación off an inscription date rather than guessing.
+
+        A Registro Civil inscription date is the adoption anchor and nothing
+        else carries it, so a record supplying one while saying nothing about
+        the relación has already stated it — resolving that to
+        :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` is a reading of the
+        same information, not an inference about a case the operator left open.
+
+        Deliberately NOT symmetric with the acogimiento date. That date is
+        compatible with two members and the statute treats them oppositely, so
+        picking one would be the guess this axis exists to remove; an
+        acogimiento date with no stated relación is refused below instead, and
+        the refusal names both members so the operator resolves it themselves.
+
+        Runs ``mode="before"`` because the default makes an ABSENT relación and
+        an explicitly-ordinary one indistinguishable afterwards, and those two
+        get opposite treatment: absent is read, explicit is a contradiction the
+        coherence check refuses.
+
+        An explicit ``None`` counts as unstated, which is what lets every entry
+        door express "the operator did not answer" without each inventing its
+        own sentinel: the flag parser, the fact-index reader and the wizard
+        projection all pass the optional token straight through. The key is then
+        dropped so the field default applies.
+        """
+        if not isinstance(data, dict):
+            return data
+        # Untyped by construction: this is raw pre-validation input, and
+        # pydantic re-validates every value against the declared field type
+        # immediately after.
+        raw = cast("dict[str, object]", data)
+        if raw.get("relacion") is not None:
+            return raw
+        if raw.get("inscripcion_registro_civil_date") is not None:
+            return {**raw, "relacion": DescendantRelacion.ADOPTADO}
+        return {key: value for key, value in raw.items() if key != "relacion"}
+
+    @model_validator(mode="after")
+    def _validate_guarderia_spend(self) -> DescendantInfo:
+        """One spend authority per child, and a coherent monthly map.
+
+        Refuses BOTH an annual total and a monthly breakdown for the same child.
+        Reconciling two figures would mean choosing one silently, and whichever
+        was chosen the other would sit in the record contradicting it; a filer
+        reading their own profile could not tell which one reached the filing.
+
+        Also refuses a repeated month, which is the only way a sparse map can be
+        internally inconsistent: two entries for the same month are either a
+        duplicate or a partial, and summing them silently would invent a figure
+        the operator never stated.
+        """
+        months = [entry.month for entry in self.gastos_guarderia_mensuales]
+        duplicates = sorted({month for month in months if months.count(month) > 1})
+        if duplicates:
+            raise ProfileValidationError(
+                f"gastos_guarderia_mensuales declares month(s) {duplicates} more than once; "
+                "give one entry per month carrying that month's total.",
+            )
+        if self.gastos_guarderia_mensuales and self.gastos_guarderia_euros > 0:
+            raise ProfileValidationError(
+                "gastos_guarderia_euros and gastos_guarderia_mensuales cannot both be declared for "
+                "one descendant. The monthly breakdown is the authority where it exists; drop the "
+                "annual total rather than stating the spend twice.",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_entry_event_dates(self) -> DescendantInfo:
+        """Enforce the entry-event dates' ordering and their relación coherence.
+
+        Two rules, and they fail in deliberately different directions.
+
+        ORDERING refuses: an entry event before the birth or in the future is
+        not a fact about any real placement, exactly as the retired
+        ``adoption_date`` refused the same shapes.
+
+        COHERENCE refuses an entry date carried by a relación the statute
+        excludes — a tutela guardian, a temporal acogimiento carer, or an
+        explicitly-ordinary descendant. Tolerating it would leave an entitling
+        anchor sitting on an excluded record, and the Art. 58.2 limb would then
+        be reachable through the only date field those records have. That is
+        the over-grant this axis was added to prevent, so it fails loudly at
+        the boundary rather than being filtered later by whichever predicate
+        happens to remember.
+
+        The converse — an entitling relación with NO entry date — is VALID and
+        silent here. The window limb simply cannot fire without an anchor, so
+        the record under-grants; refusing it would block an operator from
+        recording a placement whose date they do not yet hold, and a refusal to
+        record is worse than a grant deferred. The calculate path raises a
+        visible advisory for exactly that state.
+        """
+        self._refuse_out_of_range_entry_dates()
+        self._refuse_incoherent_entry_dates()
+        return self
+
+    def _refuse_out_of_range_entry_dates(self) -> None:
+        """Refuse an entry event before the birth or in the future."""
+        today = today_madrid()
+        for field_name, value in (
+            ("inscripcion_registro_civil_date", self.inscripcion_registro_civil_date),
+            ("acogimiento_resolucion_date", self.acogimiento_resolucion_date),
+        ):
+            if value is None:
+                continue
+            if value < self.birth_date:
+                raise ProfileValidationError(f"{field_name} {value} must be ≥ birth_date {self.birth_date}")
+            if value > today:
+                raise ProfileValidationError(
+                    f"{field_name} {value} must not be in the future (today={today})",
+                )
+
+    def _refuse_incoherent_entry_dates(self) -> None:
+        """Refuse an entry-event date the declared relación cannot carry."""
+        if self.inscripcion_registro_civil_date is not None and self.relacion is not DescendantRelacion.ADOPTADO:
+            raise ProfileValidationError(
+                f"inscripcion_registro_civil_date is the Art. 58.2 anchor for an adoption and cannot be "
+                f"carried by relacion={self.relacion.value!r}. Set relacion="
+                f"{DescendantRelacion.ADOPTADO.value!r}, or record the placement date as "
+                f"acogimiento_resolucion_date if this is an acogimiento.",
+            )
+        if self.acogimiento_resolucion_date is not None and self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+            entitling = ", ".join(sorted(member.value for member in ART_58_2_ENTITLING_RELACIONES))
+            raise ProfileValidationError(
+                f"acogimiento_resolucion_date is the first ENTITLING acogimiento resolución (Art. 58.2 "
+                f"names acogimiento 'tanto preadoptivo como permanente') and cannot be carried by "
+                f"relacion={self.relacion.value!r}; accepted values are {entitling}. A temporal "
+                f"acogimiento is assimilated by Art. 58.1 for the tranches but excluded from the "
+                f"Art. 58.2 increase, so it carries no entry date.",
+            )
 
     @field_validator("nif")
     @classmethod
@@ -199,19 +412,6 @@ class DescendantInfo(BaseModel):
             raise ProfileValidationError(f"nif must be 9 characters, got {len(stripped)!r} for {value!r}")
         return stripped
 
-    @model_validator(mode="after")
-    def _validate_adoption_date(self) -> DescendantInfo:
-        if self.adoption_date is None:
-            return self
-        if self.adoption_date < self.birth_date:
-            raise ProfileValidationError(f"adoption_date {self.adoption_date} must be ≥ birth_date {self.birth_date}")
-        today = today_madrid()
-        if self.adoption_date > today:
-            raise ProfileValidationError(
-                f"adoption_date {self.adoption_date} must not be in the future (today={today})",
-            )
-        return self
-
     def age_at_year_end(self, filing_year: int) -> int:
         """Return the descendant's age on 31 December of *filing_year*."""
         year_end = date(filing_year, 12, 31)
@@ -222,8 +422,49 @@ class DescendantInfo(BaseModel):
         return age
 
     def _entry_date(self) -> date:
-        """The effective entry date used for prorrata: adoption or birth."""
-        return self.adoption_date if self.adoption_date is not None else self.birth_date
+        """The nacimiento/adopción entry date the Madrid deducción window measures from.
+
+        ADOPTION-SPECIFIC, and that is the whole reason two named dates replaced
+        one general field. The Madrid decree (DL 1/2010 art. 4) keys its window
+        on "nacimiento o adopción" and names no acogimiento, so an acogimiento
+        resolución must not move this anchor even though it does open the
+        Art. 58.2 window — the two statutes count from different events for the
+        same child, and a single entry date could serve only one of them.
+
+        Reading the inscription field alone is sufficient rather than lucky:
+        :meth:`_refuse_incoherent_entry_dates` guarantees it is populated only
+        on an :attr:`~cadrumo.core.DescendantRelacion.ADOPTADO` record, so a
+        present value is always an adoption. Absent, the birth is the event.
+        """
+        return (
+            self.inscripcion_registro_civil_date
+            if self.inscripcion_registro_civil_date is not None
+            else self.birth_date
+        )
+
+    def art_58_2_entry_date(self) -> date | None:
+        """The FIRST entitling entry event for the Art. 58.2 window, or ``None``.
+
+        Art. 58.2's three periods are a cap rather than a restart: where the
+        circumstances change — the authority's own worked example is an adoption
+        following a fostering — the increase continues for the remaining periods
+        up to a maximum of three. Anchoring on whichever event the record
+        happens to hold would grant a fostered-then-adopted child up to six
+        periods where the statute allows three, so the earliest entitling event
+        is the anchor and the later one changes nothing.
+
+        Returns ``None`` for a relación the statute excludes from the limb
+        (tutela, temporal acogimiento, an ordinary descendant) and for an
+        entitling relación whose date is not yet recorded.
+        """
+        if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+            return None
+        candidates = [
+            value
+            for value in (self.inscripcion_registro_civil_date, self.acogimiento_resolucion_date)
+            if value is not None
+        ]
+        return min(candidates) if candidates else None
 
     def exceeds_rentas_cap(self, thresholds: MinimoDescendientesThresholds) -> bool:
         """True when a DECLARED rentas figure breaches the Art. 58.1 ceiling.
@@ -271,14 +512,15 @@ class DescendantInfo(BaseModel):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        dependencia_assimilation_available: bool = False,
     ) -> bool:
         """True when the descendant qualifies for the Art. 58.1 ordinary mínimo.
 
         Eligibility requires ALL of:
 
         * cohabiting with the taxpayer (Art. 58.1 "siempre que conviva con el
-          contribuyente"), for which economic dependency is NOT yet modelled as
-          an equivalent;
+          contribuyente"), OR assimilated economic dependency — see
+          :meth:`meets_non_income_conditions`;
         * age < 25 at year-end OR any degree of discapacidad;
         * annual rentas excluding exempt income at or below the Art. 58.1
           ceiling (:meth:`exceeds_rentas_cap`);
@@ -293,10 +535,18 @@ class DescendantInfo(BaseModel):
             return False
         if self.excluded_by_declaracion_propia(thresholds):
             return False
-        return self.meets_non_income_conditions(filing_year)
+        return self.meets_non_income_conditions(
+            filing_year,
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        )
 
-    def meets_non_income_conditions(self, filing_year: int) -> bool:
-        """The half of Art. 58.1 that needs no ceiling: cohabitation and age/discapacidad.
+    def meets_non_income_conditions(
+        self,
+        filing_year: int,
+        *,
+        dependencia_assimilation_available: bool = False,
+    ) -> bool:
+        """The half of Art. 58.1 that needs no ceiling: the household limb and age/discapacidad.
 
         Split out rather than inlined because one caller genuinely cannot supply
         the ceilings and does not need them. A descendant with NO declared rentas
@@ -307,15 +557,58 @@ class DescendantInfo(BaseModel):
         re-deriving it beside :meth:`is_eligible_ordinary`, which is how the two
         would drift.
 
+        The household limb is cohabitation OR assimilated economic dependency.
+        The authority states the dependency case in terms: a progenitor without
+        custody, not even shared, and paying no judicial anualidades, who
+        nonetheless contributes to the descendant's economic upkeep "tendrá
+        derecho a la aplicación del mínimo por descendientes". Cohabitation is
+        therefore sufficient but not necessary, which is what an earlier reading
+        of this predicate got wrong.
+
+        Assimilation requires BOTH halves and neither is a default. The
+        descendant must carry an explicit ``dependencia_economica = True`` — an
+        unset field never assimilates, because the reachable-through-the-only-
+        available-field shape is how an excluded case gets granted. And the
+        caller must pass *dependencia_assimilation_available*, which the profile
+        computes from the filer-level anualidades declaration.
+
+        That flag defaults to ``False``, so a caller that forgets it gets the
+        UNDER-granting answer rather than the claiming one. The default is the
+        safe direction by construction rather than by convention.
+
         Not a public substitute for :meth:`is_eligible_ordinary`. Answering
         ``True`` here says only that the non-income conditions hold; a caller
         that HAS a rentas figure must still apply the ceilings.
         """
-        if not self.convive_con_contribuyente:
+        if not self.qualifies_on_household_limb(
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        ):
             return False
         if self.discapacidad_grado and self.discapacidad_grado > 0:
             return True
         return self.age_at_year_end(filing_year) < _MAX_AGE_ORDINARY
+
+    def qualifies_on_household_limb(self, *, dependencia_assimilation_available: bool = False) -> bool:
+        """True when cohabitation holds, or economic dependency is assimilated in its place.
+
+        Named and public because three surfaces ask this question and one of
+        them — the advisory that discloses the assimilation to the operator —
+        needs it apart from the age limb.
+        """
+        if self.convive_con_contribuyente:
+            return True
+        return self.dependencia_economica is True and dependencia_assimilation_available
+
+    def assimilated_by_dependencia(self, *, dependencia_assimilation_available: bool = False) -> bool:
+        """True when this descendant reaches the mínimo ONLY through the dependency limb.
+
+        The disclosure predicate: a descendant who cohabits is not assimilated
+        even when the dependency fact is also set, so the advisory reports only
+        the households where the assimilation is actually load-bearing.
+        """
+        if self.convive_con_contribuyente:
+            return False
+        return self.dependencia_economica is True and dependencia_assimilation_available
 
     def is_eligible_menor_tres(self, filing_year: int) -> bool:
         """True when the descendant is under three at the devengo date and cohabits.
@@ -342,6 +635,115 @@ class DescendantInfo(BaseModel):
             return False
         return self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES
 
+    def maternidad_contributing_meses(self, filing_year: int) -> int:
+        """Art. 81.1 months this descendant contributes to the deducción in *filing_year*.
+
+        The split between what the operator supplies and what the engine applies
+        follows the statute rather than a design preference, and the two halves
+        must not re-derive each other.
+
+        The EMPLOYMENT months are the operator's and stay so:
+        ``meses_madre_trabajo_2024`` records whether the mother held contributory
+        or assistance unemployment benefit at the birth, or Social Security /
+        mutualidad registration with the contributed period the article requires.
+        That is her employment history, which this application does not hold and
+        must not infer. It is separately reported to the authority by its own
+        informative return, so the declared figure is checkable against a record
+        the authority already holds.
+
+        The CHILD-side condition is the engine's, because the authority defines
+        the qualifying child as one "con derecho a la aplicación del mínimo por
+        descendientes" — a condition that already exists, already runs, and
+        already governs this same descendant in the same calculation. Asserting
+        it a second time would create a second authority for a question the
+        record already answers.
+
+        Returns ``0`` for a descendant outside the Art. 81.1 population, so
+        months declared against an ineligible child contribute nothing rather
+        than reaching the casilla unchecked.
+        """
+        if not self.is_eligible_menor_tres(filing_year):
+            return 0
+        return self.meses_madre_trabajo_2024
+
+    def guarderia_contributing_spend(self, filing_year: int) -> int:
+        """Art. 81.2 guardería spend this descendant contributes in *filing_year*.
+
+        Applies the LOWER bound and deliberately not the upper one.
+
+        The lower bound is computable from data held: in the period the child
+        turns three, only spend "incurridos con posterioridad al cumplimiento de
+        dicha edad" counts, so months up to and including the birthday month are
+        dropped. Before that period the child is under three throughout and every
+        month counts; after it, nothing does.
+
+        The UPPER bound is not derived, and that is a decision rather than a gap.
+        The statute ends the extension at the month before the second cycle of
+        infant education may begin, which each region determines. The informative
+        return reporting childcare custody is filed EXCLUSIVELY by the centre,
+        never by the taxpayer, and the centre is required to report exactly those
+        months. Re-deriving the boundary here would compute, from a calendar this
+        application does not hold, a determination the law assigns to a party who
+        does — and risk contradicting the return the authority already holds from
+        that party. So the months a taxpayer can evidence are taken as the months
+        the centre determined.
+
+        Returns ``0`` for a non-cohabiting descendant, and for the turning-three
+        period when only an ANNUAL total is on record: that total spans the
+        birthday and cannot be apportioned across it. That is not the withheld
+        window — it is an unanswerable question about a figure the operator can
+        replace with the monthly detail their centre already certified.
+        """
+        if not self.convive_con_contribuyente:
+            return 0
+        age_at_year_end = self.age_at_year_end(filing_year)
+        if age_at_year_end < _MAX_AGE_MENOR_TRES:
+            # Under three for the whole period: every declared month counts, and
+            # an annual total needs no apportioning.
+            if self.gastos_guarderia_mensuales:
+                return sum(entry.amount_euros for entry in self.gastos_guarderia_mensuales)
+            return self.gastos_guarderia_euros
+        if age_at_year_end > _MAX_AGE_MENOR_TRES:
+            return 0
+        # The turning-three period: the Art. 81.2 extension, month-scoped.
+        return sum(
+            entry.amount_euros for entry in self.gastos_guarderia_mensuales if entry.month > self.birth_date.month
+        )
+
+    def guarderia_needs_monthly_detail(self, filing_year: int) -> bool:
+        """True when only an annual total is on record for the turning-three period.
+
+        The one state where declared spend contributes nothing purely because of
+        its SHAPE. Reported so the operator is told to supply the monthly
+        breakdown their centre certified, rather than left to wonder why a
+        declared figure produced no increase.
+        """
+        if not self.convive_con_contribuyente:
+            return False
+        if self.age_at_year_end(filing_year) != _MAX_AGE_MENOR_TRES:
+            return False
+        return self.gastos_guarderia_euros > 0 and not self.gastos_guarderia_mensuales
+
+    def is_eligible_guarderia(self, filing_year: int) -> bool:
+        """True when this descendant may carry an Art. 81.2 guardería increase at all.
+
+        Wider than :meth:`is_eligible_menor_tres`, which tests age under three at
+        year end and is the Art. 81.1 maternidad population. The guardería
+        increase additionally reaches the period the child TURNS three, which is
+        the largest under-grant this campaign measured: it is a full birth cohort
+        rather than a minority case, and it reduces cuota directly rather than
+        the base.
+
+        The authority is explicit that the increase is not gated on the
+        maternidad deduction's own eligibility — where the child turns three in
+        January, or the mother starts work after the birthday, the deduction does
+        not apply and that does NOT prevent the increase. Hence a separate
+        predicate rather than a widened shared one.
+        """
+        if not self.convive_con_contribuyente:
+            return False
+        return self.age_at_year_end(filing_year) <= _MAX_AGE_MENOR_TRES
+
     def is_eligible_minimo_incremento_menor_tres(self, filing_year: int) -> bool:
         """True when Art. 58.2 grants the bajo-3-años increase for this descendant.
 
@@ -362,32 +764,75 @@ class DescendantInfo(BaseModel):
         statute's window to the other's deduction, which is why the two are
         resolved apart.
 
-        Art. 58.2 names "adopción o acogimiento" and NOT tutela, so this limb
-        keys on ``adoption_date``, documented here as the adoption's
-        finalisation date. A descendant under tutela carries none and is never
-        granted the increase by this limb, which is the correct outcome. An
-        acogimiento placement that is not an adoption also carries none, so it
-        stays under-granted; closing that needs a relationship-kind fact this
-        axis does not yet hold.
+        The second limb reads ``relacion`` rather than the presence of a date,
+        which is what makes the statute's three-way split expressible. Art. 58.1
+        assimilates "tutela y acogimiento"; Art. 58.2 names "adopción o
+        acogimiento, tanto preadoptivo como permanente". So a tutela guardian
+        and a TEMPORAL acogimiento carer both take the ordinary tranches and
+        neither takes this increase, while a preadoptivo or permanente carer
+        takes both. Keying the limb on a date alone would grant it to whoever
+        recorded one, which is the over-grant the relación axis exists to close.
 
-        Precision limit worth stating: Art. 58.2 anchors on the Registro Civil
-        inscription, or on the resolución where inscription is not required,
-        while this model carries a single adoption date. Where the resolución
-        and the inscription straddle a year boundary the window can start one
-        period early or late.
+        The anchor is :meth:`art_58_2_entry_date` — the FIRST entitling event —
+        so the three periods cap a fostered-then-adopted child's window rather
+        than restarting on the adoption.
         """
         if not self.convive_con_contribuyente:
             return False
         if self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES:
             return True
-        if self.adoption_date is None:
+        entry_date = self.art_58_2_entry_date()
+        if entry_date is None:
             return False
-        periods_since_entry = filing_year - self.adoption_date.year
+        periods_since_entry = filing_year - entry_date.year
         return 0 <= periods_since_entry <= _NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS
 
     def entry_year(self) -> int:
-        """Calendar year of the nacimiento/adopción event (deducción-window anchor)."""
+        """Calendar year of the nacimiento/adopción event, for the Madrid deducción window.
+
+        Scoped to the autonomic nacimiento/adopción deducción and NOT to
+        Art. 58.2, which counts from a different event for the same child: see
+        :meth:`_entry_date` for why an acogimiento resolución moves one anchor
+        and not the other, and :meth:`art_58_2_entry_date` for the state anchor.
+        """
         return self._entry_date().year
+
+    def art_58_2_window_anchor_missing(self, filing_year: int) -> bool:
+        """True when an entitling relación has no entry date, so the limb cannot fire.
+
+        The recordable state the coherence validators deliberately allow: an
+        operator may declare an adoption or an entitling acogimiento before they
+        hold the inscription or resolución date. Art. 58.2's age-independent
+        increase then cannot be granted, because the window has nothing to
+        measure from — an UNDER-grant, which is the safe direction, but a silent
+        one unless something says so.
+
+        Reports only the state that changes an outcome, so the advisory it feeds
+        stays worth reading. A relación the statute excludes from the limb has
+        no anchor to be missing. A descendant who fails the Art. 58.1 non-income
+        conditions — not cohabiting, or over 25 with no discapacidad — carries no
+        mínimo for the increase to attach to, so a missing date costs them
+        nothing; a 30-year-old adopted descendant is the false positive this limb
+        exists to suppress. And a descendant already under three takes the
+        increase through the ordinary limb regardless.
+
+        What remains is the older cohabiting adopted or fostered child, who is
+        exactly the household the age-independent sentence was written for and
+        the one currently granted nothing.
+
+        The income ceilings are deliberately NOT applied. They need registry
+        figures this layer does not resolve, and an absent rentas figure is
+        non-excluding anyway, so the residual over-report is a descendant whose
+        declared rentas breach the ceiling — a narrow case that already carries
+        its own advisory.
+        """
+        if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
+            return False
+        if not self.meets_non_income_conditions(filing_year):
+            return False
+        if self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES:
+            return False
+        return self.art_58_2_entry_date() is None
 
     def is_nacimiento_adopcion_eligible(
         self,
@@ -478,6 +923,25 @@ class RentaFamilyProfile(BaseModel):
     descendants: tuple[RentaDescendantProfile, ...] = ()
     ascendants: tuple[RentaAscendantProfile, ...] = ()
     descendientes: tuple[DescendantInfo, ...] = ()
+    anualidades_alimentos_euros: Decimal | None = Field(default=None, ge=0)
+    """Judicial anualidades por alimentos the filer PAYS, or ``None`` if undeclared.
+
+    Filer-level rather than per-descendant, and that is the staged boundary
+    rather than the intended end state. Art. 58 carves the dependency
+    assimilation out where anualidades are satisfied, and the carve-out is
+    per-child in the law; this profile cannot attribute a payment to one
+    descendant, so a declared amount suppresses the assimilation for EVERY
+    descendant until that attribution lands.
+
+    Suppressing them all is the under-granting direction, which is the safe one
+    and the direction this campaign's defaults rest on, but it is a real
+    narrowing: a filer paying anualidades for one child and supporting another
+    outside any court order loses the second child's assimilation too. The
+    calculate path discloses that rather than leaving it silent.
+
+    A declared ``0`` is an answer meaning none are paid and does NOT suppress;
+    only a positive amount does. ``None`` means the question was never put.
+    """
     cotizaciones_ss_madre_2024: int = Field(default=0, ge=0)
     """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
 
@@ -529,6 +993,64 @@ class RentaFamilyProfile(BaseModel):
         """Total number of DescendantInfo entries."""
         return len(self.descendientes)
 
+    @property
+    def dependencia_assimilation_available(self) -> bool:
+        """Whether the dependency assimilation may apply to ANY descendant this year.
+
+        False as soon as the filer declares a positive anualidades figure. Art.
+        58 carves the assimilation out where anualidades are satisfied, and
+        because this profile cannot yet attribute a payment to a particular
+        descendant the carve-out is applied to all of them.
+
+        The narrowing is deliberate and one-directional: it withholds an
+        allowance some filers are owed rather than granting one they are not.
+        Reversing it needs per-child attribution, not a looser reading here.
+        """
+        return not (self.anualidades_alimentos_euros is not None and self.anualidades_alimentos_euros > 0)
+
+    def dependencia_assimilated_indices(self, filing_year: int) -> tuple[int, ...]:
+        """Indices of descendants reaching the mínimo ONLY through the dependency limb.
+
+        The disclosure surface for a judgement the operator most needs to see:
+        the allowance is being granted to a non-cohabiting filer on a declared
+        economic-dependency fact, which is an assertion rather than an
+        observation. Empty when the assimilation is unavailable or nothing
+        relies on it.
+
+        Applies the NON-INCOME conditions only, for the same reason
+        :meth:`DescendantInfo.meets_non_income_conditions` exists: the caller is
+        a calculate-path advisory that cannot resolve the registry ceilings.
+        The narrowing is safe in this direction - a descendant excluded by a
+        ceiling contributes nothing either way, so the worst case is one extra
+        disclosure rather than a missing one.
+        """
+        available = self.dependencia_assimilation_available
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.assimilated_by_dependencia(dependencia_assimilation_available=available)
+            and descendant.meets_non_income_conditions(
+                filing_year,
+                dependencia_assimilation_available=available,
+            )
+        )
+
+    def dependencia_suppressed_indices(self) -> tuple[int, ...]:
+        """Indices whose declared dependency is suppressed by the anualidades carve-out.
+
+        These descendants would be assimilated but for the filer's declared
+        anualidades, which this model cannot yet attribute per child. Reported
+        so the narrowing is visible to the filer it costs rather than silently
+        withheld.
+        """
+        if self.dependencia_assimilation_available:
+            return ()
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.dependencia_economica is True and not descendant.convive_con_contribuyente
+        )
+
     def descendientes_menores_3_year_end(self, filing_year: int) -> int:
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
         return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year))
@@ -542,17 +1064,67 @@ class RentaFamilyProfile(BaseModel):
         """
         return self.descendientes_menores_3_year_end(2024)
 
-    @property
-    def gastos_guarderia_reales_2024(self) -> int:
-        """Sum of Art. 81.2 guardería expenses across eligible children under 3 in 2024.
+    def descendientes_guarderia_count(self, filing_year: int) -> int:
+        """Count of descendants who may carry an Art. 81.2 guardería increase.
 
-        Only children eligible for the bajo-3-años supplement (age < 3 at
-        year-end 2024 AND cohabiting) contribute their ``gastos_guarderia_euros``.
-        Used as the ``gastos_reales`` term in the 0613 formula:
-        min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 × 1000,
-        cotizaciones_ss_madre_2024).
+        Wider than the Art. 58.2 menor-de-tres count by exactly the turning-three
+        period. Kept separate rather than widening that count, which has its own
+        registry binding and its own statutory meaning for the supplement.
         """
-        return sum(d.gastos_guarderia_euros for d in self.descendientes if d.is_eligible_menor_tres(2024))
+        return sum(1 for d in self.descendientes if d.is_eligible_guarderia(filing_year))
+
+    def gastos_guarderia_reales(self, filing_year: int) -> int:
+        """Sum of the Art. 81.2 guardería spend every descendant contributes in *filing_year*.
+
+        Sums :meth:`DescendantInfo.guarderia_contributing_spend`, which applies
+        the Art. 81.2 month rules per child: every declared month while the child
+        is under three, and only the post-birthday months in the period the child
+        turns three. The turning-three period is INCLUDED here and was not
+        before, which is the campaign's largest measured under-grant — a full
+        birth cohort rather than a minority case, reducing cuota directly.
+
+        Year-parameterised rather than pinned to 2024 because the calculate path
+        derives ``renta_family.gastos_guarderia_reales_{filing_year}`` for
+        whatever year the registry declares a consumer for. A 2024-only accessor
+        would have forced that path to keep its own parallel sum, which is how
+        the monthly map could be declared and contribute nothing.
+        """
+        return sum(d.guarderia_contributing_spend(filing_year) for d in self.descendientes)
+
+    def meses_maternidad_por_descendiente(self, filing_year: int) -> tuple[tuple[str, int], ...]:
+        """The Art. 81.1 ``(hijo_id, meses)`` pairs this profile contributes in *filing_year*.
+
+        Pairs :meth:`DescendantInfo.maternidad_contributing_meses` with the
+        descendant's index, which is the identifier every other descendiente
+        surface addresses a child by — the ``list`` renderer, the ``remove``
+        verb, and the fact paths themselves. The deducción's own per-hijo cap
+        then applies over these pairs rather than over a collapsed total, so a
+        second child can never absorb a first child's unused months.
+
+        Aggregates through the canonical record rather than summing the stored
+        facts directly. The guardería path was broken for exactly one release by
+        a second loop that read the raw fact under its own inline age test: the
+        two diverged the moment the record learned a month rule, and a taxpayer
+        could declare spend, see it stored, and receive nothing. One aggregation
+        path per value is the lesson, and this is that path for Art. 81.1.
+
+        Omits descendants contributing zero months, so an ineligible child and
+        one whose mother declared no employment months are both simply absent
+        rather than carrying a zero pair into the deducción.
+        """
+        return tuple(
+            (str(index), meses)
+            for index, descendant in enumerate(self.descendientes)
+            if (meses := descendant.maternidad_contributing_meses(filing_year)) > 0
+        )
+
+    def guarderia_needs_monthly_detail_indices(self, filing_year: int) -> tuple[int, ...]:
+        """Indices whose declared spend contributes nothing only because of its shape."""
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.guarderia_needs_monthly_detail(filing_year)
+        )
 
     def descendientes_eligible_minimum(
         self,
@@ -567,7 +1139,16 @@ class RentaFamilyProfile(BaseModel):
         excluded by Art. 61 norma 2ª — see
         :meth:`DescendantInfo.is_eligible_ordinary`.
         """
-        return sum(1 for d in self.descendientes if d.is_eligible_ordinary(filing_year, thresholds=thresholds))
+        available = self.dependencia_assimilation_available
+        return sum(
+            1
+            for d in self.descendientes
+            if d.is_eligible_ordinary(
+                filing_year,
+                thresholds=thresholds,
+                dependencia_assimilation_available=available,
+            )
+        )
 
     def custodia_compartida_count(
         self,
@@ -587,7 +1168,12 @@ class RentaFamilyProfile(BaseModel):
         return sum(
             1
             for d in self.descendientes
-            if d.custodia_compartida and d.is_eligible_ordinary(filing_year, thresholds=thresholds)
+            if d.custodia_compartida
+            and d.is_eligible_ordinary(
+                filing_year,
+                thresholds=thresholds,
+                dependencia_assimilation_available=self.dependencia_assimilation_available,
+            )
         )
 
     def minimo_prorrata_factor(
@@ -622,7 +1208,11 @@ class RentaFamilyProfile(BaseModel):
         descendant always returns ``Decimal("1")`` because there is no mínimo
         to prorate.
         """
-        if not descendant.is_eligible_ordinary(filing_year, thresholds=thresholds):
+        if not descendant.is_eligible_ordinary(
+            filing_year,
+            thresholds=thresholds,
+            dependencia_assimilation_available=self.dependencia_assimilation_available,
+        ):
             return Decimal("1")
         if descendant.prorrata_minimo is not None:
             return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR if descendant.prorrata_minimo else Decimal("1")
@@ -679,7 +1269,15 @@ class RentaFamilyProfile(BaseModel):
         never enters the birth-order ranking at all.
         """
         eligible = sorted(
-            (d for d in self.descendientes if d.is_eligible_ordinary(filing_year, thresholds=thresholds)),
+            (
+                d
+                for d in self.descendientes
+                if d.is_eligible_ordinary(
+                    filing_year,
+                    thresholds=thresholds,
+                    dependencia_assimilation_available=self.dependencia_assimilation_available,
+                )
+            ),
             key=lambda d: d.birth_date,
         )
         if not eligible:
@@ -765,91 +1363,6 @@ class RentaFamilyProfile(BaseModel):
         over-claim).
         """
         return Decimal("0")
-
-    # ------------------------------------------------------------------
-    # Art. 81 LIRPF deducción maternidad (casilla 0611)
-    # ------------------------------------------------------------------
-
-    def deduccion_maternidad_0611(self, filing_year: int) -> int:
-        """Compute the Art. 81 LIRPF deducción maternidad for casilla 0611.
-
-        Formula: ``sum(min(meses_madre_trabajo_2024 × 100, 1_200))`` for each
-        descendant that is eligible for the bajo-3-años supplement (age < 3 at
-        year-end AND cohabiting with the taxpayer).
-
-        Returns an integer euros amount (casilla 0611 carries no decimal places
-        on the official form).  Returns ``0`` when no eligible child has a
-        non-zero ``meses_madre_trabajo_2024``.
-        """
-        total = 0
-        for d in self.descendientes:
-            if d.is_eligible_menor_tres(filing_year) and d.meses_madre_trabajo_2024 > 0:
-                total += min(
-                    d.meses_madre_trabajo_2024 * DEDUCCION_MATERNIDAD_MENSUAL_EUR,
-                    DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR,
-                )
-        return total
-
-    # ------------------------------------------------------------------
-    # Art. 81 LIRPF guardería incremento (casilla 0613)
-    # ------------------------------------------------------------------
-
-    def incremento_guarderia_0613(self, filing_year: int) -> int:
-        """Compute the Art. 81 LIRPF guardería incremento for casilla 0613.
-
-        Formula (Art. 81 LIRPF — incremento por gastos de custodia en guardería,
-        NOT Art. 81 bis which covers familia numerosa / discapacidad)::
-
-            min(gastos_guarderia_reales,
-                hijos_menores_3 × INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR,
-                cotizaciones_ss_madre_2024)
-
-        Only the 2024 filing year is supported by the profile fields
-        (``gastos_guarderia_euros`` and ``cotizaciones_ss_madre_2024``); for
-        other years, returns 0.
-
-        Returns an integer euros amount.  Returns 0 when no eligible child has
-        ``gastos_guarderia_euros > 0`` or ``cotizaciones_ss_madre_2024 == 0``.
-        """
-        if filing_year != 2024:
-            return 0
-        gastos_reales = self.gastos_guarderia_reales_2024
-        hijos_menores_3 = self.descendientes_menores_3_2024
-        cotizaciones = self.cotizaciones_ss_madre_2024
-        if gastos_reales == 0 or hijos_menores_3 == 0 or cotizaciones == 0:
-            return 0
-        return min(gastos_reales, hijos_menores_3 * INCREMENTO_GUARDERIA_POR_HIJO_CAP_EUR, cotizaciones)
-
-    def incremento_guarderia_advisory(self, filing_year: int) -> str | None:
-        """Return a translated advisory string when 0613 can be auto-populated.
-
-        Returns ``None`` when the incremento is zero.
-        """
-        from ...core.i18n import tr
-
-        amount = self.incremento_guarderia_0613(filing_year)
-        if amount > 0:
-            return tr(
-                "profile.descendiente.incremento_guarderia_applied",
-                amount=amount,
-            )
-        return None
-
-    def deduccion_maternidad_advisory(self, filing_year: int) -> str | None:
-        """Return a translated advisory string when 0611 can be auto-populated.
-
-        Returns ``None`` when no descendant under 3 carries
-        ``meses_madre_trabajo_2024 > 0``, i.e. the computation produces zero.
-        """
-        from ...core.i18n import tr
-
-        amount = self.deduccion_maternidad_0611(filing_year)
-        if amount > 0:
-            return tr(
-                "profile.descendiente.deduccion_maternidad_applied",
-                amount=amount,
-            )
-        return None
 
 
 __all__ = [

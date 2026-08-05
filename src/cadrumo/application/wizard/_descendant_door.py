@@ -5,7 +5,7 @@ that hosts the exact count page and
 :class:`~cadrumo.application.flows.FlowRepeatingGroup` the full setup flow uses
 (:data:`~cadrumo.application.wizard._descendant_group.DESCENDANTS_COUNT_PAGE`,
 :data:`~cadrumo.application.wizard._descendant_group.DESCENDANT_GROUP`, and the
-adoption cross-field validator id) — the pages and validators are *adopted*, not
+entry-event cross-field validator id) — the pages and validators are *adopted*, not
 re-authored, so the door and the setup flow can never diverge on the descendant
 surface.
 
@@ -62,7 +62,7 @@ from ..flows import (
 from ..user_profile import set_active_fields
 from ._checkpoint_store import descendant_clearing_facts
 from ._descendant_group import (
-    DESCENDANT_ADOPTION_VALIDATOR_ID,
+    DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
     DESCENDANT_GROUP,
     DESCENDANTS_COUNT_PAGE,
 )
@@ -114,8 +114,9 @@ def build_descendant_door_definition() -> FlowDefinition:
 
     Adopts :data:`~cadrumo.application.wizard._descendant_group.DESCENDANTS_COUNT_PAGE`
     and :data:`~cadrumo.application.wizard._descendant_group.DESCENDANT_GROUP`
-    verbatim into a single familia section, and names the adoption cross-field
-    validator on the definition so a bad adoption date blocks submit — the same
+    verbatim into a single familia section, and names the entry-event
+    cross-field validator on the definition so a bad entry date — or one the
+    declared relación cannot carry — blocks submit — the same
     validators the setup flow runs. The count page's ``visible_when`` gate on the
     ``entity-type`` page is stripped: the door has no ``entity-type`` page (an
     operator who opened the descendant surface is declaring descendants), and a
@@ -138,7 +139,7 @@ def build_descendant_door_definition() -> FlowDefinition:
             FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
-        flow_validator_ids=(DESCENDANT_ADOPTION_VALIDATOR_ID,),
+        flow_validator_ids=(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,),
     )
 
 

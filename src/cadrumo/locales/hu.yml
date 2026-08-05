@@ -921,6 +921,12 @@ application:
         %{fetch_gated}.'
       calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere összesen %{total},
         ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR küszöböt.
+      calculate_maternidad_meses_two_authorities: 'A --meses-trabajo-con-hijo-menor-3
+        kapcsolot akkor adta meg, amikor az aktiv profil mar deklaral meses_madre_trabajo
+        erteket a leszarmazotti nyilvantartasaiban. Bevallasonkent egyetlen forras
+        lehet: vagy hagyja el a kapcsolot, es a deklaralt nyilvantartasok adjak a
+        81.1. cikk szerinti honapokat, vagy torolje a MESES_TRABAJO erteket a nyilvantartasokbol
+        az `aeat config profile descendiente add` paranccsal.'
       calculate_pension_inputs_incomplete: A nyugdíjterv kiváltási adatait együtt
         kell megadni.
       calculate_relation_unknown: '--relation %{key} egyik relation azonosítónak sem
@@ -2905,7 +2911,11 @@ cli:
           Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként ismételhető. A GYERMEK_AZONOSÍTÓ
           szabad felirat (pl. 0, 1, "laia"). Kiszámítja: összeg(min(HÓNAPOK × 100;
           1200)) és befecskendezi a 0611-es mezőbe. Példa: --meses-trabajo-con-hijo-menor-3
-          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800. Csak olyan profilokhoz,
+          amelyek nem deklarálnak leszármazottat: ha az aktív profil már deklarál
+          MESES_TRABAJO értéket az `aeat config profile descendiente add` paranccsal,
+          akkor azok a nyilvántartások adják a hónapokat, és ez a kapcsoló elutasításra
+          kerül.'
         meses_trabajo_hijo_bad_format: 'A --meses-trabajo-con-hijo-menor-3 GYERMEK_AZONOSÍTÓ=HÓNAPOK
           formátumot igényel; kapott: {spec}.'
         meses_trabajo_hijo_not_integer: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3
@@ -3648,8 +3658,8 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
-          Ismételhető. Futtasd az `aeat config profile descendiente` parancsot alparancs
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+          Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
@@ -6986,12 +6996,6 @@ profile:
       cikk) megosztott felügyelet esetén %{count} eltartott(ak)nál. Minden szülő a
       vonatkozó minimum felét vallja be (0513/0514. mező, és ahol alkalmazható, 0515/0516.
       mező).
-    deduccion_maternidad_applied: 'LIRPF 81. cikk szerinti anyasági levonás számítva:
-      %{amount} € (0611. mező). A képlet: összeg(min(hónapok × 100; 1 200)) eltartottanként,
-      akik 3 évesnél fiatalabbak és bejelentett munkahónapokkal rendelkeznek.'
-    incremento_guarderia_applied: 'Bölcsőde Art. 81.2 LIRPF pótlék kiszámítva: %{amount}
-      € (0613 rovatszám). Korlát: min(tényleges kiadások, 3 évesnél fiatalabb gyermekek
-      × 1.000 €, tb-járulék 2024).'
   errors:
     foral_regime: '{tax_region} lakosai az illetékes Hacienda Foralnál kötelesek adóbevallást
       benyújtani a Gazdasági Megállapodás (Ley 12/2002) alapján, nem az AEAT-nél.
@@ -7223,6 +7227,8 @@ profile:
         valid_to:
           label: Érvényes eddig
       renta_family:
+        anualidades_alimentos_euros:
+          label: Bírósági határozat alapján fizetett gyermektartásdíj
         ascendants:
           label: Felmenők
         cotizaciones_ss_madre_2024:
@@ -7675,10 +7681,12 @@ wizard:
         provenance: Az Ön beállítási válasza
       title: Összevetés a Certificado de Situación Censal tanúsítvánnyal
     descendientes:
-      adoption-date:
-        before_birth: Az örökbefogadás dátuma nem lehet korábbi a születési dátumnál.
-        in_future: Az örökbefogadás dátuma nem lehet jövőbeli.
-        prompt: Örökbefogadás dátuma (hagyja üresen, ha nem örökbefogadott)
+      acogimiento-resolucion:
+        help: 'Az első örökbefogadás előtti vagy tartós nevelésbe vételi határozat
+          dátuma. Akkor is adja meg, ha a gyermeket később örökbefogadták: a hároméves
+          kor alatti növekmény az első nevelésbe vételtől számít, összesen három időszakon
+          át tart, és az örökbefogadás nem indítja újra.'
+        prompt: Az első nevelésbe vételi határozat dátuma
       birth-date:
         prompt: Születési dátum
       convivencia:
@@ -7694,6 +7702,19 @@ wizard:
         help: Ez csak akkor szünteti meg a kedvezményt, ha a jövedelme is meghaladja
           a törvényi határt.
         prompt: Benyújtja a leszármazott a saját jövedelemadó-bevallását?
+      dependencia-economica:
+        choices:
+          'false':
+            label: Nem járulok hozzá az eltartásához
+          'true':
+            label: Igen, hozzájárulok az eltartásához
+        help: Csak akkor válaszoljon, ha a leszármazott nem él Önnel. Az a szülő,
+          akinek nincs felügyeleti joga, még közös sem, és nem fizet bírósági határozaton
+          alapuló tartásdíjat, de hozzájárul a gyermek eltartásához, jogosult a leszármazottak
+          utáni adóalap-kedvezményre. Ha tartásdíjat vall be, ez a beszámítás egyetlen
+          leszármazottra sem alkalmazható, amíg az alkalmazás nem tudja azt gyermekenként
+          megosztani.
+        prompt: Hozzájárul Ön ennek a leszármazottnak a gazdasági eltartásához?
       discapacidad:
         choices:
           '0':
@@ -7703,12 +7724,40 @@ wizard:
           '65':
             label: 65% vagy több
         prompt: Fogyatékosság mértéke
+      entry-event:
+        before_birth: A belépés dátuma nem lehet korábbi a születési dátumnál.
+        in_future: A belépés dátuma nem lehet jövőbeli.
+        relacion_mismatch: Ez a dátum nem felel meg a megadott jogviszonynak. Az anyakönyvi
+          bejegyzés csak örökbefogadott leszármazottra vonatkozik, a nevelésbe vételi
+          határozat pedig csak örökbefogadás előtti vagy tartós nevelésbe vételre,
+          illetve korábban nevelésbe vett örökbefogadottra. Javítsa a jogviszonyt,
+          vagy törölje a dátumot.
       gastos-guarderia:
+        both_declared: Adja meg ennek a gyermeknek vagy az éves bölcsődei összeget,
+          vagy a havi összegeket, de ne mindkettőt. A havi bontás az egyetlen, amely
+          ki tudja fejezni azt az évet, amelyben a gyermek betölti a harmadik életévét,
+          ezért törölje az éves összeget.
         help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81.2. cikk), amelyek
           növelik az anyasági levonást; egész euró.
         invalid_negative: A bölcsődei költség nem lehet negatív; adjon meg 0-t vagy
           pozitív összeget euróban (LIRPF 81 bis cikk).
         prompt: Az adóévben fizetett bölcsődei költségek (euró)
+      gastos-guarderia-mensuales:
+        help: 'Az éves összeg helyett ezt használja, ha a gyermek az adóévben tölti
+          be a harmadik életévét: csak a születésnap utáni hónapok számítanak, és
+          egy éves összeg nem osztható fel közöttük. Írja be minden hónapot és összegét
+          HH:ÖSSZEG formában, pontosvesszővel elválasztva, vagy egy időszakot HH-HH:ÖSSZEG
+          formában, például 9-12:210;1:180. A jogosult hónapokat a bölcsőde igazolja.'
+        invalid_grammar: Írja be minden hónapot és összegét HH:ÖSSZEG formában, pontosvesszővel
+          elválasztva; egy időszak HH-HH:ÖSSZEG formában írható. Például 9-12:210;1:180.
+          A hónapok 1-től 12-ig terjednek, az összegek egész eurók, és minden hónap
+          csak egyszer szerepelhet.
+        prompt: Ennek a gyermeknek a bölcsődei költségei, hónapról hónapra (nem kötelező)
+      inscripcion-registro-civil:
+        help: Az a dátum, amikor az örökbefogadást az anyakönyvbe bejegyezték. Ha
+          a bejegyzés nem volt szükséges, adja meg a bírósági vagy hatósági határozat
+          dátumát. A hároméves kor alatti növekmény ettől a dátumtól számít.
+        prompt: Anyakönyvi bejegyzés dátuma
       meses-madre-trabajo:
         help: 'Az anyasági levonáshoz (LIRPF 81. cikk): hónapok (0–12), amikor az
           anya tb-járulékot fizetett a 3 év alatti gyermek mellett.'
@@ -7726,6 +7775,24 @@ wizard:
         help: Hagyd üresen, és a családi állapotodból, a rögzített házastársból és
           a bevallás típusából vezetjük le.
         prompt: Jogosult másik adózó is a kedvezményre ezen leszármazott után?
+      relacion:
+        choices:
+          acogimiento_preadoptivo_o_permanente:
+            label: Örökbefogadás előtti vagy tartós nevelésbe vétel
+          acogimiento_temporal:
+            label: Ideiglenes nevelésbe vétel
+          adoptado:
+            label: Örökbefogadott
+          descendiente:
+            label: Leszármazott (gyermek vagy unoka)
+          tutela:
+            label: Gyámság vagy törvényes képviselet
+        help: Válassza ki a jogviszonyt. Mindegyik jogosít a leszármazottak utáni
+          adóalap-kedvezményre. Csak az örökbefogadás és az örökbefogadás előtti vagy
+          tartós nevelésbe vétel jogosít ezenfelül a hároméves kor alatti növekményre,
+          a gyermek életkorától függetlenül; az ideiglenes nevelésbe vétel és a gyámság
+          nem.
+        prompt: Kapcsolat ezzel a leszármazottal
       rentas-anuales:
         help: Hagyd üresen, ha nem tudod. A magas jövedelem megszüntetheti a kedvezményt.
         invalid_negative: A leszármazott jövedelme nem lehet negatív.
@@ -7772,8 +7839,7 @@ wizard:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
-        help: 'Leszármazotti adatok az LIRPF 58. cikk szerinti minimumhoz (megismételhető).
-          Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:

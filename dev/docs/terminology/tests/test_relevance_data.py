@@ -10,10 +10,10 @@ cannot regenerate it. These gates keep the committed artifact honest:
    Handbook concept (loaded from the real authoring tree).
 2. **target-resolves gate** -- every ``TermTargetRef.target`` deep-links to a
    surface that exists in the current build (a real casilla, concept anchor,
-   BOE permalink, API stub, doc page, or CLI ref). A STALE target -- pointing at
-   something the registry / docs no longer carry -- FAILS LOUDLY. This is the
-   drift gate: when a source changes and the relevance data is not re-swept, it
-   reds.
+   generated legal-reference page/anchor, API stub, doc page, or CLI ref). A
+   STALE target -- pointing at something the registry / docs no longer carry --
+   FAILS LOUDLY. Legal ids and targets are checked against the same generated
+   projection the injector emits; BOE links are typed provenance, never targets.
 3. **laundering / licence gate** -- the committed file carries ONLY ids /
    targets / weights: no vectors, no sparse / SPLADE term-weight maps, no raw
    score, no source path. Nothing model-derived ships (the SPLADE-licence
@@ -54,7 +54,7 @@ class _BuildSurfaces(TypedDict):
     concept_targets: set[str]
     casilla_modelos: set[str]
     casilla_targets_by_record_id: dict[str, str]
-    permalinks: set[str]
+    legal_targets_by_record_id: dict[str, str]
     cli_targets: set[str]
 
 
@@ -122,6 +122,7 @@ def build_surfaces() -> _BuildSurfaces:
     from dev.docs.terminology._casilla_projection import project_casilla_search_records
     from dev.docs.terminology._cli_projection import project_cli_search_records
     from dev.docs.terminology._concept_cards import project_concept_cards
+    from dev.docs.terminology._legal_projection import project_legal_search_records
     from dev.docs.terminology._unified_record import to_search_record
 
     concept_cards, _concept_stats = project_concept_cards(handbook)
@@ -130,10 +131,12 @@ def build_surfaces() -> _BuildSurfaces:
     unified_casillas = tuple(to_search_record(record) for record in casilla_records)
     casilla_modelos = {unified.metadata.modelo for unified in unified_casillas if unified.metadata.modelo is not None}
     casilla_targets_by_record_id = {unified.id: unified.target for unified in unified_casillas}
-    # Legal permalinks: every legal-catalogue permalink.
-    permalinks = {
-        str(entry.permalink) for entry in authority.catalogues.legal.values() if getattr(entry, "permalink", None)
-    }
+    # Legal targets: the exact record-id -> target inventory emitted by the
+    # registry-backed legal projection consumed by Pagefind injection. The
+    # projection owns the generated page/anchor target; its typed BOE
+    # permalink is destination provenance and is intentionally not indexed.
+    legal_records = project_legal_search_records(_REPO_ROOT)
+    legal_targets_by_record_id = {record.record_id: record.target for record in legal_records}
     # CLI targets: every live leaf command's real generated page+anchor, from
     # the same projection (`_cli_projection.py`) that is the sole producer of
     # committed CLI-kind relevance targets. A family-shaped regular expression
@@ -145,7 +148,7 @@ def build_surfaces() -> _BuildSurfaces:
         "concept_targets": concept_targets,
         "casilla_modelos": casilla_modelos,
         "casilla_targets_by_record_id": casilla_targets_by_record_id,
-        "permalinks": permalinks,
+        "legal_targets_by_record_id": legal_targets_by_record_id,
         "cli_targets": cli_targets,
     }
 
@@ -154,7 +157,7 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     """Return whether a deep-link target points at a surface in the current build."""
     concept_targets = surfaces["concept_targets"]
     casilla_modelos = surfaces["casilla_modelos"]
-    permalinks = surfaces["permalinks"]
+    legal_targets = set(surfaces["legal_targets_by_record_id"].values())
     cli_targets = surfaces["cli_targets"]
     # Concept card anchor: generated from the approved glossary headword.
     concept_match = re.fullmatch(r"_generated/glossary\.html#term-[A-Za-z0-9-]+", target)
@@ -168,9 +171,12 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     if casilla_match:
         return casilla_match.group("modelo") in casilla_modelos
 
-    # BOE legal permalink: must be a known catalogue permalink.
+    # Generated legal-reference page/anchor: membership in the renderer-owned
+    # inventory is required. Direct BOE URLs are provenance, never targets.
+    if target.startswith("_generated/legal/"):
+        return target in legal_targets
     if target.startswith("https://www.boe.es/"):
-        return target in permalinks
+        return False
 
     # API stub: api/<dotted>.html -> the module file must exist under src/.
     api_match = re.fullmatch(r"api/(?P<dotted>cadrumo[a-zA-Z0-9_.]+)\.html", target)
@@ -219,11 +225,34 @@ def test_every_target_resolves_in_the_current_build(
 
     The drift gate: a stale target (a casilla / concept / legal / module / page
     the build no longer carries) fails loudly, forcing a re-sweep when the
-    registry or docs change.
+    registry or docs change. Legal ids must also be emitted by the canonical
+    projection, and their targets must match it exactly.
     """
     unresolved: list[str] = []
     for mapping in relevance.mappings:
         for target in mapping.targets:
+            if target.record_id.startswith("legal:"):
+                expected_target = build_surfaces["legal_targets_by_record_id"].get(target.record_id)
+                if expected_target is None:
+                    unresolved.append(
+                        f"{mapping.query!r} -> {target.record_id} is not an emitted legal record id",
+                    )
+                elif target.surface != "legal":
+                    unresolved.append(
+                        f"{mapping.query!r} -> {target.record_id} has surface {target.surface!r}, expected 'legal'",
+                    )
+                elif target.kind is not SearchRecordKind.LEGAL:
+                    unresolved.append(
+                        f"{mapping.query!r} -> {target.record_id} has kind {target.kind.value!r}, expected 'legal'",
+                    )
+                elif target.target != expected_target:
+                    unresolved.append(
+                        f"{mapping.query!r} -> {target.record_id} target {target.target!r}, expected {expected_target!r}",
+                    )
+                continue
+            if target.surface == "legal" or target.target.startswith("https://www.boe.es/"):
+                unresolved.append(f"{mapping.query!r} -> non-canonical legal target {target.target}")
+                continue
             if not _target_resolves(target.target, build_surfaces):
                 unresolved.append(f"{mapping.query!r} -> {target.record_id} -> {target.target}")
     assert not unresolved, "relevance targets that no longer resolve in the build (re-sweep needed):\n" + "\n".join(
@@ -270,15 +299,19 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfac
     """Anti-tautology: a fabricated stale target is rejected by the resolver check.
 
     Proves the drift gate has teeth -- a target pointing at a non-existent
-    concept / casilla / module is reported as unresolved, so the gate cannot
-    pass on stale data.
+    concept / casilla / legal page / module is reported as unresolved, so the
+    gate cannot pass on stale data or direct BOE targets.
     """
     assert not _target_resolves("_generated/glossary.html#term-this-concept-does-not-exist", build_surfaces)
     assert not _target_resolves("_generated/casillas/000.html#casilla-99999", build_surfaces)
+    assert not _target_resolves("_generated/legal/not-a-real-document.html#legal-not-real", build_surfaces)
+    assert not _target_resolves("https://www.boe.es/buscar/act.php?id=BOE-A-not-a-target", build_surfaces)
     assert not _target_resolves("api/cadrumo.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
     real_concept_target = next(iter(build_surfaces["concept_targets"]))
     assert _target_resolves(real_concept_target, build_surfaces)
+    real_legal_target = next(iter(build_surfaces["legal_targets_by_record_id"].values()))
+    assert _target_resolves(real_legal_target, build_surfaces)
 
 
 def test_a_fabricated_cli_page_or_anchor_is_rejected(build_surfaces: _BuildSurfaces) -> None:
@@ -363,11 +396,17 @@ def test_prorrata_maps_to_grounding_targets(relevance: SweepResult) -> None:
     """The prorrata concept's terms deep-link to real grounding (worked example).
 
     A concrete end-to-end assertion on the committed data: at least one prorrata
-    query resolves to a BOE legal article and/or the prorrata concept card.
+    query resolves to an exact generated legal article and/or the prorrata
+    concept card. BOE provenance is checked on the real resolved record, not in
+    this laundered five-field artifact.
     """
     prorrata = [m for m in relevance.mappings if m.concept_id == "prorrata" and m.targets]
     assert prorrata, "prorrata relevance data must ship at least one grounding target; re-run the sweep"
     all_targets = [t.target for m in prorrata for t in m.targets]
+    expected_legal_targets = {
+        "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-102",
+        "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-104",
+    }
     assert any("_generated/glossary.html#term-prorrata" in t for t in all_targets) or any(
-        "boe.es" in t for t in all_targets
-    ), "prorrata maps to neither its concept card nor a BOE article"
+        t in expected_legal_targets for t in all_targets
+    ), "prorrata maps to neither its concept card nor an exact generated legal article"

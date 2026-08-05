@@ -15,7 +15,8 @@ projections (through the validated authority, never raw TOML), the live CLI
 projection, and the legal catalogue's provision vocabulary -- assigns each its
 canonical search-record id (the exact id a sweep would emit, via the shared
 :func:`~dev.docs.terminology._unified_record.to_search_record` funnel and the
-legal-target id shape :func:`~dev.docs.terminology._resolution` builds), and
+canonical :func:`~dev.docs.terminology._legal_projection.legal_target_record_id`
+helper), and
 joins that derivable surface against the record ids the committed mapping
 references. A target with no inbound reference is *uncovered*; a mapping target
 that belongs to none of the four derivable surfaces (a doc-page or source-code
@@ -49,6 +50,7 @@ from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bun
 from ._casilla_projection import project_casilla_search_records
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord, project_cli_search_records
 from ._concept_cards import ConceptCardRecord, project_concept_cards
+from ._legal_projection import legal_target_record_id
 from ._miss_rate import load_committed_relevance
 from ._search_record import CasillaSearchRecord
 from ._sweep import SweepResult
@@ -70,13 +72,6 @@ __all__ = [
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _UTF_8: Final[str] = "utf-8"
-
-#: The record-id prefix the resolution layer stamps on a legal-grounding
-#: target (``_resolution._legal_target`` builds ``id=f"legal:{legal_id}"``).
-#: Mirrored here so the derivable legal surface joins the mapping on the exact
-#: same id shape.
-_LEGAL_RECORD_ID_PREFIX: Final[str] = "legal:"
-
 
 class CoverageKind(StrEnum):
     """The four enumerable target surfaces a coverage report measures.
@@ -251,16 +246,6 @@ class CoverageReport(BaseModel):
 def coverage_report_path() -> Path:
     """Return the bundled path for the committed coverage report."""
     return bundled_path("terminology", "evaluation", "coverage-report.json")
-
-
-def legal_target_record_id(legal_id: str) -> str:
-    """Return the search-record id for a legal-catalogue provision.
-
-    Mirrors the id shape the resolution layer builds for a legal-grounding
-    target, so the derivable legal surface joins the committed mapping on the
-    same key.
-    """
-    return f"{_LEGAL_RECORD_ID_PREFIX}{legal_id}"
 
 
 def legal_provision_ids(authority: ValidatedRegistryAuthority) -> tuple[str, ...]:

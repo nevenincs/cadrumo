@@ -15,11 +15,76 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from graphlib import CycleError
 
 from ._ids import BindingId, CasillaId, RelationId
 from ._runtime_graph import formula_evaluation_order
-from ._schema import FormulaExpression, ModeloRevision
+from ._schema import (
+    CasillaDefinition,
+    FormulaDefinition,
+    FormulaExpression,
+    LegalReference,
+    ModeloRevision,
+    SourceReference,
+)
+from ._schema_input_kind import InputKind
+from ._validate_evidence import EvidenceValidator
+from ._validate_helpers import missing_refs
+from ._validate_revision_identity import duplicates
+
+
+def validate_formula_section(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+    bindings: set[BindingId],
+    parameters: set[str],
+    relations: set[RelationId],
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> None:
+    """Append formula reference, evidence, citation, and duplicate-target failures."""
+    for formula in revision.formulas:
+        owner = f"formula {formula.id}"
+        failures.extend(missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
+        failures.extend(evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance"))
+        failures.extend(
+            evidence.validate_source_citations(
+                prefix,
+                owner,
+                formula.source_refs,
+                formula.source_citations,
+                "official_source_guidance",
+            ),
+        )
+        failures.extend(
+            validate_formula_target_casilla(
+                prefix,
+                formula,
+                casillas=casillas,
+                casilla_by_id=casilla_by_id,
+            ),
+        )
+        failures.extend(
+            validate_formula_expression(
+                prefix,
+                formula.id,
+                formula.expression,
+                casillas=casillas,
+                bindings=bindings,
+                parameters=parameters,
+                relations=relations,
+            ),
+        )
+
+    for target in sorted(duplicates([formula.target_casilla_id for formula in revision.formulas])):
+        failures.append(f"{prefix}: duplicate formula target {target!r}")
 
 
 def validate_formula_dag(scope: str, revision: ModeloRevision) -> list[str]:
@@ -83,5 +148,31 @@ def validate_formula_expression(
                 parameters=parameters,
                 relations=relations,
             ),
+        )
+    return failures
+
+
+def validate_formula_target_casilla(
+    scope: str,
+    formula: FormulaDefinition,
+    *,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    """Return the bidirectional schema failures for one formula target."""
+    if formula.target_casilla_id not in casillas:
+        return [f"{scope}: formula {formula.id!r} targets unknown casilla {formula.target_casilla_id!r}"]
+
+    target_casilla = casilla_by_id[formula.target_casilla_id]
+    failures: list[str] = []
+    if target_casilla.input_kind != InputKind.COMPUTED:
+        failures.append(
+            f"{scope}: formula {formula.id!r} targets casilla {formula.target_casilla_id!r} "
+            f"declared as {target_casilla.input_kind.value!r}; formula targets must be computed",
+        )
+    if target_casilla.formula != formula.id:
+        failures.append(
+            f"{scope}: formula {formula.id!r} targets casilla {formula.target_casilla_id!r} "
+            f"whose declared formula is {target_casilla.formula!r}",
         )
     return failures

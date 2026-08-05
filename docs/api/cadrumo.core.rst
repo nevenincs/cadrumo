@@ -55,6 +55,7 @@ Submodules
    cadrumo.core._config_timeouts
    cadrumo.core._credentials
    cadrumo.core._declaracion_idioma
+   cadrumo.core._descendant_relacion
    cadrumo.core._export_layout_format
    cadrumo.core._external_oracle_corpus
    cadrumo.core._foreign_asset_obligation

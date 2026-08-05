@@ -33,7 +33,7 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile import UserProfileLifecycleRepository
-from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
+from ....domain.calculations.registry import FormulaExpression, RegistrySnapshot, resolve_parameter
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -67,6 +67,23 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-2024-profile-marriage-month-end=0",
     "--binding", "renta-2024-base-liquidable-negativa-general-anterior=0",
 )  # fmt: skip
+
+
+def _binding_flags_without(*binding_ids: str) -> tuple[str, ...]:
+    """The required-binding flags with the named bindings' ``--binding`` PAIRS dropped.
+
+    Pair-aware on purpose. The flags are a flat alternating tuple, so filtering
+    by substring removes the ``id=value`` element and leaves its ``--binding``
+    behind — which then swallows the NEXT pair's value and the one after it
+    arrives as an unexpected positional argument.
+    """
+    kept: list[str] = []
+    pairs = zip(_REQUIRED_2024_BINDING_FLAGS[::2], _REQUIRED_2024_BINDING_FLAGS[1::2], strict=True)
+    for flag, assignment in pairs:
+        if any(assignment.startswith(f"{binding_id}=") for binding_id in binding_ids):
+            continue
+        kept.extend((flag, assignment))
+    return tuple(kept)
 
 
 @pytest.fixture
@@ -340,3 +357,367 @@ def test_descendiente_remove_drops_the_row_and_recomputes_to_zero(
         and n.get("context", {}).get("source_kind") == "minimo_descendientes_undeclared"
     ]
     assert fired == [], f"an explicit descendientes_count=0 (written by remove) must not fire the advisory; got {fired}"
+
+
+# ---------------------------------------------------------------------------
+# End-to-end: the Art. 81.2 monthly guardería map, declared to calculated.
+# ---------------------------------------------------------------------------
+
+
+def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The whole surface, operator-side: declare a month map, calculate, see 0613.
+
+    Every layer below has its own test, and each of them could pass while the
+    operator still got nothing — the domain rules landed first with no way to
+    write the field, and the calculate path carried a second aggregation that
+    read only the annual figure. This drives the real CLI end to end so the
+    claim being made is the one an operator can check.
+
+    The child turns three in April, so Art. 81.2 admits only the months after
+    the birthday. The expected figure is the arithmetic of the declared months
+    themselves (three months at 200), capped by the registry's own per-child
+    ceiling — never a re-derivation of the 0613 formula, which is why the cap
+    term and the cotización are pinned high enough not to bind.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    # The declared map round-trips through the JSON transport as typed rows,
+    # expanded and month-sorted regardless of the ranges typed above.
+    list_payload = _payload(invoke_cached_cli(["--format", "json", "config", "profile", "descendiente", "list"]).output)
+    months = list_payload["descendientes"][0]["gastos_guarderia_mensuales"]
+    assert [(row["month"], row["amount_euros"]) for row in months] == [
+        (1, 150),
+        (2, 150),
+        (3, 150),
+        (4, 150),
+        (5, 200),
+        (6, 200),
+        (7, 200),
+    ]
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            # The guardería spend binding is deliberately NOT overridden here:
+            # it is the aggregate this test exists to prove the engine derives
+            # from the declared months. The cotización is set well above the
+            # post-birthday total so it cannot be what the min() picks.
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+    calc_payload = _payload(calc_result.output)
+
+    # Only May, June and July fall after the April birthday: 3 x 200.
+    assert Decimal(str(calc_payload["casilla_values"]["0613"])) == Decimal("600.00")
+
+
+def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_silent(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The zero an operator would otherwise have to explain to themselves.
+
+    An annual total spans the birthday and cannot be apportioned, so it counts
+    nothing — correctly. What makes that defensible rather than a silent
+    under-declaration is the advisory arriving on the same calculate, naming the
+    child and the key that states the months.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=2400",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("0.00")
+
+    fired = [
+        n
+        for n in unwrap_envelope_notices(calc_result.output)
+        if n.get("context", {}).get("source_kind") == "guarderia_spend_needs_monthly_detail"
+    ]
+    assert len(fired) == 1, f"the shape advisory must reach the operator; notices were {fired}"
+    assert "GASTOS_GUARDERIA_MENSUAL" in fired[0]["message"]
+
+
+def test_the_flag_refuses_both_spend_shapes_for_one_child(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """One spend authority per child, refused at the door the operator uses.
+
+    Reconciling two figures would mean choosing one silently, and whichever was
+    chosen the other would sit in the record contradicting it.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA=2400,GASTOS_GUARDERIA_MENSUAL=5-7:200",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "GASTOS_GUARDERIA_MENSUAL" in result.output
+
+
+def test_the_cotizaciones_term_binds_the_0613_cap(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The mother's SS cotizaciones is a real term of the cap, and it must BIND.
+
+    Art. 81.2 caps the increase at ``min(gastos_reales, hijos x 1.000,
+    cotizaciones_ss_madre)``. A test that only ever lets the spend term win would
+    pass against a formula that dropped the cotizaciones argument entirely, so
+    this pins the case where cotizaciones is the smallest of the three and is
+    therefore what the operator receives.
+
+    This assertion previously existed only against a domain-layer method that
+    duplicated the formula in Python and had no production consumer. Deleting
+    that method without replacing this would have left a real term's behaviour
+    asserted nowhere, while every gate stayed green — so the replacement lands in
+    the same change as the deletion, never after it.
+
+    The expected figure is the cotizaciones input itself, not a re-derivation of
+    the formula: the whole claim is that the smallest term is what comes out.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            # Spend of 2.400 across a child under three all year, so the spend
+            # term is 2400 and the population term is 1 x 1000 = 1000.
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            # The smallest of the three terms, so it is the one that must win.
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=450",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == Decimal("450.00")
+
+
+def test_the_population_term_binds_the_0613_cap(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The per-child ceiling is the other term that must be able to win.
+
+    With spend and cotizaciones both above it, the result is the population
+    count times the registry's own per-child ceiling. Pinned for the same reason
+    as the cotizaciones case: a formula that dropped this argument would still
+    satisfy every test in which the spend term happened to be smallest.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    add_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2022-06-01,GASTOS_GUARDERIA=2400",
+        ],
+    )  # fmt: skip
+    assert add_result.exit_code == 0, add_result.output
+
+    work_unit_id = create_modelo_work_unit_via_cli(modelo="100", filing_year=2024, period="0A", revision="2024")
+    calc_result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            *_binding_flags_without(
+                "renta-2024-profile-guarderia-gastos-reales",
+                "renta-2024-profile-cotizaciones-ss-madre",
+            ),
+            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+        ],
+    )  # fmt: skip
+    assert calc_result.exit_code == 0, calc_result.output
+
+    # One eligible child, so the population term is the registry's per-child
+    # ceiling once. Read from the registry rather than restated here.
+    assert Decimal(str(_payload(calc_result.output)["casilla_values"]["0613"])) == _registry_guarderia_per_child_cap()
+
+
+def _registry_guarderia_per_child_cap() -> Decimal:
+    """The Art. 81.2 per-child ceiling as the live 0613 formula carries it.
+
+    Read off the formula rather than restated, so a revision that moved the
+    ceiling moves this expectation with it instead of reddening a test that was
+    right about the law and stale about the figure.
+    """
+    from ....core.resources import resources
+
+    snapshot = resources().modelos.authority.snapshot("100", filing_year=2024, period="0A")
+    formula = next(f for f in snapshot.revision.formulas if f.target_casilla_id == "0613")
+    literals = _literals_in(formula.expression)
+    assert len(literals) == 1, f"expected exactly one literal in the 0613 formula; found {literals}"
+    return Decimal(literals[0])
+
+
+def _literals_in(node: FormulaExpression) -> list[str]:
+    """Collect every ``literal`` value in a compiled formula expression tree.
+
+    Walks the typed :class:`FormulaExpression` the registry compiles to, not a
+    raw mapping: reading the TOML shape instead would make this assert against
+    the authoring form rather than the one the engine evaluates.
+    """
+    found = [] if node.literal is None else [str(node.literal)]
+    for child in node.args:
+        found.extend(_literals_in(child))
+    return found
+
+
+# ---------------------------------------------------------------------------
+# Canonical-record refusals reach the operator translated, not as a traceback.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_a_record_level_refusal_is_translated_in_every_catalogue(
+    runtime_profile: TestRuntimeProfile,
+    locale: str,
+) -> None:
+    """The coherence rules this Phase shipped must reach the operator as themselves.
+
+    The ``--descendiente`` flag has two families of guard. The parser's own
+    pre-validations raise the typed answer error, which this verb has always
+    translated. The canonical record's validators raise through pydantic, and
+    that arm was unhandled.
+
+    It did NOT produce a traceback — the boundary has a catch-all that projected
+    it to a generic translated refusal. The defect is subtler and was measured
+    rather than assumed: the operator got "validation failed" in their own
+    language while the validator's sentence, which names the conflicting field
+    and both ways out, was discarded on the way. Careful copy existed and nobody
+    ever saw it.
+
+    Driven through the real CLI rather than by calling the parser, because the
+    parser was never the broken part: the gap was between what it raised and what
+    the verb caught. Parametrised over all four catalogues because a refusal that
+    resolves in one locale and not another is the same class one step out.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            # A tutela guardian carrying an adoption anchor: entitling for the
+            # tranches, excluded from the Art. 58.2 increase, and refused by the
+            # record precisely so the excluded case cannot claim it.
+            "--descendiente", "NACIMIENTO=2015-01-01,RELACION=tutela,INSCRIPCION=2020-01-01",
+            # The language option belongs to the verb, not the root. Placed at
+            # the root it is refused as an unknown option -- which this test
+            # caught by failing loudly on the wrong refusal rather than passing.
+            "--output-language", locale,
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    # The refusal, not a traceback: no exception class name and no pydantic
+    # apparatus reaches the operator.
+    assert "ValidationError" not in result.output
+    assert "Traceback" not in result.output
+    assert "For further information visit" not in result.output
+    # And the validator's own sentence does, naming the field and the conflict.
+    assert "inscripcion_registro_civil_date" in result.output
+    assert "tutela" in result.output
+
+
+def test_a_record_level_refusal_does_not_echo_the_operators_record(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The refusal must not repeat the record under construction back at the operator.
+
+    A pydantic error carries an ``input`` echo of every field it was validating.
+    On this surface those are a taxpayer's family facts, and the unhandled arm
+    wrote them to the error log — birth date, relación and cohabitation in clear,
+    with only the NIF redacted. Catching the refusal before the boundary is what
+    stops that, so this pins the operator-facing half and the log line goes with
+    it.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2015-01-01,RELACION=tutela,INSCRIPCION=2020-01-01",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "input_value" not in result.output
+    assert "datetime.date" not in result.output
+
+
+def test_the_parser_refusal_family_still_translates(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The arm that already worked must keep working.
+
+    Widening the caught set is exactly the change that quietly reroutes an
+    existing refusal through the new arm, so the original family is pinned too.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2015-01-01,DISCAPACIDAD=50",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "DISCAPACIDAD" in result.output

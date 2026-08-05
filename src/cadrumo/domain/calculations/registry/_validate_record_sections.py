@@ -25,8 +25,14 @@ from ._bindings import (
     is_layout_binding_selector,
     validate_binding_selector_shape,
 )
-from ._ids import BindingId, CasillaId, RelationId
-from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
+from ._ids import BindingId, CasillaId
+from ._schema import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    LegalReference,
+    ModeloRevision,
+    SourceReference,
+)
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
     validate_bbox_anchor_consistency,
@@ -35,9 +41,7 @@ from ._validate_extraction_profiles import (
     validate_dotted_callable,
     validate_extraction_profile_artefacts,
 )
-from ._validate_formulas import validate_formula_expression
 from ._validate_helpers import missing_refs
-from ._validate_revision_identity import duplicates
 from ._validate_revision_rules import validate_dated_values
 
 _CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
@@ -119,60 +123,6 @@ def validate_casilla_section(
         for export_ref in casilla.export_refs:
             if export_ref not in export_field_ids:
                 failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")
-
-
-def validate_formula_section(
-    failures: list[str],
-    *,
-    prefix: str,
-    revision: ModeloRevision,
-    casillas: set[CasillaId],
-    bindings: set[BindingId],
-    parameters: set[str],
-    relations: set[RelationId],
-    legal_refs: Mapping[str, LegalReference],
-    source_refs: Mapping[str, SourceReference],
-    evidence: EvidenceValidator,
-) -> None:
-    """Append formula reference, evidence, citation, and duplicate-target failures.
-
-    The :class:`~domain.calculations.registry.ModeloRevision` supplies
-    :class:`~domain.calculations.registry.FormulaDefinition` rows. Each
-    formula must cite official-source guidance, target a declared
-    :class:`~domain.calculations.registry.CasillaId`, and contain only
-    expression references accepted by
-    :func:`~domain.calculations.registry._validate_formulas.validate_formula_expression`.
-    """
-    for formula in revision.formulas:
-        owner = f"formula {formula.id}"
-        failures.extend(missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
-        failures.extend(missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance"))
-        failures.extend(
-            evidence.validate_source_citations(
-                prefix,
-                owner,
-                formula.source_refs,
-                formula.source_citations,
-                "official_source_guidance",
-            ),
-        )
-        if formula.target_casilla_id not in casillas:
-            failures.append(f"{prefix}: formula {formula.id!r} targets unknown casilla {formula.target_casilla_id!r}")
-        failures.extend(
-            validate_formula_expression(
-                prefix,
-                formula.id,
-                formula.expression,
-                casillas=casillas,
-                bindings=bindings,
-                parameters=parameters,
-                relations=relations,
-            ),
-        )
-
-    for target in sorted(duplicates([formula.target_casilla_id for formula in revision.formulas])):
-        failures.append(f"{prefix}: duplicate formula target {target!r}")
 
 
 def validate_parameter_section(
