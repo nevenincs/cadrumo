@@ -2560,6 +2560,9 @@ cli:
         view_help: Show one verification report by id
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
+        actor_too_long: The --by label must be at most {limit} characters; received
+          {length}. It names the actor on the audit event this command records, so
+          give a short operator or agent name.
         allow_not_applicable_help: Create the work unit even when the modelo does
           not apply to the active profile's taxpayer type.
         amend_help: Build a corrective amendment over an externally-filed return.
@@ -2968,7 +2971,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        actor_too_long: 'The --by label must be at most {limit} characters; received {length}. It names the actor on the audit event this command records, so give a short operator or agent name.'
     quickfile:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits
@@ -4565,10 +4567,11 @@ cli:
     remove_key_help: Dotted locale key to remove.
     remove_locale_help: Locale code to update.
     scaffold_check_help: Report drift without writing locale files
+    set_batch_manifest_help: JSON object mapping locale codes to dotted-key scalar
+      maps.
     set_key_help: Dotted locale key to set.
     set_locale_help: Locale code to update (e.g. en, es, ca).
     set_value_help: Replacement locale value.
-    set_batch_manifest_help: 'JSON object mapping locale codes to dotted-key scalar maps.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -6932,10 +6935,16 @@ modelo:
           irpf-deduccion-andalucia-vivienda-habitual-protegida:
             help: null
             label: null
+          irpf-deduccion-aragon-acogimiento-ucrania:
+            help: null
+            label: null
           irpf-deduccion-aragon-adopcion-internacional:
             help: null
             label: null
           irpf-deduccion-aragon-arrendamiento-social:
+            help: null
+            label: null
+          irpf-deduccion-aragon-ayuda-humanitaria-ucrania:
             help: null
             label: null
           irpf-deduccion-aragon-cuidado-dependientes:
@@ -7007,21 +7016,9 @@ modelo:
           irpf-deduccion-asturias-vivienda-discapacitados:
             help: null
             label: null
-          irpf-deduccion-autonomica-aragon-acogimiento-ucrania:
-            help: null
-            label: null
-          irpf-deduccion-autonomica-aragon-ayuda-humanitaria-ucrania:
-            help: null
-            label: null
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
             label: null
-          irpf-deduccion-autonomica-baleares-prestamo-hipotecario-incremento:
-            help: null
-            label: null
-          irpf-deduccion-autonomica-galicia-otras:
-            help: Enter other deductions.
-            label: Other deductions
           irpf-deduccion-autonomica-otro-importe:
             help: null
             label: null
@@ -7056,6 +7053,9 @@ modelo:
             help: null
             label: null
           irpf-deduccion-baleares-mecenazgo-deportivo:
+            help: null
+            label: null
+          irpf-deduccion-baleares-prestamo-hipotecario-incremento:
             help: null
             label: null
           irpf-deduccion-baleares-subvenciones-declaracion-sinistro:
@@ -7386,6 +7386,9 @@ modelo:
           irpf-deduccion-galicia-nuevas-tecnologias:
             help: null
             label: null
+          irpf-deduccion-galicia-otras:
+            help: Enter other deductions.
+            label: Other deductions
           irpf-deduccion-galicia-rehabilitacion-centros-historicos:
             help: null
             label: null

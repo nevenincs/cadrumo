@@ -7269,10 +7269,16 @@ modelo:
           irpf-deduccion-andalucia-vivienda-habitual-protegida:
             help: null
             label: null
+          irpf-deduccion-aragon-acogimiento-ucrania:
+            help: null
+            label: null
           irpf-deduccion-aragon-adopcion-internacional:
             help: null
             label: null
           irpf-deduccion-aragon-arrendamiento-social:
+            help: null
+            label: null
+          irpf-deduccion-aragon-ayuda-humanitaria-ucrania:
             help: null
             label: null
           irpf-deduccion-aragon-cuidado-dependientes:
@@ -7344,21 +7350,9 @@ modelo:
           irpf-deduccion-asturias-vivienda-discapacitados:
             help: null
             label: null
-          irpf-deduccion-autonomica-aragon-acogimiento-ucrania:
-            help: null
-            label: null
-          irpf-deduccion-autonomica-aragon-ayuda-humanitaria-ucrania:
-            help: null
-            label: null
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
             label: null
-          irpf-deduccion-autonomica-baleares-prestamo-hipotecario-incremento:
-            help: null
-            label: null
-          irpf-deduccion-autonomica-galicia-otras:
-            help: Adja meg az egyéb kedvezményeket.
-            label: Egyéb kedvezmények
           irpf-deduccion-autonomica-otro-importe:
             help: null
             label: null
@@ -7393,6 +7387,9 @@ modelo:
             help: null
             label: null
           irpf-deduccion-baleares-mecenazgo-deportivo:
+            help: null
+            label: null
+          irpf-deduccion-baleares-prestamo-hipotecario-incremento:
             help: null
             label: null
           irpf-deduccion-baleares-subvenciones-declaracion-sinistro:
@@ -7724,6 +7721,9 @@ modelo:
           irpf-deduccion-galicia-nuevas-tecnologias:
             help: null
             label: null
+          irpf-deduccion-galicia-otras:
+            help: Adja meg az egyéb kedvezményeket.
+            label: Egyéb kedvezmények
           irpf-deduccion-galicia-rehabilitacion-centros-historicos:
             help: null
             label: null

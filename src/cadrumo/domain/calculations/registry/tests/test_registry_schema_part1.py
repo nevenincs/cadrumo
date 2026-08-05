@@ -813,7 +813,7 @@ def test_casilla_accepts_continuidad_id_roundtrip() -> None:
             "localization_keys": ("test.schema.casilla.label",),
             "section": ("base",),
             "data_type": "money",
-            "continuidad_id": "renta.base-liquidacion.general",
+            "continuidad_id": "renta-base-liquidacion-general",
             "legal_refs": ("ley-35-2006:art-48",),
             "source_refs": ("aeat-manual",),
         },
@@ -824,7 +824,38 @@ def test_casilla_accepts_continuidad_id_roundtrip() -> None:
     )
 
     assert restored == casilla
-    assert restored.continuidad_id == "renta.base-liquidacion.general"
+    assert restored.continuidad_id == "renta-base-liquidacion-general"
+
+
+def test_casilla_continuidad_id_refuses_a_dotted_segment() -> None:
+    """A chain id must be one plain locale-key segment, so dots are refused.
+
+    The chain id is embedded whole into the shared locale key as
+    ``modelo.schema.<modelo>.casilla.continuidad.<chain-id>.<field>``, and
+    ``encode_modelo_locale_segment`` base32-encodes any segment that is not
+    ``[A-Za-z0-9_-]+``. A dotted id therefore renders its own continuity key as
+    an opaque ``x-...`` blob in all four catalogues -- a translator sees the blob
+    and never the concept.
+
+    The pattern used to permit ``.`` and ``:``, so nothing refused such an id and
+    the damage surfaced only as unreadable keys afterwards; eleven Modelo 100
+    pilots shipped that way before being converted. This asserts the refusal at
+    the boundary, so the class cannot return by loosening the pattern back.
+    """
+    for rejected in ("irpf.inmueble.porcentaje-propiedad", "irpf:inmueble"):
+        with pytest.raises(ValidationError, match="continuidad_id"):
+            CasillaDefinition.model_validate(
+                {
+                    "id": "0700",
+                    "number": "0700",
+                    "localization_keys": ("test.schema.casilla.label",),
+                    "section": ("base",),
+                    "data_type": "money",
+                    "continuidad_id": rejected,
+                    "legal_refs": ("ley-35-2006:art-48",),
+                    "source_refs": ("aeat-manual",),
+                },
+            )
 
 
 def test_casilla_continuidad_id_uses_registry_id_shape() -> None:
@@ -846,7 +877,7 @@ def test_casilla_continuidad_evolution_rejects_same_revision_pair() -> None:
     with pytest.raises(ValidationError, match="must span two different revisions"):
         CasillaContinuidadEvolutionDefinition(
             id="renta-2024-self-evolution",
-            continuidad_id="renta.base-liquidacion.general",
+            continuidad_id="renta-base-liquidacion-general",
             from_revision="2024",
             to_revision="2024",
             evolution_kind="label_evolved",

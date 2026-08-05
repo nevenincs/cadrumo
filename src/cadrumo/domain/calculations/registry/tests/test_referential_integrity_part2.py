@@ -514,7 +514,7 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
     """Continuity-evolution legal/source refs are load-blocking catalogue references."""
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
-        continuidad_id="test.continuidad",
+        continuidad_id="test-continuidad",
         from_revision="2024",
         to_revision="2025",
         evolution_kind="label_evolved",
@@ -542,7 +542,7 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
 def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executable_parity() -> None:
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
-        continuidad_id="test.continuidad",
+        continuidad_id="test-continuidad",
         from_revision="2024",
         to_revision="2025",
         evolution_kind="label_evolved",
@@ -576,7 +576,7 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
     )
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
-        continuidad_id="test.continuidad",
+        continuidad_id="test-continuidad",
         from_revision="2024",
         to_revision="2025",
         evolution_kind="legal_refs_evolved",
@@ -641,7 +641,7 @@ def test_snapshot_integrity_checks_casilla_continuidad_evolution_refs() -> None:
     """Snapshot integrity rejects continuity-evolution refs missing from the slice catalogue."""
     evolution = CasillaContinuidadEvolutionDefinition(
         id="test-continuidad-2024-2025",
-        continuidad_id="test.continuidad",
+        continuidad_id="test-continuidad",
         from_revision="2024",
         to_revision="2025",
         evolution_kind="label_evolved",

@@ -2769,6 +2769,9 @@ cli:
         view_help: Mostrar un informe de verificación por id
       work:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
+        actor_too_long: La etiqueta --by debe tener como máximo {limit} caracteres;
+          se recibieron {length}. Identifica al actor del evento de auditoría que
+          registra este comando, así que indica un nombre corto de operador o agente.
         allow_not_applicable_help: Crear la unidad de trabajo aunque el modelo no
           aplique al tipo de contribuyente del perfil activo.
         amend_help: Construir una declaración complementaria sobre una declaración
@@ -3208,7 +3211,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        actor_too_long: 'La etiqueta --by debe tener como máximo {limit} caracteres; se recibieron {length}. Identifica al actor del evento de auditoría que registra este comando, así que indica un nombre corto de operador o agente.'
     quickfile:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
@@ -4922,10 +4924,11 @@ cli:
     remove_key_help: Clave de locale con puntos que se eliminará.
     remove_locale_help: Código de locale a actualizar.
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
+    set_batch_manifest_help: Objeto JSON que asigna códigos de idioma a mapas de claves
+      con puntos.
     set_key_help: Clave de locale con formato de puntos a establecer.
     set_locale_help: Código del locale a actualizar (p. ej. en, es, ca).
     set_value_help: Valor de locale a establecer.
-    set_batch_manifest_help: 'Objeto JSON que asigna códigos de idioma a mapas de claves con puntos.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -7478,12 +7481,20 @@ modelo:
             help: null
             label: Por inversión en vivienda habitual que tenga la consideración de
               protegida y por las personas jóvenes
+          irpf-deduccion-aragon-acogimiento-ucrania:
+            help: null
+            label: Por acogimiento de personas o familias ucranianas desplazadas con
+              motivo del conflicto armado en su país
           irpf-deduccion-aragon-adopcion-internacional:
             help: null
             label: Por adopción internacional de niños
           irpf-deduccion-aragon-arrendamiento-social:
             help: null
             label: Por arrendamiento de vivienda social (deducción arrendador)
+          irpf-deduccion-aragon-ayuda-humanitaria-ucrania:
+            help: null
+            label: Por ayudas de carácter humanitario al pueblo ucraniano con motivo
+              del conflicto armado en su país
           irpf-deduccion-aragon-cuidado-dependientes:
             help: null
             label: Por el cuidado de personas dependientes
@@ -7560,25 +7571,10 @@ modelo:
             help: null
             label: Por adquisición o adecuación de vivienda habitual para contribuyentes
               con discapacidad
-          irpf-deduccion-autonomica-aragon-acogimiento-ucrania:
-            help: null
-            label: Por acogimiento de personas o familias ucranianas desplazadas con
-              motivo del conflicto armado en su país
-          irpf-deduccion-autonomica-aragon-ayuda-humanitaria-ucrania:
-            help: null
-            label: Por ayudas de carácter humanitario al pueblo ucraniano con motivo
-              del conflicto armado en su país
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
             label: Importe de la deducción autonómica por el arrendamiento de vivienda
               habitual vinculado a determinadas operaciones de dación en pago
-          irpf-deduccion-autonomica-baleares-prestamo-hipotecario-incremento:
-            help: null
-            label: Para compensar el incremento del coste de los préstamos o créditos
-              hipotecarios con tipo de interés variable
-          irpf-deduccion-autonomica-galicia-otras:
-            help: null
-            label: Otras deducciones
           irpf-deduccion-autonomica-otro-importe:
             help: null
             label: Importe total de la deducción
@@ -7624,6 +7620,10 @@ modelo:
             help: null
             label: Por donaciones, cesiones de uso o contratos de comodato y convenios
               de colaboración, relativos al mecenazgo deportivo
+          irpf-deduccion-baleares-prestamo-hipotecario-incremento:
+            help: null
+            label: Para compensar el incremento del coste de los préstamos o créditos
+              hipotecarios con tipo de interés variable
           irpf-deduccion-baleares-subvenciones-declaracion-sinistro:
             help: null
             label: Por determinadas subvenciones y ayudas otorgadas por razón de una
@@ -8001,6 +8001,9 @@ modelo:
             help: null
             label: Por gastos dirigidos al uso de nuevas tecnologías en los hogares
               gallegos
+          irpf-deduccion-galicia-otras:
+            help: null
+            label: Otras deducciones
           irpf-deduccion-galicia-rehabilitacion-centros-historicos:
             help: null
             label: Por rehabilitación de bienes inmuebles situados en centros históricos

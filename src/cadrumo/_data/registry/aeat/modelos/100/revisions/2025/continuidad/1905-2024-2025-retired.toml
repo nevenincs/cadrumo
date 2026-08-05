@@ -1,6 +1,6 @@
 [[revisions."2025".casilla_continuidad_evolutions]]
 id = "m100-1905-2024-2025-retired"
-continuidad_id = "irpf-deduccion-autonomica-baleares-prestamo-hipotecario-incremento"
+continuidad_id = "irpf-deduccion-baleares-prestamo-hipotecario-incremento"
 from_revision = "2024"
 to_revision = "2025"
 evolution_kind = "retired"

@@ -2744,6 +2744,9 @@ cli:
         view_help: Mostrar un informe de verificació per id
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
+        actor_too_long: L'etiqueta --by ha de tenir com a màxim {limit} caràcters;
+          se n'han rebut {length}. Identifica l'actor de l'esdeveniment d'auditoria
+          que registra aquesta ordre, així que indica un nom curt d'operador o agent.
         allow_not_applicable_help: Crea la unitat de treball encara que el model no
           s'apliqui al tipus de contribuent del perfil actiu.
         amend_help: Construir una declaració complementària sobre una declaració presentada
@@ -3186,7 +3189,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        actor_too_long: 'L''etiqueta --by ha de tenir com a màxim {limit} caràcters; se n''han rebut {length}. Identifica l''actor de l''esdeveniment d''auditoria que registra aquesta ordre, així que indica un nom curt d''operador o agent.'
     quickfile:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
@@ -4885,10 +4887,11 @@ cli:
     remove_key_help: Clau de locale amb punts que s'eliminarà.
     remove_locale_help: Codi de locale que s'ha d'actualitzar.
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
+    set_batch_manifest_help: Objecte JSON que assigna codis d'idioma a mapes de claus
+      amb punts.
     set_key_help: Clau de locale amb format de punts a establir.
     set_locale_help: Codi del locale a actualitzar (p. ex. en, es, ca).
     set_value_help: Valor de locale a establir.
-    set_batch_manifest_help: 'Objecte JSON que assigna codis d''idioma a mapes de claus amb punts.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -7380,10 +7383,16 @@ modelo:
           irpf-deduccion-andalucia-vivienda-habitual-protegida:
             help: null
             label: null
+          irpf-deduccion-aragon-acogimiento-ucrania:
+            help: null
+            label: null
           irpf-deduccion-aragon-adopcion-internacional:
             help: null
             label: null
           irpf-deduccion-aragon-arrendamiento-social:
+            help: null
+            label: null
+          irpf-deduccion-aragon-ayuda-humanitaria-ucrania:
             help: null
             label: null
           irpf-deduccion-aragon-cuidado-dependientes:
@@ -7455,21 +7464,9 @@ modelo:
           irpf-deduccion-asturias-vivienda-discapacitados:
             help: null
             label: null
-          irpf-deduccion-autonomica-aragon-acogimiento-ucrania:
-            help: null
-            label: null
-          irpf-deduccion-autonomica-aragon-ayuda-humanitaria-ucrania:
-            help: null
-            label: null
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
             label: null
-          irpf-deduccion-autonomica-baleares-prestamo-hipotecario-incremento:
-            help: null
-            label: null
-          irpf-deduccion-autonomica-galicia-otras:
-            help: Introduïu altres deduccions.
-            label: Altres deduccions
           irpf-deduccion-autonomica-otro-importe:
             help: null
             label: null
@@ -7504,6 +7501,9 @@ modelo:
             help: null
             label: null
           irpf-deduccion-baleares-mecenazgo-deportivo:
+            help: null
+            label: null
+          irpf-deduccion-baleares-prestamo-hipotecario-incremento:
             help: null
             label: null
           irpf-deduccion-baleares-subvenciones-declaracion-sinistro:
@@ -7835,6 +7835,9 @@ modelo:
           irpf-deduccion-galicia-nuevas-tecnologias:
             help: null
             label: null
+          irpf-deduccion-galicia-otras:
+            help: Introduïu altres deduccions.
+            label: Altres deduccions
           irpf-deduccion-galicia-rehabilitacion-centros-historicos:
             help: null
             label: null
