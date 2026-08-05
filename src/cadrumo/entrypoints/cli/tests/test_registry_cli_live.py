@@ -376,14 +376,15 @@ def test_live_iva_wallet_read_verbs_expose_help_without_leaking_internals() -> N
     check a safety property is the shape the no-localized-prose discipline
     exists to prevent.
 
-    The property is not expressible structurally today, which is why nothing
-    replaces it. The command classification's ``read_only`` axis derives from
-    the FAMILY's mutability, so a read verb in a mixed family cannot carry it;
-    and the per-command live-write axis is declared by no verb on the whole
-    surface, so asserting it false cannot fail for any verb. Restoring the
-    check needs a per-command no-live-write declaration that discriminates.
-    The gap is left open and visible rather than covered by an assertion that
-    runs in one language.
+    The property is now checked structurally, surface-wide, rather than here:
+    every exposed command must carry a risk ASSESSMENT and must declare no AEAT
+    live write. The assessment half is what makes the claim falsifiable -- a
+    live-write value of False holds for every command, so on its own it cannot
+    tell a verb judged safe from one nobody has looked at.
+
+    That check covers these five verbs along with the rest of the surface, in
+    every language, which is strictly more than the retired prose assertion
+    gave. What remains below is the operator-facing surface itself.
 
     What remains is language-independent: every read verb is wired and renders
     help, ``history`` offers the ``--as-of-year`` axis, and ``remote-state`` --
