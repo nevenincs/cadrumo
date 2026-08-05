@@ -966,6 +966,38 @@ class RentaIncomeObservationProtocol(Protocol):
     def withheld_amount(self) -> Decimal: ...
 
 
+def _renta_income_build_matcher(
+    selector: _RentaLedgerIncomeSelector,
+) -> Callable[[RentaIncomeObservationProtocol], bool]:
+    target_casilla_id = selector.target_casilla_id
+
+    def matcher(observation: RentaIncomeObservationProtocol) -> bool:
+        return observation.target_casilla_id == target_casilla_id
+
+    return matcher
+
+
+def _renta_income_aggregate(
+    matched: Sequence[RentaIncomeObservationProtocol],
+    selector: _RentaLedgerIncomeSelector,
+) -> Decimal:
+    if selector.fact == "ingresos_integros_sum":
+        return sum(
+            (
+                observation.taxable_base_amount
+                if observation.taxable_base_amount is not None
+                else observation.gross_amount
+                for observation in matched
+            ),
+            Decimal("0"),
+        )
+    if selector.fact == "taxable_base_sum":
+        return sum((observation.taxable_base_amount or Decimal("0") for observation in matched), Decimal("0"))
+    if selector.fact == "withheld_amount_sum":
+        return sum((observation.withheld_amount for observation in matched), Decimal("0"))
+    return sum((observation.gross_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_renta_income_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],
@@ -978,40 +1010,22 @@ def resolve_ledger_renta_income_aggregation_binding_values(
     fallback); ``"gross_income_sum"`` → ``observation.gross_amount``;
     ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
     ``None``); ``"withheld_amount_sum"`` → ``observation.withheld_amount``.
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings are resolved.
         observations: Renta income ledger lines to aggregate over.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
-            continue
-        selector = _renta_ledger_income_selector(binding)
-        matched = [
-            observation for observation in available if observation.target_casilla_id == selector.target_casilla_id
-        ]
-        if selector.fact == "ingresos_integros_sum":
-            resolved[binding.id] = sum(
-                (
-                    observation.taxable_base_amount
-                    if observation.taxable_base_amount is not None
-                    else observation.gross_amount
-                    for observation in matched
-                ),
-                Decimal("0"),
-            )
-        elif selector.fact == "taxable_base_sum":
-            resolved[binding.id] = sum(
-                (observation.taxable_base_amount or Decimal("0") for observation in matched),
-                Decimal("0"),
-            )
-        elif selector.fact == "withheld_amount_sum":
-            resolved[binding.id] = sum((observation.withheld_amount for observation in matched), Decimal("0"))
-        else:
-            resolved[binding.id] = sum((observation.gross_amount for observation in matched), Decimal("0"))
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+        parse_selector=_renta_ledger_income_selector,
+        build_matcher=_renta_income_build_matcher,
+        aggregate=_renta_income_aggregate,
+    )
 
 
 def unsupported_ledger_renta_income_observations(
