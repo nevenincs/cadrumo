@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:8212a8442c293734f31f1d3ec79671c8e29dd7b68741318d56d24b42c93f755f'
+body_hash: 'sha256:785a8355dd2a91c8cb81a73f3626862cb0906553dda232287f783b604b3e9c5d'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -72,6 +72,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [ ] `P04.S23` - Add the Art. 81.1 post-birth alta increment, 150 euros for the month completing the 30-day contribution period, raising that child cap to 1.350 euros for filing years from 2023 only, gated on a new operator-supplied fact naming that month; `src/cadrumo/core/external_constants.py, src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`.
 - [ ] `P04.S24` - Collapse the two family-record reconstructions in _profile_binding onto one, because the guarderia path pre-checks birth dates per index but omits the anualidades that suppress dependency assimilation while the minimo and maternidad path carries anualidades but skips the pre-check, so one malformed stored birth date names its row on one path and not the other, and a predicate that later consults anualidades would silently over-grant on the guarderia path; `src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S25` - Escalate the stale ley-35-2006 art-81 corpus excerpt for operator refresh, because its apartado 1 carries the post-2023 widened supuestos while its apartado 2 still carries the cotizaciones ceiling the bundled AEAT manual states was removed from 2023, and the 150 euro post-alta increment is absent entirely, so the excerpt is a two-vintage hybrid that cannot gate the required_text for any clause S15 or S23 implement; `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-81.html`.
+- [ ] `P04.S26` - Apply the pre-2023 cotizaciones ceiling to the computed casilla 0611 for filing years through 2022 or refuse to compute it for those years, because wiring the deduccion made a figure the operator used to supply themselves into one this application computes, and the computation applies only the 1200 euro cap while the law in force through 2022 additionally limited the deduction to the mother total Seguridad Social cotizaciones, so a mother whose cotizaciones fell below her accrued months is now over-granted by a figure this campaign introduced; `src/cadrumo/domain/contribuyente/_deduccion_maternidad.py, src/cadrumo/application/modelo/_profile_binding.py`.
 
 ## Parallelization
 
