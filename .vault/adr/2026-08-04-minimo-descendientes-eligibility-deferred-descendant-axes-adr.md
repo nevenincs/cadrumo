@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:59daf9761d5ef3ddb184697ec0e8754f7225f29f33d5c1002bf9883078928a58'
+body_hash: 'sha256:2a252e92a6ad7ab9bf9a8ad8c127c6e60986f3aaaf8585cd40a267161f46dbd2'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -230,6 +230,46 @@ the question, instead of to a figure we computed and they cannot verify.
 **Sequencing effect.** The monthly spend model is no longer blocked. The regional table is
 retired as a precondition and should not be built. What remains is the shape, the entry
 surface, the birthday bound and the caps — all unblocked.
+
+
+### Grounding for the maternidad decision: it is not the binary the row poses
+
+Recorded as decision input, not as the decision. Three Steps wait on whether the Art. 81.1
+maternidad months are operator-asserted or engine-derived. Grounding the deduction against
+the live authority shows the question decomposes into three parts with three different
+answers, and that the binary framing is what makes it look hard.
+
+**The eligible child is defined by our own predicate.** The authority states the deduction is
+for women with children under three **"con derecho a la aplicación del mínimo por
+descendientes"**. So the child-side condition is not a separate rule to be asserted or
+re-derived — it *is* the mínimo eligibility this campaign has spent its length correcting.
+The engine already computes it, for that exact child, from facts already on the profile.
+Leaving it unenforced means the application ignores an answer it holds, on the same
+descendant, in the same calculation.
+
+**The month arithmetic is computable and has two rules worth stating**: the month of birth
+counts in full, and the month in which the child turns three does **not** count. Both follow
+from a birth date the profile carries. Neither is an operator judgement.
+
+**Only the employment condition is genuinely the operator's**, and it is genuinely outside
+our data: the mother must have been receiving contributory or assistance unemployment
+benefit at the birth, or be registered with Social Security or a mutualidad with at least
+thirty days contributed. That is her employment history, which the application does not hold
+and should not guess. It is also independently reported to the authority by a separate
+informative return, so the operator's figure is checkable against a record the authority
+already has — the same structure as the childcare months.
+
+**So the shape that follows the law is a hybrid**, and it mirrors the guardería resolution
+reached earlier: the operator supplies what only they know, the engine applies what it can
+compute, and neither re-derives the other's part. Operator-supplied employment months;
+engine-derived child eligibility, from the mínimo predicate; engine-computed month
+arithmetic from the birth date.
+
+**A rule surfaced that appears unmodelled anywhere.** Where the Social Security registration
+follows the birth, the month in which the thirty-day contribution period completes carries an
+additional amount, making that single month materially larger than the ordinary monthly
+figure. Nothing in the current path expresses it. Direction is under-grant, and it belongs in
+whichever Step takes the maternidad work rather than being discovered afterwards.
 
 
 ## Amendment: a design review corrected all four decisions, and refuted one
