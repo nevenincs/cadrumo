@@ -470,11 +470,21 @@ class LedgerRentaIncomeAggregationSourceResolver:
         )
 
 
-# How many contributing transaction ids the advisory names before it stops and
-# reports a remainder. The diagnostic message is length-bounded, and an operator
-# needs a handle on the rows rather than the whole list; the count and sum are
-# always exact, and the truncation is always stated (never a silent cap).
-_UNGROUNDED_INCOME_ID_SAMPLE = 5
+# The character budget an advisory message must fit, read from the field that
+# enforces it rather than restated as a literal -- a hardcoded copy silently
+# stops matching the moment the model's own limit moves, and the failure lands
+# as a ValidationError raised from inside the diagnostic that was supposed to
+# keep the operator informed.
+#
+# An operator needs a handle on the offending rows, not the whole list, so the
+# id sample is fitted to whatever budget the prose leaves. The count and the
+# summed cash are always exact and the omission is always stated, so the list
+# shortens but never becomes a silent cap.
+_DIAGNOSTIC_MESSAGE_MAX: int = next(
+    meta.max_length
+    for meta in CalculationSourceDiagnostic.model_fields["message"].metadata
+    if getattr(meta, "max_length", None) is not None
+)
 
 
 def _ungrounded_income_consequence(facts: frozenset[str]) -> str:
@@ -510,9 +520,19 @@ def _ungrounded_income_diagnostics(
     Deliberately aggregate rather than per-row: an advisory that fires once per
     transaction trains operators to ignore it, and the actionable unit here is
     "how much of my declared income has no invoice behind it", not each row.
-    The count and the summed cash are exact; the transaction-id list is capped
-    at :data:`_UNGROUNDED_INCOME_ID_SAMPLE` with the remainder stated, so the
-    truncation is visible rather than silent.
+    The count and the summed cash are always exact; only the transaction-id
+    list is abbreviated, and the omitted count is stated so the truncation is
+    visible rather than silent.
+
+    The id list is fitted to the diagnostic's own character budget rather than
+    to a fixed number of ids. Bounding by id COUNT was a proxy for the real
+    constraint: :class:`CalculationSourceDiagnostic` caps ``message`` at
+    :data:`_DIAGNOSTIC_MESSAGE_MAX`, transaction ids are long and
+    variable-length, and three of them already overflowed a five-id sample --
+    raising ``ValidationError`` from inside the advisory and taking down the
+    whole calculation. A safety net that crashes as soon as it has several
+    things to report is worse than none, so the budget is now measured, not
+    assumed.
 
     Returns an empty tuple when every consumed row declared its substrate.
     """
@@ -521,23 +541,43 @@ def _ungrounded_income_diagnostics(
         return ()
     total = sum((observation.gross_amount for observation in observations), Decimal("0"))
     sampled = sorted(observation.transaction_id for observation in observations)
-    shown = sampled[:_UNGROUNDED_INCOME_ID_SAMPLE]
-    remainder = len(sampled) - len(shown)
-    id_list = ", ".join(shown) + (f" (and {remainder} more)" if remainder else "")
+    preamble = (
+        f"{len(observations)} actividad-económica income row(s) totalling {total} EUR of "
+        f"bank-credited cash declare no taxable_base (IVA-exclusive base imponible), so "
+        f"{_ungrounded_income_consequence(ungrounded.facts)}. Record the invoice base with "
+        f"'aeat app ledger classify <transaction-id> --taxable-base <amount>' to ground the "
+        f"figure. Transactions: "
+    )
     return (
         CalculationSourceDiagnostic(
             reason="ungrounded_income_substrate",
             source_kind="ledger_renta_income_aggregation",
             resolver_id=resolver_id,
-            message=(
-                f"{len(observations)} actividad-económica income row(s) totalling {total} EUR of "
-                f"bank-credited cash declare no taxable_base (IVA-exclusive base imponible), so "
-                f"{_ungrounded_income_consequence(ungrounded.facts)}. Record the invoice base with "
-                f"'aeat app ledger classify <transaction-id> --taxable-base <amount>' to ground the "
-                f"figure. Transactions: {id_list}"
-            ),
+            message=preamble + _fitted_id_list(sampled, budget=_DIAGNOSTIC_MESSAGE_MAX - len(preamble)),
         ),
     )
+
+
+def _fitted_id_list(identifiers: Sequence[str], *, budget: int) -> str:
+    """Render ``identifiers`` into at most ``budget`` characters, stating omissions.
+
+    Shows as many ids as fit alongside the "(and N more)" suffix that describes
+    the ones it dropped -- the suffix is part of the budget, because a truncation
+    notice that itself overflows would defeat the cap it exists to respect.
+
+    Degrades rather than raises: when even one id plus its suffix cannot fit, it
+    reports the bare count. The caller is an advisory about a measurement risk,
+    so losing the id sample is acceptable where losing the whole diagnostic --
+    and with it the calculation -- is not.
+    """
+    total = len(identifiers)
+    for shown in range(total, 0, -1):
+        remainder = total - shown
+        candidate = ", ".join(identifiers[:shown]) + (f" (and {remainder} more)" if remainder else "")
+        if len(candidate) <= budget:
+            return candidate
+    fallback = f"{total} transaction(s), ids omitted to fit the diagnostic length limit"
+    return fallback if len(fallback) <= budget else ""
 
 
 def _m130_retenciones_backend_inputs(
