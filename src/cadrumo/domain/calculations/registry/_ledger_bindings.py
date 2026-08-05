@@ -542,6 +542,29 @@ def _iva_ledger_observation_matches_selector(
     return observation.exemption_article in set(selector.exemption_articles)
 
 
+def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaLedgerObservation], bool]:
+    categories = set(selector.categories)
+    rate_kinds = set(selector.rate_kinds)
+
+    def matcher(observation: IvaLedgerObservation) -> bool:
+        return _iva_ledger_observation_matches_selector(
+            observation,
+            selector,
+            categories=categories,
+            rate_kinds=rate_kinds,
+        )
+
+    return matcher
+
+
+def _iva_aggregate(matched: Sequence[IvaLedgerObservation], selector: _IvaLedgerSelector) -> Decimal:
+    if selector.fact == "iva_amount_sum":
+        return sum((observation.iva_amount for observation in matched), Decimal("0"))
+    if selector.fact == "recargo_amount_sum":
+        return sum((observation.recargo_amount for observation in matched), Decimal("0"))
+    return sum((observation.base_amount for observation in matched), Decimal("0"))
+
+
 def resolve_ledger_iva_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[IvaLedgerObservation],
@@ -551,7 +574,12 @@ def resolve_ledger_iva_aggregation_binding_values(
     Filters observations by the three classification axes (category in
     selector.categories, rate_kind in selector.rate_kinds, flow_direction
     matches selector.flow_direction) and aggregates the matched lines'
-    iva_amount or base_amount per the declared fact.
+    iva_amount, recargo_amount, or base_amount per the declared fact.
+    Delegates the filter/aggregate skeleton to
+    :func:`resolve_ledger_family_binding_values`, shared by every ledger
+    family resolver; the per-selector ``categories`` / ``rate_kinds`` sets
+    are built once when the matcher closure is constructed for a binding,
+    not once per observation.
 
     Args:
         revision: The :class:`ModeloRevision` whose bindings to resolve.
@@ -561,32 +589,14 @@ def resolve_ledger_iva_aggregation_binding_values(
         Mapping of binding id to the aggregated Decimal value. Empty
         match sets resolve to ``Decimal("0")``.
     """
-    available = tuple(observations)
-    resolved: dict[BindingId, Decimal] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
-            continue
-        selector = _iva_ledger_selector(binding)
-        cat_set = set(selector.categories)
-        kind_set = set(selector.rate_kinds)
-        matched = [
-            observation
-            for observation in available
-            if _iva_ledger_observation_matches_selector(
-                observation,
-                selector,
-                categories=cat_set,
-                rate_kinds=kind_set,
-            )
-        ]
-        if selector.fact == "iva_amount_sum":
-            total = sum((observation.iva_amount for observation in matched), Decimal("0"))
-        elif selector.fact == "recargo_amount_sum":
-            total = sum((observation.recargo_amount for observation in matched), Decimal("0"))
-        else:
-            total = sum((observation.base_amount for observation in matched), Decimal("0"))
-        resolved[binding.id] = total
-    return resolved
+    return resolve_ledger_family_binding_values(
+        revision,
+        observations,
+        source_kind=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        parse_selector=_iva_ledger_selector,
+        build_matcher=_iva_build_matcher,
+        aggregate=_iva_aggregate,
+    )
 
 
 def unsupported_ledger_iva_observations(
