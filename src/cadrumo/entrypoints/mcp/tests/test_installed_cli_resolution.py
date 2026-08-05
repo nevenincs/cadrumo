@@ -19,10 +19,9 @@ import sys
 from pathlib import Path
 
 import pytest
+from dev.packaging._smoke_common import create_pip_venv, head_extract, run_checked, venv_bin_dir, venv_python_path
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import EXPECTED_LEGAL_REF
-from dev.packaging.smoke_core import _head_extract, _run, _venv_bin, _venv_python
-from dev.packaging.smoke_pip_core import _create_pip_venv
 from dev.packaging.smoke_split_install import (
     _build_data_wheels,
     _build_root_wheel,
@@ -35,7 +34,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[5]
 
 def _installed_script(venv: Path, name: str) -> Path:
     suffix = ".exe" if sys.platform == "win32" else ""
-    return (_venv_bin(venv) / f"{name}{suffix}").resolve()
+    return (venv_bin_dir(venv) / f"{name}{suffix}").resolve()
 
 
 @pytest.fixture(scope="module")
@@ -45,13 +44,13 @@ def installed_agent_environment(tmp_path_factory: pytest.TempPathFactory) -> tup
     assert uv is not None, "uv is required to build the real installed cohort"
 
     work_dir = tmp_path_factory.mktemp("installed-mcp-cli-resolution")
-    build_root = _head_extract(_REPO_ROOT, work_dir)
+    build_root = head_extract(_REPO_ROOT, work_dir)
     root_wheel = _build_root_wheel(build_root, work_dir, uv)
     data_wheels = _build_data_wheels(build_root, work_dir, uv)
-    venv = _create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
-    _run(
+    venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
+    run_checked(
         [
-            str(_venv_python(venv)),
+            str(venv_python_path(venv)),
             "-m",
             "pip",
             "install",
@@ -62,7 +61,7 @@ def installed_agent_environment(tmp_path_factory: pytest.TempPathFactory) -> tup
         ],
         cwd=work_dir,
     )
-    _run([str(_venv_python(venv)), "-m", "pip", "check"], cwd=work_dir)
+    run_checked([str(venv_python_path(venv)), "-m", "pip", "check"], cwd=work_dir)
 
     mcp_server = _installed_script(venv, "cadrumo-mcp")
     cli = _installed_script(venv, "aeat")

@@ -11,19 +11,19 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.python_cohort import load_python_cohort
-from dev.packaging.smoke_core import (
+from dev.packaging._smoke_common import (
     _CORPUS_SOURCE_PREFIX,
-    _assert_complete_wheel_cohort,
-    _build_companion_wheels,
-    _build_wheel,
-    _commit_defined_build_root,
     _configured_corpus_binary_suffixes,
-    _expected_wheel_data_paths,
     _is_corpus_source_binary,
-    _run,
-    _tracked_source_data_paths,
+    build_companion_wheels,
+    build_wheel,
+    commit_defined_build_root,
+    expected_wheel_data_paths,
+    run_checked,
+    tracked_source_data_paths,
 )
+from dev.packaging.python_cohort import load_python_cohort
+from dev.packaging.smoke_core import _assert_complete_wheel_cohort
 from dev.packaging.smoke_sdist_core import (
     _assert_sdist_contains_expected_data,
     _build_sdist,
@@ -39,7 +39,7 @@ _REVIEW_FOUND_PATHS = {
 }
 
 
-# The dirty-tree branch of `_commit_defined_build_root` extracts roughly forty
+# The dirty-tree branch of `commit_defined_build_root` extracts roughly forty
 # thousand files before any build starts, measured at three minutes on the
 # Windows build host. CI checks out clean and never pays it, but the shared
 # factory worktree always does, and the 300 s project ceiling would kill the
@@ -49,7 +49,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     """Build the wheel and prove tracked-data parity against companion ownership."""
     uv = shutil.which("uv")
     assert uv is not None
-    tracked = _tracked_source_data_paths(_REPO_ROOT)
+    tracked = tracked_source_data_paths(_REPO_ROOT)
     suffixes = _configured_corpus_binary_suffixes(_REPO_ROOT)
     split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     assert split_owned >= _REVIEW_FOUND_PATHS
@@ -60,9 +60,9 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     # peer edit, producing an artifact that matches no commit and failing this
     # test as if it were a packaging regression (issue 613). On a clean checkout
     # this is the tree itself, so CI pays nothing. One root serves all six builds.
-    build_root = _commit_defined_build_root(_REPO_ROOT, tmp_path / "build-source")
+    build_root = commit_defined_build_root(_REPO_ROOT, tmp_path / "build-source")
 
-    wheel = _build_wheel(_REPO_ROOT, tmp_path, uv, build_root=build_root)
+    wheel = build_wheel(_REPO_ROOT, tmp_path, uv, build_root=build_root)
     with zipfile.ZipFile(wheel) as archive:
         members = set(archive.namelist())
     actual_runtime = {name for name in members if name.startswith("cadrumo/_data/") and not name.endswith("/")}
@@ -72,11 +72,11 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         for path in tracked - split_owned
         if "/tests/" not in path
     }
-    assert _expected_wheel_data_paths(_REPO_ROOT) == independently_expected
+    assert expected_wheel_data_paths(_REPO_ROOT) == independently_expected
     assert actual_runtime == independently_expected
     assert not {f"cadrumo/_data/corpus/{path.removeprefix(_CORPUS_SOURCE_PREFIX)}" for path in split_owned} & members
 
-    companions = _build_companion_wheels(tmp_path, uv, build_root=build_root)
+    companions = build_companion_wheels(tmp_path, uv, build_root=build_root)
     with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         expected_version = tomllib.load(handle)["project"]["version"]
     assert (
@@ -110,11 +110,11 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     cohort_dir = tmp_path / "real-cohort"
     cohort_dir.mkdir()
     companion_sdists_dir = tmp_path / "companion-sdists"
-    _run(
+    run_checked(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
         cwd=build_root / "packaging" / "cadrumo_data_manuals",
     )
-    _run(
+    run_checked(
         [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
         cwd=build_root / "packaging" / "cadrumo_data_official",
     )
@@ -166,23 +166,23 @@ def test_commit_defined_build_root_excludes_uncommitted_working_tree_state(tmp_p
     """
     origin = tmp_path / "origin"
     (origin / "packaging").mkdir(parents=True)
-    _run(["git", "init", "--quiet"], cwd=origin)
-    _run(["git", "config", "user.email", "probe@example.invalid"], cwd=origin)
-    _run(["git", "config", "user.name", "probe"], cwd=origin)
+    run_checked(["git", "init", "--quiet"], cwd=origin)
+    run_checked(["git", "config", "user.email", "probe@example.invalid"], cwd=origin)
+    run_checked(["git", "config", "user.name", "probe"], cwd=origin)
     (origin / "committed.txt").write_text("committed content\n", encoding="utf-8")
     (origin / "packaging" / "kept.txt").write_text("nested committed\n", encoding="utf-8")
-    _run(["git", "add", "committed.txt", "packaging/kept.txt"], cwd=origin)
-    _run(["git", "commit", "--quiet", "-m", "probe commit"], cwd=origin)
+    run_checked(["git", "add", "committed.txt", "packaging/kept.txt"], cwd=origin)
+    run_checked(["git", "commit", "--quiet", "-m", "probe commit"], cwd=origin)
 
     # Clean tree: the tree already IS the commit, so it is used as-is.
-    assert _commit_defined_build_root(origin, tmp_path / "clean-work") == origin
+    assert commit_defined_build_root(origin, tmp_path / "clean-work") == origin
 
     # Dirty the tree exactly as a mid-sweep peer would: one edit to a tracked
     # file and one entirely new untracked file.
     (origin / "committed.txt").write_text("TORN EDIT\n", encoding="utf-8")
     (origin / "untracked.txt").write_text("never committed\n", encoding="utf-8")
 
-    build_root = _commit_defined_build_root(origin, tmp_path / "dirty-work")
+    build_root = commit_defined_build_root(origin, tmp_path / "dirty-work")
 
     assert build_root != origin
     extracted = {path.relative_to(build_root).as_posix() for path in build_root.rglob("*") if path.is_file()}

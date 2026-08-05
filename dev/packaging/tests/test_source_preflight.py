@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from ..smoke_core import _repo_root, _tracked_source_data_paths
+from .._smoke_common import find_repo_root, tracked_source_data_paths
 from ..source_preflight import _root_for, _summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -19,7 +19,7 @@ _OUTSIDE_ROOTS = "<outside-tracked-data-roots>"
 
 def test_summary_counts_the_real_tracked_data_tree() -> None:
     """The summary reflects the live git-tracked shipped-data set, fully partitioned."""
-    paths = _tracked_source_data_paths(_repo_root())
+    paths = tracked_source_data_paths(find_repo_root())
     summary = _summary(paths)
 
     assert summary["ok"] is True

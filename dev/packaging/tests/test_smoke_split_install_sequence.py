@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.smoke_core import _run, _venv_bin, _venv_python
-from dev.packaging.smoke_pip_core import _create_pip_venv
+from dev.packaging._smoke_common import create_pip_venv, run_checked, venv_bin_dir, venv_python_path
 from dev.packaging.smoke_split_install import (
     _COHORT_PROBE,
     _build_data_wheels,
@@ -33,10 +32,10 @@ def test_three_wheel_cohort_installs_only_aeat_human_script(tmp_path: Path) -> N
 
     wheel = _build_root_wheel(_REPO_ROOT, tmp_path, uv)
     companions = _build_data_wheels(_REPO_ROOT, tmp_path, uv)
-    venv = _create_pip_venv(tmp_path, f"{sys.version_info.major}.{sys.version_info.minor}")
+    venv = create_pip_venv(tmp_path, f"{sys.version_info.major}.{sys.version_info.minor}")
     _install_cohort_with_pip(tmp_path, wheel, companions, venv)
 
-    human_alias = _venv_bin(venv) / ("cadrumo.exe" if os.name == "nt" else "cadrumo")
+    human_alias = venv_bin_dir(venv) / ("cadrumo.exe" if os.name == "nt" else "cadrumo")
     assert _venv_cadrumo(venv).is_file()
     assert _venv_cadrumo(venv).name == ("aeat.exe" if os.name == "nt" else "aeat")
     assert not human_alias.exists()
@@ -61,10 +60,10 @@ def test_real_wheels_form_one_complete_authority_cohort(tmp_path: Path) -> None:
     assert any(name.endswith(".docx") for name in official)
     assert any(name.endswith(".zip") for name in official)
 
-    venv = _create_pip_venv(tmp_path, f"{sys.version_info.major}.{sys.version_info.minor}")
+    venv = create_pip_venv(tmp_path, f"{sys.version_info.major}.{sys.version_info.minor}")
     _install_cohort_with_pip(tmp_path, wheel, companions, venv)
-    _run(
-        [str(_venv_python(venv)), "-c", _COHORT_PROBE],
+    run_checked(
+        [str(venv_python_path(venv)), "-c", _COHORT_PROBE],
         cwd=tmp_path,
         env=_runtime_env(tmp_path, "test-cohort-state"),
     )

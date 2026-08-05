@@ -355,7 +355,7 @@ class PackagingSmokeManifest(BaseModel):
     """One packaging-smoke lane's machine-readable run record.
 
     The single typed shape shared by every ``smoke_*.py`` writer (via
-    ``dev.packaging.smoke_core._write_smoke_manifest``) and by every reader that
+    ``dev.packaging._smoke_common.write_smoke_manifest``) and by every reader that
     decides whether a manifest reports a genuine successful run
     (:func:`checkpoint_smoke_evidence`,
     :func:`dev.release.readiness.check_latest_packaging_smoke_evidence`). A
