@@ -50,10 +50,11 @@ carry semantics.
   Both errors are real: a role-derived id on a role-ambiguous chain silently
   merges two legal concepts, and a dotted id on any chain silently produces an
   opaque locale key.
-  Corpus state 2026-08-05: 814 distinct chain ids, 11 of them still dotted, all
-  in Modelo 100 — the `irpf.inmueble.*`, `irpf.regularizacion.*`,
-  `irpf.deduccion-autonomica.*` and `irpf.intereses-demora-regularizacion.*`
-  pilots. They are the conversion backlog, not a second convention to copy.
+  Corpus state 2026-08-05: every chain id is flat. The eleven dotted Modelo 100
+  pilots were converted in one pass (92 `continuidad_id` values across stamps and
+  evolution records, 2 test files, and 88 locale leaves moved off their base32
+  keys). There is no dotted backlog left and no second convention to copy — a
+  dotted id appearing again is a regression, not legacy.
 - Evolution kinds are a closed set: `unchanged`, `label_evolved`,
   `legal_refs_evolved`, `label_and_legal_refs_evolved`, `repurposed`,
   `retired`. Two are safety-critical: `retired` ends a chain (the target
@@ -269,11 +270,13 @@ authored `legal_refs_evolved` records (verified 2026-08-05: it does, against 12
 existing records).
 
 Read the localization-key section every time. It is where a dotted chain id
-becomes visible: `0063` is stamped `irpf.inmueble.porcentaje-propiedad`, and the
-dossier prints its continuity key as
-`modelo.schema.100.casilla.continuidad.x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0.label`.
-Nothing refuses that id, so the base32 blob in this output is the only place the
-damage shows up before it reaches four locale catalogues.
+becomes visible, and nothing else refuses one. `0063` is the worked case: while
+it was stamped `irpf.inmueble.porcentaje-propiedad` the dossier printed its
+continuity key as
+`...casilla.continuidad.x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0.label`;
+now that it is `irpf-inmueble-porcentaje-propiedad` the key reads back verbatim.
+A base32 blob in this output means the id you just wrote is about to reach four
+locale catalogues unreadable — it is the only warning you get.
 
 ```python
 """chain_dossier.py <modelo> <casilla-id> -- everything known about one candidate.
