@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:fdef0dfa1c6d94f16a35902160bd979396f964324fdd0e2b2ac22a78100a0e7d'
+body_hash: 'sha256:d9e4d030689165c6877260b85438542fcb44ce771b3823551fa71eee2622c78b'
 related: []
 ---
 
@@ -66,14 +66,64 @@ family of `resolve` methods), `aggregation/_oss_ioss.py`,
 
 ## Severity, stated honestly
 
-This is a QUALITY gap, not a correctness one, and the distinction is load-bearing
-rather than a softening. Before `4277ecc160` an over-long advisory raised and stopped
-the filing. After it, an over-long advisory silently loses its tail. An operator reads
-a truncated explanation instead of a complete one; nothing is mis-declared.
+**Corrected after measurement.** This section originally filed the whole class as a
+quality gap rather than a correctness one. That holds for most of the population and
+does NOT hold for the two advisories now known to truncate in production.
 
-That inversion is exactly why the truncating type and the headroom gate are both
-correct and neither is redundant: the type makes the severe failure impossible, and the
-gate keeps truncation a floor rather than a licence.
+The general case is a quality gap, and the distinction is load-bearing rather than a
+softening. Before `4277ecc160` an over-long advisory raised and stopped the filing.
+After it, an over-long advisory silently loses its tail. That inversion is why the
+truncating type and the headroom gate are both correct and neither redundant: the type
+makes the severe failure impossible, and the gate keeps truncation a floor rather than
+a licence.
+
+But an advisory whose PURPOSE is telling an operator how to fix an under-declaration,
+truncated so that the remedy is the part cut, is not a degraded message. The advisory
+still fires -- nothing is silent -- and the operator is left knowing something is wrong
+with no instruction for fixing it. That sits closer to correctness than to polish, and
+filing it under quality under-ranked it.
+
+## Two advisories are truncating in production today
+
+Measured against the real factories, not reconstructions:
+
+| advisory | rendered | state |
+| --- | --- | --- |
+| `dependencia_suppressed` (l.586) | 521 | **over cap, eliding now** |
+| `prorrata_inferred` (l.239) | 516 | **over cap, eliding now** |
+
+The trigger is a late-qualifying subset of a large household. **Four children is enough**
+to reach 498 and 493 respectively -- not an extreme-tail case requiring an implausible
+family.
+
+## The static-floor ranking in this document was inverted
+
+The floor table ranks by FIXED PROSE, and the risk is not in the fixed prose. It put
+`count_desync` (floor 406) at the top and `dependencia_suppressed` (floor 333) last.
+Measured, that is exactly backwards: `count_desync` does not use the fact-path renderer
+at all and is the SAFEST growable advisory in the module, while `dependencia_suppressed`
+is the one already over the cap.
+
+A static floor is a lower bound on a message, not a ranking of risk. Ranking by it
+substitutes the part that cannot grow for the part that can.
+
+## The interpolation delta is ~123, and shaped differently than assumed
+
+The working assumption was ~100 characters, extrapolated from two sites. Measured: 96 at
+a household of four, 101 at a million all-qualifying, and **123** at a late-qualifying
+household. The renderer emits enumerate positions, so length grows with index DIGITS as
+well as with the remainder, and the true worst case is a late-qualifying subset of a
+large household rather than the all-qualify shape.
+
+The sibling gate's `_ids(1_000_000)` convention models the weaker case and under-measures
+this module by ~22 characters -- a gate understating headroom in the safe-looking
+direction, inside the instrument built to measure headroom.
+
+**Of the 96 characters at four children, 78 are the `renta_family.descendiente.` prefix
+repeated three times.** The cost is in the rendering ceremony, not the message.
+Compressing a shared prefix would return ~60 characters to every advisory in the module
+at once with no prose lost -- larger and cheaper than per-advisory trimming, subject to
+checking whether anything downstream parses that string.
 
 ## What this does not claim
 
