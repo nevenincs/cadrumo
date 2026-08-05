@@ -32,12 +32,14 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, ModeloRevision
 from ....domain.contribuyente import (
     DescendantInfo,
+    GuarderiaMonthSpend,
     descendant_facts_from_list,
     parse_guarderia_mensual,
 )
 from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ...aggregation import CalculationSourceDiagnostic
 from ...user_profile import profile_create_storage_span, set_active_fields
 from ...workflow import workflow_state_repository
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
@@ -78,7 +80,7 @@ def _write(*descendants: DescendantInfo) -> None:
     workflow_state_repository().update(lambda s: set_active_fields(s, tuple(facts)))
 
 
-def _collect() -> tuple[object, ...]:
+def _collect() -> tuple[CalculationSourceDiagnostic, ...]:
     return collect_guarderia_spend_shape_diagnostics(
         _revision(),
         {_GUARDERIA_CASILLA: Decimal("0")},
@@ -87,7 +89,7 @@ def _collect() -> tuple[object, ...]:
     )
 
 
-def _monthly(raw: str) -> tuple[object, ...]:
+def _monthly(raw: str) -> tuple[GuarderiaMonthSpend, ...]:
     return parse_guarderia_mensual(raw, field="probe")
 
 
@@ -102,8 +104,8 @@ def test_fires_for_an_annual_only_figure_in_the_turning_three_period() -> None:
     diagnostics = _collect()
 
     assert len(diagnostics) == 1
-    assert diagnostics[0].source_kind == _KIND  # type: ignore[attr-defined]
-    assert diagnostics[0].casilla_id == _GUARDERIA_CASILLA  # type: ignore[attr-defined]
+    assert diagnostics[0].source_kind == _KIND
+    assert diagnostics[0].casilla_id == _GUARDERIA_CASILLA
 
 
 def test_the_message_names_the_descendant_the_key_and_the_certificate() -> None:
@@ -116,7 +118,7 @@ def test_the_message_names_the_descendant_the_key_and_the_certificate() -> None:
     """
     _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_euros=2400))
 
-    message = _collect()[0].message  # type: ignore[attr-defined]
+    message = _collect()[0].message
 
     assert "renta_family.descendiente.0" in message
     assert "GASTOS_GUARDERIA_MENSUAL" in message
@@ -150,7 +152,7 @@ def test_it_reaches_the_operator_through_the_coordinator() -> None:
 
 def test_silent_when_the_monthly_detail_is_already_on_record() -> None:
     """The shape is already the one that works; there is nothing to correct."""
-    _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_mensuales=_monthly("5-8:210")))  # type: ignore[arg-type]
+    _write(DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_mensuales=_monthly("5-8:210")))
 
     assert _collect() == ()
 
@@ -215,7 +217,7 @@ def test_it_names_every_affected_child_in_a_mixed_household() -> None:
         DescendantInfo(birth_date=_TURNS_THREE, gastos_guarderia_euros=2400),
     )
 
-    message = _collect()[0].message  # type: ignore[attr-defined]
+    message = _collect()[0].message
 
     assert "renta_family.descendiente.1" in message
     assert "renta_family.descendiente.0" not in message
