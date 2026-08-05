@@ -15,6 +15,7 @@ from typing import Any, Final
 
 from packaging.requirements import Requirement
 
+from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
 from dev.packaging._distribution_names import normalise_distribution_name
 from dev.packaging._hashing import sha256_path
 
@@ -39,7 +40,6 @@ _DISTRIBUTIONS: Final[tuple[str, ...]] = (
     "cadrumo-data-manuals",
     "cadrumo-data-official",
 )
-_PYPI_FILE_CAP_BYTES: Final[int] = 100 * 1_000_000
 _INSTALLED_PROBE: Final[str] = """
 import json
 from importlib.metadata import distribution
@@ -198,7 +198,7 @@ def _validate_wheel_contract(
         artifact_kind="wheel",
     )
     for wheel in (root_wheel, manuals_wheel, official_wheel):
-        if wheel.stat().st_size >= _PYPI_FILE_CAP_BYTES:
+        if wheel.stat().st_size >= PYPI_FILE_CAP_BYTES:
             raise SystemExit(
                 f"{wheel.name} exceeds PyPI's 100 MB per-file cap: {wheel.stat().st_size} bytes",
             )
@@ -231,7 +231,7 @@ def _validate_sdist_contract(
         artifact_kind="sdist",
     )
     for sdist in (root_sdist, manuals_sdist, official_sdist):
-        if sdist.stat().st_size >= _PYPI_FILE_CAP_BYTES:
+        if sdist.stat().st_size >= PYPI_FILE_CAP_BYTES:
             raise SystemExit(
                 f"{sdist.name} exceeds PyPI's 100 MB per-file cap: {sdist.stat().st_size} bytes",
             )

@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from dev.packaging._command import CommandResult, run_command
+from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
 from dev.packaging._distribution_names import normalise_distribution_name
 from dev.packaging.evidence import PackagingSmokeManifest
 from dev.packaging.python_cohort import digest_install_target
@@ -61,6 +62,7 @@ __all__ = [
     "head_extract",
     "install_targets_with_pip",
     "install_wheel",
+    "isolated_product_env",
     "optional_extra_registry",
     "pyproject_surfaces",
     "relative_manifest_path",
@@ -101,7 +103,6 @@ _DATA_COMPANION_PROJECTS = (
     ("cadrumo-data-manuals", "packaging/cadrumo_data_manuals", "cadrumo_data_manuals-*.whl"),
     ("cadrumo-data-official", "packaging/cadrumo_data_official", "cadrumo_data_official-*.whl"),
 )
-_PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 _RENTA_PDF_ALLOW_LIST = {
     f"src/cadrumo/_data/corpus/manuals/renta/{year}/part1/source.pdf"
     for year in ("2020", "2021", "2022", "2023", "2024", "2025")
@@ -746,7 +747,7 @@ def build_companion_wheels(work_dir: Path, uv: str, *, build_root: Path) -> tupl
         if len(built) != 1:
             raise SystemExit(f"expected one {project_name} wheel in {out_dir}; got {built!r}")
         wheel = built[0]
-        if wheel.stat().st_size >= _PYPI_FILE_CAP_BYTES:
+        if wheel.stat().st_size >= PYPI_FILE_CAP_BYTES:
             raise SystemExit(
                 f"{wheel.name} exceeds PyPI's 100 MB per-file cap: {wheel.stat().st_size} bytes",
             )
@@ -871,7 +872,7 @@ def clean_product_env() -> dict[str, str]:
     return {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
 
 
-def _isolated_product_env(storage_root: Path) -> dict[str, str]:
+def isolated_product_env(storage_root: Path) -> dict[str, str]:
     """Return a clean product environment rooted in isolated temporary storage."""
     return {
         **clean_product_env(),
@@ -896,7 +897,7 @@ if missing:
 print(root)
 """
     runtime_root = work_dir / "installed-data-state"
-    env = _isolated_product_env(runtime_root)
+    env = isolated_product_env(runtime_root)
     run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
 
 
@@ -998,12 +999,12 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     version = run_checked(
         [cadrumo, "--version"],
         cwd=work_dir,
-        env=_isolated_product_env(work_dir / "version-state"),
+        env=isolated_product_env(work_dir / "version-state"),
     )
     assert_cadrumo_version_output(version, context="in core venv")
 
     default_root = work_dir / "default-check-state"
-    default_env = _isolated_product_env(default_root)
+    default_env = isolated_product_env(default_root)
     default_check = run_checked(
         [cadrumo, "--format", "json", "config", "check"],
         cwd=work_dir,

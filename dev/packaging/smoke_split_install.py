@@ -13,30 +13,30 @@ one exact cohort, and runs full byte-exact registry verification. There is no
 supported command-bearing installation without both data distributions.
 
 The root wheel's corpus-binary shedding and each companion's sub-cap size are
-enforced where the wheels are BUILT (``python_cohort``), not here; the builders
-in this module serve the tests that construct a cohort from source.
+enforced where the wheels are BUILT (``python_cohort``), not here. Tests that
+need to construct a cohort from source build it with
+:func:`~dev.packaging._smoke_common.build_wheel` and
+:func:`~dev.packaging._smoke_common.build_companion_wheels`.
 """
 
 from __future__ import annotations
 
 import argparse
 import sys
-import zipfile
+from collections.abc import Sequence
 from pathlib import Path
 
 from ._smoke_common import (
-    clean_product_env,
     create_pip_venv,
+    isolated_product_env,
     relative_manifest_path,
     resolve_work_dir,
     run_checked,
-    venv_bin_dir,
+    venv_cadrumo_path,
     venv_python_path,
     write_smoke_manifest,
 )
 from .python_cohort import assert_installed_cohort, load_python_cohort
-
-_CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 
 _COHORT_PROBE = """
 from importlib.metadata import requires, version
@@ -63,81 +63,7 @@ print(f"three-wheel-cohort-ok: {root_version}")
 """
 
 
-def _build_root_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the command-bearing wheel and assert split-owned binaries stay external."""
-    wheel_dir = work_dir / "wheel"
-    wheel_dir.mkdir(parents=True, exist_ok=True)
-    run_checked([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
-    wheels = sorted(wheel_dir.glob("cadrumo-*.whl"))
-    if len(wheels) != 1:
-        raise SystemExit(f"expected exactly one Cadrumo wheel in {wheel_dir}; got {[w.name for w in wheels]!r}")
-    with zipfile.ZipFile(wheels[0]) as bundle:
-        leaked = [
-            name
-            for name in bundle.namelist()
-            if name.startswith("cadrumo/_data/corpus/") and name.lower().endswith(_CORPUS_BINARY_SUFFIXES)
-        ]
-    if leaked:
-        raise SystemExit(f"root wheel leaked {len(leaked)} corpus source binaries; first ten: {leaked[:10]!r}")
-    return wheels[0]
-
-
-# The two corpus companions and the wheel glob each emits, in install order.
-_DATA_COMPANIONS = (
-    ("cadrumo_data_manuals", "cadrumo_data_manuals-*.whl"),
-    ("cadrumo_data_official", "cadrumo_data_official-*.whl"),
-)
-
-# PyPI's default per-file size cap, in the decimal-MB convention the publish and
-# CI artifact guards use. The split exists to keep each companion sub-cap.
-_PYPI_FILE_CAP_BYTES = 100 * 1_000_000
-
-
-def _venv_cadrumo(venv: Path) -> Path:
-    """Return the installed canonical Cadrumo console script."""
-    executable = "aeat.exe" if sys.platform == "win32" else "aeat"
-    return venv_bin_dir(venv) / executable
-
-
-def _runtime_env(work_dir: Path, state_name: str) -> dict[str, str]:
-    """Return a host-independent environment for an installed runtime probe."""
-    state_root = work_dir / state_name
-    return {
-        **clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(state_root),
-        "CADRUMO_DATABASE_URL": f"sqlite:///{(state_root / 'cadrumo.db').as_posix()}",
-    }
-
-
-def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
-    """Build both ``cadrumo-data-*`` companion wheels from their in-repo projects.
-
-    Each companion wheel is asserted sub-cap here too: a companion that crossed
-    PyPI's 100 MB per-file limit would defeat the entire reason for the split.
-    """
-    out_dir = work_dir / "dist-data"
-    wheels: list[Path] = []
-    for project_dir, wheel_glob in _DATA_COMPANIONS:
-        run_checked(
-            [uv, "build", "--project", str(build_root / "packaging" / project_dir), "--out-dir", str(out_dir)],
-            cwd=build_root,
-        )
-        built = sorted(out_dir.glob(wheel_glob))
-        if len(built) != 1:
-            raise SystemExit(f"expected exactly one {wheel_glob} in {out_dir}, found {built!r}")
-        wheel = built[0]
-        size_mb = wheel.stat().st_size / 1_000_000
-        print(f"  {wheel.name}: {size_mb:.1f} MB", flush=True)
-        if wheel.stat().st_size >= _PYPI_FILE_CAP_BYTES:
-            raise SystemExit(
-                f"{wheel.name} is {size_mb:.1f} MB, at or over PyPI's 100 MB per-file cap; the split must keep "
-                "each companion sub-cap"
-            )
-        wheels.append(wheel)
-    return wheels
-
-
-def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: list[Path], venv_path: Path) -> None:
+def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: Sequence[Path], venv_path: Path) -> None:
     """Install the three local wheels in one pip transaction and validate dependencies."""
     python = venv_python_path(venv_path)
     run_checked(
@@ -159,9 +85,9 @@ def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: list[Path
 def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
     """With the complete cohort installed, full source verification runs clean."""
     run_checked(
-        [str(_venv_cadrumo(venv_path)), "app", "registry", "verify"],
+        [str(venv_cadrumo_path(venv_path)), "app", "registry", "verify"],
         cwd=work_dir,
-        env=_runtime_env(work_dir, "clean-verify-state"),
+        env=isolated_product_env(work_dir / "clean-verify-state"),
     )
 
 
@@ -205,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
     run_checked(
         [str(venv_python_path(venv_path)), "-c", _COHORT_PROBE],
         cwd=work_dir,
-        env=_runtime_env(work_dir, "cohort-import-state"),
+        env=isolated_product_env(work_dir / "cohort-import-state"),
     )
     _assert_registry_verify_runs_clean(work_dir, venv_path)
 

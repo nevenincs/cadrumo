@@ -11,16 +11,16 @@ from ._smoke_common import (
     assert_installed_data,
     assert_wheel_contains_tracked_data,
     assert_wheel_metadata_matches_pyproject,
-    clean_product_env,
     create_pip_venv,
     expected_wheel_data_paths,
     install_targets_with_pip,
+    isolated_product_env,
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
     run_checked,
     validate_frozen_exports,
-    venv_bin_dir,
+    venv_cadrumo_path,
     venv_python_path,
     write_smoke_manifest,
 )
@@ -62,25 +62,14 @@ for extra in (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA):
 
 print("all-extra-imports-ok")
 """
-    runtime_root = work_dir / "all-extras-import-state"
-    env = {
-        **clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
-        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
-    }
+    env = isolated_product_env(work_dir / "all-extras-import-state")
     run_checked([str(venv_python_path(venv_path)), "-c", code], cwd=work_dir, env=env)
 
 
 def _assert_cli_version(work_dir: Path, venv_path: Path) -> None:
     """Verify the installed console script starts in the all-extras venv."""
-    runtime_root = work_dir / "cli-version-state"
-    env = {
-        **clean_product_env(),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime_root),
-        "CADRUMO_DATABASE_URL": f"sqlite:///{(runtime_root / 'cadrumo.db').as_posix()}",
-    }
-    executable = "aeat.exe" if sys.platform == "win32" else "aeat"
-    version = run_checked([str(venv_bin_dir(venv_path) / executable), "--version"], cwd=work_dir, env=env)
+    env = isolated_product_env(work_dir / "cli-version-state")
+    version = run_checked([str(venv_cadrumo_path(venv_path)), "--version"], cwd=work_dir, env=env)
     assert_cadrumo_version_output(version, context="in all-extras venv")
 
 

@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
 from dev.packaging._smoke_common import (
     _CORPUS_SOURCE_PREFIX,
     _configured_corpus_binary_suffixes,
@@ -105,7 +106,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     }
     sdist = _build_sdist(tmp_path, uv, build_root=build_root)
     _assert_sdist_contains_expected_data(sdist, expected_sdist_data)
-    assert sdist.stat().st_size < 100 * 1_000_000
+    assert sdist.stat().st_size < PYPI_FILE_CAP_BYTES
 
     cohort_dir = tmp_path / "real-cohort"
     cohort_dir.mkdir()

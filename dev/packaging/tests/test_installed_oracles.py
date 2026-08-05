@@ -25,14 +25,17 @@ from typing import IO, Any, cast
 import pytest
 
 from cadrumo.agent import materialise_marketplace
-from dev.packaging._smoke_common import create_pip_venv, run_checked, venv_bin_dir, venv_python_path
+from dev.packaging._smoke_common import (
+    build_companion_wheels,
+    build_wheel,
+    create_pip_venv,
+    run_checked,
+    venv_bin_dir,
+    venv_python_path,
+)
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
 from dev.packaging.installed_tax_oracle import run_installed_tax_oracle
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
-from dev.packaging.smoke_split_install import (
-    _build_data_wheels,
-    _build_root_wheel,
-)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -153,8 +156,8 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         source_commit = source_commit_result.stdout.strip()
         assert len(source_commit) == 40
         build_root = _extract_source_commit(_REPO_ROOT, work_dir, source_commit)
-        root_wheel = _build_root_wheel(build_root, work_dir, uv)
-        built_data_wheels = _build_data_wheels(build_root, work_dir, uv)
+        root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
+        built_data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
         assert len(built_data_wheels) == 2
         data_wheels = (built_data_wheels[0], built_data_wheels[1])
         cohort_dir = work_dir / "python-cohort"
