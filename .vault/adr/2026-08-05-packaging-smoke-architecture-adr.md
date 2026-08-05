@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:44dc7da669ac1bd101d0cba1bcdf165c4eb3e89306ef0d3826767ffb6433a08d'
+body_hash: 'sha256:e35e2fecf7cf651023308894dccfc74e6a95cb0eb5bbe93802ef322254163e3a'
 related:
   - "[[2026-08-05-packaging-smoke-architecture-audit]]"
   - "[[2026-06-28-product-packaging-research]]"
@@ -13,7 +13,7 @@ related:
   - "[[2026-07-15-distribution-installation-readiness-research]]"
 ---
 
-# `packaging-smoke-architecture` adr: `Lane-form hierarchy for the packaging proof surface` | (**status:** `proposed`)
+# `packaging-smoke-architecture` adr: `Lane-form hierarchy for the packaging proof surface` | (**status:** `accepted`)
 
 ## Problem Statement
 
