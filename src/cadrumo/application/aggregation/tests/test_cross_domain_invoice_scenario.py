@@ -422,9 +422,17 @@ def test_the_checker_is_silent_only_on_the_true_decomposition() -> None:
 # still a wrong return.
 #
 # So the same invoice is driven one layer further, through the committed
-# Modelo 130 bindings, and the resolved binding VALUES are asserted against the
-# invoice figures. This is the layer at which "the three domains agree" becomes
-# a statement about the declaration rather than about the code.
+# bindings, and the resolved binding VALUES are asserted against the invoice
+# figures. This is the layer at which "the three domains agree" becomes a
+# statement about the declaration rather than about the code.
+#
+# The division of labour with the per-modelo oracle modules is deliberate.
+# Those assert that ONE modelo receives its published measure, with the
+# grounding markers and the derivation route that got it there. This module
+# asserts only what no single-modelo test can state: that the values several
+# modelos file describe one invoice. Where a value is asserted here it is
+# because the cross-domain claim needs it, never as a second opinion on a
+# claim that already has an owner.
 
 
 _M130_INGRESOS_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
@@ -447,38 +455,6 @@ def _modelo_130_revision() -> ModeloRevision:
         )
         .revision
     )
-
-
-def test_the_committed_m130_bindings_receive_the_invoice_figures() -> None:
-    """The registry routes the decomposition to the casillas that get filed.
-
-    Ingresos takes the IVA-exclusive base, not the credited cash: casilla 01 is
-    "la totalidad de los ingresos integros fiscalmente computables", and the
-    IVA repercutido is collected for Hacienda rather than earned. Retenciones
-    takes the 150 recovered by inference, which is the credit RIRPF art. 110.3.a
-    deducts from the pago fraccionado.
-
-    Both are asserted against the invoice figures rather than against each
-    other, so a resolver that routed the same wrong number to both casillas
-    would still fail.
-    """
-    revision = _modelo_130_revision()
-    income = aggregate_renta_income_ledger(
-        _catalogue(_invoice_transaction(with_substrate=True)),
-        bucket_id=_BUCKET,
-        period=_PERIOD,
-    )
-
-    resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, income.observations)
-
-    assert resolved[_M130_INGRESOS_BINDING] == _BASE
-    assert resolved[_M130_RETENCIONES_BINDING] == _RETENCION
-
-    # The two guards that make the first assertion mean something: casilla 01
-    # must carry neither the credited cash nor the IVA-inclusive total, which
-    # are the two figures a mis-wired resolver would most plausibly produce.
-    assert resolved[_M130_INGRESOS_BINDING] != _CASH, "casilla 01 must not receive the bank-credited cash"
-    assert resolved[_M130_INGRESOS_BINDING] != _TOTAL, "casilla 01 must not receive the IVA-inclusive total"
 
 
 def test_the_filed_figures_close_the_invoice_identity() -> None:
