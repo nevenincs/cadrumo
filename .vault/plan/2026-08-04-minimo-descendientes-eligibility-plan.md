@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:882787da968d29b074b2f8d8afd37f1470f10d4ec4f3e2b3a0704f69d029dab9'
+body_hash: 'sha256:18c03bb4e97411a08cb6084d19b7728bf59f38c2f7a30a0c570c740c5b41076a'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -69,6 +69,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `P04.S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-derived, because the engine never sees the descendants at all and takes an operator-supplied list of hijo and month pairs, so the under-three and cohabiting conditions cannot be enforced while the profile already holds the birth dates and cohabitation facts, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited, BLOCKING S15 whose window predicate has no consumer until this resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/domain/contribuyente/family.py`.
 - [x] `P04.S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
+- [ ] `P04.S23` - Add the Art. 81.1 post-birth alta increment, 150 euros for the month completing the 30-day contribution period, raising that child cap to 1.350 euros for filing years from 2023 only, gated on a new operator-supplied fact naming that month; `src/cadrumo/core/external_constants.py, src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`.
 
 ## Parallelization
 
