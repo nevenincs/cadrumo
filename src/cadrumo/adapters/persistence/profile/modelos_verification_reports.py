@@ -61,10 +61,14 @@ _VERIFICATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_verification_report
 class VerificationReportCatalogueRepository:
     """Repository over encrypted SQL-backed verification-report catalogue storage.
 
-    The catalogue payload is wrapped in
-    :class:`~adapters.persistence.storage.Envelope` before
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
-    persists it; this class is the concrete load/save implementation behind
+    The write path (``to_secure_object_write`` / ``save`` / ``exists``)
+    composes
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
+    here because it translates a classification or schema-version mismatch
+    into :class:`VerificationReportPersistenceError` via
+    :func:`~domain.modelos.raise_catalogue_integrity_error`. This class is
+    the concrete load/save implementation behind
     :class:`~domain.modelos.VerificationReportCatalogueRepositoryProtocol`.
     """
 
@@ -171,6 +175,7 @@ class VerificationReportCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
 
@@ -192,7 +197,7 @@ class VerificationReportCatalogueRepository:
         if record is None:
             return VerificationReportCatalogue()
         envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not _VERIFICATION_CATALOGUE_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _VERIFICATION_CATALOGUE_SENSITIVITY):
             _LOGGER.error(
                 "verification-report catalogue classification mismatch",
                 extra={

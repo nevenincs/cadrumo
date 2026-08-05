@@ -67,12 +67,16 @@ class CalculationRevisionCatalogueRepository:
     :data:`~adapters.persistence.storage.MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE`
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
-    catalogue payload is wrapped in
-    :class:`~adapters.persistence.storage.Envelope` before
-    :class:`~adapters.persistence.storage.SecureObjectRepository`
-    persists it, and the same envelope can be returned as a
-    :class:`~adapters.persistence.storage.SecureObjectWrite` for atomic
-    co-writes. The class exposes the concrete load/save implementation behind
+    write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
+    here because it translates a classification or schema-version mismatch
+    into :class:`CalculationRevisionPersistenceError` via
+    :func:`~domain.modelos.raise_catalogue_integrity_error`, and runs the
+    post-load ledger-evidence coverage gate
+    (:func:`~domain.modelos.assert_revision_snapshot_evidence_coverage`) the
+    shared kernel has no domain knowledge of. The class exposes the concrete
+    load/save implementation behind
     :class:`~domain.modelos.CalculationRevisionCatalogueRepositoryProtocol`.
     """
 
@@ -148,6 +152,7 @@ class CalculationRevisionCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
 
@@ -169,7 +174,7 @@ class CalculationRevisionCatalogueRepository:
         if record is None:
             return CalculationRevisionCatalogue()
         envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not _CALCULATION_CATALOGUE_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _CALCULATION_CATALOGUE_SENSITIVITY):
             _LOGGER.error(
                 "calculation-revision catalogue classification mismatch",
                 extra={

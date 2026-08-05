@@ -65,10 +65,15 @@ class ModeloRecordCatalogueRepository:
     is the central namespace, schema-version, sensitivity, and singleton-key
     contract for the encrypted :class:`ModeloRecordCatalogue` row. The
     catalogue payload keeps member-scoped current/history lookups in the domain
-    type, while this repository wraps it in
-    :class:`~adapters.persistence.storage.Envelope` and writes it through
-    :class:`~adapters.persistence.storage.SecureObjectRepository`.
-    It exposes the concrete load/save implementation behind
+    type. The write path (``to_secure_object_write`` / ``save`` / ``exists``)
+    composes
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
+    here because this repository translates a classification or
+    schema-version mismatch into :class:`ModeloRecordPersistenceError` via
+    :func:`~domain.modelos.raise_catalogue_integrity_error`, a translation the
+    shared kernel does not perform. This class exposes the concrete load/save
+    implementation behind
     :class:`~domain.modelos.ModeloRecordCatalogueRepositoryProtocol`.
     """
 
@@ -193,6 +198,7 @@ class ModeloRecordCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
 
@@ -214,7 +220,7 @@ class ModeloRecordCatalogueRepository:
         if record is None:
             return ModeloRecordCatalogue()
         envelope = Envelope[ModeloRecordCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not _FILING_CATALOGUE_SENSITIVITY:
+        if not inner_envelope_classification_is_expected(envelope.classification, _FILING_CATALOGUE_SENSITIVITY):
             _LOGGER.error(
                 "filing-record catalogue classification mismatch",
                 extra={
