@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f1ffca62425d471e94b053465ba6807c5b7b5bf356d6afe0ce9ccdc86f6ccc6c'
+body_hash: 'sha256:318b12cbd7be26107d9ee6cae9ca1eff1f60bac3771e5f46c1a1b159afa5be8e'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
@@ -192,3 +192,85 @@ schema bytes, not bytes.
 Why two payload-growth commits landed 24 minutes apart without either author observing the
 combined effect is not established. That the gate never ran is the likely explanation and has
 not been confirmed against either author's local runs.
+
+## Amendment (2026-08-05): D2 is confirmed, and two of its supporting claims were wrong
+
+The independent verdict D2 was pending has arrived. **The decision survives on substance and
+could not be broken** — but two of the claims supporting it were wrong, one of them the
+load-bearing one, and one framing in this record is withdrawn.
+
+**D2's load-bearing argument is void; strike it.** This record argued that the repository
+already ships title-free schemas on the adjacent surface, tool input schemas carrying zero
+titles, so suppression merely brings the output side into line. That is false as reasoning.
+Input schemas are built by walking the live command tree; the model-schema generator appears
+nowhere in that path, so nothing was ever suppressed there and nothing was ever observed not
+to break. It is an absence of evidence, not evidence of safety. The claim does not need it.
+
+What replaces it is stronger and was read from the SDK source rather than inferred from a
+repository search: the client session uses the output schema **only** to compile a validator
+for structured content, and JSON-Schema `title` is a pure annotation with no validation
+effect. Every `title=` in the SDK is the protocol-level display name for a tool, resource or
+prompt — a different field entirely.
+
+**The census is 115 of 117, not all of them.** Two property titles are not pure functions of
+their key: `result` carries `OverviewCalendarResult` and `error` carries `ErrorEnvelope`,
+model names not computable from `result` or `error`. Materiality is low — nothing reads them
+and the model is derivable from the command key — but this record's "none carries information
+a consumer cannot compute" is false as written, and a claim of universality that is 98% true
+is still a wrong claim.
+
+**The framing "the gate stops being forced" is withdrawn, and its replacement is the point.**
+The gate's own docstring names its target: output-schema size as the static proxy for the
+structured content a verb emits. Titles never appear in structured content. So suppressing
+them reduces the proxy **without reducing the target** — by the gate's stated purpose that is
+gaming it, which is the same shape as the metadata rejection D3 already refuses. The honest
+statement is narrower and better: **the gate stops firing; the thing it exists to bound is
+unchanged.** If suppression incidentally drops this verb under the line, that has revealed
+the proxy is imperfect, and the response is to fix the instrument to measure emitted content
+rather than to note that the proxy now passes.
+
+D2 therefore stands as a decision on a **different axis** from the budget. The schema really
+is emitted at `tools/list` once per session, and suppression saves a measured 198,806
+characters across all 297 verbs — about a tenth of total output-schema bytes, with zero verbs
+over budget afterwards. Worth doing on its own merits; not to be recorded as satisfying the
+budget. That separation is the whole reason D2 was written as separable.
+
+**The composition argument is sharper than the one D1 used.** Both remedies are required, and
+the decisive number is not this record's six-times comparison. On 2026-08-02 the payload sat
+at 16928 with 1072 characters of headroom, and two commits 24 minutes apart consumed all of
+it. **So the 629 that titles alone restore is less than a headroom that already proved
+insufficient three days ago.** Either remedy alone re-trips on the next payload model; both
+together give 3349.
+
+**One open question of this record is now closed.** Suppression is a post-process strip in the
+output-schema builder, reaching the whole graph including all 13 definitions in one place —
+no per-model configuration, no nested overrides, no maintenance surface. The implementation
+cost is known, not projected.
+
+**The blocker split holds with one refinement.** The recompute remains structural, confirmed
+against the source: the calendar is computed from a clock with no persisted record, and
+resolution is scoped to encrypted persisted state, so a link resolved later can return rows
+the call never summarised. Two of the remaining three are ordinary plumbing. The third — the
+bulk-resolution cross-check bound to a bucket id — is plumbing **with a safety review
+attached**: it exists so a link cannot silently resolve a different bucket's rows, so
+generalising it for a cross-bucket read means redesigning a safety check rather than widening
+a signature. Record it as contingent-but-not-cheap; this record's "absent plumbing and would
+be addable" understates it.
+
+**One prior objection is now historical and belongs in the past tense.** Thinning used to
+inflate: the helper built its alternative branch from two full copies of the property body,
+so a schema whose definitions stayed reachable from another property paid the duplication and
+saved nothing — which is why thinning any non-profiles array took this verb to roughly 22400.
+That is fixed; the bodies are declared once and only the discriminator sits in the
+alternation, and all four thinned verbs shrank. A reader proposing thinning again will no
+longer inflate. The same fix closed a latent hole where branch disjointness relied on models
+forbidding extra properties: this verb allows them and carries a non-required profiles array,
+so it would have hit it.
+
+**Two questions stay open and are recorded as open.** Third-party MCP clients outside this
+repository may render property titles in a form generator; the SDK in this environment was
+verified and every client was not. If one does render them, "recomputable from the key" stops
+being sufficient — though it would be rendering a title the server has never guaranteed, and
+the input schemas such clients build forms from have never carried one. And no authoritative
+specification statement on titles in output schemas was located, so the SDK's behaviour is
+the evidence here, not the spec text.
