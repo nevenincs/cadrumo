@@ -635,7 +635,38 @@ class DescendantInfo(BaseModel):
             return False
         return self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES
 
-    def maternidad_contributing_meses(self, filing_year: int) -> int:
+    def maternidad_eligible_meses(self, filing_year: int) -> int:
+        """Months of *filing_year* in which this descendant is under three (Art. 81.1).
+
+        The article runs "hasta que el menor alcance los tres años de edad",
+        which is a MONTH boundary rather than a year-end age test, and the
+        authority draws it twice:
+
+        * the month of birth counts in full — the deduction begins in the month
+          the child arrives, not the month after; and
+        * the month in which the child turns three does NOT count, so a child
+          with an April birthday contributes January to March of that year.
+
+        Both follow from a birth date the profile already holds, so neither is
+        an operator judgement and neither should be typed. Comparing
+        ``(year, month)`` pairs rather than constructing a third-birthday date
+        is deliberate: a 29 February birth has no third-birthday date in a
+        non-leap year, and building one raises.
+
+        Returns ``0`` for a period entirely before the birth or entirely after
+        the third-birthday month.
+        """
+        start = (self.birth_date.year, self.birth_date.month)
+        end = (self.birth_date.year + _MAX_AGE_MENOR_TRES, self.birth_date.month)
+        return sum(1 for month in range(1, 13) if start <= (filing_year, month) < end)
+
+    def maternidad_contributing_meses(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+        dependencia_assimilation_available: bool = False,
+    ) -> int:
         """Art. 81.1 months this descendant contributes to the deducción in *filing_year*.
 
         The split between what the operator supplies and what the engine applies
@@ -651,20 +682,34 @@ class DescendantInfo(BaseModel):
         informative return, so the declared figure is checkable against a record
         the authority already holds.
 
-        The CHILD-side condition is the engine's, because the authority defines
-        the qualifying child as one "con derecho a la aplicación del mínimo por
-        descendientes" — a condition that already exists, already runs, and
-        already governs this same descendant in the same calculation. Asserting
-        it a second time would create a second authority for a question the
-        record already answers.
+        The CHILD-side condition is the engine's, and it is the ORDINARY mínimo
+        test rather than a bespoke one: the authority grants the deduction to
+        women with children under three "con derecho a la aplicación del mínimo
+        por descendientes", so the qualifying child is defined by the predicate
+        this record already computes — cohabitation or assimilated dependency,
+        the Art. 58.1 rentas ceiling, and the Art. 61 norma 2ª own-return
+        exclusion. Re-asserting it here would create a second authority for a
+        question :meth:`is_eligible_ordinary` already answers, and the two would
+        drift the moment either statute moved.
 
-        Returns ``0`` for a descendant outside the Art. 81.1 population, so
-        months declared against an ineligible child contribute nothing rather
-        than reaching the casilla unchecked.
+        *thresholds* is required for the same reason it is required there: an
+        optional ceiling lets a caller evaluate the household limb while
+        silently skipping the two income conditions, which inflates the
+        deducción.
+
+        The declared months are CAPPED by :meth:`maternidad_eligible_meses`
+        rather than trusted outright. An operator who counted correctly is
+        unaffected, because their figure already lies inside the window; one who
+        declared raw employment months has the over-claim removed. The cap can
+        only ever reduce, so it cannot invent an entitlement.
         """
-        if not self.is_eligible_menor_tres(filing_year):
+        if not self.is_eligible_ordinary(
+            filing_year,
+            thresholds=thresholds,
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        ):
             return 0
-        return self.meses_madre_trabajo_2024
+        return min(self.meses_madre_trabajo_2024, self.maternidad_eligible_meses(filing_year))
 
     def guarderia_contributing_spend(self, filing_year: int) -> int:
         """Art. 81.2 guardería spend this descendant contributes in *filing_year*.
@@ -1091,7 +1136,12 @@ class RentaFamilyProfile(BaseModel):
         """
         return sum(d.guarderia_contributing_spend(filing_year) for d in self.descendientes)
 
-    def meses_maternidad_por_descendiente(self, filing_year: int) -> tuple[tuple[str, int], ...]:
+    def meses_maternidad_por_descendiente(
+        self,
+        filing_year: int,
+        *,
+        thresholds: MinimoDescendientesThresholds,
+    ) -> tuple[tuple[str, int], ...]:
         """The Art. 81.1 ``(hijo_id, meses)`` pairs this profile contributes in *filing_year*.
 
         Pairs :meth:`DescendantInfo.maternidad_contributing_meses` with the
@@ -1108,14 +1158,28 @@ class RentaFamilyProfile(BaseModel):
         could declare spend, see it stored, and receive nothing. One aggregation
         path per value is the lesson, and this is that path for Art. 81.1.
 
+        Reads :attr:`dependencia_assimilation_available` off this profile rather
+        than taking it as an argument, exactly as
+        :meth:`descendientes_eligible_minimum` does, so the anualidades
+        carve-out cannot be applied to the mínimo and skipped for the deducción
+        that keys on it.
+
         Omits descendants contributing zero months, so an ineligible child and
         one whose mother declared no employment months are both simply absent
         rather than carrying a zero pair into the deducción.
         """
+        available = self.dependencia_assimilation_available
         return tuple(
             (str(index), meses)
             for index, descendant in enumerate(self.descendientes)
-            if (meses := descendant.maternidad_contributing_meses(filing_year)) > 0
+            if (
+                meses := descendant.maternidad_contributing_meses(
+                    filing_year,
+                    thresholds=thresholds,
+                    dependencia_assimilation_available=available,
+                )
+            )
+            > 0
         )
 
     def guarderia_needs_monthly_detail_indices(self, filing_year: int) -> tuple[int, ...]:

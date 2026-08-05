@@ -317,6 +317,105 @@ def _renta_family_profile_from_facts(
     return RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
 
 
+def _minimo_eligibility_profile(fact_index: Mapping[str, UserProfileFactValue]) -> RentaFamilyProfile:
+    """Rebuild the family record every Art. 58 eligibility question is asked of.
+
+    Carries the filer's declared anualidades alongside the descendants, because
+    that figure is what suppresses the dependency assimilation for all of them.
+    A reconstruction that omitted it would answer "is this descendant entitled
+    to the mínimo?" with the assimilation always available, over-granting for a
+    filer who pays anualidades.
+
+    Named and shared rather than rebuilt per consumer: the mínimo aggregate and
+    the Art. 81.1 deducción por maternidad ask the SAME question of the same
+    descendant in the same calculation, because the authority defines the
+    qualifying child as one "con derecho a la aplicación del mínimo por
+    descendientes". Two constructions of the record would let the two answers
+    diverge, which is precisely what tying the deduction to the mínimo predicate
+    is meant to prevent.
+    """
+    descendant_facts = {
+        fact_key: str(value)
+        for fact_key, value in fact_index.items()
+        if fact_key.startswith("renta_family.descendiente.")
+    }
+    return RentaFamilyProfile(
+        descendientes=descendant_list_from_facts(descendant_facts),
+        anualidades_alimentos_euros=_declared_anualidades_alimentos(fact_index),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class MaternidadMesesResolution:
+    """What the profile contributes to the Art. 81.1 deducción, and what it does not.
+
+    Carries the withheld indices and the ceilings verdict alongside the granted
+    pairs because all three come from one evaluation of one predicate over one
+    reconstruction of the record. Returning only the pairs would force the
+    caller to ask again for the other two, and a second evaluation is how a
+    disclosure comes to describe a withholding the grant path never made.
+    """
+
+    pairs: tuple[tuple[str, int], ...]
+    withheld_indices: tuple[str, ...]
+    ceilings_resolved: bool
+    declares_meses: bool
+
+
+def resolve_maternidad_meses(
+    record: object,
+    snapshot: RegistrySnapshot,
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> MaternidadMesesResolution:
+    """Resolve the Art. 81.1 maternidad months a profile record contributes.
+
+    Owns the fact-index projection as well as the predicate, so the calculate
+    path asks one question of this module rather than assembling the inputs
+    itself. The index is built exactly as profile-sourced bindings build it, so
+    the Art. 81.1 eligibility question is asked of the same facts every other
+    Art. 58 question is asked of.
+
+    ``ceilings_resolved`` is ``False`` when the revision does not declare the
+    Art. 58.1 / Art. 61 norma 2ª parameters. The deducción is then withheld
+    rather than granted against a fabricated ceiling — the same refusal the
+    mínimo aggregate makes, for the same reason — and the caller discloses it
+    rather than letting a declared figure vanish.
+    """
+    fact_index = _profile_fact_index(record, schema if schema is not None else load_user_profile_schema())
+    declares_meses = any(
+        key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo") for key in fact_index
+    )
+    thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
+    if thresholds is None:
+        return MaternidadMesesResolution(
+            pairs=(),
+            withheld_indices=(),
+            ceilings_resolved=False,
+            declares_meses=declares_meses,
+        )
+    profile = _minimo_eligibility_profile(fact_index)
+    available = profile.dependencia_assimilation_available
+    contributed = {
+        str(index): descendant.maternidad_contributing_meses(
+            snapshot.filing_year,
+            thresholds=thresholds,
+            dependencia_assimilation_available=available,
+        )
+        for index, descendant in enumerate(profile.descendientes)
+    }
+    return MaternidadMesesResolution(
+        pairs=tuple((hijo_id, meses) for hijo_id, meses in contributed.items() if meses > 0),
+        withheld_indices=tuple(
+            str(index)
+            for index, descendant in enumerate(profile.descendientes)
+            if descendant.meses_madre_trabajo_2024 > 0 and contributed[str(index)] == 0
+        ),
+        ceilings_resolved=True,
+        declares_meses=declares_meses,
+    )
+
+
 _MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES = (
     "primer-hijo",
     "segundo-hijo",
@@ -571,15 +670,7 @@ def _inject_derived_minimo_descendientes_facts(
         # exists to close, so refusing is the safe direction.
         return
 
-    descendant_facts = {
-        fact_key: str(value)
-        for fact_key, value in fact_index.items()
-        if fact_key.startswith("renta_family.descendiente.")
-    }
-    profile = RentaFamilyProfile(
-        descendientes=descendant_list_from_facts(descendant_facts),
-        anualidades_alimentos_euros=_declared_anualidades_alimentos(fact_index),
-    )
+    profile = _minimo_eligibility_profile(fact_index)
     second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
     birth_order_amounts, menor_tres_supplement = estatal_tranches

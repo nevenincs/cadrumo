@@ -247,6 +247,47 @@ def test_an_eligible_child_does_not_raise_the_withheld_advisory(
     assert "maternidad_meses_withheld" not in _advisory_kinds(output)
 
 
+def test_a_child_turning_three_mid_year_contributes_its_months_before_the_birthday(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The under-grant the month window closes, proven through the real CLI.
+
+    Born April 2021, so three years old by the 2024 devengo. A year-end age test
+    excludes the child entirely and the mother receives nothing for a year in
+    which she qualified for three months. Art. 81.1 runs "hasta que el menor
+    alcance los tres anos de edad", so January to March count and the birthday
+    month does not: three months at the authority's 100 euros is 300.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2021-04-15,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("300")
+
+
+def test_a_child_over_the_rentas_ceiling_contributes_nothing(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The deduction reaches only a child who holds the minimo por descendientes.
+
+    Art. 58.1 excludes a descendant whose own annual rentas exceed the ceiling,
+    and the authority defines the qualifying child for this deduction as one
+    "con derecho a la aplicacion del minimo por descendientes". A bare
+    age-and-cohabitation test cannot express that, so this case is the one that
+    distinguishes the mininmo predicate from a bespoke one.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare(f"{_MELLIZO_BIRTH},MESES_TRABAJO=12,RENTAS=99999")
+
+    exit_code, output = _calculate()
+
+    assert exit_code == 0, output
+    assert _casilla_0611(output) == Decimal("0")
+    assert "maternidad_meses_withheld" in _advisory_kinds(output)
+
+
 # ---------------------------------------------------------------------------
 # One authority per filing.
 # ---------------------------------------------------------------------------
