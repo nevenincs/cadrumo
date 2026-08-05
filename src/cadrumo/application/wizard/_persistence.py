@@ -16,14 +16,14 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
     from datetime import date
 
-    from ...domain.contribuyente import DescendantInfo
+    from ...domain.contribuyente import DescendantInfo, GuarderiaMonthSpend
     from ...domain.user_profile import UserProfileRecord
 
 from ...core import DescendantRelacion
@@ -393,6 +393,11 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         raise WorkflowInputMismatchError(
             translated_message="application.wizard.errors.descendant_rentas_not_a_valid_amount",
         )
+    # Read as a named pair rather than a second ** unpack: the call already
+    # carries one (relacion_kwarg, whose whole purpose is to render zero or
+    # one keyword), and two unpacks in one constructor leave a checker unable
+    # to tell which of them supplies what.
+    guarderia = _safe_guarderia_spend(row)
     return DescendantInfo(
         birth_date=birth_date,
         **relacion_kwarg(relacion),
@@ -430,12 +435,26 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         presenta_declaracion_propia=parse_bool(row.get("declaracion-propia", "")) is True,
         prorrata_minimo=parse_bool(prorrata) if prorrata else None,
         meses_madre_trabajo_2024=int(meses) if meses else 0,
-        **_safe_guarderia_spend(row),
+        gastos_guarderia_euros=guarderia["gastos_guarderia_euros"],
+        gastos_guarderia_mensuales=guarderia["gastos_guarderia_mensuales"],
         nif=row.get("nif") or None,
     )
 
 
-def _safe_guarderia_spend(row: Mapping[str, str]) -> dict[str, object]:
+class _GuarderiaSpend(TypedDict):
+    """The two guardería fields ``_safe_guarderia_spend`` resolves as a pair.
+
+    Declared rather than returned as a bare mapping so the ``**`` unpack into
+    :class:`~cadrumo.domain.contribuyente.DescendantInfo` stays checkable: a
+    ``dict[str, object]`` makes both values ``object`` at the call site, which
+    reads as a type error against every field on the record.
+    """
+
+    gastos_guarderia_euros: int
+    gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...]
+
+
+def _safe_guarderia_spend(row: Mapping[str, str]) -> _GuarderiaSpend:
     """Read one instance's two guardería answers into a pair the record accepts.
 
     The checkpoint path runs no flow validators, so an answer map can reach here
