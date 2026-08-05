@@ -28,7 +28,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from ....core import Period
+from ....core import Period, fold_diacritics, is_administrative_period_token
 from ....core.decimal import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id
@@ -316,9 +316,22 @@ def _parse_declaracion_pages(
 
 
 def _filing_period_for_observation(filing_year: int, registry_selector: str) -> Period:
-    """Resolve the parser's registry selector to the stored filing period."""
-    normalized = registry_selector.strip().upper()
-    if normalized in {"ALTA", "MODIFICACION", "MODIFICACIÓN", "BAJA"}:
+    """Resolve the parser's registry selector to the stored filing period.
+
+    An administrative censo selector names a registration event, not a period a
+    filing occupies, so it is stored as ``AD-HOC``. Membership is asked of
+    :func:`~cadrumo.core.is_administrative_period_token` rather than a local set:
+    a hand-copied set here already drifted two members behind the authority, and
+    the drift was invisible because the two it lacked belong to a modelo that
+    ships no extraction profile yet.
+
+    Accents are folded before the question is asked because AEAT prints these
+    tokens in correct Spanish (``MODIFICACIÓN``, ``COMUNICACIÓN``, ``VARIACIÓN``)
+    while the registry declares them unaccented. Folding every token is safe: the
+    rest of the vocabulary is ASCII, so the fold is a no-op there.
+    """
+    normalized = fold_diacritics(registry_selector).strip().upper()
+    if is_administrative_period_token(normalized):
         return Period.from_year_and_code(filing_year, "AD-HOC")
     return Period.from_year_and_code(filing_year, "0A" if normalized == str(filing_year) else normalized)
 

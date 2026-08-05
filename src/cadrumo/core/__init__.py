@@ -160,6 +160,7 @@ from ._period import (
     accepted_filing_period_patterns,
     accepted_period_codes,
     accepted_period_patterns,
+    is_administrative_period_token,
     registry_period_kind,
 )
 from ._post_filing_event import (
@@ -414,6 +415,7 @@ __all__: list[str] = [
     "fsync_parent_dir",
     "fts_or_group",
     "iban_mod_97",
+    "is_administrative_period_token",
     "is_aeat_csv",
     "lineage_obligations",
     "live_state_root_inputs",

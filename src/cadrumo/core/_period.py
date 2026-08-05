@@ -156,6 +156,29 @@ def _validate_period_against_registry(value: str) -> str:
         raise ValueError(f"invalid period code '{value}'; accepted forms: {accepted}") from None
 
 
+def is_administrative_period_token(token: str) -> bool:
+    """Return whether ``token`` is one of the administrative censo period codes.
+
+    The administrative sub-vocabulary (Modelo 036's ``ALTA`` / ``MODIFICACION`` /
+    ``BAJA``, Modelo 145's ``COMUNICACION`` / ``VARIACION``) addresses a registry
+    revision rather than naming a period, so a caller holding a raw registry token
+    generally needs to route it somewhere other than :class:`Period`. This is the
+    one public way to ask, so the membership test cannot be hand-copied into a
+    second, drifting set.
+
+    Matching is on the registry's own unaccented spelling. A caller reading a
+    token off an AEAT-rendered surface — where Spanish prints ``MODIFICACIÓN``,
+    ``COMUNICACIÓN``, ``VARIACIÓN`` — folds it with
+    :func:`~cadrumo.core.fold_diacritics` first; admitting accented spellings here
+    would put this predicate and :data:`RegistryPeriodCode` into disagreement
+    about the same token.
+
+    Raises:
+        ValueError: When ``token`` is not a string.
+    """
+    return _normalised_period_token(token) in _ADMINISTRATIVE_PERIOD_SET
+
+
 def accepted_period_codes() -> tuple[str, ...]:
     """Return the fully enumerable REGISTRY period codes.
 
@@ -531,5 +554,6 @@ __all__ = [
     "accepted_filing_period_patterns",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "is_administrative_period_token",
     "registry_period_kind",
 ]
