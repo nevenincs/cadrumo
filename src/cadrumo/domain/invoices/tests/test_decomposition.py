@@ -341,3 +341,45 @@ def test_eu_member_state_substrate_still_resolves_for_a_partitioned_invoice() ->
 
     assert invoice.counterparty_eu_member_state is EUMemberState.DE
     assert decompose_invoice(invoice).is_grounded
+
+
+def test_a_one_directional_category_on_its_impossible_side_is_its_own_defect() -> None:
+    """An import the taxpayer ISSUED is a contradiction, not an absent declaration.
+
+    LIVA art. 17 defines an importación as goods the taxpayer receives, so the
+    pair (import_third_country, issued) describes no operation. The operator
+    declared a treatment, so reporting it as IVA_TREATMENT_UNDECLARED would
+    send them to fill in a field they already filled in; the two failures need
+    different fixes and therefore different members.
+    """
+    invoice = _invoice(kind=InvoiceKind.ISSUED, iva_category=IvaCategory.IMPORT_THIRD_COUNTRY)
+
+    defects = decompose_invoice(invoice).defects
+
+    assert InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND in defects
+    assert InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED not in defects
+
+
+def test_the_same_category_on_its_real_side_is_not_flagged() -> None:
+    """The control. Without it, a member that fired unconditionally would pass above.
+
+    The identical category on the RECEIVED side is an ordinary importación, so
+    the impossible-side defect must be absent — otherwise the check is keying
+    on the category rather than on the pair.
+    """
+    invoice = _invoice(kind=InvoiceKind.RECEIVED, iva_category=IvaCategory.IMPORT_THIRD_COUNTRY)
+
+    defects = decompose_invoice(invoice).defects
+
+    assert InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND not in defects
+
+
+def test_the_impossible_side_guidance_does_not_repeat_the_undeclared_advice() -> None:
+    """The two members must not resolve to the same sentence.
+
+    The whole reason for the split is that the remediation differs; identical
+    guidance would make the extra member cosmetic.
+    """
+    impossible = INVOICE_DECOMPOSITION_DEFECT_GUIDANCE[InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND]
+    undeclared = INVOICE_DECOMPOSITION_DEFECT_GUIDANCE[InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED]
+    assert impossible != undeclared

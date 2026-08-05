@@ -91,6 +91,18 @@ class InvoiceDecompositionDefect(StrEnum):
     neither bears a cuota.
     """
 
+    CATEGORY_IMPOSSIBLE_ON_THIS_KIND = "category_impossible_on_this_kind"
+    """The declared category is one-directional and this invoice is the other side.
+
+    Kept separate from :attr:`IVA_TREATMENT_UNDECLARED` because the operator
+    fix differs. An absent category is a data-entry gap: supply one. A category
+    on its impossible side is a CONTRADICTION between two declarations that
+    were both made — an entrega intracomunitaria recorded as received, say —
+    and the contract cannot tell which of the two is the mistake. Telling that
+    operator to "declare the IVA treatment" would send them to fix a field
+    they already filled in.
+    """
+
     CUOTA_CONTRADICTS_CATEGORY = "cuota_contradicts_category"
     """The record carries a cuota the declared category makes zero by law.
 
@@ -114,6 +126,10 @@ INVOICE_DECOMPOSITION_DEFECT_GUIDANCE: Final[Mapping[InvoiceDecompositionDefect,
         ),
         InvoiceDecompositionDefect.TAXABLE_BASE_ABSENT: (
             "record the base imponible; this category carries a taxable base even when it bears no cuota"
+        ),
+        InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND: (
+            "the declared IVA category cannot occur on an invoice of this kind; correct whichever "
+            "is wrong -- the category, or whether the invoice was issued or received"
         ),
         InvoiceDecompositionDefect.CUOTA_CONTRADICTS_CATEGORY: (
             "the recorded cuota and the declared IVA category disagree; correct whichever is wrong"
@@ -314,9 +330,10 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     row = iva_category_components(category, invoice.kind)
     if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
         # The category is one-directional and this invoice claims the other
-        # side (an "import" the taxpayer issued, say). The combination is not a
-        # real operation, so the declaration is as unusable as an absent one.
-        yield InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED
+        # side (an "import" the taxpayer issued, say). Its own defect rather
+        # than the undeclared one: the operator DID declare a treatment, so
+        # the two failures need different remediation.
+        yield InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND
         return
     # The two placeholder categories are not named here. Their Axis-A rows
     # already declare their own components UNKNOWN, so reading that column is
