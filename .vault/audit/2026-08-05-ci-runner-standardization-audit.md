@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:336f4fd1195869e159d01021a1d45378f4b0632ef13e669160745fceb6d6be74'
+body_hash: 'sha256:4abd1676cbbfe13e306ca722b3200a62b0bd2296960a874f654bf252c38f2324'
 related: []
 ---
 
@@ -564,6 +564,77 @@ is the documented alternative and the README already names the migration path, i
 that the diagnostic hook then takes effect on a service restart rather than a console
 relaunch. That is an operator act on operator-owned infrastructure, and it is the only
 change that stops this recurring at every logoff, stray interrupt, and reboot.
+
+### directory-renames-are-not-cheap | medium | The rename judged cheapest is the one that cannot be done safely
+
+The naming proposal assumed directory renames were the low-cost half — no re-registration,
+no downtime. Measurement contradicts that for every directory that actually diverges.
+
+Each runner directory is named by **absolute path** in two places that a rename would
+silently invalidate: the action of the logon scheduled task that launches it, and the
+job-completed hook path in the runner's own environment file. Editing the task requires
+an elevated session, which this one does not have and did not acquire.
+
+So the rename and the task edit must land together, and only one half is reachable.
+Doing the reachable half alone would leave a launcher pointing at a path that no longer
+exists — converting the Windows runner from *down but relaunchable at the next logon*
+into *down with its relauncher broken*, which directly worsens the deregistration
+deadline recorded above. The dashboard directory carries the identical coupling on
+another project's surface.
+
+The two conforming directories need no change. The two divergent ones are blocked on the
+same elevation as the duplicate-task item. **The cheap half of the naming work turns out
+to be the blocked half, and the expensive half — runner names — turns out to be the one
+that could proceed.** That is the reverse of the proposal's assumption and is recorded
+so the next reader does not re-derive the cheap-looking answer.
+
+### runner-names-now-conform | medium | Both Linux runners renamed with no outage, because the restored pair provided cover
+
+The runner carrying a name that asserted the wrong hosting mechanism has been
+re-registered under the convention, and its sibling with it. Both now identify
+product-first and carry no host name.
+
+The restore made this safe. Renaming a registration is a deregister/re-register cycle,
+which on a single runner is an outage; with a healthy pair sharing one label set, the
+surviving runner covers the label while its sibling is reconfigured. Both were idle,
+each was stopped and reconfigured in turn, and each returned online listening for jobs.
+The stale registration left behind by the rename was removed rather than left as another
+orphan.
+
+The sequencing is the lesson: the restore was justified on capacity, but it also created
+the conditions that made the naming fix free. Work ordered by risk produced an
+opportunity that work ordered by tidiness would have missed — attempting these renames
+before the pair existed would have meant real downtime on the only Linux runner.
+
+### macbook-host-entirely-offline | critical | The second build host is down, and six registrations across four repositories are now on the deregistration clock
+
+Observed during this session rather than sought: **every runner hosted on the macOS
+build machine is offline, across all four repositories** — both of this repository's, and
+one or two each belonging to the other three. Two of them were online when this audit
+began. The host does not answer on the network.
+
+This is a whole-machine outage, not a per-repository fault, and nothing in this campaign
+touched that machine — the work here was confined to containers and registrations on the
+Windows/WSL box.
+
+Its significance is the clock, and the clock is now the central finding of this audit
+rather than an aside. The mechanism established from the lost Linux runner applies
+unchanged: a runner that merely stops is deregistered for inactivity after roughly a
+fortnight, and at that moment its stored configuration becomes permanently dead. That
+happened once here and cost a full re-provisioning. **Six registrations are now sitting
+in that same window simultaneously**, on a host that is manually provisioned and cannot
+be rebuilt from this machine.
+
+So the fleet-wide state is worse than any single finding suggested. This repository has
+two working runners — both Linux X64, both restored or renamed during this audit — and
+is carrying an offline Windows runner and two offline ARM runners. Its macOS, Linux
+ARM64 and Windows lanes are all unschedulable at once.
+
+And it is the third independent instance of the same root defect: **nothing watches the
+fleet.** One runner was lost to it entirely, one is a day into it, and six more entered
+the window during the few hours this audit took to write. A liveness check is no longer
+a tidiness proposal; it is the only control that would have surfaced any of these before
+the cheap remedy expired.
 
 ## Recommendations
 
