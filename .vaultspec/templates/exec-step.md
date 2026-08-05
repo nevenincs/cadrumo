@@ -51,6 +51,19 @@ related:
 
 ## Outcome
 
+## Verification
+
+<!-- Where the evidence is that something RAN, quote the instrument rather than
+     summarising it: the invocation, then the runner's verbatim summary line.
+
+         uv run --no-sync pytest <paths> -m integration -n 0
+         15 passed in 10.35s
+
+     The invocation shows the selection (marker expression and path scope); the
+     summary line shows what that selection produced. A run that selected nothing
+     exits zero and reads as green, so a paraphrase such as "the tests pass"
+     discards exactly the part a reader needs. Quote, do not summarise. -->
+
 ## Notes
 
 <!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
