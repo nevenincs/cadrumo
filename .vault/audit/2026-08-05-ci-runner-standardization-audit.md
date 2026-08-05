@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:31f4dfd5844f1b4a83656ecade16d46a0595ca5e90861dbfca75d56e4eafbc4d'
+body_hash: 'sha256:0bd0968c31b290287ff669aed9a459add0065586ee933284c5282051efdf6899'
 related: []
 ---
 
@@ -339,6 +339,48 @@ So it is genuinely superseded, genuinely inert, and its correct end state is the
 is already in. Deleting it would need the same elevation the item above lacks, and
 would buy nothing: a disabled never-run task consumes no resource and cannot fire.
 Recording it as known-superseded is the complete remedy, and is cheaper than deletion.
+
+### linux-runner-death-root-caused | high | The container did not die of the cleanup prune; it died of an unrecoverable registration crash-loop
+
+The orphaned state volume was inspected read-only and carries the whole story in its
+diagnostics. The earlier reading — that the cleanup hook's container prune reaped a
+stopped container and thereby cost the capacity — is wrong about causation. The prune
+was the last step, not the cause.
+
+The evidenced sequence: the runner served normally for three days, its logs large and
+busy. Its final session then ends **mid-poll with no shutdown record at all** — token
+refreshes continuing at ordinary intervals, then nothing. That absence is the signature
+of a container stopped externally rather than one that failed: a runner that crashes
+says so, and a runner asked to stop logs its shutdown. Neither appears.
+
+Eleven days of silence follow. The service then does what it documents: it deletes
+registrations that have not connected recently. When the container next started — the
+restart policy firing after a daemon or host restart — it woke into a world where its
+identity no longer existed, and logged exactly that: the registration has been deleted
+from the server, please re-configure. It exited code 1, the restart policy started it
+again, and it repeated the cycle seven times in thirty seconds before ending stopped.
+
+Two consequences follow, and both matter more than the original finding.
+
+**A deleted registration plus an always-restart policy is an unrecoverable loop.** The
+container cannot re-register: that needs a fresh registration token it has no way to
+obtain. So it burns restarts forever without any possibility of self-healing, and the
+only signal is a log nobody reads inside a container nobody is watching. This is why
+the volume must not be reused — any container built on those credentials reproduces the
+same loop indefinitely.
+
+**The real defect is that nothing noticed.** A runner stopped serving, its registration
+was deleted for inactivity eleven days later, it crash-looped, and it was reaped — and
+the first thing to observe any of it was an unrelated inventory audit two weeks on. The
+fleet has no liveness signal. Restoring the container without adding one would rebuild
+the capacity and leave intact the condition that let it vanish unremarked, which is the
+same reset-instead-of-fix this campaign has refused twice already.
+
+The likely trigger deserves recording without being overstated: the stop falls in the
+same window as the provisioning of three other repositories' runners on this box, whose
+directories were created across the two following days. A container stopped during that
+work and never restarted fits every observation, but the logs do not name who stopped
+it, and no evidence here raises that from consistent to established.
 
 ## Recommendations
 
