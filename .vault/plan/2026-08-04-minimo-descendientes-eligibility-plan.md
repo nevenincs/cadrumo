@@ -276,6 +276,33 @@ reconstruction it feeds is called five lines below at `:278`, inside the same fu
 body, while the other reconstruction is called elsewhere entirely. Ordering `S18` first
 would mean two separate edits to one hunk and two chances to disturb it.
 
+`S40` is being landed in coherent pieces rather than as one atomic commit, and the
+contrast with `S39` is the point. `S39` had to be atomic because a persisted field
+without a writer is a dead shape — half of it is a defect. Here the failure mode is the
+opposite: the registry formula keeps its current behaviour until a binding feeds it, so
+each piece is independently verifiable and none half-grants anything. Two pieces have
+landed and neither changes a computed value, verified rather than asserted — the
+formula is untouched at HEAD. Taken atomically the choice would have been between
+rushing the piece that changes live behaviour and reverting the two that do not.
+Atomicity is a property to argue for per change, not a default.
+
+The proration basis mirrors the existing spend method rather than re-deriving the month
+selection, because the two answer one question about one set of months, in euros and in
+count; a test declaring spend only in months the turning-three extension excludes
+catches a method that counts the right NUMBER of wrong months, which a count-only
+assertion would pass. The per-child cap carries both manual oracles and two assertions
+the oracles cannot supply: that the cap binds per child, since a household-wide minimum
+hands a lightly-enrolled child's unused allowance to a heavily-enrolled sibling with no
+entitlement to it, and the flat-cap delta pinned at its euro figure so a regression
+fails with the number that motivated the fix rather than an opaque one.
+
+`S45` exists because of a wrinkle the row did not anticipate: the annual cap figure
+lives ONLY as an inline literal inside the formula, which registry TOML can read and
+the application layer cannot. The injector that must call the prorated aggregate has no
+way to obtain it, so it has to be authored as a money parameter with legal grounding
+and per-year citations. That is regulatory-value authoring with its own obligations
+rather than wiring, which is why it is a row rather than a step inside one.
+
 ## Verification
 
 The plan is complete when every Step is closed and all of the following hold: the two
