@@ -1,12 +1,8 @@
-"""Reusable IVA classification record for ledger-side categorization.
+"""IVA classification record for the invoice-import bridge to the ledger.
 
 Bridges the substrate's three IVA classification axes
 (:class:`IvaCategory`, :class:`IvaRateKind`, :class:`IvaFlowDirection`)
-into one frozen pydantic record that the ledger and downstream
-filing surfaces can pass around without re-deriving the mapping.
-
-Every IVA-bearing ledger line — invoice line, payment, ledger entry —
-carries one :class:`IvaInvoiceClassification`. The record captures:
+into one frozen pydantic record. The record captures:
 
 - The operation kind (domestic / intra-community / recargo / OSS / etc.).
 - The applicable rate tier (general / reduced / super-reduced / zero / exempt).
@@ -15,25 +11,26 @@ carries one :class:`IvaInvoiceClassification`. The record captures:
   deducible) — pre-computed at construction time so consumers don't
   have to call :func:`settlement_sides_for_flow` repeatedly.
 
-Why a separate record instead of fields on
-:class:`cadrumo.domain.invoices.Invoice`?
-
-Multiple ledger surfaces need the same triple — invoice lines,
-payment-record IVA splits, expense-report ledger lines, OSS / IOSS
-observations, recargo de equivalencia entries — and embedding the
-fields directly on each model would scatter the substrate-bridge
-logic across the codebase. The record is the canonical reusable
-construct: build one from substrate primitives once, pass it down
-the ledger pipeline.
-
-The :func:`classify_invoice_line_for_iva` helper accepts an
-:class:`IvaRate` plus the invoice direction (issued / received) and
-returns a :class:`IvaInvoiceClassification` for the standard
-domestic-IVA case (the most common autónomo operation). For
+Scope: this record is the standard-case construction path for
+**invoice lines** specifically — :func:`classify_invoice_line_for_iva`
+derives it from an :class:`IvaRate` plus the invoice direction (issued /
+received), and :func:`invoice_line_to_iva_observation` is the sole
+production caller, feeding the invoice-derived Modelo 303 observations in
+:mod:`cadrumo.application.aggregation._modelo_bindings`. For
 reverse-charge, intra-community, OSS / IOSS, and other non-domestic
-cases, callers construct the record directly with the appropriate
+invoice cases, callers construct the record directly with the appropriate
 :class:`IvaCategory` from the substrate's classifier output
 (:func:`classify_iva`).
+
+This is NOT the construction path for the general ledger-transaction
+pipeline. Bank-transaction-derived IVA observations (payment splits,
+expense-report lines, OSS / IOSS observations, recargo de equivalencia
+entries resolved from already-classified ledger rows) are built directly
+as :class:`~cadrumo.domain.calculations.registry.IvaLedgerObservation` in
+:mod:`cadrumo.application.aggregation._iva_ledger`, whose category, rate,
+and flow axes are resolved upstream (manual or LLM classification) rather
+than re-derived from an :class:`IvaRate` + direction pair — that pipeline
+never constructs an :class:`IvaInvoiceClassification`.
 """
 
 from __future__ import annotations
