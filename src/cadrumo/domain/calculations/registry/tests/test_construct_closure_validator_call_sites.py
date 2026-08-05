@@ -41,7 +41,7 @@ def test_modelo_validation_rejects_construct_without_official_source_evidence() 
     casilla = minimal_casilla()
     construct = ConstructDefinition(
         id="construct.without-guidance",
-        title="Construct without official guidance",
+        localization_key="test.schema.construct.without-guidance.title",
         casilla_ids=(casilla.id,),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),

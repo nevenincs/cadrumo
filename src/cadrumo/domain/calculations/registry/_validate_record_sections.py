@@ -91,7 +91,7 @@ def validate_casilla_section(
                 ),
             )
         for alias in casilla.aliases:
-            alias_owner = f"casilla {casilla.id} alias {alias.label!r}"
+            alias_owner = f"casilla {casilla.id} alias {alias.localization_key!r}"
             failures.extend(missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
             failures.extend(missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
             failures.extend(

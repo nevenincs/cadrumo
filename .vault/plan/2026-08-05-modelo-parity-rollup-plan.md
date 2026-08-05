@@ -4,7 +4,7 @@ tags:
   - '#modelo-parity-rollup'
 date: '2026-08-05'
 modified: '2026-08-05'
-body_hash: 'sha256:94b2c14a2bd8b1fe138c249a7fe9aea75ad88b8a064e68da24b4c474f307a5bd'
+body_hash: 'sha256:2e33bd71f6bcfb7fb4871ba46570fe3cba000be9537803f30e203a13bc2864f8'
 tier: L3
 related:
   - '[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]'
@@ -53,17 +53,17 @@ Map every schema construct, formula, parameter, binding, relation, selector, and
 
 Inventory canonical relations and aggregation paths with source and target coordinates, period applicability, clean-state behavior, and provenance.
 
-- [ ] `W01.P06.S10` - Inventory canonical relation and aggregation declarations with source and target identities; `src/cadrumo/domain/calculations/registry`.
-- [ ] `W01.P06.S11` - Measure period applicability and clean-state behavior for each cross-model handoff; `src/cadrumo/domain/calculations/registry/_snapshot.py`.
-- [ ] `W01.P06.S12` - Detect parallel or non-canonical handoff paths and preserve their provenance classifications; `src/cadrumo/domain/calculations/registry/_validate.py`.
+- [x] `W01.P06.S10` - Inventory canonical relation and aggregation declarations with source and target identities; `src/cadrumo/domain/calculations/registry`.
+- [x] `W01.P06.S11` - Measure period applicability and clean-state behavior for each cross-model handoff; `src/cadrumo/domain/calculations/registry/_snapshot.py`.
+- [x] `W01.P06.S12` - Detect parallel or non-canonical handoff paths and preserve their provenance classifications; `src/cadrumo/domain/calculations/registry/_validate.py`.
 
 ### Phase `W01.P07` - Certify behavioral verification parity
 
 Define the finite annual matrix, map only exact existing oracle evidence, and prove claimed producers and handoffs through the real registry and runtime.
 
-- [ ] `W01.P07.S13` - Define the finite annual matrix from law-selected revisions and official layout sources; `dev/registry/conformance/manager.py`.
+- [x] `W01.P07.S13` - Define the finite annual matrix from law-selected revisions and official layout sources; `dev/registry/conformance/manager.py`.
 - [x] `W01.P07.S14` - Extract exact existing oracle coordinate and payload mappings without adding unsupported claims; `src/cadrumo/domain/calculations/registry/_external_grounding.py`.
-- [ ] `W01.P07.S15` - Prove real runtime verification expectations and independent-value projections for certified mappings; `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`.
+- [x] `W01.P07.S15` - Prove real runtime verification expectations and independent-value projections for certified mappings; `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`.
 
 ## Wave `W03` - Resolve bounded semantic decisions
 

@@ -389,6 +389,7 @@ def test_construct_definition_rejects_legacy_casillas_key() -> None:
         ConstructDefinition.model_validate(
             {
                 "id": "test.construct",
+                "localization_key": "test.schema.construct.test.title",
                 "title": "Test construct",
                 "casillas": (_SCHEMA_CASILLA_ID,),
                 "legal_refs": (_SCHEMA_LEGAL_ID,),

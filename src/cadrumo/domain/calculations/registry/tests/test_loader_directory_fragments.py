@@ -352,7 +352,6 @@ def test_directory_mode_merges_construct_member_fragments_by_construct_id(tmp_pa
 
 [[revisions."2025".constructs]]
 id = "modelo-999-workflow"
-title = "Workflow"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 casilla_ids = ["0001"]
@@ -380,7 +379,6 @@ casilla_ids = ["0001"]
         """
 [[revisions."2025".constructs]]
 id = "modelo-999-workflow"
-title = "Workflow"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 formulas = ["formula-1"]
@@ -432,7 +430,6 @@ record_type = "2"
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
-title = "One"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 casilla_ids = ["0001"]
@@ -443,14 +440,13 @@ casilla_ids = ["0001"]
                     """
 [[revisions."2025".constructs]]
 id = "workflow"
-title = "Two"
 legal_refs = ["ley-58-2003:art-29"]
-source_refs = ["aeat-manual"]
+source_refs = ["other-source"]
 formulas = ["formula-1"]
 """.lstrip(),
                 ),
             ),
-            "field 'title' conflicts",
+            "field 'source_refs' conflicts",
             id="construct-metadata",
         ),
     ),

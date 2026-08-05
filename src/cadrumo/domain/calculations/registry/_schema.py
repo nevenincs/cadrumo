@@ -569,7 +569,7 @@ class SupportRemovalDecisionDefinition(RegistryModel):
 
 class ConstructDefinition(RegistryModel):
     id: ConstructId
-    title: str = Field(min_length=1, max_length=200)
+    localization_key: str = Field(min_length=1, exclude=True, repr=False)
     legal_refs: LegalRefs
     source_refs: SourceRefs
     casilla_ids: tuple[CasillaId, ...] = ()
@@ -589,6 +589,17 @@ class ConstructDefinition(RegistryModel):
     filing_schedules: tuple[str, ...] = ()
     support_removal_decisions: tuple[SupportRemovalDecisionId, ...] = ()
     dependency_classifications: tuple[DependencyClassificationId, ...] = ()
+
+    def get_title(self, locale: str) -> str:
+        """Resolve the construct title from the shared catalogue."""
+        resolved = resolve_modelo_localization((self.localization_key,), locale=locale, required=True)
+        assert resolved is not None
+        return resolved
+
+    @property
+    def title(self) -> str:
+        """Return the strict official-Spanish construct title."""
+        return self.get_title("es")
 
     @field_validator(
         "casilla_ids",

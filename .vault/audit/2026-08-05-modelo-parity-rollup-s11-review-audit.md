@@ -5,51 +5,26 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a469581f13140414121c511017b74d205457933685fbe2a76ae1fcb56cd24c1b'
+body_hash: 'sha256:8d09cb98326f92381f7a97792afa57202c257698d94e8131001c7b0edaa4090c'
 related:
   - "[[2026-08-05-modelo-parity-rollup-plan]]"
   - "[[2026-08-05-modelo-parity-rollup-five-domain-contract-adr]]"
   - "[[2026-08-05-modelo-parity-rollup-denominator-research]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace modelo-parity-rollup with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-# `modelo-parity-rollup` audit: `S11 relation period applicability review`
-
 ## Scope
 
-<!-- What was audited and why -->
+Audit authority-selected period applicability and the clean-state contract for every declared cross-model relation. The runtime verdict remains taxpayer-specific; this step measures the registry requirement graph and records that boundary explicitly.
 
 ## Findings
 
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
+### S11 relation period applicability review | low | All declared relation-period rows resolve or are explicitly excluded
 
-       ### S11 relation period applicability review | {level} | {summary}
+The authority-selected inventory expands 74 relations to 108 declared relation-period rows: 81 active rows produce a source requirement, 27 rows are excluded by target-period applicability, and 0 rows are unresolved. This proves period-graph closure for the current bundled declarations at each revision representative year; it is not a numeric calculation proof.
 
-     followed by a paragraph carrying the detail. S11 relation period applicability review is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
+### S11 relation period applicability review | medium | Clean-state behavior is classified, but taxpayer verdicts remain unmeasured
+
+The 108 rows classify into 73 required clean-state contracts, 13 conditional contracts governed by economic-activity applicability, and 22 advisory/not-applicable contracts for sources the taxpayer does not file. Every row carries `runtime_clean_state=unmeasured`, because a registry audit has no taxpayer repositories, evidence payloads, or operator facts from which to manufacture a clean-state verdict.
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+Carry the 108-row applicability matrix into S12 and behavioral verification. Use the existing application clean-state authority for runtime verdicts, and require real repository/evidence tests before claiming behavioral parity. Do not collapse conditional or advisory rows into unconditional required dependencies.

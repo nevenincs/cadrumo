@@ -36,6 +36,20 @@ def revision_locale_key(modelo_id: str, revision_id: str, field: Literal["label"
     )
 
 
+def construct_locale_key(
+    modelo_id: str,
+    revision_id: str,
+    construct_id: str,
+    field: Literal["title"] = "title",
+) -> str:
+    """Derive the presentation key for one revision construct."""
+    return (
+        f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.revision."
+        f"{encode_modelo_locale_segment(revision_id)}.construct."
+        f"{encode_modelo_locale_segment(construct_id)}.field.{field}"
+    )
+
+
 def casilla_occurrence_locale_key(
     modelo_id: str,
     revision_id: str,
@@ -59,6 +73,22 @@ def casilla_continuity_locale_key(
     return (
         f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.casilla.continuidad."
         f"{encode_modelo_locale_segment(continuidad_id)}.{field}"
+    )
+
+
+def casilla_alias_locale_key(
+    modelo_id: str,
+    revision_id: str,
+    casilla_id: str,
+    alias_id: str,
+    field: Literal["label"] = "label",
+) -> str:
+    """Derive the presentation key for one casilla alias occurrence."""
+    return (
+        f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.revision."
+        f"{encode_modelo_locale_segment(revision_id)}.casilla."
+        f"{encode_modelo_locale_segment(casilla_id)}.alias."
+        f"{encode_modelo_locale_segment(alias_id)}.{field}"
     )
 
 
@@ -90,8 +120,10 @@ def resolve_modelo_localization(
 
 __all__ = [
     "ModeloLocalizationField",
+    "casilla_alias_locale_key",
     "casilla_continuity_locale_key",
     "casilla_occurrence_locale_key",
+    "construct_locale_key",
     "encode_modelo_locale_segment",
     "modelo_locale_key",
     "resolve_modelo_localization",

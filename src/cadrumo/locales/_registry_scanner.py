@@ -69,7 +69,11 @@ def scan_modelo_schema_keys() -> set[str]:
         keys.add(modelo.official_name_localization_key)
         for revision in modelo.revisions.values():
             keys.add(revision.localization_key)
+            for construct in revision.constructs:
+                keys.add(construct.localization_key)
             for casilla in revision.casillas:
                 keys.update(casilla.localization_keys)
                 keys.update(f"{key.removesuffix('.label')}.help" for key in casilla.localization_keys)
+                for alias in casilla.aliases:
+                    keys.add(alias.localization_key)
     return keys

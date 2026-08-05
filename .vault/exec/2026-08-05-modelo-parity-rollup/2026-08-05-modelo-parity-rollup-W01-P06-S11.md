@@ -5,57 +5,23 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad8b1ac5fc4d90d3c6340a9dcdfc7e991f6287717cff1618a899d24448c68506'
+body_hash: 'sha256:fe9dc1dacc5084c2cd32f62c39a5afb142ada7117a4ee971b6bad9aaf1bd5873'
 step_id: 'S11'
 related:
   - "[[2026-08-05-modelo-parity-rollup-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace modelo-parity-rollup with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S11 and 2026-08-05-modelo-parity-rollup-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Measure period applicability and clean-state behavior for each cross-model handoff and ## Scope
-
-- `src/cadrumo/domain/calculations/registry/_snapshot.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Measure period applicability and clean-state behavior for each cross-model handoff
-
-## Scope
-
-- `src/cadrumo/domain/calculations/registry/_snapshot.py`
-
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Re-run RAG against relation period alignment, source-period derivation, and the clean-state dependency inventory.
+- Use the validated authority and authority-selected snapshots for every revision representative year and declared target period.
+- Project `relation_source_requirements` into typed relation-period rows, preserving source filing year, source periods, source casilla, dependency treatment, aggregation, and legal/source references.
+- Classify clean-state contracts as required, conditional, or advisory from the registry dependency classification; leave taxpayer-specific runtime verdicts explicitly unmeasured.
+- Add real bundled-authority assertions for the finite row counts, M100 2025 advisory and conditional examples, and no unresolved rows.
 
 ## Outcome
 
+S11 is complete. The measured denominator is 108 relation-period rows from 74 validated relations: 81 active, 27 not applicable, and 0 unresolved. Clean-state contract classes are 73 required, 13 conditional, and 22 advisory. The focused real-registry module passes 3 tests; Ruff, format, basedpyright, and the owned-path diff check are clean.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+This step measures the registry-side requirement contract only. It does not run a taxpayer clean-state verdict and does not substitute synthetic repositories, mocks, or fabricated evidence for behavioral proof.
