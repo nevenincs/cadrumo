@@ -1,0 +1,31 @@
+# TEMPORARY probe: is `administration` even a grantable permissions key?
+# Isolated in its own workflow file so a parse rejection cannot take the main
+# probe down with it.
+
+name: Cadrumo Runner Probe Permissions
+
+on:
+  push:
+    branches: [ci-runner-probe]
+
+jobs:
+  ask-for-administration:
+    name: Cadrumo probe / request administration read
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    permissions:
+      administration: read
+      actions: read
+      contents: read
+    steps:
+      - name: Report the granted permission set and retry the runners endpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "=== the runner prints the granted GITHUB_TOKEN permissions above ==="
+          status="$(curl -s -o /tmp/r.json -w '%{http_code}' \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runners")"
+          echo "HTTP_STATUS_WITH_ADMINISTRATION_REQUESTED=$status"
+          cat /tmp/r.json; echo
