@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from dev.packaging._command import run_command
 from dev.packaging._hashing import sha256_path
+from dev.packaging._proof_ledger import record_proof, reset_proof_ledger
 from dev.packaging._smoke_common import write_smoke_manifest
 from dev.packaging.cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
@@ -235,11 +236,13 @@ def test_checkpoint_copies_manifest_without_traversing_secure_runtime(tmp_path) 
     secrets_dir.mkdir(parents=True)
     (secrets_dir / "encrypted.bin").write_bytes(b"ciphertext")
     (secrets_dir / "packaging-smoke-manifest.json").write_text("not-json", encoding="utf-8")
+    reset_proof_ledger()
+    record_proof("clean Linux container install")
     manifest = write_smoke_manifest(
         work_dir,
         lane="docker-core",
         artifacts={"wheel": "wheel/cadrumo.whl"},
-        checks=("clean Linux container install",),
+        declared=("clean Linux container install",),
     )
     evidence_root = tmp_path / "packaging-smoke-evidence"
 
@@ -259,11 +262,13 @@ def test_checkpoint_prunes_only_completed_work_directories(tmp_path) -> None:
     incomplete.mkdir(parents=True)
     (completed / "large-browser-payload.bin").write_bytes(b"browser-cache")
     (incomplete / "failure.log").write_text("ENOSPC\n", encoding="utf-8")
+    reset_proof_ledger()
+    record_proof("localhost browser health smoke")
     write_smoke_manifest(
         completed,
         lane="browser-extra",
         artifacts={"wheel": "wheel/cadrumo.whl"},
-        checks=("localhost browser health smoke",),
+        declared=("localhost browser health smoke",),
     )
     evidence_root = tmp_path / "packaging-smoke-evidence"
 
@@ -279,11 +284,13 @@ def test_checkpoint_refuses_to_replace_existing_immutable_evidence(tmp_path: Pat
     smoke_root = tmp_path / "packaging-smoke"
     work_dir = smoke_root / "browser-20260715T214000Z"
     work_dir.mkdir(parents=True)
+    reset_proof_ledger()
+    record_proof("localhost browser health smoke")
     write_smoke_manifest(
         work_dir,
         lane="browser-extra",
         artifacts={"wheel": "wheel/cadrumo.whl"},
-        checks=("localhost browser health smoke",),
+        declared=("localhost browser health smoke",),
     )
     evidence_root = tmp_path / "packaging-smoke-evidence"
     evidence_root.mkdir()

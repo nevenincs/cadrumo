@@ -403,16 +403,19 @@ def test_packaging_smoke_evidence_refuses_an_empty_lane(tmp_path: Path) -> None:
 
 def test_packaging_smoke_evidence_end_to_end_through_the_real_smoke_writer(tmp_path: Path) -> None:
     """A manifest produced by the real production writer passes the readiness reader."""
+    from dev.packaging._proof_ledger import record_proof, reset_proof_ledger
     from dev.packaging._smoke_common import write_smoke_manifest
 
     root = _make_repo_root(tmp_path)
     work_dir = root / "var" / "packaging-smoke" / "core-20260101T000000Z"
     work_dir.mkdir(parents=True)
+    reset_proof_ledger()
+    record_proof("installed CLI config/profile smoke")
     write_smoke_manifest(
         work_dir,
         lane="core-wheel",
         artifacts={"wheel": "wheel/cadrumo.whl"},
-        checks=("installed CLI config/profile smoke",),
+        declared=("installed CLI config/profile smoke",),
     )
 
     check = readiness.check_latest_packaging_smoke_evidence(root)
