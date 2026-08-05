@@ -100,7 +100,7 @@ def _rows() -> Iterable[IvaCategoryComponents]:
 def test_every_iva_category_declares_its_components() -> None:
     """A new IvaCategory member cannot ship without an Axis-A row.
 
-    This is the gate the ADR asks for: component existence becomes declared
+    This is the gate the governing decision asks for: component existence becomes declared
     data, so adding a category forces the author to state what it carries
     rather than leaving each decomposition site to guess.
     """
@@ -208,7 +208,7 @@ def test_evidence_exempt_extends_the_cuota_less_set_by_the_three_sentinels() -> 
 def test_cuota_less_categories_still_require_a_taxable_base(category: IvaCategory) -> None:
     """An exempt or export operation carries a real base that feeds base-only casillas.
 
-    This is the ADR's load-bearing distinction: a base-less row in one of these
+    This is the governing decision's load-bearing distinction: a base-less row in one of these
     categories is ungrounded, not legitimately empty, and that is precisely
     what a bare cash amount cannot tell you.
     """

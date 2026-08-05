@@ -132,7 +132,7 @@ def _pytest_lines(
 
     A workflow step's `run:` line either carries `pytest` directly, or
     delegates to a `just <recipe>` whose body carries it. Routing a pytest
-    invocation into a recipe (W2-B) moved the run line's substance, not just
+    invocation into a recipe moved the run line's substance, not just
     its label -- a workflow line naming a recipe with no pytest in it, or
     naming nothing at all, must still fail this gate exactly as an empty
     `-n auto` invocation would have. The recipe's own worker-count template is

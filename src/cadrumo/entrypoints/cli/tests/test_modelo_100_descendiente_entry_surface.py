@@ -850,7 +850,7 @@ def test_a_record_level_refusal_is_translated_in_every_catalogue(
     runtime_profile: TestRuntimeProfile,
     locale: str,
 ) -> None:
-    """The coherence rules this Phase shipped must reach the operator as themselves.
+    """The coherence rules this surface added must reach the operator as themselves.
 
     The ``--descendiente`` flag has two families of guard. The parser's own
     pre-validations raise the typed answer error, which this verb has always

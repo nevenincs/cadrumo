@@ -477,7 +477,7 @@ def test_a_write_primitive_called_directly_on_the_chain_is_also_caught() -> None
 
 # ── Anchor-aware vocabulary-literal resolution ──────────────────────────────
 #
-# The scanner that measured the S78 residual matched taxonomy-vocabulary
+# The scanner that measured the residual matched taxonomy-vocabulary
 # segment names WITHOUT resolving their chain's root -- the exact defect this
 # campaign was chartered against, and the reason the registry loader's two
 # `bundled_path("registry", "aeat")`-rooted ``manifest.toml`` sites (a
