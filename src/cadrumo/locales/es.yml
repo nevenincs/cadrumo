@@ -7558,10 +7558,25 @@ modelo:
             help: null
             label: Por adquisición o adecuación de vivienda habitual para contribuyentes
               con discapacidad
+          irpf-deduccion-autonomica-aragon-acogimiento-ucrania:
+            help: null
+            label: Por acogimiento de personas o familias ucranianas desplazadas con
+              motivo del conflicto armado en su país
+          irpf-deduccion-autonomica-aragon-ayuda-humanitaria-ucrania:
+            help: null
+            label: Por ayudas de carácter humanitario al pueblo ucraniano con motivo
+              del conflicto armado en su país
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
             label: Importe de la deducción autonómica por el arrendamiento de vivienda
               habitual vinculado a determinadas operaciones de dación en pago
+          irpf-deduccion-autonomica-baleares-prestamo-hipotecario-incremento:
+            help: null
+            label: Para compensar el incremento del coste de los préstamos o créditos
+              hipotecarios con tipo de interés variable
+          irpf-deduccion-autonomica-galicia-otras:
+            help: null
+            label: Otras deducciones
           irpf-deduccion-autonomica-otro-importe:
             help: null
             label: Importe total de la deducción
@@ -8869,6 +8884,9 @@ modelo:
           irpf-inmueble-pct-a-disposicion:
             help: null
             label: Indique el porcentaje (%) del inmueble a disposición del contribuyente
+          irpf-inmueble-porcentaje-propiedad:
+            help: null
+            label: Propiedad (%)
           irpf-inmueble-porcentaje-usufructo:
             help: null
             label: Usufructo (%)
@@ -8892,6 +8910,13 @@ modelo:
             label: Indique si el valor catastral ha sido revisado, modificado o determinado
               mediante un procedimiento de valoración colectiva de carácter general
               que haya entrado en vigor en el ejercicio o en los últ...
+          irpf-inmueble-vivienda-habitual-flag:
+            help: null
+            label: Vivienda habitual en 2020
+          irpf-intereses-demora-regularizacion-estatal:
+            help: null
+            label: 'Intereses de demora correspondientes a la regularización anterior:
+              Parte estatal'
           irpf-minimo-ascendientes-autonomico:
             help: null
             label: 'Parte autonómica: Mínimo por ascendientes. Importe'
@@ -9185,6 +9210,22 @@ modelo:
           irpf-reduccion-prevision-social-discapacidad-total:
             help: null
             label: Total con derecho a reducción.
+          irpf-regularizacion-complementaria-resultado:
+            help: null
+            label: Resultado de la declaración complementaria
+          irpf-regularizacion-devoluciones-solicitadas-ejercicio:
+            help: null
+            label: Devoluciones solicitadas a la Agencia Tributaria como consecuencia
+              de la tramitación de anteriores autoliquidaciones correspondientes al
+              ejercicio 2020
+          irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio:
+            help: null
+            label: Resultados a ingresar de anteriores autoliquidaciones o liquidaciones
+              administrativas correspondientes al ejercicio 2020
+          irpf-regularizacion-numero-justificante-rectificacion:
+            help: null
+            label: Número de justificante de la autoliquidación cuya rectificación
+              se solicita
           irpf-rendimiento-capital-mobiliario-general-cesion-derechos-autor-anticipo-flag:
             help: null
             label: En el caso de los rendimientos derivados de la cesión de la explotación
@@ -9230,47 +9271,6 @@ modelo:
           irpf-vehiculo-electrico-vendedor-nif:
             help: null
             label: NIF/NIE de la persona/entidad vendedora
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
-            help: null
-            label: Por acogimiento de personas o familias ucranianas desplazadas con
-              motivo del conflicto armado en su país
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sobpeli62bb8elmm2rj9ehgn4qb15lqm6sj1dpkm2:
-            help: null
-            label: Por ayudas de carácter humanitario al pueblo ucraniano con motivo
-              del conflicto armado en su país
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15ph62r35c5p6aspee1p6asrkc5mmubb8d5o6ut35cdgn4qbf5lkmsoriclmmarjkds:
-            help: null
-            label: Para compensar el incremento del coste de los préstamos o créditos
-              hipotecarios con tipo de interés variable
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pjm2r39cdkm2bjfehp62so:
-            help: null
-            label: Otras deducciones
-          x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0:
-            help: null
-            label: Propiedad (%)
-          x-d5p70phed5n6qtb5c9m6abjmd5r6ipbechgiqq31c9kn8tb1dgmmcr31cs:
-            help: null
-            label: Vivienda habitual en 2020
-          x-d5p70phed5n78pbiclpmaspdchimqrric4mn4pb7elm62sj9f9gm6qbfdon6asrkc5q62r0:
-            help: null
-            label: 'Intereses de demora correspondientes a la regularización anterior:
-              Parte estatal'
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhecdnmqs3cclmmarjkc5p6io9de9in6tbcehgm8ro:
-            help: null
-            label: Resultado de la declaración complementaria
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhechincrrcelhmirreclpiqsrfdhkm6qbkc5i62spdcll6asj3d5hmiro:
-            help: null
-            label: Devoluciones solicitadas a la Agencia Tributaria como consecuencia
-              de la tramitación de anteriores autoliquidaciones correspondientes al
-              ejercicio 2020
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhed5n6esj5edgn4bb1elq6ur39e5qmip31cdkmurj5ecmm2rjkclp6irriclpiqpbaclp66qb3d5ng:
-            help: null
-            label: Resultados a ingresar de anteriores autoliquidaciones o liquidaciones
-              administrativas correspondientes al ejercicio 2020
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhedpqmqpbidsmmktbjehkmcqb3c5n78p9de9im6t39cpkm6ob3d5nms:
-            help: null
-            label: Número de justificante de la autoliquidación cuya rectificación
-              se solicita
       field:
         official_name: Modelo 100. Declaración del Impuesto sobre la Renta de las
           Personas Físicas.

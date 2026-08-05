@@ -7339,9 +7339,21 @@ modelo:
           irpf-deduccion-asturias-vivienda-discapacitados:
             help: null
             label: null
+          irpf-deduccion-autonomica-aragon-acogimiento-ucrania:
+            help: null
+            label: null
+          irpf-deduccion-autonomica-aragon-ayuda-humanitaria-ucrania:
+            help: null
+            label: null
           irpf-deduccion-autonomica-arrendamiento-viv-hab-importe:
             help: null
             label: null
+          irpf-deduccion-autonomica-baleares-prestamo-hipotecario-incremento:
+            help: null
+            label: null
+          irpf-deduccion-autonomica-galicia-otras:
+            help: Adja meg az egyéb kedvezményeket.
+            label: Egyéb kedvezmények
           irpf-deduccion-autonomica-otro-importe:
             help: null
             label: null
@@ -8530,6 +8542,9 @@ modelo:
           irpf-inmueble-pct-a-disposicion:
             help: null
             label: null
+          irpf-inmueble-porcentaje-propiedad:
+            help: Adja meg a tulajdoni hányad százalékát.
+            label: Tulajdoni hányad (%)
           irpf-inmueble-porcentaje-usufructo:
             help: null
             label: null
@@ -8548,6 +8563,13 @@ modelo:
           irpf-inmueble-valor-catastral-revisado-flag:
             help: null
             label: null
+          irpf-inmueble-vivienda-habitual-flag:
+            help: Jelezze, hogy 2024-ben szokásos lakóhely volt-e.
+            label: Szokásos lakóhely 2024-ben
+          irpf-intereses-demora-regularizacion-estatal:
+            help: Adja meg az előző rendezéshez kapcsolódó késedelmi kamatok állami
+              részét.
+            label: 'Az előző rendezéshez kapcsolódó késedelmi kamatok: állami rész'
           irpf-minimo-ascendientes-autonomico:
             help: null
             label: null
@@ -8821,6 +8843,18 @@ modelo:
           irpf-reduccion-prevision-social-discapacidad-total:
             help: null
             label: null
+          irpf-regularizacion-complementaria-resultado:
+            help: null
+            label: null
+          irpf-regularizacion-devoluciones-solicitadas-ejercicio:
+            help: null
+            label: null
+          irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio:
+            help: null
+            label: null
+          irpf-regularizacion-numero-justificante-rectificacion:
+            help: null
+            label: null
           irpf-rendimiento-capital-mobiliario-general-cesion-derechos-autor-anticipo-flag:
             help: null
             label: null
@@ -8852,40 +8886,6 @@ modelo:
             help: null
             label: null
           irpf-vehiculo-electrico-vendedor-nif:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sob3dtjmirb9cln78rpdelhn4obed5gg:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pgn4ob7dtn2sobpeli62bb8elmm2rj9ehgn4qb15lqm6sj1dpkm2:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15ph62r35c5p6aspee1p6asrkc5mmubb8d5o6ut35cdgn4qbf5lkmsoriclmmarjkds:
-            help: null
-            label: null
-          x-d5p70phechim8tb3cdkmurhdc5qn8rredtmmior15pjm2r39cdkm2bjfehp62so:
-            help: Adja meg az egyéb kedvezményeket.
-            label: Egyéb kedvezmények
-          x-d5p70phed5n6qtb5c9m6abjgdtp66pbeehgmkp9de1p6us39cli62p0:
-            help: Adja meg a tulajdoni hányad százalékát.
-            label: Tulajdoni hányad (%)
-          x-d5p70phed5n6qtb5c9m6abjmd5r6ipbechgiqq31c9kn8tb1dgmmcr31cs:
-            help: Jelezze, hogy 2024-ben szokásos lakóhely volt-e.
-            label: Szokásos lakóhely 2024-ben
-          x-d5p70phed5n78pbiclpmaspdchimqrric4mn4pb7elm62sj9f9gm6qbfdon6asrkc5q62r0:
-            help: Adja meg az előző rendezéshez kapcsolódó késedelmi kamatok állami
-              részét.
-            label: 'Az előző rendezéshez kapcsolódó késedelmi kamatok: állami rész'
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhecdnmqs3cclmmarjkc5p6io9de9in6tbcehgm8ro:
-            help: null
-            label: null
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhechincrrcelhmirreclpiqsrfdhkm6qbkc5i62spdcll6asj3d5hmiro:
-            help: null
-            label: null
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhed5n6esj5edgn4bb1elq6ur39e5qmip31cdkmurj5ecmm2rjkclp6irriclpiqpbaclp66qb3d5ng:
-            help: null
-            label: null
-          x-d5p70phee9imetbcc5p6iuj1cdkmurhedpqmqpbidsmmktbjehkmcqb3c5n78p9de9im6t39cpkm6ob3d5nms:
             help: null
             label: null
       field:
