@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, get_args, get_origin
+from typing import Literal, cast, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
@@ -259,13 +259,17 @@ def _enroll_revision_localization(
         **raw_revision,
         "localization_key": revision_locale_key(modelo_id, revision_id),
     }
-    raw_casillas = raw_revision.get("casillas")
+    raw_casillas = _as_toml_array(raw_revision.get("casillas"))
     casillas: list[dict[str, object]] = []
-    if isinstance(raw_casillas, (list, tuple)):
+    if raw_casillas is not None:
         for raw_casilla in raw_casillas:
             casilla = _as_toml_table(raw_casilla)
             if casilla is None:
-                casillas.append(dict(raw_casilla) if isinstance(raw_casilla, Mapping) else {"value": raw_casilla})
+                casillas.append(
+                    dict(cast(Mapping[str, object], raw_casilla))
+                    if isinstance(raw_casilla, Mapping)
+                    else {"value": raw_casilla},
+                )
                 continue
             casilla_id = casilla.get("id")
             if not isinstance(casilla_id, str):
@@ -276,14 +280,16 @@ def _enroll_revision_localization(
             if isinstance(continuidad_id, str):
                 keys.append(casilla_continuity_locale_key(modelo_id, continuidad_id, "label"))
             casilla_payload = {**casilla, "localization_keys": tuple(keys)}
-            raw_aliases = casilla.get("aliases")
-            if isinstance(raw_aliases, (list, tuple)):
+            raw_aliases = _as_toml_array(casilla.get("aliases"))
+            if raw_aliases is not None:
                 aliases: list[dict[str, object]] = []
                 for alias_index, raw_alias in enumerate(raw_aliases):
                     alias = _as_toml_table(raw_alias)
                     if alias is None:
                         aliases.append(
-                            dict(raw_alias) if isinstance(raw_alias, Mapping) else {"value": raw_alias},
+                            dict(cast(Mapping[str, object], raw_alias))
+                            if isinstance(raw_alias, Mapping)
+                            else {"value": raw_alias},
                         )
                         continue
                     aliases.append(
@@ -301,14 +307,16 @@ def _enroll_revision_localization(
             casillas.append(casilla_payload)
         payload["casillas"] = tuple(casillas)
 
-    raw_constructs = raw_revision.get("constructs")
-    if isinstance(raw_constructs, (list, tuple)):
+    raw_constructs = _as_toml_array(raw_revision.get("constructs"))
+    if raw_constructs is not None:
         constructs: list[dict[str, object]] = []
         for raw_construct in raw_constructs:
             construct = _as_toml_table(raw_construct)
             if construct is None:
                 constructs.append(
-                    dict(raw_construct) if isinstance(raw_construct, Mapping) else {"value": raw_construct},
+                    dict(cast(Mapping[str, object], raw_construct))
+                    if isinstance(raw_construct, Mapping)
+                    else {"value": raw_construct},
                 )
                 continue
             construct_id = construct.get("id")
