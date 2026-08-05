@@ -30,6 +30,7 @@ is where that filtering now lives.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 
@@ -38,9 +39,15 @@ from .._descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from ..family import DescendantInfo
+from ..family import DescendantInfo, RentaFamilyProfile
+from ._registry_thresholds import registry_thresholds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+#: The Art. 58.1 / Art. 61 norma 2a ceilings, read from the registry rather than
+#: retyped, so a revision that moves either cannot leave this module asserting
+#: against a stale figure while the engine uses the new one.
+_THRESHOLDS = registry_thresholds(2024)
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -170,6 +177,45 @@ class TestCLIHelpers:
 # ---------------------------------------------------------------------------
 
 
+class TestMaternidadEligibleMeses:
+    """The month window Art. 81.1 draws from the birth date alone.
+
+    Two boundaries the authority states and neither of which is a year-end age
+    test: the month of birth counts in full, and the month the child turns three
+    does not count. The second is why a child who turns three mid-year is not
+    simply excluded from the period.
+    """
+
+    def test_a_child_under_three_all_year_has_every_month(self) -> None:
+        assert _hijo_menor_3(0).maternidad_eligible_meses(2024) == 12
+
+    def test_the_birth_month_counts_in_full(self) -> None:
+        """Born in June 2024: June to December is seven months, not six."""
+        child = DescendantInfo(birth_date=date(2024, 6, 15))
+
+        assert child.maternidad_eligible_meses(2024) == 7
+
+    def test_the_month_the_child_turns_three_does_not_count(self) -> None:
+        """Born April 2021, turns three in April 2024: January to March only."""
+        child = DescendantInfo(birth_date=date(2021, 4, 15))
+
+        assert child.maternidad_eligible_meses(2024) == 3
+
+    def test_a_january_third_birthday_leaves_no_eligible_month(self) -> None:
+        child = DescendantInfo(birth_date=date(2021, 1, 20))
+
+        assert child.maternidad_eligible_meses(2024) == 0
+
+    def test_a_leap_day_birth_resolves_without_constructing_a_third_birthday(self) -> None:
+        """29 February has no anniversary in a non-leap year; the window still resolves."""
+        child = DescendantInfo(birth_date=date(2020, 2, 29))
+
+        assert child.maternidad_eligible_meses(2023) == 1
+
+    def test_a_period_before_the_birth_has_no_eligible_month(self) -> None:
+        assert DescendantInfo(birth_date=date(2025, 3, 1)).maternidad_eligible_meses(2024) == 0
+
+
 class TestMaternidadContributingMeses:
     """The child-side condition Art. 81.1 delegates to the mínimo por descendientes.
 
@@ -178,11 +224,11 @@ class TestMaternidadContributingMeses:
     """
 
     def test_an_eligible_child_contributes_its_declared_months(self) -> None:
-        assert _hijo_menor_3(9).maternidad_contributing_meses(2024) == 9
+        assert _hijo_menor_3(9).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 9
 
     def test_a_child_over_three_contributes_nothing(self) -> None:
         """Art. 81.1 runs only "hasta que el menor alcance los tres años de edad"."""
-        assert _hijo_no_menor_3().maternidad_contributing_meses(2024) == 0
+        assert _hijo_no_menor_3().maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
 
     def test_a_non_cohabiting_child_contributes_nothing(self) -> None:
         """The mínimo por descendientes the deduction keys on needs the household limb."""
@@ -192,22 +238,53 @@ class TestMaternidadContributingMeses:
             meses_madre_trabajo_2024=12,
         )
 
-        assert child.maternidad_contributing_meses(2024) == 0
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
 
     def test_an_eligible_child_with_no_declared_months_contributes_nothing(self) -> None:
         """The employment months stay the operator's: absent means none, never inferred."""
-        assert _hijo_menor_3(0).maternidad_contributing_meses(2024) == 0
+        assert _hijo_menor_3(0).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+
+    def test_a_child_over_the_rentas_ceiling_contributes_nothing(self) -> None:
+        """The added half of the predicate: Art. 58.1 excludes on the descendant's own rentas.
+
+        This case is unreachable through a bare age-and-cohabitation test, which
+        is why tying the deduction to the mínimo predicate rather than to a
+        bespoke one is a behaviour change and not a refactor.
+        """
+        child = DescendantInfo(
+            birth_date=date(2022, 6, 1),
+            rentas_anuales_euros=_THRESHOLDS.rentas_anuales_limite + Decimal("1"),
+            meses_madre_trabajo_2024=12,
+        )
+
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+
+    def test_declared_months_are_capped_by_the_eligible_window(self) -> None:
+        """A turning-three child whose mother worked all year contributes the window.
+
+        Twelve declared months against a three-month window yields three. Before
+        the window existed this child contributed NOTHING, because the age test
+        ran once at year-end and the child was three by then -- an under-grant
+        for every family whose child turns three mid-year.
+        """
+        child = DescendantInfo(birth_date=date(2021, 4, 15), meses_madre_trabajo_2024=12)
+
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 3
+
+    def test_the_cap_never_raises_a_declared_figure(self) -> None:
+        """An operator who declared fewer months than the window keeps their figure."""
+        child = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo_2024=4)
+
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 4
 
 
 class TestMesesMaternidadPorDescendiente:
     """The profile-level pairing the calculate path feeds to the deducción."""
 
     def test_pairs_carry_the_descendant_index_as_the_hijo_id(self) -> None:
-        from ..family import RentaFamilyProfile
-
         profile = RentaFamilyProfile(descendientes=(_hijo_menor_3(12), _hijo_menor_3(6)))
 
-        assert profile.meses_maternidad_por_descendiente(2024) == (("0", 12), ("1", 6))
+        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("0", 12), ("1", 6))
 
     def test_ineligible_descendants_are_omitted_but_do_not_shift_the_indices(self) -> None:
         """A withheld child must not renumber the ones after it.
@@ -216,15 +293,35 @@ class TestMesesMaternidadPorDescendiente:
         child by, so a compacted list would report months against the wrong
         record in any diagnostic that names one.
         """
-        from ..family import RentaFamilyProfile
-
         profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3(6)))
 
-        assert profile.meses_maternidad_por_descendiente(2024) == (("1", 6),)
+        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("1", 6),)
 
     def test_a_profile_with_no_contributing_descendants_pairs_nothing(self) -> None:
-        from ..family import RentaFamilyProfile
-
         profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(),))
 
-        assert profile.meses_maternidad_por_descendiente(2024) == ()
+        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == ()
+
+    def test_declared_anualidades_suppress_a_dependency_assimilated_descendant(self) -> None:
+        """The anualidades carve-out reaches the deducción, not only the mínimo.
+
+        A non-cohabiting but economically dependent descendant is assimilated
+        only while the filer declares no anualidades. Reading that flag off the
+        profile is what keeps the two answers identical; a pairing that ignored
+        it would grant months for a child the mínimo itself withholds.
+        """
+        dependiente = DescendantInfo(
+            birth_date=date(2022, 6, 1),
+            convive_con_contribuyente=False,
+            dependencia_economica=True,
+            meses_madre_trabajo_2024=12,
+        )
+
+        assimilated = RentaFamilyProfile(descendientes=(dependiente,))
+        suppressed = RentaFamilyProfile(
+            descendientes=(dependiente,),
+            anualidades_alimentos_euros=Decimal("1200"),
+        )
+
+        assert assimilated.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("0", 12),)
+        assert suppressed.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == ()

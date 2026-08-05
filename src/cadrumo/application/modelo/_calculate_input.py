@@ -63,7 +63,7 @@ from ...domain.calculations.registry import (
     revision_date_binding_ids,
     validate_registry_text_scalar,
 )
-from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, compute_deduccion_maternidad_0611
+from ...domain.contribuyente import compute_deduccion_maternidad_0611
 from ...domain.modelos import (
     CalculationRevision,
     Dt12WindowEligibility,
@@ -81,6 +81,7 @@ from ...domain.modelos import (
     validate_m347_threshold,
 )
 from ..aggregation import CalculationSourceDiagnostic
+from ._profile_binding import MaternidadMesesResolution
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
     AmbiguousSemanticRoleCasillaError,
@@ -91,6 +92,7 @@ _AUTOCONSUMO_PROMOTOR_BINDING: BindingId = "modelo-303-autoconsumo-promotor-base
 _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 _MATERNIDAD_MESES_WITHHELD_SOURCE_KIND = "maternidad_meses_withheld"
+_MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND = "maternidad_eligibility_ceilings_unresolved"
 _REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
 _DECLARANTE_SELECTOR_SEMANTIC_ROLE = "irpf_toma_datos_declarante_selector"
@@ -720,31 +722,25 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
     return resolve_registry_snapshot_for_work_unit(unit).revision
 
 
-def _declared_descendientes_for_work_unit(work_unit_id: str) -> tuple[int, tuple[DescendantInfo, ...]]:
-    """Return the work unit's filing year and the descendants its profile declares.
+def _resolved_maternidad_meses(work_unit_id: str) -> MaternidadMesesResolution | None:
+    """Resolve the Art. 81.1 maternidad months the active profile contributes.
 
-    One reader for both Art. 81.1 questions — which months contribute, and which
-    declared months contribute nothing — because two readers of the same facts is
-    how the guardería half came to have a second aggregation path that diverged
-    from the canonical record the moment that record learned a month rule.
-
-    Returns an empty descendant tuple when the bucket has no profile yet,
-    mirroring the silent-absent handling profile-sourced bindings already apply.
+    Returns ``None`` when the bucket has no profile yet, mirroring the
+    silent-absent handling profile-sourced bindings already apply.
     """
-    from ...domain.contribuyente import descendant_list_from_facts
     from ...domain.user_profile import ProfileNotFoundError
     from ..user_profile import UserProfileLifecycleRepository
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
+    from ._profile_binding import resolve_maternidad_meses
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
-    filing_year = resolve_registry_snapshot_for_work_unit(unit).filing_year
+    snapshot = resolve_registry_snapshot_for_work_unit(unit)
     try:
         record = UserProfileLifecycleRepository(bucket_id=unit.bucket_id).load(unit.bucket_id)
     except ProfileNotFoundError:
-        return filing_year, ()
-    facts = {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
-    return filing_year, descendant_list_from_facts(facts)
+        return None
+    return resolve_maternidad_meses(record, snapshot)
 
 
 def _maternidad_casilla_id(work_unit_id: str) -> CasillaId | None:
@@ -769,47 +765,50 @@ def _maternidad_casilla_id(work_unit_id: str) -> CasillaId | None:
         return None
 
 
-def _profile_declared_maternidad_meses(
-    filing_year: int,
-    descendientes: tuple[DescendantInfo, ...],
-) -> tuple[tuple[str, int], ...]:
-    """Return the Art. 81.1 ``(hijo_id, meses)`` pairs the active profile declares.
+def _maternidad_ceilings_unresolved_advisory(
+    declares_meses: bool,
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic | None:
+    """Advise when declared months cannot be evaluated for want of the Art. 58.1 ceilings.
 
-    Asks the canonical family record which months contribute, so the engine
-    applies the child-side eligibility it already holds while the operator keeps
-    the employment months only they can know.
+    A revision that declares casilla 0611 but not the eligibility parameters
+    cannot answer whether a descendant holds the mínimo, so the deducción is
+    withheld rather than granted against a fabricated ceiling. That is the safe
+    direction and the same refusal the mínimo aggregate makes — but silence here
+    is indistinguishable from a taxpayer who declared nothing, which is the state
+    this whole Step exists to remove.
 
-    Before this path existed the fact was written by three surfaces, declared in
-    the user-profile schema, and read by nothing that calculates: an operator who
-    declared the months through the documented entry surface received nothing,
-    and the surface said otherwise. Declared-and-unconsumed is worse than absent,
-    because absent reads as an omission while declared reads to any inspector as
-    wired.
+    Fires only when months were actually declared, so a filer with no maternidad
+    facts is not told about a parameter gap that costs them nothing.
     """
-    if not descendientes:
-        return ()
-    return RentaFamilyProfile(descendientes=descendientes).meses_maternidad_por_descendiente(filing_year)
+    if not declares_meses:
+        return None
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind=_MATERNIDAD_CEILINGS_UNRESOLVED_SOURCE_KIND,
+        message=(
+            "the active profile declares meses_madre_trabajo but this revision does not declare the "
+            "Art. 58.1 rentas ceiling and the Art. 61 norma 2ª own-return ceiling, so entitlement to "
+            "the mínimo por descendientes cannot be evaluated and the Art. 81.1 deducción por "
+            "maternidad is withheld rather than granted against an unverified ceiling"
+        ),
+        casilla_id=casilla_id,
+    )
 
 
 def _maternidad_meses_withheld_advisory(
-    filing_year: int,
-    descendientes: tuple[DescendantInfo, ...],
+    withheld: tuple[str, ...],
     casilla_id: CasillaId,
 ) -> CalculationSourceDiagnostic | None:
     """Advise when declared maternidad months contribute nothing on eligibility grounds.
 
     The one state where a taxpayer declared real months, sees them stored, and
     receives nothing — and nothing about the computed value says why. Art. 81.1
-    reaches only a child "con derecho a la aplicación del mínimo por
-    descendientes" under three, so months declared against an older or
-    non-cohabiting descendant are correctly withheld; withholding them SILENTLY
-    is what this reports.
+    reaches only a child under three "con derecho a la aplicación del mínimo por
+    descendientes", so months declared against a descendant that predicate
+    excludes are correctly withheld; withholding them SILENTLY is what this
+    reports.
     """
-    withheld = tuple(
-        str(index)
-        for index, descendant in enumerate(descendientes)
-        if descendant.meses_madre_trabajo_2024 > 0 and descendant.maternidad_contributing_meses(filing_year) == 0
-    )
     if not withheld:
         return None
     return CalculationSourceDiagnostic(
@@ -817,9 +816,11 @@ def _maternidad_meses_withheld_advisory(
         source_kind=_MATERNIDAD_MESES_WITHHELD_SOURCE_KIND,
         message=(
             f"descendiente {', '.join(withheld)} declares meses_madre_trabajo but contributes no "
-            "Art. 81.1 deducción por maternidad: the deduction reaches only a cohabiting descendant "
-            "under three at the devengo date. Correct the birth date or the cohabitation answer with "
-            "`aeat config profile descendiente add` if the descendant does qualify."
+            "Art. 81.1 deducción por maternidad: the deduction reaches only a descendant under three "
+            "who also holds the mínimo por descendientes, so cohabitation, the Art. 58.1 rentas "
+            "ceiling and the Art. 61 norma 2ª own-return rule all apply. Correct the birth date, the "
+            "cohabitation answer or the rentas figure with `aeat config profile descendiente add` if "
+            "the descendant does qualify."
         ),
         casilla_id=casilla_id,
     )
@@ -1003,9 +1004,9 @@ def apply_calculation_shortcut_inputs(
 
     maternidad_casilla_id = _maternidad_casilla_id(work_unit_id)
     declared_meses: tuple[tuple[str, int], ...] = ()
-    if maternidad_casilla_id is not None:
-        filing_year, descendientes = _declared_descendientes_for_work_unit(work_unit_id)
-        declared_meses = _profile_declared_maternidad_meses(filing_year, descendientes)
+    maternidad = _resolved_maternidad_meses(work_unit_id) if maternidad_casilla_id is not None else None
+    if maternidad_casilla_id is not None and maternidad is not None:
+        declared_meses = maternidad.pairs
         if meses_trabajo_con_hijo_menor_3 and declared_meses:
             raise ModeloCalculateShortcutInputError(
                 "--meses-trabajo-con-hijo-menor-3 was supplied while the active profile already declares "
@@ -1015,13 +1016,15 @@ def apply_calculation_shortcut_inputs(
                 translated_message="application.modelo.errors.calculate_maternidad_meses_two_authorities",
             )
         if not meses_trabajo_con_hijo_menor_3:
-            withheld_advisory = _maternidad_meses_withheld_advisory(
-                filing_year,
-                descendientes,
-                maternidad_casilla_id,
-            )
-            if withheld_advisory is not None:
-                advisories.append(withheld_advisory)
+            for advisory in (
+                _maternidad_ceilings_unresolved_advisory(
+                    maternidad.declares_meses and not maternidad.ceilings_resolved,
+                    maternidad_casilla_id,
+                ),
+                _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
+            ):
+                if advisory is not None:
+                    advisories.append(advisory)
 
     maternidad_meses = meses_trabajo_con_hijo_menor_3 or declared_meses
     if maternidad_meses:
