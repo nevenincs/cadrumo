@@ -1016,7 +1016,14 @@ def apply_calculation_shortcut_inputs(
     maternidad = _resolved_maternidad_meses(work_unit_id) if maternidad_casilla_id is not None else None
     if maternidad_casilla_id is not None and maternidad is not None:
         declared_meses = maternidad.pairs
-        if meses_trabajo_con_hijo_menor_3 and declared_meses:
+        # Keyed on the PRE-eligibility-filter `declares_meses`, not on `pairs`
+        # (== `declared_meses`, already filtered to `meses > 0` post-eligibility).
+        # A profile whose every declared descendant is withheld -- over three, not
+        # cohabiting, over the rentas ceiling -- has an EMPTY `pairs` while still
+        # declaring real months, and keying the refusal on `pairs` let the flag win
+        # that case silently: no refusal, no advisory, the operator never told their
+        # profile-side declaration was in play at all.
+        if meses_trabajo_con_hijo_menor_3 and maternidad.declares_meses:
             raise ModeloCalculateShortcutInputError(
                 "--meses-trabajo-con-hijo-menor-3 was supplied while the active profile already declares "
                 "meses_madre_trabajo on its descendiente records. One authority per filing: either drop "
@@ -1024,16 +1031,23 @@ def apply_calculation_shortcut_inputs(
                 "from the records with `aeat config profile descendiente add`.",
                 translated_message="application.modelo.errors.calculate_maternidad_meses_two_authorities",
             )
-        if not meses_trabajo_con_hijo_menor_3:
-            for advisory in (
-                _maternidad_ceilings_unresolved_advisory(
-                    maternidad.declares_meses and not maternidad.ceilings_resolved,
-                    maternidad_casilla_id,
-                ),
-                _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
-            ):
-                if advisory is not None:
-                    advisories.append(advisory)
+        # Evaluated unconditionally rather than gated on the flag's absence: the
+        # refusal above already aborts the one state where the flag and a real
+        # profile declaration coexist, so reaching here with the flag supplied
+        # means `declares_meses` is False and both advisories are no-ops on their
+        # own internal gates -- but the two concerns (refuse on conflict, disclose
+        # a withholding) are independent and must not share one external gate,
+        # which is the coupling that let the ceilings-unresolved case go silent
+        # too whenever the flag happened to be present.
+        for advisory in (
+            _maternidad_ceilings_unresolved_advisory(
+                maternidad.declares_meses and not maternidad.ceilings_resolved,
+                maternidad_casilla_id,
+            ),
+            _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
+        ):
+            if advisory is not None:
+                advisories.append(advisory)
 
     maternidad_meses = meses_trabajo_con_hijo_menor_3 or declared_meses
     if maternidad_meses:

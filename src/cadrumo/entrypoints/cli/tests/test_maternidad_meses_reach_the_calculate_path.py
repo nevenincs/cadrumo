@@ -382,3 +382,27 @@ def test_the_flag_alone_still_reaches_the_casilla(runtime_profile: TestRuntimePr
 
     assert exit_code == 0, output
     assert _casilla_0611(output) == _ORACLE_ONE_HIJO_TWELVE_MONTHS
+
+
+def test_a_withheld_declaration_and_the_flag_together_are_also_refused(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The silent branch: a wholly-withheld profile declaration must not let the flag win quietly.
+
+    This descendant is over three, so every one of its declared months is
+    withheld (``pairs`` is empty) -- but the profile still DECLARES real
+    months. Keying the refusal on the post-eligibility-filter ``pairs``
+    instead of the pre-filter ``declares_meses`` let this exact case fall
+    through: no refusal (``pairs`` was falsy) and no advisory (the flag's
+    presence suppressed it), so the operator's declared record silently lost
+    to the flag with nothing said. Same shape as
+    ``test_the_flag_and_the_declared_records_together_are_refused`` above, one
+    limb over.
+    """
+    _seed_natural_person_profile(runtime_profile)
+    _declare("NACIMIENTO=2015-04-01,MESES_TRABAJO=12")
+
+    exit_code, output = _calculate("--meses-trabajo-con-hijo-menor-3", "0=12")
+
+    assert exit_code != 0, output
+    assert "meses_madre_trabajo" in output
