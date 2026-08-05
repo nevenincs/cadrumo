@@ -17,7 +17,34 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 _BUCKET_ID = "registry-cli"
 _CLI_ENV: dict[str, str] = {}
+
 _ENGLISH_CLI_ENV: Mapping[str, str] = {"CADRUMO_OUTPUT_LANGUAGE": "en"}
+"""Request English output. DOES NOT WORK in-process -- kept only as intent.
+
+Measured: setting this variable in ``os.environ`` inside a warm process changes
+nothing. ``load_settings`` returns ``_constructed_settings``, an ``lru_cache``
+keyed on the active-profile pointer fingerprint alone, so no environment
+variable is part of that key and the first-built ``Settings`` wins for the life
+of the process. Passing this env to a runner that invokes the CLI IN-PROCESS
+therefore leaves BOTH channels at whatever the process already resolved:
+
+* runtime text, because ``output_language()`` reads that cached ``Settings``;
+* ``help=`` text, additionally, because ``help=tr(...)`` is evaluated when the
+  Typer tree is BUILT and :func:`cadrumo_click_command` caches that tree.
+
+An assertion on localized prose under this env is therefore an assertion
+against the ambient language, and is order-dependent -- which is how a
+misspelled Spanish alternative once survived: the Spanish branch is the one
+that actually runs. Two ways to genuinely control the language:
+
+* runtime text, in-process: ``override_settings(cadrumo_output_language=...)``
+  (verified to work for es/ca/hu);
+* help text: a SUBPROCESS with the variable in its environment, since a fresh
+  process builds both ``Settings`` and the Typer tree under it.
+
+Prefer asserting language-independent structure -- exit codes, option names,
+JSON keys -- over prose in either case.
+"""
 
 
 def _set_cli_env(env: Mapping[str, str]) -> None:
