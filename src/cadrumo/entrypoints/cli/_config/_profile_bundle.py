@@ -149,10 +149,7 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
         )
         from ....application.workflow import ProfileLabelAmbiguousError
         from ....domain.user_profile import ProfileNotFoundError
-        from .._config_payloads import (
-            ConfigProfileExportReconcileFailurePayload,
-            ConfigProfileSubjectAccessRequestResult,
-        )
+        from .._config_payloads import ConfigProfileSubjectAccessRequestResult
 
         _activate_subcommand_output_language(ctx, output_language)
         try:
@@ -176,24 +173,7 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
                 context={"name": name},
             ) from exc
 
-        result = ConfigProfileSubjectAccessRequestResult(
-            profile_id=export.profile_id,
-            display_name=export.display_name,
-            out=str(export.destination),
-            schema_version=export.bundle_schema_version,
-            purpose=export.purpose,
-            transport=export.transport,
-            data_categories=list(export.data_categories),
-            excluded_data_categories=list(export.excluded_data_categories),
-            reconcile_failures=[
-                ConfigProfileExportReconcileFailurePayload(
-                    journal_id=failure.journal_id,
-                    destination=failure.destination,
-                    reason=failure.reason,
-                )
-                for failure in export.reconcile_failures
-            ],
-        )
+        result = ConfigProfileSubjectAccessRequestResult(**_export_result_projection_fields(export))
         sensitivity_notice = _build_export_sensitivity_notice(out)
         catalogue_notice = _build_sar_catalogue_notice(
             export.data_categories,
@@ -296,6 +276,44 @@ def _reconcile_failure_notices(
     )
 
 
+def _export_result_projection_fields(export: ProfileBundleExportResult) -> dict[str, object]:
+    """Project the shared result fields of a written profile-bundle export.
+
+    ``config profile export`` and ``config profile subject-access-request``
+    write and report the same portable bundle -- profile identity,
+    destination, schema version, purpose/transport, the personal-data
+    category catalogue, and any crash-recovery journals the pre-publication
+    sweep could not finalise -- into two distinct typed results
+    (:class:`~cadrumo.entrypoints.cli._config_payloads.ConfigProfileExportResult`
+    / :class:`~cadrumo.entrypoints.cli._config_payloads.ConfigProfileSubjectAccessRequestResult`).
+    The two commands stay separately registered (SAR is a distinct GDPR
+    right-of-access surface that may diverge later), but this is the one
+    place the shared field mapping -- including the
+    ``reconcile_failures`` projection -- is built, so both callers unpack it
+    into whichever result class their command registers.
+    """
+    from .._config_payloads import ConfigProfileExportReconcileFailurePayload
+
+    return {
+        "profile_id": export.profile_id,
+        "display_name": export.display_name,
+        "out": str(export.destination),
+        "schema_version": export.bundle_schema_version,
+        "purpose": export.purpose,
+        "transport": export.transport,
+        "data_categories": list(export.data_categories),
+        "excluded_data_categories": list(export.excluded_data_categories),
+        "reconcile_failures": [
+            ConfigProfileExportReconcileFailurePayload(
+                journal_id=failure.journal_id,
+                destination=failure.destination,
+                reason=failure.reason,
+            )
+            for failure in export.reconcile_failures
+        ],
+    }
+
+
 def _export_passphrase_or_none(encrypted_mode: bool, *, secrets_stdin: bool) -> str | None:
     """Collect and floor-check the bundle passphrase, or ``None`` for cleartext.
 
@@ -323,28 +341,11 @@ def _emit_export_envelope(
     carries its own. Both are repeated as text lines because the envelope
     renders notices only in JSON mode.
     """
-    from .._config_payloads import ConfigProfileExportReconcileFailurePayload, ConfigProfileExportResult
+    from .._config_payloads import ConfigProfileExportResult
 
     transport_notice = _build_encrypted_export_notice(out) if encrypted else _build_export_sensitivity_notice(out)
     notices = (transport_notice, *_reconcile_failure_notices(export.reconcile_failures))
-    export_result = ConfigProfileExportResult(
-        profile_id=export.profile_id,
-        display_name=export.display_name,
-        out=str(export.destination),
-        schema_version=export.bundle_schema_version,
-        purpose=export.purpose,
-        transport=export.transport,
-        data_categories=list(export.data_categories),
-        excluded_data_categories=list(export.excluded_data_categories),
-        reconcile_failures=[
-            ConfigProfileExportReconcileFailurePayload(
-                journal_id=failure.journal_id,
-                destination=failure.destination,
-                reason=failure.reason,
-            )
-            for failure in export.reconcile_failures
-        ],
-    )
+    export_result = ConfigProfileExportResult(**_export_result_projection_fields(export))
     _emit_envelope(
         ctx,
         command="config.profile.export",
