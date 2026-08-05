@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:b1cfb9b9d09e03a48c0673af2977712048a884ca16dc4fea5a08ddb4dad95a9f'
+body_hash: 'sha256:c5dd95937aaa31f705a291342bd9766608a4a8310a7acb987dd7bd8264e75cc4'
 related:
   - "[[2026-07-02-arch-remediation-registry-format-adr]]"
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"
@@ -123,6 +123,28 @@ own, which weakens the audit trail for a corpus-wide change. This is the failure
 mode the project's explicit-pathspec commit discipline exists to prevent, observed
 from the side of the agent whose work was absorbed.
 
+### export-rule-claims-unenforced-section-order | medium | The export rule documents a parity assertion the gate does not make
+
+The rule governing modelo exports states that the registry-grounded parity gate
+asserts the casilla set against the completeness manifest, the numbering and
+segmento, and registry-declaration section order. The first two are asserted; the
+third is not. The workbook parity gate compares number and segmento as sets, checks
+a live formula on every renderable computed casilla, and checks a number format per
+casilla, but never reads `section` -- the word does not appear in the gate at all,
+and no other gate asserts casilla section order or contiguity either. The
+fichero-BOE lane does enforce a sequence, but a different one: it asserts that the
+emitted record order follows the export layout's declaration, keyed on an explicit
+integer `order` on each record, which is export-layout record sequence rather than
+casilla section. So the rule advertises a guarantee nothing enforces.
+
+This is distinct from the finding that the corpus does not hold section contiguity.
+That one says the property is absent from the data; this one says the property is
+claimed as gated in the governing rule. The two compound: a reader consulting the
+rule would conclude section order is protected, and would be wrong on both counts.
+The gap predates this rename and was surfaced by it rather than caused by it --
+declaration order is what the workbook lays out, so establishing whether order was
+load-bearing required reading what actually enforces it.
+
 ## Recommendations
 
 Keep the order-invariance gate as the standing guarantee behind the naming
@@ -146,4 +168,21 @@ smuggled back into filenames where it drifts stems across revisions.
 Any future corpus-wide migration runner should verify its own effect rather than
 trust an exit code, and should avoid per-file version-control invocations in this
 shared worktree, where lock contention from concurrent agents is routine rather than
-exceptional.
+exceptional. The specific runner behind the high-severity finding above is scratch
+tooling that is discarded rather than repaired, so that finding closes by removal of
+the tool and not by a fix; the recorded lesson is the remediation.
+
+Resolve the advertised-but-unenforced section order through a decision record. This
+is the one item here that cannot be closed by adding an assertion, because the
+property is already violated in the data: enforcing contiguity today would red
+immediately on Modelo 303 and Modelo 200. A follow-on ADR must choose between three
+positions, and the choice is architectural rather than mechanical. Either the
+workbook is required to group casillas by section, which means the layout planner
+sorts rather than following declaration order and the workbook stops mirroring the
+authored sequence; or section grouping is required of the corpus itself, which makes
+section contiguity an authoring invariant with a migration behind it; or the export
+rule's claim is corrected to state what is genuinely gated, leaving section order an
+explicitly ungated presentational concern. The first two change what the operator
+sees in an official-structure export, so neither should be adopted by adding a gate
+quietly. Until that ADR lands, the rule text overstates the guarantee and should be
+read as aspirational on the section-order clause alone.
