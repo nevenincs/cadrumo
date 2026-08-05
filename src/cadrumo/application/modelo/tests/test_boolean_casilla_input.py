@@ -97,7 +97,9 @@ def test_boolean_casilla_outside_zero_or_one_is_refused_instructively() -> None:
     message = str(exc_info.value)
     assert "must be 0 (no) or 1 (yes)" in message
     assert _REDUCCION_FLAG in message
-    assert exc_info.value.context["accepted"] == "0,1"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["accepted"] == "0,1"
 
 
 def test_python_bool_stays_refused_on_the_casilla_channel() -> None:

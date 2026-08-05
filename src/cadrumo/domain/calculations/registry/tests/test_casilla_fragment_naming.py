@@ -67,8 +67,11 @@ def _declared_ids(path: Path) -> list[str]:
         if not isinstance(entries, list):
             continue
         for entry in entries:
-            if isinstance(entry, dict) and entry.get("id") is not None:
-                ids.append(str(entry["id"]))
+            if not isinstance(entry, dict):
+                continue
+            entry_id = entry.get("id")
+            if entry_id is not None:
+                ids.append(str(entry_id))
     return ids
 
 

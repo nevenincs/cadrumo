@@ -151,4 +151,6 @@ def test_the_write_door_refusal_carries_the_issue_set_as_context() -> None:
         "profile facts failed schema validation",
         context={"issue_codes": (BOOLEAN_VALUE_ISSUE_CODE,), "issue_paths": ("capabilities.llm_vision",)},
     )
-    assert error.context["issue_codes"] == (BOOLEAN_VALUE_ISSUE_CODE,)
+    context = error.context
+    assert context is not None
+    assert context["issue_codes"] == (BOOLEAN_VALUE_ISSUE_CODE,)

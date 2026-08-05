@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import ast
 import inspect
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
@@ -404,13 +404,16 @@ def _capped_translation_keys() -> tuple[tuple[str, int], ...]:
     return tuple(found)
 
 
-def _lookup_dotted(catalogue: dict[str, object], dotted_key: str) -> str | None:
+def _lookup_dotted(catalogue: Mapping[str, object], dotted_key: str) -> str | None:
     """Resolve a dot-notated locale key against a nested locale mapping."""
     node: object = catalogue
     for part in dotted_key.split("."):
-        if not isinstance(node, dict) or part not in node:
+        if not isinstance(node, dict):
             return None
-        node = node[part]
+        level: dict[str, object] = {str(key): value for key, value in node.items()}
+        if part not in level:
+            return None
+        node = level[part]
     return node if isinstance(node, str) else None
 
 
