@@ -170,3 +170,53 @@ class TestForbiddenVerbInBodyIsAuditable:
             for match in call_pattern.finditer(text):
                 offenders.append((path, match.group(0)))
         assert offenders == [], f"Apparent forbidden-verb call sites in the sanitiser subpackages: {offenders}"
+
+
+class TestTheGuardCanActuallyFire:
+    """Prove the matchers detect a violation, not merely that none exists.
+
+    :meth:`TestPublicSurfaceCarriesNoForbiddenVerb.test_every_guarded_root_exists`
+    already answers "is this scan looking at anything" -- the vacuity floor the
+    module docstring explains. These cases answer the separate question "would
+    it recognise a violation if it saw one", which a floor cannot: a scan over
+    real files with a matcher that never matches passes exactly like a clean
+    tree.
+
+    The sede sibling of this guard was briefly disarmed by widening an
+    exemption, so both no-write-surface guards now carry the same proof.
+    """
+
+    @pytest.mark.parametrize("verb", _FORBIDDEN_VERBS)
+    def test_a_public_symbol_carrying_each_verb_would_be_caught(self, verb: str) -> None:
+        """The public-symbol scan must flag every verb in the banned list."""
+        tree = ast.parse(f"def {verb}_declaration():\n    pass\n")
+        names = [
+            node.name
+            for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
+            and not node.name.startswith("_")
+            and any(v in node.name.lower() for v in _FORBIDDEN_VERBS)
+        ]
+        assert names == [f"{verb}_declaration"], f"a public symbol named for {verb!r} would not be flagged"
+
+    @pytest.mark.parametrize("verb", _FORBIDDEN_VERBS)
+    def test_a_call_site_of_each_verb_would_be_caught(self, verb: str) -> None:
+        """The call-site regex must flag every verb in the banned list."""
+        call_pattern = re.compile(
+            r"\.\s*(submit|send|commit|enviar|presentar|firmar|radicar|remitir|modificar|anular|cancelar|rechazar)\s*\(",
+            re.IGNORECASE,
+        )
+        assert call_pattern.search(f"    client.{verb}(payload)"), f"a call to {verb!r} would not be flagged"
+
+    def test_a_private_symbol_is_deliberately_not_flagged(self) -> None:
+        """Underscore-prefixed names are skipped on purpose; pin that so it stays a choice.
+
+        The public-surface scan guards the API a caller could reach. If this
+        ever needs to cover private symbols too, this test is what has to
+        change first, rather than the exclusion quietly widening.
+        """
+        tree = ast.parse("def _submit_internal():\n    pass\n")
+        flagged = [
+            node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and not node.name.startswith("_")
+        ]
+        assert flagged == []
