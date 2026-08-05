@@ -1,16 +1,19 @@
-"""Shared group-by, name-cache, casilla-fold, and period-window helpers for per-modelo aggregators.
+"""Shared group-by, name-cache, casilla-fold, period-window, and rollup-total helpers for per-modelo aggregators.
 
 Used by: :mod:`_retenciones`, :mod:`_counterpart` to bucket observations and cache canonical names;
+:mod:`_foreign_assets` to bucket observations by ``(source_kind, asset_class)`` with no name cache;
 :mod:`_renta_income_ledger`, :mod:`_renta_gasto_ledger`, :mod:`_impatriado_income_ledger`, and
 :mod:`_irnr_income_ledger` to fold their observations into a :class:`CasillaAggregation`;
 :mod:`_renta_income_ledger` and :mod:`_renta_gasto_ledger` to resolve the pago-fraccionado
-year-to-date window both halves of the Modelo 130 base must share.
+year-to-date window both halves of the Modelo 130 base must share;
+:mod:`_retenciones`, :mod:`_counterpart`, and :mod:`_foreign_assets` to prove a declared rollup
+total against the sum of its rollups.
 
 Treat that list as a claim to re-check, not a guarantee. It is accurate for the callers it
 names and says nothing about the ones it does not: a module that needs one of these
 mechanisms and never found it will not appear here, and its absence is exactly what an
-inventory like this hides. Before adding a bucket-by-key loop, a casilla fold, or a period
-window anywhere in this package, look here first.
+inventory like this hides. Before adding a bucket-by-key loop, a casilla fold, a period
+window, or a rollup-total check anywhere in this package, look here first.
 
 The name-cache consumers implement the same shape of aggregation: bucket
 observations by a composite key, then roll up each bucket. They additionally
@@ -75,6 +78,32 @@ def cumulative_year_to_date_window(period: Period) -> CumulativeWindow:
     return CumulativeWindow(period=period, start=date(period.filing_year, 1, 1), end=period.end_date)
 
 
+def group_observations[T, GroupKey: tuple[object, ...]](
+    observations: Iterable[T],
+    *,
+    group_key_fn: Callable[[T], GroupKey],
+) -> dict[GroupKey, list[T]]:
+    """Bucket observations by a composite group key, preserving iteration order.
+
+    The plain bucket-by-key shape underlying :func:`group_and_collect_names`
+    (which calls this internally), for a consumer that only needs the grouping
+    and not the per-identity name cache.
+
+    Args:
+        observations: Iterable of observation records.
+        group_key_fn: Composite key for bucketing (e.g. (source_kind,
+            asset_class)).
+
+    Returns:
+        A mapping of each ``group_key_fn(obs)`` to the list of observations
+        sharing that key, in insertion order.
+    """
+    grouped: dict[GroupKey, list[T]] = {}
+    for observation in observations:
+        grouped.setdefault(group_key_fn(observation), []).append(observation)
+    return grouped
+
+
 def group_and_collect_names[T, GroupKey: tuple[object, ...], IdentityKey: tuple[object, ...]](
     observations: Iterable[T],
     *,
@@ -104,11 +133,10 @@ def group_and_collect_names[T, GroupKey: tuple[object, ...], IdentityKey: tuple[
         key (insertion order), and ``names`` maps each
         ``identity_key_fn(obs)`` to the first non-empty name observed.
     """
-    grouped: dict[GroupKey, list[T]] = {}
+    available = tuple(observations)
+    grouped = group_observations(available, group_key_fn=group_key_fn)
     names: dict[IdentityKey, str] = {}
-    for observation in observations:
-        group_key = group_key_fn(observation)
-        grouped.setdefault(group_key, []).append(observation)
+    for observation in available:
         identity_key = identity_key_fn(observation)
         name = name_fn(observation)
         if name and not names.get(identity_key):
@@ -241,11 +269,54 @@ def fold_casilla_observations[ObservationT: LedgerCasillaObservation](
     )
 
 
+def assert_rollup_totals_match[RollupT](
+    rollups: Sequence[RollupT],
+    *,
+    checks: Sequence[tuple[str, Decimal | int, Callable[[RollupT], Decimal | int]]],
+) -> None:
+    """Raise ``ValueError`` for the first declared total that disagrees with its rollups.
+
+    Shared by every declarative rollup aggregation (347/349, retenciones,
+    Modelo 720): each declares one or more grand totals that must equal the
+    sum of the corresponding field across its own ``rollups``. ``checks`` is
+    an ordered sequence of ``(label, declared_total, extractor)`` triples; for
+    each, ``sum(extractor(row) for row in rollups)`` must equal
+    ``declared_total``. The first mismatch raises, naming the diverging
+    field, its declared value, and the value the rollups actually sum to, so
+    an operator reading the error knows exactly which magnitude is wrong.
+
+    This proves only the arithmetic axis. A rollup-uniqueness invariant (a
+    distinct-NIF count, a no-duplicate-cohort-key rule) is a DIFFERENT kind of
+    check and stays on each aggregation's own model: the three declaring
+    families genuinely disagree on what "unique" means for their rollups
+    (distinct counterparty NIF, distinct perceptor NIF, distinct
+    ``(source_kind, asset_class)`` cohort), so that clause is not shared here.
+
+    Args:
+        rollups: The aggregation's own rollup rows.
+        checks: Ordered ``(label, declared_total, extractor)`` triples to
+            verify. ``extractor`` reads the comparable field off one rollup
+            row; the sum starts from ``type(declared_total)(0)`` so a
+            ``Decimal`` total and an ``int`` total both accumulate at their
+            own type.
+
+    Raises:
+        ValueError: The first ``declared_total`` that does not equal the sum
+            of ``extractor(row)`` over ``rollups``.
+    """
+    for label, declared_total, extractor in checks:
+        computed = sum((extractor(row) for row in rollups), type(declared_total)(0))
+        if computed != declared_total:
+            raise ValueError(f"{label} {declared_total} != sum of rollups {computed}")
+
+
 __all__ = [
     "CumulativeWindow",
     "LedgerCasillaObservation",
+    "assert_rollup_totals_match",
     "cumulative_year_to_date_window",
     "filter_observations_for_modelo",
     "fold_casilla_observations",
     "group_and_collect_names",
+    "group_observations",
 ]
