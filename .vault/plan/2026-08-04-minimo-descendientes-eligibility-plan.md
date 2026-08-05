@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:4d9c21508a5e002cd2fc797c60a3e062d7d2b2871cb8b0bd081aeb4898cf4534'
+body_hash: 'sha256:8212a8442c293734f31f1d3ec79671c8e29dd7b68741318d56d24b42c93f755f'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -71,6 +71,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `P04.S23` - Add the Art. 81.1 post-birth alta increment, 150 euros for the month completing the 30-day contribution period, raising that child cap to 1.350 euros for filing years from 2023 only, gated on a new operator-supplied fact naming that month; `src/cadrumo/core/external_constants.py, src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`.
 - [ ] `P04.S24` - Collapse the two family-record reconstructions in _profile_binding onto one, because the guarderia path pre-checks birth dates per index but omits the anualidades that suppress dependency assimilation while the minimo and maternidad path carries anualidades but skips the pre-check, so one malformed stored birth date names its row on one path and not the other, and a predicate that later consults anualidades would silently over-grant on the guarderia path; `src/cadrumo/application/modelo/_profile_binding.py`.
+- [ ] `P04.S25` - Escalate the stale ley-35-2006 art-81 corpus excerpt for operator refresh, because its apartado 1 carries the post-2023 widened supuestos while its apartado 2 still carries the cotizaciones ceiling the bundled AEAT manual states was removed from 2023, and the 150 euro post-alta increment is absent entirely, so the excerpt is a two-vintage hybrid that cannot gate the required_text for any clause S15 or S23 implement; `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-81.html`.
 
 ## Parallelization
 
