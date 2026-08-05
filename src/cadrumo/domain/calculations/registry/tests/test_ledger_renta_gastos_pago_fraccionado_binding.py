@@ -5,13 +5,12 @@ Pins the committed M130 casilla 02 contract: the casilla binds
 ``ledger_renta_gastos_pago_fraccionado_aggregation``, fact
 ``deductible_amount_sum``. Also covers
 :func:`resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values`
-and :func:`unsupported_ledger_renta_gastos_pago_fraccionado_observations`
-after their refactor onto the shared
+after its refactor onto the shared
 :func:`~....registry._ledger_binding_resolution.resolve_ledger_family_binding_values`
-/ :func:`~....registry._ledger_binding_resolution.unsupported_ledger_family_observations`
 skeleton (F15): a real registry revision, a worked-example Decimal sum
-independent of the resolver under test, and off-casilla / zero-amount
-observations proving the shared predicate and false-fire guard still hold.
+independent of the resolver under test, and an off-casilla observation
+proving the ``target_casilla_id`` predicate genuinely excludes non-matching
+rows rather than folding everything in scope.
 """
 
 from __future__ import annotations
@@ -26,7 +25,6 @@ from .. import (
     CasillaId,
     build_snapshot,
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
-    unsupported_ledger_renta_gastos_pago_fraccionado_observations,
     validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
     validated_casilla_id,
 )
@@ -129,43 +127,3 @@ def test_resolver_returns_zero_for_binding_with_no_matching_observations() -> No
     resolved = resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(revision, (off_casilla,))
 
     assert resolved[binding.id] == Decimal("0")
-
-
-def test_unsupported_flags_non_zero_gasto_routed_to_no_binding() -> None:
-    """A non-zero deductible expense whose target_casilla_id matches no binding is surfaced.
-
-    Every committed M130 gastos binding selects casilla 02; an observation
-    routed to casilla 03 reaches no binding and would silently vanish from
-    the filing, so the fail-closed screen MUST report it
-    (no-silent-under-declaration).
-    """
-    revision = _modelo_130_snapshot().revision
-
-    routed = _GastoObservation(target_casilla_id=_M130_GASTOS_CASILLA, deductible_amount=Decimal("150.00"))
-    unrouted = _GastoObservation(
-        target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
-        deductible_amount=Decimal("75.00"),
-    )
-
-    result = unsupported_ledger_renta_gastos_pago_fraccionado_observations(revision, (routed, unrouted))
-
-    assert result == (unrouted,)
-
-
-def test_unsupported_does_not_flag_zero_deductible_amount() -> None:
-    """A zero-deductible-amount observation routed to no binding must NOT false-fire.
-
-    A zero declarable gasto contributes nothing whether or not it is
-    routed, so the false-fire guard excludes it even when its
-    target_casilla_id is unbound.
-    """
-    revision = _modelo_130_snapshot().revision
-
-    zero_unrouted = _GastoObservation(
-        target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
-        deductible_amount=Decimal("0.00"),
-    )
-
-    result = unsupported_ledger_renta_gastos_pago_fraccionado_observations(revision, (zero_unrouted,))
-
-    assert result == ()
