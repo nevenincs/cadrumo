@@ -7,10 +7,10 @@ plain-data matrix that a later browser-side cosine tier may consume:
 * the vocabulary is normalised, deduplicated, byte-sorted, and fingerprinted;
 * a provider must return exactly one tokenised, finite vector for every term;
 * a provider must separately return exact browser-recognizable query-token
-  vectors; and
+  vectors with complete model-token provenance; and
 * vectors are normalised and quantised with a specified per-row int8 scheme;
-* the output carries model, licence, vocabulary, row-order, and artifact
-  provenance; and
+* the output carries model, provider, tokenizer, licence, vocabulary, row-order,
+  and artifact provenance; and
 * the serialized artifact is hard-capped before it can be written.
 
 No model package, model download, vaultspec-rag import, or browser dependency
@@ -36,21 +36,26 @@ __all__ = [
     "DEFAULT_MAX_SERIALIZED_BYTES",
     "EMBEDDING_MATRIX_SCHEMA_VERSION",
     "INT8_QUANTIZATION_ALGORITHM",
+    "NORMALIZATION_CONTRACT_VERSION",
     "ROW_ORDER",
     "EmbeddingObservation",
     "MatrixCompilationError",
     "ModelMetadata",
+    "NormalizationContract",
+    "ProviderProvenance",
     "QueryTokenObservation",
     "QuantizedQueryTokenRow",
     "QuantizedEmbeddingRow",
     "StaticEmbeddingMatrix",
     "StaticEmbeddingProvider",
+    "TokenizerProvenance",
     "TokenInventoryEntry",
     "canonical_vocabulary",
     "canonical_vocabulary_bytes",
     "canonical_query_tokens",
     "compile_static_embedding_matrix",
     "load_static_embedding_matrix",
+    "normalise_query_tokens",
     "write_static_embedding_matrix",
     "query_token_fingerprint",
     "vocabulary_fingerprint",
@@ -58,10 +63,10 @@ __all__ = [
 
 _UTF_8: Final[str] = "utf-8"
 DEFAULT_MAX_SERIALIZED_BYTES: Final[int] = 3_000_000
-EMBEDDING_MATRIX_SCHEMA_VERSION: Final[int] = 2
+EMBEDDING_MATRIX_SCHEMA_VERSION: Final[int] = 3
 INT8_QUANTIZATION_ALGORITHM: Final[str] = "symmetric-per-row-int8-f32-v1"
+NORMALIZATION_CONTRACT_VERSION: Final[str] = "unicode-word-runs-nfkc-lower-v1"
 ROW_ORDER: Final[str] = "canonical-utf8-byte-order-v1"
-_WHITESPACE = re.compile(r"\s+")
 _IMMUTABLE_REVISION = re.compile(r"^[0-9a-f]{40}$")
 _ALLOWED_SPDX_LICENSES = frozenset({"MIT", "Apache-2.0"})
 
@@ -76,8 +81,60 @@ class MatrixCompilationError(ValueError):
     """Raised when provider output cannot satisfy the matrix contract."""
 
 
+class ProviderProvenance(BaseModel):
+    """Pinned package identity for the build-time embedding provider."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    package: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+    version: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
+    source_sha256: _Sha256
+
+
+class NormalizationContract(BaseModel):
+    """Versioned normalization shared by the compiler and browser reader.
+
+    The fields are deliberately explicit rather than a prose note.  A future
+    browser implementation can reject a matrix whose algorithm identifier is
+    not one it implements, instead of silently applying a different Unicode or
+    token-boundary policy.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    algorithm: Literal["unicode-word-runs-nfkc-lower-v1"]
+    unicode_form: Literal["NFKC"]
+    case_mapping: Literal["lower"]
+    accent_policy: Literal["preserve"]
+    token_boundaries: Literal["unicode-letter-number-runs-v1"]
+    separator_policy: Literal["collapse-to-boundary-v1"]
+
+
+class TokenizerProvenance(BaseModel):
+    """Pinned tokenizer identity and content hashes used for query rows."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    package: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+    version: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
+    repository: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+    revision: Annotated[str, StringConstraints(min_length=40, max_length=40)]
+    vocabulary_sha256: _Sha256
+    config_sha256: _Sha256
+    normalization: NormalizationContract
+
+    @field_validator("revision")
+    @classmethod
+    def _require_immutable_revision(cls, value: str) -> str:
+        """Require a full immutable tokenizer revision, never a branch name."""
+        revision = value.casefold()
+        if not _IMMUTABLE_REVISION.fullmatch(revision):
+            raise ValueError("tokenizer revision must be a 40-character immutable hexadecimal commit")
+        return revision
+
+
 class ModelMetadata(BaseModel):
-    """Immutable metadata for the model that produced the matrix rows."""
+    """Immutable model and implementation provenance for matrix rows."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -85,6 +142,8 @@ class ModelMetadata(BaseModel):
     revision: Annotated[str, StringConstraints(min_length=40, max_length=40)]
     spdx_license: Literal["MIT", "Apache-2.0"]
     dimension: int = Field(gt=0, le=8192)
+    provider: ProviderProvenance
+    tokenizer: TokenizerProvenance
 
     @field_validator("revision")
     @classmethod
@@ -138,24 +197,26 @@ class QueryTokenObservation(BaseModel):
     """One provider response for one browser-recognizable query token.
 
     A term row is a candidate result representation.  A query-token row is a
-    separate contract: its exact token text and model token id are retained so
-    the browser can recognise covered query material without shipping the
-    model tokenizer or weights.  The provider, not this compiler, owns the
-    tokenizer and must echo the requested token identity exactly.
+    separate contract: its normalized browser token, complete ordered model
+    token-id tuple, and count are retained so the browser can recognise covered
+    query material without shipping the model tokenizer or weights. The
+    provider owns subword pooling and must echo the requested token identity
+    exactly; the tuple remains audit provenance for that pooled row.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     token: _QueryToken
-    token_id: _TokenId
+    model_token_ids: tuple[_TokenId, ...] = Field(min_length=1)
+    token_count: int = Field(ge=1)
     vector: tuple[float, ...] = Field(min_length=1)
 
     @field_validator("token")
     @classmethod
-    def _require_non_blank_token(cls, value: str) -> str:
-        """Reject whitespace-only identities without rewriting tokenizer text."""
-        if not value.strip():
-            raise ValueError("query-token text cannot be blank")
+    def _require_canonical_token(cls, value: str) -> str:
+        """Require the exact normalized browser lookup key."""
+        if normalise_query_tokens(value) != (value,):
+            raise ValueError("query-token text must be one canonical normalized word")
         return value
 
     @field_validator("vector")
@@ -165,6 +226,13 @@ class QueryTokenObservation(BaseModel):
         if any(not math.isfinite(component) for component in value):
             raise ValueError("query-token vectors must contain only finite values")
         return value
+
+    @model_validator(mode="after")
+    def _token_count_matches_inventory(self) -> QueryTokenObservation:
+        """Refuse silent subword drops or fabricated token counts."""
+        if self.token_count != len(self.model_token_ids):
+            raise ValueError("token_count must equal the model_token_ids inventory length")
+        return self
 
 
 class TokenInventoryEntry(BaseModel):
@@ -217,12 +285,18 @@ class QuantizedEmbeddingRow(BaseModel):
 
 
 class QuantizedQueryTokenRow(BaseModel):
-    """One browser-addressable query token encoded as a symmetric int8 row."""
+    """One browser token encoded as a symmetric int8 row.
+
+    ``model_token_ids`` records every ordered subword id pooled by the pinned
+    provider to produce this row.  It is provenance, not a second browser
+    tokenizer: the reader looks up the normalized ``token`` key.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     token: _QueryToken
-    token_id: _TokenId
+    model_token_ids: tuple[_TokenId, ...] = Field(min_length=1)
+    token_count: int = Field(ge=1)
     scale: float = Field(gt=0)
     values: tuple[_Int8Value, ...] = Field(min_length=1)
 
@@ -236,10 +310,10 @@ class QuantizedQueryTokenRow(BaseModel):
 
     @field_validator("token")
     @classmethod
-    def _require_non_blank_token(cls, value: str) -> str:
-        """Keep token identity exact while rejecting a blank lookup key."""
-        if not value.strip():
-            raise ValueError("query-token text cannot be blank")
+    def _require_canonical_token(cls, value: str) -> str:
+        """Keep the shipped lookup key on the shared normalization contract."""
+        if normalise_query_tokens(value) != (value,):
+            raise ValueError("query-token text must be one canonical normalized word")
         return value
 
     @field_validator("scale")
@@ -256,6 +330,13 @@ class QuantizedQueryTokenRow(BaseModel):
             raise ValueError("query-token quantization scale must be exactly representable as float32")
         return value
 
+    @model_validator(mode="after")
+    def _token_count_matches_inventory(self) -> QuantizedQueryTokenRow:
+        """Keep the shipped count tied to the complete ordered id tuple."""
+        if self.token_count != len(self.model_token_ids):
+            raise ValueError("token_count must equal the model_token_ids inventory length")
+        return self
+
 
 class StaticEmbeddingMatrix(BaseModel):
     """Self-attesting, bounded matrix with separate term/query-token rows.
@@ -269,7 +350,7 @@ class StaticEmbeddingMatrix(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal[2]
+    schema_version: Literal[3]
     model: ModelMetadata
     vocabulary_sha256: _Sha256
     vocabulary_count: int = Field(ge=1)
@@ -297,7 +378,6 @@ class StaticEmbeddingMatrix(BaseModel):
         row_terms = tuple(row.term for row in self.rows)
         inventory_terms = tuple(entry.term for entry in self.token_inventory)
         query_tokens = tuple(row.token for row in self.query_token_rows)
-        query_token_ids = tuple(row.token_id for row in self.query_token_rows)
         expected_query_order = tuple(sorted(query_tokens, key=lambda token: token.encode(_UTF_8)))
         expected_order = tuple(sorted(row_terms, key=lambda term: term.encode(_UTF_8)))
         if any(term != _canonical_term(term) for term in row_terms):
@@ -308,8 +388,6 @@ class StaticEmbeddingMatrix(BaseModel):
             raise ValueError("matrix query-token rows must not contain blank token identities")
         if query_tokens != expected_query_order or len(query_tokens) != len(set(query_tokens)):
             raise ValueError("query-token rows must be unique and sorted by canonical UTF-8 byte order")
-        if len(query_token_ids) != len(set(query_token_ids)):
-            raise ValueError("query-token rows must carry unique model token ids")
         if inventory_terms != row_terms:
             raise ValueError("token inventory must have the same row order and terms as the matrix")
         if any(len(row.values) != self.dimension for row in self.rows) or any(
@@ -347,7 +425,7 @@ class StaticEmbeddingProvider(Protocol):
         ...
 
     def embed_query_tokens(self, tokens: tuple[str, ...]) -> tuple[QueryTokenObservation, ...]:
-        """Return one exact, browser-addressable vector per query token."""
+        """Return one exact normalized-word vector plus subword provenance per token."""
         ...
 
 
@@ -373,23 +451,20 @@ def vocabulary_fingerprint(terms: Iterable[str]) -> str:
 
 
 def canonical_query_tokens(tokens: Iterable[str]) -> tuple[str, ...]:
-    """Return exact provider token identities in deterministic UTF-8 order.
+    """Return browser-recognizable query words in deterministic UTF-8 order.
 
-    Unlike the result-term vocabulary, query-token text is not case-folded or
-    whitespace-rewritten here: those transformations belong to the pinned
-    provider/tokenizer contract.  The compiler only establishes a stable byte
-    order and rejects blank identities, so the browser lookup key is exactly
-    the text the provider declared.
+    The same versioned normalization contract is applied to compiler input and
+    to the future browser query.  Provider rows must echo one of these exact
+    normalized words; model subword identities live in ``model_token_ids``.
     """
     canonical: set[str] = set()
     for token in tokens:
-        if not isinstance(token, str) or not token.strip():
+        if not isinstance(token, str):
             raise MatrixCompilationError("query-token identities must be non-blank strings")
-        if len(token) > 160:
-            raise MatrixCompilationError("query-token identities cannot exceed 160 characters")
-        if "\r" in token or "\n" in token:
-            raise MatrixCompilationError("query-token identities cannot contain line breaks")
-        canonical.add(token)
+        normalized = normalise_query_tokens(token)
+        if not normalized:
+            raise MatrixCompilationError("query-token identities must be non-blank strings")
+        canonical.update(normalized)
     if not canonical:
         raise MatrixCompilationError("the static matrix query-token vocabulary cannot be empty")
     return tuple(sorted(canonical, key=lambda token: token.encode(_UTF_8)))
@@ -476,7 +551,8 @@ def compile_static_embedding_matrix(
         query_rows.append(
             QuantizedQueryTokenRow(
                 token=token,
-                token_id=observation.token_id,
+                model_token_ids=observation.model_token_ids,
+                token_count=observation.token_count,
                 scale=scale,
                 values=values,
             )
@@ -531,16 +607,44 @@ def write_static_embedding_matrix(matrix: StaticEmbeddingMatrix, destination: Pa
 
 
 def _canonical_term(value: str) -> str:
-    """Normalize a query term without changing its semantic word boundaries."""
+    """Normalize a result term with the shared cross-runtime word contract."""
     if not isinstance(value, str):
         raise MatrixCompilationError("vocabulary terms must be strings")
-    normalized = unicodedata.normalize("NFKC", value)
-    normalized = _WHITESPACE.sub(" ", normalized).strip().casefold()
-    if not normalized:
+    tokens = normalise_query_tokens(value)
+    if not tokens:
         raise MatrixCompilationError("vocabulary terms cannot be blank")
+    normalized = " ".join(tokens)
     if len(normalized) > 160:
         raise MatrixCompilationError("vocabulary terms cannot exceed 160 characters")
     return normalized
+
+
+def normalise_query_tokens(value: str) -> tuple[str, ...]:
+    """Apply the versioned compiler/browser normalization algorithm.
+
+    NFKC, Unicode lowercase, and accent preservation are followed by Unicode
+    letter/number-run extraction. Every other character is a separator, so
+    repeated separators collapse into one token boundary. The implementation
+    intentionally does not use Python ``casefold``: the contract names the
+    lowercasing operation shared with JavaScript ``toLowerCase``.
+    """
+    if not isinstance(value, str):
+        raise MatrixCompilationError("query text must be a string")
+    normalized = unicodedata.normalize("NFKC", value).lower()
+    if len(normalized) > 160:
+        raise MatrixCompilationError("query text cannot exceed 160 characters")
+    tokens: list[str] = []
+    current: list[str] = []
+    for character in normalized:
+        category = unicodedata.category(character)
+        if character.isalpha() or character.isnumeric() or (current and category.startswith("M")):
+            current.append(character)
+        elif current:
+            tokens.append("".join(current))
+            current.clear()
+    if current:
+        tokens.append("".join(current))
+    return tuple(tokens)
 
 
 def _quantize_vector(

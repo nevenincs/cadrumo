@@ -84,6 +84,13 @@ def _revisions_overlap(left: object, right: object) -> bool:
     return _period_selectors_overlap(left_selector, right_selector)
 
 
+def _ordered_revisions(modelo: ModeloDefinition) -> tuple[ModeloRevision, ...]:
+    """Return a modelo's revisions in validity order, ties broken by id."""
+    return tuple(
+        sorted(modelo.revisions.values(), key=lambda revision: (revision.valid_from, revision.id)),
+    )
+
+
 def _group_casillas_by_id(
     modelo: ModeloDefinition,
 ) -> dict[CasillaId, list[tuple[ModeloRevision, CasillaDefinition]]]:
@@ -199,4 +206,5 @@ def _evolution_covers_field(evolution: CasillaContinuidadEvolutionDefinition | N
 
 
 revisions_overlap = _revisions_overlap
+ordered_revisions = _ordered_revisions
 iter_cross_revision_casilla_divergences = _iter_cross_revision_casilla_divergences

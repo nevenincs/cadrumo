@@ -5,6 +5,7 @@ label = "Apellidos y nombre, razon social o denominacion del perceptor"
 section = ["perceptor", "identificacion"]
 data_type = "name"
 semantic_role = "payee_name"
+continuidad_id = "payee-name"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-180-perc-nombre"]

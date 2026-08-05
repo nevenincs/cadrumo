@@ -5,6 +5,7 @@ label = "NIF del perceptor"
 section = ["perceptor", "identificacion"]
 data_type = "nif"
 semantic_role = "payee_nif"
+continuidad_id = "payee-nif"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-180-perc-nif"]

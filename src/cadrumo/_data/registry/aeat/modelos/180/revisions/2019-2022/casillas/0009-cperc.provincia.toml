@@ -5,6 +5,7 @@ label = "Codigo provincia del domicilio del perceptor"
 section = ["perceptor", "identificacion"]
 data_type = "province_code"
 semantic_role = "payee_province"
+continuidad_id = "payee-province"
 required = true
 input_kind = "manual"
 export_refs = ["modelo-180-perc-provincia"]

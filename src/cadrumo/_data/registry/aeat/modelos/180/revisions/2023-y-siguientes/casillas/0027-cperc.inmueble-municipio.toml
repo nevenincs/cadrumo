@@ -5,6 +5,7 @@ label = "Municipio del inmueble arrendado"
 section = ["perceptor", "inmueble", "direccion"]
 data_type = "text"
 semantic_role = "payee_inmueble_municipio"
+continuidad_id = "payee-inmueble-municipio"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-180-perc-inmueble-municipio"]
