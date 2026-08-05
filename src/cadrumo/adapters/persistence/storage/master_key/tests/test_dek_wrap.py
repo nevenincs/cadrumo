@@ -13,11 +13,13 @@ from __future__ import annotations
 
 import pytest
 from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from ......core.errors import build_error_envelope
 from ...errors import DecryptionError, EncryptionError
 from .._dek_wrap import (
     WrappedDek,
+    _associated_data,
     unwrap_dek,
     wrap_dek,
 )
@@ -75,6 +77,42 @@ def test_wrap_then_unwrap_round_trip_returns_dek() -> None:
 
     recovered = unwrap_dek(kek=_REFERENCE_KEK, wrapped=wrapped, bucket_id=_ROUNDTRIP_BUCKET)
     assert recovered == _REFERENCE_DEK
+
+
+def test_wrap_dek_output_is_independently_decryptable_by_raw_aesgcm() -> None:
+    """Bidirectional AAD-contract proof, measured in the OTHER direction.
+
+    ``test_unwrap_dek_matches_upstream_reference_vector`` proves old-encrypt
+    (a ciphertext captured from a direct ``AESGCM`` call) decrypts correctly
+    through the refactored ``unwrap_dek`` (which now routes through
+    ``decrypt_record``). That alone does not prove the reverse: that
+    ``wrap_dek``'s OWN output (now produced via ``encrypt_record``) is
+    decryptable by the same direct ``AESGCM`` construction the KAT was
+    captured with. Both directions must round-trip for the AAD/nonce/key
+    contract to be genuinely identical, not merely "close enough" by
+    inspection -- this test measures the direction the KAT does not cover.
+
+    Includes the negative control: decrypting under the WRONG bucket's AAD
+    must fail. Without this, both positive directions passing would be
+    equally consistent with the AAD binding doing nothing at all -- the
+    positive case alone cannot distinguish "AAD is checked and matches"
+    from "AAD is ignored entirely."
+    """
+    wrapped = wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id=_REFERENCE_BUCKET)
+
+    independently_decrypted = AESGCM(_REFERENCE_KEK).decrypt(
+        wrapped.nonce,
+        wrapped.ciphertext + wrapped.tag,
+        _associated_data(_REFERENCE_BUCKET),
+    )
+    assert independently_decrypted == _REFERENCE_DEK
+
+    with pytest.raises(InvalidTag):
+        AESGCM(_REFERENCE_KEK).decrypt(
+            wrapped.nonce,
+            wrapped.ciphertext + wrapped.tag,
+            _associated_data(_OTHER_BUCKET),
+        )
 
 
 def test_wrap_uses_fresh_nonce_per_call() -> None:
