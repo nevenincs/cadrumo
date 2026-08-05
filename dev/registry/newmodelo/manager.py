@@ -5,7 +5,7 @@ Generates the standard per-modelo, per-revision directory layout the loader
 ``manifest.toml`` at the modelo root, and ``revisions/<revision-id>/`` holding
 ``revision.toml`` plus one fragment subdirectory per registry section
 (casillas, formulas, bindings, completeness_manifest, verification_expectations,
-export_layouts, extraction_profiles, application_links, locales).
+export_layouts, extraction_profiles, application_links).
 
 The scaffolded tree is a *skeleton*: every section fragment starts empty (a
 commented placeholder, since registry section fields default to ``()``/``None``
@@ -52,9 +52,6 @@ _SECTION_DIRECTORIES: tuple[str, ...] = (
     "extraction_profiles",
     "application_links",
 )
-
-_LOCALES_DIRECTORY = "locales"
-_LOCALE_LANGUAGES: tuple[str, ...] = ("en", "ca", "hu")
 
 
 class NewModeloError(RuntimeError):
@@ -180,16 +177,6 @@ _SECTION_CHECKLIST_HINTS: dict[str, str] = {
 }
 
 
-def _locale_toml_stub(revision_id: str, language: str) -> str:
-    return (
-        f'# Scaffolded schema-local "{language}" locale stub for revision "{revision_id}".\n'
-        "# Do NOT hand-edit: use `python -m cadrumo.locales scaffold/set` "
-        "(modelo-locales-cli-authority),\n"
-        "# checklist item 10. This placeholder exists only so the directory is discoverable;\n"
-        "# the locale CLI owns its content.\n"
-    )
-
-
 class NewModeloScaffoldManager:
     """Plan and write the skeleton registry directory tree for a new modelo revision."""
 
@@ -259,13 +246,6 @@ class NewModeloScaffoldManager:
                 ScaffoldPlanEntry(
                     Path("revisions") / revision_id / section / f"0001-{section}.toml",
                     _section_fragment_toml(revision_id, section, hint),
-                ),
-            )
-        for language in _LOCALE_LANGUAGES:
-            entries.append(
-                ScaffoldPlanEntry(
-                    Path("revisions") / revision_id / _LOCALES_DIRECTORY / f"{language}.toml",
-                    _locale_toml_stub(revision_id, language),
                 ),
             )
         return tuple(entries)
