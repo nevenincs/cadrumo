@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-registry-format'
-date: '2026-07-28'
-modified: '2026-07-28'
+date: '2026-08-05'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:f26d56971fc55ec6885f5485cd79e2dceaf9d74d282ff187c380b736799fb2c0'
+body_hash: 'sha256:d4e88680eb7dec3ee88438e75fb78be1e687ef47835c76f32af2cddb51344700'
 related:
   - '[[2026-07-02-arch-remediation-registry-format-P01-S01]]'
   - '[[2026-07-02-arch-remediation-registry-format-P01-S02]]'
@@ -30,6 +30,7 @@ related:
   - '[[2026-07-02-arch-remediation-registry-format-plan]]'
   - '[[2026-07-03-arch-remediation-registry-format-audit]]'
   - '[[2026-07-06-arch-remediation-registry-format-research]]'
+  - '[[2026-08-05-arch-remediation-registry-format-casilla-fragment-content-naming-audit]]'
 ---
 
 # `arch-remediation-registry-format` feature index
@@ -45,6 +46,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-registry-fo
 ### audit
 
 - `2026-07-03-arch-remediation-registry-format-audit` - `arch-remediation-registry-format` audit: `campaign close honesty review`
+- `2026-08-05-arch-remediation-registry-format-casilla-fragment-content-naming-audit` - `arch-remediation-registry-format` audit: `casilla fragment content-derived naming: is compiled order load-bearing?`
 
 ### exec
 
