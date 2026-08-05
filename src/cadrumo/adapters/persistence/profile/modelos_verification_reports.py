@@ -38,7 +38,6 @@ from typing import TYPE_CHECKING
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.modelos import (
     VerificationReportCatalogue,
     VerificationReportPersistenceError,
@@ -46,6 +45,7 @@ from ....domain.modelos import (
 )
 from ..storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
+from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
@@ -79,12 +79,18 @@ class VerificationReportCatalogueRepository:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is not None:
             self._objects = objects
-            return
-        self._bucket_id = resolve_modelo_repository_bucket_id(
-            bucket_id,
-            error_type=VerificationReportPersistenceError,
+        else:
+            self._bucket_id = resolve_modelo_repository_bucket_id(
+                bucket_id,
+                error_type=VerificationReportPersistenceError,
+            )
+            self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+        self._storage = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
+            model_type=VerificationReportCatalogue,
+            empty_document=VerificationReportCatalogue,
         )
-        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str | None:
@@ -93,7 +99,7 @@ class VerificationReportCatalogueRepository:
 
     def exists(self) -> bool:
         """Report whether a stored verification-report catalogue is present."""
-        return self._objects.exists(_VERIFICATION_NAMESPACE, _VERIFICATION_OBJECT_KEY)
+        return self._storage.exists()
 
     def _assert_reports_resolve_to_local_revisions(
         self,
@@ -230,23 +236,8 @@ class VerificationReportCatalogueRepository:
             catalogue: The full :class:`VerificationReportCatalogue` to store,
                 keyed by each report's verification-report identifier.
         """
-        from ..storage import Envelope
-
         self._assert_reports_resolve_to_local_revisions(catalogue, boundary="save")
-        envelope = Envelope[VerificationReportCatalogue](
-            schema_version=_VERIFICATION_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_VERIFICATION_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        self._objects.save(
-            namespace=_VERIFICATION_NAMESPACE,
-            object_key=_VERIFICATION_OBJECT_KEY,
-            classification=_VERIFICATION_CATALOGUE_SENSITIVITY,
-            schema_version=_VERIFICATION_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        self._storage.save(catalogue)
 
 
 __all__ = [

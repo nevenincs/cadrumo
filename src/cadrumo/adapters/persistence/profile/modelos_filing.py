@@ -38,7 +38,6 @@ from typing import TYPE_CHECKING
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.modelos import (
     ModeloRecordCatalogue,
     ModeloRecordPersistenceError,
@@ -46,6 +45,7 @@ from ....domain.modelos import (
 )
 from ..storage import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
+from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
@@ -83,9 +83,15 @@ class ModeloRecordCatalogueRepository:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is not None:
             self._objects = objects
-            return
-        self._bucket_id = resolve_modelo_repository_bucket_id(bucket_id, error_type=ModeloRecordPersistenceError)
-        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+        else:
+            self._bucket_id = resolve_modelo_repository_bucket_id(bucket_id, error_type=ModeloRecordPersistenceError)
+            self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+        self._storage = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
+            model_type=ModeloRecordCatalogue,
+            empty_document=ModeloRecordCatalogue,
+        )
 
     @property
     def bucket_id(self) -> str | None:
@@ -108,7 +114,7 @@ class ModeloRecordCatalogueRepository:
         check only; it neither decrypts nor validates the stored payload.
         Call ``load`` to retrieve and verify the catalogue contents.
         """
-        return self._objects.exists(_FILING_NAMESPACE, _FILING_OBJECT_KEY)
+        return self._storage.exists()
 
     def _assert_records_belong_to_this_bucket(
         self,
@@ -267,23 +273,8 @@ class ModeloRecordCatalogueRepository:
         and :class:`~adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
-        from ..storage import Envelope, SecureObjectWrite
-
         self._assert_records_belong_to_this_bucket(catalogue, boundary="save")
-        envelope = Envelope[ModeloRecordCatalogue](
-            schema_version=_FILING_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_FILING_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        return SecureObjectWrite(
-            namespace=_FILING_NAMESPACE,
-            object_key=_FILING_OBJECT_KEY,
-            classification=_FILING_CATALOGUE_SENSITIVITY,
-            schema_version=_FILING_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        return self._storage.to_secure_object_write(catalogue)
 
     def save_with_secure_object_writes(
         self,

@@ -40,7 +40,6 @@ from typing import TYPE_CHECKING
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionPersistenceError,
@@ -49,6 +48,7 @@ from ....domain.modelos import (
 )
 from ..storage import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
+from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
@@ -81,12 +81,18 @@ class CalculationRevisionCatalogueRepository:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is not None:
             self._objects = objects
-            return
-        self._bucket_id = resolve_modelo_repository_bucket_id(
-            bucket_id,
-            error_type=CalculationRevisionPersistenceError,
+        else:
+            self._bucket_id = resolve_modelo_repository_bucket_id(
+                bucket_id,
+                error_type=CalculationRevisionPersistenceError,
+            )
+            self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+        self._storage = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+            model_type=CalculationRevisionCatalogue,
+            empty_document=CalculationRevisionCatalogue,
         )
-        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str | None:
@@ -114,7 +120,7 @@ class CalculationRevisionCatalogueRepository:
         Returns:
             ``True`` when a stored catalogue object exists, ``False`` otherwise.
         """
-        return self._objects.exists(_CALCULATION_NAMESPACE, _CALCULATION_OBJECT_KEY)
+        return self._storage.exists()
 
     def load(self) -> CalculationRevisionCatalogue:
         """Load and decrypt the persisted calculation-revision catalogue.
@@ -220,22 +226,7 @@ class CalculationRevisionCatalogueRepository:
             catalogue: The :class:`CalculationRevisionCatalogue` to serialise and
                 store.
         """
-        from ..storage import Envelope
-
-        envelope = Envelope[CalculationRevisionCatalogue](
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        self._objects.save(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
-            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        self._storage.save(catalogue)
 
     def to_secure_object_write(self, catalogue: CalculationRevisionCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it.
@@ -247,22 +238,7 @@ class CalculationRevisionCatalogueRepository:
         co-emitted with related secure objects (e.g. the participation index) in
         one :meth:`save_with_secure_object_writes` unit of work.
         """
-        from ..storage import Envelope, SecureObjectWrite
-
-        envelope = Envelope[CalculationRevisionCatalogue](
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        return SecureObjectWrite(
-            namespace=_CALCULATION_NAMESPACE,
-            object_key=_CALCULATION_OBJECT_KEY,
-            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
-            schema_version=_CALCULATION_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        return self._storage.to_secure_object_write(catalogue)
 
     def save_with_secure_object_writes(
         self,

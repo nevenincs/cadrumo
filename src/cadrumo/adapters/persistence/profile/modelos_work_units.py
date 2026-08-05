@@ -40,7 +40,6 @@ from typing import TYPE_CHECKING
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.modelos import (
     WorkUnitCatalogue,
     WorkUnitPersistenceError,
@@ -48,6 +47,7 @@ from ....domain.modelos import (
 )
 from ..storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
+from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
@@ -84,9 +84,15 @@ class WorkUnitCatalogueRepository:
         self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         if objects is not None:
             self._objects = objects
-            return
-        self._bucket_id = resolve_modelo_repository_bucket_id(bucket_id, error_type=WorkUnitPersistenceError)
-        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+        else:
+            self._bucket_id = resolve_modelo_repository_bucket_id(bucket_id, error_type=WorkUnitPersistenceError)
+            self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+        self._storage = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
+            model_type=WorkUnitCatalogue,
+            empty_document=WorkUnitCatalogue,
+        )
 
     @property
     def bucket_id(self) -> str | None:
@@ -95,7 +101,7 @@ class WorkUnitCatalogueRepository:
 
     def exists(self) -> bool:
         """Return whether a work-unit catalogue object has been persisted."""
-        return self._objects.exists(_WORK_UNIT_NAMESPACE, _WORK_UNIT_OBJECT_KEY)
+        return self._storage.exists()
 
     def load(self) -> WorkUnitCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
@@ -184,22 +190,7 @@ class WorkUnitCatalogueRepository:
         Args:
             catalogue: The :class:`WorkUnitCatalogue` to persist.
         """
-        from ..storage import Envelope
-
-        envelope = Envelope[WorkUnitCatalogue](
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_WORK_UNIT_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        self._objects.save(
-            namespace=_WORK_UNIT_NAMESPACE,
-            object_key=_WORK_UNIT_OBJECT_KEY,
-            classification=_WORK_UNIT_CATALOGUE_SENSITIVITY,
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-        )
+        self._storage.save(catalogue)
         _LOGGER.info("saved work-unit catalogue with %d entr(y/ies)", len(catalogue))
 
     def to_secure_object_write(
@@ -219,23 +210,10 @@ class WorkUnitCatalogueRepository:
         :class:`~adapters.persistence.storage.SensitivityClass` classification
         :meth:`save` would persist directly.
         """
-        from ..storage import Envelope, SecureObjectWrite
-
-        envelope = Envelope[WorkUnitCatalogue](
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_WORK_UNIT_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        return SecureObjectWrite(
-            namespace=_WORK_UNIT_NAMESPACE,
-            object_key=_WORK_UNIT_OBJECT_KEY,
-            classification=_WORK_UNIT_CATALOGUE_SENSITIVITY,
-            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-            expected_revision_id=expected_revision_id,
-        )
+        write = self._storage.to_secure_object_write(catalogue)
+        if expected_revision_id is not None:
+            return write.model_copy(update={"expected_revision_id": expected_revision_id})
+        return write
 
     def save_with_secure_object_writes(
         self,

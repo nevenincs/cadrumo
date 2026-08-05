@@ -8,6 +8,19 @@ bucket. Each stored record is wrapped in an
 :class:`~adapters.persistence.storage.Envelope` at
 ``FINANCIAL`` :class:`~adapters.persistence.storage.SensitivityClass`.
 
+The write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
+:class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+for the shared envelope-construction mechanic. The read path
+(``load`` / ``load_revisioned``) stays hand-rolled here rather than routing
+through the shared kernel's generic checks: this repository's classification
+and schema-version mismatch errors carry a richer, test-asserted
+``translated_message``/``context`` shape distinguishing an outer (SQL-row)
+integrity failure from an inner (envelope-payload) classification or version
+drift, plus a dedicated schema-drift (``ValidationError``) translation none
+of that is part of the shared kernel's generic contract, and collapsing it
+would be a silent, observable error-message regression for every caller and
+test that depends on the specific translated message.
+
 This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`. It lives in
 the persistence adapter (not in :mod:`~domain.buckets`) because its
@@ -43,11 +56,10 @@ from typing import TYPE_CHECKING
 from pydantic import ValidationError
 
 from ....core import ABSENT_SECURE_OBJECT_REVISION_ID
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
-from ....core.time import now
 from ....domain.buckets import BucketEventHistoryCatalogue, BucketEventHistoryPersistenceError
 from ..storage import BUCKET_EVENT_HISTORY_NAMESPACE
+from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
@@ -74,7 +86,10 @@ class BucketEventHistoryRepository:
     :class:`~adapters.persistence.storage.SecureObjectWrite` when sibling
     catalogue updates need one transaction. This class exposes the concrete
     load/save implementation behind
-    :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
+    :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`, composing
+    :class:`~adapters.persistence.profile.ProfileEnvelopedModelSecurePersistence`
+    for the write-path envelope mechanic (see module docstring for why the
+    read path stays separate).
     """
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
@@ -86,10 +101,16 @@ class BucketEventHistoryRepository:
         """
         if objects is not None:
             self._objects = objects
-            return
-        from ..storage import secure_object_repository_for_active_bucket
+        else:
+            from ..storage import secure_object_repository_for_active_bucket
 
-        self._objects = secure_object_repository_for_active_bucket()
+            self._objects = secure_object_repository_for_active_bucket()
+        self._storage = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=BUCKET_EVENT_HISTORY_NAMESPACE,
+            model_type=BucketEventHistoryCatalogue,
+            empty_document=BucketEventHistoryCatalogue,
+        )
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
@@ -104,7 +125,7 @@ class BucketEventHistoryRepository:
 
     def exists(self) -> bool:
         """Return whether a bucket-event-history catalogue has been persisted."""
-        return self._objects.exists(_NAMESPACE, _OBJECT_KEY)
+        return self._storage.exists()
 
     def load(self) -> BucketEventHistoryCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
@@ -214,23 +235,10 @@ class BucketEventHistoryRepository:
         :class:`~adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
-        from ..storage import Envelope, SecureObjectWrite
-
-        envelope = Envelope[BucketEventHistoryCatalogue](
-            schema_version=_CATALOGUE_VERSION,
-            written_at=now(),
-            classification=_CATALOGUE_SENSITIVITY,
-            payload=catalogue,
-        )
-        return SecureObjectWrite(
-            namespace=_NAMESPACE,
-            object_key=_OBJECT_KEY,
-            classification=_CATALOGUE_SENSITIVITY,
-            schema_version=_CATALOGUE_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
-            expected_revision_id=expected_revision_id,
-        )
+        write = self._storage.to_secure_object_write(catalogue)
+        if expected_revision_id is not None:
+            return write.model_copy(update={"expected_revision_id": expected_revision_id})
+        return write
 
 
 __all__ = [
