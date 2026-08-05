@@ -73,7 +73,16 @@ def test_profiles_resolve_to_the_pinned_executed_set() -> None:
     Each profile's resolved invocations must equal the pinned module/argument
     sequence, in order. This is the migration's load-bearing guarantee, kept as
     a standing pin rather than a one-off check performed at migration time.
+
+    The set equality below is what makes the pin total. Iterating the pinned
+    table alone would never VISIT a profile absent from it, so a whole new
+    profile — the thing a workflow actually invokes — could land carrying any
+    executed set at all and every assertion here would still pass.
     """
+    assert set(_EXPECTED_EXECUTION) == set(_PROFILES), (
+        f"every profile must be pinned; unpinned: {sorted(set(_PROFILES) - set(_EXPECTED_EXECUTION))}, "
+        f"stale pins: {sorted(set(_EXPECTED_EXECUTION) - set(_PROFILES))}"
+    )
     for profile, expected in _EXPECTED_EXECUTION.items():
         resolved: list[tuple[str, tuple[str, ...]]] = []
         for selector in _PROFILES[profile]:
