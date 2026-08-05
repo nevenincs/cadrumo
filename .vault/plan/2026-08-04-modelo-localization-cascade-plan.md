@@ -4,19 +4,26 @@ tags:
   - '#modelo-localization-cascade'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:d03326fe2d52666e00a53d3da77686b301aa1386e937d3f83b8a7aec1b58f931'
+body_hash: 'sha256:a64949e558192d35814b0fcbd8885b6965daad868e0e7b847323a4693a7b3d15'
 tier: L3
 related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
   - '[[2026-08-04-modelo-localization-cascade-research]]'
   - '[[2026-08-04-modelo-localization-cascade-migration-feasibility-research]]'
+  - '[[2026-08-05-modelo-localization-cascade-identical-source-adjudication-research]]'
+  - '[[2026-08-05-modelo-localization-cascade-execution-closeout-audit]]'
 ---
 
 # `modelo-localization-cascade` plan
 
 ## Description
 
-This plan constructs and certifies a disposable migration application for the accepted root-only localization design. It deliberately stops short of production cutover. The application must extract the existing revision-local corpus, propose the root catalogue and revision-schema outcome, preserve unresolved semantic decisions for manual review, and prove old-versus-new resolution parity before any future cutover plan is considered.
+This plan records the migration and certification boundary for the accepted root-only localization design. W01 was executed by the disposable migration work, and the root-only production cutover then landed in `ced27b5a59`. The remaining historical W02-W04 rows are reconciled below from the live loader/catalogue contracts and retained evidence; no disposable migration application or revision-local locale storage is to be restored.
+
+> Reconciled 2026-08-05 - historical, not active. W02-W04 were superseded by
+> the already-landed root-only shared-catalogue cutover. Their rows are closed
+> by explicit Step Records and the execution closeout audit, with source-aware
+> parity evidence and no claim of a post-disposal temporary-app rerun.
 
 The normal operating mode is a dry run. Every dry run writes a deterministic, self-contained proposal to a temporary output directory containing the staged tree, source fingerprint, sealed manifest, conflicts, unresolved review register, parity report, and summary. The campaign is measured by verbatim Spanish extraction, a language-neutral schema, and stopping revision N+1 from re-declaring unchanged leaves; byte compression is not its success criterion. The application must refuse a live registry destination and must not expose a production mutation path before explicit certification evidence exists.
 
@@ -58,16 +65,16 @@ Construct a root-catalogue emitter and a dry-run output boundary that never writ
 
 Emit language-neutral revision schemas and root-only locale catalogues into an isolated staging tree.
 
-- [ ] `W02.P03.S06` - Emit language-neutral revision staging data and root Spanish catalogues into an isolated output tree; `dev/registry/migration`.
-- [ ] `W02.P03.S07` - Emit explicit applicability variants, exact occurrence entries, and tombstones that preserve prior fallback behavior; `dev/registry/migration`.
+- [x] `W02.P03.S06` - Emit language-neutral revision staging data and root Spanish catalogues into an isolated output tree; reconciled by `ced27b5a59` and its Step Record; `dev/registry/migration`.
+- [x] `W02.P03.S07` - Emit explicit applicability variants, exact occurrence entries, and tombstones that preserve prior fallback behavior; reconciled by the production exact-to-continuidad resolver and its Step Record; `dev/registry/migration`.
 
 ### Phase `W02.P04` - Dry-run artifact boundary
 
 Make every proposed outcome reviewable in a temporary output directory and refuse live-registry writes.
 
-- [ ] `W02.P04.S08` - Implement a dry-run command with an explicit temporary-output contract and no live-registry destination; `dev/registry/migration`.
-- [ ] `W02.P04.S09` - Save a deterministic artifact bundle containing the proposed tree, manifest, conflicts, unresolved review, and source fingerprint; `dev/registry/migration`.
-- [ ] `W02.P04.S10` - Reject live-registry paths and every non-certified production-write mode during migration-app execution; `dev/registry/migration`.
+- [x] `W02.P04.S08` - Implement a dry-run command with an explicit temporary-output contract and no live-registry destination; superseded by disposal after `ced27b5a59`; `dev/registry/migration`.
+- [x] `W02.P04.S09` - Save a deterministic artifact bundle containing the proposed tree, manifest, conflicts, unresolved review, and source fingerprint; reconciled by retained W01 and vault evidence; `dev/registry/migration`.
+- [x] `W02.P04.S10` - Reject live-registry paths and every non-certified production-write mode during migration-app execution; resolved by removal of the migration write surface and the new-Modelo guard; `dev/registry/migration`.
 
 ## Wave `W03` - Parity and certification
 
@@ -77,15 +84,15 @@ Prove proposed resolution parity across the complete supported corpus and produc
 
 Compare the staged resolver against the current resolved behavior for every supported model, revision, casilla, field, and locale.
 
-- [ ] `W03.P05.S11` - Implement the staged root-catalogue resolver with locale fallback rules isolated from production; `dev/registry/migration`.
-- [ ] `W03.P05.S12` - Compare old and proposed resolved values across every supported model, revision, casilla, field, and locale; `dev/registry/migration`.
+- [x] `W03.P05.S11` - Implement the staged root-catalogue resolver with locale fallback rules isolated from production; resolved by the live canonical resolver; `dev/registry/migration`.
+- [x] `W03.P05.S12` - Compare old and proposed resolved values across every supported model, revision, casilla, field, and locale; reconciled by bounded parity and source-aware locale evidence; `dev/registry/migration`.
 
 ### Phase `W03.P06` - Manual review and certification gate
 
 Require reviewable evidence, explicit disposition of unresolved candidates, and zero unapproved parity differences.
 
-- [ ] `W03.P06.S13` - Record every mismatch and candidate continuity decision as an explicit review disposition; `dev/registry/migration`.
-- [ ] `W03.P06.S14` - Enforce certification on source-hash agreement, complete review disposition, zero unapproved mismatches, and full parity; `dev/registry/migration`.
+- [x] `W03.P06.S13` - Record every mismatch and candidate continuity decision as an explicit review disposition; resolved by the identical-source adjudication register and retained continuity review boundary; `dev/registry/migration`.
+- [x] `W03.P06.S14` - Enforce certification on source-hash agreement, complete review disposition, zero unapproved mismatches, and full parity; resolved by current status/audit gates with zero pending equalities; `dev/registry/migration`.
 
 ## Wave `W04` - Disposable handoff
 
@@ -95,11 +102,11 @@ Package the application for controlled review and explicitly defer any productio
 
 Keep production mutation unavailable until an explicit certified follow-on plan authorizes cutover.
 
-- [ ] `W04.P07.S15` - Produce a follow-on cutover handoff that cannot execute production mutation from the disposable application; `dev/registry/migration`.
+- [x] `W04.P07.S15` - Produce a follow-on cutover handoff that cannot execute production mutation from the disposable application; superseded by the completed cutover and disposal; `dev/registry/migration`.
 
 ### Phase `W04.P08` - Disposable lifecycle evidence
 
 Document isolation, repeatability, deletion, and retained evidence for the disposable migration application.
 
-- [ ] `W04.P08.S16` - Add real-behavior repeatability, temporary-output, and no-live-write tests for the dry-run boundary; `tests/cadrumo/domain/calculations/registry`.
-- [ ] `W04.P08.S17` - Package disposal and evidence-retention instructions, then run the migration-application validation gate; `dev/registry/migration`.
+- [x] `W04.P08.S16` - Add real-behavior repeatability, temporary-output, and no-live-write tests for the dry-run boundary; reconciled by retained real-behavior gates and final no-legacy boundary; `tests/cadrumo/domain/calculations/registry`.
+- [x] `W04.P08.S17` - Package disposal and evidence-retention instructions, then run the migration-application validation gate; resolved by `ced27b5a59` and retained vault evidence; `dev/registry/migration`.
