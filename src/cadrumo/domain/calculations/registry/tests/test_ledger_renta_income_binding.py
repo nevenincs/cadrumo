@@ -181,8 +181,13 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, (tagged, untagged))
 
+    # The tagged row is the one carrying a base; naming that here keeps the
+    # contrast below arithmetic on a real Decimal rather than an optional one.
+    tagged_base = tagged.taxable_base_amount
+    assert tagged_base is not None
+
     assert resolved[_TAXABLE_BASE_BINDING] == Decimal("1000.00")
-    assert resolved[_TAXABLE_BASE_BINDING] != tagged.taxable_base_amount + untagged.gross_amount, (
+    assert resolved[_TAXABLE_BASE_BINDING] != tagged_base + untagged.gross_amount, (
         "taxable_base_sum must not fall back to the untagged row's gross_amount"
     )
 
