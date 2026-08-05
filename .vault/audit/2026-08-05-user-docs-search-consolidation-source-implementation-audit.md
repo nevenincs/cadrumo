@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d32edab96ef559fa4e8226197b13fd1be2b2b020c4308fee0a5b9289ba53e9d3'
+body_hash: 'sha256:e8ab9eaaff52dfa9548d93993f795bec38e7b659777a973df527ca3b791c4e89'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -70,3 +70,19 @@ The matrix/provider/bridge/browser/legal/casilla source seams are directionally 
 - Correct the threshold lock, locale census semantics, bridge validation parity, pagefind omission handling, legal ambiguity behavior, and CLI authoritative-record resolution as disjoint source-only fixes, subject to RAG grounding and formal review.
 - Resolve the Disenos locator contract from the actual preprocessor/RAG payload before adding fields or fallback logic; fail closed until an individual locator is available.
 - Keep P02.S04 through P02.S07, P03.S08, P04.S12 through P04.S13, P05.S14 through P05.S17, and P06.S24 open until their authorized artifacts and runtime gates exist.
+
+## 2026-08-05 continuation — bounded source remediation
+
+Following the RAG-grounded review, the accepted ADR Update 7 ratified the required Rung-2 input-provenance bundle contract. The source assembler's computed `Rung2InputProvenance` is now propagated through the compiler into a required schema-v2 `Rung2SearchBundle.input_provenance`; canonical serialization, artifact hashing, and byte accounting include it. Python acceptance validates the embedded identity and its matrix fingerprints. The browser contract accepts only schema-v2 bundles, validates the embedded provenance shape and SHA-256 fields, and checks vocabulary/query-token links without attempting to recompute the raw-source digest.
+
+The Luna Extra High browser slice updated `docs/_static/cadrumo-docs.js`; the Python provenance implementation was integrated against current `HEAD` after the Luna Max worker failed to converge without touching a stale shared-index projection. The existing committed strict-boundary source was preserved. Static verification passed with Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, Node syntax, diff checks, and conflict-marker scan. No tests, builds, model downloads, Pagefind/runtime probes, artifact generation, live sweeps, reindexing, or deployment were run.
+
+### Disposition of previously identified findings
+
+- `rung2-input-provenance`: source contract and ADR amendment are now in place; artifact acceptance remains open because the user has deferred builds and tests.
+- `miss-rate-threshold-override`: fixed by `2eca09e5e3`; the adjudication and CLI use the ratified threshold only.
+- `legal-source-collision`: fixed by `2eca09e5e3`; ambiguous corpus-path-to-provision mappings fail closed.
+- `cli-synthetic-record`: fixed by `2eca09e5e3`; family hits resolve only to an unambiguous emitted Pagefind CLI record and never fabricate a record.
+- `model-content-attestation`, `casilla-locale-fallback`, `bridge-order-parity`, `browser-hash-parity`, `pagefind-narrowing`, and `diseno-casilla-locator` remain bounded follow-ups; no acceptance row is closed by source-only inspection.
+
+The plan remains at 12 of 24 steps closed (50 percent), with P02.S04 and the remaining artifact, runtime, multilingual, legal, and deployment gates open.

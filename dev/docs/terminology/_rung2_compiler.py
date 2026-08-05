@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import cast
 
 from ._rung2_bridge import Rung2SearchBundle, build_rung2_search_bundle, write_rung2_search_bundle
+from ._rung2_provenance import Rung2InputProvenance
 from ._static_matrix import (
     DEFAULT_MAX_SERIALIZED_BYTES,
     MatrixCompilationError,
@@ -46,6 +47,7 @@ def compile_rung2_search_bundle(
     provider: object,
     sweep: object,
     records: object,
+    provenance: object,
     max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
 ) -> Rung2SearchBundle:
     """Compile a matrix and immediately link it to one authoritative sweep.
@@ -57,15 +59,16 @@ def compile_rung2_search_bundle(
     The supplied record iterable is materialized once so it cannot be consumed
     before the bridge builds its manifest.
 
-    All matrix, model-provenance, size, sweep, mapping, URL, manifest, and
-    bundle invariants remain owned by the existing contracts.  This function
-    only rejects empty or structurally invalid seam inputs and composes those
-    contracts in order.
+    All matrix, model-provenance, input-provenance, size, sweep, mapping, URL,
+    manifest, and bundle invariants remain owned by the existing contracts.
+    This function only rejects empty or structurally invalid seam inputs and
+    composes those contracts in order.
     """
     validated_vocabulary = _require_canonical_vocabulary(vocabulary)
     validated_query_tokens = _require_canonical_query_tokens(query_tokens)
     validated_provider = _require_provider(provider)
     validated_sweep = _require_sweep(sweep)
+    validated_provenance = _require_provenance(provenance)
     record_tuple = _materialize_records(records)
 
     try:
@@ -79,6 +82,7 @@ def compile_rung2_search_bundle(
             matrix,
             validated_sweep,
             record_tuple,
+            provenance=validated_provenance,
             max_serialized_bytes=max_serialized_bytes,
         )
     except (TypeError, ValueError) as exc:
@@ -93,15 +97,16 @@ def compile_and_write_rung2_search_bundle(
     sweep: object,
     records: object,
     destination: object,
+    provenance: object,
     max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
 ) -> Rung2SearchBundle:
     """Compile one validated bundle and write its canonical bytes explicitly.
 
     The destination is a dev-side operator choice.  No parent directory is
     created and no artifact is written until :func:`compile_rung2_search_bundle`
-    has accepted the provider, matrix, sweep, record manifest, bridge, and
-    shared byte bound.  The validated bundle is returned for an immediate
-    caller-side measurement or manifest handoff.
+    has accepted the provider, matrix, sweep, record manifest, bridge, input
+    provenance, and shared byte bound.  The validated bundle is returned for
+    an immediate caller-side measurement or manifest handoff.
     """
     if not isinstance(destination, Path):
         raise Rung2CompilationError("destination must be a pathlib.Path")
@@ -111,6 +116,7 @@ def compile_and_write_rung2_search_bundle(
         provider=provider,
         sweep=sweep,
         records=records,
+        provenance=provenance,
         max_serialized_bytes=max_serialized_bytes,
     )
     try:
@@ -145,6 +151,7 @@ def compile_project_rung2_search_bundle(
         sweep=inputs.sweep,
         records=inputs.records,
         destination=destination,
+        provenance=inputs.provenance,
         max_serialized_bytes=max_serialized_bytes,
     )
 
@@ -201,6 +208,13 @@ def _require_sweep(sweep: object) -> SweepResult:
     if not sweep.mappings:
         raise Rung2CompilationError("sweep mappings cannot be empty")
     return sweep
+
+
+def _require_provenance(provenance: object) -> Rung2InputProvenance:
+    """Reject an unvalidated provenance value before bundle construction."""
+    if not isinstance(provenance, Rung2InputProvenance):
+        raise Rung2CompilationError("provenance must be a validated Rung2InputProvenance")
+    return provenance
 
 
 def _materialize_records(records: object) -> tuple[SearchRecord, ...]:

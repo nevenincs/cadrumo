@@ -5,7 +5,7 @@ tags:
 date: '2026-08-01'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4682f39602d7be9a58e3e5a8afc2ef96b80b49a4eb14d460fb8614b562edd8b8'
+body_hash: 'sha256:c7c6d45d65d0ad2dd7dc7fa99f36d3187e3c524aee5538bb56cedfbc917e163f'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -19,6 +19,7 @@ related:
   - '[[2026-08-04-user-docs-search-consolidation-deterministic-casilla-enrollment-research]]'
   - '[[2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research]]'
 ---
+
 # `user-docs-search-consolidation` adr: `user documentation search: affirm the precompile pipeline, adjudicate rung 2, reconcile the corpus` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -168,3 +169,37 @@ Two how-to pages (`how-to/verification-reports`, `how-to/modelo-130`) fail the d
 **The publish-evidence contract is extended.** The requirement set for the two coherence reds in Update 4 now covers the 6 localization-gate failures (3 untranslated-delta, 3 punctuation-stale), for the same reason in the same words: green is not redefined; the red is named and adjudicated in the publish record, citing this update and the drift audit. The masking mechanism itself - the third observed-surface false-green of this one day, after the Update 3 addendum's blind-gate trio and the pages-mode env - is recorded as the drift audit's durable gate-design finding.
 
 **Operational note for the publish procedure**, reported honestly and not claimed as reproduced: the cli-sequence check runs a nested pool of child interpreters under Sphinx and wedged once under heavy concurrent load (about 15ms CPU across 45s, zero output, orphaned subprocess). Message extraction no longer runs it, but a production docs build still does, and `dev/docs/sequence_build_gate.py` states no production path sets the opt-out. If the publish build ever stalls with zero output, that pool is the first place to look.
+
+## Update 7 (2026-08-05): Rung-2 input provenance is a required bundle contract
+
+Update 6 ratified the bounded Rung-2 model, encoding, bridge, and fail-closed acceptance boundary and authorized source implementation. This amendment refines that decision at the artifact boundary: the provenance already computed by the authoritative input assembler is part of the bundle identity, not an intermediate value that can be discarded. The source-implementation audit and the Rung-2 research/reference records identify this as a contract gap, not a change of semantic tier.
+
+### Decision
+
+`Rung2SearchBundle` MUST carry a required top-level `input_provenance` object. The bundle schema version increments with this field. The object is the existing immutable `Rung2InputProvenance` contract: a repository-relative source identity, the SHA-256 of the raw committed relevance bytes, and the canonical vocabulary and query-token fingerprints derived from the same authoritative inputs.
+
+The compiler MUST propagate `Rung2CompilationInputs.provenance` into the bundle constructor. Bundle canonical JSON, the bundle artifact hash, and the measured serialized-byte envelope MUST include `input_provenance`; omitting it, substituting a second provenance source, or emitting a stale schema is a fail-closed error. The browser-visible bundle remains the sole shipped authority for this identity.
+
+Python acceptance MUST validate the provenance shape, repository-relative source identity, and equality of its vocabulary/query-token fingerprints with the matrix contract. The browser validator MUST require and validate the embedded provenance object and its links to the matrix and bridge. It MUST NOT claim to recompute `source_sha256`: raw source bytes are not shipped. The browser therefore verifies the embedded, hash-covered provenance rather than inventing an independent source authority.
+
+### Considered options
+
+- **Discard the computed provenance.** Rejected: it leaves the compiler unable to prove which committed input set produced a shipped bundle.
+- **Duplicate provenance in browser configuration.** Rejected: it creates a second authority and can drift from the bundle already carrying the matrix, bridge, manifest, hash, and size evidence.
+- **Add required provenance to the bundle and validate it at both boundaries.** Chosen: one hash-covered identity travels with the artifact, with independent structural checks at the Python and browser seams.
+
+### Constraints
+
+This amendment does not authorize a model download, live RAG sweep, test run, build, generated artifact, Pagefind/runtime probe, artifact release, or deployment. It does not authorize raw source bytes or vectors to ship. The existing licence, vocabulary, query-token, matrix, bridge, record-manifest, size, and fail-closed decisions remain binding. The implementation is source-only until the deferred acceptance gates are explicitly run.
+
+### Implementation
+
+The source assembler remains responsible for reading the committed relevance bytes and deriving `Rung2InputProvenance`. The provider-backed compiler receives that value explicitly, constructs the schema-versioned bundle with the required field, and includes it in canonical hashing and byte accounting. Python acceptance checks the bundle-resident identity and cross-field fingerprints. The browser bundle validator checks the same required field and its matrix/bridge links before the semantic tier can become eligible. The implementation is governed by the source contract reference and the source-implementation audit, while the decision itself remains here.
+
+### Rationale
+
+The selected shape closes the exact provenance-loss finding without widening the runtime boundary or duplicating authority. It preserves Update 6's bounded, reviewable, licence-clean artifact rule while making the artifact's input identity durable and tamper-evident. The decision follows `2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research`, `2026-08-05-user-docs-search-consolidation-source-contract-reference`, and `2026-08-05-user-docs-search-consolidation-source-implementation-audit`.
+
+### Consequences
+
+Every future Rung-2 bundle consumer must understand the incremented schema and refuse bundles without provenance. Existing source-only acceptance and browser contracts require coordinated updates, and any measured artifact must be regenerated after those updates. The current relevance baseline and the deployment deferral are unchanged; this amendment makes the implementation traceable but does not turn the still-unbuilt Rung-2 tier green.

@@ -65,6 +65,7 @@ from ._resolution import (
 )
 from ._rung2_bridge import (
     BRIDGE_SCHEMA_VERSION,
+    BUNDLE_SCHEMA_VERSION,
     BridgeCompilationError,
     RecordManifest,
     RecordManifestEntry,
@@ -173,6 +174,7 @@ from ._wrangle import (
 
 __all__ = [
     "BRIDGE_SCHEMA_VERSION",
+    "BUNDLE_SCHEMA_VERSION",
     "DEFAULT_MAX_RESULTS",
     "DEFAULT_MAX_SERIALIZED_BYTES",
     "DEFAULT_RELATIVE_COSINE_THRESHOLDS",
