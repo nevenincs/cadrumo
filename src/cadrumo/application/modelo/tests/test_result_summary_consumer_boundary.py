@@ -62,6 +62,16 @@ _DISPLAY_LAYER = _PACKAGE_ROOT / "entrypoints" / "cli"
 #: violation list, and an empty violation list reads as "no leak".
 _MINIMUM_MODULES_SCANNED = 200
 
+#: Pinned EXACTLY, unlike the importer count, and the asymmetry is deliberate. A
+#: floor is right for a count whose only job is refusing an empty scan, because a
+#: legitimate new importer would red it and train a reader to bump the number. A
+#: re-export point is the opposite case: adding one genuinely widens the surface a
+#: consumer can reach the symbol through, so the change IS the thing to review and
+#: bumping this is the sanctioned response rather than a way around the gate.
+#: ``service-imports-via-top-level-reexports`` actively encourages promotions on
+#: these types, which is exactly why the widening should not be silent.
+_EXPECTED_REEXPORTERS = 2
+
 
 def _production_modules() -> Iterator[Path]:
     for path in sorted(_PACKAGE_ROOT.rglob("*.py")):
@@ -173,7 +183,12 @@ def test_the_reexport_surface_is_the_one_reviewed(symbol: str) -> None:
         f"{symbol} is re-exported from outside its owning package, widening the surface a "
         f"consumer can reach it through: {relative}"
     )
-    assert reexporters, f"{symbol} is re-exported nowhere; the facade contract changed"
+    assert len(reexporters) == _EXPECTED_REEXPORTERS, (
+        f"the {symbol} re-export surface changed and now has {len(reexporters)} publishers: "
+        f"{relative}. A promotion widens the paths a consumer can reach this type through, so "
+        "confirm the new publisher is intended and update the expected count -- that bump is "
+        "the review, not a way around it."
+    )
 
 
 def test_the_boundary_predicates_can_fail() -> None:
@@ -189,9 +204,19 @@ def test_the_boundary_predicates_can_fail() -> None:
 
     assert _imports_symbol(leaking, "ResultSummaryRow")
     assert not _imports_symbol(inert, "ResultSummaryRow")
-    assert not _imports_symbol(leaking, "ResultSummaryRowPayload"), (
-        "the CLI payload name must not match the application row: the two families are "
-        "asserted separately and a prefix match would allowlist each against the other"
+
+    # The prefix collision, pinned in the direction that can actually fail.
+    # ``ResultSummaryRow`` is a strict prefix of ``ResultSummaryRowPayload``, so a
+    # substring matcher scanning the SHORTER name would match the LONGER import and
+    # silently merge the two families -- each allowlisted against the other's
+    # permitted surface, which is the failure the split exists to prevent. The
+    # reverse direction cannot fail under either matcher and asserting it would
+    # prove nothing.
+    payload_import = ast.parse("from ....entrypoints.cli import ResultSummaryRowPayload\n")
+
+    assert not _imports_symbol(payload_import, "ResultSummaryRow"), (
+        "scanning the application row matched a CLI payload import: the matcher is not "
+        "exact and the two families have merged"
     )
 
     republishing = ast.parse('__all__ = ["ResultSummaryRow"]\n')
