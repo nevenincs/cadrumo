@@ -52,7 +52,11 @@ from ....domain.transactions import (
     TransactionLifecycleState,
     load_retencion_actividades_rates,
 )
-from .._iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
+from .._iva_ledger import (
+    IvaLedgerAggregationIssueReason,
+    aggregate_iva_ledger_observations,
+    resolve_iva_ledger_binding_values,
+)
 from .._renta_income_ledger import aggregate_renta_income_ledger
 from ._renta_income_aggregation_support import _raw_transaction
 
@@ -500,3 +504,84 @@ def test_the_filed_figures_close_the_invoice_identity() -> None:
         )
         == ()
     )
+
+
+# --------------------------------------------------------------------------- #
+# S29: the IVA leg, also at the BINDING level
+# --------------------------------------------------------------------------- #
+#
+# The M130 assertions above carry the income and retenciones legs to the
+# declaration. The IVA leg stopped at the observation, so two of the three
+# domains this module exists to reconcile were checked one layer deeper than
+# the third -- the binding-level insight did not cross the modelo boundary it
+# was written to cross.
+#
+# The cuota reaches a different modelo, so it takes a different revision and a
+# different resolver, but the claim is identical: a correct observation
+# consumed by the wrong binding, or by none, is still a wrong return.
+
+_M303_REPERCUTIDO_BASE_BINDING = "modelo-303-iva-repercutido-general-base"
+_M303_REPERCUTIDO_CUOTA_BINDING = "modelo-303-iva-repercutido-general-cuota"
+
+
+def _modelo_303_revision() -> ModeloRevision:
+    """The committed M303 revision, resolved the way production resolves it.
+
+    Same discipline as :func:`_modelo_130_revision`: through the registry
+    authority, never a test-side snapshot builder, so the bindings asserted
+    are the ones a real calculate would load.
+    """
+    return (
+        resources()
+        .modelos.authority.snapshot(
+            Modelo.M303.value,
+            filing_year=2024,
+            period="1T",
+        )
+        .revision
+    )
+
+
+def test_the_committed_m303_bindings_receive_the_invoice_figures() -> None:
+    """The IVA leg reaches its filed casillas, not merely its observation.
+
+    The repercutido base takes the same 1000 the income casilla takes, and the
+    cuota takes the 210 that is collected for Hacienda rather than earned. That
+    the two modelos draw the same base from one invoice is the cross-domain
+    claim stated where it is filed rather than where it is computed: M130
+    casilla 01 and the M303 repercutido base are the same figure reached by
+    different registries.
+
+    Asserted against the invoice figures, never against the M130 resolution --
+    two modelos agreeing with each other while both disagreeing with the
+    invoice is precisely the failure a cross-domain test exists to catch.
+    """
+    revision = _modelo_303_revision()
+    iva = aggregate_iva_ledger_observations(
+        _catalogue(_invoice_transaction(with_substrate=True)),
+        period=_PERIOD,
+    )
+
+    resolved = resolve_iva_ledger_binding_values(revision, iva.observations)
+
+    assert resolved[_M303_REPERCUTIDO_BASE_BINDING] == _BASE
+    assert resolved[_M303_REPERCUTIDO_CUOTA_BINDING] == _CUOTA
+
+
+def test_the_two_modelos_draw_the_same_base_from_one_invoice() -> None:
+    """M130 casilla 01 and the M303 repercutido base are one figure, filed twice.
+
+    This is the reconciliation the module is named for, asserted at the layer
+    that reaches a return. Both sides are compared to the invoice base rather
+    than to each other, so the assertion cannot be satisfied by two registries
+    agreeing on a wrong number.
+    """
+    catalogue = _catalogue(_invoice_transaction(with_substrate=True))
+    income = aggregate_renta_income_ledger(catalogue, bucket_id=_BUCKET, period=_PERIOD)
+    iva = aggregate_iva_ledger_observations(catalogue, period=_PERIOD)
+
+    m130 = resolve_ledger_renta_income_aggregation_binding_values(_modelo_130_revision(), income.observations)
+    m303 = resolve_iva_ledger_binding_values(_modelo_303_revision(), iva.observations)
+
+    assert m130[_M130_INGRESOS_BINDING] == _BASE
+    assert m303[_M303_REPERCUTIDO_BASE_BINDING] == _BASE
