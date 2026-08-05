@@ -614,3 +614,110 @@ def _literals_in(node: FormulaExpression) -> list[str]:
     for child in node.args:
         found.extend(_literals_in(child))
     return found
+
+
+# ---------------------------------------------------------------------------
+# Canonical-record refusals reach the operator translated, not as a traceback.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+def test_a_record_level_refusal_is_translated_in_every_catalogue(
+    runtime_profile: TestRuntimeProfile,
+    locale: str,
+) -> None:
+    """The coherence rules this Phase shipped must reach the operator as themselves.
+
+    The ``--descendiente`` flag has two families of guard. The parser's own
+    pre-validations raise the typed answer error, which this verb has always
+    translated. The canonical record's validators raise through pydantic, and
+    that arm was unhandled.
+
+    It did NOT produce a traceback — the boundary has a catch-all that projected
+    it to a generic translated refusal. The defect is subtler and was measured
+    rather than assumed: the operator got "validation failed" in their own
+    language while the validator's sentence, which names the conflicting field
+    and both ways out, was discarded on the way. Careful copy existed and nobody
+    ever saw it.
+
+    Driven through the real CLI rather than by calling the parser, because the
+    parser was never the broken part: the gap was between what it raised and what
+    the verb caught. Parametrised over all four catalogues because a refusal that
+    resolves in one locale and not another is the same class one step out.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            # A tutela guardian carrying an adoption anchor: entitling for the
+            # tranches, excluded from the Art. 58.2 increase, and refused by the
+            # record precisely so the excluded case cannot claim it.
+            "--descendiente", "NACIMIENTO=2015-01-01,RELACION=tutela,INSCRIPCION=2020-01-01",
+            # The language option belongs to the verb, not the root. Placed at
+            # the root it is refused as an unknown option -- which this test
+            # caught by failing loudly on the wrong refusal rather than passing.
+            "--output-language", locale,
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    # The refusal, not a traceback: no exception class name and no pydantic
+    # apparatus reaches the operator.
+    assert "ValidationError" not in result.output
+    assert "Traceback" not in result.output
+    assert "For further information visit" not in result.output
+    # And the validator's own sentence does, naming the field and the conflict.
+    assert "inscripcion_registro_civil_date" in result.output
+    assert "tutela" in result.output
+
+
+def test_a_record_level_refusal_does_not_echo_the_operators_record(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The refusal must not repeat the record under construction back at the operator.
+
+    A pydantic error carries an ``input`` echo of every field it was validating.
+    On this surface those are a taxpayer's family facts, and the unhandled arm
+    wrote them to the error log — birth date, relación and cohabitation in clear,
+    with only the NIF redacted. Catching the refusal before the boundary is what
+    stops that, so this pins the operator-facing half and the log line goes with
+    it.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2015-01-01,RELACION=tutela,INSCRIPCION=2020-01-01",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "input_value" not in result.output
+    assert "datetime.date" not in result.output
+
+
+def test_the_parser_refusal_family_still_translates(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The arm that already worked must keep working.
+
+    Widening the caught set is exactly the change that quietly reroutes an
+    existing refusal through the new arm, so the original family is pinned too.
+    """
+    _seed_natural_person_profile(runtime_profile)
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "config", "profile", "descendiente", "add",
+            "--descendiente", "NACIMIENTO=2015-01-01,DISCAPACIDAD=50",
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "DISCAPACIDAD" in result.output

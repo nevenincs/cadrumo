@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:6af774d8ea3e014e72b9d3330ecb4676445423865eefaf83d9243d7041e8c137'
+body_hash: 'sha256:92de7f8c4fa7aa02f1dfd37212cc374a7a2bbe2941b4492c01369f127d92e444'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -66,7 +66,8 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S18` - Rename the derived guarderia cap-population path and its binding away from the menor-de-tres name it outgrew, in ONE atomic commit carrying the schema pattern, the binding TOML, the formula reference, the injector and every M100 fixture supplying the binding id by name; `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/application/modelo/_profile_binding.py`.
 - [x] `P04.S19` - Retire the dead advisory cluster on RentaFamilyProfile, opened on a partial measurement naming one property and widened on a fuller one to five members, including the maternidad method superseded by the live free function and the guarderia cap constant whose last Python consumer it is, replacing the cotizaciones-binds-the-cap assertion against the live registry path in the SAME commit; `src/cadrumo/domain/contribuyente/family.py, src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py, src/cadrumo/core/external_constants.py, src/cadrumo/core/tests/test_external_constants_centralisation_part2.py, src/cadrumo/locales/`.
-- [ ] `P04.S20` - Translate the model-level refusals reaching the descendiente add verb, which surface as raw pydantic tracebacks because the handler catches only the answer-type error, so the entry-date coherence refusals this campaign shipped are the ones landing untranslated; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
+- [ ] `P04.S20` - Route the canonical-record refusals reaching the descendiente add verb to the operator, because the verb catches only the answer-type error and the boundary projects the rest to a GENERIC translated refusal that discards the validator's own sentence, so the entry-date coherence rules this Phase shipped told the operator nothing about which field conflicted, and the discarded detail was written to the error log carrying the declared record; `src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
+- [ ] `P04.S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-checked, because the under-three and cohabiting conditions are enforced nowhere on the live path while the profile already holds the birth dates and cohabitation facts the check would need, so an operator can today declare months for a child the statute excludes and OVER-grant, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/domain/contribuyente/family.py`.
 
 ## Parallelization
 
