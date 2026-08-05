@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:22172ce3912b7da0f2321cd4eb4e228bebc211dc77af1b9cd9d8149a25dc7270'
+body_hash: 'sha256:f5c0a776be3e8540431189c9fa9b4a4c1929328dd384079e7a20378d308dca22'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -312,6 +312,61 @@ direction is under-grant.
 **Reversible on evidence rather than on preference.** The decision rests on the authority's own
 definition of the qualifying child. If that definition is read differently — with a source —
 the first clause falls and the other two stand independently.
+
+
+### DECISION: the two Art. 81.1 exclusions get DIFFERENT shapes, and the stock problem gets neither
+
+Research grounded both exclusions across the 2020-2025 manuals, byte-stable, and the
+decision follows from three findings rather than from preference.
+
+**Both exclusions are deliberate, not oversights, and the evidence is stronger than
+the one that admitted tutela.** Each population carries a POSITIVE statement for Art.
+58.1 - grandchildren are literally named as descendientes in the direct-lineal sense,
+and judicial guarda y custodia is positively assimilated as a third category distinct
+from tutela and acogimiento - while Art. 81.1 excludes both by name. Tutela's positive
+statement was for the SAME article it had to be admitted to; here the positive statement
+is for a DIFFERENT article, so the exclusion cannot be read as a drafting gap.
+
+**Judicial guarda y custodia is added to the relacion axis. Grandchild is NOT.** They
+are not the same shape and treating them alike is what makes the naive fix wrong.
+Judicial guarda is a distinct legal-basis relationship, positively named by the
+authority, exactly like tutela and acogimiento - it belongs on an axis that enumerates
+legal bases, and the existing whole-enum default keeps it out of the Art. 81.1 set for
+free. Hijo, nieto and bisnieto are NOT different legal bases: the authority's own text
+treats them as one relationship type differing only in GENERATIONAL DEGREE. Encoding
+degree-of-descent as a member of a relationship-type enum bolts a differently-shaped
+fact onto the axis, which is the fragmentation this campaign exists to remove rather
+than an instance of fixing it. The grandchild population needs a degree fact or a
+predicate scoped to Art. 81.1, decided separately.
+
+**Neither addition fixes the existing stock, and that is the load-bearing consequence.**
+The default relacion today means any qualifying lineal descendant, generation-agnostic
+by its own documentation. Adding a grandchild member would NARROW that default's
+meaning retroactively, and every already-stored record was written under the wider one
+with no way to determine which are correctly-defaulted hijos and which are grandchildren
+recorded under the only value that existed. This is a semantic narrowing of an existing
+default, not a pure addition - which is precisely why it was held as ADR-shaped rather
+than patched.
+
+**So the stock is addressed where the error actually occurs, not on the axis.** The
+ordinary-eligibility predicate never reads relacion at all, so Art. 58.1 and 58.2 are
+computed correctly today for both populations whatever value is recorded. The ONLY
+broken consumer is Art. 81.1, and the over-grant additionally requires the operator to
+have declared working months for that child. That narrow conjunction is the right place
+to ask: an advisory or confirmation at the point months are declared reaches every
+existing record, which no enum member can do.
+
+**One tension is recorded unresolved rather than silently decided.** The same Art. 81.1
+section's multi-filer proration sentence names guarda y custodia por resolucion judicial
+among the populations sharing a prorated deduccion, three sentences from the exclusion
+that bars it, byte-identical across all six years. The reading adopted here is that the
+proration sentence is boilerplate reused from the parallel Art. 58.1 allocation rule and
+is conditional rather than a grant, while the exclusion is the direct unhedged statement
+of legal effect. That reading is adopted because the decision cannot wait on it and the
+exclusion is the stronger instrument - but it is a reading, not a measurement, and if it
+is wrong the correction is an under-grant for that population and this decision's first
+limb falls while the shape argument stands independently.
+
 
 ## Amendment: a design review corrected all four decisions, and refuted one
 
