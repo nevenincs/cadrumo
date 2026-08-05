@@ -1,6 +1,6 @@
 [[revisions."2024".casilla_continuidad_evolutions]]
 id = "m100-0681-2023-2024-retired"
-continuidad_id = "irpf.regularizacion.ingresar-autoliquidaciones-anteriores-ejercicio"
+continuidad_id = "irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio"
 from_revision = "2023"
 to_revision = "2024"
 evolution_kind = "retired"

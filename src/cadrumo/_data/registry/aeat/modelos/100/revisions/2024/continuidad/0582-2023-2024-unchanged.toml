@@ -1,6 +1,6 @@
 [[revisions."2024".casilla_continuidad_evolutions]]
 id = "m100-0582-2023-2024-unchanged"
-continuidad_id = "irpf.intereses-demora-regularizacion.estatal"
+continuidad_id = "irpf-intereses-demora-regularizacion-estatal"
 from_revision = "2023"
 to_revision = "2024"
 evolution_kind = "unchanged"

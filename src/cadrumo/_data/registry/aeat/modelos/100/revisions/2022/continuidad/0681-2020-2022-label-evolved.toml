@@ -1,6 +1,6 @@
 [[revisions."2022".casilla_continuidad_evolutions]]
 id = "m100-0681-2020-2022-label-evolved"
-continuidad_id = "irpf.regularizacion.ingresar-autoliquidaciones-anteriores-ejercicio"
+continuidad_id = "irpf-regularizacion-ingresar-autoliquidaciones-anteriores-ejercicio"
 from_revision = "2020"
 to_revision = "2022"
 evolution_kind = "label_evolved"

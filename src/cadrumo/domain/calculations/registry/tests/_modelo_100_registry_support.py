@@ -653,8 +653,8 @@ _ATTRIBUTION_REGIME_2025_MODE_FLAG_CASILLA_REFS: Mapping[CasillaId, frozenset[st
 }
 _INMUEBLE_ART_22_FORM_ORDER_REFS = frozenset({"ley-35-2006:art-22", _MODELO_100_2025_FORM_ORDER_REF})
 _INMUEBLE_2025_CONTINUITY_REFS: Mapping[str, frozenset[str]] = {
-    "irpf.inmueble.porcentaje-propiedad": _INMUEBLE_ART_22_FORM_ORDER_REFS,
-    "irpf.inmueble.vivienda-habitual-flag": _INMUEBLE_ART_22_FORM_ORDER_REFS,
+    "irpf-inmueble-porcentaje-propiedad": _INMUEBLE_ART_22_FORM_ORDER_REFS,
+    "irpf-inmueble-vivienda-habitual-flag": _INMUEBLE_ART_22_FORM_ORDER_REFS,
 }
 _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-2025-base-liquidable-negativa-general-anterior"
