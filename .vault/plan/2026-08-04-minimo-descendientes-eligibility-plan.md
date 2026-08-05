@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-05'
-body_hash: 'sha256:b6d7dc54fafc04f0982c593d688b78bf7878e551626aa3c91ee9eddec92dd6e1'
+body_hash: 'sha256:e10a8aaf8813ae6aef799f6a65b76516c447a270f1222c2c107e5a8ac4313252'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -70,7 +70,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S21` - Decide whether the Art. 81.1 maternidad months are operator-asserted or engine-derived, because the engine never sees the descendants at all and takes an operator-supplied list of hijo and month pairs, so the under-three and cohabiting conditions cannot be enforced while the profile already holds the birth dates and cohabitation facts, and the answer may be a refusal, an advisory or a documented operator-asserted input but must be chosen rather than inherited, BLOCKING S15 whose window predicate has no consumer until this resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/domain/contribuyente/family.py`.
 - [x] `P04.S22` - Connect or retire the declared maternidad months, because an operator declaring MESES_TRABAJO through descendiente add or the guided flow gets nothing, the fact round-trips and rides the payload and is declared in the user-profile schema as a model selector while no formula targets casilla 0611 and no binding names the path, so a documented entry surface is today lying about what it does whichever way S21 resolves; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml, src/cadrumo/entrypoints/cli/_config/_descendiente.py`.
 - [ ] `P04.S23` - Add the Art. 81.1 post-birth alta increment, 150 euros for the month completing the 30-day contribution period, raising that child cap to 1.350 euros for filing years from 2023 only, gated on a new operator-supplied fact naming that month; `src/cadrumo/core/external_constants.py, src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`.
-- [ ] `P04.S24` - Collapse the two family-record reconstructions in _profile_binding onto one, because the guarderia path pre-checks birth dates per index but omits the anualidades that suppress dependency assimilation while the minimo and maternidad path carries anualidades but skips the pre-check, so one malformed stored birth date names its row on one path and not the other, and a predicate that later consults anualidades would silently over-grant on the guarderia path; `src/cadrumo/application/modelo/_profile_binding.py`.
+- [ ] `P04.S24` - Collapse the two family-record reconstructions in _profile_binding onto their UNION rather than onto either one, because each carries what the other lacks, the guarderia path pre-checks every birth date and raises naming the row index while omitting the anualidades that suppress dependency assimilation, and the minimo and maternidad path carries the anualidades while having no pre-check, so collapsing onto the minimo variant silently loses the indexed diagnostic and collapsing onto the other silently over-grants for a filer paying judicial anualidades, and adding anualidades to the guarderia injector must be recorded as a stated no-op since the guarderia count does not read them; `src/cadrumo/application/modelo/_profile_binding.py`.
 - [ ] `P04.S25` - Escalate the stale ley-35-2006 art-81 corpus excerpt for operator refresh, because its apartado 1 carries the post-2023 widened supuestos while its apartado 2 still carries the cotizaciones ceiling the bundled AEAT manual states was removed from 2023, and the 150 euro post-alta increment is absent entirely, so the excerpt is a two-vintage hybrid that cannot gate the required_text for any clause S15 or S23 implement; `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-81.html`.
 - [ ] `P04.S26` - Apply the pre-2023 cotizaciones ceiling to the computed casilla 0611 for filing years 2020 to 2022 only, or refuse to compute it for those years, because the law in force through 2022 additionally limited the deduction to the mother total Seguridad Social cotizaciones while the computation applies only the 1200 euro cap, and although the un-ceilinged arithmetic predates this campaign the wiring changed the exposed population from operators who explicitly typed the calculate flag to every operator with declared descendant months, so the defect is now reachable by default rather than newly created, and the registry declares the cotizaciones binding only in 2024 so it cannot express the ceiling for the affected years at all; `src/cadrumo/domain/contribuyente/_deduccion_maternidad.py, src/cadrumo/application/modelo/_profile_binding.py`.
 
@@ -224,6 +224,37 @@ required the family record, the profile-binding injector and the profile schema 
 three files `S18` must move. The scope line understated the work, and a file-set
 disjointness proved before `S23` began was then relayed to `S18` as a standing fact.
 `S18` is released only when those three files are clean and a fresh baseline is taken.
+
+`S18`'s stated verification — a clean whole-tree collect immediately before the atomic
+commit — became unsatisfiable by anyone while it waited, and the substitute is recorded
+here rather than left to the executing agent's discretion. A broad peer checkpoint
+commit stripped a constant from a registry test-support module while leaving its
+consumer's import standing, so the whole-tree collect is red **at HEAD**. Narrowing the
+gate to `S18`'s own packages does not rescue it: the broken module sits inside
+`domain/calculations/registry`, which holds sixteen of the twenty-four consumer test
+files, so that package cannot be dropped from the scope either. The workable gate is
+therefore an IDENTITY requirement rather than a cleanliness one — scoped and whole-tree
+collect captured immediately either side of the commit, with the error set required to
+be identical in count and signature, the single member being the peer's missing
+constant. Any second signature is the Step's. That preserves what the original gate was
+for, which is proving the Step introduced nothing, and abandons only the part that
+proves the tree is healthy — which is not currently in anyone's gift. It is weaker in
+an absolute sense and the Step record must say so rather than let a green read as more
+than it is.
+
+Two consequences follow for how `S18` is evidenced. Because sixteen of twenty-four
+consumers sit in one package, a scoped test run would look convincing while missing the
+eight in `application/filing`, `application/modelo` and `entrypoints/cli`; so the
+zero-hit `rg` check on both retired names stays the primary evidence and the test runs
+stay secondary. And both lanes must run, because a marker-selected green over a rename
+is worthless.
+
+The `S24`-before-`S18` ordering holds, but not for the reason first given. `S18` renames
+exactly one key-building site either way, so there was never a two-call-site version.
+The real argument is adjacency: the key is built at `_profile_binding.py:273` and the
+reconstruction it feeds is called five lines below at `:278`, inside the same function
+body, while the other reconstruction is called elsewhere entirely. Ordering `S18` first
+would mean two separate edits to one hunk and two chances to disturb it.
 
 ## Verification
 
