@@ -267,7 +267,7 @@ op = "sum"
 [[revisions.2009-y-siguientes.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
@@ -275,7 +275,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
-categories = ["intra_community_acquisition_reverse_charge"]
+categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
@@ -284,9 +284,13 @@ fact = "iva_amount_sum"
 op = "sum"
 
 # Intra-community-acquisition official-box parity (adquisición intracomunitaria,
-# inversión del sujeto pasivo, LIVA art. 13 hecho imponible + art. 15 concepto +
-# art. 84.Uno.2 inversión). The recipient self-assesses the AIC cuota on BOTH the
+# inversión del sujeto pasivo). The recipient self-assesses the cuota on BOTH the
 # devengado side (official box 11) and the deducible side (official box 37).
+# Both official titles read "de bienes y servicios", so each selector carries the
+# goods and the services category and sums them onto the one line; box 12/13 is
+# expressly "excepto adq. intracom". The goods leg rests on art. 13 (hecho
+# imponible) + art. 15 (concepto), the services leg on art. 69.Uno.1 read subject
+# to art. 70; art. 84.Uno.2.a) makes the recipient sujeto pasivo on both.
 # These two bindings expose the same self-assessed cuota the existing
 # modelo-303-iva-autorepercutido-intracomunitaria-cuota semantic binding already
 # feeds into the resultado, so the parity casillas are NOT added to the resultado
@@ -295,7 +299,7 @@ op = "sum"
 [[revisions.2009-y-siguientes.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
@@ -303,7 +307,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
-categories = ["intra_community_acquisition_reverse_charge"]
+categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
@@ -314,7 +318,7 @@ op = "sum"
 [[revisions.2009-y-siguientes.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
 source = "ledger_iva_aggregation"
-legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2009-y-siguientes.bindings.source_citations]]
@@ -322,7 +326,7 @@ source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
 [revisions.2009-y-siguientes.bindings.selector]
-categories = ["intra_community_acquisition_reverse_charge"]
+categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
 rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"

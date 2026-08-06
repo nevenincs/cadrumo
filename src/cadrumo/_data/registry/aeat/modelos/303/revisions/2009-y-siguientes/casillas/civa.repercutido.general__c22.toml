@@ -60,7 +60,7 @@ continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
 required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
-legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2009-y-siguientes.casillas]]
@@ -106,7 +106,7 @@ continuidad_id = "iva-cuota-autorepercutida-intracomunitaria-devengado"
 required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
-legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2009-y-siguientes.casillas]]
@@ -119,7 +119,7 @@ continuidad_id = "iva-cuota-autorepercutida-intracomunitaria-deducible"
 required = false
 input_kind = "bound"
 binding = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
-legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
 # Third-country import IVA deducible (official casilla 33). IVA devengado on the
