@@ -1756,8 +1756,7 @@ categories:
     arrendamiento_vivienda_afecta: Part del lloguer de l'habitatge afecta a l'activitat
     arrendamiento_vivienda_afecto:
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
-        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+        (Ley 35/2006 art. 29.2 i art. 28.1, lloguer de l'habitatge afecte).
     asesoria_contable:
       label: Honoraris d'assessoria comptable
       notes: Despesa íntegrament deduïble, com a servei professional independent (Ley

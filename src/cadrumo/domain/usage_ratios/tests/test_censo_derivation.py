@@ -80,6 +80,26 @@ def test_suministros_luz_concrete_value_at_20_percent_afectacion() -> None:
     assert profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.060")
 
 
+def test_arrendamiento_vivienda_afecto_concrete_value_at_20_percent_afectacion() -> None:
+    """Anti-tautology pin: 20% afectación, arrendamiento must be exactly 0.20, not 0.06.
+
+    arrendamiento_vivienda_afecto is the renter's parallel to
+    ibi_vivienda_afecto / amortizacion_vivienda_afecto / comunidad_vivienda_afecto:
+    a titularidad-shaped cost of the partially affected home, deducted at the
+    raw affectación ratio under LIRPF art. 29.2 partial affectation. It must
+    never apply the suministros-only art. 30.2.5.b 30% carve-out (which would
+    wrongly derive 0.06).
+    """
+
+    profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025)
+
+    assert profile.ratios[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO] == Decimal("0.20")
+    assert (
+        profile.ratios[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO]
+        == profile.ratios[SpendingCategory.IBI_VIVIENDA_AFECTO]
+    )
+
+
 def test_telefonia_fija_concrete_value_at_20_percent_afectacion() -> None:
     """Anti-tautology pin: 20% afectación, telefonia_fija must be exactly 0.06.
 

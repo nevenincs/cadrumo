@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:acc7faa65abf1a29db15aeb3a630e57fbb18691f01f0cd1cc0915753893af257'
+body_hash: 'sha256:904c4d73be10e3289b5b4ecca2e03dc4e3ebfb76bc3bfe8a602f6ce50eeb6940'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -105,3 +105,4 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [x] `P06.S57` - Wire RentaDeductibilityContext.iva_deduction_ratio to a real producer: a wholly EXENTO iva.regime profile fact resolves to zero, otherwise the bucket's ProrrataRegister whole-entity entry contributes its in-force provisional percentage, mirroring the resolution the M303 side already applies; `src/cadrumo/application/aggregation/_renta_ledger.py, src/cadrumo/application/aggregation/tests/test_renta_ledger.py, src/cadrumo/domain/renta/_ledger_expenses.py`.
 - [x] `P06.S58` - Extend the iva_deduction_ratio wiring to the M130 quarterly gasto path: aggregate_renta_gasto_ledger_from_repositories now resolves the same ratio through the shared _resolve_iva_deduction_ratio, for the same ejercicio, so M130 and M100 cannot diverge on it; `src/cadrumo/application/aggregation/_renta_gasto_ledger.py, src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`.
 - [x] `P06.S60` - Reground telefonia_fija to LIRPF art. 30.2.5.b's own suministros enumeration (agua, gas, electricidad, telefonia e Internet), moving it into HOME_OFFICE_SUMINISTROS with the statutory 0.30 multiplier it was missing, since it previously deducted at the raw home-area ratio with no censo-consistency guard; `src/cadrumo/_data/registry/aeat/categories/profiles/2024.toml,src/cadrumo/_data/registry/aeat/categories/profiles/2025.toml,src/cadrumo/domain/categories/_spending_category.py`.
+- [x] `P06.S61` - Move arrendamiento_vivienda_afecto from PREMISES into HOME_OFFICE_OWNERSHIP as the renter's parallel to amortizacion/ibi/comunidad_vivienda_afecto, correcting its citation from the suministros-only art. 30.2.5.b to the general art. 29.2 partial-affectation doctrine plus art. 28.1, and dropping its stray default_ratio so it now requires an explicit operator ratio like its true siblings; `src/cadrumo/_data/registry/aeat/categories/profiles/2024.toml,src/cadrumo/_data/registry/aeat/categories/profiles/2025.toml,src/cadrumo/domain/categories/_spending_category.py`.

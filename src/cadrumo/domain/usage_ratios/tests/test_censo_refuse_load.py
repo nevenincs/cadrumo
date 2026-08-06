@@ -106,6 +106,45 @@ def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value() -> 
     assert profile.ratios[SpendingCategory.TELEFONIA_FIJA] == Decimal("0.060")
 
 
+def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_persisted() -> None:
+    """The censo guard now covers arrendamiento_vivienda_afecto: it is no longer freely overridable.
+
+    Before this category joined HOME_OFFICE_OWNERSHIP (it lived in PREMISES,
+    alongside a dedicated-local rent it has nothing in common with), an
+    operator could persist any usage ratio for a partially affected home's
+    rent with no consistency check against the bound censo -- the same
+    defect class this guard closes for its three titularidad siblings.
+    """
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO: Decimal("0.20")}),
+        bucket_id=_BUCKET_ID,
+    )
+
+    with pytest.raises(CensoRatioMismatchError) as exc:
+        load_usage_ratios_with_censo_guard(
+            bucket_id=_BUCKET_ID,
+            raw_afectacion_ratio=None,
+        )
+
+    assert "arrendamiento_vivienda_afecto" in str(exc.value)
+
+
+def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_derived_value() -> None:
+    """An arrendamiento override equal to the raw ratio (no statutory_multiplier) is accepted."""
+    raw = Decimal("0.20")
+    save_usage_ratios(
+        UsageRatioProfile(ratios={SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO: raw}),
+        bucket_id=_BUCKET_ID,
+    )
+
+    profile = load_usage_ratios_with_censo_guard(
+        bucket_id=_BUCKET_ID,
+        raw_afectacion_ratio=raw,
+    )
+
+    assert profile.ratios[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO] == Decimal("0.20")
+
+
 def test_refuses_on_mismatch_between_persisted_and_censo_derived() -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO: Decimal("0.50")}),

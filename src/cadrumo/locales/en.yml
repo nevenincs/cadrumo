@@ -1620,9 +1620,8 @@ categories:
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     arrendamiento_vivienda_afecta: Business-use share of home rent
     arrendamiento_vivienda_afecto:
-      notes: Deductible in proportion to the home's business-use floor area (default
-        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
-        art. 30.2.5.b rule 4).
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 29.2 and art. 28.1, rent of the home used for business).
     asesoria_contable:
       label: Accounting advisory fees
       notes: Fully deductible expense, as an independent professional service (Ley

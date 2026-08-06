@@ -90,23 +90,29 @@ category = "arrendamiento_vivienda_afecto"
 display_label = "categories.registry.arrendamiento_vivienda_afecta"
 iva_hint = "exempt_or_non_subject"
 
+# The renter's parallel to amortizacion_vivienda_afecto / ibi_vivienda_afecto /
+# comunidad_vivienda_afecto: the same partially-affected-dwelling cost, borne
+# as rent instead of ownership. Deducts at the raw affectation ratio like
+# those three siblings -- no statutory_multiplier -- grounded on the general
+# art. 29.2 partial-affectation doctrine plus art. 28.1, never art. 30.2.5.b
+# (regla 5.a b), which is the suministros-only carve-out and does not
+# enumerate rent.
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
-default_ratio = "0.30"
 notes = "categories.registry.arrendamiento_vivienda_afecto.notes"
-
-[[profiles.proportionality.citations]]
-source = "manual_renta"
-reference = "Manual práctico Renta 2025"
-locator = "Vivienda parcialmente afecta"
-url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
-quote = "categories.registry.arrendamiento_vivienda_afecto.citations.0.quote"
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
 reference = "Ley 35/2006"
-locator = "art. 30.2.5.b"
+locator = "art. 29.2 y art. 28.1 (afectación parcial de la vivienda arrendada)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "categories.registry.arrendamiento_vivienda_afecto.citations.0.quote"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2025"
+locator = "Vivienda parcialmente afecta - arrendamiento"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
 quote = "categories.registry.arrendamiento_vivienda_afecto.citations.1.quote"
 
 [[profiles]]

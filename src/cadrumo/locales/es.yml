@@ -1766,8 +1766,7 @@ categories:
     arrendamiento_vivienda_afecta: Parte del alquiler de la vivienda afecta a la actividad
     arrendamiento_vivienda_afecto:
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+        (Ley 35/2006 art. 29.2 y art. 28.1, arrendamiento de la vivienda afecta).
     asesoria_contable:
       label: Honorarios de asesoría contable
       notes: Gasto totalmente deducible, como servicio de profesional independiente

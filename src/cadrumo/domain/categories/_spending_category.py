@@ -107,7 +107,6 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
     ),
     SpendingCategoryFamily.PREMISES: (
         SpendingCategory.ARRENDAMIENTO_LOCAL,
-        SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
         SpendingCategory.IBI_LOCAL_AFECTO,
         # Utilities of premises used for the activity. Deliberately PREMISES and
         # not HOME_OFFICE_SUMINISTROS: the home-office family is bound to the
@@ -128,10 +127,20 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
         # so TELEFONIA_MOVIL is not moved here.
         SpendingCategory.TELEFONIA_FIJA,
     ),
+    # NOTE: this family now holds a non-ownership member (a rental cost, not
+    # a titularidad cost) -- see ARRENDAMIENTO_VIVIENDA_AFECTO below. The name
+    # should eventually become something like HOME_OFFICE_DWELLING_COST; the
+    # rename is deferred so the correctness fix does not wait behind it.
     SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP: (
         SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
         SpendingCategory.IBI_VIVIENDA_AFECTO,
         SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
+        # The renter's parallel to the three ownership costs above: the same
+        # partially-affected-dwelling cost, borne as rent instead of
+        # ownership. Deducts at the raw affectation ratio with no statutory
+        # multiplier, same as its siblings; art. 30.2.5.b (the suministros
+        # carve-out) does not enumerate rent, so it belongs here, not there.
+        SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
     ),
     SpendingCategoryFamily.TELECOMS: (SpendingCategory.TELEFONIA_MOVIL,),
     SpendingCategoryFamily.OFFICE: (

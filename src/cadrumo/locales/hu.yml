@@ -1685,8 +1685,7 @@ categories:
     arrendamiento_vivienda_afecta: Lakás bérleti díjának üzleti hányada
     arrendamiento_vivienda_afecto:
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
-        art. 30.2.5.b szabály 4.ª).
+        (Ley 35/2006 art. 29.2 és art. 28.1, üzleti célra használt lakás bérleti díja).
     asesoria_contable:
       label: Könyvelési tanácsadási díj
       notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
