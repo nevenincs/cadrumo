@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:362d2f433cf026015659919aedc31064f87c3f944688b20f9df71886d2f14059'
+body_hash: 'sha256:17b2b8f4a4f394ea0b1da093e3d079bbc00cdd73dfd06ae0b3c79967cb34750d'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -48,7 +48,7 @@ Enrolling the integration suite and the dev tooling gates exposed accumulated ro
 - [x] `P02.S06` - Close the entrypoints CLI integration failures, measured at 18 across 8 modules with 138 passing, and regenerate the set from two intersected runs rather than one; `src/cadrumo/entrypoints/cli/tests`.
 - [x] `P02.S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock; `src/cadrumo/entrypoints/mcp`.
 - [x] `P02.S08` - Measure the dev tooling gates at a clean HEAD, the local count of 55 is contaminated because 32 belong to an uncommitted peer legal entry and the true figure is nearer 23; `dev/audit, dev/deploy, dev/env, dev/registry, dev/docs`.
-- [ ] `P02.S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass; `.github/workflows/ci-full.yml`.
+- [x] `P02.S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass; `.github/workflows/ci-full.yml`.
 - [ ] `P02.S10` - Flip continue-on-error off the integration serial step once one runner execution is observed, its build branch producing three wheels and three sdists has never been watched; `.github/workflows/ci-full.yml`.
 - [x] `P02.S22` - Author the ADR reshaping the overview.calendar payload, the resource_link remedy the gate names cannot apply to a computed verb with no persisted record and the irreducible floor leaves only 622 characters of headroom; `src/cadrumo/entrypoints/mcp`.
 - [x] `P02.S23` - Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it; `src/cadrumo/entrypoints/mcp`.
