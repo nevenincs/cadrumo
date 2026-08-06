@@ -30,7 +30,14 @@ from ...core.money import round_to_cents
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from .. import canonical_decimal_string
 from ..iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
-from ._enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus, iva_rate_percentage
+from ._enums import (
+    InvoiceClass,
+    InvoiceLegalMention,
+    InvoiceOperationDateRole,
+    IvaRate,
+    PaymentStatus,
+    iva_rate_percentage,
+)
 from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
 
@@ -203,6 +210,21 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
                 raise InvoiceValidationError("oss_transaction_kind must be a TransactionKind") from exc
         else:
             payload["oss_transaction_kind"] = None
+    if "legal_mentions" in payload:
+        raw_mentions = payload["legal_mentions"]
+        if isinstance(raw_mentions, Sequence) and not isinstance(raw_mentions, str | bytes):
+            coerced: list[InvoiceLegalMention] = []
+            for entry in raw_mentions:
+                if isinstance(entry, InvoiceLegalMention):
+                    coerced.append(entry)
+                    continue
+                if not isinstance(entry, str):
+                    raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention or its value")
+                try:
+                    coerced.append(InvoiceLegalMention(entry))
+                except ValueError as exc:
+                    raise InvoiceValidationError("legal_mentions entries must be an InvoiceLegalMention") from exc
+            payload["legal_mentions"] = tuple(coerced)
     return payload
 
 
@@ -219,6 +241,15 @@ def _normalise_invoice_string_fields(payload: dict[str, object]) -> dict[str, ob
     if "series" in payload and isinstance(payload["series"], str):
         stripped = payload["series"].strip()
         payload["series"] = stripped or None
+    if "issuer_address" in payload and isinstance(payload["issuer_address"], str):
+        stripped = payload["issuer_address"].strip()
+        payload["issuer_address"] = stripped or None
+    if "recipient_address" in payload and isinstance(payload["recipient_address"], str):
+        stripped = payload["recipient_address"].strip()
+        payload["recipient_address"] = stripped or None
+    if "exemption_reference" in payload and isinstance(payload["exemption_reference"], str):
+        stripped = payload["exemption_reference"].strip()
+        payload["exemption_reference"] = stripped or None
     if "rectifies_invoice_number" in payload and isinstance(payload["rectifies_invoice_number"], str):
         stripped = payload["rectifies_invoice_number"].strip().upper()
         payload["rectifies_invoice_number"] = stripped or None
@@ -483,6 +514,28 @@ class Invoice(BaseModel):
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: str | None = Field(default=None, min_length=1)
     counterparty_country: str = Field(min_length=2, max_length=2)
+    # RD 1619/2012 art. 6.1.e: "Domicilio, tanto del obligado a expedir
+    # factura como del destinatario de las operaciones." Named by legal role,
+    # not by party-relative-to-us like `counterparty_*` above, because the
+    # two roles swap sides with `kind`: for an ISSUED invoice the issuer is
+    # self and the recipient is the counterparty; for a RECEIVED invoice the
+    # issuer is the counterparty and the recipient is self. Each field is
+    # what that document actually PRINTED -- never derived from a current
+    # profile domicilio, which may differ from what an older invoice states.
+    issuer_address: str | None = Field(default=None, min_length=1)
+    recipient_address: str | None = Field(default=None, min_length=1)
+    # RD 1619/2012 art. 6.1.j / .l / .m / .n / .o / .p: the fixed legal
+    # notices ("menciones") the reglamento requires printed under specific
+    # regimes. `exemption_reference` is art. 6.1.j's REFERENCE (a Directiva
+    # 2006/112/CE provision, a LIVA article, or a bare "operación exenta"
+    # statement) -- free text because the reglamento does not fix its
+    # wording. `legal_mentions` carries the CLOSED, literally-quoted phrases
+    # of art. 6.1.l/.m/.n/.o/.p (see `InvoiceLegalMention`). Both are
+    # evidence of what the issuer printed; neither is derived from
+    # `iva_category` below -- that would manufacture evidence of compliance
+    # nobody observed on the document.
+    exemption_reference: str | None = Field(default=None, min_length=1)
+    legal_mentions: tuple[InvoiceLegalMention, ...] = ()
     base_total: Decimal
     iva_total: Decimal
     grand_total: Decimal
