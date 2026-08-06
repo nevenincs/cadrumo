@@ -110,6 +110,7 @@ from ._reconciliation import (
     reconcile_invoice_catalogues,
     reconcile_invoice_repositories,
 )
+from ._self_counterparty import counterparty_is_the_filer
 from ._source_resolver import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
 from ._wizard import InvoiceWizardFieldError, InvoiceWizardResult, create_invoice_via_wizard
 
@@ -135,6 +136,7 @@ __all__ = [
     "ReconciliationSkippedSuggestion",
     "apply_manual_invoice_match",
     "build_catalogue_invoice",
+    "counterparty_is_the_filer",
     "create_catalogue_invoice",
     "create_invoice_via_wizard",
     "find_invoice",

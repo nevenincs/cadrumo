@@ -636,6 +636,56 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
     return supplied
 
 
+def _refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
+    """Refuse an invoice recording the taxpayer as their own counterparty.
+
+    The reader identifies a counterparty as the first checksum-valid tax id in
+    the document, and the vision prompt asks for "the supplier's" identifier.
+    On a RECEIVED invoice that lands on the supplier. On an ISSUED one the
+    issuer IS the filer, so the same scan returns the filer's own identifier --
+    checksum-valid, so every downstream identity check passes it, and bound for
+    the Modelo 347 / 349 counterparty totals AEAT reconciles against what the
+    counterparty declared.
+
+    Refusing is right rather than advisory: unlike an amount that is merely
+    doubtful, a self-naming counterparty is wrong under every reading this
+    codebase can represent (see
+    :func:`~application.invoices.counterparty_is_the_filer` for the autoconsumo
+    scope note). Minting the record and warning about it would put a fabricated
+    counterparty identity in the catalogue.
+
+    The profile carries the identity to compare against, so a bucket whose
+    profile is absent or carries no tax id cannot be checked. That case returns
+    without refusing -- a guard that cannot run must not block a path it cannot
+    judge -- which does mean the protection is only as present as the profile.
+    Every real bucket carries one; setup requires the tax id.
+
+    Args:
+        counterparty_tax_id: The identifier about to be recorded.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When the identifier is the filer's
+            own.
+    """
+    from ..invoices import counterparty_is_the_filer
+    from ..wizard import WizardStatusError, load_active_taxpayer_profile
+    from ..workflow import workflow_state_repository
+
+    try:
+        profile = load_active_taxpayer_profile(workflow_state_repository().load())
+    except WizardStatusError:
+        return
+    if not counterparty_is_the_filer(counterparty_tax_id=counterparty_tax_id, profile=profile):
+        return
+    raise PurchaseInvoiceEvidenceInputError(
+        "cannot confirm an invoice whose counterparty is the taxpayer themselves. The tax id read "
+        "from the document is this profile's own, which usually means the document is an invoice "
+        "YOU issued and the reader picked up your identifier from the letterhead instead of the "
+        "customer's. Supply the other party's tax id with --counterparty-nif.",
+        suggestion="aeat app ledger evidence confirm --counterparty-nif <the other party's tax id>",
+    )
+
+
 def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Decimal | str:
     if value is None:
         raise PurchaseInvoiceEvidenceInputError(
@@ -745,6 +795,7 @@ def confirm_invoice_draft_from_evidence(
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
+    _refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
     resolved_invoice_number = _require_confirmed_field(
         invoice_number if invoice_number is not None else draft.invoice_number,
         field="invoice_number",
