@@ -2061,6 +2061,7 @@ cli:
         view_help: Mostra una factura de negoci
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
+        total_amount_required: 'L''opció --total-amount és obligatòria: indiqueu el total de la factura com a import decimal, per exemple 121.00.'
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).

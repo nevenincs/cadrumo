@@ -1919,6 +1919,7 @@ cli:
         view_help: Show one business invoice
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
+        total_amount_required: 'Option --total-amount is required: state the invoice total as a decimal amount, for example 121.00.'
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).

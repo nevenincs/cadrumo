@@ -128,7 +128,8 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     """``ledger add`` with ``taxable_base + iva_amount != amount`` surfaces a
     one-line typed refusal — never the raw ``RawTransaction(...)`` pydantic repr.
 
-    The gross-invariant validator (``Transaction._enforce_gross_equals_base_plus_iva``)
+    The gross-invariant validator
+    (``Transaction._enforce_gross_equals_base_plus_iva_plus_recargo``)
     fires inside ``create_manual_transaction``, *after* the
     ``ManualLedgerTransactionCommand`` construction. Before the fix the leaked
     ``pydantic.ValidationError`` reached the generic CLI boundary, dumping the

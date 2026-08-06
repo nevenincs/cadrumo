@@ -195,7 +195,7 @@ def invoice_add(
     taxable_base: str = typer.Option("0", "--taxable-base"),
     iva_rate: str | None = typer.Option(None, "--iva-rate"),
     iva_amount: str = typer.Option("0", "--iva-amount"),
-    total_amount: str = typer.Option("0", "--total-amount"),
+    total_amount: str | None = typer.Option(None, "--total-amount"),
     notes: str = typer.Option("", "--notes"),
     country_code: str | None = typer.Option(
         None,
@@ -226,6 +226,13 @@ def invoice_add(
     ),
 ) -> None:
     """Register a new business invoice record on the active bucket."""
+    if total_amount is None:
+        raise _bad(
+            tr(
+                "cli.app.ledger.invoice.total_amount_required",
+                default="--total-amount is required: state the invoice total as a decimal amount, e.g. 121.00.",
+            ),
+        )
     bucket_id = _business_invoice_bucket_id()
     result = _service_for_kind(kind).add(
         bucket_id=bucket_id,
