@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:24fec459ec20b187c6246512f68f3db1b6184fdb5e6a4c1a22f6dbffa0432deb'
+body_hash: 'sha256:614743253856db0dbafce540e3e7b21de58b96fda49c8d291c45594dccedd216'
 step_id: 'S47'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
@@ -143,6 +143,22 @@ value exactly and `git diff` against HEAD showed only the intended additions.
   `MISSING_COUNTERPARTY_TAX_ID` defect member and a new `_invoice_devengo`
   import respectively). Both are compatible with this Step's additions; this
   Step did not revert or alter either.
+- INCIDENT: committing these two shared files used
+  `git commit --only -- <pathspec>`, believing it would commit the precisely
+  staged index built via a HEAD-anchored `git apply --cached` patch. It does
+  not: a pathspec-qualified `git commit` reads the WORKING TREE content of the
+  named paths, not the index, so the peer's still-uncommitted
+  `_invoice_devengo` import landed alongside this Step's changes in the first
+  commit -- and because `_invoice_devengo.py` itself was never committed, that
+  import was dangling at HEAD (breaks on any fresh checkout). Caught by a
+  post-commit collection run. Fixed immediately with a second, isolated commit
+  that removes only the dangling import line and its `__all__` entry, leaving
+  the peer's untracked `_invoice_devengo.py` and its test untouched on disk.
+  The peer's `MISSING_COUNTERPARTY_TAX_ID` addition to `_invoice_retencion.py`
+  is self-contained (no external dependency) and was left as committed --
+  correct in substance, merely mis-attributed to this Step's commit instead of
+  its own. Reported to the team lead so the owning agent can verify and land
+  their module properly.
 - `python -m dev.docs.apidocs scaffold --check` reports drift, but every
   missing/stale stub it names belongs to other agents' new modules
   (`_invoice_devengo`, `cadrumo.core.prose_elision`,
