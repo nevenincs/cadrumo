@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:033c01394ec7e9674ea2ddc358198f6cd6d3ebdaca73ae65b30dd04f1087dfcd'
+body_hash: 'sha256:8eebd30400156e4f261a8fd1d9af64eb70332bc89f189f077286f044a3bfeef1'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -39,7 +39,7 @@ The two new lanes both failed their first real execution and their fixes are unv
 - [ ] `P01.S02` - Verify the frontend lane passes on a runner under Node 22, its first run refused npm ci because jest-dom 7.0.0 requires node 22 and the manifest under-declares at 20.19; `.github/workflows/frontend.yml`.
 - [ ] `P01.S03` - Dispatch ci-full for its first ever execution and record the result, its run count is zero so every claim about its steps is structural rather than observed; `.github/workflows/ci-full.yml`.
 - [x] `P01.S04` - Move the ci-full docs build above the tooling-gates step so the terminology gates that resolve to built HTML get their artefact, blocked until the legal-entry defect stops masking the dependency; `.github/workflows/ci-full.yml`.
-- [ ] `P01.S05` - Decide what to do about the already-pushed branch, a peer snapshot pushed it so the original decision is moot and the live question is whether the published history needs remediation; `origin/main`.
+- [x] `P01.S05` - Decide what to do about the already-pushed branch, a peer snapshot pushed it so the original decision is moot and the live question is whether the published history needs remediation; `origin/main`.
 
 ### Phase `P02` - Enrolled-lane backlog closure
 
