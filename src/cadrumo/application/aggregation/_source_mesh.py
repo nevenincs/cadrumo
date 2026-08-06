@@ -106,6 +106,12 @@ CalculationSourceDiagnosticReason = Literal[
     "oss_no_live_source",
     "missing_transaction_evidence",
     "administrador_retencion_rate_mismatch",
+    # An ISSUED-side retención the ledger INFERRED from a cash shortfall whose
+    # figure is no statutory rate product. The shortfall may be a bank fee, a
+    # discount, or a disputed line rather than tax withheld, in which case the
+    # credit is an over-claim. Screened on the rate rather than on the inference
+    # marker so the correct domestic-B2B majority stays silent.
+    "inferred_retencion_rate_unmatched",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",
