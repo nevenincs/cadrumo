@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-06'
-body_hash: 'sha256:207aa1353d29fb96468401a2a7539bd46c8792b812d4f69aed98e8f45477a133'
+body_hash: 'sha256:ec2684ae490048a5e3b149d373cf57e5693bcb87ea8b3e756d45cf5b9fae1469'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -49,7 +49,7 @@ Capability conservation is this plan's organising law and this phase is where th
 
 - [x] `P01.S01` - Prove declarable coverage, that every declarable fact the slim store contributes today is reachable on the canonical path for both M347 per-party totals and M349 operator rows, asserting fact-level reachability and never output-equality with the double-counting two-store union; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
 - [x] `P01.S02` - Record that canonical M349 party identity is already conserved structurally and do NOT add eu_iva_id to the canonical aggregate, because a non-ES counterparty_country forces counterparty_tax_id to be that country's published NIF-IVA through the central NIF_IVA_FORMATS authority including the GR to EL prefix mapping, so a second identity field would install a second party-identity authority on the one axis where a disagreement mis-declares an intra-community operator, then hand the slim eu_iva_id versus counterparty_nif disagreement to the fold rule in S08 as a record class rather than a missing field; `src/cadrumo/domain/invoices/_models.py`.
-- [ ] `P01.S03` - Inventory every production slim-store consumer and record the named canonical replacement for each in the execution record, refusing to proceed to P03 while any consumer has no replacement; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
+- [x] `P01.S03` - Inventory every production slim-store consumer and record the named canonical replacement for each in the execution record, refusing to proceed to P03 while any consumer has no replacement; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
 - [ ] `P01.S08` - Decide and implement the fold rule per unmigratable-record class, covering the empty counterparty_name, the null country_code, the totals that do not reconcile, the absent line concept and the bare Decimal iva_rate against the closed IvaRate enum, stating per class whether the fold synthesises, refuses or quarantines and never silently coercing a value the source record did not hold; `src/cadrumo/application/invoices/_creation.py`.
 - [ ] `P01.S09` - Remove the COLLECTIBLE_INVOICE default from InvoiceObservation.source_kind and make the direction axis required, after confirming every production construction site already passes it explicitly; `src/cadrumo/domain/calculations/registry/_invoice_bindings.py`.
 - [ ] `P01.S10` - Carry created_at and updated_at onto the canonical aggregate or record their loss as a deliberate decision in the execution record, so no slim field disappears unremarked; `src/cadrumo/domain/invoices/_models.py`.
