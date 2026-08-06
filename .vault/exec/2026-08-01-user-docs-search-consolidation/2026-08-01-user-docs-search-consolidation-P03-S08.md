@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:675d00209939e55f8c84cec807f8c8de25f70a49b12aa2480e55034a85b68c5a'
+body_hash: 'sha256:5883497f924912b91ea8295473c79ad5f5bf913dd28fe84f501806f296719576'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -52,3 +52,15 @@ Fresh vaultspec-rag grounding over the localized legal-reference renderer, local
 - The separate translation-completeness gate remains red in all three targets: six failures total (22 incomplete/fuzzy page catalogues and five machine-text dash-policy entries per language). The catalogue-drift checks passed. No catalogue refresh or translation authoring was performed because those failures are outside the search-consolidation renderer/injection change and would require a separate docs-localization tranche.
 
 The built-site multilingual half is now proven. The live-root re-probe and deployment remain unperformed by authorization; P03.S08 stays open pending the deployed-root evidence owned by P04.S12/S13.
+
+### 2026-08-06 current full strict preflight timeout
+
+The current full strict preflight command, `uv run --no-sync python -m dev.docs.build --strict docs/conf.py`, ran for 304.372 seconds and exited with code 124 from the command timeout before returning an actionable build failure or a green result. This is an unverified timeout boundary, not evidence for changing source, refreshing golden artifacts, closing the gate, or publishing deployment. AWS STS authentication remains expired, so the live deployment proof is still unavailable.
+
+### 2026-08-06 current strict build legal-corpus failure
+
+The longer retry of `uv run --no-sync python -m dev.docs.build --strict docs/conf.py` reached Sphinx `builder-inited` and exited with code 1. Registry validation failed before page generation because 39 legal references could not resolve exactly one bundled corpus unit for their declared anchors, including Ley 35/2006 arts. 68.1-68.5, Orden HAC 56/2024 art. 1, Orden HAP 1732/2014 art. 2, Ley 37/1992 and several other Ordenes/RD references. This is an actionable legal-corpus data gate; no resolver fallback, source invention, artifact promotion, or deployment was performed.
+
+### 2026-08-06 current strict build sequence-golden failure
+
+The current strict retry cleared the registry legal-corpus validation after the bounded resolver and sidecar repair. It then reached the sequence-golden gate and exited with code 1 on nine divergences caused by concurrent peer changes (invoice option requirements, category ordering, profile-history ordering, ledger split behavior, and localized registry output). This is not a legal-search failure; the step remains open until a later full build is green.

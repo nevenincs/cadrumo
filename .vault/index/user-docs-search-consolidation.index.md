@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:81cc15e43dadf3776e9294c470b39d6e2e571c3ebe61fad1ce0986e53195c391'
+body_hash: 'sha256:ce59b89cb92b5a26a24416b8b7f68c5d08ba88dd37e23d71496cd7658b6b1b00'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -70,6 +70,7 @@ related:
   - '[[2026-08-06-user-docs-search-consolidation-canonical-casilla-id-matcher-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-controller-cleanup-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-final-implementation-review-audit]]'
+  - '[[2026-08-06-user-docs-search-consolidation-legal-corpus-resolver-review-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-p02-s32-audit]]'
 ---
 
@@ -109,6 +110,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-06-user-docs-search-consolidation-canonical-casilla-id-matcher-audit` - `user-docs-search-consolidation` audit: `Canonical casilla exact-search identity review`
 - `2026-08-06-user-docs-search-consolidation-controller-cleanup-audit` - `user-docs-search-consolidation` audit: `shared search controller cleanup review`
 - `2026-08-06-user-docs-search-consolidation-final-implementation-review-audit` - `user-docs-search-consolidation` audit: `final implementation review`
+- `2026-08-06-user-docs-search-consolidation-legal-corpus-resolver-review-audit` - 2026-08-06-user-docs-search-consolidation-legal-corpus-resolver-review-audit
 - `2026-08-06-user-docs-search-consolidation-p02-s32-audit` - `user-docs-search-consolidation` audit: `P02.S32 formal code review`
 
 ### exec

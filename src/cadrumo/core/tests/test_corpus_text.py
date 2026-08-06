@@ -97,6 +97,14 @@ def test_single_article_sidecar_safely_resolves_a_subsection_fragment() -> None:
     assert "porcentaje igual al 1 por ciento" in text
 
 
+def test_single_article_sidecar_refuses_a_different_article_anchor() -> None:
+    """A declared single-article unit cannot widen to another article."""
+    sidecar = _NORMATIVES / "ley-58-2003-art-27.html.extracted.json"
+
+    with pytest.raises(CorpusAnchorResolutionError, match="missing"):
+        resolve_anchored_extracted_unit(sidecar, anchor="a28")
+
+
 def test_multi_unit_sidecar_refuses_a_missing_anchor() -> None:
     """A missing anchor may not widen to every article in a consolidated law."""
     sidecar = _NORMATIVES / "ley-37-1992.html.extracted.json"
@@ -125,6 +133,24 @@ def test_multi_unit_sidecar_can_resolve_a_unique_structural_heading() -> None:
     text = resolve_anchored_extracted_unit(sidecar, anchor="articulo-4")
 
     assert "De conformidad con los artículos" in text
+
+
+def test_multi_unit_sidecar_can_resolve_an_ordinal_article_heading() -> None:
+    """Unanchored ordinal article headings remain uniquely addressable."""
+    sidecar = _NORMATIVES / "orden-hac-56-2024.html.extracted.json"
+
+    text = resolve_anchored_extracted_unit(sidecar, anchor="articulo-primero")
+
+    assert normalise_corpus_text("El anexo II, modelo 123") in normalise_corpus_text(text)
+
+
+def test_multi_unit_sidecar_can_resolve_a_qualified_article_heading() -> None:
+    """A qualified article heading matches its complete citation identity."""
+    sidecar = _NORMATIVES / "ley-37-1992-art-163-octiesdecies.html.extracted.json"
+
+    text = resolve_anchored_extracted_unit(sidecar, anchor="a163octiesdecies", include_title=True)
+
+    assert normalise_corpus_text("Artículo 163 octiesdecies. Ámbito de aplicación") in normalise_corpus_text(text)
 
 
 def test_multi_unit_sidecar_can_resolve_a_spelled_out_disposicion_heading() -> None:

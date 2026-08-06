@@ -62,7 +62,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-1285-2020.html#a1"
+corpus_ref = "corpus/normatives/html/orden-hac-1285-2020.html.extracted.md#a1"
 document_id = "BOE-A-2020-17342"
 article = "primero"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-17342"
