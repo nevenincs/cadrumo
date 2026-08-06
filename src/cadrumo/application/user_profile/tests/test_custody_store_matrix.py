@@ -273,25 +273,35 @@ def _verify_usage_ratios(bucket_id: str) -> None:
     assert load_usage_ratios(bucket_id=bucket_id) is not None, "usage ratios lost"
 
 
-def _seed_invoice_catalogue(bucket_id: str) -> None:
-    from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
+def _custody_invoice(bucket_id: str):
+    """The invoice both custody halves share, with every optional axis set.
+
+    A carry proof is only as strong as its fixture. A record left at its
+    defaults cannot detect a boundary that drops a field and re-defaults it on
+    reload, because the dropped value and the default are the same value -- the
+    blindness the roundtrip discipline names explicitly. So every optional axis
+    the aggregate carries is populated with a NON-default value here, and the
+    verifier compares the whole model rather than checking the catalogue is
+    non-empty.
+    """
+    from ....domain.invoices import (
+        Invoice,
+        InvoiceClass,
+        InvoiceLine,
+        InvoiceOperationDateRole,
+        IvaRate,
+        PaymentStatus,
+        derive_invoice_id,
+    )
     from ....domain.iva import InvoiceKind
 
-    line = InvoiceLine(
-        description="Servicio",
-        quantity=Decimal("1"),
-        unit_price=Decimal("100.00"),
-        subtotal=Decimal("100.00"),
-        iva_rate=IvaRate.RATE_0,
-        iva_amount=Decimal("0"),
-    )
     kind = InvoiceKind.RECEIVED
     invoice_number = "F-2026-001"
     issued_at = date(2026, 1, 15)
     counterparty_tax_id = "12345678Z"
     currency = "EUR"
-    grand_total = Decimal("100.00")
-    invoice = Invoice(
+    grand_total = Decimal("136.20")
+    return Invoice(
         invoice_id=derive_invoice_id(
             kind=kind,
             invoice_number=invoice_number,
@@ -300,24 +310,65 @@ def _seed_invoice_catalogue(bucket_id: str) -> None:
             currency=currency,
             grand_total=grand_total,
         ),
+        bucket_id=bucket_id,
         kind=kind,
+        invoice_class=InvoiceClass.RECTIFICATIVA,
+        series="R",
+        rectifies_invoice_number="F-2026-000",
         invoice_number=invoice_number,
         issued_at=issued_at,
+        operation_date=date(2026, 1, 10),
+        operation_date_role=InvoiceOperationDateRole.OPERATION_PERFORMED,
         counterparty_name="Proveedor SL",
         counterparty_tax_id=counterparty_tax_id,
         counterparty_country="ES",
+        issuer_address="Calle Mayor 1, Madrid",
+        recipient_address="Gran Via 2, Madrid",
         base_total=Decimal("100.00"),
-        iva_total=Decimal("0"),
+        iva_total=Decimal("21.00"),
         grand_total=grand_total,
         currency=currency,
-        lines=(line,),
+        lines=(
+            InvoiceLine(
+                description="Servicio",
+                quantity=Decimal("1"),
+                unit_price=Decimal("100.00"),
+                subtotal=Decimal("100.00"),
+                iva_rate=IvaRate.RATE_21,
+                iva_amount=Decimal("21.00"),
+            ),
+        ),
         payment_status=PaymentStatus.PAID,
+        linked_transaction_ids=("c" * 64,),
+        notes="Carried through the profile export boundary.",
+        retention_rate=Decimal("0.15"),
+        retention_amount=Decimal("15.00"),
+        recargo_amount=Decimal("5.20"),
+        suplido_amount=Decimal("10.00"),
+        payment_id="d" * 64,
+        created_at=datetime(2026, 1, 16, 9, 0, 0, tzinfo=UTC),
+        updated_at=datetime(2026, 2, 2, 17, 30, 0, tzinfo=UTC),
     )
-    InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((invoice,)))
+
+
+def _seed_invoice_catalogue(bucket_id: str) -> None:
+    from ....domain.invoices import InvoiceCatalogue
+
+    InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices((_custody_invoice(bucket_id),)))
 
 
 def _verify_invoice_catalogue(bucket_id: str) -> None:
-    assert InvoiceCatalogueRepository().load().invoices, "invoice catalogue lost"
+    """Strict equality across the export/import boundary, not a presence check.
+
+    The previous form asserted only that the catalogue was non-empty, which
+    passes even if the boundary silently drops a field and reloads its default.
+    """
+    carried = InvoiceCatalogueRepository().load()
+    assert carried.invoices, "invoice catalogue lost"
+    expected = _custody_invoice(bucket_id)
+    restored = carried.get(expected.invoice_id)
+    assert restored is not None, "invoice catalogue carried, but the seeded invoice is absent"
+    assert restored == expected
 
 
 def _seed_verification_reports(bucket_id: str) -> None:
@@ -1181,3 +1232,54 @@ def test_non_file_custody_refuses_every_recovery_operation(tmp_path: Path, backe
 
     # A refused operation never creates the recovery envelope.
     assert not path.exists()
+
+
+def test_the_invoice_custody_comparison_detects_every_optional_field_being_dropped() -> None:
+    """Anti-tautology proof for the invoice custody verifier.
+
+    The verifier's strict-equality assertion is only worth anything if it would
+    actually FAIL when the boundary drops a field. The natural form of that
+    proof -- mutate the exported payload and reload -- is not available here:
+    the profile export is an encrypted, recovery-wrapped archive, so there is
+    no plaintext payload to edit without defeating the very protection the
+    export exists to provide.
+
+    So the property is proven directly instead. For every optional axis the
+    custody fixture populates, a variant with that axis reset to its default
+    must compare UNEQUAL to the fully-populated record. That is exactly the
+    failure a dropped-and-re-defaulted field would produce on reload, and it
+    demonstrates the comparison is sensitive to each field individually rather
+    than passing on the fields that happen to be identical.
+
+    If this ever passes with a field excluded from the comparison, the custody
+    proof has become tautological and every claim resting on it is void.
+    """
+    populated = _custody_invoice("24242424-2424-4242-8242-242424242424")
+
+    defaults: dict[str, object] = {
+        "bucket_id": None,
+        "series": None,
+        "rectifies_invoice_number": None,
+        "operation_date": None,
+        "operation_date_role": None,
+        "issuer_address": None,
+        "recipient_address": None,
+        "linked_transaction_ids": (),
+        "notes": "",
+        "retention_rate": None,
+        "retention_amount": None,
+        "recargo_amount": None,
+        "suplido_amount": None,
+        "payment_id": None,
+        "created_at": None,
+        "updated_at": None,
+    }
+
+    for field, default in defaults.items():
+        assert getattr(populated, field) != default, (
+            f"fixture leaves {field} at its default, so dropping it would be undetectable"
+        )
+        # model_copy deliberately skips validation: the point is to build the
+        # shape a lossy boundary would hand back, which need not be valid.
+        dropped = populated.model_copy(update={field: default})
+        assert dropped != populated, f"the custody comparison would not notice {field} being dropped"
