@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:d5997e2768f134cf805e04c0fc1165bf47eae04b6c1a4bd8d307dc13b3bbefb0'
+body_hash: 'sha256:2f43c1fb2d6cded7f52e14708a2a10fb5cc93e094ac5896ad59b81780e142240'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-adr]]"
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
@@ -203,6 +203,41 @@ are well represented. The gap is specific, not general.
 Corpus state: only article 2 of RD 1619/2012 is bundled. Article 6, the mandatory
 content list, and article 11, the issuance deadline, are not, so neither can be verified
 against bundled authoritative text.
+
+### The mandatory-content list names what the record is missing
+
+RD 1619/2012 article 6 was read verbatim from BOE consolidated text on 2026-08-06 and
+bundled. It is the authority the invoice field set derives from, and three of its
+provisions settle findings that had been argued from inference until now.
+
+**Article 6.1.i** requires "la fecha en que se hayan efectuado las operaciones que se
+documentan o en la que, en su caso, se haya recibido el pago anticipado, siempre que se
+trate de una fecha distinta a la de expedición de la factura". That is the operation-date
+finding stated by the regulation itself, and it is broader than the finding was: the same
+provision covers the pago anticipado date, so the field the record needs serves both the
+article 75.Uno devengo and the article 75.Dos carve-out. One field, two legal roles.
+
+**Article 6.1.d** makes the destinatario's NIF obligatory in exactly three enumerated
+cases — an entrega exenta to another member state under article 25, an operation where
+the destinatario is the sujeto pasivo, and an operation in the territory of application
+where the issuer is established there. It is therefore NOT universally required, which
+gives the factura simplificada carve-out a legal basis rather than a convenience
+argument: the record's unconditional `counterparty_tax_id` is stricter than the
+regulation, and the fix is a conditional requirement keyed to those three cases, never a
+global relaxation.
+
+**Article 6.1.a** requires "número y, en su caso, serie", with numbering correlative
+WITHIN each series, and it makes a specific series mandatory for rectificativas among
+others. Two consequences the record cannot express today: series is a first-class
+identity component rather than a prefix convention inside the number, and a rectificativa
+is identifiable by its series, so series and invoice class are coupled and cannot be
+modelled independently.
+
+Two further requirements are recorded here because nothing tracks them yet. Article 6.1.f
+requires "cualquier descuento o rebaja que no esté incluido en dicho precio unitario" to
+be stated, and the descuento search returned zero files. Article 6.1.j requires an exempt
+operation to carry a reference to the provision that exempts it, which the record cannot
+hold either — it stores an `IvaCategory` but no citation of the exemption.
 
 ### What was not investigated
 

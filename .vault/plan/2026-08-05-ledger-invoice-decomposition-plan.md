@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:a5de5d956bf6ddd334416929c75d6501297c0b9fa0006d8c0fe0ef9a0315999d'
+body_hash: 'sha256:571181ac6a08965a518fe675b637e83b508fc6df8402a3061d45aa2045b02fc6'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -84,7 +84,7 @@ Prove the chain against external AEAT authority rather than against itself, anch
 
 The record has been extended field by field as each defect surfaced, and four findings now share one shape: the law describes a property of a Spanish invoice the record cannot hold. This phase derives the field set from RD 1619/2012 art. 6 rather than from consumer demand, and wires the two contracts earlier phases built but left unreachable. Outcome is expressed as cross-modelo multi-period tests over one accumulative invoice life, plus an adversarial suite of deliberately degraded invoices each asserting its specific refusal.
 
-- [ ] `P06.S40` - Bundle RD 1619/2012 articles 6 and 11 from BOE consolidated text, since only article 2 ships today and article 6 is the authority the schema field set derives from; `src/cadrumo/_data/corpus/normatives/html`.
+- [x] `P06.S40` - Bundle RD 1619/2012 articles 6 and 11 from BOE consolidated text, since only article 2 ships today and article 6 is the authority the schema field set derives from; `src/cadrumo/_data/corpus/normatives/html`.
 - [ ] `P06.S41` - Let the invoice record its fecha de operacion, so the art. 75 devengo date has an authoritative source instead of the issue-date proxy; `src/cadrumo/domain/invoices/_models.py`.
 - [ ] `P06.S42` - Let the invoice carry a suplido, which joins total and cash while joining neither base nor cuota, taking a third position on the identity rather than a second recargo; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/_decomposition.py`.
 - [ ] `P06.S43` - Let a factura rectificativa name what it corrects, so the cuota rectification LIVA article 89 requires becomes representable; `src/cadrumo/domain/invoices/_models.py`.
