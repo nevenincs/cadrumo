@@ -85,6 +85,8 @@ def test_invoice_issued_add_reports_collectible() -> None:
             "COL-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     assert add_result.exit_code == 0, add_result.output
@@ -103,6 +105,8 @@ def test_invoice_view_by_prefix_received() -> None:
             "INV-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     full_id = _full_id_from_add(add_result.output)
@@ -123,6 +127,8 @@ def test_invoice_update_changes_fields_received() -> None:
             "INV-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     full_id = _full_id_from_add(add_result.output)
@@ -145,6 +151,8 @@ def test_invoice_remove_requires_yes_received() -> None:
             "INV-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     full_id = _full_id_from_add(add_result.output)
@@ -152,6 +160,47 @@ def test_invoice_remove_requires_yes_received() -> None:
     assert refused.exit_code != 0
     confirmed = _invoke_invoice(["remove", full_id, "--kind", "received", "--yes"])
     assert confirmed.exit_code == 0, confirmed.output
+
+
+def test_invoice_add_refuses_missing_total_amount() -> None:
+    # Prevents the CLI silently defaulting an operator-omitted total to zero,
+    # which would drop the counterparty from a Modelo 347 threshold check
+    # (RD 1065/2007 art. 31) without any operator-visible signal.
+    result = _invoke_invoice(
+        [
+            "add",
+            "--kind",
+            "received",
+            "--counterparty-nif",
+            "12345678Z",
+            "--invoice-number",
+            "INV-001",
+            "--invoice-date",
+            "2026-03-15",
+        ],
+    )
+    assert result.exit_code != 0
+    assert "--total-amount" in result.output, result.output
+
+
+def test_invoice_add_accepts_supplied_total_amount() -> None:
+    result = _invoke_invoice(
+        [
+            "add",
+            "--kind",
+            "received",
+            "--counterparty-nif",
+            "12345678Z",
+            "--invoice-number",
+            "INV-002",
+            "--invoice-date",
+            "2026-03-15",
+            "--total-amount",
+            "7260.00",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "total_amount\t7260.00" in result.output
 
 
 def test_invoice_kind_is_required_on_add() -> None:
@@ -201,6 +250,8 @@ def test_invoice_list_filters_by_kind() -> None:
             "PAY-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     _invoke_invoice(
@@ -214,6 +265,8 @@ def test_invoice_list_filters_by_kind() -> None:
             "COL-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     received_list = _invoke_invoice(["list", "--kind", "received"])
@@ -238,6 +291,8 @@ def test_invoice_list_without_kind_returns_both_kinds() -> None:
             "PAY-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     _invoke_invoice(
@@ -251,6 +306,8 @@ def test_invoice_list_without_kind_returns_both_kinds() -> None:
             "COL-001",
             "--invoice-date",
             "2026-03-15",
+            "--total-amount",
+            "0",
         ],
     )
     both = _invoke_invoice(["list"])
