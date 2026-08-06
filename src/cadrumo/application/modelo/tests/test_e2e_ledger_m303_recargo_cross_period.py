@@ -134,9 +134,11 @@ def _recargo_sale(
 
     The line carries the normal domestic IVA facts (so the standard repercutido
     devengada casillas also populate) plus the separate ``recargo_amount`` cuota
-    the supplier charged the recargo-regime retailer. ``raw.amount`` reconstitutes
-    only ``taxable_base + iva_amount`` (the recargo is a separate cuota the model
-    does not fold into the IVA-inclusive gross).
+    the supplier charged the recargo-regime retailer. ``raw.amount`` is the money
+    the supplier actually received, so it reconstitutes
+    ``taxable_base + iva_amount + recargo_amount``: LIVA art. 161 has the
+    surcharge repercutido on the entrega alongside the cuota, so it is inside the
+    gross rather than beside it.
     """
     booked = date(_YEAR, _QUARTER_MONTH[period], 10)
     iva_amount = (taxable_base * iva_rate).quantize(Decimal("0.01"))
@@ -146,7 +148,7 @@ def _recargo_sale(
                 provider_transaction_id=provider_id,
                 booked_date=booked,
                 value_date=booked,
-                amount=(taxable_base + iva_amount),
+                amount=(taxable_base + iva_amount + recargo_amount),
                 currency="EUR",
                 counterparty="Comerciante en recargo de equivalencia",
                 description=f"venta con recargo {provider_id}",
