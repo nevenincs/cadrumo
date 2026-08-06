@@ -85,10 +85,10 @@ def _capped_prose_fields() -> Mapping[tuple[str, str], FieldInfo]:
     covered without anyone remembering to enrol it.
     """
     warnings.filterwarnings("ignore")
-    import cadrumo
+    from .. import __path__ as cadrumo_path
 
     found: dict[tuple[str, str], FieldInfo] = {}
-    for module_info in pkgutil.walk_packages(cadrumo.__path__, "cadrumo."):
+    for module_info in pkgutil.walk_packages(cadrumo_path, "cadrumo."):
         if ".tests" in module_info.name:
             continue
         try:

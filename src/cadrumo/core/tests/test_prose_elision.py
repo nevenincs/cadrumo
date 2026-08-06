@@ -18,7 +18,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
-from cadrumo.core import PROSE_ELISION_MARKER, elide_to_cap, elided_prose
+from .. import PROSE_ELISION_MARKER, elide_to_cap, elided_prose
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

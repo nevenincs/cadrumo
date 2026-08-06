@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from cadrumo.domain.contribuyente import DescendantInfo, GuarderiaMonthSpend, RentaFamilyProfile
+from .. import DescendantInfo, GuarderiaMonthSpend, RentaFamilyProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
