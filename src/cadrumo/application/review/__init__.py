@@ -40,62 +40,151 @@ See Also:
 
 from __future__ import annotations
 
-from ._actions import update_invoice_review, update_ledger_review
-from ._adapters import (
-    drafts_pending,
-    invoices_pending,
-    transactions_pending,
-)
-from ._aggregator import ReviewQueue
-from ._edit import (
-    EditClause,
-    EditParseError,
-    InvoiceEditKey,
-    InvoiceEditSpec,
-    LedgerEditKey,
-    LedgerEditSpec,
-    parse_edit_clause,
-    parse_edit_clauses,
-)
-from ._enums import (
-    ReviewFormat,
-    ReviewItemKind,
-    ReviewSeverity,
-    ReviewState,
-    reserved_kind_reason,
-    severity_rank,
-)
-from ._errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
-from ._filter import (
-    DeclaracionReviewFilterKey,
-    DeclaracionReviewFilterSpec,
-    DeclaracionReviewStatus,
-    FilterClause,
-    FilterParseError,
-    InvoiceReviewFilterKey,
-    InvoiceReviewFilterSpec,
-    InvoiceReviewStatus,
-    LedgerReviewFilterKey,
-    LedgerReviewFilterSpec,
-    LedgerReviewStatus,
-    parse_filter_clause,
-    parse_filter_clauses,
-)
-from ._models import (
-    FindingReviewItem,
-    InvoiceReviewItem,
-    InvoiceReviewRecord,
-    LedgerReviewRecord,
-    ReviewItem,
-    TransactionReviewItem,
-)
-from ._operator import (
-    ACCEPTED_KINDS,
-    ReviewQueueReport,
-    ReviewQueueRow,
-    project_review_item,
-    project_review_queue,
-)
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._actions import update_invoice_review, update_ledger_review
+    from ._adapters import (
+        drafts_pending,
+        invoices_pending,
+        transactions_pending,
+    )
+    from ._aggregator import ReviewQueue
+    from ._edit import (
+        EditClause,
+        EditParseError,
+        InvoiceEditKey,
+        InvoiceEditSpec,
+        LedgerEditKey,
+        LedgerEditSpec,
+        parse_edit_clause,
+        parse_edit_clauses,
+    )
+    from ._enums import (
+        ReviewFormat,
+        ReviewItemKind,
+        ReviewSeverity,
+        ReviewState,
+        reserved_kind_reason,
+        severity_rank,
+    )
+    from ._errors import ReviewError, ReviewKindReservedError, ReviewSourceLoadError
+    from ._filter import (
+        DeclaracionReviewFilterKey,
+        DeclaracionReviewFilterSpec,
+        DeclaracionReviewStatus,
+        FilterClause,
+        FilterParseError,
+        InvoiceReviewFilterKey,
+        InvoiceReviewFilterSpec,
+        InvoiceReviewStatus,
+        LedgerReviewFilterKey,
+        LedgerReviewFilterSpec,
+        LedgerReviewStatus,
+        parse_filter_clause,
+        parse_filter_clauses,
+    )
+    from ._models import (
+        FindingReviewItem,
+        InvoiceReviewItem,
+        InvoiceReviewRecord,
+        LedgerReviewRecord,
+        ReviewItem,
+        TransactionReviewItem,
+    )
+    from ._operator import (
+        ACCEPTED_KINDS,
+        ReviewQueueReport,
+        ReviewQueueRow,
+        project_review_item,
+        project_review_queue,
+    )
+
+
+#: Public name -> owning submodule, resolved on first attribute access.
+#:
+#: This facade's ``_models`` submodule pulls in ``application.filing`` and its
+#: PDF-extraction chain (``pdfplumber``/``pdfminer``) -- measured at ~160,000 us
+#: cumulative import cost -- for consumers that only ever wanted a single enum
+#: (e.g. ``application.ledger._models`` importing ``LedgerReviewStatus`` for two
+#: pydantic field annotations). A CLI process runs one command, so most of that
+#: cost was paid for symbols the invocation never touched.
+_LAZY_EXPORTS: dict[str, str] = {
+    "ACCEPTED_KINDS": "._operator",
+    "DeclaracionReviewFilterKey": "._filter",
+    "DeclaracionReviewFilterSpec": "._filter",
+    "DeclaracionReviewStatus": "._filter",
+    "EditClause": "._edit",
+    "EditParseError": "._edit",
+    "FilterClause": "._filter",
+    "FilterParseError": "._filter",
+    "FindingReviewItem": "._models",
+    "InvoiceEditKey": "._edit",
+    "InvoiceEditSpec": "._edit",
+    "InvoiceReviewFilterKey": "._filter",
+    "InvoiceReviewFilterSpec": "._filter",
+    "InvoiceReviewItem": "._models",
+    "InvoiceReviewRecord": "._models",
+    "InvoiceReviewStatus": "._filter",
+    "LedgerEditKey": "._edit",
+    "LedgerEditSpec": "._edit",
+    "LedgerReviewFilterKey": "._filter",
+    "LedgerReviewFilterSpec": "._filter",
+    "LedgerReviewRecord": "._models",
+    "LedgerReviewStatus": "._filter",
+    "ReviewError": "._errors",
+    "ReviewFormat": "._enums",
+    "ReviewItem": "._models",
+    "ReviewItemKind": "._enums",
+    "ReviewKindReservedError": "._errors",
+    "ReviewQueue": "._aggregator",
+    "ReviewQueueReport": "._operator",
+    "ReviewQueueRow": "._operator",
+    "ReviewSeverity": "._enums",
+    "ReviewSourceLoadError": "._errors",
+    "ReviewState": "._enums",
+    "TransactionReviewItem": "._models",
+    "drafts_pending": "._adapters",
+    "invoices_pending": "._adapters",
+    "parse_edit_clause": "._edit",
+    "parse_edit_clauses": "._edit",
+    "parse_filter_clause": "._filter",
+    "parse_filter_clauses": "._filter",
+    "project_review_item": "._operator",
+    "project_review_queue": "._operator",
+    "reserved_kind_reason": "._enums",
+    "severity_rank": "._enums",
+    "transactions_pending": "._adapters",
+    "update_invoice_review": "._actions",
+    "update_ledger_review": "._actions",
+}
+
+
+def __getattr__(name: str) -> object:
+    """Resolve one public name by importing only the submodule that owns it.
+
+    The resolved value is written into module globals, so only the first
+    access to a name goes through this hook; every later one is an ordinary
+    global lookup with no import machinery in the path.
+
+    Ownership is unchanged: every name still has exactly one canonical home in
+    this package's ``__all__``, and consumers still import it from here. Only
+    WHEN the owning submodule executes has moved.
+    """
+    module_name = _LAZY_EXPORTS.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from importlib import import_module
+
+    value = getattr(import_module(module_name, __name__), name)
+    globals()[name] = value
+    return value
+
+
+def __dir__() -> list[str]:
+    """Report the full public surface, including names not yet resolved."""
+    return sorted(set(__all__) | set(globals()))
+
 
 __all__ = [
     "ACCEPTED_KINDS",
