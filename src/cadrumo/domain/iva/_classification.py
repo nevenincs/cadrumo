@@ -638,6 +638,25 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
         _r12_services_b2b_eu_outbound,
         IvaCategory.DOMESTIC_NOT_SUBJECT,
     ),
+    # This rule resolves a SERVICE to the GOODS category, and that is only
+    # half-right. Modelo 303 combines the two legs by design — official boxes
+    # 10/11 and 36/37 are titled "adquisiciones intracomunitarias de bienes y
+    # servicios", so both categories select the same bindings and the collapse is
+    # harmless there. Modelo 349 keeps them apart: `_intracommunity_clave` maps
+    # the goods category to clave "A" (adquisición de bienes) and
+    # INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE to clave "I"
+    # (adquisición de servicios), so this rule would file an EU service under
+    # clave A against VIES.
+    #
+    # Nothing calls `classify_iva` in production today — categories reach the
+    # engine declared by the operator or the LLM path, never derived from
+    # territoriality — so no filing is affected. Before wiring it up, give it a
+    # per-surface category mapping (or drop the rule); read the Modelo 349 diseño
+    # clave table directly rather than inferring it from the 303 box mapping.
+    #
+    # `test_intracom_goods_and_services_share_the_combined_official_casilla_10_11`
+    # is green and asserts this collapse is correct. It is — for Modelo 303, the
+    # only surface it exercises. Do not read it as clearance for 349.
     _IvaClassificationRule(
         "R13_services_b2b_eu_inbound",
         "EU_MEMBER to ES B2B services",
