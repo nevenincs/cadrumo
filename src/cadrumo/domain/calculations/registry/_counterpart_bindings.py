@@ -141,7 +141,29 @@ def validate_counterpart_binding(binding: DataBindingDefinition) -> list[str]:
 
 
 def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> InvoiceObservation:
+    """Project a counterpart observation onto the shared invoice-observation shape.
+
+    ``source_kind`` is stated rather than left to a default, and the value is
+    deliberately arbitrary: it is NOT read on this path. The supplier filters
+    on the counterpart observation's OWN ``source_kind`` before calling here
+    (see :func:`_counterpart_observation_supplier`), so by the time a record
+    reaches this function its family has already been decided, and the field
+    set below is never compared against a binding source again.
+
+    It cannot carry the truthful value either. A counterpart observation's
+    source kind is drawn from the counterpart taxonomy -- ``LEDGER_TRANSACTION``
+    among them -- which :class:`InvoiceObservation` validates against the
+    invoice binding family and would refuse.
+
+    So this is a shape-fitting placeholder, and the reason it is written out
+    explicitly is that the alternative reads as a claim. Left to the model
+    default it silently asserted that every counterpart-derived observation was
+    an ISSUED invoice, which is untrue for the received half and invisible.
+    Anything downstream that starts reading this field for a counterpart-
+    derived record must change this function rather than trust the value.
+    """
     return InvoiceObservation(
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id=observation.source_id,
         party_tax_id=observation.party_tax_id,
         country_code=observation.country_code,

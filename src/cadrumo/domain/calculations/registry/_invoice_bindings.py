@@ -83,7 +83,7 @@ class InvoiceObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     invoice_id: str = Field(min_length=1, max_length=128)
-    source_kind: BindingSourceKind = BindingSourceKind.COLLECTIBLE_INVOICE
+    source_kind: BindingSourceKind
     party_tax_id: str = Field(min_length=1, max_length=64)
     country_code: str = Field(min_length=2, max_length=2)
     transaction_date: date

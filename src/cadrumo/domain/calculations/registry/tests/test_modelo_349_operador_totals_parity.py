@@ -52,6 +52,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import BindingSourceKind
 from .. import (
     InvoiceObservation,
     Modelo349OperadorTotalsParity,
@@ -64,6 +65,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
     InvoiceObservation(
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id="inv-de-1",
         party_tax_id="DE123456789",
         country_code="DE",
@@ -73,6 +75,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
         party_legal_name="DE Auto GmbH",
     ),
     InvoiceObservation(
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id="inv-fr-1",
         party_tax_id="FR12345678901",
         country_code="FR",
@@ -86,6 +89,7 @@ _CONSISTENT_OBSERVATIONS: tuple[InvoiceObservation, ...] = (
     # record (Orden HAC/174/2020 Anexo instructions), so this must fold into
     # the DE/E row rather than producing a second row.
     InvoiceObservation(
+        source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         invoice_id="inv-de-2",
         party_tax_id="DE123456789",
         country_code="DE",
