@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:237cca9c461f78db39a06ebdaa287217cf6a97b84591e2315e98703792df63ec'
+body_hash: 'sha256:b0b080b34d124327571c5713b4d1be5f8ac669cdb1e1b1065102c60d14cecb5d'
 step_id: 'S12'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -31,3 +31,9 @@ P04.S12 remains open. The repository already contains the intended local mechani
 ## Notes
 
 No implementation files changed. The AWS CLI is installed, but `aws sts get-caller-identity` reports that the session has expired and the worker's CloudFormation inspection could not complete. The deployed routing/object state therefore cannot be distinguished from the committed mechanism without re-authentication. Do not close this step or dispatch the redeploy/live-verification step until an authenticated operator session proves the roots respond.
+
+### 2026-08-06 authorized build/deployment continuation
+
+Strict user-doc builds for en, es, ca, and hu each stop on the same five known sequence/product divergences: profile-setup history ordering, correct-review history expectation, Modelo 100 export authority absence, the Modelo 303 verification-report localized divergence, and the Renta assembly localized-help divergence. No golden was refreshed and no authoritative source was invented.
+
+Deployment was not attempted because `aws sts get-caller-identity` reports an expired session and requires reauthentication. P04.S12 remains open; P04.S13 has no deploy evidence.

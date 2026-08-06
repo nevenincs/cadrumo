@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:7b31faa19c4de5510351d8fd99805727c5c372830de56d87cf400b4d0a220596'
+body_hash: 'sha256:e9fdd2878520deae6772ca909391ae6e983c3a15d93aae2695137fb41c63ab47'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -37,3 +37,7 @@ The casilla helper was tightened to select only a real bounded record carrying a
 Fresh vaultspec-rag grounding over the sweep runner, committed relevance input assembler, per-root recall contract, and P03.S08 execution evidence confirms that the source seam is present: the sweep runner launders live RAG hits through the typed resolver, while the P03.S08 gate probes the production Pagefind path with a real casilla record and all available localized descriptions across the four roots.
 
 The remaining requirement is evidence from a newly built artifact and the authorized per-root/live-root run. The committed relevance file is consumed by the Rung-2 input assembler rather than regenerated implicitly, so no source change or sweep was justified here. P03.S08 remains open. No tests, builds, Pagefind compilation, browser/runtime probes, generated artifacts, live sweeps, reindexing, model downloads, or deployment were run.
+
+### 2026-08-06 authorized multilingual build continuation
+
+Strict user-document builds were attempted for en, es, ca, and hu. Each stopped on the same five known sequence/product divergences before the Pagefind post-build stage: profile-setup history ordering, correct-review history expectation, Modelo 100 export authority absence, the Modelo 303 verification-report localized divergence, and the Renta assembly localized-help divergence. The locale source projection and parity tests are green, but no locale build is represented as green or deployable. The build outputs were not repaired by refreshing goldens or inventing authoritative source data.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:5cec71536d41afd43810b5c6203c5f3b4118b95c7e8b89dcceac075a3e1a07ba'
+body_hash: 'sha256:f05e21fa0f0092e78efe6a88db604ed5e7da7c897a56635cc1ccc52ac33868a0'
 step_id: 'S15'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -69,3 +69,7 @@ Static evidence only: vaultspec-rag grounding, AST parsing, and focused diff che
 ### 2026-08-05 LUNA Max legal projection re-audit
 
 Fresh vaultspec-rag grounding and an independent LUNA Max review of the disjoint `dev/docs/terminology/_legal_projection.py` seam found no source defect and made no edit. The projection emits all validated legal records, takes generated targets only from the renderer inventory, fails closed on missing targets, and preserves BOE permalinks as provenance rather than search destinations. Ruff, basedpyright (0 errors, 0 warnings, 0 notes), and focused `git diff --check` passed for the owned file. P05.S15 remains open for its separate generated-surface, build, parity, and runtime gates; no tests, builds, Pagefind, generated artifacts, probes, sweeps, reindexing, deployment, or model downloads were run.
+
+### 2026-08-06 authorized execution
+
+The unified Pagefind projection contains 594 dedicated `LEGAL` records with renderer-owned BOE targets and permalink metadata. The full English Pagefind build reported 8,496 injected term/casilla/legal/CLI records, and the marker-aware legal/resolution gates are included in `63 passed in 180.00s (0:03:00)`. No legal provision is represented as a generic `PAGE` record in the authoritative projection.

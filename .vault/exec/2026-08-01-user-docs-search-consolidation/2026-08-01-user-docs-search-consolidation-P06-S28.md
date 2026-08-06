@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:be1b3d6c73be6753d999e1d0e34af7285c17a1cd8211b3287209d2aa96cf0389'
+body_hash: 'sha256:b3d16bee851ccd28bd2d3f914927ec2169ab73fe1865962ce2496eeb1488ea97'
 step_id: 'S28'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -36,3 +36,7 @@ P06.S28 remains open for the deferred verification lane because no tests were au
 - No tests, builds, model downloads, live sweeps, RAG reindexing, Pagefind/runtime probes, generated artifacts, or deployment were run.
 - Unrelated legal-test edits in the same file were preserved and excluded from the S28 change.
 - The next evidence required for closure is the authorized test/verification run; the standing deployment deferral remains unchanged.
+
+### 2026-08-06 authorized execution
+
+The stale model-only Diseño expectation is covered by the marker-aware resolver run: the consolidated source gate returned `63 passed in 180.00s (0:03:00)`. The production resolver therefore remains fail-closed for a model-only non-TOML hit without an individual locator; no undocumented locator schema was invented.

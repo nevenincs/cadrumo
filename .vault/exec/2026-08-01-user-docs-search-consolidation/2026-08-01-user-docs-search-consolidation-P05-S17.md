@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c68f0cf288177c76deafc83308d1bda4d7cbb65f959a7b6e4306ff577f86c50'
+body_hash: 'sha256:5cf6f5214a7480d2f19f2199642101eb454567089e9dcef8d0ae5c931fc9d031'
 step_id: 'S17'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -50,3 +50,7 @@ The broken MCP `search_codebase` alias remains tracked in vaultspec-rag issue
 #350; no reindex or bypass was used. Runtime/test/build acceptance is deferred
 explicitly by instruction and remains unresolved. Unrelated peer WIP,
 including S16, was preserved and is not part of this change.
+
+### 2026-08-06 authorized execution
+
+The real legal parity gate ran as part of the marker-aware source run and the full selection returned `63 passed in 180.00s (0:03:00)`. The generated legal inventory, unified `LEGAL` records, anchors, and BOE destination grounding are therefore runtime-tested in the source tree. Strict multilingual Sphinx build acceptance remains separate and is still red.

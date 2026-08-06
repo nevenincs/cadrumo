@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:47113f76e085f671326b463eb65847fe3b608f15bfd696558672c1edeaed618a'
+body_hash: 'sha256:7a895a9009e0200153a7b2045434c57bbdd5ee15000c66baa5da32b5108e2c24'
 step_id: 'S05'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -57,3 +57,7 @@ Fresh vaultspec-rag grounding and exact reads were followed by a bounded LUNA Ma
 ### 2026-08-06 source-only controller cleanup
 
 Fresh vaultspec-rag grounding over the accepted search ADR, the P02.S05 execution boundary, and an exact read of `docs/_static/cadrumo-docs.js` identified a redundant second identical `select(index)` declaration inside `createSearchController`. A LUNA Max worker removed only that duplicate from the shared controller; the first declaration remains the sole selection implementation. Parent review confirmed the focused diff contains no other file change. `node --check`, `git diff --check`, and an exact declaration-count check passed. No tests, builds, browser/runtime probes, generated artifacts, matrix/bundle generation, live sweeps, reindexing, deployment, or release activity was performed. P02.S05 remains open because the shipped artifact and behavioral/runtime evidence are still absent.
+
+### 2026-08-06 authorized runtime continuation
+
+The source client-side cosine bridge and fail-closed browser path were exercised by the Rung-2 acceptance and composition checks, but no accepted browser configuration was emitted. The independent Pagefind capture showed that lexical card observations can crowd semantic candidates; the LUNA Max correction now treats card-pass origin as provenance rather than direct identity and uses direct-match strength plus semantic score for the tie. The semantic tier remains disabled until the held-out and locale/kind acceptance gates pass.

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:c87440e8a004263d8dffa9692cc90746ddc12327245d45710413b685322ea7f7'
+body_hash: 'sha256:f98de9a4a16b36d0a963eba0154cccef2dedf7a60b3dcc55fe216472e0728044'
 step_id: 'S07'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -58,6 +58,12 @@ This remains measurement evidence only: it does not adjudicate the miss-rate gat
 ### 2026-08-05 LUNA Extra High evaluator review
 
 Read-only LUNA Extra High review, grounded with vaultspec-rag and exact current source, found three open evaluator defects in the peer WIP: abstention statuses can carry candidates into composition (HIGH), evaluation rows/aggregates do not enforce hit/reason/matched-id arithmetic (MEDIUM), and lexical composition ties do not apply the required UTF-8 record-id fallback (LOW). The peer-owned `_rung2_evaluation.py` was not edited. P02.S07 remains open; no acceptance or measurement evidence is claimed.
+
+### 2026-08-06 authorized measurement continuation
+
+The provider-backed temporary bundle parses and the independent float32/int8 top-five comparison remains clean: 0 of 32 queries lost a top-five record, with maximum observed cosine drift approximately 0.002751. A diagnostic replay of the captured Pagefind observations under the explicit test policy `minimum_coverage_ratio=0.8`, `cosine_floor=0.75`, `runner_up_margin=0.05`, and result cap 5 produced 17/32 semantic hits and 15/32 composed hits; neither meets the ADR threshold of 0.10 miss-rate. The earlier supplied 22/32 ladder metric was not reproducible from the available capture/bundle pair, so no acceptance claim is made.
+
+The Rung-2 browser config remains disabled/fail-closed. P02.S07 stays open pending an accepted config/policy, reproducible full-ladder evidence, locale/kind parity, and the held-out gate.
 
 ## Notes
 

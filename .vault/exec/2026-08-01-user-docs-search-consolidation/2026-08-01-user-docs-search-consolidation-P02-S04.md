@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:0a965e47ced8d51d2a0b898d06be7cea1d270a60f4cc38251a9d2e6268375cd1'
+body_hash: 'sha256:df8d33763704305924a5fd199cc7d95a8c1771aee10c2438acb9c5fe0c4d56ef'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -117,6 +117,12 @@ A read-only LUNA Extra High review, grounded with vaultspec-rag and exact curren
 ### 2026-08-06 source-only relevance-loader hardening
 
 Fresh vaultspec-rag grounding over the P02 source boundary and the exact Pagefind injection loader identified a documented fail-closed gap: a present relevance file decoded with invalid UTF-8 raised `UnicodeDecodeError` before the existing `(OSError, ValidationError)` handler could convert it to `SearchInjectionError`. A LUNA Max worker added `UnicodeDecodeError` to that tuple in `dev/docs/pagefind_inject.py`. LUNA Extra High review passed: missing-file behavior, existing validation behavior, and the loader-before-injection ordering are unchanged. Parent verification passed Ruff, basedpyright, and `git diff --check`. No tests, builds, Pagefind generation, browser/runtime probes, matrix/bundle generation, live sweeps, reindexing, deployment, or release activity was performed. P02.S04 remains open for the pinned provider evidence, generated matrix/artifact, acceptance, and runtime gates.
+
+### 2026-08-06 authorized provider/artifact continuation
+
+The independently reviewed temporary provider lane supplied `model2vec==0.8.2`, `minishlab/potion-multilingual-128M` at revision `e7421cd79c75fc506b88bb75723ae0a234994720`, MIT provenance, dimension 256, and raw provider/model/tokenizer manifests. The clean provider-source root was used for compilation. The validated temporary bundle is 2,130,942 canonical bytes with raw SHA-256 `3d2db2c75ba8ff5e259d22db4fef0589993f36c643f74b6246eb9a91b4dde5f1`; its embedded artifact hash is `64d1f26196f054549b5984c5dc4b4f19d0d01da5f1263fbba083a01279791f90`.
+
+The bundle was not promoted to the repository or enabled in the browser because the standing held-out ladder and full locale/build gates are not accepted. P02.S04 remains open for a committed, accepted artifact and the dependent measured/runtime closure.
 
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 

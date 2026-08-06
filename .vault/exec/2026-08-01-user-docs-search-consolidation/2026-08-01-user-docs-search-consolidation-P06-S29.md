@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:bf580e3fe00ece26718e1683eb406f0eafdf7cafe544372976fff1860747717d'
+body_hash: 'sha256:5db75d8a69521ef58218b705665804e3dd6d59141859ca410a9b5b7705e3147c'
 step_id: 'S29'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -39,3 +39,7 @@ No tests, typing gates, builds, generated artifacts, browser probes, sweeps, rei
 ## Notes
 
 The source test gate and canonical matcher are intentionally unexecuted/unprobed under the explicit no-tests boundary. The shared worktree retains unrelated peer WIP in the same two files; those changes were preserved and not broadly staged, committed, or overwritten.
+
+### 2026-08-06 authorized execution
+
+The canonical identity gate is now included in the green 63-test marker-aware run. The full English Pagefind build and independent structured capture also exercised the shipped metadata path: M130/casilla 15 resolved to `casilla-record:63300419eb4c0e5119307cfc` and `_generated/casillas/130.html#casilla-15`. The canonical id remains separate from display number where the registry requires it; no fallback or synthetic record was used. Other locale source fields remain parity-checked, while strict locale artifact builds remain blocked by the recorded sequence/product divergences.

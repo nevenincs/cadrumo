@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce51609d28b9339e961676d3284592d1766eb83cdc9cc0a0b40343d37d4e774e'
+body_hash: 'sha256:4ae8dd83965c5fd94cf9def4129e45198990b46fdd38ffce519e9af5eb924db1'
 step_id: 'S16'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -43,6 +43,10 @@ RAG grounding and exact `rg` inspection confirmed the source-grounded cause: pac
 The remediation defines `legal_target_record_id` once in `_legal_projection` and re-exports that same function object from `_coverage`. `_legal_projection` no longer imports `_coverage`; `_coverage` now imports the canonical helper from `_legal_projection`. No lazy import, helper module, duplicate implementation, legal identity change, target-authority change, coverage-semantics change, or injection change was introduced.
 
 Static import-graph evidence shows the initialization path now terminates at the shared search-record and renderer dependencies: `_miss_rate -> _sweep -> _resolution -> _legal_projection`, with no reverse `_legal_projection -> _coverage` edge. Based on this static evidence, the current projection/gate path is importable after the fix; no runtime import or test result is claimed. AST parsing, exact `rg` inspection, `git diff --check`, and conflict-marker scanning remain the only verification boundary; no tests, builds, Pagefind runs, live probes, sweeps, deployment, or reindexing were run.
+
+### 2026-08-06 authorized execution
+
+The live RAG sweep was refreshed and promoted byte-identically: 112 mappings, 169 target rows, 91 unique record ids, 112 concept target rows, and 57 legal target rows. No stale legal ids and no synthetic `code:` targets remain. The marker-aware relevance-data and legal-anchor gates are part of `63 passed in 180.00s (0:03:00)`.
 
 ## Remediation addendum (2026-08-04)
 

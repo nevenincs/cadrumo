@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-06'
-body_hash: 'sha256:2ff862a811001bafa7b9cae2120f744575124953589063f5aff2bb879e935cfa'
+body_hash: 'sha256:d4f51ec0342f38a09eebe099de3f819bb15cc2ed3b2ead4c861781f8788b0fdd'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -64,10 +64,10 @@ Make the deployed site carry the decided search contract: the pages-only env val
 
 Deliver the operator's core ask that no record kind ever served: project the legal catalogue's provisions into a fifth typed record kind with D1-conformant destinations on a generated legal reference surface, reconcile the hundreds of dead legal relevance targets to the new ids, and close the dead-target class in the gate.
 
-- [ ] `P05.S14` - Build the generated legal reference surface rendering per-law pages with per-provision anchors from one shared slug authority, each entry carrying its BOE permalink and catalogue metadata; `dev/docs/`.
-- [ ] `P05.S15` - Project the legal catalogue into the fifth search record kind with D1-conformant targets on the new surface and inject it beside the existing kinds with declared weights; `dev/docs/pagefind_inject.py`.
-- [ ] `P05.S16` - Reconcile the committed legal relevance targets to the new record ids and extend the target-resolution gate to refuse any target id no injector emits; `src/cadrumo/_data/terminology/relevance/`.
-- [ ] `P05.S17` - Add the legal per-kind parity gate proving anchor existence and destination-grounding coverage for every projected provision record; `dev/docs/tests/`.
+- [x] `P05.S14` - Build the generated legal reference surface rendering per-law pages with per-provision anchors from one shared slug authority, each entry carrying its BOE permalink and catalogue metadata; `dev/docs/`.
+- [x] `P05.S15` - Project the legal catalogue into the fifth search record kind with D1-conformant targets on the new surface and inject it beside the existing kinds with declared weights; `dev/docs/pagefind_inject.py`.
+- [x] `P05.S16` - Reconcile the committed legal relevance targets to the new record ids and extend the target-resolution gate to refuse any target id no injector emits; `src/cadrumo/_data/terminology/relevance/`.
+- [x] `P05.S17` - Add the legal per-kind parity gate proving anchor existence and destination-grounding coverage for every projected provision record; `dev/docs/tests/`.
 
 ### Phase `P06` - Deterministic casilla enrollment and definition contract
 
@@ -81,10 +81,10 @@ Formal review follow-up is part of that queue: the P06.S22 Pagefind result contr
 - [x] `P06.S21` - Carry registry help, input-kind, data-type, formula, and locale metadata through the casilla search projection and unified record without changing the opaque identity; `dev/docs/terminology/`.
 - [x] `P06.S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback; `docs/_static/cadrumo-docs.js`.
 - [x] `P06.S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback; `dev/docs/terminology/_resolution.py`.
-- [ ] `P06.S29` - Correct the structured modelo plus casilla route to carry and match canonical casilla_id while retaining display-number and segmento fallback, and add the real-authority gate for an id that differs from its display number; `dev/docs/pagefind_inject.py, docs/_static/cadrumo-docs.js, dev/docs/terminology/tests/test_casilla_projection.py`.
-- [ ] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
+- [x] `P06.S29` - Correct the structured modelo plus casilla route to carry and match canonical casilla_id while retaining display-number and segmento fallback, and add the real-authority gate for an id that differs from its display number; `dev/docs/pagefind_inject.py, docs/_static/cadrumo-docs.js, dev/docs/terminology/tests/test_casilla_projection.py`.
+- [x] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
 - [ ] `P06.S27` - Defer a Diseño-specific locator/parser contract until an official revision-aware source locator is available while retaining fail-closed target resolution; `dev/docs/terminology/_resolution.py`.
-- [ ] `P06.S28` - Reconcile the Diseño source-resolution verification gate with the validated individual-locator contract before verification runs; `dev/docs/terminology/tests/test_resolution.py`.
+- [x] `P06.S28` - Reconcile the Diseño source-resolution verification gate with the validated individual-locator contract before verification runs; `dev/docs/terminology/tests/test_resolution.py`.
 - [ ] `P06.S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input; `dev/docs/terminology/_sweep.py, dev/docs/terminology/tests/test_sweep.py, src/cadrumo/_data/terminology/relevance/`.
 
 ## Parallelization
