@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-05'
-body_hash: 'sha256:0c75b830edfe5910ef1ff8bcf342cd66e74e8a7931aa41ccc668c575d415c938'
+modified: '2026-08-06'
+body_hash: 'sha256:e7af1d8b8596a9bbd0d0194f820e9131a07ef54fba7d2d948692d9799af88c65'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -49,6 +49,7 @@ Let exempt invoices recover their retencion by relaxing the inference preconditi
 - [x] `P03.S13` - Add the partial-invoice decomposition contract so an ungrounded record is excluded but visible rather than silently dropped; `src/cadrumo/domain/transactions`.
 - [x] `P03.S20` - Route received-invoice retencion into the existing per-perceptor store behind retenciones_aggregation, never a second parallel retencion path; `src/cadrumo/application/aggregation`.
 - [ ] `P03.S37` - Let an invoice record that its customer is under recargo de equivalencia, so an unrecorded surcharge stops being indistinguishable from one that does not apply; `src/cadrumo/domain/invoices/_models.py`.
+- [ ] `P03.S38` - Let the income aggregation read a linked sales invoice for its base, cuota and retencion, following the derive-on-read shape the expense pipeline already proves; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
 
 ### Phase `P04` - Verify severity escalation
 
