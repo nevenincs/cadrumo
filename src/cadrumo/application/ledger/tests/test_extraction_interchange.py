@@ -11,6 +11,7 @@ stopped firing could not pass by accident.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -28,7 +29,7 @@ def _producer() -> ExtractionProducer:
     )
 
 
-def _well_formed() -> dict[str, object]:
+def _well_formed() -> dict[str, Any]:
     """A payload with every defaultable field populated NON-default.
 
     Deliberately not a minimal fixture. A roundtrip or refusal test built on

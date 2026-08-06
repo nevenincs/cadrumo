@@ -32,7 +32,7 @@ See Also:
 from __future__ import annotations
 
 import tomllib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from pydantic import ValidationError
@@ -357,7 +357,7 @@ def test_no_row_cites_the_same_ref_as_both_bundled_and_pending() -> None:
 # --------------------------------------------------------------------------- #
 
 
-def _valid_row_kwargs() -> dict[str, object]:
+def _valid_row_kwargs() -> dict[str, Any]:
     return {
         "category": IvaCategory.DOMESTIC_EXEMPT,
         "kind": InvoiceKind.ISSUED,

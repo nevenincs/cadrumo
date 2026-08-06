@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -770,7 +771,7 @@ _DECLARABLE_FACTS: frozenset[str] = frozenset(
 )
 
 
-def _declarable_facts(observation: object) -> dict[str, object]:
+def _declarable_facts(observation: object) -> dict[str, Any]:
     """Project an observation onto the declarable-fact contract.
 
     Reads through the fact set rather than listing attributes inline, so a fact
