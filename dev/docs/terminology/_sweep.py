@@ -298,19 +298,24 @@ class ServiceRagSearchClient:
         # and integer flags. The query is operator vocabulary, not untrusted
         # input, and is passed as a single argv element (never interpolated into
         # a shell), hence the S603 suppression.
-        result = subprocess.run(  # noqa: S603
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=self._timeout_s + 30.0,
-            check=False,
-        )
+        try:
+            result = subprocess.run(  # noqa: S603
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=self._timeout_s + 30.0,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise SweepError(f"RAG search for {query!r} could not run: {exc}") from exc
         if result.returncode != 0:
             raise SweepError(f"RAG search for {query!r} failed (exit {result.returncode}): {result.stderr.strip()}")
         try:
             payload = json.loads(result.stdout)
         except json.JSONDecodeError as exc:
             raise SweepError(f"RAG search for {query!r} returned non-JSON: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise SweepError(f"RAG search for {query!r} returned a non-object JSON envelope")
         if not payload.get("ok"):
             raise SweepError(f"RAG search for {query!r} not ok: {payload.get('message', payload.get('error'))}")
         return _parse_hits(payload)
