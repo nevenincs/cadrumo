@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:d67461bf7b9dd223b81348fb5430fdbb40984e583d2593c8de4842f811c08bd0'
+body_hash: 'sha256:5d376ce82c84e1121a98b84dcc6dde88f224eb67b238a7d8d0402d9cd3aaf9b3'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -62,7 +62,7 @@ Findings the campaign surfaced in the registry and core surfaces that are real b
 - [ ] `P03.S13` - Decide the strength class for casillas 0529 and 0531, promoting them to the coverage-gated class raises the denominator and could flip verdicts on legitimate filings so it needs domain grounding; `src/cadrumo/_data/registry/aeat/modelos/100`.
 - [x] `P03.S14` - Fix the embedded newline in the rd-439-2007 art-76 legal entry notes field, the validator rejects any Unicode C category and a narrower scan for control characters reads as clean; `src/cadrumo/_data/registry/aeat/legal`.
 - [x] `P03.S18` - Pin which snapshot coordinates the filing-period cross-check covers, the consistency validator returns early on a null filing period so administrative-token snapshots quietly lost a check the validator's name still implies; `src/cadrumo/domain/calculations/registry/tests/test_snapshot_filing_period_coverage.py`.
-- [ ] `P03.S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator; `src/cadrumo/domain/calculations/registry`.
+- [x] `P03.S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator; `src/cadrumo/domain/calculations/registry`.
 
 ### Phase `P04` - Tracked but owned elsewhere
 
@@ -70,7 +70,7 @@ Work this campaign found and cannot close, recorded so it is not silently droppe
 
 - [x] `P04.S15` - Repair the four core tests broken by the root-only Modelo localization migration, it stripped title and official_name and label from the M036 manifest without updating hand-derived expectations; `src/cadrumo/core/tests/test_toml_registry_parity.py`.
 - [ ] `P04.S16` - Re-pin the model-facing description digest once the description sources settle, the gate forbids re-pinning from a dirty tree and the locale and CLI help surfaces are actively churning; `dev/packaging/tests/test_verify_distribution_identity.py`.
-- [ ] `P04.S17` - Fill or uncheck the 204 semantic-dedup exec records that closed their Steps with empty Outcome sections, the baseline schema note forbids absorbing them into the tolerated set; `.vault/exec/2026-06-13-semantic-dedup-epic`.
+- [ ] `P04.S17` - Fill or uncheck the 204 semantic-dedup exec records that closed their Steps with empty Outcome sections, this addresses ONE feature's instance of a tree-wide pattern measured at ~1321 records across 15 features so its closure must not be read as the pattern being resolved; `.vault/exec/2026-06-13-semantic-dedup-epic`.
 - [x] `P04.S20` - Resolve the import-hygiene test-debt failures from the maternidad private reaches, raising a baseline designed to only decrease would invert the ratchet so establish whether the debt is legitimate before admitting it; `src/cadrumo/tests/test_import_hygiene_gate.py`.
 - [x] `P04.S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent; `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`.
 - [ ] `P04.S24` - Confirm with the localization cascade owner that the result-summary application row is meant to follow the active output language, the repair is stronger than what it replaced but it crosses another campaign's surface; `src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py`.

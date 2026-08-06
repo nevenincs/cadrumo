@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:15eb0de9e6dc693988a51b2fd2b08902a72502b8a59d4946cd18a42da9c178f0'
+body_hash: 'sha256:d40b5cafe30c8a860b81255083b6233e35b1006fa2a660d1ba259d6ca113a3bb'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S04]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S07]]'
@@ -16,6 +16,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-P03-S12]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S14]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S18]]'
+  - '[[2026-08-05-ci-lane-deconflation-P03-S19]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S15]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S20]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S21]]'
@@ -67,6 +68,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P04-S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero
 - `2026-08-05-ci-lane-deconflation-P04-S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads
 - `2026-08-05-ci-lane-deconflation-P02-S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock
+- `2026-08-05-ci-lane-deconflation-P03-S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator
 
 ### plan
 
