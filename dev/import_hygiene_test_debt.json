@@ -476,15 +476,6 @@
         "reason": "White-box unit test instantiating the concrete local-filesystem StorageProvider backend directly to exercise push/manifest behaviour. The package docstring explicitly documents _local and _google_drive as private implementation details behind the StorageProvider Protocol; promoting the concrete class to the public facade would contradict that documented boundary."
       },
       {
-        "importer_path": "src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.user_profile._overview",
-        "imported_names": [
-          "mask_profile_field"
-        ],
-        "reason": "Deliberate identity cross-check: the test imports both the public `application.user_profile.mask_profile_field` re-export and the private `._overview.mask_profile_field` definition side by side to prove the status frontend's masking decision never forks from the overview builder's decision. The private import is the point of the test, not an oversight."
-      },
-      {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_app_maintenance_export_reconcile.py",
         "occurrence": 1,
         "target_mod": "cadrumo.application.user_profile._bundle_export_operation",

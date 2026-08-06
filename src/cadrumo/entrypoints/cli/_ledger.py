@@ -161,7 +161,7 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
     try:
         return resolve_lineage_transaction_id(prefix, catalogue)
     except TransactionIdPrefixError as exc:
-        raise _prefix_error_bad(exc, prefix) from exc
+        raise _prefix_error_bad(exc) from exc
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:

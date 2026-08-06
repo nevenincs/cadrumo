@@ -99,7 +99,10 @@ from ._renta_income_ledger import (
 )
 from ._renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from ._retencion_observations_repository import RetencionObservationRepository
-from ._retencion_rate_advisory import administrador_retencion_rate_advisory_observations
+from ._retencion_rate_advisory import (
+    administrador_retencion_rate_advisory_observations,
+    inferred_actividad_retencion_rate_advisory_observations,
+)
 from ._retenciones import (
     RetencionesAggregation,
     RetencionObservation,
@@ -480,7 +483,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 for observation in unrouted
             )
             + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
-            + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id),
+            + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + inferred_actividad_retencion_rate_advisory_observations(aggregation.observations),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="ledger_renta_income_aggregation",

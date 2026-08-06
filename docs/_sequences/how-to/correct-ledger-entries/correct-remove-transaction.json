@@ -139,7 +139,7 @@
           "category": "REFUSED",
           "code": "REFUSED_CLI_BOUNDARY",
           "context": null,
-          "message": "Invalid value: Unexpected transaction id prefix error: application.ledger.errors.transaction_id_prefix_no_match",
+          "message": "Invalid value: no transaction matches id prefix '1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb'",
           "retryable": false,
           "runbook_id": null,
           "suggestion": null,

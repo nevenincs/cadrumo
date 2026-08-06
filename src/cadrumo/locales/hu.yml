@@ -797,6 +797,7 @@ application:
         távolítsa el vagy cserélje ki a csatolmányok munkafolyamatán keresztül.
       transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag
         %{count} tranzakcióra illeszkedik: %{matches}'
+      transaction_id_prefix_empty: a tranzakcióazonosító-előtag üres
       transaction_id_prefix_no_match: egyetlen tranzakció sem egyezik a(z) %{prefix}
         azonosító-előtaggal
       transaction_id_prefix_non_hex: a(z) %{prefix} tranzakcióazonosító-előtag nem
@@ -1980,14 +1981,18 @@ cli:
           invoice_id_help: Katalógusbeli számla azonosítója (vagy egyértelmű előtag).
           list_help: Az egyeztetési katalógus számláinak listázása.
           remove_help: Egy egyeztetési katalógusbeli számla törlése.
+          retention_amount_help: A kifizető által levont IRPF visszatartás összege
+            euróban. Megadható önállóan, vagy a --retention-rate paraméterrel együtt.
+          retention_rate_help: A RIRPF 95.1. cikke szerinti visszatartási hányad,
+            amelyet a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység
+            megkezdésének időszakában). A --retention-amount megadása kötelező; önmagában
+            a hányad megadása elutasításra kerül.
           view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító
             vagy egyértelmű előtag alapján.
           wizard_help: Irányított, nem interaktív kézi bevitel, ha a kinyerés nem
             elérhető.
           wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú
             számla (%{invoice_id}); semmi sem jött létre.'
-          retention_rate_help: 'A RIRPF 95.1. cikke szerinti visszatartási hányad, amelyet a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység megkezdésének időszakában). A --retention-amount megadása kötelező; önmagában a hányad megadása elutasításra kerül.'
-          retention_amount_help: 'A kifizető által levont IRPF visszatartás összege euróban. Megadható önállóan, vagy a --retention-rate paraméterrel együtt.'
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -4526,16 +4531,6 @@ cli:
       confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez.
       filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen %{token} közelében:
         %{reason}.'
-      id_prefix_collision: 'A(z) %{prefix!r} tranzakcióazonosító-előtag több tranzakcióra
-        illeszkedik: %{candidates}. Hosszabbítsa meg az előtagot az egyértelműsítéshez.'
-      id_prefix_empty: A tranzakcióazonosító-előtag üres; adjon meg legalább egy hexadecimális
-        karaktert.
-      id_prefix_not_found: Nem található tranzakció a(z) %{prefix!r} előtaggal.
-      id_prefix_not_hex: 'A(z) %{prefix!r} tranzakcióazonosító-előtag nem hexadecimális
-        karaktert tartalmaz (engedélyezett: 0-9, a-f).'
-      id_prefix_too_long: A(z) %{prefix!r} tranzakcióazonosító-előtag hosszabb 64
-        karakternél (teljes SHA-256 kivonat).
-      id_prefix_unknown: 'Váratlan tranzakcióazonosító-előtag hiba: %{message}'
       invalid_category: 'Ismeretlen költségkategória: ''{category}''. Ismert kategóriák:
         {known}. Futtasd: ''aeat app ledger categories'' az érvényes --category-id
         értékekhez.'

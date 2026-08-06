@@ -193,7 +193,9 @@ from ._retencion_observations_repository import (
 )
 from ._retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
+    INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,
+    inferred_actividad_retencion_rate_advisory_observations,
 )
 from ._retenciones import (
     RetencionesAggregation,
@@ -247,6 +249,7 @@ __all__ = [
     "ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND",
     "DEFERRED_SOURCE_KINDS",
     "DIAGNOSTIC_MESSAGE_MAX_LENGTH",
+    "INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND",
     "INVOICE_RETENCION_DEFECT_GUIDANCE",
     "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
@@ -360,6 +363,7 @@ __all__ = [
     "declarable_for_347",
     "evaluate_ledger_filing_staleness",
     "get_per_modelo_aggregation_contract",
+    "inferred_actividad_retencion_rate_advisory_observations",
     "invoice_devengo_in_period",
     "iva_ledger_missing_fact_reasons",
     "merge_manual_and_routed_retencion_observations",
