@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:dfd8c261b27625c9167bdac10d662b6771c1f423aa87b9fb41010fe10f368c4b'
+body_hash: 'sha256:c2b6ff4054d22340bb6bccb19630e5de1f4f77544e198c33f06f76262aef2805'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -94,4 +94,4 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [x] `P06.S47` - Wire route_invoice_retenciones into the invoice lifecycle so a received invoice's retencion reaches Modelo 111, asserting the filed figure moves rather than that the projection returns a value; `src/cadrumo/application/aggregation/_invoice_retencion.py, src/cadrumo/application/invoices`.
 - [ ] `P06.S48` - Thread the operation date into period attribution with a declared rank marker naming which source produced it, surfaced identically on the pull and calculate paths; `src/cadrumo/application/aggregation`.
 - [x] `P06.S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides; `src/cadrumo/application/aggregation/tests`.
-- [ ] `P06.S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases; `src/cadrumo/domain/invoices/tests`.
+- [x] `P06.S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases; `src/cadrumo/domain/invoices/tests`.
