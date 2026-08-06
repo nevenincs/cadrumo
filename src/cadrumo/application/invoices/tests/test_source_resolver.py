@@ -739,3 +739,235 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
         payment_status=PaymentStatus.PAID,
         iva_category=category,
     )
+
+
+# ---------------------------------------------------------------------------
+# Declarable-coverage proof (invoice-canonical-structure P01.S01)
+#
+# The fold in P03 deletes the slim store, which is a live M347/M349 source. What
+# has to survive that deletion is not the slim store's OUTPUT but the set of
+# declarable FACTS it contributes, so these tests assert fact-level reachability
+# on the canonical path.
+#
+# They deliberately do NOT assert equality against a resolver wired to both
+# stores. That union double-counts an invoice held in both, so a union-equality
+# assertion would demand the canonical path reproduce the double-count -- it is
+# either unsatisfiable or it pins the very defect this campaign removes. Instead
+# each store is projected ALONE and both are asserted against one explicit
+# contract, so the contract is the thing conserved.
+# ---------------------------------------------------------------------------
+
+_DECLARABLE_FACTS: frozenset[str] = frozenset(
+    {
+        "party_tax_id",
+        "country_code",
+        "transaction_date",
+        "base_amount",
+        "invoice_total_amount",
+        "intracommunity_clave",
+        "party_legal_name",
+    },
+)
+
+
+def _declarable_facts(observation: object) -> dict[str, object]:
+    """Project an observation onto the declarable-fact contract.
+
+    Reads through the fact set rather than listing attributes inline, so a fact
+    dropped from the contract fails the enumeration guard below instead of
+    silently shrinking what these proofs cover.
+    """
+    return {name: getattr(observation, name) for name in sorted(_DECLARABLE_FACTS)}
+
+
+def test_declarable_fact_contract_covers_every_observation_fact_the_stores_contribute() -> None:
+    """Anti-tautology guard on the contract itself.
+
+    Every proof below compares fact dicts built from the same fact set. If a
+    fact were quietly removed from that set the comparisons would still pass
+    while covering less, so the set is pinned against the observation model's
+    own declarable surface. Identity and rectification axes are excluded by
+    name, which forces a newly-added declarable field to fail here rather than
+    slip past the coverage proofs unnoticed.
+    """
+    from ....domain.calculations.registry import InvoiceObservation
+
+    non_declarable = {
+        "invoice_id",
+        "source_kind",
+        "iva_regime",
+        "is_rectification",
+        "rectified_year",
+        "rectified_period",
+        "rectified_base_previous",
+    }
+    assert set(InvoiceObservation.model_fields) - non_declarable == _DECLARABLE_FACTS
+
+
+def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Every M349 fact the slim store contributes must be reachable canonically.
+
+    The counterparty carries BOTH a domestic-format NIF and an EU VAT ID, which
+    is the case that separates the two paths. The slim record has no coupling
+    between its tax id and its country, so it needs a second identity field and
+    a prefix-derivation fallback to decide who is being declared. The canonical
+    record reaches the same declared party by a stronger route: a non-ES country
+    forces the tax id to BE that country's NIF-IVA, so there is only ever one
+    party identity on the aggregate. Same facts, fewer authorities.
+    """
+    from .._source_resolver import _business_invoice_observation, _invoice_observation
+
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="349",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        revision=resources().modelos.authority.snapshot("349", filing_year=2026, period="1T").revision,
+    )
+
+    slim = (
+        PayableInvoiceService(settings=secure_profile.settings)
+        .add(
+            bucket_id=secure_profile.bucket_id,
+            counterparty_nif="B12345674",
+            counterparty_name="Servizi SRL",
+            invoice_number="IT-SERV-2026-001",
+            invoice_date="2026-03-10",
+            taxable_base=Decimal("3000.00"),
+            iva_rate=Decimal("0"),
+            total_amount=Decimal("3000.00"),
+            country_code=None,
+            eu_iva_id="DE345678901",
+            operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
+        )
+        .record
+    )
+    slim_facts = _declarable_facts(_business_invoice_observation(slim, context=context))
+
+    canonical = _invoice(
+        bucket_id=secure_profile.bucket_id,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="IT-SERV-2026-001",
+        issued_at=date(2026, 3, 10),
+        counterparty_tax_id="DE345678901",
+        counterparty_name="Servizi SRL",
+        counterparty_country="DE",
+        base_total=Decimal("3000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+    )
+    canonical_facts = _declarable_facts(_invoice_observation(canonical, context=context))
+
+    assert canonical_facts == slim_facts
+
+
+def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The mechanism by which canonical conserves M349 party identity.
+
+    This is the other half of the proof above, and it is why the canonical
+    aggregate needs no second EU-VAT-ID field. The slim record accepts a
+    Spanish-format NIF alongside a German country because nothing couples the
+    two, which is exactly what forces it to carry a separate identity field and
+    prefer it at projection time. The canonical record refuses that shape: a
+    non-ES country validates the tax id against that country's published
+    NIF-IVA pattern, so the only representable party identity is already the
+    one M349 must declare.
+
+    Adding an EU-VAT-ID field to the canonical aggregate would therefore
+    install a SECOND party-identity authority on the record -- two fields that
+    can disagree about who was invoiced -- on the axis where a disagreement is
+    a mis-declared intra-community operator.
+    """
+    from pydantic import ValidationError
+
+    # Matched on the message, not merely on the exception type: the point is
+    # that the COUNTRY/TAX-ID coupling fired, not that some validator did.
+    with pytest.raises(ValidationError, match="DE"):
+        _invoice(
+            bucket_id=secure_profile.bucket_id,
+            kind=InvoiceKind.RECEIVED,
+            invoice_number="IT-SERV-2026-002",
+            issued_at=date(2026, 3, 11),
+            counterparty_tax_id="B12345674",
+            counterparty_name="Servizi SRL",
+            counterparty_country="DE",
+            base_total=Decimal("3000.00"),
+            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        )
+
+
+def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Every M347 fact the slim store contributes must be reachable canonically.
+
+    The gross total is kept distinct from the taxable base here on purpose:
+    M347's declaration floor is the gross total, so a proof whose base and total
+    coincide would not detect the two being confused.
+    """
+    from ....domain.invoices import derive_invoice_id
+    from .._source_resolver import _business_invoice_observation, _invoice_observation
+
+    context = CalculationSourceContext(
+        bucket_id=secure_profile.bucket_id,
+        modelo="347",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "0A"),
+        revision=_modelo_revision("347", "2008-y-siguientes"),
+    )
+
+    slim = (
+        CollectibleInvoiceService(settings=secure_profile.settings)
+        .add(
+            bucket_id=secure_profile.bucket_id,
+            counterparty_nif="B12345674",
+            counterparty_name="Cliente M347 SL",
+            invoice_number="M347-C-2025-001",
+            invoice_date="2025-02-10",
+            taxable_base=Decimal("1500.00"),
+            iva_amount=Decimal("315.00"),
+            total_amount=Decimal("1815.00"),
+            country_code="ES",
+        )
+        .record
+    )
+    slim_facts = _declarable_facts(_business_invoice_observation(slim, context=context))
+
+    canonical = Invoice(
+        invoice_id=derive_invoice_id(
+            kind=InvoiceKind.ISSUED,
+            invoice_number="M347-C-2025-001",
+            issued_at=date(2025, 2, 10),
+            counterparty_tax_id="B12345674",
+            currency="EUR",
+            grand_total=Decimal("1815.00"),
+        ),
+        bucket_id=secure_profile.bucket_id,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="M347-C-2025-001",
+        issued_at=date(2025, 2, 10),
+        counterparty_name="Cliente M347 SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        base_total=Decimal("1500.00"),
+        iva_total=Decimal("315.00"),
+        grand_total=Decimal("1815.00"),
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Servicio",
+                quantity=Decimal("1"),
+                unit_price=Decimal("1500.00"),
+                subtotal=Decimal("1500.00"),
+                iva_rate=IvaRate.RATE_21,
+                iva_amount=Decimal("315.00"),
+            ),
+        ),
+        payment_status=PaymentStatus.PENDING,
+    )
+    canonical_facts = _declarable_facts(_invoice_observation(canonical, context=context))
+
+    assert canonical_facts == slim_facts
