@@ -44,8 +44,16 @@
             "source": "pointer",
             "status": "ready"
           },
+          "bucket_id": null,
           "cleared_pointer": false,
-          "dry_run": true
+          "display_name": null,
+          "dry_run": true,
+          "error": null,
+          "next_action": null,
+          "profile_id": null,
+          "profile_record_present": null,
+          "registered_bucket": null,
+          "status": null
         },
         "schema_version": "2",
         "status": "success"

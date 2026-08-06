@@ -630,8 +630,29 @@ def test_calendar_all_profiles_strict_mode_refuses_conflicting_aeat_evidence_ref
         ],
     )
     assert lax.exit_code == 0, lax.output
+    # The all-profiles payload is a per-profile SUMMARY, so it reports that the
+    # profile carries a warning; the warning's own fields are read from the
+    # single-profile call below, which is where that detail now lives.
     profile = json.loads(lax.output)["result"]["profiles"][0]
-    warning = next(item for item in profile["calendar"]["warnings"] if item["code"] == "filing.aeat_evidence_conflict")
+    assert profile["warning_count"] >= 1, profile
+
+    single = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+    assert single.exit_code == 0, single.output
+    warnings = json.loads(single.output)["result"]["warnings"]
+    warning = next(item for item in warnings if item["code"] == "filing.aeat_evidence_conflict")
     assert warning["affected_modelos"] == ["303"]
 
 

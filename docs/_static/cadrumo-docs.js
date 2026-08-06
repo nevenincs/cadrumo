@@ -1533,11 +1533,11 @@
         excerpt: summary || excerpt || "",
         kind: kind,
         displayClass: displayClass,
-        /* The weight-sorted Pagefind pass contains only injected records. A
-         * hit there is therefore a declared lexical surface match, including
-         * a search_aliases hit, even when its title is not the query. Keep the
-         * flag separate from titleMatch so exact titles retain their stronger
-         * score inside the lexical band. */
+        /* The weight-sorted Pagefind pass contains only injected records. Keep
+         * this as a pass-origin marker, not a direct-identity signal: Pagefind
+         * can reach a card through its description as well as its title or
+         * declared aliases. The compose ladder uses title/direct-match
+         * strength for identity precedence. */
         isLexicalCard: isCard,
         /* Newer injection payloads may carry the opaque id. Older Pagefind
          * records remain valid and dedupe by their href below. */
@@ -1705,25 +1705,29 @@
       var ordered = [];
       var cards = (pagefindCards || []).slice().sort(function (a, b) {
         /* A declared lexical identity (including an exact title or alias
-         * returned by Pagefind) precedes a semantic fallback. Once both rows
-         * are in the same source class, retain the existing display-class
-         * ladder and its relevance tie-break; semantic rows therefore never
-         * become a second display-class authority. */
+         * returned by Pagefind) precedes a semantic fallback. The card-pass
+         * marker is deliberately not identity: a description hit is lexical
+         * provenance, not a direct answer. Once direct identity is resolved,
+         * retain the existing display-class bands; a same-band semantic score
+         * breaks a tie with a non-direct lexical card. */
         var ma = typeof a.directMatchStrength === "number" ? a.directMatchStrength : titleMatch(a.title, query);
         var mb = typeof b.directMatchStrength === "number" ? b.directMatchStrength : titleMatch(b.title, query);
         var aSemantic = typeof a.semanticScore === "number";
         var bSemantic = typeof b.semanticScore === "number";
         if (aSemantic !== bSemantic) {
-          var aDirect = !!a.isLexicalCard || ma > 0;
-          var bDirect = !!b.isLexicalCard || mb > 0;
+          var aDirect = ma > 0;
+          var bDirect = mb > 0;
           if (aDirect !== bDirect) return aDirect ? -1 : 1;
           if (aDirect && bDirect && mb !== ma) return mb - ma;
-          /* With no direct identity/title/alias signal, fall through to the
-           * existing display-class band. This keeps semantic results above
-           * ordinary full-text pages while direct lexical answers still win. */
         }
         if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
         if (mb !== ma) return mb - ma;
+        if (aSemantic !== bSemantic) {
+          /* Within one display-class band, an observed semantic cosine is the
+           * relevance tie-break. A non-direct Pagefind card must not win by
+           * stable input order merely because it came from the card pass. */
+          return aSemantic ? -1 : 1;
+        }
         if (aSemantic && bSemantic) {
           if (b.semanticScore !== a.semanticScore) return b.semanticScore - a.semanticScore;
           if ((b.semanticRankingWeight || 0) !== (a.semanticRankingWeight || 0)) {
@@ -1836,16 +1840,6 @@
           endBusy(items.length);
           paint(items);
         });
-    }
-
-    function select(index) {
-      if (!rows.length) return;
-      selected = Math.max(0, Math.min(index, rows.length - 1));
-      rows.forEach(function (row, i) {
-        row.classList.toggle("is-selected", i === selected);
-        row.setAttribute("aria-selected", i === selected ? "true" : "false");
-      });
-      rows[selected].scrollIntoView({ block: "nearest" });
     }
 
     function select(index) {

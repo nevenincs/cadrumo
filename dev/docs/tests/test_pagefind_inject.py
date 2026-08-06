@@ -3,7 +3,7 @@
 In-process checks over real projected records (no mocks): unified records funnel
 into custom records, typed metadata and filters carry the card payload, and the
 relevance boost applies when the committed file is present while base weights
-stand when it is absent or malformed.
+stand when it is absent; malformed committed input fails closed.
 
 Split from the site-building half so each module carries one execution lane; the
 tests that run a real Pagefind build over copied HTML live in
@@ -21,6 +21,7 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from ..pagefind_inject import (
     InjectionStats,
+    SearchInjectionError,
     _effective_weight,
     _filters_for,
     _meta_for,
@@ -134,12 +135,14 @@ def test_relevance_file_present_is_loaded(tmp_path: Path) -> None:
     assert weights["concept:iva"] == 0.4
 
 
-def test_relevance_file_malformed_yields_empty_map(tmp_path: Path) -> None:
-    """A file that is not a valid SweepResult yields an empty boost map."""
+def test_relevance_file_malformed_raises_search_injection_error(tmp_path: Path) -> None:
+    """A present file that is not a valid SweepResult fails closed."""
     rel = tmp_path / "src/cadrumo/_data/terminology/relevance"
     rel.mkdir(parents=True)
     (rel / "relevance.json").write_text(json.dumps({"not": "a sweep result"}), encoding="utf-8")
-    assert load_relevance_weights(tmp_path) == {}
+    with pytest.raises(SearchInjectionError) as exc_info:
+        load_relevance_weights(tmp_path)
+    assert str(exc_info.value) == f"committed relevance file is invalid: {rel / 'relevance.json'}"
 
 
 def test_build_record_injector_returns_a_callable(tmp_path: Path) -> None:

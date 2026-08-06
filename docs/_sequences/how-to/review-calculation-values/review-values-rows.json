@@ -183,6 +183,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "decl.ejercicio",
               "formula_id": null,
               "legal_refs": [
@@ -199,6 +200,7 @@
               "value": "2024"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.tipo-declaracion",
               "formula_id": null,
               "legal_refs": [
@@ -215,6 +217,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "tipo2.clave",
               "formula_id": null,
               "legal_refs": [
@@ -233,6 +236,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "tipo2.miembro-nif",
               "formula_id": null,
               "legal_refs": [
@@ -252,6 +256,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "tipo2.renta-atribuible-importe",
               "formula_id": null,
               "legal_refs": [
@@ -273,6 +278,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "tipo2.subclave",
               "formula_id": null,
               "legal_refs": [
@@ -297,66 +303,36 @@
             {
               "casilla_id": "decl.ejercicio",
               "label": "Tax year the return refers to",
-              "localized_labels": {
-                "ca": "Exercici a què es refereix la declaració",
-                "en": "Tax year the return refers to",
-                "hu": "A bevallás tárgyát képező adóév"
-              },
               "role": "key_figure",
               "value": "2024"
             },
             {
               "casilla_id": "decl.tipo-declaracion",
               "label": "Type of return (original / replacement / supplementary)",
-              "localized_labels": {
-                "ca": "Tipus de declaració (originària / substitutiva / complementària)",
-                "en": "Type of return (original / replacement / supplementary)",
-                "hu": "A bevallás típusa (eredeti / helyettesítő / kiegészítő)"
-              },
               "role": "key_figure",
               "value": "0"
             },
             {
               "casilla_id": "tipo2.clave",
               "label": "Attributed-income type key (A=movable capital, C=real-estate capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne, L=excess negative income from no-treaty countries)",
-              "localized_labels": {
-                "ca": "Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió, G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions IS, K=retencions suportades, L=excés de rendes negatives de països sense conveni)",
-                "en": "Attributed-income type key (A=movable capital, C=real-estate capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne, L=excess negative income from no-treaty countries)",
-                "hu": "A hozzárendelt jövedelem típuskódja (A=ingó vagyoni tőke, C=ingatlan vagyoni tőke, D=gazdasági tevékenységek, F=nyereség/veszteség átruházás nélkül, G=nyereség/veszteség átruházással, I=IRPF-levonások, J=IS-levonások, K=viselt visszatartások, L=nem szerződéses országokból származó negatív jövedelem többlete)"
-              },
               "role": "key_figure",
               "value": "0"
             },
             {
               "casilla_id": "tipo2.subclave",
               "label": "Attributed-income subtype key (granularity by domestic/foreign geographic origin, applicable reductions, etc.)",
-              "localized_labels": {
-                "ca": "Subclau del tipus de renda atribuïda (granularitat per origen geogràfic Espanya/estranger, reduccions aplicables, etc.)",
-                "en": "Attributed-income subtype key (granularity by domestic/foreign geographic origin, applicable reductions, etc.)",
-                "hu": "A hozzárendelt jövedelem altípuskódja (belföldi/külföldi eredet szerinti részletezés, alkalmazandó csökkentések stb.)"
-              },
               "role": "key_figure",
               "value": "0"
             },
             {
               "casilla_id": "tipo2.miembro-nif",
               "label": "NIF of the entity member to whom the income is attributed (partner, co-owner, heir, participant)",
-              "localized_labels": {
-                "ca": "NIF del membre de l'entitat al qual s'atribueix la renda (soci, comuner, hereu, partícip)",
-                "en": "NIF of the entity member to whom the income is attributed (partner, co-owner, heir, participant)",
-                "hu": "Az entitás azon tagjának adóazonosítója, akinek a jövedelmet hozzárendelik (tag, résztulajdonos, örökös, résztvevő)"
-              },
               "role": "key_figure",
               "value": "0"
             },
             {
               "casilla_id": "tipo2.renta-atribuible-importe",
               "label": "Amount of income attributable / net return attributable to the entity member (unsigned, no decimal comma, in euros)",
-              "localized_labels": {
-                "ca": "Import de la renda atribuïble / rendiment net atribuïble al membre de l'entitat (sense signe, sense coma decimal, en euros)",
-                "en": "Amount of income attributable / net return attributable to the entity member (unsigned, no decimal comma, in euros)",
-                "hu": "A hozzárendelhető jövedelem / az entitás tagjának hozzárendelhető nettó hozam összege (előjel nélkül, tizedesvessző nélkül, euróban)"
-              },
               "role": "key_figure",
               "value": "0"
             }

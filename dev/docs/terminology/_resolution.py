@@ -185,6 +185,25 @@ class _LegalSourceSection:
     end_line: int
 
 
+@dataclass(frozen=True, slots=True)
+class _CliSourceLocator:
+    """One generated CLI command or parameter locator and its source span."""
+
+    command_path: str
+    start_line: int
+    end_line: int
+    #: Empty for the command-path locator; populated for one parameter line.
+    option_names: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class _CliSourceLocators:
+    """Parsed CLI locators together with the source file's line count."""
+
+    line_count: int
+    locators: tuple[_CliSourceLocator, ...]
+
+
 _CONCEPT_TOML_RE = re.compile(
     r"^src/cadrumo/_data/terminology/concepts/(?P<concept_id>[^/]+)\.toml$",
 )
@@ -204,8 +223,13 @@ _LEGAL_TOML_RE = re.compile(
     r"^src/cadrumo/_data/registry/aeat/legal/[^/]+\.toml$",
 )
 _CLI_REFERENCE_RE = re.compile(
-    r"^docs/cli/(?P<family>[^/]+)\.rst$",
+    r"^docs/cli/(?P<page>.+)\.rst$",
 )
+_CLI_COMMAND_PATH_RE = re.compile(r'^\*\*Command path:\*\* ``(?P<path>[^`]+)``\s*$')
+_CLI_PARAMETERS_HEADER_RE = re.compile(r"^\*\*Parameters\*\*\s*$")
+_CLI_OUTPUT_SCHEMA_HEADER_RE = re.compile(r"^\*\*Output schema\*\*\s*$")
+_CLI_PARAMETER_LINE_RE = re.compile(r"^\s*``[^`]+``(?:\s*,\s*``[^`]+``)*\s*$")
+_CLI_INLINE_CODE_RE = re.compile(r"``([^`]+)``")
 _CODE_MODULE_RE = re.compile(
     r"^src/cadrumo/.+\.py$",
 )
@@ -261,12 +285,16 @@ class TargetResolver:
         from ..pagefind_inject import materialise_search_records
 
         cli_projection = materialise_search_records(_REPO_ROOT)
-        self._cli_records_by_target: dict[str, tuple[SearchRecord, ...]] = {}
+        self._cli_records_by_locator: dict[tuple[str, tuple[str, ...]], tuple[SearchRecord, ...]] = {}
         for record in cli_projection.records:
             if record.kind is not SearchRecordKind.CLI:
                 continue
-            target_records = self._cli_records_by_target.get(record.target, ())
-            self._cli_records_by_target[record.target] = (*target_records, record)
+            command_path = record.metadata.command_path
+            if command_path is None:
+                continue
+            locator = (command_path, record.metadata.option_names)
+            locator_records = self._cli_records_by_locator.get(locator, ())
+            self._cli_records_by_locator[locator] = (*locator_records, record)
         self._cli_projection_skipped_reason = cli_projection.cli_skipped_reason
 
         # Reverse index: a normatives corpus html path -> every legal id whose
@@ -332,7 +360,7 @@ class TargetResolver:
 
         cli_ref_match = _CLI_REFERENCE_RE.match(path)
         if cli_ref_match:
-            return self._resolve_cli_reference(hit, cli_ref_match.group("family"))
+            return self._resolve_cli_reference(hit, cli_ref_match.group("page"))
 
         docs_match = _DOCS_PAGE_RE.match(path)
         if docs_match:
@@ -543,14 +571,102 @@ class TargetResolver:
         )
         return ResolvedTarget(surface=surface, record=record, source_hit=hit)
 
-    def _resolve_cli_reference(self, hit: ChunkHit, family: str) -> ResolvedTarget | DroppedHit:
-        # Resolve only to an exact CLI record already emitted by the
-        # authoritative Pagefind projection. A family page has no individual
-        # command locator, so it must not fabricate a family-level record.
-        target = f"cli/{family}.html"
-        matching = self._cli_records_by_target.get(target, ())
+    def _resolve_cli_reference(self, hit: ChunkHit, page: str) -> ResolvedTarget | DroppedHit:
+        """Resolve one generated CLI page only through a unique source locator.
+
+        The generated reference page is the source evidence boundary. A
+        ``Command path`` line identifies one command record; a parameter name
+        line identifies one option record. A family/navigation page, an
+        unbounded range, or a range spanning more than one locator is not an
+        entity and therefore remains dropped.
+        """
+        source_path = hit.posix_path.as_posix()
+        if hit.line_start < 1 or hit.line_end < hit.line_start:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"invalid CLI source line range {hit.line_start}-{hit.line_end} for {source_path!r}",
+            )
+
+        expected_page = f"cli/{page}"
+        locators = _read_cli_source_locators(source_path)
+        if locators is None:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"cannot read CLI reference source {source_path!r} to identify a command or option",
+            )
+        if hit.line_end > locators.line_count:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"CLI source line range {hit.line_start}-{hit.line_end} exceeds the {source_path!r} "
+                    f"source length of {locators.line_count} lines"
+                ),
+            )
+        matching_locators = tuple(
+            locator
+            for locator in locators.locators
+            if locator.start_line <= hit.line_end and hit.line_start <= locator.end_line
+        )
+        if not matching_locators:
+            target = f"{expected_page}.html"
+            detail = (
+                f"source lines {hit.line_start}-{hit.line_end} identify no CLI command or option "
+                f"locator in {source_path!r}; no authoritative CLI search record was emitted for exact target "
+                f"{target!r}"
+            )
+            if self._cli_projection_skipped_reason is not None:
+                detail += f" (CLI projection skipped: {self._cli_projection_skipped_reason})"
+            return DroppedHit(hit=hit, reason=DropReason.NO_TARGET_ENTITY, detail=detail)
+        if len(matching_locators) != 1:
+            descriptions = ", ".join(
+                f"{locator.command_path!r}{locator.option_names!r}" for locator in matching_locators
+            )
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"source lines {hit.line_start}-{hit.line_end} overlap multiple CLI source locators "
+                    f"({descriptions}) in {source_path!r}; no unambiguous command or option is available"
+                ),
+            )
+
+        (locator,) = matching_locators
+        command_path = tuple(locator.command_path.split())
+        from dev.docs.cli_reference import cli_reference_page_for_command
+
+        try:
+            routed_page = cli_reference_page_for_command(command_path)
+        except ValueError as exc:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"CLI source locator has no valid routed page: {exc}",
+            )
+        if routed_page != expected_page:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"CLI command {locator.command_path!r} routes to {routed_page!r}, not source page "
+                    f"{expected_page!r}"
+                ),
+            )
+
+        matching = tuple(
+            record
+            for record in self._cli_records_by_locator.get((locator.command_path, locator.option_names), ())
+            if record.target.partition("#")[0] == f"{routed_page}.html"
+            and record.target.partition("#")[2]
+        )
+        target = f"{routed_page}.html"
         if not matching:
-            detail = f"no authoritative CLI search record was emitted for exact target {target!r}"
+            detail = (
+                f"no authoritative CLI search record was emitted for source locator "
+                f"{locator.command_path!r}{locator.option_names!r} at exact target page {target!r}"
+            )
             if self._cli_projection_skipped_reason is not None:
                 detail += f" (CLI projection skipped: {self._cli_projection_skipped_reason})"
             return DroppedHit(hit=hit, reason=DropReason.NO_TARGET_ENTITY, detail=detail)
@@ -559,7 +675,10 @@ class TargetResolver:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"multiple authoritative CLI records were emitted for exact target {target!r} ({ids})",
+                detail=(
+                    f"multiple authoritative CLI records were emitted for source locator "
+                    f"{locator.command_path!r}{locator.option_names!r} at exact target page {target!r} ({ids})"
+                ),
             )
         (base,) = matching
         record = base.model_copy(
@@ -659,7 +778,7 @@ def _read_casilla_source_sections(project_relpath: str) -> tuple[_CasillaSourceS
     absolute = _REPO_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
     try:
         lines = absolute.read_text(encoding=_UTF_8).splitlines()
-    except OSError:
+    except (OSError, UnicodeError):
         return None
 
     headers = [
@@ -688,6 +807,83 @@ def _read_casilla_source_sections(project_relpath: str) -> tuple[_CasillaSourceS
             ),
         )
     return tuple(sections)
+
+
+def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None:
+    """Read generated CLI command and parameter locators from one RST page.
+
+    The CLI reference generator writes one explicit ``Command path`` line per
+    leaf command and one inline-code definition line per parameter. This helper
+    reads only those locator lines; the CLI projection remains the authority for
+    record identity, metadata, and the emitted page/anchor target.
+    """
+    absolute = _REPO_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
+    try:
+        lines = absolute.read_text(encoding=_UTF_8).splitlines()
+    except (OSError, UnicodeError):
+        return None
+
+    command_headers = [
+        (index, match.group("path"))
+        for index, line in enumerate(lines)
+        if (match := _CLI_COMMAND_PATH_RE.fullmatch(line)) is not None
+    ]
+    locators: list[_CliSourceLocator] = []
+    for position, (command_index, command_path) in enumerate(command_headers):
+        next_command_index = (
+            command_headers[position + 1][0] if position + 1 < len(command_headers) else len(lines)
+        )
+        # The command locator is deliberately only the explicit command-path
+        # line. A range that also overlaps a parameter locator is ambiguous.
+        locators.append(
+            _CliSourceLocator(
+                command_path=command_path,
+                start_line=command_index + 1,
+                end_line=command_index + 1,
+            ),
+        )
+
+        parameters_index = next(
+            (
+                index
+                for index in range(command_index + 1, next_command_index)
+                if _CLI_PARAMETERS_HEADER_RE.fullmatch(lines[index]) is not None
+            ),
+            None,
+        )
+        if parameters_index is None:
+            continue
+        output_schema_index = next(
+            (
+                index
+                for index in range(parameters_index + 1, next_command_index)
+                if _CLI_OUTPUT_SCHEMA_HEADER_RE.fullmatch(lines[index]) is not None
+            ),
+            next_command_index,
+        )
+        parameter_lines = [
+            (index, tuple(_CLI_INLINE_CODE_RE.findall(line)))
+            for index, line in enumerate(
+                lines[parameters_index + 1 : output_schema_index],
+                start=parameters_index + 1,
+            )
+            if _CLI_PARAMETER_LINE_RE.fullmatch(line) is not None
+        ]
+        for parameter_position, (parameter_index, option_names) in enumerate(parameter_lines):
+            next_parameter_index = (
+                parameter_lines[parameter_position + 1][0]
+                if parameter_position + 1 < len(parameter_lines)
+                else output_schema_index
+            )
+            locators.append(
+                _CliSourceLocator(
+                    command_path=command_path,
+                    start_line=parameter_index + 1,
+                    end_line=next_parameter_index,
+                    option_names=option_names,
+                ),
+            )
+    return _CliSourceLocators(line_count=len(lines), locators=tuple(locators))
 
 
 _LEGAL_HEADER_RE = re.compile(r'^\[legal\."(?P<id>[^"]+)"\]\s*$')

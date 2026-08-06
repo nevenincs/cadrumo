@@ -19,10 +19,10 @@ import unicodedata
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 from urllib.parse import urlsplit
 
-from .glossary_reference import _LEGAL_CATALOGUE_RELPATH
+from .glossary_reference import LEGAL_CATALOGUE_RELPATH
 
 __all__ = [
     "LEGAL_REFERENCE_DIR",
@@ -339,44 +339,49 @@ def _required_text(body: dict[str, object], *, path: Path, legal_id: str) -> tup
     value = body.get("required_text")
     if value is None:
         return ()
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+    if not isinstance(value, list):
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field 'required_text' must be a string array")
+    items = cast(list[object], value)
+    if not all(isinstance(item, str) for item in items):
+        raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field 'required_text' must be a string array")
+    string_items = tuple(item for item in items if isinstance(item, str))
     return tuple(
         _validate_authored_text(item, path=path, legal_id=legal_id, field="required_text")
-        for item in value
+        for item in string_items
     )
 
 
 def _record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisionRecord:
     if not isinstance(body, dict):
         raise LegalReferenceError(f"{path}: [legal.{legal_id!r}] must be a table")
-    unknown_fields = set(body).difference(_LEGAL_TABLE_FIELDS)
+    table = cast(dict[str, object], body)
+    unknown_fields = set(table).difference(_LEGAL_TABLE_FIELDS)
     if unknown_fields:
         fields = ", ".join(repr(field) for field in sorted(unknown_fields))
         raise LegalReferenceError(
             f"{path}: legal entry {legal_id!r} contains unknown field(s): {fields}",
         )
-    permalink = _required_string(body, "permalink", path=path, legal_id=legal_id)
+    permalink = _required_string(table, "permalink", path=path, legal_id=legal_id)
     _validate_boe_permalink(permalink, path=path, legal_id=legal_id)
     return LegalProvisionRecord(
         legal_id=legal_id,
-        kind=_required_string(body, "kind", path=path, legal_id=legal_id),
-        document_id=_required_string(body, "document_id", path=path, legal_id=legal_id),
-        corpus_ref=_required_string(body, "corpus_ref", path=path, legal_id=legal_id),
+        kind=_required_string(table, "kind", path=path, legal_id=legal_id),
+        document_id=_required_string(table, "document_id", path=path, legal_id=legal_id),
+        corpus_ref=_required_string(table, "corpus_ref", path=path, legal_id=legal_id),
         permalink=permalink,
-        authority=_optional_string(body, "authority", path=path, legal_id=legal_id),
-        evidence_tier=_optional_string(body, "evidence_tier", path=path, legal_id=legal_id),
-        article=_optional_string(body, "article", path=path, legal_id=legal_id),
-        section=_optional_string(body, "section", path=path, legal_id=legal_id),
-        published_at=_optional_date(body, "published_at", path=path, legal_id=legal_id),
-        effective_from=_optional_date(body, "effective_from", path=path, legal_id=legal_id),
-        effective_to=_optional_date(body, "effective_to", path=path, legal_id=legal_id),
-        consolidated_as_of=_optional_date(body, "consolidated_as_of", path=path, legal_id=legal_id),
-        review_status=_optional_string(body, "review_status", path=path, legal_id=legal_id),
-        reviewed_at=_optional_date(body, "reviewed_at", path=path, legal_id=legal_id),
-        reviewed_by=_optional_string(body, "reviewed_by", path=path, legal_id=legal_id),
-        notes=_optional_string(body, "notes", path=path, legal_id=legal_id),
-        required_text=_required_text(body, path=path, legal_id=legal_id),
+        authority=_optional_string(table, "authority", path=path, legal_id=legal_id),
+        evidence_tier=_optional_string(table, "evidence_tier", path=path, legal_id=legal_id),
+        article=_optional_string(table, "article", path=path, legal_id=legal_id),
+        section=_optional_string(table, "section", path=path, legal_id=legal_id),
+        published_at=_optional_date(table, "published_at", path=path, legal_id=legal_id),
+        effective_from=_optional_date(table, "effective_from", path=path, legal_id=legal_id),
+        effective_to=_optional_date(table, "effective_to", path=path, legal_id=legal_id),
+        consolidated_as_of=_optional_date(table, "consolidated_as_of", path=path, legal_id=legal_id),
+        review_status=_optional_string(table, "review_status", path=path, legal_id=legal_id),
+        reviewed_at=_optional_date(table, "reviewed_at", path=path, legal_id=legal_id),
+        reviewed_by=_optional_string(table, "reviewed_by", path=path, legal_id=legal_id),
+        notes=_optional_string(table, "notes", path=path, legal_id=legal_id),
+        required_text=_required_text(table, path=path, legal_id=legal_id),
     )
 
 
@@ -386,7 +391,7 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     Only ``[legal."<id>"]`` tables are read.  Other tables in the same TOML
     files, such as ``[sources]``, are intentionally ignored.
     """
-    catalogue = repo_root / _LEGAL_CATALOGUE_RELPATH
+    catalogue = repo_root / LEGAL_CATALOGUE_RELPATH
     if not catalogue.is_dir():
         raise LegalReferenceError(f"legal catalogue directory does not exist: {catalogue}")
 
@@ -394,7 +399,7 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     seen_ids: dict[str, Path] = {}
     for fragment in sorted(catalogue.glob("*.toml")):
         try:
-            data = tomllib.loads(fragment.read_text(encoding=_UTF_8))
+            data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
         except (OSError, tomllib.TOMLDecodeError) as exc:
             raise LegalReferenceError(f"cannot read legal catalogue fragment {fragment}: {exc}") from exc
         legal = data.get("legal")
@@ -402,7 +407,8 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
             continue
         if not isinstance(legal, dict):
             raise LegalReferenceError(f"{fragment}: 'legal' must contain provision tables")
-        for raw_id, body in legal.items():
+        legal_tables = cast(dict[object, object], legal)
+        for raw_id, body in legal_tables.items():
             if not isinstance(raw_id, str) or not raw_id.strip():
                 raise LegalReferenceError(f"{fragment}: legal provision id must be a non-empty string")
             legal_id = raw_id
@@ -429,12 +435,15 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
     )
 
 
-def _validate_records(records: tuple[LegalProvisionRecord, ...]) -> None:
+def _validate_records(records: tuple[object, ...]) -> None:
     seen_ids: set[str] = set()
     page_slugs: dict[str, str] = {}
-    for record in records:
+    for candidate in records:
+        if not isinstance(candidate, LegalProvisionRecord):
+            raise LegalReferenceError("legal reference records must be LegalProvisionRecord values")
+        record = candidate
         for field in _RENDERED_TEXT_FIELDS:
-            value = getattr(record, field)
+            value = cast(object, getattr(record, field))
             if value is None:
                 continue
             if not isinstance(value, str):
@@ -442,11 +451,13 @@ def _validate_records(records: tuple[LegalProvisionRecord, ...]) -> None:
                     f"legal entry {record.legal_id!r} field {field!r} must be a string",
                 )
             _validate_authored_text(value, path=Path("<rendered records>"), legal_id=record.legal_id, field=field)
-        if not isinstance(record.required_text, tuple) or not all(
-            isinstance(item, str) for item in record.required_text
-        ):
+        required_text = cast(object, record.required_text)
+        if not isinstance(required_text, tuple):
             raise LegalReferenceError(f"legal entry {record.legal_id!r} field 'required_text' must be a string tuple")
-        for item in record.required_text:
+        required_items = cast(tuple[object, ...], required_text)
+        if not all(isinstance(item, str) for item in required_items):
+            raise LegalReferenceError(f"legal entry {record.legal_id!r} field 'required_text' must be a string tuple")
+        for item in (item for item in required_items if isinstance(item, str)):
             _validate_authored_text(
                 item,
                 path=Path("<rendered records>"),

@@ -287,7 +287,7 @@ def build_record_manifest(records: Iterable[SearchRecord]) -> RecordManifest:
         "serialized_bytes": 0,
     }
     core["serialized_bytes"] = _fixed_point_serialized_size(core)
-    return RecordManifest.model_validate(core)
+    return RecordManifest.model_validate_json(canonical_json_bytes(core))
 
 
 def build_rung2_search_bundle(
@@ -329,9 +329,7 @@ def build_rung2_search_bundle(
         mapping_record_ids: set[str] = set()
         for target in mapping.targets:
             if target.record_id in mapping_record_ids:
-                raise BridgeCompilationError(
-                    f"mapping {mapping.query!r} repeats target {target.record_id!r}"
-                )
+                raise BridgeCompilationError(f"mapping {mapping.query!r} repeats target {target.record_id!r}")
             mapping_record_ids.add(target.record_id)
             manifest_entry = manifest_by_id.get(target.record_id)
             if manifest_entry is None:
@@ -388,7 +386,7 @@ def build_rung2_search_bundle(
         {key: value for key, value in bridge_core.items() if key not in {"artifact_sha256", "serialized_bytes"}},
     )
     bridge_core["serialized_bytes"] = _fixed_point_serialized_size(bridge_core)
-    bridge = SemanticBridge.model_validate(bridge_core)
+    bridge = SemanticBridge.model_validate_json(canonical_json_bytes(bridge_core))
 
     bundle_core: dict[str, object] = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
@@ -408,7 +406,7 @@ def build_rung2_search_bundle(
             f"matrix, bridge, manifest, and input provenance serialize to {bundle_core['serialized_bytes']} bytes; "
             f"maximum is {max_serialized_bytes}"
         )
-    return Rung2SearchBundle.model_validate(bundle_core)
+    return Rung2SearchBundle.model_validate_json(canonical_json_bytes(bundle_core))
 
 
 def load_rung2_search_bundle(path: Path) -> Rung2SearchBundle:
@@ -436,9 +434,7 @@ def write_rung2_search_bundle(bundle: Rung2SearchBundle, destination: Path) -> N
 def _validate_max_serialized_bytes(value: int) -> None:
     """Reject a caller-supplied bound that weakens the shared contract."""
     if value <= 0 or value > DEFAULT_MAX_SERIALIZED_BYTES:
-        raise BridgeCompilationError(
-            f"max_serialized_bytes must be between 1 and {DEFAULT_MAX_SERIALIZED_BYTES}"
-        )
+        raise BridgeCompilationError(f"max_serialized_bytes must be between 1 and {DEFAULT_MAX_SERIALIZED_BYTES}")
 
 
 def _fixed_point_serialized_size(payload: dict[str, object]) -> int:

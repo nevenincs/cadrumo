@@ -7,8 +7,16 @@ emits - so a newly-added bulky result shape trips the budget and must move its
 bulk arrays to a ``resource_link`` rather than inlining them.
 
 The gate is intentionally static (it reads the registered output schemas, no CLI
-run), so it is a cheap always-on lock; the runtime resource-link thinning of a
-verb that trips it is the follow-on remediation, verb by verb.
+run), so it is a cheap always-on lock; reducing what a tripping verb returns is
+the follow-on remediation, verb by verb.
+
+Two things about the instrument, learned by tripping it. The measured schema
+includes docstring-derived ``description`` text the repository separately
+mandates, so the number is not purely a payload measure and a genuine payload
+fix can still read over -- a known impurity, not a licence to delete
+documentation. And roughly 4700 chars of every verb's total is the shared
+envelope spine, which no payload change can touch, so the verb-specific
+allowance is materially smaller than the headline budget.
 """
 
 from __future__ import annotations
@@ -37,8 +45,13 @@ def test_no_verb_output_schema_exceeds_the_size_budget() -> None:
         if _schema_size(descriptor.output_schema) > _OUTPUT_SCHEMA_BUDGET_CHARS
     ]
     assert over == [], (
-        f"output schemas over the {_OUTPUT_SCHEMA_BUDGET_CHARS}-char budget "
-        f"(move bulk arrays to a resource_link): {over}"
+        f"output schemas over the {_OUTPUT_SCHEMA_BUDGET_CHARS}-char budget: {over}. "
+        "Reduce what the verb RETURNS -- summarise a nested collection and let the "
+        "caller fetch detail per item. Moving bulk rows to a resource_link works only "
+        "where those rows are PERSISTED and a read verb can resolve them again; a verb "
+        "computed from a clock has nothing to resolve against. Note also that roughly "
+        "4700 chars are envelope spine no payload change can touch, so the verb-specific "
+        "allowance is well under the headline budget."
     )
 
 

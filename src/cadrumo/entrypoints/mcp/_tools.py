@@ -194,12 +194,13 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
             "additionalProperties": False,
         },
     }
-    return {
-        "$defs": {**definitions, **error_definitions},
-        # MCP's tools/list descriptor requires an object-shaped output schema at
-        # the top level. The branches below retain the canonical success/error
-        # envelope distinction within that required serializable shape.
-        "type": "object",
+    return _without_generated_titles(
+        {
+            "$defs": {**definitions, **error_definitions},
+            # MCP's tools/list descriptor requires an object-shaped output schema at
+            # the top level. The branches below retain the canonical success/error
+            # envelope distinction within that required serializable shape.
+            "type": "object",
         "oneOf": [
             {
                 "type": "object",
@@ -224,8 +225,33 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
                     "error": error_schema,
                     "notices": notices_schema,
                 },
-                "required": ["schema_version", "command", "active_profile", "status", "error", "notices"],
-                "additionalProperties": False,
-            },
-        ],
-    }
+                    "required": ["schema_version", "command", "active_profile", "status", "error", "notices"],
+                    "additionalProperties": False,
+                },
+            ],
+        },
+    )
+
+
+def _without_generated_titles(schema: dict[str, Any]) -> dict[str, Any]:
+    """Drop pydantic's auto-generated ``title`` keys from an output schema.
+
+    Every ``title`` pydantic emits here is a pure function of the key it sits
+    under: a property title is the field name in title case, and a definition
+    title is the class name a consumer resolving ``$ref`` already holds. None
+    carries information a consumer cannot compute, and nothing reads them --
+    the SDK client uses ``outputSchema`` only to compile a JSON Schema
+    validator, and ``title`` is an annotation with no validation effect.
+
+    Dropping them is a saving on ``tools/list``, which every session pays once.
+    It is NOT a payload saving: titles never appear in ``structuredContent``, so
+    this does not reduce what the per-call result costs. Two exceptions are
+    accepted with it -- the envelope's ``result``/``error`` titles name their
+    model rather than restating the key -- because the model is derivable from
+    the command and no consumer reads either.
+    """
+    if isinstance(schema, dict):
+        return {key: _without_generated_titles(value) for key, value in schema.items() if key != "title"}
+    if isinstance(schema, list):
+        return [_without_generated_titles(item) for item in schema]
+    return schema

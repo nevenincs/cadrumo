@@ -148,10 +148,25 @@
           }
         ],
         "result": {
+          "data_categories": [
+            "profile_identity_and_facts",
+            "modelo_work_units",
+            "ledger_transactions",
+            "calculation_revisions",
+            "filing_records"
+          ],
           "display_name": "bruno-real",
+          "excluded_data_categories": [
+            "secure_object_namespace:cadrumo.application.user_profile.value",
+            "secure_object_namespace:cadrumo.domain.buckets.event_history",
+            "secure_object_namespace:cadrumo.workflow"
+          ],
           "out": "bruno-real-profile.json",
           "profile_id": "<profile-id>",
-          "schema_version": 3
+          "purpose": "portable_transfer",
+          "reconcile_failures": [],
+          "schema_version": 3,
+          "transport": "cleartext_local"
         },
         "schema_version": "2",
         "status": "warning"

@@ -97,6 +97,358 @@
             "defaulted_modelos": [],
             "explicitly_set_keys": []
           },
+          "coverage": {
+            "advised": [
+              {
+                "modelo": "038",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "100",
+                "reason": "applicable_window_missing"
+              },
+              {
+                "modelo": "111",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "115",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "117",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "121",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "122",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "123",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "126",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "130",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "131",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "140",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "143",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "156",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "165",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "179",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "180",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "181",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "182",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "185",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "186",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "187",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "188",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "189",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "190",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "193",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "194",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "210",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "216",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "220",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "222",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "231",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "232",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "233",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "234",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "238",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "270",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "280",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "289",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "296",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "303",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "308",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "309",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "322",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "341",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "345",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "347",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "349",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "353",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "360",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "361",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "369",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "379",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "380",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "390",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "490",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "576",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "592",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "604",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "720",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "721",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "763",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "848",
+                "reason": "applicability_undetermined"
+              }
+            ],
+            "confidently_excluded": [
+              "184",
+              "200",
+              "202"
+            ],
+            "out_of_scope": [
+              "030",
+              "035",
+              "036",
+              "043",
+              "145",
+              "149",
+              "150",
+              "151",
+              "159",
+              "170",
+              "171",
+              "172",
+              "173",
+              "192",
+              "196",
+              "198",
+              "218",
+              "221",
+              "235",
+              "236",
+              "240",
+              "241",
+              "242",
+              "290",
+              "291",
+              "294",
+              "295",
+              "362",
+              "363",
+              "368",
+              "430",
+              "480",
+              "510",
+              "511",
+              "517",
+              "518",
+              "519",
+              "520",
+              "521",
+              "522",
+              "524",
+              "548",
+              "553",
+              "554",
+              "555",
+              "556",
+              "557",
+              "558",
+              "559",
+              "560",
+              "561",
+              "562",
+              "563",
+              "566",
+              "568",
+              "570",
+              "573",
+              "580",
+              "581",
+              "582",
+              "583",
+              "584",
+              "585",
+              "586",
+              "587",
+              "588",
+              "589",
+              "590",
+              "591",
+              "593",
+              "595",
+              "596",
+              "714",
+              "718",
+              "795",
+              "796",
+              "797",
+              "798",
+              "840",
+              "993"
+            ],
+            "surfaced": []
+          },
           "due_soon": [],
           "due_today": [],
           "generated_at": "2026-04-01T09:00:00Z",
@@ -214,6 +566,358 @@
             "defaulted_keys": [],
             "defaulted_modelos": [],
             "explicitly_set_keys": []
+          },
+          "coverage": {
+            "advised": [
+              {
+                "modelo": "038",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "100",
+                "reason": "applicable_window_missing"
+              },
+              {
+                "modelo": "111",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "115",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "117",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "121",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "122",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "123",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "126",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "130",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "131",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "140",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "143",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "156",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "165",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "179",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "180",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "181",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "182",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "185",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "186",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "187",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "188",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "189",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "190",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "193",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "194",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "210",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "216",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "220",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "222",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "231",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "232",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "233",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "234",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "238",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "270",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "280",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "289",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "296",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "303",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "308",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "309",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "322",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "341",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "345",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "347",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "349",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "353",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "360",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "361",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "369",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "379",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "380",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "390",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "490",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "576",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "592",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "604",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "720",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "721",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "763",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "848",
+                "reason": "applicability_undetermined"
+              }
+            ],
+            "confidently_excluded": [
+              "184",
+              "200",
+              "202"
+            ],
+            "out_of_scope": [
+              "030",
+              "035",
+              "036",
+              "043",
+              "145",
+              "149",
+              "150",
+              "151",
+              "159",
+              "170",
+              "171",
+              "172",
+              "173",
+              "192",
+              "196",
+              "198",
+              "218",
+              "221",
+              "235",
+              "236",
+              "240",
+              "241",
+              "242",
+              "290",
+              "291",
+              "294",
+              "295",
+              "362",
+              "363",
+              "368",
+              "430",
+              "480",
+              "510",
+              "511",
+              "517",
+              "518",
+              "519",
+              "520",
+              "521",
+              "522",
+              "524",
+              "548",
+              "553",
+              "554",
+              "555",
+              "556",
+              "557",
+              "558",
+              "559",
+              "560",
+              "561",
+              "562",
+              "563",
+              "566",
+              "568",
+              "570",
+              "573",
+              "580",
+              "581",
+              "582",
+              "583",
+              "584",
+              "585",
+              "586",
+              "587",
+              "588",
+              "589",
+              "590",
+              "591",
+              "593",
+              "595",
+              "596",
+              "714",
+              "718",
+              "795",
+              "796",
+              "797",
+              "798",
+              "840",
+              "993"
+            ],
+            "surfaced": []
           },
           "due_soon": [],
           "due_today": [],
@@ -334,6 +1038,358 @@
             "defaulted_keys": [],
             "defaulted_modelos": [],
             "explicitly_set_keys": []
+          },
+          "coverage": {
+            "advised": [
+              {
+                "modelo": "038",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "100",
+                "reason": "applicable_window_missing"
+              },
+              {
+                "modelo": "111",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "115",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "117",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "121",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "122",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "123",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "126",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "130",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "131",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "140",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "143",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "156",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "165",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "179",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "180",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "181",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "182",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "185",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "186",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "187",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "188",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "189",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "190",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "193",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "194",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "210",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "216",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "220",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "222",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "231",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "232",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "233",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "234",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "238",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "270",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "280",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "289",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "296",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "303",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "308",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "309",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "322",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "341",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "345",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "347",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "349",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "353",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "360",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "361",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "369",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "379",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "380",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "390",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "490",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "576",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "592",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "604",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "720",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "721",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "763",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "848",
+                "reason": "applicability_undetermined"
+              }
+            ],
+            "confidently_excluded": [
+              "184",
+              "200",
+              "202"
+            ],
+            "out_of_scope": [
+              "030",
+              "035",
+              "036",
+              "043",
+              "145",
+              "149",
+              "150",
+              "151",
+              "159",
+              "170",
+              "171",
+              "172",
+              "173",
+              "192",
+              "196",
+              "198",
+              "218",
+              "221",
+              "235",
+              "236",
+              "240",
+              "241",
+              "242",
+              "290",
+              "291",
+              "294",
+              "295",
+              "362",
+              "363",
+              "368",
+              "430",
+              "480",
+              "510",
+              "511",
+              "517",
+              "518",
+              "519",
+              "520",
+              "521",
+              "522",
+              "524",
+              "548",
+              "553",
+              "554",
+              "555",
+              "556",
+              "557",
+              "558",
+              "559",
+              "560",
+              "561",
+              "562",
+              "563",
+              "566",
+              "568",
+              "570",
+              "573",
+              "580",
+              "581",
+              "582",
+              "583",
+              "584",
+              "585",
+              "586",
+              "587",
+              "588",
+              "589",
+              "590",
+              "591",
+              "593",
+              "595",
+              "596",
+              "714",
+              "718",
+              "795",
+              "796",
+              "797",
+              "798",
+              "840",
+              "993"
+            ],
+            "surfaced": []
           },
           "due_soon": [],
           "due_today": [],

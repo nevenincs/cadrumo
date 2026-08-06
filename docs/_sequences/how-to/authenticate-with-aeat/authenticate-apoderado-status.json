@@ -41,7 +41,7 @@
           "bucket_id": "<bucket-id>",
           "catalogue_version": "2026.05.bootstrap",
           "configured": true,
-          "configured_at": "2026-04-01T09:00:00Z",
+          "configured_at": "2026-04-01T09:00:00+00:00",
           "granted_scopes": [
             "IVA",
             "PAGOSF"

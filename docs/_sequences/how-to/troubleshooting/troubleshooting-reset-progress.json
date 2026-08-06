@@ -37,7 +37,7 @@
             "reason_class": "readable",
             "recovered_bucket_id": "<profile-id>",
             "schema_version": 1,
-            "written_at": "2026-04-01T09:00:00"
+            "written_at": "2026-04-01T09:00:00+00:00"
           },
           "reason": null,
           "reset": null

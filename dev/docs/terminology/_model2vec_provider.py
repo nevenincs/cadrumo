@@ -268,6 +268,14 @@ def _verify_content_manifests(
         expected_sha256=metadata.tokenizer.config_sha256,
         reject_unexpected=False,
     )
+    tokenizer_vocabulary_paths = {entry.relative_path for entry in tokenizer_vocabulary_manifest.entries}
+    tokenizer_config_paths = {entry.relative_path for entry in tokenizer_config_manifest.entries}
+    overlapping_paths = tokenizer_vocabulary_paths & tokenizer_config_paths
+    if overlapping_paths:
+        raise MatrixCompilationError(
+            "tokenizer-vocabulary and tokenizer-configuration manifest roles overlap on "
+            f"paths: {sorted(overlapping_paths)!r}"
+        )
     model_entries = {
         entry.relative_path: (entry.byte_length, entry.sha256) for entry in model_manifest.entries
     }

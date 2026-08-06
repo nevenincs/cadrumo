@@ -381,6 +381,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "01",
               "formula_id": null,
               "legal_refs": [
@@ -400,6 +401,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "02",
               "formula_id": null,
               "legal_refs": [
@@ -419,6 +421,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "03",
               "formula_id": "modelo-303-dr303-03-projection",
               "legal_refs": [
@@ -446,6 +449,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "04",
               "formula_id": null,
               "legal_refs": [
@@ -465,6 +469,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "05",
               "formula_id": null,
               "legal_refs": [
@@ -484,6 +489,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "06",
               "formula_id": "modelo-303-dr303-06-projection",
               "legal_refs": [
@@ -511,6 +517,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "07",
               "formula_id": null,
               "legal_refs": [
@@ -530,6 +537,7 @@
               "value": "1000"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "08",
               "formula_id": null,
               "legal_refs": [
@@ -549,6 +557,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "09",
               "formula_id": "modelo-303-dr303-09-projection",
               "legal_refs": [
@@ -576,6 +585,7 @@
               "value": "210.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "10",
               "formula_id": null,
               "legal_refs": [
@@ -595,6 +605,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "108",
               "formula_id": null,
               "legal_refs": [
@@ -614,6 +625,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "109",
               "formula_id": null,
               "legal_refs": [
@@ -633,6 +645,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "11",
               "formula_id": "modelo-303-dr303-11-projection",
               "legal_refs": [
@@ -660,6 +673,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "111",
               "formula_id": null,
               "legal_refs": [
@@ -679,6 +693,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "12",
               "formula_id": null,
               "legal_refs": [
@@ -698,6 +713,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "120",
               "formula_id": null,
               "legal_refs": [
@@ -716,6 +732,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "122",
               "formula_id": null,
               "legal_refs": [
@@ -734,6 +751,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "123",
               "formula_id": null,
               "legal_refs": [
@@ -752,6 +770,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "124",
               "formula_id": null,
               "legal_refs": [
@@ -770,6 +789,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "13",
               "formula_id": "modelo-303-dr303-13-projection",
               "legal_refs": [
@@ -797,6 +817,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "14",
               "formula_id": null,
               "legal_refs": [
@@ -816,6 +837,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "15",
               "formula_id": null,
               "legal_refs": [
@@ -835,6 +857,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "150",
               "formula_id": null,
               "legal_refs": [
@@ -854,6 +877,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "151",
               "formula_id": null,
               "legal_refs": [
@@ -873,6 +897,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "152",
               "formula_id": null,
               "legal_refs": [
@@ -892,6 +917,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "153",
               "formula_id": null,
               "legal_refs": [
@@ -911,6 +937,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "154",
               "formula_id": null,
               "legal_refs": [
@@ -930,6 +957,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "155",
               "formula_id": null,
               "legal_refs": [
@@ -949,6 +977,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "156",
               "formula_id": null,
               "legal_refs": [
@@ -968,6 +997,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "157",
               "formula_id": null,
               "legal_refs": [
@@ -987,6 +1017,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "158",
               "formula_id": null,
               "legal_refs": [
@@ -1007,6 +1038,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "16",
               "formula_id": null,
               "legal_refs": [
@@ -1026,6 +1058,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "165",
               "formula_id": null,
               "legal_refs": [
@@ -1045,6 +1078,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "166",
               "formula_id": null,
               "legal_refs": [
@@ -1064,6 +1098,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "167",
               "formula_id": null,
               "legal_refs": [
@@ -1083,6 +1118,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "168",
               "formula_id": null,
               "legal_refs": [
@@ -1102,6 +1138,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "169",
               "formula_id": null,
               "legal_refs": [
@@ -1121,6 +1158,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "17",
               "formula_id": null,
               "legal_refs": [
@@ -1140,6 +1178,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "170",
               "formula_id": null,
               "legal_refs": [
@@ -1159,6 +1198,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "18",
               "formula_id": null,
               "legal_refs": [
@@ -1178,6 +1218,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "19",
               "formula_id": null,
               "legal_refs": [
@@ -1197,6 +1238,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "20",
               "formula_id": null,
               "legal_refs": [
@@ -1216,6 +1258,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "21",
               "formula_id": null,
               "legal_refs": [
@@ -1236,6 +1279,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "22",
               "formula_id": null,
               "legal_refs": [
@@ -1255,6 +1299,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "23",
               "formula_id": null,
               "legal_refs": [
@@ -1274,6 +1319,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "24",
               "formula_id": null,
               "legal_refs": [
@@ -1294,6 +1340,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "25",
               "formula_id": null,
               "legal_refs": [
@@ -1313,6 +1360,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "26",
               "formula_id": null,
               "legal_refs": [
@@ -1332,6 +1380,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "27",
               "formula_id": "modelo-303-dr303-27-projection",
               "legal_refs": [
@@ -1359,6 +1408,7 @@
               "value": "210.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "28",
               "formula_id": null,
               "legal_refs": [
@@ -1378,6 +1428,7 @@
               "value": "500"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "29",
               "formula_id": "modelo-303-dr303-29-projection",
               "legal_refs": [
@@ -1405,6 +1456,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "30",
               "formula_id": null,
               "legal_refs": [
@@ -1424,6 +1476,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "31",
               "formula_id": null,
               "legal_refs": [
@@ -1443,6 +1496,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "32",
               "formula_id": null,
               "legal_refs": [
@@ -1462,6 +1516,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "33",
               "formula_id": "modelo-303-dr303-33-projection",
               "legal_refs": [
@@ -1489,6 +1544,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "34",
               "formula_id": null,
               "legal_refs": [
@@ -1508,6 +1564,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "35",
               "formula_id": null,
               "legal_refs": [
@@ -1527,6 +1584,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "36",
               "formula_id": null,
               "legal_refs": [
@@ -1546,6 +1604,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "37",
               "formula_id": "modelo-303-dr303-37-projection",
               "legal_refs": [
@@ -1573,6 +1632,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "38",
               "formula_id": null,
               "legal_refs": [
@@ -1592,6 +1652,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "39",
               "formula_id": null,
               "legal_refs": [
@@ -1611,6 +1672,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "40",
               "formula_id": null,
               "legal_refs": [
@@ -1630,6 +1692,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "41",
               "formula_id": null,
               "legal_refs": [
@@ -1649,6 +1712,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "42",
               "formula_id": null,
               "legal_refs": [
@@ -1668,6 +1732,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "43",
               "formula_id": null,
               "legal_refs": [
@@ -1688,6 +1753,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "44",
               "formula_id": null,
               "legal_refs": [
@@ -1709,6 +1775,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "45",
               "formula_id": "modelo-303-dr303-45-projection",
               "legal_refs": [
@@ -1736,6 +1803,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "47",
               "formula_id": null,
               "legal_refs": [
@@ -1755,6 +1823,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "48",
               "formula_id": null,
               "legal_refs": [
@@ -1774,6 +1843,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "49",
               "formula_id": null,
               "legal_refs": [
@@ -1793,6 +1863,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "50",
               "formula_id": null,
               "legal_refs": [
@@ -1812,6 +1883,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "51",
               "formula_id": null,
               "legal_refs": [
@@ -1831,6 +1903,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "52",
               "formula_id": null,
               "legal_refs": [
@@ -1850,6 +1923,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "53",
               "formula_id": null,
               "legal_refs": [
@@ -1869,6 +1943,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "54",
               "formula_id": null,
               "legal_refs": [
@@ -1888,6 +1963,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "55",
               "formula_id": null,
               "legal_refs": [
@@ -1907,6 +1983,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "56",
               "formula_id": null,
               "legal_refs": [
@@ -1926,6 +2003,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "57",
               "formula_id": null,
               "legal_refs": [
@@ -1945,6 +2023,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "58",
               "formula_id": null,
               "legal_refs": [
@@ -1964,6 +2043,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "59",
               "formula_id": null,
               "legal_refs": [
@@ -1981,6 +2061,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "60",
               "formula_id": null,
               "legal_refs": [
@@ -1999,6 +2080,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "62",
               "formula_id": null,
               "legal_refs": [
@@ -2020,6 +2102,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "63",
               "formula_id": null,
               "legal_refs": [
@@ -2041,6 +2124,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "64",
               "formula_id": "modelo-303-iva-suma-resultados",
               "legal_refs": [
@@ -2076,6 +2160,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "65",
               "formula_id": null,
               "legal_refs": [
@@ -2095,6 +2180,7 @@
               "value": "100"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "66",
               "formula_id": "modelo-303-iva-atribuible-estado",
               "legal_refs": [
@@ -2122,6 +2208,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "68",
               "formula_id": null,
               "legal_refs": [
@@ -2141,6 +2228,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "70",
               "formula_id": null,
               "legal_refs": [
@@ -2160,6 +2248,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "71",
               "formula_id": "modelo-303-iva-resultado-final",
               "legal_refs": [
@@ -2195,6 +2284,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "74",
               "formula_id": null,
               "legal_refs": [
@@ -2216,6 +2306,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "75",
               "formula_id": null,
               "legal_refs": [
@@ -2237,6 +2328,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "76",
               "formula_id": null,
               "legal_refs": [
@@ -2256,6 +2348,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "77",
               "formula_id": null,
               "legal_refs": [
@@ -2275,6 +2368,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.ejercicio",
               "formula_id": null,
               "legal_refs": [
@@ -2292,6 +2386,7 @@
               "value": "2026"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.periodo",
               "formula_id": null,
               "legal_refs": [
@@ -2309,6 +2404,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autoconsumo.promotor.base",
               "formula_id": null,
               "legal_refs": [
@@ -2327,6 +2423,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autoconsumo.promotor.cuota",
               "formula_id": "modelo-303-autoconsumo-promotor-cuota",
               "legal_refs": [
@@ -2353,6 +2450,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.interior.deducible",
               "formula_id": null,
               "legal_refs": [
@@ -2371,6 +2469,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.interior.devengado",
               "formula_id": null,
               "legal_refs": [
@@ -2388,6 +2487,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.intracomunitaria",
               "formula_id": null,
               "legal_refs": [
@@ -2405,6 +2505,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.intracomunitaria.deducible",
               "formula_id": null,
               "legal_refs": [
@@ -2425,6 +2526,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.intracomunitaria.devengado",
               "formula_id": null,
               "legal_refs": [
@@ -2444,6 +2546,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-aplicada-periodo",
               "formula_id": "modelo-303-compensacion-aplicada-periodo",
               "legal_refs": [
@@ -2476,6 +2579,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
               "formula_id": "modelo-303-compensacion-disponible-fin-periodo",
               "legal_refs": [
@@ -2508,6 +2612,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-generada-periodo",
               "formula_id": "modelo-303-compensacion-generada-periodo",
               "legal_refs": [
@@ -2537,6 +2642,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-pendiente-periodos-anteriores",
               "formula_id": null,
               "legal_refs": [
@@ -2560,6 +2666,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
               "formula_id": "modelo-303-compensacion-pendiente-periodos-posteriores",
               "legal_refs": [
@@ -2592,6 +2699,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.cuota-deducible-total",
               "formula_id": "modelo-303-iva-cuota-deducible-total",
               "legal_refs": [
@@ -2632,6 +2740,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.cuota-devengada-total",
               "formula_id": "modelo-303-iva-cuota-devengada-total",
               "legal_refs": [
@@ -2684,6 +2793,7 @@
               "value": "210.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.prorrata-porcentaje",
               "formula_id": "modelo-303-iva-prorrata-porcentaje",
               "legal_refs": [
@@ -2711,6 +2821,7 @@
               "value": "100"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.prorrata-volumen-con-derecho",
               "formula_id": null,
               "legal_refs": [
@@ -2730,6 +2841,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.prorrata-volumen-total",
               "formula_id": null,
               "legal_refs": [
@@ -2749,6 +2861,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.regularizacion-inversiones",
               "formula_id": null,
               "legal_refs": [
@@ -2770,6 +2883,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.general",
               "formula_id": null,
               "legal_refs": [
@@ -2787,6 +2901,7 @@
               "value": "210"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.reducido",
               "formula_id": null,
               "legal_refs": [
@@ -2804,6 +2919,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.super-reducido",
               "formula_id": null,
               "legal_refs": [
@@ -2821,6 +2937,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.resultado",
               "formula_id": "modelo-303-iva-resultado",
               "legal_refs": [
@@ -2859,6 +2976,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.resultado-regimen-general",
               "formula_id": "modelo-303-iva-resultado-regimen-general",
               "legal_refs": [
@@ -2888,6 +3006,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.soportado.importaciones",
               "formula_id": null,
               "legal_refs": [
@@ -2906,6 +3025,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.soportado.interiores",
               "formula_id": null,
               "legal_refs": [
@@ -2923,6 +3043,7 @@
               "value": "105"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-1-unidades",
               "formula_id": null,
               "legal_refs": [
@@ -2940,6 +3061,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-2-unidades",
               "formula_id": null,
               "legal_refs": [
@@ -2957,6 +3079,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-3-unidades",
               "formula_id": null,
               "legal_refs": [
@@ -2974,6 +3097,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-cuota-derivada",
               "formula_id": "modelo-303-2023-modulos-iva-cuota-derivada",
               "legal_refs": [
@@ -3007,6 +3131,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-cuota-devengada",
               "formula_id": "modelo-303-2023-modulos-iva-cuota-devengada",
               "legal_refs": [
@@ -3028,6 +3153,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-epigrafe",
               "formula_id": null,
               "legal_refs": [
@@ -3051,143 +3177,78 @@
             {
               "casilla_id": "iva.cuota-devengada-total",
               "label": "Total accrued VAT amount",
-              "localized_labels": {
-                "ca": "Total quota d'IVA meritada",
-                "en": "Total accrued VAT amount",
-                "hu": "Összes keletkezett ÁFA összeg"
-              },
               "role": "key_figure",
               "value": "210.00"
             },
             {
               "casilla_id": "iva.cuota-deducible-total",
               "label": "Total deductible VAT amount",
-              "localized_labels": {
-                "ca": "Total quota d'IVA deduïble",
-                "en": "Total deductible VAT amount",
-                "hu": "Összes levonható ÁFA összeg"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "iva.resultado-regimen-general",
               "label": "General regime result",
-              "localized_labels": {
-                "ca": "Resultat del règim general",
-                "en": "General regime result",
-                "hu": "Általános rendszer eredménye"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "64",
               "label": "Result - sum of results ([46] + [58] + [76])",
-              "localized_labels": {
-                "ca": "Resultat - suma de resultats ([46] + [58] + [76])",
-                "en": "Result - sum of results ([46] + [58] + [76])",
-                "hu": "Eredmény - eredmények összege ([46] + [58] + [76])"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "66",
               "label": "Result - amount attributable to the State Tax Administration ([64] x [65] / 100)",
-              "localized_labels": {
-                "ca": "Resultat - import atribuïble a l'Administració de l'Estat ([64] x [65] / 100)",
-                "en": "Result - amount attributable to the State Tax Administration ([64] x [65] / 100)",
-                "hu": "Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64] x [65] / 100)"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
               "label": "Prior-period offsets applied in this period",
-              "localized_labels": {
-                "ca": "Compensacions de períodes anteriors aplicades en aquest període",
-                "en": "Prior-period offsets applied in this period",
-                "hu": "Ebben az időszakban alkalmazott korábbi időszaki beszámítások"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
               "label": "Prior-period offsets pending for later periods",
-              "localized_labels": {
-                "ca": "Compensacions de períodes anteriors pendents per a períodes posteriors",
-                "en": "Prior-period offsets pending for later periods",
-                "hu": "Későbbi időszakokra fennmaradó korábbi beszámítások"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
               "label": "Self-assessment result",
-              "localized_labels": {
-                "ca": "Resultat de l'autoliquidació",
-                "en": "Self-assessment result",
-                "hu": "Önbevallás eredménye"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "71",
               "label": "Final result ([69] - [70] + [109])",
-              "localized_labels": {
-                "ca": "Resultat final ([69] - [70] + [109])",
-                "en": "Final result ([69] - [70] + [109])",
-                "hu": "Végső eredmény ([69] - [70] + [109])"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
               "label": "Offset balance generated in this period",
-              "localized_labels": {
-                "ca": "Saldo a compensar generat en aquest període",
-                "en": "Offset balance generated in this period",
-                "hu": "Ebben az időszakban keletkezett beszámítási egyenleg"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
               "label": "Offset balance available at period end",
-              "localized_labels": {
-                "ca": "Saldo de compensació disponible al final del període",
-                "en": "Offset balance available at period end",
-                "hu": "Időszak végén rendelkezésre álló beszámítási egyenleg"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "27",
               "label": "Total accrued VAT amount",
-              "localized_labels": {
-                "ca": "Total quota meritada",
-                "en": "Total accrued VAT amount",
-                "hu": "Összes keletkezett ÁFA összeg"
-              },
               "role": "key_figure",
               "value": "210.00"
             },
             {
               "casilla_id": "45",
               "label": "Total deductible amount",
-              "localized_labels": {
-                "ca": "Total a deduir - quota",
-                "en": "Total deductible amount",
-                "hu": "Összes levonható összeg"
-              },
               "role": "key_figure",
               "value": "105.00"
             }
@@ -3424,6 +3485,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "01",
               "formula_id": null,
               "legal_refs": [
@@ -3443,6 +3505,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "02",
               "formula_id": null,
               "legal_refs": [
@@ -3462,6 +3525,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "03",
               "formula_id": "modelo-303-dr303-03-projection",
               "legal_refs": [
@@ -3489,6 +3553,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "04",
               "formula_id": null,
               "legal_refs": [
@@ -3508,6 +3573,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "05",
               "formula_id": null,
               "legal_refs": [
@@ -3527,6 +3593,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "06",
               "formula_id": "modelo-303-dr303-06-projection",
               "legal_refs": [
@@ -3554,6 +3621,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "07",
               "formula_id": null,
               "legal_refs": [
@@ -3573,6 +3641,7 @@
               "value": "1000"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "08",
               "formula_id": null,
               "legal_refs": [
@@ -3592,6 +3661,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "09",
               "formula_id": "modelo-303-dr303-09-projection",
               "legal_refs": [
@@ -3619,6 +3689,7 @@
               "value": "210.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "10",
               "formula_id": null,
               "legal_refs": [
@@ -3638,6 +3709,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "108",
               "formula_id": null,
               "legal_refs": [
@@ -3657,6 +3729,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "109",
               "formula_id": null,
               "legal_refs": [
@@ -3676,6 +3749,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "11",
               "formula_id": "modelo-303-dr303-11-projection",
               "legal_refs": [
@@ -3703,6 +3777,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "111",
               "formula_id": null,
               "legal_refs": [
@@ -3722,6 +3797,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "12",
               "formula_id": null,
               "legal_refs": [
@@ -3741,6 +3817,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "120",
               "formula_id": null,
               "legal_refs": [
@@ -3759,6 +3836,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "122",
               "formula_id": null,
               "legal_refs": [
@@ -3777,6 +3855,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "123",
               "formula_id": null,
               "legal_refs": [
@@ -3795,6 +3874,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "124",
               "formula_id": null,
               "legal_refs": [
@@ -3813,6 +3893,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "13",
               "formula_id": "modelo-303-dr303-13-projection",
               "legal_refs": [
@@ -3840,6 +3921,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "14",
               "formula_id": null,
               "legal_refs": [
@@ -3859,6 +3941,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "15",
               "formula_id": null,
               "legal_refs": [
@@ -3878,6 +3961,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "150",
               "formula_id": null,
               "legal_refs": [
@@ -3897,6 +3981,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "151",
               "formula_id": null,
               "legal_refs": [
@@ -3916,6 +4001,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "152",
               "formula_id": null,
               "legal_refs": [
@@ -3935,6 +4021,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "153",
               "formula_id": null,
               "legal_refs": [
@@ -3954,6 +4041,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "154",
               "formula_id": null,
               "legal_refs": [
@@ -3973,6 +4061,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "155",
               "formula_id": null,
               "legal_refs": [
@@ -3992,6 +4081,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "156",
               "formula_id": null,
               "legal_refs": [
@@ -4011,6 +4101,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "157",
               "formula_id": null,
               "legal_refs": [
@@ -4030,6 +4121,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "158",
               "formula_id": null,
               "legal_refs": [
@@ -4050,6 +4142,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "16",
               "formula_id": null,
               "legal_refs": [
@@ -4069,6 +4162,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "165",
               "formula_id": null,
               "legal_refs": [
@@ -4088,6 +4182,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "166",
               "formula_id": null,
               "legal_refs": [
@@ -4107,6 +4202,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "167",
               "formula_id": null,
               "legal_refs": [
@@ -4126,6 +4222,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "168",
               "formula_id": null,
               "legal_refs": [
@@ -4145,6 +4242,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "169",
               "formula_id": null,
               "legal_refs": [
@@ -4164,6 +4262,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "17",
               "formula_id": null,
               "legal_refs": [
@@ -4183,6 +4282,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "170",
               "formula_id": null,
               "legal_refs": [
@@ -4202,6 +4302,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "18",
               "formula_id": null,
               "legal_refs": [
@@ -4221,6 +4322,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "19",
               "formula_id": null,
               "legal_refs": [
@@ -4240,6 +4342,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "20",
               "formula_id": null,
               "legal_refs": [
@@ -4259,6 +4362,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "21",
               "formula_id": null,
               "legal_refs": [
@@ -4279,6 +4383,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "22",
               "formula_id": null,
               "legal_refs": [
@@ -4298,6 +4403,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "23",
               "formula_id": null,
               "legal_refs": [
@@ -4317,6 +4423,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "24",
               "formula_id": null,
               "legal_refs": [
@@ -4337,6 +4444,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "25",
               "formula_id": null,
               "legal_refs": [
@@ -4356,6 +4464,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "26",
               "formula_id": null,
               "legal_refs": [
@@ -4375,6 +4484,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "27",
               "formula_id": "modelo-303-dr303-27-projection",
               "legal_refs": [
@@ -4402,6 +4512,7 @@
               "value": "210.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "28",
               "formula_id": null,
               "legal_refs": [
@@ -4421,6 +4532,7 @@
               "value": "500"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "29",
               "formula_id": "modelo-303-dr303-29-projection",
               "legal_refs": [
@@ -4448,6 +4560,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "30",
               "formula_id": null,
               "legal_refs": [
@@ -4467,6 +4580,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "31",
               "formula_id": null,
               "legal_refs": [
@@ -4486,6 +4600,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "32",
               "formula_id": null,
               "legal_refs": [
@@ -4505,6 +4620,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "33",
               "formula_id": "modelo-303-dr303-33-projection",
               "legal_refs": [
@@ -4532,6 +4648,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "34",
               "formula_id": null,
               "legal_refs": [
@@ -4551,6 +4668,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "35",
               "formula_id": null,
               "legal_refs": [
@@ -4570,6 +4688,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "36",
               "formula_id": null,
               "legal_refs": [
@@ -4589,6 +4708,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "37",
               "formula_id": "modelo-303-dr303-37-projection",
               "legal_refs": [
@@ -4616,6 +4736,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "38",
               "formula_id": null,
               "legal_refs": [
@@ -4635,6 +4756,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "39",
               "formula_id": null,
               "legal_refs": [
@@ -4654,6 +4776,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "40",
               "formula_id": null,
               "legal_refs": [
@@ -4673,6 +4796,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "41",
               "formula_id": null,
               "legal_refs": [
@@ -4692,6 +4816,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "42",
               "formula_id": null,
               "legal_refs": [
@@ -4711,6 +4836,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "43",
               "formula_id": null,
               "legal_refs": [
@@ -4731,6 +4857,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "44",
               "formula_id": null,
               "legal_refs": [
@@ -4752,6 +4879,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "45",
               "formula_id": "modelo-303-dr303-45-projection",
               "legal_refs": [
@@ -4779,6 +4907,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "47",
               "formula_id": null,
               "legal_refs": [
@@ -4798,6 +4927,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "48",
               "formula_id": null,
               "legal_refs": [
@@ -4817,6 +4947,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "49",
               "formula_id": null,
               "legal_refs": [
@@ -4836,6 +4967,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "50",
               "formula_id": null,
               "legal_refs": [
@@ -4855,6 +4987,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "51",
               "formula_id": null,
               "legal_refs": [
@@ -4874,6 +5007,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "52",
               "formula_id": null,
               "legal_refs": [
@@ -4893,6 +5027,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "53",
               "formula_id": null,
               "legal_refs": [
@@ -4912,6 +5047,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "54",
               "formula_id": null,
               "legal_refs": [
@@ -4931,6 +5067,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "55",
               "formula_id": null,
               "legal_refs": [
@@ -4950,6 +5087,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "56",
               "formula_id": null,
               "legal_refs": [
@@ -4969,6 +5107,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "57",
               "formula_id": null,
               "legal_refs": [
@@ -4988,6 +5127,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "58",
               "formula_id": null,
               "legal_refs": [
@@ -5007,6 +5147,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "59",
               "formula_id": null,
               "legal_refs": [
@@ -5024,6 +5165,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "60",
               "formula_id": null,
               "legal_refs": [
@@ -5042,6 +5184,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "62",
               "formula_id": null,
               "legal_refs": [
@@ -5063,6 +5206,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "63",
               "formula_id": null,
               "legal_refs": [
@@ -5084,6 +5228,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "64",
               "formula_id": "modelo-303-iva-suma-resultados",
               "legal_refs": [
@@ -5119,6 +5264,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "65",
               "formula_id": null,
               "legal_refs": [
@@ -5138,6 +5284,7 @@
               "value": "100"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "66",
               "formula_id": "modelo-303-iva-atribuible-estado",
               "legal_refs": [
@@ -5165,6 +5312,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "68",
               "formula_id": null,
               "legal_refs": [
@@ -5184,6 +5332,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "70",
               "formula_id": null,
               "legal_refs": [
@@ -5203,6 +5352,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "71",
               "formula_id": "modelo-303-iva-resultado-final",
               "legal_refs": [
@@ -5238,6 +5388,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "74",
               "formula_id": null,
               "legal_refs": [
@@ -5259,6 +5410,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "75",
               "formula_id": null,
               "legal_refs": [
@@ -5280,6 +5432,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "76",
               "formula_id": null,
               "legal_refs": [
@@ -5299,6 +5452,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "77",
               "formula_id": null,
               "legal_refs": [
@@ -5318,6 +5472,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.ejercicio",
               "formula_id": null,
               "legal_refs": [
@@ -5335,6 +5490,7 @@
               "value": "2026"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.periodo",
               "formula_id": null,
               "legal_refs": [
@@ -5352,6 +5508,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autoconsumo.promotor.base",
               "formula_id": null,
               "legal_refs": [
@@ -5370,6 +5527,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autoconsumo.promotor.cuota",
               "formula_id": "modelo-303-autoconsumo-promotor-cuota",
               "legal_refs": [
@@ -5396,6 +5554,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.interior.deducible",
               "formula_id": null,
               "legal_refs": [
@@ -5414,6 +5573,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.interior.devengado",
               "formula_id": null,
               "legal_refs": [
@@ -5431,6 +5591,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.intracomunitaria",
               "formula_id": null,
               "legal_refs": [
@@ -5448,6 +5609,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.intracomunitaria.deducible",
               "formula_id": null,
               "legal_refs": [
@@ -5468,6 +5630,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.autorepercutido.intracomunitaria.devengado",
               "formula_id": null,
               "legal_refs": [
@@ -5487,6 +5650,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-aplicada-periodo",
               "formula_id": "modelo-303-compensacion-aplicada-periodo",
               "legal_refs": [
@@ -5519,6 +5683,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
               "formula_id": "modelo-303-compensacion-disponible-fin-periodo",
               "legal_refs": [
@@ -5551,6 +5716,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-generada-periodo",
               "formula_id": "modelo-303-compensacion-generada-periodo",
               "legal_refs": [
@@ -5580,6 +5746,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-pendiente-periodos-anteriores",
               "formula_id": null,
               "legal_refs": [
@@ -5603,6 +5770,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
               "formula_id": "modelo-303-compensacion-pendiente-periodos-posteriores",
               "legal_refs": [
@@ -5635,6 +5803,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.cuota-deducible-total",
               "formula_id": "modelo-303-iva-cuota-deducible-total",
               "legal_refs": [
@@ -5675,6 +5844,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.cuota-devengada-total",
               "formula_id": "modelo-303-iva-cuota-devengada-total",
               "legal_refs": [
@@ -5727,6 +5897,7 @@
               "value": "210.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.prorrata-porcentaje",
               "formula_id": "modelo-303-iva-prorrata-porcentaje",
               "legal_refs": [
@@ -5754,6 +5925,7 @@
               "value": "100"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.prorrata-volumen-con-derecho",
               "formula_id": null,
               "legal_refs": [
@@ -5773,6 +5945,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.prorrata-volumen-total",
               "formula_id": null,
               "legal_refs": [
@@ -5792,6 +5965,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.regularizacion-inversiones",
               "formula_id": null,
               "legal_refs": [
@@ -5813,6 +5987,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.general",
               "formula_id": null,
               "legal_refs": [
@@ -5830,6 +6005,7 @@
               "value": "210"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.reducido",
               "formula_id": null,
               "legal_refs": [
@@ -5847,6 +6023,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.repercutido.super-reducido",
               "formula_id": null,
               "legal_refs": [
@@ -5864,6 +6041,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.resultado",
               "formula_id": "modelo-303-iva-resultado",
               "legal_refs": [
@@ -5902,6 +6080,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.resultado-regimen-general",
               "formula_id": "modelo-303-iva-resultado-regimen-general",
               "legal_refs": [
@@ -5931,6 +6110,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.soportado.importaciones",
               "formula_id": null,
               "legal_refs": [
@@ -5949,6 +6129,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.soportado.interiores",
               "formula_id": null,
               "legal_refs": [
@@ -5966,6 +6147,7 @@
               "value": "105"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-1-unidades",
               "formula_id": null,
               "legal_refs": [
@@ -5983,6 +6165,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-2-unidades",
               "formula_id": null,
               "legal_refs": [
@@ -6000,6 +6183,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-3-unidades",
               "formula_id": null,
               "legal_refs": [
@@ -6017,6 +6201,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-cuota-derivada",
               "formula_id": "modelo-303-2023-modulos-iva-cuota-derivada",
               "legal_refs": [
@@ -6050,6 +6235,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-cuota-devengada",
               "formula_id": "modelo-303-2023-modulos-iva-cuota-devengada",
               "legal_refs": [
@@ -6071,6 +6257,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "modulos-iva-epigrafe",
               "formula_id": null,
               "legal_refs": [
@@ -6094,143 +6281,78 @@
             {
               "casilla_id": "iva.cuota-devengada-total",
               "label": "Total accrued VAT amount",
-              "localized_labels": {
-                "ca": "Total quota d'IVA meritada",
-                "en": "Total accrued VAT amount",
-                "hu": "Összes keletkezett ÁFA összeg"
-              },
               "role": "key_figure",
               "value": "210.00"
             },
             {
               "casilla_id": "iva.cuota-deducible-total",
               "label": "Total deductible VAT amount",
-              "localized_labels": {
-                "ca": "Total quota d'IVA deduïble",
-                "en": "Total deductible VAT amount",
-                "hu": "Összes levonható ÁFA összeg"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "iva.resultado-regimen-general",
               "label": "General regime result",
-              "localized_labels": {
-                "ca": "Resultat del règim general",
-                "en": "General regime result",
-                "hu": "Általános rendszer eredménye"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "64",
               "label": "Result - sum of results ([46] + [58] + [76])",
-              "localized_labels": {
-                "ca": "Resultat - suma de resultats ([46] + [58] + [76])",
-                "en": "Result - sum of results ([46] + [58] + [76])",
-                "hu": "Eredmény - eredmények összege ([46] + [58] + [76])"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "66",
               "label": "Result - amount attributable to the State Tax Administration ([64] x [65] / 100)",
-              "localized_labels": {
-                "ca": "Resultat - import atribuïble a l'Administració de l'Estat ([64] x [65] / 100)",
-                "en": "Result - amount attributable to the State Tax Administration ([64] x [65] / 100)",
-                "hu": "Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64] x [65] / 100)"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
               "label": "Prior-period offsets applied in this period",
-              "localized_labels": {
-                "ca": "Compensacions de períodes anteriors aplicades en aquest període",
-                "en": "Prior-period offsets applied in this period",
-                "hu": "Ebben az időszakban alkalmazott korábbi időszaki beszámítások"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
               "label": "Prior-period offsets pending for later periods",
-              "localized_labels": {
-                "ca": "Compensacions de períodes anteriors pendents per a períodes posteriors",
-                "en": "Prior-period offsets pending for later periods",
-                "hu": "Későbbi időszakokra fennmaradó korábbi beszámítások"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
               "label": "Self-assessment result",
-              "localized_labels": {
-                "ca": "Resultat de l'autoliquidació",
-                "en": "Self-assessment result",
-                "hu": "Önbevallás eredménye"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "71",
               "label": "Final result ([69] - [70] + [109])",
-              "localized_labels": {
-                "ca": "Resultat final ([69] - [70] + [109])",
-                "en": "Final result ([69] - [70] + [109])",
-                "hu": "Végső eredmény ([69] - [70] + [109])"
-              },
               "role": "key_figure",
               "value": "105.00"
             },
             {
               "casilla_id": "iva.compensacion-generada-periodo",
               "label": "Offset balance generated in this period",
-              "localized_labels": {
-                "ca": "Saldo a compensar generat en aquest període",
-                "en": "Offset balance generated in this period",
-                "hu": "Ebben az időszakban keletkezett beszámítási egyenleg"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
               "label": "Offset balance available at period end",
-              "localized_labels": {
-                "ca": "Saldo de compensació disponible al final del període",
-                "en": "Offset balance available at period end",
-                "hu": "Időszak végén rendelkezésre álló beszámítási egyenleg"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "27",
               "label": "Total accrued VAT amount",
-              "localized_labels": {
-                "ca": "Total quota meritada",
-                "en": "Total accrued VAT amount",
-                "hu": "Összes keletkezett ÁFA összeg"
-              },
               "role": "key_figure",
               "value": "210.00"
             },
             {
               "casilla_id": "45",
               "label": "Total deductible amount",
-              "localized_labels": {
-                "ca": "Total a deduir - quota",
-                "en": "Total deductible amount",
-                "hu": "Összes levonható összeg"
-              },
               "role": "key_figure",
               "value": "105.00"
             }

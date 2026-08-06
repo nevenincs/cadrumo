@@ -236,6 +236,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "decl.ejercicio",
               "formula_id": null,
               "legal_refs": [
@@ -253,6 +254,7 @@
               "value": "2025"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.tipo-declaracion",
               "formula_id": null,
               "legal_refs": [
@@ -270,6 +272,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.autorepercutido.intracomunitaria",
               "formula_id": null,
               "legal_refs": [
@@ -287,6 +290,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.compensacion-generada-ejercicio-no-97",
               "formula_id": null,
               "legal_refs": [
@@ -310,6 +314,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.compensacion-ultimo-periodo-97",
               "formula_id": null,
               "legal_refs": [
@@ -333,6 +338,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.cuota-deducible-total",
               "formula_id": "modelo-390-iva-anual-cuota-deducible-total",
               "legal_refs": [
@@ -378,6 +384,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.cuota-devengada-total",
               "formula_id": "modelo-390-iva-anual-cuota-devengada-total",
               "legal_refs": [
@@ -424,6 +431,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.reconciliacion.deducible-303",
               "formula_id": null,
               "legal_refs": [
@@ -441,6 +449,7 @@
               "value": "105.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.reconciliacion.devengada-303",
               "formula_id": null,
               "legal_refs": [
@@ -458,6 +467,7 @@
               "value": "1470.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.reconciliacion.devengada-simplificado-303",
               "formula_id": null,
               "legal_refs": [
@@ -476,6 +486,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.reconciliacion.resultado-303",
               "formula_id": null,
               "legal_refs": [
@@ -494,6 +505,7 @@
               "value": "1365.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.regularizacion-bienes-inversion",
               "formula_id": null,
               "legal_refs": [
@@ -516,6 +528,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.regularizacion-prorrata-definitiva",
               "formula_id": null,
               "legal_refs": [
@@ -539,6 +552,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.general",
               "formula_id": null,
               "legal_refs": [
@@ -556,6 +570,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.recargo.general",
               "formula_id": null,
               "legal_refs": [
@@ -573,6 +588,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.recargo.reducido",
               "formula_id": null,
               "legal_refs": [
@@ -590,6 +606,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.recargo.super-reducido",
               "formula_id": null,
               "legal_refs": [
@@ -607,6 +624,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.reducido",
               "formula_id": null,
               "legal_refs": [
@@ -624,6 +642,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.repercutido.super-reducido",
               "formula_id": null,
               "legal_refs": [
@@ -641,6 +660,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.resultado-regimen-general",
               "formula_id": "modelo-390-iva-anual-resultado-regimen-general",
               "legal_refs": [
@@ -670,6 +690,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.soportado.importaciones",
               "formula_id": null,
               "legal_refs": [
@@ -688,6 +709,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "iva.anual.soportado.interiores",
               "formula_id": null,
               "legal_refs": [
@@ -715,33 +737,18 @@
             {
               "casilla_id": "iva.anual.cuota-devengada-total",
               "label": "Total annual VAT due (charged + self-charged)",
-              "localized_labels": {
-                "ca": "Total quota d'IVA meritada anual (repercutit + autorepercutit)",
-                "en": "Total annual VAT due (charged + self-charged)",
-                "hu": "Éves keletkezett ÁFA összesen (felszámított + önmagára terhelt)"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.anual.cuota-deducible-total",
               "label": "Total annual deductible VAT (borne + self-charged)",
-              "localized_labels": {
-                "ca": "Total quota d'IVA deduïble anual (suportat + autorepercutit)",
-                "en": "Total annual deductible VAT (borne + self-charged)",
-                "hu": "Éves levonható ÁFA összesen (viselt + önmagára terhelt)"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.anual.resultado-regimen-general",
               "label": "Annual result under the standard regime (VAT due minus deductible VAT)",
-              "localized_labels": {
-                "ca": "Resultat anual del règim general (quota meritada - quota deduïble)",
-                "en": "Annual result under the standard regime (VAT due minus deductible VAT)",
-                "hu": "Az általános rendszer éves eredménye (keletkezett ÁFA mínusz levonható ÁFA)"
-              },
               "role": "key_figure",
               "value": "0.00"
             }

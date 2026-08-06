@@ -231,6 +231,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "01",
               "formula_id": null,
               "legal_refs": [
@@ -252,6 +253,7 @@
               "value": "1000"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "02",
               "formula_id": null,
               "legal_refs": [
@@ -273,6 +275,7 @@
               "value": "500"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "03",
               "formula_id": "modelo-130-rendimiento-neto",
               "legal_refs": [
@@ -301,6 +304,7 @@
               "value": "500.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "04",
               "formula_id": "modelo-130-pago-fraccionado-directa",
               "legal_refs": [
@@ -328,6 +332,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "05",
               "formula_id": null,
               "legal_refs": [
@@ -347,6 +352,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "06",
               "formula_id": null,
               "legal_refs": [
@@ -366,6 +372,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "07",
               "formula_id": "modelo-130-resultado-apartado-i",
               "legal_refs": [
@@ -397,6 +404,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "08",
               "formula_id": null,
               "legal_refs": [
@@ -416,6 +424,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "09",
               "formula_id": "modelo-130-pago-fraccionado-agrario",
               "legal_refs": [
@@ -443,6 +452,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "10",
               "formula_id": null,
               "legal_refs": [
@@ -462,6 +472,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "11",
               "formula_id": "modelo-130-resultado-apartado-ii",
               "legal_refs": [
@@ -490,6 +501,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "12",
               "formula_id": "modelo-130-suma-parciales",
               "legal_refs": [
@@ -518,6 +530,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "13",
               "formula_id": "modelo-130-minoracion-rendimientos-netos",
               "legal_refs": [
@@ -541,6 +554,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "14",
               "formula_id": "modelo-130-neto-tras-minoracion",
               "legal_refs": [
@@ -569,6 +583,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "15",
               "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
               "legal_refs": [
@@ -596,6 +611,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "16",
               "formula_id": null,
               "legal_refs": [
@@ -615,6 +631,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "17",
               "formula_id": "modelo-130-diferencia",
               "legal_refs": [
@@ -646,6 +663,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "18",
               "formula_id": null,
               "legal_refs": [
@@ -665,6 +683,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "19",
               "formula_id": "modelo-130-resultado-final",
               "legal_refs": [
@@ -693,6 +712,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "saldo-negativo-fin-periodo",
               "formula_id": "modelo-130-saldo-negativo-fin-periodo",
               "legal_refs": [
@@ -724,110 +744,60 @@
             {
               "casilla_id": "03",
               "label": "Net yield",
-              "localized_labels": {
-                "ca": "Rendiment net",
-                "en": "Net yield",
-                "hu": "Nettó jövedelem"
-              },
               "role": "key_figure",
               "value": "500.00"
             },
             {
               "casilla_id": "04",
               "label": "Fractional payment amount",
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "07",
               "label": "Partial result of Section I",
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat I",
-                "en": "Partial result of Section I",
-                "hu": "I. rész részeredménye"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "09",
               "label": "Fractional payment amount",
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "11",
               "label": "Partial result of Section II",
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat II",
-                "en": "Partial result of Section II",
-                "hu": "II. rész részeredménye"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "12",
               "label": "Sum of partial results",
-              "localized_labels": {
-                "ca": "Suma dels resultats parcials",
-                "en": "Sum of partial results",
-                "hu": "Részeredmények összege"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "13",
               "label": "Reduction for net yields",
-              "localized_labels": {
-                "ca": "Minoració per rendiments nets",
-                "en": "Reduction for net yields",
-                "hu": "Nettó jövedelem miatti csökkentés"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "14",
               "label": "Net amount after reduction",
-              "localized_labels": {
-                "ca": "Import net després de la minoració",
-                "en": "Net amount after reduction",
-                "hu": "Csökkentés utáni nettó összeg"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "17",
               "label": "Difference",
-              "localized_labels": {
-                "ca": "Diferència",
-                "en": "Difference",
-                "hu": "Különbözet"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "19",
               "label": "Final result",
-              "localized_labels": {
-                "ca": "Resultat final",
-                "en": "Final result",
-                "hu": "Végső eredmény"
-              },
               "role": "key_figure",
               "value": "0.00"
             }
@@ -1110,6 +1080,7 @@
           "rows": [
             {
               "casilla_id": "01",
+              "help_text": "Total cumulative business income for the tax year.",
               "input_kind": "bound",
               "label": "Income",
               "legal_refs": [
@@ -1120,16 +1091,6 @@
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28"
               ],
-              "localized_help": {
-                "ca": "Ingressos acumulats de l'activitat econòmica.",
-                "en": "Total cumulative business income for the tax year.",
-                "hu": "Az adóévben elért összesített vállalkozási bevétel."
-              },
-              "localized_labels": {
-                "ca": "Ingressos",
-                "en": "Income",
-                "hu": "Bevételek"
-              },
               "number": "01",
               "required": false,
               "source_refs": [
@@ -1139,6 +1100,7 @@
             },
             {
               "casilla_id": "02",
+              "help_text": "Total cumulative business expenses for the tax year.",
               "input_kind": "bound",
               "label": "Expenses",
               "legal_refs": [
@@ -1149,16 +1111,6 @@
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30"
               ],
-              "localized_help": {
-                "ca": "Despeses acumulades de l'activitat econòmica.",
-                "en": "Total cumulative business expenses for the tax year.",
-                "hu": "Az adóévben elért összesített vállalkozási kiadás."
-              },
-              "localized_labels": {
-                "ca": "Despeses",
-                "en": "Expenses",
-                "hu": "Kiadások"
-              },
               "number": "02",
               "required": true,
               "source_refs": [
@@ -1168,6 +1120,7 @@
             },
             {
               "casilla_id": "03",
+              "help_text": "Net yield from direct-estimation economic activities, calculated as income minus expenses.",
               "input_kind": "computed",
               "label": "Net yield",
               "legal_refs": [
@@ -1178,16 +1131,6 @@
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30"
               ],
-              "localized_help": {
-                "ca": "Rendiment net de les activitats econòmiques en estimació directa, calculat com ingressos menys despeses.",
-                "en": "Net yield from direct-estimation economic activities, calculated as income minus expenses.",
-                "hu": "A közvetlen becslésű gazdasági tevékenységek nettó jövedelme, a bevételek és kiadások különbözeteként."
-              },
-              "localized_labels": {
-                "ca": "Rendiment net",
-                "en": "Net yield",
-                "hu": "Nettó jövedelem"
-              },
               "number": "03",
               "required": false,
               "source_refs": [
@@ -1197,6 +1140,7 @@
             },
             {
               "casilla_id": "04",
+              "help_text": "Fractional payment amount for direct-estimation activities before prior payments and withholdings.",
               "input_kind": "computed",
               "label": "Fractional payment amount",
               "legal_refs": [
@@ -1205,16 +1149,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Import del pagament fraccionat per activitats en estimació directa abans de pagaments previs i retencions.",
-                "en": "Fractional payment amount for direct-estimation activities before prior payments and withholdings.",
-                "hu": "A közvetlen becslésű tevékenységek részletfizetési összege a korábbi befizetések és levonások előtt."
-              },
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "number": "04",
               "required": false,
               "source_refs": [
@@ -1224,6 +1158,7 @@
             },
             {
               "casilla_id": "05",
+              "help_text": "Fractional payments already made earlier in the same tax year for direct-estimation activities.",
               "input_kind": "bound",
               "label": "Prior fractional payments",
               "legal_refs": [
@@ -1232,16 +1167,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Pagaments fraccionats ja realitzats anteriorment en el mateix exercici per activitats en estimació directa.",
-                "en": "Fractional payments already made earlier in the same tax year for direct-estimation activities.",
-                "hu": "Ugyanazon adóév korábbi időszakaiban már teljesített részletfizetések közvetlen becslésű tevékenységekre."
-              },
-              "localized_labels": {
-                "ca": "Pagaments fraccionats anteriors",
-                "en": "Prior fractional payments",
-                "hu": "Korábbi részletfizetések"
-              },
               "number": "05",
               "required": false,
               "source_refs": [
@@ -1251,6 +1176,7 @@
             },
             {
               "casilla_id": "06",
+              "help_text": "Withholdings and payments on account borne during the period for direct-estimation activities.",
               "input_kind": "manual",
               "label": "Withholdings and payments on account",
               "legal_refs": [
@@ -1259,16 +1185,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Retencions i ingressos a compte suportats durant el període per activitats en estimació directa.",
-                "en": "Withholdings and payments on account borne during the period for direct-estimation activities.",
-                "hu": "Az időszakban elszenvedett levonások és előlegbefizetések közvetlen becslésű tevékenységekre."
-              },
-              "localized_labels": {
-                "ca": "Retencions i ingressos a compte",
-                "en": "Withholdings and payments on account",
-                "hu": "Levonások és előlegbefizetések"
-              },
               "number": "06",
               "required": false,
               "source_refs": [
@@ -1278,6 +1194,7 @@
             },
             {
               "casilla_id": "07",
+              "help_text": "Partial Section I result after subtracting prior payments and withholdings from the direct-estimation fractional payment.",
               "input_kind": "computed",
               "label": "Partial result of Section I",
               "legal_refs": [
@@ -1286,16 +1203,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Resultat parcial de l'apartat I després de restar pagaments previs i retencions al pagament fraccionat d'estimació directa.",
-                "en": "Partial Section I result after subtracting prior payments and withholdings from the direct-estimation fractional payment.",
-                "hu": "Az I. rész részeredménye a korábbi befizetések és levonások levonása után."
-              },
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat I",
-                "en": "Partial result of Section I",
-                "hu": "I. rész részeredménye"
-              },
               "number": "07",
               "required": false,
               "source_refs": [
@@ -1305,6 +1212,7 @@
             },
             {
               "casilla_id": "08",
+              "help_text": "Income volume for the quarter from agricultural, livestock, forestry, or fishing activities.",
               "input_kind": "manual",
               "label": "Quarterly income volume",
               "legal_refs": [
@@ -1313,16 +1221,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Volum d'ingressos del trimestre procedent d'activitats agrícoles, ramaderes, forestals o pesqueres.",
-                "en": "Income volume for the quarter from agricultural, livestock, forestry, or fishing activities.",
-                "hu": "A negyedév bevételi volumene mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységekből."
-              },
-              "localized_labels": {
-                "ca": "Volum d'ingressos del trimestre",
-                "en": "Quarterly income volume",
-                "hu": "A negyedév bevételi volumene"
-              },
               "number": "08",
               "required": false,
               "source_refs": [
@@ -1332,6 +1230,7 @@
             },
             {
               "casilla_id": "09",
+              "help_text": "Fractional payment amount for agricultural, livestock, forestry, or fishing activities.",
               "input_kind": "computed",
               "label": "Fractional payment amount",
               "legal_refs": [
@@ -1340,16 +1239,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Import del pagament fraccionat per activitats agrícoles, ramaderes, forestals o pesqueres.",
-                "en": "Fractional payment amount for agricultural, livestock, forestry, or fishing activities.",
-                "hu": "A mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységek részletfizetési összege."
-              },
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "number": "09",
               "required": false,
               "source_refs": [
@@ -1359,6 +1248,7 @@
             },
             {
               "casilla_id": "10",
+              "help_text": "Withholdings and payments on account borne during the period for agricultural, livestock, forestry, or fishing activities.",
               "input_kind": "manual",
               "label": "Withholdings and payments on account",
               "legal_refs": [
@@ -1367,16 +1257,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Retencions i ingressos a compte suportats durant el període per activitats agrícoles, ramaderes, forestals o pesqueres.",
-                "en": "Withholdings and payments on account borne during the period for agricultural, livestock, forestry, or fishing activities.",
-                "hu": "Az időszakban elszenvedett levonások és előlegbefizetések mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységekre."
-              },
-              "localized_labels": {
-                "ca": "Retencions i ingressos a compte",
-                "en": "Withholdings and payments on account",
-                "hu": "Levonások és előlegbefizetések"
-              },
               "number": "10",
               "required": false,
               "source_refs": [
@@ -1386,6 +1266,7 @@
             },
             {
               "casilla_id": "11",
+              "help_text": "Partial Section II result after subtracting withholdings from the agricultural, livestock, forestry, or fishing fractional payment.",
               "input_kind": "computed",
               "label": "Partial result of Section II",
               "legal_refs": [
@@ -1394,16 +1275,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Resultat parcial de l'apartat II després de restar les retencions al pagament fraccionat agrari, ramader, forestal o pesquer.",
-                "en": "Partial Section II result after subtracting withholdings from the agricultural, livestock, forestry, or fishing fractional payment.",
-                "hu": "A II. rész részeredménye a levonások mezőgazdasági, állattenyésztési, erdészeti vagy halászati részletfizetésből való levonása után."
-              },
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat II",
-                "en": "Partial result of Section II",
-                "hu": "II. rész részeredménye"
-              },
               "number": "11",
               "required": false,
               "source_refs": [
@@ -1413,6 +1284,7 @@
             },
             {
               "casilla_id": "12",
+              "help_text": "Sum of the partial results from Sections I and II.",
               "input_kind": "computed",
               "label": "Sum of partial results",
               "legal_refs": [
@@ -1421,16 +1293,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Suma dels resultats parcials dels apartats I i II.",
-                "en": "Sum of the partial results from Sections I and II.",
-                "hu": "Az I. és II. rész részeredményeinek összege."
-              },
-              "localized_labels": {
-                "ca": "Suma dels resultats parcials",
-                "en": "Sum of partial results",
-                "hu": "Részeredmények összege"
-              },
               "number": "12",
               "required": false,
               "source_refs": [
@@ -1440,6 +1302,7 @@
             },
             {
               "casilla_id": "13",
+              "help_text": "Reduction applied when net yields fall within the regulatory threshold for Modelo 130.",
               "input_kind": "computed",
               "label": "Reduction for net yields",
               "legal_refs": [
@@ -1448,16 +1311,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Minoració aplicable quan els rendiments nets entren dins el llindar regulador del Model 130.",
-                "en": "Reduction applied when net yields fall within the regulatory threshold for Modelo 130.",
-                "hu": "A Modelo 130 szabályozási küszöbe alapján alkalmazható nettó jövedelmi csökkentés."
-              },
-              "localized_labels": {
-                "ca": "Minoració per rendiments nets",
-                "en": "Reduction for net yields",
-                "hu": "Nettó jövedelem miatti csökkentés"
-              },
               "number": "13",
               "required": false,
               "source_refs": [
@@ -1467,6 +1320,7 @@
             },
             {
               "casilla_id": "14",
+              "help_text": "Amount remaining after applying the net-yield reduction.",
               "input_kind": "computed",
               "label": "Net amount after reduction",
               "legal_refs": [
@@ -1475,16 +1329,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Import restant després d'aplicar la minoració per rendiments nets.",
-                "en": "Amount remaining after applying the net-yield reduction.",
-                "hu": "A nettó jövedelmi csökkentés alkalmazása után fennmaradó összeg."
-              },
-              "localized_labels": {
-                "ca": "Import net després de la minoració",
-                "en": "Net amount after reduction",
-                "hu": "Csökkentés utáni nettó összeg"
-              },
               "number": "14",
               "required": false,
               "source_refs": [
@@ -1494,6 +1338,7 @@
             },
             {
               "casilla_id": "15",
+              "help_text": "Deduction for negative results from previous quarters of the same tax year.",
               "input_kind": "computed",
               "label": "Negative results from previous quarters",
               "legal_refs": [
@@ -1502,16 +1347,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Deducció per resultats negatius de trimestres anteriors del mateix exercici.",
-                "en": "Deduction for negative results from previous quarters of the same tax year.",
-                "hu": "Ugyanazon adóév korábbi negyedéveiből származó negatív eredmények levonása."
-              },
-              "localized_labels": {
-                "ca": "Resultats negatius de trimestres anteriors",
-                "en": "Negative results from previous quarters",
-                "hu": "Korábbi negyedévek negatív eredményei"
-              },
               "number": "15",
               "required": false,
               "source_refs": [
@@ -1521,6 +1356,7 @@
             },
             {
               "casilla_id": "16",
+              "help_text": "Deduction for investment in the taxpayer's main residence when the transitional regime applies.",
               "input_kind": "manual",
               "label": "Deduction for investment in main residence",
               "legal_refs": [
@@ -1529,16 +1365,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Deducció per inversió en l'habitatge habitual quan s'aplica el règim transitori.",
-                "en": "Deduction for investment in the taxpayer's main residence when the transitional regime applies.",
-                "hu": "A fő lakóhelybe történő beruházás kedvezménye, ha az átmeneti szabályozás alkalmazható."
-              },
-              "localized_labels": {
-                "ca": "Deducció per inversió en habitatge habitual",
-                "en": "Deduction for investment in main residence",
-                "hu": "Lakóhelyi ingatlanberuházási kedvezmény"
-              },
               "number": "16",
               "required": false,
               "source_refs": [
@@ -1548,6 +1374,7 @@
             },
             {
               "casilla_id": "17",
+              "help_text": "Difference after applying prior-quarter negative results and any main-residence deduction.",
               "input_kind": "computed",
               "label": "Difference",
               "legal_refs": [
@@ -1556,16 +1383,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Diferència després d'aplicar resultats negatius anteriors i, si escau, la deducció per habitatge habitual.",
-                "en": "Difference after applying prior-quarter negative results and any main-residence deduction.",
-                "hu": "Különbözet a korábbi negyedévek negatív eredményei és az esetleges lakóhelyi kedvezmény alkalmazása után."
-              },
-              "localized_labels": {
-                "ca": "Diferència",
-                "en": "Difference",
-                "hu": "Különbözet"
-              },
               "number": "17",
               "required": false,
               "source_refs": [
@@ -1575,6 +1392,7 @@
             },
             {
               "casilla_id": "18",
+              "help_text": "Amount payable already reported in previous self-assessments for the same period and year.",
               "input_kind": "manual",
               "label": "Amount payable from previous self-assessments",
               "legal_refs": [
@@ -1583,16 +1401,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Import a ingressar ja declarat en autoliquidacions anteriors del mateix període i exercici.",
-                "en": "Amount payable already reported in previous self-assessments for the same period and year.",
-                "hu": "Ugyanazon időszakra és évre vonatkozó korábbi önadózásokban már fizetendőként bevallott összeg."
-              },
-              "localized_labels": {
-                "ca": "Resultat a ingressar d'autoliquidacions anteriors",
-                "en": "Amount payable from previous self-assessments",
-                "hu": "Korábbi önadózásokban fizetendőként szereplő összeg"
-              },
               "number": "18",
               "required": false,
               "source_refs": [
@@ -1602,6 +1410,7 @@
             },
             {
               "casilla_id": "19",
+              "help_text": "Final Modelo 130 amount payable after all deductions and prior self-assessments.",
               "input_kind": "computed",
               "label": "Final result",
               "legal_refs": [
@@ -1610,16 +1419,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Import final a ingressar del Model 130 després de totes les deduccions i autoliquidacions anteriors.",
-                "en": "Final Modelo 130 amount payable after all deductions and prior self-assessments.",
-                "hu": "A Modelo 130 végső fizetendő összege minden levonás és korábbi önadózás után."
-              },
-              "localized_labels": {
-                "ca": "Resultat final",
-                "en": "Final result",
-                "hu": "Végső eredmény"
-              },
               "number": "19",
               "required": false,
               "source_refs": [
@@ -1629,6 +1428,7 @@
             },
             {
               "casilla_id": "saldo-negativo-fin-periodo",
+              "help_text": "Computed carry-forward seed when casilla 17 is negative, used as deductible casilla 15 in a later quarter.",
               "input_kind": "computed",
               "label": "Negative balance transferable to later periods (max 0, -casilla 17)",
               "legal_refs": [
@@ -1637,16 +1437,6 @@
                 "ley-35-2006:art-99",
                 "rd-439-2007:art-95"
               ],
-              "localized_help": {
-                "ca": "Llavor de traspàs calculada quan la casella 17 és negativa, usada com a deducció a la casella 15 d'un trimestre posterior.",
-                "en": "Computed carry-forward seed when casilla 17 is negative, used as deductible casilla 15 in a later quarter.",
-                "hu": "Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben a 15. mező levonásaként használható."
-              },
-              "localized_labels": {
-                "ca": "Saldo negatiu traslladable a períodes posteriors (màx. 0, -casella 17)",
-                "en": "Negative balance transferable to later periods (max 0, -casilla 17)",
-                "hu": "Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)"
-              },
               "number": "saldo-negativo-fin-periodo",
               "required": false,
               "source_refs": [

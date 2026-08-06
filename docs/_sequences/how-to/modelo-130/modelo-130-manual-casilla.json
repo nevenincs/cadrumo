@@ -240,6 +240,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "01",
               "formula_id": null,
               "legal_refs": [
@@ -261,6 +262,7 @@
               "value": "1000"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "02",
               "formula_id": null,
               "legal_refs": [
@@ -282,6 +284,7 @@
               "value": "500"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "03",
               "formula_id": "modelo-130-rendimiento-neto",
               "legal_refs": [
@@ -310,6 +313,7 @@
               "value": "500.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "04",
               "formula_id": "modelo-130-pago-fraccionado-directa",
               "legal_refs": [
@@ -337,6 +341,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "05",
               "formula_id": null,
               "legal_refs": [
@@ -356,6 +361,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "06",
               "formula_id": null,
               "legal_refs": [
@@ -375,6 +381,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "07",
               "formula_id": "modelo-130-resultado-apartado-i",
               "legal_refs": [
@@ -406,6 +413,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "08",
               "formula_id": null,
               "legal_refs": [
@@ -425,6 +433,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "09",
               "formula_id": "modelo-130-pago-fraccionado-agrario",
               "legal_refs": [
@@ -452,6 +461,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "10",
               "formula_id": null,
               "legal_refs": [
@@ -471,6 +481,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "11",
               "formula_id": "modelo-130-resultado-apartado-ii",
               "legal_refs": [
@@ -499,6 +510,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "12",
               "formula_id": "modelo-130-suma-parciales",
               "legal_refs": [
@@ -527,6 +539,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "13",
               "formula_id": "modelo-130-minoracion-rendimientos-netos",
               "legal_refs": [
@@ -550,6 +563,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "14",
               "formula_id": "modelo-130-neto-tras-minoracion",
               "legal_refs": [
@@ -578,6 +592,7 @@
               "value": "-100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "15",
               "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
               "legal_refs": [
@@ -605,6 +620,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "16",
               "formula_id": null,
               "legal_refs": [
@@ -624,6 +640,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "17",
               "formula_id": "modelo-130-diferencia",
               "legal_refs": [
@@ -655,6 +672,7 @@
               "value": "-100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "18",
               "formula_id": null,
               "legal_refs": [
@@ -674,6 +692,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "19",
               "formula_id": "modelo-130-resultado-final",
               "legal_refs": [
@@ -702,6 +721,7 @@
               "value": "-100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "saldo-negativo-fin-periodo",
               "formula_id": "modelo-130-saldo-negativo-fin-periodo",
               "legal_refs": [
@@ -733,110 +753,60 @@
             {
               "casilla_id": "03",
               "label": "Net yield",
-              "localized_labels": {
-                "ca": "Rendiment net",
-                "en": "Net yield",
-                "hu": "Nettó jövedelem"
-              },
               "role": "key_figure",
               "value": "500.00"
             },
             {
               "casilla_id": "04",
               "label": "Fractional payment amount",
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "07",
               "label": "Partial result of Section I",
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat I",
-                "en": "Partial result of Section I",
-                "hu": "I. rész részeredménye"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "09",
               "label": "Fractional payment amount",
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "11",
               "label": "Partial result of Section II",
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat II",
-                "en": "Partial result of Section II",
-                "hu": "II. rész részeredménye"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "12",
               "label": "Sum of partial results",
-              "localized_labels": {
-                "ca": "Suma dels resultats parcials",
-                "en": "Sum of partial results",
-                "hu": "Részeredmények összege"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "13",
               "label": "Reduction for net yields",
-              "localized_labels": {
-                "ca": "Minoració per rendiments nets",
-                "en": "Reduction for net yields",
-                "hu": "Nettó jövedelem miatti csökkentés"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "14",
               "label": "Net amount after reduction",
-              "localized_labels": {
-                "ca": "Import net després de la minoració",
-                "en": "Net amount after reduction",
-                "hu": "Csökkentés utáni nettó összeg"
-              },
               "role": "key_figure",
               "value": "-100.00"
             },
             {
               "casilla_id": "17",
               "label": "Difference",
-              "localized_labels": {
-                "ca": "Diferència",
-                "en": "Difference",
-                "hu": "Különbözet"
-              },
               "role": "key_figure",
               "value": "-100.00"
             },
             {
               "casilla_id": "19",
               "label": "Final result",
-              "localized_labels": {
-                "ca": "Resultat final",
-                "en": "Final result",
-                "hu": "Végső eredmény"
-              },
               "role": "key_figure",
               "value": "-100.00"
             }
@@ -923,6 +893,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "01",
               "formula_id": null,
               "legal_refs": [
@@ -944,6 +915,7 @@
               "value": "1000"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "02",
               "formula_id": null,
               "legal_refs": [
@@ -965,6 +937,7 @@
               "value": "500"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "03",
               "formula_id": "modelo-130-rendimiento-neto",
               "legal_refs": [
@@ -993,6 +966,7 @@
               "value": "500.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "04",
               "formula_id": "modelo-130-pago-fraccionado-directa",
               "legal_refs": [
@@ -1020,6 +994,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "05",
               "formula_id": null,
               "legal_refs": [
@@ -1039,6 +1014,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "06",
               "formula_id": null,
               "legal_refs": [
@@ -1058,6 +1034,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "07",
               "formula_id": "modelo-130-resultado-apartado-i",
               "legal_refs": [
@@ -1089,6 +1066,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "08",
               "formula_id": null,
               "legal_refs": [
@@ -1108,6 +1086,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "09",
               "formula_id": "modelo-130-pago-fraccionado-agrario",
               "legal_refs": [
@@ -1135,6 +1114,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "10",
               "formula_id": null,
               "legal_refs": [
@@ -1154,6 +1134,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "11",
               "formula_id": "modelo-130-resultado-apartado-ii",
               "legal_refs": [
@@ -1182,6 +1163,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "12",
               "formula_id": "modelo-130-suma-parciales",
               "legal_refs": [
@@ -1210,6 +1192,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "13",
               "formula_id": "modelo-130-minoracion-rendimientos-netos",
               "legal_refs": [
@@ -1233,6 +1216,7 @@
               "value": "100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "14",
               "formula_id": "modelo-130-neto-tras-minoracion",
               "legal_refs": [
@@ -1261,6 +1245,7 @@
               "value": "-100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "15",
               "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
               "legal_refs": [
@@ -1288,6 +1273,7 @@
               "value": "0.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "16",
               "formula_id": null,
               "legal_refs": [
@@ -1307,6 +1293,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "17",
               "formula_id": "modelo-130-diferencia",
               "legal_refs": [
@@ -1338,6 +1325,7 @@
               "value": "-100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "18",
               "formula_id": null,
               "legal_refs": [
@@ -1357,6 +1345,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "19",
               "formula_id": "modelo-130-resultado-final",
               "legal_refs": [
@@ -1385,6 +1374,7 @@
               "value": "-100.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "saldo-negativo-fin-periodo",
               "formula_id": "modelo-130-saldo-negativo-fin-periodo",
               "legal_refs": [
@@ -1416,110 +1406,60 @@
             {
               "casilla_id": "03",
               "label": "Net yield",
-              "localized_labels": {
-                "ca": "Rendiment net",
-                "en": "Net yield",
-                "hu": "Nettó jövedelem"
-              },
               "role": "key_figure",
               "value": "500.00"
             },
             {
               "casilla_id": "04",
               "label": "Fractional payment amount",
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "07",
               "label": "Partial result of Section I",
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat I",
-                "en": "Partial result of Section I",
-                "hu": "I. rész részeredménye"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "09",
               "label": "Fractional payment amount",
-              "localized_labels": {
-                "ca": "Import del pagament fraccionat",
-                "en": "Fractional payment amount",
-                "hu": "Részletfizetés összege"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "11",
               "label": "Partial result of Section II",
-              "localized_labels": {
-                "ca": "Resultat parcial de l'apartat II",
-                "en": "Partial result of Section II",
-                "hu": "II. rész részeredménye"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "12",
               "label": "Sum of partial results",
-              "localized_labels": {
-                "ca": "Suma dels resultats parcials",
-                "en": "Sum of partial results",
-                "hu": "Részeredmények összege"
-              },
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "13",
               "label": "Reduction for net yields",
-              "localized_labels": {
-                "ca": "Minoració per rendiments nets",
-                "en": "Reduction for net yields",
-                "hu": "Nettó jövedelem miatti csökkentés"
-              },
               "role": "key_figure",
               "value": "100.00"
             },
             {
               "casilla_id": "14",
               "label": "Net amount after reduction",
-              "localized_labels": {
-                "ca": "Import net després de la minoració",
-                "en": "Net amount after reduction",
-                "hu": "Csökkentés utáni nettó összeg"
-              },
               "role": "key_figure",
               "value": "-100.00"
             },
             {
               "casilla_id": "17",
               "label": "Difference",
-              "localized_labels": {
-                "ca": "Diferència",
-                "en": "Difference",
-                "hu": "Különbözet"
-              },
               "role": "key_figure",
               "value": "-100.00"
             },
             {
               "casilla_id": "19",
               "label": "Final result",
-              "localized_labels": {
-                "ca": "Resultat final",
-                "en": "Final result",
-                "hu": "Végső eredmény"
-              },
               "role": "key_figure",
               "value": "-100.00"
             }

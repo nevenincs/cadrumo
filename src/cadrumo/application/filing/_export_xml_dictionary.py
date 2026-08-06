@@ -487,6 +487,21 @@ def _modelo_100_comunidad_block(path: str) -> str | None:
     return path[len(_MODELO_100_COMUNIDAD_BLOCK_PREFIX) :].split("/", 1)[0]
 
 
+def _modelo_100_casilla_is_populated(value: object) -> bool:
+    """Return whether a CCAA casilla value selects a comunidad block.
+
+    Calculated drafts carry zero-valued placeholders for every CCAA aggregate,
+    sometimes as strings. Those placeholders are absent for the XSD ``choice``
+    and must not select a block. A nonempty value that cannot be parsed remains
+    populated so the later row formatter raises its typed validation error
+    instead of silently suppressing the invalid input as if it were absent.
+    """
+    if value is None or value == "":
+        return False
+    amount = coerce_decimal(value)
+    return amount is None or not amount.is_zero()
+
+
 def _modelo_100_unfiled_comunidad_paths(
     entries: tuple[XmlDictionaryEntry, ...],
     casilla_values: Mapping[CasillaId, object],
@@ -517,7 +532,7 @@ def _modelo_100_unfiled_comunidad_paths(
     filed = sorted(
         block
         for block, own in own_casillas_by_block.items()
-        if any(casilla_values.get(casilla) is not None for casilla in own)
+        if any(_modelo_100_casilla_is_populated(casilla_values.get(casilla)) for casilla in own)
     )
     if len(filed) > 1:
         raise FilingExportValidationError(

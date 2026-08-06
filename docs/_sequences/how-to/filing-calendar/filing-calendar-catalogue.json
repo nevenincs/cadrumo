@@ -1481,11 +1481,22 @@
         "notices": [],
         "result": {
           "binding_count": 8,
+          "bound_casilla_count": 3,
           "cadence": "quarterly",
           "casilla_count": 20,
           "code": "130",
+          "computed_casilla_count": 12,
+          "filing_period": null,
           "filing_year": null,
           "formula_count": 12,
+          "jurisdiction": "ES-AEAT",
+          "legal_refs": [
+            "rd-439-2007:art-110",
+            "orden-eha-672-2007:art-1",
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-95"
+          ],
+          "manual_casilla_count": 5,
           "official_name": "Impuesto sobre la Renta de las Personas Físicas. Actividades económicas en estimación directa. Pago fraccionado.",
           "operation": "modelo.describe",
           "period": null,
@@ -1499,8 +1510,14 @@
           "revision_ids": [
             "2019-y-siguientes"
           ],
+          "source_refs": [
+            "aeat-dr-130-2019-v12",
+            "aeat-modelo-130-instructions"
+          ],
           "tax_domain": "irpf",
-          "title": "IRPF pago fraccionado estimación directa"
+          "title": "IRPF pago fraccionado estimación directa",
+          "valid_from": "2019-01-01",
+          "valid_to": null
         },
         "schema_version": "2",
         "status": "success"
@@ -1530,11 +1547,22 @@
         "notices": [],
         "result": {
           "binding_count": 8,
+          "bound_casilla_count": 3,
           "cadence": "quarterly",
           "casilla_count": 20,
           "code": "130",
+          "computed_casilla_count": 12,
+          "filing_period": null,
           "filing_year": null,
           "formula_count": 12,
+          "jurisdiction": "ES-AEAT",
+          "legal_refs": [
+            "rd-439-2007:art-110",
+            "orden-eha-672-2007:art-1",
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-95"
+          ],
+          "manual_casilla_count": 5,
           "official_name": "Impuesto sobre la Renta de las Personas Físicas. Actividades económicas en estimación directa. Pago fraccionado.",
           "operation": "modelo.describe",
           "period": "1T",
@@ -1548,8 +1576,14 @@
           "revision_ids": [
             "2019-y-siguientes"
           ],
+          "source_refs": [
+            "aeat-dr-130-2019-v12",
+            "aeat-modelo-130-instructions"
+          ],
           "tax_domain": "irpf",
-          "title": "IRPF pago fraccionado estimación directa"
+          "title": "IRPF pago fraccionado estimación directa",
+          "valid_from": "2019-01-01",
+          "valid_to": null
         },
         "schema_version": "2",
         "status": "success"

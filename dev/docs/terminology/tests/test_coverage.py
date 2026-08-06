@@ -240,10 +240,9 @@ def test_report_over_the_committed_mapping_is_grounded(
 ) -> None:
     """Against the real committed mapping the report is populated and honest.
 
-    The committed sweep references real concept cards, casillas, and legal
-    provisions (so those surfaces show real coverage) plus doc-page and
-    source-code grounding targets that no enumerable surface produces (so they
-    surface as orphan mapping targets, not crashes).
+    The refreshed manifest-admissible relevance references real concept cards,
+    casillas, and legal provisions (so those surfaces show real coverage) and
+    does not emit synthetic source-code targets as orphan mapping targets.
     """
     committed = load_committed_relevance()
     report = compute_coverage_report(
@@ -258,9 +257,9 @@ def test_report_over_the_committed_mapping_is_grounded(
     assert report.referenced_target_count > 0
     assert report.kind(CoverageKind.CONCEPT).covered > 0
     assert report.kind(CoverageKind.LEGAL).covered > 0
-    # Doc-page / source-code grounding targets are outside the four derivable
-    # surfaces and are reported as orphans rather than crashed on.
-    assert any(orphan.startswith("code:") for orphan in report.orphan_mapping_target_ids)
+    # The refreshed manifest-admissible relevance emits no synthetic code
+    # targets, so the orphan report contains no ``code:`` ids.
+    assert not any(orphan.startswith("code:") for orphan in report.orphan_mapping_target_ids)
     assert coverage_report_path().name == "coverage-report.json"
 
 

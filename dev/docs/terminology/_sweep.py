@@ -31,9 +31,11 @@ serialisation is one ``model_dump_json`` call.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Protocol
+from typing import NamedTuple, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,7 +46,8 @@ from ..terminology_handbook import TerminologyHandbook, load_terminology_handboo
 from ..terminology_handbook._enums import TermStatus
 from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
 from ._search_record import SearchRecordKind
-from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, wrangle
+from ._unified_record import SearchRecord
+from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
 
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
@@ -75,6 +78,22 @@ DEFAULT_MAX_RESULTS = 20
 #: service can be busy behind a concurrent index rebuild, so the default is
 #: generous.
 DEFAULT_SEARCH_TIMEOUT_S = 60.0
+
+
+class _StructuredCasillaQuery(NamedTuple):
+    """The normalized parts of a structured Modelo/casilla query."""
+
+    modelo: str
+    casilla_id: str
+    number: str
+    segmento: str | None
+
+
+_STRUCTURED_CASILLA_QUERY_RE = re.compile(
+    r"^(?:modelo|model|form)\s+([0-9]+)\s+(?:casilla|casella|box|field)\s+"
+    r"([a-z0-9][a-z0-9._:-]*)$",
+    re.ASCII,
+)
 
 
 class SweepError(RuntimeError):
@@ -316,6 +335,7 @@ class ServiceRagSearchClient:
             raise SweepError(f"RAG search for {query!r} returned non-JSON: {exc}") from exc
         if not isinstance(payload, dict):
             raise SweepError(f"RAG search for {query!r} returned a non-object JSON envelope")
+        payload = cast(dict[str, object], payload)
         if not payload.get("ok"):
             raise SweepError(f"RAG search for {query!r} not ok: {payload.get('message', payload.get('error'))}")
         return _parse_hits(payload)
@@ -325,16 +345,20 @@ def _parse_hits(payload: object) -> tuple[ChunkHit, ...]:
     """Parse the service JSON envelope into typed chunk hits."""
     if not isinstance(payload, dict):
         return ()
+    payload = cast(dict[str, object], payload)
     data = payload.get("data")
     if not isinstance(data, dict):
         return ()
+    data = cast(dict[str, object], data)
     results = data.get("results")
     if not isinstance(results, list):
         return ()
+    results = cast(list[object], results)
     hits: list[ChunkHit] = []
-    for row in results:
-        if not isinstance(row, dict):
+    for raw_row in results:
+        if not isinstance(raw_row, dict):
             continue
+        row = cast(dict[str, object], raw_row)
         path = row.get("path")
         if not isinstance(path, str) or not path:
             continue
@@ -442,12 +466,19 @@ def run_sweep(
     """
     queries = enumerate_query_vocabulary(handbook, concept_ids=concept_ids)
     target_resolver = resolver if resolver is not None else TargetResolver()
+    root = repo_root if repo_root is not None else _default_repo_root()
 
     if reindex:
-        root = repo_root if repo_root is not None else _default_repo_root()
         reindex_note = _reindex_before_sweep(root, port=port)
     else:
         reindex_note = "reindex skipped (caller-supplied client; index used as-is)"
+
+    # The mapping boundary may only ship ids emitted by the complete projection
+    # consumed by Pagefind and Rung 2. This also rejects resolver-only synthetic
+    # PAGE records (for example ``code:*``) without weakening resolution itself.
+    from dev.docs.pagefind_inject import materialise_search_records
+
+    search_records = materialise_search_records(root).records
 
     mappings: list[TermRelevanceMapping] = []
     concepts_seen: set[str] = set()
@@ -466,7 +497,14 @@ def run_sweep(
             continue
         resolution = resolve_chunk_hits(hits, resolver=target_resolver)
         wrangled = wrangle(resolution, score_floor=score_floor)
-        mappings.append(_mapping_from(query, wrangled, resolver=target_resolver))
+        mappings.append(
+            _mapping_from(
+                query,
+                wrangled,
+                resolver=target_resolver,
+                search_records=search_records,
+            ),
+        )
 
     return SweepResult(
         mappings=tuple(mappings),
@@ -488,19 +526,18 @@ def _mapping_from(
     wrangled: WrangledResult,
     *,
     resolver: TargetResolver,
+    search_records: tuple[SearchRecord, ...],
 ) -> TermRelevanceMapping:
+    emitted_record_ids = frozenset(record.id for record in search_records)
+    manifest_targets = tuple(target for target in wrangled.targets if target.record.id in emitted_record_ids)
     targets = tuple(
-        TermTargetRef(
-            record_id=target.record.id,
-            target=target.record.target,
-            kind=target.record.kind,
-            surface=target.surface.value,
-            ranking_weight=target.record.ranking_weight,
-        )
-        for target in wrangled.targets
+        _term_target_ref(target.record, target.surface.value)
+        for target in manifest_targets
     )
-    targets = _seed_concept_card(query, targets, resolver)
-    dominant = wrangled.clusters[0] if wrangled.clusters else None
+    targets = _augment_structured_casilla_target(query, targets, search_records)
+    targets = _seed_concept_card(query, targets, resolver, emitted_record_ids=emitted_record_ids)
+    clusters = read_clusters(manifest_targets)
+    dominant = clusters[0] if clusters else None
     locator = f"{dominant.surface}:{dominant.locator}" if dominant is not None else None
     return TermRelevanceMapping(
         query=query.query,
@@ -513,10 +550,132 @@ def _mapping_from(
     )
 
 
+def _term_target_ref(record: SearchRecord, surface: str) -> TermTargetRef:
+    """Launder one unified record into the shipped target shape."""
+    return TermTargetRef(
+        record_id=record.id,
+        target=record.target,
+        kind=record.kind,
+        surface=surface,
+        ranking_weight=record.ranking_weight,
+    )
+
+
+def _augment_structured_casilla_target(
+    query: SweepQuery,
+    targets: tuple[TermTargetRef, ...],
+    search_records: tuple[SearchRecord, ...],
+) -> tuple[TermTargetRef, ...]:
+    """Add one exact structured casilla match at the laundering boundary.
+
+    The match is deliberately outside RAG resolution and wrangling: the
+    authoritative projection already owns the record id, target, metadata, and
+    base weight. A zero or ambiguous match is refused, and an id already
+    surfaced by RAG is retained exactly once.
+    """
+    record = _match_structured_casilla_query(query.query, search_records)
+    if record is None or any(target.record_id == record.id for target in targets):
+        return targets
+
+    augmented = (*targets, _term_target_ref(record, GroundingSurface.CASILLA.value))
+    return tuple(sorted(augmented, key=lambda target: (-target.ranking_weight, target.record_id)))
+
+
+def _match_structured_casilla_query(
+    query: str,
+    records: Iterable[SearchRecord],
+) -> SearchRecord | None:
+    """Return the unique authoritative casilla record addressed by ``query``.
+
+    The grammar and normalization mirror the docs search controller. Canonical
+    ``(modelo, casilla_id)`` identity wins first; only when that yields no
+    record is the reviewed ``(number, segmento)`` display metadata considered.
+    Both paths fail closed for zero or multiple matches.
+    """
+    address = _parse_structured_casilla_query(query)
+    if address is None:
+        return None
+
+    casillas = tuple(
+        record
+        for record in records
+        if record.kind is SearchRecordKind.CASILLA
+        and record.metadata.modelo is not None
+        and _normalise_structured_value(str(record.metadata.modelo)) == address.modelo
+    )
+    canonical_matches = tuple(
+        record
+        for record in casillas
+        if record.metadata.casilla_id is not None
+        and _normalise_structured_text(str(record.metadata.casilla_id)) == address.casilla_id
+    )
+    if len(canonical_matches) == 1:
+        return canonical_matches[0]
+    if canonical_matches:
+        return None
+
+    display_matches = tuple(
+        record
+        for record in casillas
+        if record.metadata.number is not None
+        and _normalise_structured_value(record.metadata.number) == address.number
+        and (
+            address.segmento is None
+            or (
+                record.metadata.segmento is not None
+                and _normalise_structured_value(record.metadata.segmento) == address.segmento
+            )
+        )
+    )
+    return display_matches[0] if len(display_matches) == 1 else None
+
+
+def _parse_structured_casilla_query(query: str) -> _StructuredCasillaQuery | None:
+    """Parse the exact structured Modelo/casilla vocabulary shared with docs JS."""
+    text = _normalise_structured_text(query)
+    text = re.sub(r"[^\w\s:.-]", " ", text, flags=re.ASCII)
+    text = re.sub(r"\s+", " ", text).strip()
+    match = _STRUCTURED_CASILLA_QUERY_RE.fullmatch(text)
+    if match is None:
+        return None
+
+    casilla_id = match.group(2)
+    separator = casilla_id.find(":")
+    segmento = None
+    number = casilla_id
+    if separator >= 0:
+        if separator == 0 or separator == len(casilla_id) - 1:
+            return None
+        segmento = _normalise_structured_value(casilla_id[:separator])
+        number = casilla_id[separator + 1 :]
+    return _StructuredCasillaQuery(
+        modelo=_normalise_structured_value(match.group(1)),
+        casilla_id=_normalise_structured_text(casilla_id),
+        number=_normalise_structured_value(number),
+        segmento=segmento,
+    )
+
+
+def _normalise_structured_text(value: str) -> str:
+    """Apply the docs search controller's NFKD, accent, and case normalization."""
+    decomposed = unicodedata.normalize("NFKD", value.strip())
+    return "".join(character for character in decomposed if not unicodedata.combining(character)).lower()
+
+
+def _normalise_structured_value(value: str) -> str:
+    """Normalize a structured numeric value while preserving non-numeric ids."""
+    text = _normalise_structured_text(value)
+    if re.fullmatch(r"[0-9]+", text) is not None:
+        return text.lstrip("0") or "0"
+    return text
+
+
 def _seed_concept_card(
     query: SweepQuery,
     targets: tuple[TermTargetRef, ...],
     resolver: TargetResolver,
+    *,
+    emitted_record_ids: frozenset[str],
 ) -> tuple[TermTargetRef, ...]:
     """Guarantee the query's originating concept card heads the target list.
 
@@ -533,7 +692,7 @@ def _seed_concept_card(
     enrolled card.
     """
     record = resolver.concept_record(query.concept_id)
-    if record is None or any(ref.record_id == record.id for ref in targets):
+    if record is None or record.id not in emitted_record_ids or any(ref.record_id == record.id for ref in targets):
         return targets
     seed = TermTargetRef(
         record_id=record.id,

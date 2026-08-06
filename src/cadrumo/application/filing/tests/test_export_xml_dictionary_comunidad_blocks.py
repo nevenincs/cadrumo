@@ -115,6 +115,23 @@ def test_no_autonomic_deductions_writes_no_block_and_no_total() -> None:
             assert entry.path in unfiled, f"{entry.path} would still be written with no deductions claimed"
 
 
+def test_zero_only_cross_block_values_are_absent_not_a_conflict() -> None:
+    """String zero placeholders across CCAA blocks select no ``xs:choice`` branch."""
+    entries = _entries()
+    values = {
+        _own_casillas("AragonRes")[0]: "0",
+        _own_casillas("MadridRes")[0]: "0.00",
+    }
+
+    unfiled = _modelo_100_unfiled_comunidad_paths(entries, values)
+
+    assert all(
+        entry.path in unfiled
+        for entry in entries
+        if _modelo_100_comunidad_block(entry.path) is not None or entry.casilla_id == _SHARED_TOTAL
+    )
+
+
 def test_two_comunidades_refuses_and_names_both() -> None:
     """The schema admits one, so a draft carrying two has no correct rendering."""
     entries = _entries()

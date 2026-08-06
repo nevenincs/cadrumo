@@ -125,7 +125,11 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
         generated_at=datetime(2026, 1, 1, tzinfo=UTC),
         coverage=coverage,
     )
-    profile, _, _ = overview_calendar_profile_output(bucket_id="bucket-1", label="Operator", cal=calendar)
+    profile, _, profile_notices = overview_calendar_profile_output(
+        bucket_id="bucket-1",
+        label="Operator",
+        cal=calendar,
+    )
     agenda, _, _ = overview_agenda_output(
         OverviewAgenda(
             as_of=date(2026, 1, 1),
@@ -146,6 +150,15 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
     )
 
     expected = coverage.model_dump(mode="json")
-    assert OverviewCalendarProfilePayload.model_validate(profile).calendar.coverage.model_dump(mode="json") == expected
     assert agenda.coverage.model_dump(mode="json") == expected
     assert backlog.coverage.model_dump(mode="json") == expected
+    # The all-profiles block is a per-profile SUMMARY and no longer embeds the
+    # calendar, so coverage reaches a machine consumer there on the notice
+    # channel instead. The structured advised map rides on ``Notice.context``,
+    # so nothing about the advisory became unreadable -- it moved surfaces.
+    summary = OverviewCalendarProfilePayload.model_validate(profile)
+    assert summary.profile_id == "bucket-1"
+    advised_contexts = [notice.context or {} for notice in profile_notices]
+    assert any(item.modelo in context for item in coverage.advised for context in advised_contexts), (
+        f"the profile path must still surface every advised modelo; notices carried {advised_contexts}"
+    )
