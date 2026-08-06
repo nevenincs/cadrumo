@@ -376,8 +376,14 @@ class LedgerRentaIncomeAggregationSourceResolver:
     resolver_id = "ledger_renta_income_aggregation"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+        invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    ) -> None:
         self._transaction_repository = transaction_repository
+        self._invoice_repository = invoice_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_has_binding_source(context.revision, "ledger_renta_income_aggregation"):
@@ -400,6 +406,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
                 transaction_repository=self._transaction_repository,
+                invoice_repository=self._invoice_repository,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
