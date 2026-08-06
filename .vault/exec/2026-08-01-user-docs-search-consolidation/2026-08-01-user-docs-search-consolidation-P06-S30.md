@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:a317564706ef293d2482b07f9dbb5819a9cfc185d5b73feda98ec3eda7e5bdd9'
+body_hash: 'sha256:b3997f198bb51bb6a80653df6391b57f339c2adfb7716fe6ab9dac07e5a24811'
 step_id: 'S30'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -49,3 +49,13 @@ The broader `test_sweep.py` selection timed out at 184 seconds while materializi
 ## Notes
 
 All discovery claims were grounded through the `vaultspec-rag` CLI because the MCP codebase alias remains rejected as `unknown_source_type` and is tracked in vaultspec-rag issue #350. Rung 2 remains fail-closed: this step refreshed the R1/relevance input and did not promote or enable a semantic bundle. Deployment was not performed.
+
+### 2026-08-06 sweep projection optimization
+
+Fresh vaultspec-rag grounding over the accepted ADR, source contract, P06 sweep audit, and the current sweep/projection code confirmed that the complete authoritative Pagefind/Rung-2 projection is the only admissible manifest. The safe remediation therefore reuses one materialized projection between run_sweep() and TargetResolver; it does not narrow CLI coverage, add synthetic targets, change structured casilla authority, or modify the relevance bytes.
+
+The bounded implementation changed only dev/docs/terminology/_sweep.py, dev/docs/terminology/_resolution.py, and dev/docs/terminology/tests/test_sweep.py. The focused real suite returned 13 passed in 41.04s; scoped Ruff, basedpyright (0 errors, 0 warnings, 0 notes), and git diff --check passed. A seven-query live default sweep measured seven targeted mappings, zero empty mappings, and 47.4 seconds wall time.
+
+A current full 112-query live rerun timed out at 244.4 seconds, and its marked live-service test failed after 43.19 seconds because the prorrata mapping had no targets. The previous successful 112-query artifact remains the standing relevance evidence. This optimization therefore removes the former focused test_sweep.py timeout boundary but does not prove a fresh complete laundering run or justify closing P06.S30. The committed relevance artifact remains unchanged and Rung 2 remains fail-closed.
+
+The adjacent resolver regression run then returned 24 passed in 130.87s, covering the real registry-backed resolver behavior after the projection-injection seam. The Rung-2 contract suite independently returned 33 passed in 0.87s.
