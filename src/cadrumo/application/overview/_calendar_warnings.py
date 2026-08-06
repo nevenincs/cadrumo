@@ -25,8 +25,8 @@ from ...domain.calculations.registry.applicability import PayerFact as _PayerFac
 from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
+from ...domain.deadlines import IrpfEstimationRegime as _IrpfEstimationRegime
 from ...domain.deadlines import IVARegime as _IVARegime
-from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime as _IrpfEstimationRegime
 from ._calendar_models import (
     CalendarCompleteness,
     CalendarWarning,

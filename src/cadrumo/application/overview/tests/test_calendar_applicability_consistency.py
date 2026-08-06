@@ -28,11 +28,11 @@ from datetime import date
 import pytest
 
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.deadlines import IVARegime
-from ....domain.deadlines.taxpayer_model import (
+from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
+    IVARegime,
     TaxpayerProfile,
 )
 from .. import OverviewCalendarRange, build_overview_calendar, build_overview_explain
