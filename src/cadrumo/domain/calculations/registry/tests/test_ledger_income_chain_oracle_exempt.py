@@ -51,7 +51,6 @@ import pytest
 from .....application.aggregation import aggregate_renta_income_ledger
 from .....core import Period
 from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
-from .....core.resources import bundled_path
 from ....iva import InvoiceKind, IvaCategory, category_cuota_is_zero_by_law
 from ....transactions import (
     BusinessClassification,
@@ -66,12 +65,11 @@ from ....transactions import (
 )
 from .. import (
     CasillaId,
-    build_snapshot,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     validated_casilla_id,
 )
-from ._registry_schema_support import _committed_modelo
+from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -92,18 +90,6 @@ _VALUE_DATE = date(_FILING_YEAR, 3, 4)
 _BUCKET = "bucket-oracle-exempt"
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-
-
-def _modelo_130_revision():
-    """The committed M130 revision the chain's last link resolves against."""
-    modelo, catalogues = _committed_modelo("130")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=_FILING_YEAR,
-        period="1T",
-    ).revision
 
 
 def _invoice_row(*, declares_substrate: bool) -> Transaction:
@@ -190,7 +176,7 @@ def test_the_declared_category_is_what_makes_the_cuota_zero() -> None:
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:
     """Casilla 01 receives the full 1000 ingresos integros, not the 850 banked."""
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
     assert aggregation.issues == ()
@@ -222,7 +208,7 @@ def test_the_exempt_invoice_recovers_its_retencion_at_the_statutory_figure() -> 
     the coincidence, which is why the inversion guard belongs to the rated
     case.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
@@ -243,7 +229,7 @@ def test_the_declared_invoice_raises_no_ungrounded_advisory() -> None:
     would make the advisory fire on the ordinary exempt professional -- the
     fastest way to train an operator to ignore the case below.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
     screened = ungrounded_ledger_renta_income_observations(revision, aggregation.observations)
@@ -260,7 +246,7 @@ def test_the_unrecorded_invoice_under_declares_by_exactly_the_withheld_amount() 
     it. Pinning the shortfall to the withheld amount rather than to a bare 150
     keeps the two halves tied to one another rather than to a literal.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=False)
 
     assert len(aggregation.observations) == 1
@@ -284,7 +270,7 @@ def test_the_under_declaration_is_surfaced_rather_than_silently_folded() -> None
     would under-declare by the whole 850 rather than by 150), so the screen
     firing IS the closure of the under-declaration direction.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=False)
 
     screened = ungrounded_ledger_renta_income_observations(revision, aggregation.observations)

@@ -701,11 +701,29 @@ class Transaction(BaseModel):
             domestic/export/intracom/etc. and this field only records
             whether the taxpayer's special regime or a supplier's
             special regime changes IVA timing.
-        cash_accounting_operation_date: Art. 75 general-devengo
-            operation date for cash-accounting informational reporting.
-            Required whenever ``cash_accounting_treatment`` is not
-            ``NONE`` so the aggregator never silently reuses a bank
-            movement date as the legal devengo projection.
+        operation_date: The LIVA art. 75 devengo date -- when the
+            operation legally occurred, as distinct from when the bank
+            moved. Optional on every regime and REQUIRED whenever
+            ``cash_accounting_treatment`` is not ``NONE``, so the
+            aggregator never silently reuses a bank movement date as the
+            legal devengo projection.
+
+            Available to the general regime, not only to criterio de
+            caja. Under art. 75 the cuota is devengada when the
+            operation occurs regardless of collection, so for a
+            general-regime row the operation date is the legally
+            CONTROLLING one and the movement date is the proxy; the
+            criterio-de-caja regime is the one where collection timing
+            governs and this date is the informational counterpart.
+            Restricting the field to cash accounting therefore withheld
+            it from the only regime the law binds to it, leaving an
+            invoice issued in one quarter and paid in another to declare
+            its IVA in the quarter of payment.
+
+            ``None`` means the row makes no distinction, and the
+            movement date stands as the operation date -- correct
+            whenever an operation is settled on the day it occurs, which
+            is the ordinary case.
         cash_accounting_payment_evidence: Total or partial
             collection/payment events that settle affected base/cuota
             under LIVA arts. 163 terdecies / quinquiesdecies.
@@ -775,7 +793,7 @@ class Transaction(BaseModel):
     exemption_article: IvaExemptionArticle | None = None
     counterparty_eu_member_state: EUMemberState | None = None
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
-    cash_accounting_operation_date: date | None = None
+    operation_date: date | None = None
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
@@ -856,9 +874,9 @@ class Transaction(BaseModel):
         }
         return enum_by_field[info.field_name or ""](value)
 
-    @field_validator("cash_accounting_operation_date", mode="before")
+    @field_validator("operation_date", mode="before")
     @classmethod
-    def _parse_cash_accounting_operation_date(cls, value: object) -> object:
+    def _parse_operation_date(cls, value: object) -> object:
         if isinstance(value, str):
             return parse_iso8601_date(value)
         return value
@@ -1049,16 +1067,25 @@ class Transaction(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_cash_accounting_axis(self) -> Self:
-        """Keep cash-accounting timing evidence independent and complete."""
+        """Keep cash-accounting timing evidence independent and complete.
+
+        ``operation_date`` is deliberately NOT gated on the regime. It is the
+        LIVA art. 75 devengo date, which the general regime needs most: there
+        the operation date is legally controlling and collection timing is
+        irrelevant, so withholding the field from that regime forced its rows
+        onto the bank movement date. Only the settlement evidence below is
+        criterio-de-caja-specific, because only that regime settles a cuota
+        across several collections.
+        """
         if self.cash_accounting_treatment is IvaCashAccountingTreatment.NONE:
-            if self.cash_accounting_operation_date is not None or self.cash_accounting_payment_evidence:
+            if self.cash_accounting_payment_evidence:
                 raise TransactionValidationError(
-                    "cash_accounting_operation_date/payment_evidence require a non-NONE cash_accounting_treatment",
+                    "cash_accounting_payment_evidence requires a non-NONE cash_accounting_treatment",
                 )
             return self
-        if self.cash_accounting_operation_date is None:
+        if self.operation_date is None:
             raise TransactionValidationError(
-                "cash_accounting_operation_date is required when cash_accounting_treatment is not NONE",
+                "operation_date is required when cash_accounting_treatment is not NONE",
             )
         if not self.cash_accounting_payment_evidence:
             raise TransactionValidationError(
@@ -1076,7 +1103,7 @@ class Transaction(BaseModel):
             raise TransactionValidationError(
                 "supplier-regime cash-accounting treatment is only valid on received/purchase rows",
             )
-        fallback_date = date(self.cash_accounting_operation_date.year + 1, 12, 31)
+        fallback_date = date(self.operation_date.year + 1, 12, 31)
         total_base = sum((evidence.taxable_base for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
         total_iva = sum((evidence.iva_amount for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
         total_recargo = sum(

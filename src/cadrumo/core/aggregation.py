@@ -543,6 +543,14 @@ class LedgerWithholdingDerivation(StrEnum):
     NONE_WITHHELD = "none_withheld"
     """Substrate sufficed and the cash covers the invoice: nothing was withheld."""
 
+    DECLARED_ON_LINKED_INVOICE = "declared_on_linked_invoice"
+    """Read from the retención the linked sales invoice itself declares.
+
+    The strongest source available: the figure the document states, not one
+    reconstructed from what reached the bank. Preferred over every inference
+    below it, because a declared figure beats a derived one.
+    """
+
     INFERRED_FROM_DECLARED_CUOTA = "inferred_from_declared_cuota"
     """Derived as invoice gross minus cash, with the cuota read from the row."""
 

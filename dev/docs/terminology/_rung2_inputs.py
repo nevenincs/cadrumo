@@ -138,6 +138,11 @@ def build_rung2_compilation_inputs(
     from ..pagefind_inject import materialise_search_records
 
     projection = materialise_search_records(root)
+    if projection.casillas == 0:
+        raise Rung2InputError(
+            "the authoritative Pagefind record projection is incomplete because "
+            "the casilla projection is empty"
+        )
     if projection.cli_skipped_reason is not None:
         raise Rung2InputError(
             "the authoritative Pagefind record projection is incomplete because "

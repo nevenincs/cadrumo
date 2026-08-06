@@ -19,8 +19,15 @@ The invoice is one ordinary Spanish professional service::
 **Where every expected figure comes from, and why none of it is the engine.**
 The 1000 is the base imponible the invoice states; the bundled AEAT Modelo 130
 instructions define casilla 01 as the "ingresos integros fiscalmente
-computables", and the IVA repercutido is not an ingreso of the issuer (PGC
-NRV 12.a/14.a), so 1000 is the published measure and 1210 is not. The 150 is
+computables", and the IVA repercutido is not an ingreso of the issuer, so 1000
+is the published measure and 1210 is not. That last step rests on PGC NRV
+12.a/14.a, which is NOT in the bundled corpus: it is a reading of cited
+authority, not bundled text this repo can re-verify. Retrieval was attempted
+against the BOE consolidated API for RD 1514/2007 and returned 404 on every
+endpoint tried, so the gap is recorded rather than papered over. The assertions
+below do not depend on it -- the bundled Modelo 130 instructions already name
+casilla 01 as the ingresos integros, and the accounting norm only explains WHY
+the cuota is excluded. The 150 is
 the RIRPF art. 95.1 general rate applied to those ingresos integros -- the
 bundled consolidated text of RD 439/2007 art. 95 reads "15 por ciento sobre los
 ingresos integros satisfechos", and the rate itself is read here from the
@@ -54,7 +61,6 @@ import pytest
 from .....application.aggregation import aggregate_renta_income_ledger
 from .....core import Period
 from .....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
-from .....core.resources import bundled_path
 from ....iva import IvaCategory
 from ....transactions import (
     BusinessClassification,
@@ -69,12 +75,11 @@ from ....transactions import (
 )
 from .. import (
     CasillaId,
-    build_snapshot,
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
     validated_casilla_id,
 )
-from ._registry_schema_support import _committed_modelo
+from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -96,18 +101,6 @@ _VALUE_DATE = date(_FILING_YEAR, 2, 16)
 _BUCKET = "bucket-oracle-rated"
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-
-
-def _modelo_130_revision():
-    """The committed M130 revision the chain's last link resolves against."""
-    modelo, catalogues = _committed_modelo("130")
-    return build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=_FILING_YEAR,
-        period="1T",
-    ).revision
 
 
 def _invoice_row(*, declares_substrate: bool, cash: Decimal | None = None) -> Transaction:
@@ -203,7 +196,7 @@ def test_the_retencion_expectation_is_the_statutory_rate_not_the_engine_route() 
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:
     """Casilla 01 receives 1000: the ingresos integros, not the gross, not the cash."""
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
     assert aggregation.issues == ()
@@ -229,7 +222,7 @@ def test_the_declared_invoice_reaches_the_retenciones_casilla_at_the_statutory_f
     the IVA-inclusive total, or that inverted a rate off the cash, would land
     somewhere else.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
@@ -255,7 +248,7 @@ def test_the_declared_invoice_raises_no_ungrounded_advisory() -> None:
     has nothing to report, and a screen that fired here would train the
     operator to ignore the case below.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True)
 
     screened = ungrounded_ledger_renta_income_observations(revision, aggregation.observations)
@@ -273,7 +266,7 @@ def test_the_unrecorded_invoice_over_declares_casilla_01_and_loses_its_credit() 
     under-claims the credit at once -- 210 worse off on one invoice, in two
     directions nothing would otherwise watch.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=False)
 
     assert len(aggregation.observations) == 1
@@ -298,7 +291,7 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
     facts it disturbed: cash folded into ``ingresos_integros_sum`` AND nothing
     contributed to ``taxable_base_sum``.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=False)
 
     screened = ungrounded_ledger_renta_income_observations(revision, aggregation.observations)
@@ -368,7 +361,7 @@ def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutor
     unchanged, because the rate the payer applied does not alter the ingresos
     integros the article names as the base.
     """
-    revision = _modelo_130_revision()
+    revision = modelo_130_revision()
     aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)

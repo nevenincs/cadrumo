@@ -65,7 +65,7 @@ def _transaction(
     taxable_base: Decimal,
     iva_amount: Decimal,
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
-    cash_accounting_operation_date: date | None = None,
+    operation_date: date | None = None,
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = (),
 ) -> Transaction:
     return Transaction.model_validate(
@@ -80,7 +80,7 @@ def _transaction(
             "iva_amount": iva_amount,
             "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
             "cash_accounting_treatment": cash_accounting_treatment,
-            "cash_accounting_operation_date": cash_accounting_operation_date,
+            "operation_date": operation_date,
             "cash_accounting_payment_evidence": cash_accounting_payment_evidence,
             "classified_at": datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
             "classified_by": "manual",
@@ -105,7 +105,7 @@ def test_cash_accounting_supply_reports_art75_information_before_collection_and_
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
-        cash_accounting_operation_date=date(2026, 3, 20),
+        operation_date=date(2026, 3, 20),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
                 payment_date=date(2026, 4, 15),
@@ -143,7 +143,7 @@ def test_cash_accounting_purchase_reports_acquisition_information_without_admitt
         taxable_base=Decimal("300.00"),
         iva_amount=Decimal("63.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
-        cash_accounting_operation_date=date(2026, 3, 12),
+        operation_date=date(2026, 3, 12),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
                 payment_date=date(2026, 4, 10),
@@ -193,7 +193,7 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
         cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
-        cash_accounting_operation_date=date(2026, 3, 20),
+        operation_date=date(2026, 3, 20),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(
                 payment_date=date(2026, 4, 15),

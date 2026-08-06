@@ -1098,7 +1098,7 @@ def _classify_iva_transaction(
     """
     transaction_id = transaction.transaction_id
     ledger_date = transaction.raw.value_date or transaction.raw.booked_date
-    operation_date = transaction.cash_accounting_operation_date or ledger_date
+    operation_date = transaction.operation_date or ledger_date
     cash_treatment = transaction.cash_accounting_treatment
     if cash_treatment is IvaCashAccountingTreatment.NONE and not resolved_period.contains(operation_date):
         return _IvaTransactionOutcome(
@@ -1379,7 +1379,7 @@ def _cash_accounting_observations(
 def _cash_accounting_settlement_parts(
     transaction: Transaction,
 ) -> tuple[tuple[date, Decimal, Decimal, Decimal], ...]:
-    assert transaction.cash_accounting_operation_date is not None
+    assert transaction.operation_date is not None
     assert transaction.taxable_base is not None
     assert transaction.iva_amount is not None
     parts = [
@@ -1401,7 +1401,7 @@ def _cash_accounting_settlement_parts(
         recargo_amount - paid_recargo,
     )
     if any(amount > Decimal("0") for amount in remainder):
-        fallback_date = date(transaction.cash_accounting_operation_date.year + 1, 12, 31)
+        fallback_date = date(transaction.operation_date.year + 1, 12, 31)
         parts.append((fallback_date, *remainder))
     return tuple(sorted(parts, key=lambda part: part[0]))
 

@@ -335,6 +335,8 @@ def _meta_for(
         meta["domain"] = md.domain
     if md.modelo:
         meta["modelo"] = md.modelo
+    if record.kind.value == "casilla" and md.casilla_id:
+        meta["casilla_id"] = md.casilla_id
     if md.number:
         meta["number"] = md.number
     if md.segmento:

@@ -293,6 +293,7 @@ def test_a_verdict_carrying_both_components_and_defects_is_refused() -> None:
                 taxable_base=Decimal("100"),
                 cuota=Decimal("21"),
                 retencion=Decimal("0"),
+                recargo=Decimal("0"),
                 total=Decimal("121"),
                 cash=Decimal("121"),
             ),
@@ -313,6 +314,7 @@ def test_components_that_do_not_add_up_are_refused() -> None:
             taxable_base=Decimal("100"),
             cuota=Decimal("21"),
             retencion=Decimal("0"),
+            recargo=Decimal("0"),
             total=Decimal("999"),
             cash=Decimal("999"),
         )
@@ -325,6 +327,7 @@ def test_components_whose_cash_ignores_the_retencion_are_refused() -> None:
             taxable_base=Decimal("100"),
             cuota=Decimal("21"),
             retencion=Decimal("15"),
+            recargo=Decimal("0"),
             total=Decimal("121"),
             cash=Decimal("121"),
         )

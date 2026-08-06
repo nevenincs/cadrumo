@@ -24,6 +24,8 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
+from ..iva import IvaCashAccountingTreatment
+
 if TYPE_CHECKING:  # pragma: no cover — typing-only import
     from ._models import Transaction
 
@@ -47,7 +49,7 @@ def transaction_eligible_date_span(transaction: Transaction) -> tuple[date, date
     :func:`transaction_filing_date` alone. Under the IVA criterio de caja
     (LIVA art. 163 *decies* and following) one transaction produces
     observations on dates independent of its ledger filing date: the art. 75
-    devengo ``cash_accounting_operation_date``, each
+    devengo ``operation_date``, each
     ``cash_accounting_payment_evidence`` collection date, and the 31 December
     statutory fallback of the year following the operation. A row booked in
     Q2 can therefore carry a Q1 observation, and selecting on the filing date
@@ -66,13 +68,15 @@ def transaction_eligible_date_span(transaction: Transaction) -> tuple[date, date
         filing date for a row with no cash-accounting timing override.
     """
     filing_date = transaction_filing_date(transaction)
-    operation_date = transaction.cash_accounting_operation_date
+    operation_date = transaction.operation_date
     if operation_date is None:
         return filing_date, filing_date
-    candidates = [
-        filing_date,
-        operation_date,
-        date(operation_date.year + 1, 12, 31),
-        *(evidence.payment_date for evidence in transaction.cash_accounting_payment_evidence),
-    ]
+    candidates = [filing_date, operation_date]
+    if transaction.cash_accounting_treatment is not IvaCashAccountingTreatment.NONE:
+        # Both extras are criterio-de-caja constructs and must not widen a
+        # general-regime row. That row files on its art. 75 devengo date, full
+        # stop: it settles in one movement, so there is no collection series
+        # and no art. 163 quinquiesdecies year-end fallback to reach for.
+        candidates.append(date(operation_date.year + 1, 12, 31))
+        candidates.extend(evidence.payment_date for evidence in transaction.cash_accounting_payment_evidence)
     return min(candidates), max(candidates)
