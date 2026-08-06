@@ -40,7 +40,6 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-plan]]'
   - '[[2026-08-05-ledger-invoice-decomposition-reference]]'
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
-  - '[[2026-08-06-ledger-invoice-decomposition-research]]'
 ---
 
 # `ledger-invoice-decomposition` feature index

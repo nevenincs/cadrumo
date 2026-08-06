@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:7141f0b54078ef773a47bedc8754fd3d3d846da34a1ce432be943cd5b9923690'
+body_hash: 'sha256:2cd9ddfb0df6f9b518d68a88f993f0bce21247d42f33833b791c7efd2722e546'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -85,11 +85,11 @@ Prove the chain against external AEAT authority rather than against itself, anch
 The record has been extended field by field as each defect surfaced, and four findings now share one shape: the law describes a property of a Spanish invoice the record cannot hold. This phase derives the field set from RD 1619/2012 art. 6 rather than from consumer demand, and wires the two contracts earlier phases built but left unreachable. Outcome is expressed as cross-modelo multi-period tests over one accumulative invoice life, plus an adversarial suite of deliberately degraded invoices each asserting its specific refusal.
 
 - [x] `P06.S40` - Bundle RD 1619/2012 articles 6 and 11 from BOE consolidated text, since only article 2 ships today and article 6 is the authority the schema field set derives from; `src/cadrumo/_data/corpus/normatives/html`.
-- [ ] `P06.S41` - Let the invoice record its fecha de operacion, so the art. 75 devengo date has an authoritative source instead of the issue-date proxy; `src/cadrumo/domain/invoices/_models.py`.
-- [ ] `P06.S42` - Let the invoice carry a suplido, which joins total and cash while joining neither base nor cuota, taking a third position on the identity rather than a second recargo; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/_decomposition.py`.
-- [ ] `P06.S43` - Let a factura rectificativa name what it corrects, so the cuota rectification LIVA article 89 requires becomes representable; `src/cadrumo/domain/invoices/_models.py`.
-- [ ] `P06.S44` - Key the counterparty tax-id requirement to the three cases article 6.1.d enumerates, and in those same cases require a structurally-valid NIF-IVA rather than any tax id, so an intra-community supply stops accepting a domestic number; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/_validators.py`.
-- [ ] `P06.S45` - Represent pagos anticipados so a prepayment devengues on collection for the amount received, honouring the article 25 exclusion; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/application/aggregation`.
+- [x] `P06.S41` - Let the invoice record its fecha de operacion, so the art. 75 devengo date has an authoritative source instead of the issue-date proxy; `src/cadrumo/domain/invoices/_models.py`.
+- [x] `P06.S42` - Let the invoice carry a suplido, which joins total and cash while joining neither base nor cuota, taking a third position on the identity rather than a second recargo; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/_decomposition.py`.
+- [x] `P06.S43` - Let a factura rectificativa name what it corrects, so the cuota rectification LIVA article 89 requires becomes representable; `src/cadrumo/domain/invoices/_models.py`.
+- [x] `P06.S44` - Key the counterparty tax-id requirement to the three cases article 6.1.d enumerates, and in those same cases require a structurally-valid NIF-IVA rather than any tax id, so an intra-community supply stops accepting a domestic number; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/_validators.py`.
+- [x] `P06.S45` - Represent pagos anticipados so a prepayment devengues on collection for the amount received, honouring the article 25 exclusion; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/application/aggregation`.
 - [ ] `P06.S46` - Wire the invoice decomposition contract to a consumer so its defect verdicts reach an operator, since it classifies nothing today and the aggregation paths each carry their own inline guard set instead; `src/cadrumo/application/aggregation, src/cadrumo/application/invoices`.
 - [x] `P06.S47` - Wire route_invoice_retenciones into the invoice lifecycle so a received invoice's retencion reaches Modelo 111, asserting the filed figure moves rather than that the projection returns a value; `src/cadrumo/application/aggregation/_invoice_retencion.py, src/cadrumo/application/invoices`.
 - [ ] `P06.S48` - Thread the operation date into period attribution with a declared rank marker naming which source produced it, surfaced identically on the pull and calculate paths; `src/cadrumo/application/aggregation`.

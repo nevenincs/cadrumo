@@ -79,4 +79,3 @@ Two tests assert the income FIGURE rather than the presence of a refusal, becaus
 Mutation-proved: restoring the exclusion reddens 2 cases, dropping the refusal marker reddens 7, deleting a guard reddens 1. Restore verified by SHA-256 match, a residue grep and a post-hoc `git diff`.
 
 Raw counts after the correction, serial (`-n 0`): the module 13 passed; `application/aggregation/tests` 623 passed, 7 deselected; with the registry income binding and CLI JSON conformance suites under both marker lanes, 806 passed.
-

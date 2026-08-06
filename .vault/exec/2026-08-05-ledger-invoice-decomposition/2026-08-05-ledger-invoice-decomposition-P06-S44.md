@@ -1,0 +1,72 @@
+---
+tags:
+  - '#exec'
+  - '#ledger-invoice-decomposition'
+date: '2026-08-06'
+modified: '2026-08-06'
+body_schema: 'body-v1'
+body_hash: 'sha256:2536aa9797d35aed5374c210d178f75c88a1cea4c547d9f8f53a91ae5345513c'
+step_id: 'S44'
+related:
+  - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
+---
+
+# Key the counterparty tax-id requirement to the three cases article 6.1.d enumerates, and in those same cases require a structurally-valid NIF-IVA rather than any tax id, so an intra-community supply stops accepting a domestic number
+
+## Scope
+
+- `src/cadrumo/domain/invoices/_models.py`
+- `src/cadrumo/domain/invoices/_validators.py`
+
+## Description
+
+- Widen `Invoice.counterparty_tax_id` from a required `str` to `str | None`, default `None`.
+- Add `_SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES` (`INTRA_COMMUNITY_SUPPLY`, `DOMESTIC_REVERSE_CHARGE`) naming the two RD 1619/2012 art. 6.1.d cases readable from an invoice's own `IvaCategory`; document case 3.º (issuer established in TAI) as a declared, unmodelled gap since the record carries no issuer-establishment field.
+- Add a requiredness validator: `ORDINARIA`/`RECTIFICATIVA` keep the tax id mandatory unconditionally (unchanged); `SIMPLIFICADA` requires it only when the declared `iva_category` is in the mandatory set.
+- Keep full NIF/IVA-number checksum validation active whenever the field IS present, regardless of class.
+- Update `derive_invoice_id` and `_derive_invoice_id_when_complete` to accept `counterparty_tax_id: str | None`, hashing `counterparty_tax_id or ""`; default the key to `None` before the completeness check so omitting it entirely (not just passing `None`) still derives an `invoice_id`.
+- Absorb two downstream ripples the optional field creates (see Notes on the S41 record): `application/invoices/_source_resolver.py`'s M347/M349 projection now skips an invoice with no tax id; `entrypoints/cli/_ledger_catalogue_invoice_payloads.py`'s `CatalogueInvoiceRecordPayload.counterparty_tax_id` widened to match, its validator skipping `None`.
+- Follow-up commit, after the plan Step's own text was revised mid-implementation to also require a structurally-valid NIF-IVA in the mandatory cases: add `assert_non_domestic_country_code` to `_validators.py` and a model validator refusing `counterparty_country == "ES"` on an `INTRA_COMMUNITY_SUPPLY` invoice, closing a live defect where a domestic country + a valid Spanish CIF passed every existing check on that category.
+
+## Outcome
+
+Landed as commit `1751ce04cf` (combined with P06.S41-S43, S45; see the S41 record's Notes for why), plus a follow-up commit `539ae9c9ad` for the country-consistency fix below.
+
+A factura simplificada (an ordinary retail ticket) can now be recorded without a counterparty tax id, unless the declared IVA category is an exempt intra-community supply or a domestic reverse-charge operation — the two art. 6.1.d cases this record's data can name. An ordinaria or rectificativa is unaffected: the tax id stays mandatory exactly as before this Step. Separately, an `INTRA_COMMUNITY_SUPPLY` invoice can no longer name Spain as its own destination, closing the "domestic number" defect the revised Step text named.
+
+## Verification
+
+```
+uv run --no-sync pytest src/cadrumo/domain/invoices/tests/test_invoice_simplificada.py -n 0 -q --no-header
+8 passed in 2.43s
+```
+
+```
+uv run --no-sync pytest src/cadrumo/domain/invoices/tests/test_invoice_intracommunity_destination.py -n 0 -q --no-header
+5 passed in 0.70s
+```
+
+```
+uv run --no-sync pytest src/cadrumo/domain/invoices src/cadrumo/application/aggregation src/cadrumo/application/invoices src/cadrumo/application/ledger src/cadrumo/entrypoints/cli src/cadrumo/domain/iva src/cadrumo/domain/transactions -n auto -q --no-header
+2743 passed in 64.42s
+```
+
+```
+uv run --no-sync pytest src/cadrumo/domain/invoices src/cadrumo/application/aggregation src/cadrumo/application/invoices src/cadrumo/application/ledger src/cadrumo/entrypoints/cli src/cadrumo/domain/iva src/cadrumo/domain/transactions src/cadrumo/application/modelo -n auto -q --no-header
+4282 passed, 1 failed (unrelated, see Notes) in 160.30s
+```
+
+Two mutation-proofs, both restoring `_models.py` byte-exact afterwards (SHA-256 verified):
+
+- Emptying `_SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES` to `frozenset()` reddens exactly `test_a_simplificada_still_requires_the_tax_id_for_an_exempt_intracommunity_supply` and `test_a_simplificada_still_requires_the_tax_id_when_the_destinatario_self_assesses` (2 failed, 6 passed in the file), nothing else.
+- Removing the `assert_non_domestic_country_code(self.counterparty_country)` call from `_validate_intracommunity_destination_country` reddens exactly `test_an_intracommunity_supply_naming_spain_is_refused` and `test_the_guard_fires_even_when_the_category_alone_would_not_require_a_tax_id` (2 failed, 177 passed across the whole `domain/invoices` suite), nothing else.
+
+**Near-miss caught by the broad regression run.** The first version of the country guard used a full EU-membership check (`assert_eu_member_state_code`), which broke two existing, unrelated tests: `test_invoice_catalogue_source_resolver_accepts_xi_goods_for_m349` (Northern Ireland's `XI` is a legitimate M349 goods destination under the Windsor Framework despite not being one of the 27 Member States) and `test_invoice_catalogue_source_resolver_rejects_gb_ordinary_goods_for_m349` (a non-EU destination like `GB` is a declared fact the M349-specific resolver judges, not a construction-time refusal). Narrowed to refuse only `counterparty_country == "ES"` specifically, which is the literal defect the revised Step text names ("stops accepting a domestic number") and leaves both carve-outs intact.
+
+## Notes
+
+See the S41 record for the shared commit rationale and the peer-commit interaction on `application/aggregation`.
+
+**Case 3.º of art. 6.1.d (domestic operation, issuer established in the territorio de aplicación del impuesto) is a declared gap, not a guessed default.** `Invoice` carries no field naming where its issuer is established, so this case cannot be read from the record. Case 3.º is close to universal for a Spanish-established taxpayer's domestic operations, so leaving it unenforced is a real, if narrow, under-enforcement risk for a domestic simplificada with no declared IVA category or a domestic-rated category outside the two modelled cases. Flagged for the team lead rather than resolved unilaterally: closing it would require either a new issuer-establishment axis on `Invoice` or keying the requirement on domestic-vs-foreign `counterparty_country`, and the second reading conflates the ISSUER's establishment (what the law actually asks) with the counterparty's residency (a different fact the invoice does carry). The shared task list's item #41 ("the tax-id requirement keys on country, not on the IVA category art. 6.1.d actually names") is addressed by the country-consistency fix above for the intra-community case specifically; the case 3.º gap itself remains open.
+
+**One unrelated pre-existing test failure observed in the broad 4283-test run**, confirmed NOT caused by this Step: `test_preclassified_candidate_outside_period_blocks_binding_resolution` in `application/aggregation/tests/test_iva_ledger.py` fails in isolation too, and `application/aggregation/_iva_ledger.py` carries live uncommitted peer WIP (`git status` shows it modified, unrelated to any commit in this record) at the time of this run.
