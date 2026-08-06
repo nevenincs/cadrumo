@@ -630,7 +630,9 @@ def _purchase_invoice_evidence_payload(
             detail=(
                 "transaction references no confirmed invoice in the catalogue, so this expense carries no "
                 "invoice totals to fold in; if the reference names a registered evidence record, confirm it "
-                "into an invoice with `aeat app ledger evidence confirm`"
+                "into an invoice with `aeat app ledger evidence confirm`, then re-attach this transaction to "
+                "the confirmed invoice id -- confirming alone leaves the transaction pointing at the evidence "
+                "record and this same advisory recurs"
             ),
         )
     if invoice.bucket_id != bucket_id:

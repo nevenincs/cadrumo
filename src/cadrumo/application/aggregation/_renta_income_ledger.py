@@ -48,7 +48,7 @@ from ...core import Modelo, Period, PeriodKind, elided_prose
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.money import round_to_cents
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
-from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol, decompose_invoice
 from ...domain.iva import InvoiceKind, category_cuota_is_zero_by_law
 from ...domain.transactions import (
     BusinessClassification,
@@ -154,6 +154,23 @@ class SalesInvoiceEvidenceRefusal(StrEnum):
 
     AMOUNT_MISMATCH = "sales_invoice_amount_mismatch"
     """The credit does not match the invoice total net of its declared retención."""
+
+    UNGROUNDED_DECOMPOSITION = "ungrounded_sales_invoice_decomposition"
+    """The invoice is correctly linked but its own figures are not interpretable.
+
+    Every other member of this enum asks whether the invoice describes THIS
+    transaction. This one asks the separate question of whether the invoice is
+    internally coherent at all — whether it declares an IVA treatment, resolves
+    its currency, and carries a cuota its category permits. A document can pass
+    every linkage guard and still fail that: an invoice with no declared
+    :class:`~cadrumo.domain.iva.IvaCategory` reconciles perfectly against its
+    payment while remaining ambiguous between untagged and exempt, which is the
+    distinction the grounding contract exists to preserve.
+
+    The verdict comes from :func:`~cadrumo.domain.invoices.decompose_invoice`
+    rather than from checks re-derived here, so the one authority on invoice
+    coherence answers for every consumer.
+    """
 
 
 class RentaIncomeLedgerAggregationIssue(BaseModel):
@@ -686,6 +703,13 @@ def _sales_invoice_evidence_payload(
     expected_cash = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
     if abs(transaction.raw.amount) != expected_cash:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
+    # Linkage is established by this point; coherence is a separate question and
+    # the guards above cannot answer it. Delegated rather than re-derived: the
+    # decomposition contract is the single authority on whether an invoice's own
+    # figures are legally interpretable, and consulting it here is what makes a
+    # correctly-linked but untagged invoice visible instead of silently grounded.
+    if not decompose_invoice(invoice).is_grounded:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
     return (
         _SalesInvoiceEvidencePayload(
             taxable_base=invoice.base_total,

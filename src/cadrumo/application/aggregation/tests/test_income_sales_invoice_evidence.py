@@ -100,6 +100,7 @@ def _invoice(
     bucket_id: str = _BUCKET,
     retention_amount: str | None = "150.00",
     number: str = "F-2024-001",
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
 ) -> Invoice:
     rate = iva_rate_percentage(IvaRate.RATE_21)
     assert rate is not None
@@ -126,7 +127,7 @@ def _invoice(
             "currency": "EUR",
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": iva_category,
             "retention_rate": None if retention_amount is None else Decimal("0.15"),
             "retention_amount": None if retention_amount is None else Decimal(retention_amount),
             "linked_transaction_ids": linked_transaction_ids,
@@ -372,3 +373,53 @@ def test_no_evidence_guard_ever_removes_income_from_the_aggregation() -> None:
         assert len(aggregation.observations) == 1, "an evidence guard excluded a declarable income row"
         assert aggregation.issues == ()
         assert aggregation.casilla_aggregation.casilla_values["01"] > Decimal("0")
+
+
+def test_an_uncategorised_invoice_is_refused_even_though_it_reconciles_perfectly() -> None:
+    """Linkage and coherence are different questions, and passing one is not passing the other.
+
+    This invoice satisfies every linkage guard: same bucket, ISSUED, reciprocal
+    single link, and a credit matching its total net of retención exactly. What
+    it does not do is declare an IVA treatment, so its base is ambiguous between
+    untagged and exempt — the distinction the grounding contract exists to
+    preserve, and one no amount reconciliation can settle.
+
+    Before the coherence check, this row folded its 1000.00 base into casilla 01
+    with no diagnostic at all, which is the grounding contract's own D1 rule
+    being bypassed by the path that reads invoices.
+    """
+    transactions, invoices = _linked(iva_category=None)
+
+    result = aggregate_renta_income_ledger(
+        transactions,
+        period=Period.from_year_and_code(2024, "1T"),
+        bucket_id=_BUCKET,
+        invoices=invoices,
+    )
+
+    (observation,) = result.observations
+    assert observation.sales_invoice_refusal is SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
+    # Degraded, not dropped: the income is still declared, on its cash.
+    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
+    assert observation.grounding is LedgerIncomeGrounding.CASH_FALLBACK
+
+
+def test_a_categorised_invoice_still_grounds_on_its_base() -> None:
+    """The coherence check must not refuse the invoices this path exists to ground.
+
+    The companion to the case above: identical in every respect except that the
+    IVA treatment is declared. A guard that rejected both would look correct on
+    the refusal test alone while destroying the feature.
+    """
+    transactions, invoices = _linked()
+
+    result = aggregate_renta_income_ledger(
+        transactions,
+        period=Period.from_year_and_code(2024, "1T"),
+        bucket_id=_BUCKET,
+        invoices=invoices,
+    )
+
+    (observation,) = result.observations
+    assert observation.sales_invoice_refusal is None
+    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
