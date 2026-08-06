@@ -19,6 +19,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -69,8 +70,8 @@ def _raw(provider_id: str) -> RawTransaction:
     )
 
 
-def _transaction(provider_id: str, **overrides: object) -> Transaction:
-    payload: dict[str, object] = {
+def _transaction(provider_id: str, **overrides: Any) -> Transaction:
+    payload: dict[str, Any] = {
         "raw": _raw(provider_id),
         "direction": TransactionDirection.INCOMING,
         "business_classification": BusinessClassification.BUSINESS,

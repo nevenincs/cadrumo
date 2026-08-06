@@ -16,6 +16,7 @@ to the report cannot stop at the CLI boundary unnoticed.
 from __future__ import annotations
 
 from datetime import date
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -30,9 +31,9 @@ _LEGAL_REF = "ley-35-2006:art-27"
 _SOURCE_REF = "aeat-manual-renta-2024"
 
 
-def _report(**overrides: object) -> ModeloDescribeReport:
+def _report(**overrides: Any) -> ModeloDescribeReport:
     """Build a fully populated describe report, no field left at a default."""
-    fields: dict[str, object] = {
+    fields: dict[str, Any] = {
         "code": "100",
         "title": "Renta",
         "official_name": "Impuesto sobre la Renta de las Personas Fisicas",

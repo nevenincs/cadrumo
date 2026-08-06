@@ -16,6 +16,7 @@ engine rather than assumed.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta, timezone
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -50,8 +51,8 @@ def _obligation(*, filing_year: int, code: str = "1T") -> ModeloDeadline:
     )
 
 
-def _schedule(**overrides: object) -> Schedule:
-    payload: dict[str, object] = {
+def _schedule(**overrides: Any) -> Schedule:
+    payload: dict[str, Any] = {
         "profile": _profile(),
         "year": 2026,
         "obligations": (_obligation(filing_year=2026),),

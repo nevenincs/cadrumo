@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -36,8 +37,8 @@ def _line() -> InvoiceLine:
     )
 
 
-def _invoice(**overrides: object) -> Invoice:
-    payload: dict[str, object] = {
+def _invoice(**overrides: Any) -> Invoice:
+    payload: dict[str, Any] = {
         "kind": InvoiceKind.ISSUED,
         "invoice_number": "2026/RECT-1",
         "issued_at": date(2026, 4, 15),

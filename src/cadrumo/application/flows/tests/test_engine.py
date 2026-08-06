@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -454,7 +455,7 @@ def test_review_projection_refuses_contradictory_derived_state() -> None:
     """Direct construction cannot contradict the review rows or their failures."""
     definition = _submit_definition()
     projection = review(definition, start_flow(definition, mode=FlowMode.CREATE))
-    document: dict[str, object] = dict(projection.model_dump())
+    document: dict[str, Any] = dict(projection.model_dump())
 
     with pytest.raises(ValidationError, match="answered_count"):
         ReviewProjection.model_validate({**document, "answered_count": 1})
