@@ -5,6 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
+body_hash: 'sha256:2416e144c0dfb9ddd44ade59095ee79b1609e66528ff1acb32ef2864bebabb73'
 step_id: 'S38'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
@@ -18,110 +19,37 @@ related:
 
 ## Description
 
-NOT IMPLEMENTED. This record is the design, written at the point the coordinator
-ran out of context to land it coherently. Everything below is measured at HEAD,
-not proposed from memory.
-
-The change must land whole. An evidence resolver that exists but is not threaded
-is dead capacity, which this codebase bars outright, and a half-wired landing
-broke HEAD for a peer earlier in this campaign.
+- Add `_SalesInvoiceEvidencePayload` and `_sales_invoice_evidence_payload` in `src/cadrumo/application/aggregation/_renta_income_ledger.py:566`, mirroring the expense pipeline's derive-on-read shape.
+- Assert the credited amount against the invoice total NET of its declared retencion, not against the gross.
+- Give the linked invoice's base precedence over the transaction substrate at the observation site, with the transaction field as fallback.
+- Prefer the invoice-declared retencion over the bounded inference, carrying `LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE` from `src/cadrumo/core/aggregation.py:520`.
+- Add five per-guard issue reasons rather than one generic mismatch.
+- Thread the invoice catalogue through the classifier and both aggregators, and the invoice repository through both `*_from_repositories` entry points via `_load_income_invoices`.
+- Wire the single production call site in `src/cadrumo/application/aggregation/_modelo_bindings.py:379,409` so the resolver is live rather than latent.
+- Add eleven behavioural cases in `src/cadrumo/application/aggregation/tests/test_income_sales_invoice_evidence.py`.
 
 ## Outcome
 
-### The defect, demonstrated
+Landed as commit `32dcf3008e` (4 files, +503 / -10).
 
-Running the real path with no test doubles:
-
-```
-BEFORE link : taxable_base = None
-AFTER  link : invoice_id = inv-F-2024-001   taxable_base = None
-casilla 01  : 1060.00   grounding = cash_fallback   withheld = 0
-```
-
-A linked, matched invoice leaves casilla 01 on the credited cash. `link_invoice`
-in the transactions service carries identity and never content.
-
-### The precedent to mirror
-
-The expense pipeline already implements derive-on-read. Its evidence resolver
-applies six guards before trusting a linked invoice, then returns a payload of
-the invoice's own figures, and a per-field accessor gives the invoice
-precedence with the transaction field as fallback.
-
-The guards, in order: the invoice belongs to the active bucket; its kind is the
-one this side expects; the link is reciprocal, meaning the transaction id appears
-in the invoice's own linked ids; exactly one transaction is linked; the linked
-amount corresponds to the invoice; then the payload.
-
-### The one guard that must differ, and it is the whole point
-
-The expense side asserts `transaction_amount == invoice.grand_total`. An expense
-row pays the full contraprestacion.
-
-**The income side must not.** A sales invoice subject to retencion is paid NET:
-the payer withholds and remits it, so the bank credit is
-`grand_total - retention_amount`. Asserting equality against `grand_total` would
-reject exactly the invoices this Step exists to ground, and asserting it against
-cash without the retencion term would accept a mismatched pair.
-
-The correspondence to assert is therefore:
+The defect was reproduced on the real path at HEAD before any edit, and the same scenario re-run after:
 
 ```
-transaction_amount == invoice.grand_total - (invoice.retention_amount or 0)
+BEFORE  casilla 01 = 1060.00   grounding = cash_fallback        withheld = 0
+AFTER   casilla 01 = 1000.00   grounding = substrate_declared   withheld = 150.00
+                                                                (declared_on_linked_invoice)
 ```
 
-Getting this backwards is the failure mode with real consequences: it would
-either refuse every net-paid professional invoice, or silently accept an invoice
-that does not describe the payment.
+Raw counts, serial (`-n 0`): the new module 11 passed; `application/aggregation/tests` 610 passed then 635 passed with the registry income binding suite included, 7 deselected throughout; tree-wide `pytest src/cadrumo --collect-only -q` collected 20232 of 24148 with no collection errors. Lint and format clean over every touched file.
 
-### Insertion point
-
-`_renta_income_ledger.py` derives `taxable_base_amount` from
-`transaction.taxable_base` alone immediately before constructing the
-observation, and sets the grounding marker from whether that value is present.
-The resolved invoice base takes precedence there, which means a grounded row
-also stops reporting `CASH_FALLBACK` and stops raising the ungrounded advisory —
-correctly, since the substrate now exists.
-
-The retencion follows the same shape: `Invoice.retention_amount` exists today and
-reaches nothing. Preferring it over the bounded gross-minus-cash inference is
-strictly better, because a declared figure beats a derived one — that ordering is
-already the ADR's ruling on retencion, honoured elsewhere and not here.
-
-### Plumbing required
-
-The income resolver holds only a transaction repository. The expense one takes an
-invoice repository as well. Both income entry points — the quarterly path and the
-annual Modelo 100 path — need it, and the single production call site constructs
-the aggregator by choosing between them, so both must gain the parameter together
-or the annual and quarterly halves would ground differently. That asymmetry is
-precisely what this campaign has been removing.
-
-### What the new issue reasons must carry
-
-A mismatch is refused with a traceable reason, never silently applied. The expense
-side spells these per failure — wrong bucket, wrong kind, non-reciprocal link,
-multi-transaction evidence, amount mismatch — and the income side needs the
-equivalents. A single generic reason would lose which check failed, which is the
-information an operator needs to fix the link.
+The amount guard is the load-bearing difference from the precedent it otherwise copies. The expense side asserts the cash equals the invoice `grand_total`, because an expense pays the whole contraprestacion. A sales invoice subject to retencion is paid net, so the credit is `grand_total - retention_amount`. Copying the expense form would have refused every net-paid professional invoice this path exists to ground, and dropping the retencion term would have accepted an invoice that does not describe the payment. A test pins the 1210-credit case so the guard cannot be "simplified" back.
 
 ## Notes
 
-**Authorisation.** This changes the figures a return carries. The application
-never files — it builds, validates and exports for a human to file — and the
-change moves a demonstrably wrong number to a right one, so the risk is bounded.
-The coordinator nonetheless left it for the operator rather than reversing a
-position it had already stated twice.
+The `invoices` parameter on both aggregators is optional, which is a deliberate deviation from the expense side's required positional. 43 in-process call sites exist across 12 test modules, several of them peer-owned and actively being written; requiring the argument would have forced edits into live peer files for callers that hold no invoices and would pass an empty catalogue. Production is unaffected by the choice: both `*_from_repositories` entry points load the real catalogue and the single production call site passes the repository, so the evidence path is wired rather than latent. The docstring states this so the default is not later read as an oversight.
 
-**Why it is not a design question.** Three shapes were considered open — copy on
-link, derive on read, copy on confirmation. The expense pipeline settles it:
-derive-on-read is the established pattern, and it already handles the two hazards
-that made the choice look hard. Nothing is copied, so no stale figure can outlive
-a corrected invoice; and a link whose amounts do not correspond is refused rather
-than applied, so no filed figure is silently rewritten.
+Both income entry points had to gain the repository together. The production resolver picks between the quarterly and annual aggregators by modelo, so threading one alone would have left the annual return grounding differently from the quarterly payments it reconciles against — the same asymmetry this campaign has spent its length removing. A test asserts the two paths ground one row identically.
 
-**The asymmetry this closes.** The expense pipeline surfaced a missing base while
-the income pipeline silently folded cash — that opened this campaign. The expense
-pipeline reads a linked invoice while the income pipeline ignores it — that is the
-same asymmetry a second time, on the same two pipelines, and the income side is the
-one carrying the central figure of the return.
+An unresolvable invoice id is treated as no evidence rather than as an issue. The ledger surface already reports a broken link, and this pipeline's question is only whether trustworthy figures exist; raising here would report one operator fault twice under two vocabularies.
+
+Four mutations were run against the committed shape, each applied to a copy-aside and restored: ignoring the invoice base (3 failed), copying the expense amount guard verbatim (5 failed), applying a mismatched link instead of refusing it (2 failed), and ignoring the declared retencion (1 failed). The second is the trap the brief named, and the suite catches it five times over. Restore verified post-hoc by SHA-256 match, a residue grep, and `git diff` rather than by trusting the copy step.
