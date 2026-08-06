@@ -441,6 +441,7 @@ class Invoice(BaseModel):
     oss_transaction_kind: TransactionKind | None = None
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None
+    recargo_amount: Decimal | None = None
     payment_id: str | None = None
     fx_rate: Decimal | None = None
     fx_rate_date: date | None = None
@@ -476,6 +477,18 @@ class Invoice(BaseModel):
         if self.retention_amount is None:
             return None
         return self._in_eur(self.retention_amount)
+
+    @property
+    def recargo_amount_eur(self) -> Decimal | None:
+        """The recargo de equivalencia in euro, or ``None`` when there is none to convert.
+
+        Same shape as :attr:`retention_amount_eur`: ``None`` covers both "no
+        recargo was declared" and "the invoice is unconverted", so a caller
+        needing to tell those apart reads :attr:`recargo_amount` alongside it.
+        """
+        if self.recargo_amount is None:
+            return None
+        return self._in_eur(self.recargo_amount)
 
     def _in_eur(self, amount: Decimal) -> Decimal | None:
         """Convert *amount* to euro using the stored rate.
@@ -551,12 +564,22 @@ class Invoice(BaseModel):
             raise InvoiceValidationError("base_total must equal the exact sum of line subtotals")
         if self.iva_total != line_iva_sum:
             raise InvoiceValidationError("iva_total must equal the exact sum of line iva amounts")
-        if self.grand_total != self.base_total + self.iva_total:
-            raise InvoiceValidationError("grand_total must equal base_total + iva_total exactly")
+        recargo = self.recargo_amount or Decimal("0")
+        if self.grand_total != self.base_total + self.iva_total + recargo:
+            raise InvoiceValidationError("grand_total must equal base_total + iva_total + recargo_amount exactly")
         all_non_numeric = all(iva_rate_percentage(line.iva_rate) is None for line in self.lines)
         if all_non_numeric:
             if self.iva_total != Decimal("0"):
                 raise InvoiceValidationError("iva_total must be zero when every line is EXEMPT or NOT_SUBJECT")
+            # Checked before the grand-total equality below so the operator is
+            # told which component is impossible, rather than being handed a
+            # totals mismatch they would have to decompose themselves. The
+            # recargo rides on the cuota of a taxable supply (LIVA art. 161),
+            # so a supply bearing no cuota by law bears no recargo either.
+            if recargo != Decimal("0"):
+                raise InvoiceValidationError(
+                    "recargo_amount must be zero when every line is EXEMPT or NOT_SUBJECT",
+                )
             if self.grand_total != self.base_total:
                 raise InvoiceValidationError(
                     "grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT",
@@ -569,15 +592,15 @@ class Invoice(BaseModel):
 
         Retención is an IRPF settlement-side deduction, not a price component.
         The canonical per-invoice identity is
-        ``total (contraprestación) = base_total + iva_total`` and, separately,
-        ``cash = total - retención``: the withholding changes what the payer
-        *transfers*, never what the operation *costs*. So :attr:`grand_total`
-        stays retención-inclusive, and an issuer who nets the withholding out of
-        the grand total is refused by
-        :meth:`_validate_totals_and_exempt_invariants` above, whose
-        ``grand_total == base_total + iva_total`` equality is exact. Nothing
-        here re-checks that; this validator governs only the two retención
-        fields themselves.
+        ``total (contraprestación) = base_total + iva_total + recargo_amount``
+        and, separately, ``cash = total - retención``: the withholding changes
+        what the payer *transfers*, never what the operation *costs*. So
+        :attr:`grand_total` stays retención-inclusive, and an issuer who nets
+        the withholding out of the grand total is refused by
+        :meth:`_validate_totals_and_exempt_invariants` above, whose equality is
+        exact. Nothing here re-checks that; this validator governs only the two
+        retención fields themselves. Recargo sits on the opposite side of that
+        identity for the reason :meth:`_validate_recargo_consistency` gives.
 
         The retención base is the **base imponible**, not the grand total: RIRPF
         art. 95.1 withholds "sobre los ingresos íntegros satisfechos", and the
@@ -620,6 +643,49 @@ class Invoice(BaseModel):
                 raise InvoiceValidationError(
                     "retention_amount must equal base_total * retention_rate within 1 cent",
                 )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_recargo_consistency(self) -> Self:
+        """Enforce the recargo de equivalencia invariants, holding it inside the total.
+
+        Recargo is the mirror image of retención and is deliberately modelled
+        as its opposite. Retención is settlement-side: it reduces what the
+        payer transfers without changing what the operation cost, so it sits
+        *outside* :attr:`grand_total`. Recargo is a price component: LIVA
+        art. 161 has the supplier repercutir it on the entrega alongside the
+        cuota, and the comerciante minorista genuinely owes it, so it sits
+        *inside* :attr:`grand_total`. Recording it outside would understate
+        what the customer was actually invoiced.
+
+        ``None`` and ``Decimal("0")`` are both accepted and mean different
+        things. ``None`` is "this invoice makes no statement about recargo",
+        which is the ordinary case for the overwhelming majority of invoices
+        whose customer is not a comerciante minorista. An explicit zero is a
+        positive declaration that the régimen was considered and does not
+        apply. Neither is treated as evidence of the other, which is the whole
+        reason the field is nullable rather than defaulted to zero -- an
+        unrecorded surcharge must stay distinguishable from one that does not
+        arise.
+
+        The upper bound is :attr:`iva_total`. Every statutory recargo rate is
+        far below its companion IVA rate (5.2 % against 21 %, 1.4 % against
+        10 %, 0.5 % against 4 %), so a recargo exceeding the cuota it rides on
+        is arithmetically impossible under any tier and is far more likely to
+        be the cuota written into the wrong field. The bound is deliberately
+        loose rather than a per-tier rate check: no recargo rate table ships in
+        the registry, and inventing rate literals here would put regulatory
+        values in a feature module.
+        """
+        if self.recargo_amount is None:
+            return self
+        if self.recargo_amount < Decimal("0"):
+            raise InvoiceValidationError("recargo_amount must be non-negative")
+        if self.recargo_amount > self.iva_total:
+            raise InvoiceValidationError(
+                "recargo_amount must not exceed iva_total; every recargo tier is a smaller "
+                "percentage than the IVA rate it accompanies (LIVA art. 161)",
+            )
         return self
 
     @model_validator(mode="after")

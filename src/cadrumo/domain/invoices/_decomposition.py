@@ -25,13 +25,15 @@ by construction however complete its amounts look.
 
 The canonical identity the grounded case yields is::
 
-    total (contraprestación) = taxable_base + cuota
+    total (contraprestación) = taxable_base + cuota + recargo
     cash                     = total - retención
 
-Retención is a settlement-side deduction, not a price component: it reduces
-what the payer transfers, never what the operation cost. There is no recargo
-term because the rich :class:`Invoice` records no recargo de equivalencia
-field; when one is added, it joins ``total``, not ``cash``.
+The two optional terms sit on opposite sides on purpose. Retención is a
+settlement-side deduction, not a price component: it reduces what the payer
+transfers, never what the operation cost. Recargo de equivalencia is the
+reverse -- LIVA art. 161 has the supplier repercutir it on the entrega
+alongside the cuota, so the comerciante minorista owes it and it belongs to
+what the operation cost.
 
 See Also:
     :mod:`cadrumo.domain.iva._components`
@@ -161,7 +163,9 @@ class InvoiceComponents(BaseModel):
             by law.
         retencion: The declared IRPF retención in euro; zero when none was
             declared.
-        total: The contraprestación -- ``taxable_base + cuota``.
+        recargo: The declared recargo de equivalencia in euro; zero when none
+            was declared.
+        total: The contraprestación -- ``taxable_base + cuota + recargo``.
         cash: What the payer transfers -- ``total - retencion``.
     """
 
@@ -170,6 +174,7 @@ class InvoiceComponents(BaseModel):
     taxable_base: Decimal
     cuota: Decimal
     retencion: Decimal
+    recargo: Decimal
     total: Decimal
     cash: Decimal
 
@@ -181,12 +186,14 @@ class InvoiceComponents(BaseModel):
         future producer of this type can emit a set of components that does not
         add up, whatever route it took to compute them.
         """
-        if self.total != self.taxable_base + self.cuota:
-            raise InvoiceValidationError("total must equal taxable_base + cuota")
+        if self.total != self.taxable_base + self.cuota + self.recargo:
+            raise InvoiceValidationError("total must equal taxable_base + cuota + recargo")
         if self.cash != self.total - self.retencion:
             raise InvoiceValidationError("cash must equal total - retencion")
         if self.retencion < Decimal("0"):
             raise InvoiceValidationError("retencion must be non-negative")
+        if self.recargo < Decimal("0"):
+            raise InvoiceValidationError("recargo must be non-negative")
         return self
 
 
@@ -278,7 +285,8 @@ def decompose_invoice(invoice: Invoice) -> InvoiceDecomposition:
     if taxable_base is None or cuota is None:  # pragma: no cover - guarded by FX_UNRESOLVED
         raise InvoiceValidationError("euro components are unavailable on an invoice that passed the FX check")
     retencion = invoice.retention_amount_eur or Decimal("0")
-    total = taxable_base + cuota
+    recargo = invoice.recargo_amount_eur or Decimal("0")
+    total = taxable_base + cuota + recargo
     return InvoiceDecomposition(
         invoice_id=invoice.invoice_id,
         category=invoice.iva_category,
@@ -286,6 +294,7 @@ def decompose_invoice(invoice: Invoice) -> InvoiceDecomposition:
             taxable_base=taxable_base,
             cuota=cuota,
             retencion=retencion,
+            recargo=recargo,
             total=total,
             cash=total - retencion,
         ),
