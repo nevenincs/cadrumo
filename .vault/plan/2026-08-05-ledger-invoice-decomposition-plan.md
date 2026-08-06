@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:2cd9ddfb0df6f9b518d68a88f993f0bce21247d42f33833b791c7efd2722e546'
+body_hash: 'sha256:dfd8c261b27625c9167bdac10d662b6771c1f423aa87b9fb41010fe10f368c4b'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -93,5 +93,5 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [ ] `P06.S46` - Wire the invoice decomposition contract to a consumer so its defect verdicts reach an operator, since it classifies nothing today and the aggregation paths each carry their own inline guard set instead; `src/cadrumo/application/aggregation, src/cadrumo/application/invoices`.
 - [x] `P06.S47` - Wire route_invoice_retenciones into the invoice lifecycle so a received invoice's retencion reaches Modelo 111, asserting the filed figure moves rather than that the projection returns a value; `src/cadrumo/application/aggregation/_invoice_retencion.py, src/cadrumo/application/invoices`.
 - [ ] `P06.S48` - Thread the operation date into period attribution with a declared rank marker naming which source produced it, surfaced identically on the pull and calculate paths; `src/cadrumo/application/aggregation`.
-- [ ] `P06.S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides; `src/cadrumo/application/aggregation/tests`.
+- [x] `P06.S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides; `src/cadrumo/application/aggregation/tests`.
 - [ ] `P06.S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases; `src/cadrumo/domain/invoices/tests`.
