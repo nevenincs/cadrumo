@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:385fdee55d84a40e8446841d6c97449eada45bd82daf412d3a4ddd5a277217b0'
+body_hash: 'sha256:803bf42ce9b136adf50f34a95fab98b725f79a67903e5a7404c5c3d05710e19d'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
@@ -290,3 +290,37 @@ the properties. Both are correct and both describe the same partition. Recorded 
 unreconciled count in a decision record invites a later reader to re-measure, and because it
 is the same lesson this record already carries about orphaned definitions: two measurements
 that disagree usually differ in their setup rather than in the fact they measure.
+
+## Amendment (2026-08-06): both decisions are implemented, and the criterion that mattered is met
+
+Measured at HEAD:
+
+    total 15896   (was 20589, budget 18000)
+    $defs 11533 across 11 definitions   (was 15844 across 13)
+    envelope 4352   (was ~4734)
+    titles present: 0
+
+**D1 landed.** The per-profile summary replaced the embedded calendar, and two definitions
+left the graph with it.
+
+**D2 landed and is no longer pending.** The independent verdict arrived and survived, with two
+of its supporting claims struck; the suppression is now implemented and the schema carries
+zero titles. The envelope shrank as a side effect, which is the fleet-wide half of that
+decision showing up in this verb.
+
+**The criterion this record actually set is met, and it is not the budget.** This ADR argued
+the payload was over its REAL allowance — roughly 13300 once the shared envelope is subtracted
+— while its definitions alone were 15844. Definitions are now 11533, under that allowance with
+about 1800 to spare. Had the reshape been designed against the nominal 18000 it would have
+landed something that passed the gate and stayed over its allowance; it was designed against
+the smaller number and cleared both.
+
+Worth stating because the two are easy to confuse in a later reading: passing at 15896 against
+18000 is the gate going green, and 11533 against ~13300 is the payload actually fitting. This
+record cared about the second.
+
+**One prediction of this record was wrong in the safe direction.** It expected the summary to
+cost back some of the 622 characters that full removal of the embedded calendar would recover.
+The landed result is better than the floor this ADR computed — 11533 of definitions against a
+17378 whole-schema floor for outright removal — because the composition with title suppression
+recovered more than either remedy measured alone, as the composition table predicted.

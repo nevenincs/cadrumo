@@ -1,10 +1,19 @@
-"""Structured tool-result summaries stay within a size budget.
+"""Every verb's output schema stays within a size budget.
 
-Structured output double-emits (text + structuredContent, ~2x tokens), so a verb
-whose structured result is very large inflates every call. This gate bounds the
-per-verb output-schema size - the static proxy for the structured content a verb
-emits - so a newly-added bulky result shape trips the budget and must move its
-bulk arrays to a ``resource_link`` rather than inlining them.
+A verb's output schema is transmitted in the tool listing, once per session, and a
+client defers loading tools past a definition-token threshold. Schema bytes are
+therefore a cost in their own right, and this gate bounds them DIRECTLY. It is not
+a proxy for anything.
+
+In particular it is not a proxy for what a call emits, and reading it as one leads
+somewhere wrong. Structured output double-emits (text + structuredContent, ~2x
+tokens), but that per-call cost scales with the rows a call returns while the schema
+does not, and schema-only text such as ``title`` and ``description`` never appears in
+``structuredContent`` at all. So per-call emitted size is genuinely unbounded and this
+gate does not bound it -- a static measurement cannot, because the row count exists
+only at call time. Anyone reaching for "this measure can be gamed by moving content
+out of the schema" has substituted that other target for this one: removing bytes the
+listing really transmits is a real reduction of the real cost measured here.
 
 The gate is intentionally static (it reads the registered output schemas, no CLI
 run), so it is a cheap always-on lock; reducing what a tripping verb returns is
