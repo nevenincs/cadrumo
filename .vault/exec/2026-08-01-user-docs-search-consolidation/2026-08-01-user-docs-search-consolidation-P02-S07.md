@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:861fb53a52b342daf55a66ff65e72ec13a156e68c82f4ac9575d795ea5362bd6'
+body_hash: 'sha256:45d07474ce050fc42394a50e15b67dad83b29f56b135d8bd6cb626fbcba8c461'
 step_id: 'S07'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -70,6 +70,16 @@ The Rung-2 browser config remains disabled/fail-closed. P02.S07 stays open pendi
 Fresh resident `vaultspec-rag` searches over the accepted consolidation ADR and the current compiler/evaluator/acceptance seams reconfirmed the binding boundary: R5 permits only bounded term-level semantics over the closed project vocabulary; R8/R9 require the shared tokenizer contract and measured minimum coverage; R10 requires evidence-derived cosine/margin/coverage thresholds, quantization top-five parity, locale/record-kind parity, and a held-out miss rate at or below 0.10 before browser enablement. The current report's 0.8 coverage floor, 0.75 cosine floor, and 0.05 runner-up margin are explicitly recorded measurement-policy inputs, not release authorization.
 
 The 14 semantic misses are distributed between `no-cosine-match` and `insufficient-coverage`; they are therefore not evidence that the evaluator may admit arbitrary out-of-vocabulary held-out phrases. Adding those phrases to the matrix or lowering the ratified coverage/recall bar would invalidate the held-out measurement and contradict the accepted source contract. No code-side remediation is justified by this replay. P02.S04-P02.S07 remain open and fail-closed pending a reproducible accepted artifact/policy or new authorized evidence; the browser config remains disabled and no deployment is claimed.
+
+### 2026-08-06 diagnostic threshold sweep
+
+A coarse read-only calibration sweep over the reproducible bundle varied the explicit coverage floor and cosine floor without changing source or release data. With the deliberately weak `minimum_coverage_ratio=0.4`, `runner_up_margin=0.0`, and result cap 5, floors 0.0, 0.3, and 0.5 each reached only 28/32 held-out hits (0.125 miss rate); floor 0.7 fell to 26/32 (0.1875). This is diagnostic, not threshold acceptance: it does not supply an independent calibration corpus, does not authorize lowering the contract, and still remains above the ratified 0.10 ceiling. The previously recorded policy replay remains the standing report.
+
+### 2026-08-06 browser seam continuation
+
+Fresh `vaultspec-rag` searches and the accepted Sol-medium architecture disposition confirm that the Rung-2 representations and D8 band-first ladder remain unchanged. The real Pagefind capture found the installed result API exposes an ephemeral `id` plus `data()`, with the destination URL in `data.url`; the controller's prior `result.url` relevance join was therefore invalid. The LUNA MAX repair carries the Pagefind id through the two-pass join, retains `data.url` for destination/dedupe, and does not promote direct model identity across the accepted legal DOC band.
+
+Focused real verification passed: `uv run --no-sync pytest -q dev/docs/terminology/tests/test_rung2_evaluation.py` returned `10 passed in 9.57s`; `uv run --no-sync pytest -q -m integration dev/docs/tests/test_search_page_inline_ladder.py dev/docs/tests/test_palette_ranking.py` returned `3 passed in 43.86s`; `node --check docs/_static/cadrumo-docs.js` and scoped `git diff --check` passed. The full local Pagefind build and 32-query browser capture are recorded in P02.S31. The miss-rate/acceptance evidence remains rejected; no browser enablement, artifact promotion, commit, push, or deployment occurred.
 
 ## Notes
 

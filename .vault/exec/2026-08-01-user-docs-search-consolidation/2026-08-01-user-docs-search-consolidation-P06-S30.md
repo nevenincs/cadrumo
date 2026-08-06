@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce94b5c04781d232449d942606ce69bd29ade3209eac712f7c17907e979fc469'
+body_hash: 'sha256:0298be657e2faad3c1227003952dec372e2e0787c6dbfdd687cda6a45a7f3d8f'
 step_id: 'S30'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -34,7 +34,7 @@ The deterministic structured path remains independent of semantic relevance. Mod
 
 ## Verification
 
-`uv run --no-sync python -m dev.docs.terminology.sweep --out C:\Users\hello\AppData\Local\Temp\cadrumo-rung2-evidence-20260806-live\relevance-projected.json --port 8766 --max-results 20 --timeout 60`
+`uv run --no-sync python -m dev.docs.terminology.sweep --out <session-scratch-dir>\cadrumo-rung2-evidence-20260806-live\relevance-projected.json --port 8766 --max-results 20 --timeout 60`
 
 `112 queries, 49 concepts, 112 with targets, 0 empty`
 
@@ -66,7 +66,7 @@ Fresh vaultspec-rag grounding over the accepted source contract, deterministic c
 
 The fresh live sweep used the completed index without a second reindex:
 
-`uv run --no-sync python -m dev.docs.terminology.sweep --no-reindex --port 8766 --timeout 90 --out C:\\Users\\hello\\AppData\\Local\\Temp\\userdocs-rag-sweep-20260806-current.json`
+`uv run --no-sync python -m dev.docs.terminology.sweep --no-reindex --port 8766 --timeout 90 --out <session-scratch-dir>\\userdocs-rag-sweep-20260806-current.json`
 
 It produced 112 queries over 49 concepts, 112 targeted mappings, and 0 failed/empty mappings. The raw sweep output hash was `2DBA97F3AA2D97BD253CD0528484C5A8522960133391C85D0CFA1D8AE137710E`. After retaining an explicit completed-index provenance note, the committed relevance input hash is `4E686B6B4DDA2C525358E5B02213F9664683C032DFC9C809DA54B5F844377226`; it contains 188 target rows across 90 unique record ids: 132 concept and 56 legal rows, with no synthetic `code:` or unmanifested PAGE targets.
 
