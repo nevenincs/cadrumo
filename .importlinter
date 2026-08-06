@@ -290,8 +290,13 @@ ignore_imports =
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_recipient_encryption -> cadrumo.adapters.persistence.storage.crypto
     cadrumo.application.modelo._review_package_recipient_registry -> cadrumo.adapters.persistence.storage
+    cadrumo.application.modelo._review_package_recipient_replay_guard -> cadrumo.adapters.persistence.profile
     cadrumo.application.modelo._review_package_recipient_replay_guard -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._review_package_signing -> cadrumo.adapters.persistence.storage
+    # The mint-or-load-winner keypair primitive was extracted from the signing and
+    # recipient-encryption modules above; both are pinned, so the extraction inherits
+    # their sanctioned reach rather than introducing a new one.
+    cadrumo.application.modelo._review_package_keypair -> cadrumo.adapters.persistence.storage
 
     # ── application → adapters (permitted by architecture ADR sec. 538) ──
     # application/ may import adapters/ for outbound wiring; full inversion
@@ -471,6 +476,8 @@ ignore_imports =
     #    the concrete InvoiceCatalogueRepository moved to the persistence
     #    adapter behind InvoiceCatalogueRepositoryProtocol ──
     cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.invoices
+    cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.prorrata_register
+    cadrumo.application.aggregation._renta_income_ledger -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.filing._review -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._bulk_import -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._creation -> cadrumo.adapters.persistence.profile.invoices
