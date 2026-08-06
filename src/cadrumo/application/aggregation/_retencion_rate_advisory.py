@@ -92,6 +92,19 @@ independent of it. Suppressing on such a signal would hide a real finding behind
 a fact nothing verified. A weak signal may set how confidently we speak; it may
 never decide whether we speak at all.
 
+The grading matters most for a shortfall quoted as a PERCENTAGE, and that case is
+worth stating precisely because the flat-fee example above understates it. A
+20,00 EUR fee colliding with 1 % of a 2.000,00 base is arithmetic luck at one
+invoice size. A pronto-pago descuento is conventionally quoted as a percentage,
+and 1 % and 2 % are its standard values — so a base-quoted discount collides with
+the sectoral rates at EVERY base, by construction rather than by coincidence.
+Screening on the rate set alone would therefore have made one of the four phantom
+causes this advisory exists to catch invisible at its two commonest values, at
+every invoice size. It is the sectoral reason code that keeps it visible: those
+rows raise the weaker advisory rather than passing silently. A discount quoted on
+the invoice TOTAL instead of the base lands at 1,21 × the rate and collides with
+nothing, so it raises the strong unmatched advisory.
+
 The residual limit, stated rather than left to be discovered: a shortfall landing
 on 15 % or 7 % is still indistinguishable from a real withholding and still passes
 silently. Closing that needs a declared retención, which the ADR rejected.

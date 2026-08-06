@@ -227,6 +227,63 @@ def test_a_shortfall_coinciding_with_a_sectoral_rate_raises_the_soft_advisory() 
     assert diagnostics[0].source_kind == INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND
 
 
+@pytest.mark.parametrize(
+    ("provider_id", "cash", "shortfall", "quoted_on"),
+    [
+        ("pronto-pago-1pct-of-base", "2400.00", Decimal("20.00"), "base"),
+        ("pronto-pago-2pct-of-base", "2380.00", Decimal("40.00"), "base"),
+    ],
+)
+def test_a_percentage_quoted_discount_still_speaks_through_the_sectoral_reason(
+    provider_id: str,
+    cash: str,
+    shortfall: Decimal,
+    quoted_on: str,
+) -> None:
+    """The class the rate set absorbs wholesale, pinned as audible.
+
+    A pronto-pago descuento is quoted as a percentage and 1 % / 2 % are its
+    standard values, so a base-quoted discount equals a sectoral rate at EVERY
+    base — by construction, not by the one-base arithmetic luck the flat-fee
+    case represents. Screening on the rate set alone would make this phantom
+    cause invisible at its two commonest values at every invoice size.
+
+    These rows must therefore raise the SECTORAL advisory. If a later edit
+    dropped that reason and kept only the unmatched one, this class would go
+    silent and this gate is what catches it.
+    """
+    assert quoted_on == "base"
+    assert _GROSS - Decimal(cash) == shortfall
+
+    observations = _observations(_income_row(provider_id, cash=cash))
+
+    assert observations[0].withheld_amount == shortfall
+
+    diagnostics = inferred_actividad_retencion_rate_advisory_observations(observations)
+
+    assert len(diagnostics) == 1
+    assert diagnostics[0].reason == "inferred_retencion_sectoral_rate_unconfirmed"
+
+
+def test_a_discount_quoted_on_the_invoice_total_raises_the_strong_advisory() -> None:
+    """Quoted on the gross, the same discount collides with nothing.
+
+    2 % of the 2.420,00 invoice total is 48,40, which is 2,42 % of the base and
+    matches no statutory rate — so the commercially conventional quoting
+    convention lands in the strong bucket. Pinned beside the base-quoted case
+    because the two differ only by the 1,21 IVA factor, and a reader who saw
+    only one would draw the wrong conclusion about which discounts are audible.
+    """
+    observations = _observations(_income_row("pronto-pago-2pct-of-gross", cash="2371.60"))
+
+    assert observations[0].withheld_amount == Decimal("48.40")
+
+    diagnostics = inferred_actividad_retencion_rate_advisory_observations(observations)
+
+    assert len(diagnostics) == 1
+    assert diagnostics[0].reason == "inferred_retencion_rate_unmatched"
+
+
 def test_a_professional_rate_match_stays_silent_while_a_sectoral_one_speaks() -> None:
     """The severity split, asserted as one comparison rather than two beliefs.
 
