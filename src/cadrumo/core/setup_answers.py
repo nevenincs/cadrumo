@@ -395,14 +395,14 @@ def project_setup_answers(values: Mapping[str, str]) -> SetupAnswers:
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the
-# cadrumo.domain.deadlines.taxpayer_model module object; a typed return would
-# require importing the module at definition time, re-introducing the
-# circular import described in the block comment above.
+# cadrumo.domain.deadlines module object; a typed return would require
+# importing the module at definition time, re-introducing the circular
+# import described in the block comment above.
 def _m() -> Any:
-    """Return the cadrumo.domain.deadlines.taxpayer_model module (lazy)."""
+    """Return the cadrumo.domain.deadlines module (lazy)."""
     import importlib
 
-    return importlib.import_module("cadrumo.domain.deadlines.taxpayer_model")
+    return importlib.import_module("cadrumo.domain.deadlines")
 
 
 # ANY-RETURN-RATIONALE-PROFILE-LAZY-MODULE: returns the

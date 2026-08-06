@@ -160,8 +160,7 @@ def test_overview_agenda_error_raised_for_non_positive_horizon() -> None:
 
     # OverviewAgendaError is raised before any network or profile access so
     # no fixture setup is needed.
-    from ..domain.deadlines import DeadlineEngine
-    from ..domain.deadlines.taxpayer_model import TaxpayerProfile
+    from ..domain.deadlines import DeadlineEngine, TaxpayerProfile
 
     with pytest.raises(OverviewAgendaError):
         build_overview_agenda(
