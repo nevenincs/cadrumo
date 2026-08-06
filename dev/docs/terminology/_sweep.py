@@ -45,6 +45,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from ..terminology_handbook import TerminologyHandbook, load_terminology_handbook
 from ..terminology_handbook._enums import TermStatus
 from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chunk_hits
+from ._rung2_query_authority import Rung2QueryAliasAuthority, load_query_alias_authority, validate_query_alias_authority
 from ._search_record import SearchRecordKind
 from ._unified_record import SearchRecord
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
@@ -190,6 +191,7 @@ def enumerate_query_vocabulary(
     handbook: TerminologyHandbook | None = None,
     *,
     concept_ids: Iterable[str] | None = None,
+    query_alias_authority: Rung2QueryAliasAuthority | None = None,
 ) -> tuple[SweepQuery, ...]:
     """Enumerate the closed query vocabulary from the Handbook concepts.
 
@@ -228,6 +230,17 @@ def enumerate_query_vocabulary(
                 _add_query(queries, concept.concept_id, term.label, section.language, is_hidden=False)
                 for form in term.hidden_search_forms:
                     _add_query(queries, concept.concept_id, form, section.language, is_hidden=True)
+
+    authority = query_alias_authority if query_alias_authority is not None else load_query_alias_authority()
+    validate_query_alias_authority(
+        authority,
+        handbook=resolved,
+        canonical_queries=((query.concept_id, query.language, query.query) for query in queries.values()),
+    )
+    for entry in authority.entries:
+        if wanted is not None and entry.concept_id not in wanted:
+            continue
+        _add_query(queries, entry.concept_id, entry.query, entry.language, is_hidden=True)
     return tuple(queries[key] for key in sorted(queries))
 
 
@@ -487,16 +500,8 @@ def run_sweep(
     # the same records for target filtering.
     from dev.docs.pagefind_inject import materialise_search_records
 
-    projection = (
-        search_record_projection
-        if search_record_projection is not None
-        else materialise_search_records(root)
-    )
-    target_resolver = (
-        resolver
-        if resolver is not None
-        else TargetResolver(search_record_projection=projection)
-    )
+    projection = search_record_projection if search_record_projection is not None else materialise_search_records(root)
+    target_resolver = resolver if resolver is not None else TargetResolver(search_record_projection=projection)
 
     # The mapping boundary may only ship ids emitted by the complete projection
     # consumed by Pagefind and Rung 2. This also rejects resolver-only synthetic
@@ -553,10 +558,7 @@ def _mapping_from(
 ) -> TermRelevanceMapping:
     emitted_record_ids = frozenset(record.id for record in search_records)
     manifest_targets = tuple(target for target in wrangled.targets if target.record.id in emitted_record_ids)
-    targets = tuple(
-        _term_target_ref(target.record, target.surface.value)
-        for target in manifest_targets
-    )
+    targets = tuple(_term_target_ref(target.record, target.surface.value) for target in manifest_targets)
     targets = _augment_structured_casilla_target(query, targets, search_records)
     targets = _seed_concept_card(query, targets, resolver, emitted_record_ids=emitted_record_ids)
     clusters = read_clusters(manifest_targets)

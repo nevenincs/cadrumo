@@ -289,4 +289,3 @@ def test_windows_storage_root_long_path_margin_refuses_a_non_positive_suffix(
     """
     with pytest.raises(CoreValidationError):
         windows_storage_root_long_path_margin(tmp_path, object_path_suffix_length=suffix_length)
-

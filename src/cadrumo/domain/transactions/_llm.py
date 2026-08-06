@@ -407,6 +407,19 @@ _IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
     IvaCategory.INTRA_COMMUNITY_SUPPLY: "exempt intra-community supply of goods to an EU business (Art. 25)",
     IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: "reverse-charge EU goods acquisition",
     IvaCategory.INTRA_COMMUNITY_TRIANGULATION: "intra-community triangular operation",
+    # The services pair states what separates it from the goods pair above,
+    # because that is the one distinction the auto-derived fallback hint cannot
+    # convey: a service and an entrega both show no Spanish cuota, for
+    # different legal reasons, and the reason is what a filing cites.
+    IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY: (
+        "service supplied to an EU business — NOT SUBJECT to Spanish IVA because Art. 69.Uno.1 "
+        "locates it where the customer is established; this is a SERVICE, not the Art. 25 "
+        "exempt supply of goods"
+    ),
+    IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: (
+        "service received from an EU supplier — reverse charge, the Spanish recipient "
+        "self-assesses IVA under Art. 84.Uno.2; this is a SERVICE, not a goods acquisition"
+    ),
     IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED: "export of goods outside the EU, zero-rated (Art. 21)",
     IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED: "operation assimilated to an export, exempt/zero-rated (Art. 22)",
     IvaCategory.IMPORT_THIRD_COUNTRY: "import of goods from outside the EU",

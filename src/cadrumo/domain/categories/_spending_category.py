@@ -26,6 +26,7 @@ class SpendingCategory(StrEnum):
     ARRENDAMIENTO_LOCAL = "arrendamiento_local"
     ARRENDAMIENTO_VIVIENDA_AFECTO = "arrendamiento_vivienda_afecto"
     IBI_LOCAL_AFECTO = "ibi_local_afecto"
+    SUMINISTROS_LOCAL_AFECTO = "suministros_local_afecto"
     SUMINISTROS_HOME_OFFICE_LUZ = "suministros_home_office_luz"
     SUMINISTROS_HOME_OFFICE_AGUA = "suministros_home_office_agua"
     SUMINISTROS_HOME_OFFICE_GAS = "suministros_home_office_gas"
@@ -106,24 +107,42 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
     ),
     SpendingCategoryFamily.PREMISES: (
         SpendingCategory.ARRENDAMIENTO_LOCAL,
-        SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
         SpendingCategory.IBI_LOCAL_AFECTO,
+        # Utilities of premises used for the activity. Deliberately PREMISES and
+        # not HOME_OFFICE_SUMINISTROS: the home-office family is bound to the
+        # censo vivienda-area invariant, which a local has no data to satisfy,
+        # and its 30 % multiplier comes from a rule that governs a dwelling.
+        SpendingCategory.SUMINISTROS_LOCAL_AFECTO,
     ),
     SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS: (
         SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET,
+        # LIRPF art. 30.2.5.b enumerates "agua, gas, electricidad, telefonía e
+        # Internet" together as the one suministros list, so a fixed line at
+        # the taxpayer's partially affected vivienda habitual carries the same
+        # statutory 0.30 multiplier and the same censo invariant as its four
+        # siblings above. A mobile line is not a fixed household suministro,
+        # so TELEFONIA_MOVIL is not moved here.
+        SpendingCategory.TELEFONIA_FIJA,
     ),
+    # NOTE: this family now holds a non-ownership member (a rental cost, not
+    # a titularidad cost) -- see ARRENDAMIENTO_VIVIENDA_AFECTO below. The name
+    # should eventually become something like HOME_OFFICE_DWELLING_COST; the
+    # rename is deferred so the correctness fix does not wait behind it.
     SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP: (
         SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
         SpendingCategory.IBI_VIVIENDA_AFECTO,
         SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
+        # The renter's parallel to the three ownership costs above: the same
+        # partially-affected-dwelling cost, borne as rent instead of
+        # ownership. Deducts at the raw affectation ratio with no statutory
+        # multiplier, same as its siblings; art. 30.2.5.b (the suministros
+        # carve-out) does not enumerate rent, so it belongs here, not there.
+        SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
     ),
-    SpendingCategoryFamily.TELECOMS: (
-        SpendingCategory.TELEFONIA_MOVIL,
-        SpendingCategory.TELEFONIA_FIJA,
-    ),
+    SpendingCategoryFamily.TELECOMS: (SpendingCategory.TELEFONIA_MOVIL,),
     SpendingCategoryFamily.OFFICE: (
         SpendingCategory.MATERIAL_OFICINA,
         SpendingCategory.SOFTWARE_SUSCRIPCION,

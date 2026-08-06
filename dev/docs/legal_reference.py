@@ -346,8 +346,7 @@ def _required_text(body: dict[str, object], *, path: Path, legal_id: str) -> tup
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field 'required_text' must be a string array")
     string_items = tuple(item for item in items if isinstance(item, str))
     return tuple(
-        _validate_authored_text(item, path=path, legal_id=legal_id, field="required_text")
-        for item in string_items
+        _validate_authored_text(item, path=path, legal_id=legal_id, field="required_text") for item in string_items
     )
 
 
@@ -528,7 +527,7 @@ def _render_entry(record: LegalProvisionRecord) -> tuple[str, str | None, str]:
     if record.notes is not None:
         fields.append(f":Notes: {_rst_escape(record.notes)}")
     if record.required_text:
-        required = "; ".join(f"``{_rst_escape(item)}``" for item in record.required_text)
+        required = "; ".join(f"``{_rst_escape(item.rstrip())}``" for item in record.required_text)
         fields.append(f":Required text: {required}")
     lines.extend(fields)
     lines.append("")
@@ -619,10 +618,7 @@ def render_legal_reference(
     grouped: dict[str, list[LegalProvisionRecord]] = {}
     for record in ordered:
         grouped.setdefault(record.document_id, []).append(record)
-    pages = tuple(
-        _render_document_page(document_id, tuple(grouped[document_id]))
-        for document_id in sorted(grouped)
-    )
+    pages = tuple(_render_document_page(document_id, tuple(grouped[document_id])) for document_id in sorted(grouped))
     targets = {legal_id: target for page in pages for legal_id, target in page.targets.items()}
     anchors = {legal_id: anchor for page in pages for legal_id, anchor in page.anchor_by_id.items()}
     grounding_count = sum(len(page.grounding_by_id) for page in pages)
@@ -637,11 +633,20 @@ def render_legal_reference(
     )
 
 
-def generate_legal_reference(docs_root: Path) -> LegalReferenceResult:
-    """Materialise the generated legal pages before Sphinx reads the tree."""
+def generate_legal_reference(
+    docs_root: Path,
+    *,
+    repo_root: Path | None = None,
+) -> LegalReferenceResult:
+    """Materialise legal pages from the authoritative repo into ``docs_root``.
+
+    ``docs_root`` may be an isolated copy used by a localized build, so the
+    source repository must be independently selectable. The default retains
+    the historical adjacent-root behavior for direct callers.
+    """
     docs_root = docs_root.resolve()
-    repo_root = docs_root.parent
-    result = render_legal_reference(repo_root)
+    source_root = (repo_root if repo_root is not None else docs_root.parent).resolve()
+    result = render_legal_reference(source_root)
     out_dir = _validated_output_dir(docs_root)
     output_paths = [out_dir / "index.rst"]
     for page in result.pages:

@@ -1132,12 +1132,9 @@ class WorkflowEngine:
             else:
                 cert_severity = None
                 days_until_expiry = None
-            if (
-                cert_severity
-                in (
-                    "EXPIRED",
-                    "CRITICAL",
-                )
+            if cert_severity in (
+                "EXPIRED",
+                "CRITICAL",
             ):
                 expiry_summary = _summary_text(
                     f"Certificate pre-expiry gate: severity={cert_severity} "

@@ -51,6 +51,11 @@ from ...domain.iva import (
     lookup_rate,
 )
 from ._errors import AggregationValidationError, t
+from ._invoice_devengo import (
+    devengo_proxy_attribution_diagnostics,
+    invoice_devengo_in_period,
+    resolve_invoice_devengo,
+)
 from ._source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -244,6 +249,7 @@ def _candidate_for_invoice_line(
     line: InvoiceLine,
     *,
     line_index: int,
+    devengo_date: date,
 ) -> OssIossLedgerCandidate | None:
     if invoice.oss_ioss_regime is None or invoice.oss_transaction_kind is None:
         return None
@@ -255,7 +261,7 @@ def _candidate_for_invoice_line(
         return None
     return OssIossLedgerCandidate(
         ledger_id=f"{invoice.invoice_id}:{line_index}",
-        transaction_date=invoice.issued_at,
+        transaction_date=devengo_date,
         regime=invoice.oss_ioss_regime,
         destination_member_state=destination,
         rate_kind=rate_kind,
@@ -266,13 +272,85 @@ def _candidate_for_invoice_line(
     )
 
 
+class OssIossInvoiceProjection(BaseModel):
+    """The Modelo 369 candidates for a period, beside the invoices they came from.
+
+    The invoices ride along because the candidate cannot answer for its own
+    provenance: it carries a resolved devengo date but not whether that date
+    was declared or substituted, and the advisory the resolver owes the
+    operator is about exactly that distinction.
+
+    Attributes:
+        candidates: The substrate-classified OSS/IOSS ledger lines.
+        contributing_invoices: The invoices at least one candidate came from.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    candidates: tuple[OssIossLedgerCandidate, ...] = ()
+    contributing_invoices: tuple[Invoice, ...] = ()
+
+
+def project_oss_ioss_invoices_from_repositories(
+    *,
+    bucket_id: str,
+    period: Period,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+) -> OssIossInvoiceProjection:
+    """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates.
+
+    Attribution is by the LIVA art. 75 devengo date through the shared
+    :func:`~application.aggregation.invoice_devengo_in_period` predicate, so an
+    operation performed in one quarter and invoiced in the next is declared in
+    the quarter it was performed, and every path that folds invoices into a
+    period answers that question the same way.
+
+    Args:
+        bucket_id: Active bucket id for the default invoice repository.
+        period: Filing period whose date span filters issued invoices.
+        invoice_repository: Optional
+            :class:`~domain.invoices.InvoiceCatalogueRepositoryProtocol` used
+            instead of the active bucket repository.
+
+    Returns:
+        The candidates for the period beside the invoices they were projected
+        from.
+    """
+    if not period.has_date_span():
+        return OssIossInvoiceProjection()
+    repo = invoice_repository if invoice_repository is not None else InvoiceCatalogueRepository(bucket_id=bucket_id)
+    candidates: list[OssIossLedgerCandidate] = []
+    contributing: list[Invoice] = []
+    for invoice in repo.load():
+        if invoice.kind is not InvoiceKind.ISSUED:
+            continue
+        if not invoice_devengo_in_period(invoice, period=period):
+            continue
+        devengo_date = resolve_invoice_devengo(invoice).devengo_date
+        projected = [
+            candidate
+            for index, line in enumerate(invoice.lines, start=1)
+            if (candidate := _candidate_for_invoice_line(invoice, line, line_index=index, devengo_date=devengo_date))
+            is not None
+        ]
+        if projected:
+            candidates.extend(projected)
+            contributing.append(invoice)
+    return OssIossInvoiceProjection(candidates=tuple(candidates), contributing_invoices=tuple(contributing))
+
+
 def oss_ioss_candidates_from_repositories(
     *,
     bucket_id: str,
     period: Period,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> tuple[OssIossLedgerCandidate, ...]:
-    """Project OSS/IOSS-tagged issued invoices into Modelo 369 ledger candidates.
+    """Return only the Modelo 369 candidates for the period.
+
+    The narrow accessor for callers that aggregate but emit no diagnostics.
+    Delegates to :func:`project_oss_ioss_invoices_from_repositories` rather
+    than repeating its selection, so the two cannot attribute a period
+    differently.
 
     Args:
         bucket_id: Active bucket id for the default invoice repository.
@@ -283,22 +361,13 @@ def oss_ioss_candidates_from_repositories(
 
     Returns:
         A tuple of :class:`OssIossLedgerCandidate` rows projected from issued
-        invoices in the period.
+        invoices devengando in the period.
     """
-    if not period.has_date_span():
-        return ()
-    repo = invoice_repository if invoice_repository is not None else InvoiceCatalogueRepository(bucket_id=bucket_id)
-    candidates: list[OssIossLedgerCandidate] = []
-    for invoice in repo.load():
-        if invoice.kind is not InvoiceKind.ISSUED:
-            continue
-        if invoice.issued_at < period.start_date or invoice.issued_at > period.end_date:
-            continue
-        for index, line in enumerate(invoice.lines, start=1):
-            candidate = _candidate_for_invoice_line(invoice, line, line_index=index)
-            if candidate is not None:
-                candidates.append(candidate)
-    return tuple(candidates)
+    return project_oss_ioss_invoices_from_repositories(
+        bucket_id=bucket_id,
+        period=period,
+        invoice_repository=invoice_repository,
+    ).candidates
 
 
 def aggregate_oss_ioss_from_repositories(
@@ -389,15 +458,16 @@ class OssIossLedgerSourceResolver:
                 more than one cent.
         """
         try:
-            candidates = (
-                oss_ioss_candidates_from_repositories(
+            projection = (
+                project_oss_ioss_invoices_from_repositories(
                     bucket_id=context.bucket_id,
                     period=context.period,
                     invoice_repository=self._invoice_repository,
                 )
                 if self._candidates is None
-                else self._candidates
+                else OssIossInvoiceProjection(candidates=self._candidates)
             )
+            candidates = projection.candidates
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,
@@ -423,7 +493,12 @@ class OssIossLedgerSourceResolver:
             source_transaction_ids=tuple(
                 sorted({observation.ledger_id.split(":", 1)[0] for observation in observations}),
             ),
-            diagnostics=tuple(
+            diagnostics=devengo_proxy_attribution_diagnostics(
+                projection.contributing_invoices,
+                source_kind="ledger_oss_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + tuple(
                 CalculationSourceDiagnostic(
                     reason="unrouted_observation",
                     source_kind="ledger_oss_aggregation",
@@ -476,11 +551,13 @@ class OssIossLedgerSourceResolver:
 
 
 __all__ = [
+    "OssIossInvoiceProjection",
     "OssIossLedgerCandidate",
     "OssIossLedgerSourceResolver",
     "aggregate_oss_ioss_bindings",
     "aggregate_oss_ioss_from_repositories",
     "oss_ioss_candidates_from_repositories",
+    "project_oss_ioss_invoices_from_repositories",
     "validate_oss_ioss_observation",
     "validate_oss_ioss_observations",
 ]

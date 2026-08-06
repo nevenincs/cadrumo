@@ -65,6 +65,7 @@ def _builders() -> dict[str, Callable[..., list[PreprocessOutput]]]:
     """
     from ._html import build_outputs as build_html
     from ._pdf import build_outputs as build_pdf
+    from ._terminology import build_outputs as build_terminology
     from ._workbook import build_outputs as build_workbook
 
     return {
@@ -73,6 +74,7 @@ def _builders() -> dict[str, Callable[..., list[PreprocessOutput]]]:
         ".xls": build_workbook,
         ".xlsm": build_workbook,
         ".xlsx": build_workbook,
+        ".toml": build_terminology,
     }
 
 

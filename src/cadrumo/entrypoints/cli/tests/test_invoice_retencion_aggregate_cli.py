@@ -26,6 +26,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.aggregation import RetencionObservationRepository
+from ....application.invoices import create_catalogue_invoice
 from ....application.modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
 from ....application.user_profile import UserProfileLifecycleRepository
 from ....core import Period
@@ -222,3 +223,155 @@ def test_excluded_invoice_retencion_is_not_routed_and_surfaces_a_notice(tmp_path
             Period.from_year_and_code(2026, "1T"),
         )
         assert stored == ()
+
+
+def _producer_created_invoice(
+    *,
+    objects: SecureObjectRepository,
+    number: str,
+    retention_rate: Decimal | None,
+    retention_amount: Decimal | None,
+) -> Invoice:
+    """Mint the invoice through the real application producer (#66).
+
+    :func:`create_catalogue_invoice` is the exact function both
+    ``catalogue create`` and ``catalogue wizard`` call, so exercising
+    ``retention_rate``/``retention_amount`` through it -- rather than a
+    hand-built ``Invoice.model_validate`` -- proves the producer this Step
+    wires, not merely that the model accepts the fields (which
+    ``test_invoice_retencion_routing.py`` already proved at the model
+    boundary).
+
+    ``iva_category`` is supplied directly rather than through a CLI option:
+    no shipped CLI verb can set a DOMESTIC IVA category on a catalogue
+    invoice today (``catalogue create``/``wizard`` derive it only from an
+    intra-community ``--operation-type``, which never resolves to a domestic
+    category) -- a separate, already-tracked gap this Step's Notes name, not
+    something this Step's producer is responsible for.
+    """
+    result = create_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        counterparty_name="Asesoría Profesional SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        invoice_number=number,
+        issued_at=date(2026, 3, 15),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        repository=InvoiceCatalogueRepository(objects=objects),
+    )
+    return result.invoice
+
+
+def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path) -> None:
+    """The new retention_rate/retention_amount producer (#66) reaches M111.
+
+    Mutation-proof companion:
+    :func:`test_producer_without_retention_is_excluded_from_m111` builds the
+    identical invoice through the identical producer call, differing only in
+    ``retention_rate``/``retention_amount`` being ``None`` -- disabling the
+    producer's output reddens the M111 casilla assertions below.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 producer retencion") as profile:
+        objects: SecureObjectRepository = profile.repository
+        _seed_ready_profile(objects)
+        invoice = _producer_created_invoice(
+            objects=objects,
+            number="F-PROV-CLI-901",
+            retention_rate=Decimal("0.15"),
+            retention_amount=Decimal("150.00"),
+        )
+
+        result = invoke_cached_cli(
+            [
+                "--language",
+                "en",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--received-invoice-retencion",
+                f'{{"invoice_id": "{invoice.invoice_id}", "scheme": "actividades_profesionales"}}',
+            ],
+        )
+        assert result.exit_code == 0, result.output
+
+        stored = RetencionObservationRepository(objects=objects).load_observations(
+            "111",
+            Period.from_year_and_code(2026, "1T"),
+        )
+        assert len(stored) == 1
+        assert stored[0].source_object_id == invoice.invoice_id
+        assert stored[0].retencion_amount == Decimal("150.00")
+
+        values = _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
+
+    assert values["07"] == Decimal("1")
+    assert values["08"] == Decimal("1000.00")
+    assert values["09"] == Decimal("150.00")
+    assert values["28"] == Decimal("150.00")
+    assert values["30"] == Decimal("150.00")
+
+
+def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> None:
+    """Mutation proof: the identical invoice, minus the producer's amount, never reaches M111.
+
+    Same producer call, same base/rate/counterparty/category as
+    :func:`test_producer_created_invoice_routes_through_aggregate_cli_into_m111`
+    -- only ``retention_rate``/``retention_amount`` differ (both ``None``,
+    the pre-#66 state). The invoice is excluded for
+    ``no_retencion_declared``, and the M111 casillas this Step's producer
+    populates stay at zero.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 producer retencion") as profile:
+        objects: SecureObjectRepository = profile.repository
+        _seed_ready_profile(objects)
+        invoice = _producer_created_invoice(
+            objects=objects,
+            number="F-PROV-CLI-902",
+            retention_rate=None,
+            retention_amount=None,
+        )
+
+        result = invoke_cached_cli(
+            [
+                "--language",
+                "en",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2026",
+                "--period",
+                "1T",
+                "--received-invoice-retencion",
+                f'{{"invoice_id": "{invoice.invoice_id}", "scheme": "actividades_profesionales"}}',
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        assert "no_retencion_declared" in result.output
+        assert invoice.invoice_id in result.output
+
+        stored = RetencionObservationRepository(objects=objects).load_observations(
+            "111",
+            Period.from_year_and_code(2026, "1T"),
+        )
+        assert stored == ()
+
+        values = _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
+
+    assert values.get("09", Decimal("0")) == Decimal("0")
+    assert values.get("28", Decimal("0")) == Decimal("0")
+    assert values.get("30", Decimal("0")) == Decimal("0")

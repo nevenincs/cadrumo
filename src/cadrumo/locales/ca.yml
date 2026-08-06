@@ -1756,8 +1756,7 @@ categories:
     arrendamiento_vivienda_afecta: Part del lloguer de l'habitatge afecta a l'activitat
     arrendamiento_vivienda_afecto:
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
-        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+        (Ley 35/2006 art. 29.2 i art. 28.1, lloguer de l'habitatge afecte).
     asesoria_contable:
       label: Honoraris d'assessoria comptable
       notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
@@ -1879,10 +1878,17 @@ categories:
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
         (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
         a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+    suministros_local_afecto:
+      label: Subministraments del local afecte
+      notes: 'Despesa totalment deduible: l''immoble on es desenvolupa l''activitat
+        esta afecte (Llei 35/2006 art. 29.1.a) i els seus subministraments son despesa
+        deduible (art. 28.1). No s''aplica la regla del 30 per cent de l''art. 30.2.5.b,
+        reservada a l''habitatge habitual parcialment afecte.'
     telefonia_fija:
       label: Despesa de telefonia fixa
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (Ley 35/2006 art. 28.1).
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     telefonia_movil:
       label: Despesa de telefonia mòbil
       notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
@@ -1969,6 +1975,11 @@ cli:
           el valor extret).
         confirm_link_hint_message: Vincula aquesta factura a un moviment del llibre
           amb `aeat app ledger link`.
+        confirm_printed_total_mismatch_message: El total imprès al document no coincideix
+          amb el total registrat. El total registrat es deriva de la base imposable
+          i del tipus d'IVA, de manera que una diferència significa que el document
+          inclou un import que aquest registre no recull, com ara un recàrrec d'equivalència,
+          o que s'ha llegit malament alguna xifra. Reviseu el document.
         confirm_taxable_base_help: Sobreescriu la base imposable extreta.
         evidence_id_help: Identificador del justificant (coincidència exacta)
         extract_attachment_id_help: Identificador de l'adjunt vinculat del qual extreure
@@ -1996,7 +2007,6 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
-        confirm_printed_total_mismatch_message: 'El total imprès al document no coincideix amb el total registrat. El total registrat es deriva de la base imposable i del tipus d''IVA, de manera que una diferència significa que el document inclou un import que aquest registre no recull, com ara un recàrrec d''equivalència, o que s''ha llegit malament alguna xifra. Reviseu el document.'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici
@@ -2040,6 +2050,8 @@ cli:
             està disponible.
           wizard_idempotent_noop: 'Sense operació idempotent: ja existeix una factura
             amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
+          retention_rate_help: 'Fracció de retenció de l''art. 95.1 RIRPF que reté el pagador (0,15 per al 15% general, o 0,07 durant el període d''inici d''activitat). Requereix --retention-amount; una fracció sola es rebutja.'
+          retention_amount_help: 'Import de la retenció d''IRPF retinguda pel pagador, en euros. Es pot indicar sol, o juntament amb --retention-rate.'
         country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
           intracomunitàries UE)
         eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
@@ -2050,6 +2062,9 @@ cli:
         kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus
           a un proveïdor)'
         list_help: Llista les factures de negoci (ambdós tipus llevat que --kind filtri)
+        operation_date_help: Data en que es va fer el lliurament o la prestacio (AAAA-MM-DD).
+          Es la data de meritacio de l'art. 75 LIVA que determina en quin periode
+          es declara la quota; sense aquesta s'utilitza la data de factura.
         operation_type_help: 'Clau d''operació M349: E lliuraments, M lliuraments
           posteriors a importació exempta, H les mateixes per representant fiscal,
           A adquisicions, T lliuraments triangulars, S serveis prestats, I serveis
@@ -2057,6 +2072,8 @@ cli:
           consigna, C substitucions del destinatari en consigna'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura de negoci
+        total_amount_required: 'L''opció --total-amount és obligatòria: indiqueu el
+          total de la factura com a import decimal, per exemple 121.00.'
         update_help: Actualitza les dades d'una factura de negoci
         view_help: Mostra una factura de negoci
         yes_help: Confirma l'eliminació de la factura

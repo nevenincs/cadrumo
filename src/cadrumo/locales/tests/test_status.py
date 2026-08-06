@@ -192,4 +192,3 @@ def test_status_command_reports_catalogue_partition(manager: LocaleManager) -> N
     assert rows["hu.yml"]["identical_allowlisted"] == "1"
     assert rows["hu.yml"]["identical_pending"] == "1"
     assert rows["es.yml"]["extra"] == "1"
-

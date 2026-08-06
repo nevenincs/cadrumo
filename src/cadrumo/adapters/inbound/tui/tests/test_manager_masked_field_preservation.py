@@ -370,8 +370,7 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
         masked=True,
         required=False,
         choices=tuple(
-            ProfileFieldChoice(value=token, label=token)
-            for token in ("casilla", "numero_soporte", "fecha_validez")
+            ProfileFieldChoice(value=token, label=token) for token in ("casilla", "numero_soporte", "fecha_validez")
         ),
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):

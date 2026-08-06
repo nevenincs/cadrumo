@@ -129,11 +129,8 @@ def test_a_divergent_spelling_would_be_caught_positive_control() -> None:
     shared = frozenset(StorageNodeKind.__members__) & frozenset(DriftedPathKind.__members__)
     assert "DIRECTORY" in shared, "the control must actually share the member it drifts"
 
-    mismatches = [
-        name for name in shared if StorageNodeKind[name].value != DriftedPathKind[name].value
-    ]
+    mismatches = [name for name in shared if StorageNodeKind[name].value != DriftedPathKind[name].value]
 
     assert mismatches == ["DIRECTORY"], (
-        "the value comparison did not flag a deliberately drifted spelling, so it "
-        "cannot flag a real one"
+        "the value comparison did not flag a deliberately drifted spelling, so it cannot flag a real one"
     )

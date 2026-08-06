@@ -22,9 +22,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaId,
@@ -33,6 +35,7 @@ from ....domain.calculations.registry import (
     validated_casilla_id,
 )
 from ....domain.invoices import InvoiceCatalogue
+from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -43,6 +46,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from .._renta_gasto_ledger import (
     RentaGastoLedgerAggregationIssueReason,
@@ -50,7 +54,11 @@ from .._renta_gasto_ledger import (
     aggregate_renta_gasto_ledger,
     aggregate_renta_gasto_ledger_from_repositories,
 )
-from .._renta_ledger import RentaLedgerAggregationIssueReason, aggregate_renta_ledger_expenses
+from .._renta_ledger import (
+    RentaLedgerAggregationIssueReason,
+    aggregate_renta_ledger_expenses,
+    aggregate_renta_ledger_expenses_from_repositories,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -114,6 +122,7 @@ def _gasto_transaction(
     amount: Decimal = Decimal("1000.00"),
     currency: str = "EUR",
     taxable_base: Decimal | None = None,
+    iva_amount: Decimal | None = None,
     irpf_category: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
@@ -138,7 +147,7 @@ def _gasto_transaction(
             "category_id": "asesoria_fiscal",
             "taxable_base": taxable_base,
             "iva_rate": None,
-            "iva_amount": None,
+            "iva_amount": iva_amount,
             "irpf_category": irpf_category,
             "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
@@ -644,3 +653,196 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
     assert [issue.reason for issue in annual.issues] == [
         RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE,
     ]
+
+
+# ---------------------------------------------------------------------------
+# IVA-deduction ratio derived from the profile's ``iva.regime`` fact and the
+# bucket's ProrrataRegister, driven through the real repository path -- the
+# SAME resolver the M100 annual first slice uses
+# (application.aggregation._renta_ledger._resolve_iva_deduction_ratio), for the
+# SAME ejercicio, so the two filings cannot diverge on it.
+# ---------------------------------------------------------------------------
+
+
+def _profile_with_iva_regime(regime_value: str | None) -> UserProfileRecord:
+    """A user profile carrying an optional ``iva.regime`` fact."""
+    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    if regime_value is not None:
+        facts = (*facts, UserProfileFact(path="iva.regime", value=regime_value))
+    return UserProfileRecord(
+        profile_id="44444444-4444-4444-8444-444444444444",
+        display_name="M130 IVA Regime Tester",
+        facts=facts,
+    )
+
+
+def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterly_gasto(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A wholly ``EXENTO`` taxpayer's non-deductible input IVA joins the M130 gasto, end to end.
+
+    Same medico radiologo figures the M100 side proves against the AEAT Manual
+    practico de Renta 2024 (Parte 1, Capitulo 7): base 8.000,00 EUR, IVA
+    soportado 1.600,00 EUR. LIVA art. 20.Uno.3.º gives the activity NO right to
+    deduct any of its input IVA (art. 94.Uno a contrario), and that legal fact is
+    unchanged between the annual declaration and the quarterly pago fraccionado
+    (LIRPF arts. 28-30 base-imponible deductibility governs both identically).
+    Drives the real repository path -- a transaction carrying its own
+    taxable_base/iva_amount and a profile declaring ``iva.regime = EXENTO`` --
+    never a hand-built ratio.
+    """
+    row = _gasto_transaction(
+        "row-exento",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("9600.00"),
+        taxable_base=Decimal("8000.00"),
+        iva_amount=Decimal("1600.00"),
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+
+    def _run(profile_record: UserProfileRecord | None) -> Decimal:
+        result = aggregate_renta_gasto_ledger_from_repositories(
+            bucket_id="test",
+            period=_Q1_2024,
+            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+            profile_record=profile_record,
+        )
+        assert result.issues == ()
+        return result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA]
+
+    exento_total = _run(_profile_with_iva_regime("EXENTO"))
+    assert exento_total == Decimal("9600.00")
+
+    # Without the EXENTO fact the historic base-only behaviour stands: only the
+    # net-of-IVA base is deductible, proving the ratio is the actual selector.
+    general_total = _run(_profile_with_iva_regime(None))
+    assert general_total == Decimal("8000.00")
+
+
+def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_share_quarterly(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A GENERAL-prorrata register entry joins the non-recoverable IVA share into M130, end to end.
+
+    Same 70% figures the M100 side proves against LIVA art. 104.Uno: base
+    1.000,00 EUR, IVA soportado 210,00 EUR, of which 30% (63,00 EUR) has no
+    right to deduct. Seeds a real
+    :class:`~domain.prorrata_register.ProrrataRegister` entry for the SAME
+    ejercicio the quarterly period falls in, exercising the identical
+    ``resolve_provisional`` resolution the M303 and M100 sides already apply --
+    the PROVISIONAL percentage, not the definitive one, since the year is not
+    yet over when a Q1 pago fraccionado is computed.
+    """
+    row = _gasto_transaction(
+        "row-prorrata",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("1210.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+        ProrrataRegisterEntry(
+            ejercicio=2024,
+            regime=ProrrataRegisterRegime.GENERAL,
+            provisional_percentage=Decimal("70"),
+            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        ),
+    )
+
+    result = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    assert result.issues == ()
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("1063.00")
+
+
+def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_entry_quarterly(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A ``NINGUNA`` regime entry (full deduction rights) changes nothing for M130 either.
+
+    ``NINGUNA`` means the taxpayer performs only con-derecho operations, so no
+    percentage apportions the cuotas (LIVA art. 94 stands unmodified) -- the
+    quarterly fold-in must fall through to the historic base-only behaviour
+    exactly as if no register entry existed at all.
+    """
+    row = _gasto_transaction(
+        "row-ninguna",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("1210.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+        ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.NINGUNA),
+    )
+
+    result = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+
+    assert result.issues == ()
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("1000.00")
+
+
+def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercicio(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The quarterly and annual filings cannot diverge on the deduction ratio.
+
+    ``aggregate_renta_gasto_ledger_from_repositories`` (M130) and
+    ``aggregate_renta_ledger_expenses_from_repositories`` (M100) both read the
+    SAME transaction from the SAME bucket and resolve the SAME 70% GENERAL
+    register entry through the SAME ``_resolve_iva_deduction_ratio`` function
+    for the SAME ejercicio -- verified end to end through both real repository
+    paths rather than assumed from the shared-resolver claim alone.
+    """
+    row = _gasto_transaction(
+        "row-shared",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("1210.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+        ProrrataRegisterEntry(
+            ejercicio=2024,
+            regime=ProrrataRegisterRegime.GENERAL,
+            provisional_percentage=Decimal("70"),
+            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        ),
+    )
+
+    m130_result = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id="test",
+        period=_Q1_2024,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+    )
+    assert m130_result.issues == ()
+    assert m130_result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("1063.00")
+
+    m100_result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_period(2024, "0A"),
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2024,
+    )
+    assert m100_result.issues == ()
+    assert m100_result.observations[0].deductible_amount == Decimal("1063.00")

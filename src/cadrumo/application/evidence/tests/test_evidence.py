@@ -298,11 +298,15 @@ class TestVerify:
         added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=skewed_payloads)
 
         only_small = {("filing_record", "filing-1"): skewed_payloads[("filing_record", "filing-1")]}
-        report_small = svc.check(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id, record_payloads=only_small)
+        report_small = svc.check(
+            bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id, record_payloads=only_small
+        )
         assert report_small.completeness_ratio == pytest.approx(0.1)
 
         only_large = {("calculation_revision", "rev-1"): skewed_payloads[("calculation_revision", "rev-1")]}
-        report_large = svc.check(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id, record_payloads=only_large)
+        report_large = svc.check(
+            bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id, record_payloads=only_large
+        )
         assert report_large.completeness_ratio == pytest.approx(0.9)
 
     def test_check_fails_when_manifest_work_unit_is_not_persisted(

@@ -548,6 +548,18 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             f"renta-{_FILING_YEAR}-profile-descendientes-guarderia": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-guarderia-gastos-reales": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-cotizaciones-ss-madre": Decimal("0"),
+            # The Art. 81.2 increment is DERIVED, not read from a stored fact:
+            # the verb's profile resolver folds it per child and injects the
+            # result. This seeded profile declares no descendientes, so that
+            # fold returns zero and the mirror is that computed zero -- not a
+            # placeholder standing in for an unresolved value. The distinction
+            # matters because the injector deliberately leaves the fact ABSENT
+            # when its cap parameter or eligibility ceilings cannot resolve,
+            # precisely so a real deducción is never silently withheld; a zero
+            # here would mask that refusal if it ever fired. Both resolve for
+            # this snapshot (cap 1000, ceilings present), so the verb's own
+            # value is zero and the oracle matches it.
+            f"renta-{_FILING_YEAR}-profile-incremento-guarderia": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-marriage-full-year": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-marriage-month-start": Decimal("0"),
             f"renta-{_FILING_YEAR}-profile-marriage-month-end": Decimal("0"),

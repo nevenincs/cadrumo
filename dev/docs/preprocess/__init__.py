@@ -2,7 +2,8 @@
 
 Defines the versioned :class:`PreprocessOutput` schema the project-side
 document preprocessors (BOE normatives HTML, Disenos de Registro workbooks,
-corpus PDFs) emit, and serves two consumers from that one extraction truth:
+corpus PDFs, and Terminology Handbook concepts) emit, and serves two consumers
+from that one extraction truth:
 
 * **The committed sidecar payload** — ``*.extracted.md`` text plus
   ``*.extracted.json`` provenance next to each corpus source. These are

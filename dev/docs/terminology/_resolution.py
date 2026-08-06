@@ -228,7 +228,7 @@ _LEGAL_TOML_RE = re.compile(
 _CLI_REFERENCE_RE = re.compile(
     r"^docs/cli/(?P<page>.+)\.rst$",
 )
-_CLI_COMMAND_PATH_RE = re.compile(r'^\*\*Command path:\*\* ``(?P<path>[^`]+)``\s*$')
+_CLI_COMMAND_PATH_RE = re.compile(r"^\*\*Command path:\*\* ``(?P<path>[^`]+)``\s*$")
 _CLI_PARAMETERS_HEADER_RE = re.compile(r"^\*\*Parameters\*\*\s*$")
 _CLI_OUTPUT_SCHEMA_HEADER_RE = re.compile(r"^\*\*Output schema\*\*\s*$")
 _CLI_PARAMETER_LINE_RE = re.compile(r"^\s*``[^`]+``(?:\s*,\s*``[^`]+``)*\s*$")
@@ -289,8 +289,7 @@ class TargetResolver:
         # Pagefind injector emits. Its target is the renderer's site-relative
         # page/anchor; BOE remains typed provenance on the unified record.
         self._legal_by_id: dict[str, SearchRecord] = {
-            record.legal_id: to_search_record(record)
-            for record in project_legal_search_records(_REPO_ROOT)
+            record.legal_id: to_search_record(record) for record in project_legal_search_records(_REPO_ROOT)
         }
         # Index the exact unified records consumed by Pagefind injection. A
         # CLI family source page may resolve only to an actually emitted
@@ -432,9 +431,7 @@ class TargetResolver:
                 detail=f"cannot read casilla source {path!r} to identify an individual record",
             )
         matching = tuple(
-            section
-            for section in sections
-            if section.start_line <= hit.line_end and hit.line_start <= section.end_line
+            section for section in sections if section.start_line <= hit.line_end and hit.line_start <= section.end_line
         )
         if not matching:
             return DroppedHit(
@@ -447,24 +444,16 @@ class TargetResolver:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
-                detail=(
-                    f"source lines {hit.line_start}-{hit.line_end} overlap multiple casillas "
-                    f"({ids}) in {path!r}"
-                ),
+                detail=(f"source lines {hit.line_start}-{hit.line_end} overlap multiple casillas ({ids}) in {path!r}"),
             )
 
         casilla_id = matching[0].casilla_id
-        matching_records = tuple(
-            record for record in records if str(record.metadata.casilla_id) == casilla_id
-        )
+        matching_records = tuple(record for record in records if str(record.metadata.casilla_id) == casilla_id)
         if len(matching_records) != 1:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
-                detail=(
-                    f"source casilla {casilla_id!r} for modelo {modelo!r} has no unique "
-                    "projected search record"
-                ),
+                detail=(f"source casilla {casilla_id!r} for modelo {modelo!r} has no unique projected search record"),
             )
 
         (base,) = matching_records
@@ -520,9 +509,7 @@ class TargetResolver:
                 detail=f"cannot read legal source {path!r} to identify an individual provision",
             )
         matching = tuple(
-            section
-            for section in sections
-            if section.start_line <= hit.line_end and hit.line_start <= section.end_line
+            section for section in sections if section.start_line <= hit.line_end and hit.line_start <= section.end_line
         )
         if not matching:
             return DroppedHit(
@@ -666,16 +653,14 @@ class TargetResolver:
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
                 detail=(
-                    f"CLI command {locator.command_path!r} routes to {routed_page!r}, not source page "
-                    f"{expected_page!r}"
+                    f"CLI command {locator.command_path!r} routes to {routed_page!r}, not source page {expected_page!r}"
                 ),
             )
 
         matching = tuple(
             record
             for record in self._cli_records_by_locator.get((locator.command_path, locator.option_names), ())
-            if record.target.partition("#")[0] == f"{routed_page}.html"
-            and record.target.partition("#")[2]
+            if record.target.partition("#")[0] == f"{routed_page}.html" and record.target.partition("#")[2]
         )
         target = f"{routed_page}.html"
         if not matching:
@@ -797,11 +782,7 @@ def _read_casilla_source_sections(project_relpath: str) -> tuple[_CasillaSourceS
     except (OSError, UnicodeError):
         return None
 
-    headers = [
-        index
-        for index, line in enumerate(lines)
-        if _CASILLA_TABLE_RE.fullmatch(line)
-    ]
+    headers = [index for index, line in enumerate(lines) if _CASILLA_TABLE_RE.fullmatch(line)]
     sections: list[_CasillaSourceSection] = []
     for position, header_index in enumerate(headers):
         next_header = headers[position + 1] if position + 1 < len(headers) else len(lines)
@@ -846,9 +827,7 @@ def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None
     ]
     locators: list[_CliSourceLocator] = []
     for position, (command_index, command_path) in enumerate(command_headers):
-        next_command_index = (
-            command_headers[position + 1][0] if position + 1 < len(command_headers) else len(lines)
-        )
+        next_command_index = command_headers[position + 1][0] if position + 1 < len(command_headers) else len(lines)
         # The command locator is deliberately only the explicit command-path
         # line. A range that also overlaps a parameter locator is ambiguous.
         locators.append(
@@ -903,7 +882,7 @@ def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None
 
 
 _LEGAL_HEADER_RE = re.compile(r'^\[legal\."(?P<id>[^"]+)"\]\s*$')
-_TOML_TABLE_HEADER_RE = re.compile(r'^(?:\[\[.*\]\]|\[.*\])\s*$')
+_TOML_TABLE_HEADER_RE = re.compile(r"^(?:\[\[.*\]\]|\[.*\])\s*$")
 
 
 def _read_legal_source_sections(project_relpath: str) -> tuple[_LegalSourceSection, ...] | None:
@@ -920,11 +899,7 @@ def _read_legal_source_sections(project_relpath: str) -> tuple[_LegalSourceSecti
     except (OSError, UnicodeError):
         return None
 
-    table_headers = [
-        index
-        for index, line in enumerate(lines)
-        if _TOML_TABLE_HEADER_RE.fullmatch(line) is not None
-    ]
+    table_headers = [index for index, line in enumerate(lines) if _TOML_TABLE_HEADER_RE.fullmatch(line) is not None]
     headers = [
         (index, match.group("id"))
         for index, line in enumerate(lines)

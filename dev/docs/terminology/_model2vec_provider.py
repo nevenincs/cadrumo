@@ -32,6 +32,7 @@ from ._static_matrix import (
     StaticEmbeddingProvider,
     canonical_query_tokens,
     canonical_vocabulary,
+    normalise_query_tokens,
 )
 
 __all__ = [
@@ -94,9 +95,9 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
         if static_model is None:
             raise MatrixCompilationError("model2vec.StaticModel is unavailable")
         try:
-            # The path check above is what makes this call local-only.  The
-            # explicit flag also prevents a cache miss from becoming a network
-            # download if a future Model2Vec loader changes its default.
+            # The verified local directory and raw-byte manifests above are the
+            # no-download boundary; the selected model2vec 0.8.2 lane also
+            # receives its explicit no-download guard.
             self._model = static_model.from_pretrained(self._model_path, force_download=False)
         except Exception as exc:  # model loader errors are provider-boundary failures
             raise MatrixCompilationError(f"cannot load local Model2Vec model {self._model_path}: {exc}") from exc
@@ -112,6 +113,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
             raise MatrixCompilationError("local Model2Vec model does not expose its tokenizer")
         if not callable(getattr(self._model, "encode_as_sequence", None)):
             raise MatrixCompilationError("local Model2Vec model does not expose encode_as_sequence")
+        self._unknown_token_id = _require_unknown_token_id(tokenizer)
 
     @property
     def metadata(self) -> ModelMetadata:
@@ -131,7 +133,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
                 vector=vector,
             )
             for term in requested
-            for token_ids, vector in (self._embed_text(term),)
+            for token_ids, vector in (self._embed_term(term),)
         )
 
     def embed_query_tokens(self, tokens: tuple[str, ...]) -> tuple[QueryTokenObservation, ...]:
@@ -154,6 +156,19 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
             )
         return tuple(observations)
 
+    def _embed_term(self, term: str) -> tuple[tuple[int, ...], tuple[float, ...]]:
+        """Normalize and pool words equally, retaining every word's model tokens."""
+        words = normalise_query_tokens(term)
+        if not words:
+            raise MatrixCompilationError(f"provider produced no normalized words for {term!r}")
+        observations = tuple(self._embed_text(word) for word in words)
+        token_ids = tuple(token_id for word_ids, _ in observations for token_id in word_ids)
+        vectors = tuple(
+            self._normalize_vector(vector, text=word)
+            for word, (_, vector) in zip(words, observations, strict=True)
+        )
+        return token_ids, self._pool_vectors(vectors, text=term)
+
     def _embed_text(self, text: str) -> tuple[tuple[int, ...], tuple[float, ...]]:
         """Return an exact id tuple and a float32 mean of its token vectors."""
         tokenizer = self._model.tokenizer
@@ -164,15 +179,14 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
         raw_ids = getattr(encoding, "ids", None)
         if not isinstance(raw_ids, (list, tuple)) or not raw_ids:
             raise MatrixCompilationError(f"provider produced no model tokens for {text!r}")
-        try:
-            token_ids = tuple(int(token_id) for token_id in cast(Sequence[Any], raw_ids))
-        except (TypeError, ValueError) as exc:
-            raise MatrixCompilationError(f"provider returned invalid token ids for {text!r}") from exc
+        raw_token_ids = tuple(cast(Sequence[Any], raw_ids))
+        if any(isinstance(token_id, bool) or not isinstance(token_id, int) for token_id in raw_token_ids):
+            raise MatrixCompilationError(f"provider returned invalid token ids for {text!r}")
+        token_ids = tuple(raw_token_ids)
         if any(token_id < 0 for token_id in token_ids):
             raise MatrixCompilationError(f"provider returned a negative token id for {text!r}")
 
-        unknown_id = getattr(self._model, "unk_token_id", None)
-        if unknown_id is not None and int(unknown_id) in token_ids:
+        if self._unknown_token_id in token_ids:
             raise MatrixCompilationError(f"provider encountered an unknown token in {text!r}")
 
         try:
@@ -196,8 +210,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
             raise MatrixCompilationError(f"provider returned an unreadable token sequence for {text!r}") from exc
         if row_count != len(token_ids):
             raise MatrixCompilationError(
-                f"provider token/vector count mismatch for {text!r}: "
-                f"{row_count} vectors for {len(token_ids)} token ids"
+                f"provider token/vector count mismatch for {text!r}: {row_count} vectors for {len(token_ids)} token ids"
             )
         if row_count == 0:
             raise MatrixCompilationError(f"provider returned an empty token sequence for {text!r}")
@@ -210,10 +223,49 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
                 raise MatrixCompilationError(f"provider returned an invalid vector for {text!r}") from exc
             if len(values) != self._metadata.dimension:
                 raise MatrixCompilationError(
-                    f"provider vector for {text!r} has dimension {len(values)}, "
-                    f"expected {self._metadata.dimension}"
+                    f"provider vector for {text!r} has dimension {len(values)}, expected {self._metadata.dimension}"
                 )
             vectors.append(values)
+
+        return token_ids, self._pool_vectors(tuple(vectors), text=text)
+
+    def _normalize_vector(
+        self,
+        vector: Sequence[float],
+        *,
+        text: str,
+    ) -> tuple[float, ...]:
+        """Apply the matrix contract's finite float32 L2 normalization."""
+        if len(vector) != self._metadata.dimension:
+            raise MatrixCompilationError(
+                f"provider vector for {text!r} has dimension {len(vector)}, expected {self._metadata.dimension}"
+            )
+        float32_values = tuple(_as_float32(value, text=text) for value in vector)
+        sum_squares = 0.0
+        for value in float32_values:
+            square = _as_float32(value * value, text=text)
+            sum_squares = _as_float32(sum_squares + square, text=text)
+        if not math.isfinite(sum_squares) or sum_squares <= 0.0:
+            raise MatrixCompilationError(f"provider vector for {text!r} must be finite and non-zero")
+        norm = _as_float32(math.sqrt(sum_squares), text=text)
+        if norm <= 0.0:
+            raise MatrixCompilationError(f"provider vector for {text!r} underflowed during normalization")
+        return tuple(_as_float32(value / norm, text=text) for value in float32_values)
+
+    def _pool_vectors(
+        self,
+        vectors: Sequence[Sequence[float]],
+        *,
+        text: str,
+    ) -> tuple[float, ...]:
+        """Average vectors with deterministic float32 arithmetic."""
+        if not vectors:
+            raise MatrixCompilationError(f"provider produced no vectors for {text!r}")
+        for vector in vectors:
+            if len(vector) != self._metadata.dimension:
+                raise MatrixCompilationError(
+                    f"provider vector for {text!r} has dimension {len(vector)}, expected {self._metadata.dimension}"
+                )
 
         pooled: list[float] = []
         for column in range(self._metadata.dimension):
@@ -221,7 +273,7 @@ class PotionModel2VecProvider(StaticEmbeddingProvider):
             for row in vectors:
                 total = _as_float32(total + row[column], text=text)
             pooled.append(_as_float32(total / len(vectors), text=text))
-        return token_ids, tuple(pooled)
+        return tuple(pooled)
 
 
 def _verify_content_manifests(
@@ -276,9 +328,7 @@ def _verify_content_manifests(
             "tokenizer-vocabulary and tokenizer-configuration manifest roles overlap on "
             f"paths: {sorted(overlapping_paths)!r}"
         )
-    model_entries = {
-        entry.relative_path: (entry.byte_length, entry.sha256) for entry in model_manifest.entries
-    }
+    model_entries = {entry.relative_path: (entry.byte_length, entry.sha256) for entry in model_manifest.entries}
     for role_manifest in (tokenizer_vocabulary_manifest, tokenizer_config_manifest):
         for entry in role_manifest.entries:
             if model_entries.get(entry.relative_path) != (entry.byte_length, entry.sha256):
@@ -336,12 +386,30 @@ def _import_model2vec() -> Any:
         ) from exc
 
 
+def _require_unknown_token_id(tokenizer: Any) -> int:
+    """Require the tokenizer's explicit ``[UNK]`` identity before embedding."""
+    try:
+        token_to_id = tokenizer.token_to_id
+    except AttributeError as exc:
+        raise MatrixCompilationError("local Model2Vec tokenizer must expose token_to_id") from exc
+    if not callable(token_to_id):
+        raise MatrixCompilationError("local Model2Vec tokenizer token_to_id is not callable")
+    try:
+        raw_unknown_id = token_to_id("[UNK]")
+    except Exception as exc:  # provider-boundary lookup failures must fail closed
+        raise MatrixCompilationError("local Model2Vec tokenizer token_to_id('[UNK]') failed") from exc
+    if isinstance(raw_unknown_id, bool) or not isinstance(raw_unknown_id, int) or raw_unknown_id < 0:
+        raise MatrixCompilationError(
+            "local Model2Vec tokenizer token_to_id('[UNK]') must return a non-negative integer"
+        )
+    return raw_unknown_id
+
+
 def _require_installed_package_version(metadata: ModelMetadata) -> None:
     """Require the installed provider version to equal its pinned provenance."""
     if metadata.provider.package != _MODEL2VEC_PACKAGE:
         raise MatrixCompilationError(
-            f"Potion provider metadata must name {_MODEL2VEC_PACKAGE!r}, "
-            f"got {metadata.provider.package!r}"
+            f"Potion provider metadata must name {_MODEL2VEC_PACKAGE!r}, got {metadata.provider.package!r}"
         )
     try:
         installed = importlib_metadata.version(_MODEL2VEC_PACKAGE)

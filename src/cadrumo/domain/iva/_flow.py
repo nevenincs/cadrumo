@@ -122,6 +122,13 @@ _REVERSE_CHARGE_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        # A B2B service received from an EU supplier sits in the same
+        # position as the goods acquisition above: art. 69.Uno.1.o locates
+        # it in Spain because the recipient is established here, and art.
+        # 84.Uno.2.o makes that recipient the sujeto pasivo. Its supply
+        # counterpart is deliberately absent -- there the operation is not
+        # located in Spain at all, so no Spanish cuota arises to self-assess.
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
     },
 )
 """IVA categories that route to ``INVERSION_SUJETO_PASIVO`` regardless of the

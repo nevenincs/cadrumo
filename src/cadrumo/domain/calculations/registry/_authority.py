@@ -310,7 +310,7 @@ def _load_authority(
         verdict_key=verdict_key,
         registry_fingerprints=_registry_fingerprint,
     ):
-            authority.mark_registry_validated()
+        authority.mark_registry_validated()
     else:
         authority.validate_registry()
         certify_registry_validation(root, verdict_key=verdict_key)

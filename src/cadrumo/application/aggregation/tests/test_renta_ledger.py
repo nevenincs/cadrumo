@@ -10,10 +10,11 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Period
+from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....core.i18n import Translatable as tr
 from ....domain.calculations.registry import (
@@ -35,6 +36,7 @@ from ....domain.categories import (
 from ....domain.contribuyente import CCAA
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
+from ....domain.prorrata_register import ProrrataRegisterEntry
 from ....domain.renta import RentaExpenseDirection
 from ....domain.transactions import (
     BusinessClassification,
@@ -1159,3 +1161,155 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
     assert other_region.issues == ()
     assert other_region.observations[0].proportionality_kind is not ProportionalityKind.FIXED_PERCENTAGE
     assert other_region.observations[0].deductible_amount == Decimal("100.00")
+
+
+# ---------------------------------------------------------------------------
+# IVA-deduction ratio derived from the profile's ``iva.regime`` fact and the
+# bucket's ProrrataRegister, driven through the real repository path.
+# ---------------------------------------------------------------------------
+
+
+def _profile_with_iva_regime(regime_value: str | None) -> UserProfileRecord:
+    """A user profile carrying an optional ``iva.regime`` fact."""
+    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
+    if regime_value is not None:
+        facts = (*facts, UserProfileFact(path="iva.regime", value=regime_value))
+    return UserProfileRecord(
+        profile_id="33333333-3333-4333-8333-333333333333",
+        display_name="IVA Regime Tester",
+        facts=facts,
+    )
+
+
+def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_cost(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A wholly ``EXENTO`` taxpayer's non-deductible input IVA joins the IRPF cost, end to end.
+
+    Same medico radiologo figures the domain-level unit test
+    (``domain.renta.tests.test_ledger_expenses.test_wholly_exempt_activity_joins_the_full_iva_amount_to_the_deductible_cost``)
+    grounds against the AEAT Manual practico de Renta 2024, Parte 1, Capitulo 7:
+    base 8.000,00 EUR, IVA soportado 1.600,00 EUR, gross 9.600,00 EUR. LIVA
+    art. 20.Uno.3.º gives the activity NO right to deduct any of its input IVA
+    (art. 94.Uno a contrario), so the whole cuota becomes IRPF-deductible cost.
+    Drives the real repository path -- a transaction carrying its own
+    taxable_base/iva_amount and a profile declaring ``iva.regime = EXENTO`` --
+    never a hand-built :class:`RentaDeductibilityContext`.
+    """
+    row = _transaction(
+        "row-exento",
+        amount=Decimal("9600.00"),
+        category=SpendingCategory.MATERIAL_OFICINA,
+        taxable_base=Decimal("8000.00"),
+        iva_amount=Decimal("1600.00"),
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+
+    def _run(profile_record: UserProfileRecord | None) -> RentaLedgerExpenseAggregation:
+        return aggregate_renta_ledger_expenses_from_repositories(
+            bucket_id="test",
+            period=_ANNUAL_2025,
+            transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+            profile_year=2025,
+            profile_record=profile_record,
+        )
+
+    exento = _run(_profile_with_iva_regime("EXENTO"))
+    assert exento.issues == ()
+    assert exento.observations[0].deductible_amount == Decimal("9600.00")
+    assert exento.observations[0].non_deductible_amount == Decimal("0.00")
+    assert exento.casilla_values[_M100_ASESORIA_CASILLA] == Decimal("9600.00")
+
+    # Without the EXENTO fact the historic base-only behaviour stands: only the
+    # net-of-IVA base is deductible, proving the ratio is the actual selector
+    # and not silently ignored.
+    general = _run(_profile_with_iva_regime(None))
+    assert general.issues == ()
+    assert general.observations[0].deductible_amount == Decimal("8000.00")
+
+
+def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_share(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A GENERAL-prorrata register entry joins the non-recoverable IVA share, end to end.
+
+    Same 70% figures the domain-level unit test
+    (``test_prorrata_rationed_activity_joins_only_the_non_deductible_iva_share``)
+    grounds against LIVA art. 104.Uno: base 1.000,00 EUR, IVA soportado 210,00
+    EUR, gross 1.210,00 EUR, of which 30% of the cuota (63,00 EUR) has no right
+    to deduct. Seeds a real :class:`~domain.prorrata_register.ProrrataRegister`
+    entry rather than a hand-built context, exercising the same
+    ``resolve_provisional`` resolution the M303 side already applies
+    (``application.aggregation._iva_ledger._active_prorrata_apportionment``), so
+    the two filings stay consistent for the same ejercicio.
+    """
+    row = _transaction(
+        "row-prorrata",
+        amount=Decimal("1210.00"),
+        category=SpendingCategory.MATERIAL_OFICINA,
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+        ProrrataRegisterEntry(
+            ejercicio=2025,
+            regime=ProrrataRegisterRegime.GENERAL,
+            provisional_percentage=Decimal("70"),
+            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        ),
+    )
+
+    result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == Decimal("1063.00")
+    assert result.observations[0].non_deductible_amount == Decimal("147.00")
+
+
+def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_entry(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A ``NINGUNA`` regime entry (full deduction rights) changes nothing.
+
+    ``NINGUNA`` means the taxpayer performs only con-derecho operations, so no
+    percentage apportions the cuotas (LIVA art. 94 stands unmodified) -- the
+    fold-in must fall through to the historic base-only behaviour exactly as if
+    no register entry existed at all.
+    """
+    row = _transaction(
+        "row-ninguna",
+        amount=Decimal("1210.00"),
+        category=SpendingCategory.MATERIAL_OFICINA,
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    TransactionCatalogueRepository(bucket_id="test", objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+    ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
+        ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.NINGUNA),
+    )
+
+    result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
+        period=_ANNUAL_2025,
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == Decimal("1000.00")
+    assert result.observations[0].non_deductible_amount == Decimal("210.00")

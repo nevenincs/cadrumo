@@ -636,7 +636,6 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     )
 
 
-
 def read_certificate_subject_nif(*, path: Path, password: SecretStr, friendly_name: str | None = None) -> str:
     """Return the subject NIF/NIE of the PKCS#12 bundle at ``path``, or ``""``.
 

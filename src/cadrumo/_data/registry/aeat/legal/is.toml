@@ -737,7 +737,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-941-2018.html#articulo-primero"
+corpus_ref = "corpus/normatives/html/orden-hac-941-2018.html.extracted.md#articulo-primero"
 document_id = "BOE-A-2018-12515"
 article = "primero.5"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"

@@ -953,8 +953,9 @@ def _probe_script(*, block_schema_owner: bool, storage_root: Path) -> str:
     it, while a directory the outer test owns is reclaimed by pytest's normal
     ``tmp_path`` teardown.
     """
-    return textwrap.dedent(
-        """
+    return (
+        textwrap.dedent(
+            """
         import json, os, sys
         for _k in [_k for _k in os.environ if _k.startswith(("CADRUMO_", "AEAT_"))]:
             del os.environ[_k]
@@ -981,8 +982,9 @@ def _probe_script(*, block_schema_owner: bool, storage_root: Path) -> str:
         present = [key for key in ("config.profile.create", "config.profile.edit") if key in commands]
         print("RESULT " + json.dumps({"present": present, "wizard_before_walk": wizard_before_walk}))
         """
-    ).replace("{storage_root!r}", repr(str(storage_root))).replace(
-        "{block!r}", repr("block" if block_schema_owner else "keep")
+        )
+        .replace("{storage_root!r}", repr(str(storage_root)))
+        .replace("{block!r}", repr("block" if block_schema_owner else "keep"))
     )
 
 

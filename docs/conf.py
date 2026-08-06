@@ -1281,7 +1281,7 @@ def setup(app):
         """
         from dev.docs.legal_reference import generate_legal_reference
 
-        generate_legal_reference(Path(__file__).resolve().parent)
+        generate_legal_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
 
     def _emit_cli_tree(app):
         """Write a fresh ``_static/cli-tree.json`` help projection for the widget.

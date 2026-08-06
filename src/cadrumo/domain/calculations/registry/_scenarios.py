@@ -23,6 +23,8 @@ from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
 from ._period_selector_match import selector_period_matches_request
 from ._runtime_graph import expression_binding_refs
 from ._scenario_filing_period import hydrate_scenario_filing_period
+from ._schema import ModeloRevision
+from ._schema_input_kind import InputKind
 from ._snapshot_coordinate import registry_snapshot_id_for
 
 ScenarioStatus = Literal["match", "mismatch"]
@@ -72,6 +74,50 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     date_binding_values: dict[BindingId, date] = Field(default_factory=dict)
     expected_outputs: tuple[RegistryScenarioExpectedOutput, ...] = Field(min_length=1)
     notes: tuple[str, ...] = ()
+    hand_typed_bound_casillas: dict[CasillaId, str] = Field(default_factory=dict)
+    """Bound casillas this scenario deliberately supplies itself, each with its reason.
+
+    A casilla the registry declares ``input_kind = "bound"`` carries a value the
+    engine PRODUCES, by aggregating substrate and resolving a binding. A
+    scenario that supplies one as an ``inputs`` entry hand-types that value and
+    steps over both links, so whatever it goes on to assert says nothing about
+    how the casilla is produced — while the scenario's name and its oracle
+    evidence keep reading as end-to-end coverage.
+
+    That is sometimes the right call: a scenario isolating one leg of a chain
+    legitimately supplies the other leg rather than building substrate for it.
+    What is never right is doing it silently. Declaring the casilla here with a
+    stated reason makes the boundary of the scenario's claim explicit at the
+    scenario, which is where the next reader looks — rather than in a central
+    allowlist, which would drift from the scenarios exactly as the bypass it
+    guards drifted from the registry.
+
+    :func:`run_registry_calculation_scenario` refuses an undeclared bound input,
+    an empty reason, and a declaration naming a casilla that is not bound (a
+    stale excuse outliving the registry change that ended it).
+
+    A bound value the caller obtained by RUNNING the aggregation and the binding
+    resolver belongs in :attr:`chain_resolved_bound_casillas` instead; it is the
+    opposite claim and must not be filed under this name.
+    """
+    chain_resolved_bound_casillas: dict[CasillaId, str] = Field(default_factory=dict)
+    """Bound casillas whose value the caller PRODUCED through the real chain.
+
+    The scenario harness has one channel for casilla values, so a bound value
+    the caller resolved by running the production aggregation and binding
+    resolver arrives here looking exactly like a hand-typed one. Without a
+    second field the runner could not tell the two apart, and the check would
+    force the honest case to file itself under
+    :attr:`hand_typed_bound_casillas` — recording the precise opposite of what
+    happened, in the field a later reader would trust.
+
+    So the two claims get two names, and the value states which resolver
+    produced it. This is a declaration rather than a proof: nothing stops a
+    caller filing a hand-typed value here. What it buys is that the claim is
+    written down and greppable instead of absent, so a reviewer can check it
+    against the code that builds the mapping — the same discipline the fixture
+    corpora use when they declare their own provenance.
+    """
 
     @model_validator(mode="before")
     @classmethod
@@ -92,6 +138,28 @@ class RegistryCalculationScenario(RegistryScenarioModel):
         expected_targets = [expected.target_casilla_id for expected in self.expected_outputs]
         if len(set(expected_targets)) != len(expected_targets):
             raise RegistryValidationError("scenario expected outputs must target unique casillas")
+        for field_name, declared in (
+            ("hand_typed_bound_casillas", self.hand_typed_bound_casillas),
+            ("chain_resolved_bound_casillas", self.chain_resolved_bound_casillas),
+        ):
+            blank = sorted(casilla_id for casilla_id, reason in declared.items() if not reason.strip())
+            if blank:
+                raise RegistryValidationError(
+                    f"scenario {self.id!r} declares {field_name} with no stated reason: {blank!r}; the declaration "
+                    "exists to record what happened to the value, so an empty reason is the silence it was added "
+                    "to prevent",
+                )
+            missing = sorted(set(declared) - set(self.inputs))
+            if missing:
+                raise RegistryValidationError(
+                    f"scenario {self.id!r} declares {field_name} the scenario does not supply as inputs: {missing!r}",
+                )
+        both = sorted(set(self.hand_typed_bound_casillas) & set(self.chain_resolved_bound_casillas))
+        if both:
+            raise RegistryValidationError(
+                f"scenario {self.id!r} declares casillas as BOTH hand-typed and chain-resolved: {both!r}. The two "
+                "are opposite claims about where the value came from, and a casilla cannot satisfy both.",
+            )
         return self
 
 
@@ -157,6 +225,7 @@ def run_registry_calculation_scenario(
         period=scenario.period,
         revision_id=scenario.revision,
     )
+    _reject_undeclared_hand_typed_bound_inputs(scenario, snapshot.revision)
     # A profile-source binding a formula references but the scenario does not
     # supply defaults to a neutral zero, mirroring the live calculate path where
     # the profile-derived-fact injector seeds an absent profile binding to 0
@@ -199,6 +268,61 @@ def run_registry_calculation_scenario(
         comparisons=comparisons,
         calculation=calculation,
     )
+
+
+def bound_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
+    """Return every casilla ``revision`` declares ``input_kind = "bound"``.
+
+    Read off the revision rather than listed anywhere, so a casilla that becomes
+    bound is covered the moment the registry says so.
+    """
+    return frozenset(casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.BOUND)
+
+
+def _reject_undeclared_hand_typed_bound_inputs(
+    scenario: RegistryCalculationScenario,
+    revision: ModeloRevision,
+) -> None:
+    """Refuse a scenario that hand-types a bound casilla without saying so.
+
+    Placed in the runner rather than in a static scan of the test tree because
+    this is the one point EVERY scenario passes through. A scan of the sources
+    resolves only the scenarios whose ``inputs`` it can follow — measured at
+    half of them, the rest passing ``inputs`` through factory parameters — and
+    would report the unreadable half clean, which is worse than not checking:
+    it is a checking instrument that lies about its own coverage.
+
+    Two directions, because a one-way check rots. An input the registry binds
+    and the scenario does not declare is the silent bypass. A declaration for a
+    casilla that is NOT bound is a stale excuse: the registry changed, the
+    reason outlived it, and the next reader is told a binding is being stepped
+    over when none exists.
+
+    Raises:
+        RegistryValidationError: On either direction, naming every casilla and,
+            for the undeclared case, the binding that was stepped over.
+    """
+    bound = bound_casilla_ids(revision)
+    binding_by_casilla = {casilla.id: casilla.binding for casilla in revision.casillas}
+    declared = set(scenario.hand_typed_bound_casillas) | set(scenario.chain_resolved_bound_casillas)
+
+    undeclared = sorted((set(scenario.inputs) & bound) - declared)
+    if undeclared:
+        named = ", ".join(f"{casilla_id} (binding {binding_by_casilla.get(casilla_id)!r})" for casilla_id in undeclared)
+        raise RegistryValidationError(
+            f"scenario {scenario.id!r} supplies casillas the registry declares bound, without declaring them: "
+            f"{named}. A bound casilla's value is produced by aggregating substrate and resolving its binding; "
+            "supplying it as an input steps over both, so nothing this scenario asserts speaks to how the casilla "
+            "is produced. Record each casilla in chain_resolved_bound_casillas naming the resolver that produced "
+            "it, or in hand_typed_bound_casillas with the reason this scenario supplies it instead.",
+        )
+
+    stale = sorted(declared - bound)
+    if stale:
+        raise RegistryValidationError(
+            f"scenario {scenario.id!r} declares bound-casilla provenance for casillas revision {revision.id!r} does "
+            f"not declare bound: {stale!r}. The declaration has outlived the binding it described; drop it.",
+        )
 
 
 def assert_registry_scenario_matches(report: RegistryScenarioRunReport) -> None:

@@ -17,6 +17,7 @@ session — no mocks, stubs, or monkeypatch — and pin the refusals:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -69,6 +70,53 @@ def _create_catalogue_invoice(*, invoice_number: str = "2026-0142") -> str:
     invoice_id = _line_value(result.output, "invoice_id")
     assert len(invoice_id) == 64, invoice_id
     return invoice_id
+
+
+def test_catalogue_create_records_a_retention_amount() -> None:
+    """``catalogue create`` (#66) persists a declared RIRPF art. 95 retención.
+
+    Neither catalogue-invoice creation path could set ``retention_rate`` /
+    ``retention_amount`` before this wiring, so a received invoice's
+    withholding could never be recorded through the CLI at all.
+    """
+    result = invoke_cached_cli(
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Asesoria Profesional SL",
+            "--invoice-number", "2026-RETENCION-001",
+            "--invoice-date", "2026-03-10",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--retention-rate", "0.15", "--retention-amount", "150.00",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    invoice_id = _line_value(result.output, "invoice_id")
+
+    stored = InvoiceCatalogueRepository().load().get(invoice_id)
+    assert stored is not None
+    assert stored.retention_rate == Decimal("0.15")
+    assert stored.retention_amount == Decimal("150.00")
+
+
+def test_catalogue_create_refuses_a_retention_rate_without_an_amount() -> None:
+    """A rate alone is refused at the CLI boundary, not silently dropped."""
+    result = invoke_cached_cli(
+        [
+            "app", "ledger", "invoice", "catalogue", "create",
+            "--kind", "received",
+            "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
+            "--counterparty-name", "Asesoria Profesional SL",
+            "--invoice-number", "2026-RETENCION-002",
+            "--invoice-date", "2026-03-10",
+            "--taxable-base", "1000.00", "--iva-rate", "21",
+            "--retention-rate", "0.15",
+        ],
+    )  # fmt: skip
+    assert result.exit_code != 0, result.output
+    assert "retention_rate" in result.output
+    assert "retention_amount" in result.output
 
 
 def test_catalogue_view_resolves_full_id_and_prefix() -> None:

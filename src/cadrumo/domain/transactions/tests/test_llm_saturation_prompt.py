@@ -188,3 +188,27 @@ def test_parse_rejects_iva_category_when_spec_did_not_ask() -> None:
     stdout = '{"classification": "BUSINESS", "confidence": 0.9, "reason": "x", "iva_category": "domestic_general_21"}'
     with pytest.raises(LLMClassifierError, match=r"no JSON candidate matched"):
         parse_response(stdout, spec=default_prompt_spec())
+
+
+@pytest.mark.unit
+def test_every_iva_category_carries_a_curated_hint() -> None:
+    """No category may fall back to its auto-derived hint.
+
+    The choice builder falls back to ``category.value.replace("_", " ")`` for
+    any category the hints map omits, so an unhinted category stays selectable
+    and nothing fails — the omission is invisible. It was: two categories
+    shipped without hints and no gate noticed.
+
+    Silent is not harmless here. A derived hint can only restate the member
+    name, so it conveys nothing the name does not, and the distinctions these
+    hints exist to draw are exactly the ones the names collide on — an
+    intra-community supply of goods and of services differ by which article
+    relieves the Spanish cuota, not by their spelling.
+    """
+    unhinted = sorted(
+        choice.value.value
+        for choice in default_iva_category_choices()
+        if choice.hint == choice.value.value.replace("_", " ")
+    )
+
+    assert unhinted == [], f"IVA categories falling back to a derived hint: {unhinted}"

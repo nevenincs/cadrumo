@@ -316,7 +316,11 @@ from ._groi_oracle import (
     GroiOracle,
     GroiReplayDriver,
 )
-from ._legal import verify_legal_catalogue, verify_legal_reference
+from ._legal import (
+    legal_reference_quotes_corpus,
+    verify_legal_catalogue,
+    verify_legal_reference,
+)
 from ._live_parity import (
     CrossReferenceApplicability,
     CrossReferenceApplicabilityDeclaracion,
@@ -932,6 +936,7 @@ __all__ = [
     "iter_modelo_applicability_rules",
     "iva_wallet_owned_binding_ids_for_revision",
     "iva_wallet_owned_relation_targets_for_revision",
+    "legal_reference_quotes_corpus",
     "load_bundled_external_oracle_inventory",
     "load_catalogue_file",
     "load_convenio_authority",

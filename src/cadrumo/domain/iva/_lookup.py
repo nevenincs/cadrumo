@@ -92,6 +92,10 @@ def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
     regulation = catalogue.get(category)
     if regulation is None:
         raise IvaCategoryNotFoundError(f"IVA category {category.value!r} not found in catalogue")
+    if not regulation.citations:
+        raise IvaCatalogueError(
+            f"IVA category {category.value!r} carries no legal basis (legal_basis_exempt) and cannot be cited",
+        )
     citation = regulation.citations[0]
     from ...core.resources import resources
 

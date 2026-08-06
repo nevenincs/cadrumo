@@ -90,6 +90,8 @@ def _add_business_invoice(
             taxable_base,
             "--iva-rate",
             "0",
+            "--total-amount",
+            taxable_base,
             "--country-code",
             country_code,
             "--operation-type",

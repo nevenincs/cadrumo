@@ -1685,8 +1685,7 @@ categories:
     arrendamiento_vivienda_afecta: Lakás bérleti díjának üzleti hányada
     arrendamiento_vivienda_afecto:
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
-        art. 30.2.5.b szabály 4.ª).
+        (Ley 35/2006 art. 29.2 és art. 28.1, üzleti célra használt lakás bérleti díja).
     asesoria_contable:
       label: Könyvelési tanácsadási díj
       notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
@@ -1810,10 +1809,18 @@ categories:
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
         (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
         art. 30.2.5.b szabály 4.ª).
+    suministros_local_afecto:
+      label: Uzleti helyiseg kozuzemi koltsegei
+      notes: 'Teljes egeszeben levonhato koltseg: a tevekenyseg vegzesenek helyet
+        ado ingatlan uzleti eszkoznek minosul (Ley 35/2006 art. 29.1.a), ezert kozuzemi
+        koltsegei levonhatok (art. 28.1). A 30 szazalekos szabaly (art. 30.2.5.b)
+        nem alkalmazando, mert az csak a reszben uzleti celra hasznalt lakohelyre
+        vonatkozik.'
     telefonia_fija:
       label: Vezetékes telefon-költség
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (Ley 35/2006 art. 28.1).
+        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
+        art. 30.2.5.b szabály 4.ª).
     telefonia_movil:
       label: Mobiltelefon-költség
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
@@ -1901,6 +1908,12 @@ cli:
           érték megtartásához).
         confirm_link_hint_message: Kapcsold össze ezt a számlát egy könyvelési tétellel
           a `aeat app ledger link` paranccsal.
+        confirm_printed_total_mismatch_message: A dokumentumon szereplő végösszeg
+          nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból
+          és az áfakulcsból származik, ezért az eltérés azt jelenti, hogy a dokumentum
+          olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
+          felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
+          került. Ellenőrizze a dokumentumot.
         confirm_taxable_base_help: Felülírja a kinyert adóalapot.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
@@ -1929,7 +1942,6 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
-        confirm_printed_total_mismatch_message: 'A dokumentumon szereplő végösszeg nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból és az áfakulcsból származik, ezért az eltérés azt jelenti, hogy a dokumentum olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra került. Ellenőrizze a dokumentumot.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
@@ -1974,6 +1986,8 @@ cli:
             elérhető.
           wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú
             számla (%{invoice_id}); semmi sem jött létre.'
+          retention_rate_help: 'A RIRPF 95.1. cikke szerinti visszatartási hányad, amelyet a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység megkezdésének időszakában). A --retention-amount megadása kötelező; önmagában a hányad megadása elutasításra kerül.'
+          retention_amount_help: 'A kifizető által levont IRPF visszatartás összege euróban. Megadható önállóan, vagy a --retention-rate paraméterrel együtt.'
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
@@ -1985,6 +1999,10 @@ cli:
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
         list_help: Üzleti számlák listázása (mindkét típus, ha a --kind nem szűr).
+        operation_date_help: A teljesites (termekertekesites vagy szolgaltatasnyujtas)
+          idopontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adofizetesi kotelezettseg
+          keletkezesenek napja, amely meghatarozza, melyik idoszakban kell az adot
+          bevallani; ennek hianyaban a szamla kelte lep a helyebe.
         operation_type_help: 'M349 műveleti kód: E termékértékesítés, M adómentes
           importot követő értékesítés, H ugyanez adóügyi képviselő útján, A termékbeszerzés,
           T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
@@ -1993,6 +2011,8 @@ cli:
         operation_type_invalid: 'A --operation-type értéke csak a következők egyike
           lehet: {valid}'
         remove_help: Üzleti számla törlése.
+        total_amount_required: 'A --total-amount megadása kötelező: adja meg a számla
+          végösszegét tizedes értékként, például 121.00.'
         update_help: Üzleti számla adatainak frissítése.
         view_help: Üzleti számla adatainak megjelenítése.
         yes_help: Üzleti számla törlésének megerősítése.

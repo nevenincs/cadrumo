@@ -1766,8 +1766,7 @@ categories:
     arrendamiento_vivienda_afecta: Parte del alquiler de la vivienda afecta a la actividad
     arrendamiento_vivienda_afecto:
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+        (Ley 35/2006 art. 29.2 y art. 28.1, arrendamiento de la vivienda afecta).
     asesoria_contable:
       label: Honorarios de asesoría contable
       notes: Gasto totalmente deducible, como servicio de profesional independiente
@@ -1889,10 +1888,17 @@ categories:
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
         (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
         (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+    suministros_local_afecto:
+      label: Suministros del local afecto
+      notes: 'Gasto totalmente deducible: el inmueble donde se desarrolla la actividad
+        esta afecto (Ley 35/2006 art. 29.1.a) y sus suministros son gasto deducible
+        (art. 28.1). No se aplica la regla del 30 por ciento del art. 30.2.5.b, reservada
+        a la vivienda habitual parcialmente afecta.'
     telefonia_fija:
       label: Telefonía fija
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (Ley 35/2006 art. 28.1).
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     telefonia_movil:
       label: Telefonía móvil
       notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
@@ -1979,6 +1985,11 @@ cli:
           el valor extraido).
         confirm_link_hint_message: Vincula esta factura a un movimiento del libro
           con `aeat app ledger link`.
+        confirm_printed_total_mismatch_message: El total impreso en el documento no
+          coincide con el total registrado. El total registrado se deriva de la base
+          imponible y del tipo de IVA, por lo que una diferencia significa que el
+          documento incluye un importe que este registro no recoge, como un recargo
+          de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
@@ -2006,7 +2017,6 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
-        confirm_printed_total_mismatch_message: 'El total impreso en el documento no coincide con el total registrado. El total registrado se deriva de la base imponible y del tipo de IVA, por lo que una diferencia significa que el documento incluye un importe que este registro no recoge, como un recargo de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
@@ -2050,6 +2060,8 @@ cli:
             no está disponible.
           wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura
             con esta identidad (%{invoice_id}); no se creó nada.'
+          retention_rate_help: 'Fracción de retención del art. 95.1 RIRPF que retiene el pagador (0,15 para el 15% general, o 0,07 durante el periodo de inicio de actividad). Requiere --retention-amount; una fracción sola se rechaza.'
+          retention_amount_help: 'Importe de la retención de IRPF retenida por el pagador, en euros. Puede indicarse solo, o junto con --retention-rate.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
@@ -2060,6 +2072,9 @@ cli:
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
         list_help: Lista las facturas de negocio (ambos tipos salvo que --kind filtre)
+        operation_date_help: Fecha en que se realizo la entrega o prestacion (AAAA-MM-DD).
+          Es la fecha de devengo del art. 75 LIVA que determina en que periodo se
+          declara la cuota; sin ella se utiliza la fecha de factura.
         operation_type_help: 'Clave de operación M349: E entregas, M entregas posteriores
           a importación exenta, H las mismas por representante fiscal, A adquisiciones,
           T entregas triangulares, S servicios prestados, I servicios adquiridos,
@@ -2067,6 +2082,8 @@ cli:
           C sustituciones del destinatario en consigna'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura de negocio
+        total_amount_required: 'La opción --total-amount es obligatoria: indique el
+          total de la factura como importe decimal, por ejemplo 121.00.'
         update_help: Actualiza los datos de una factura de negocio
         view_help: Muestra una factura de negocio
         yes_help: Confirma la eliminación de la factura

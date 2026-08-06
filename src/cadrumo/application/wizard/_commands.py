@@ -85,6 +85,7 @@ def _translation_context(value: object) -> dict[str, object]:
         return {}
     return _TRANSLATION_CONTEXT.validate_python(value)
 
+
 #: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
 #: registers a fresh profile, ``edit`` modifies an existing one.
 _FLOW_MODE_BY_WIZARD_MODE: dict[WizardPersistMode, FlowMode] = {

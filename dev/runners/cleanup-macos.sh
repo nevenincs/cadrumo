@@ -39,7 +39,22 @@ if [[ -n "${RUNNER_TEMP:-}" ]]; then
 elif [[ -n "${RUNNER_WORKSPACE:-}" ]]; then
     WORK_ROOT="$(dirname "$(dirname "$RUNNER_WORKSPACE")")"
 else
-    WORK_ROOT="${HOME}/actions-runner/_work"
+    # Invoked outside a job, so RUNNER_TEMP/RUNNER_WORKSPACE are unset. The hook
+    # is copied to the runner root, so its OWN directory is that root.
+    #
+    # This replaces a hardcoded "${HOME}/actions-runner/_work". The macOS runner
+    # roots now live under ~/action-runners/<name>/, so that constant named a
+    # path that no longer exists — and because this hook must never redden a
+    # build it always exits 0, so the miss would have been invisible: hygiene
+    # simply stops and nothing says so. Deriving from the script's own location
+    # survives any future relocation.
+    _self_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ -d "${_self_dir}/_work" ]]; then
+        WORK_ROOT="${_self_dir}/_work"
+    else
+        # Nothing to clean from here (e.g. run out of a repository checkout).
+        exit 0
+    fi
 fi
 TEMP_DIR="${RUNNER_TEMP:-$WORK_ROOT/_temp}"
 LOG_FILE="$WORK_ROOT/runner-hygiene.log"

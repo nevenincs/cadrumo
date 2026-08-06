@@ -226,7 +226,6 @@ class ManualLedgerTransactionCommand(BaseModel):
             joined = ", ".join(populated)
             raise TransactionValidationError(f"INTERNAL_TRANSFER rows must not carry tax or evidence fields: {joined}")
 
-
     normalise_currency = _normalise_currency
     normalise_identifier_tuple = _normalise_identifier_tuple
 

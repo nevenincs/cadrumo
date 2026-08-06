@@ -71,9 +71,11 @@ from __future__ import annotations
 # isort: off
 from ._enums import (
     InvoiceClass,
+    InvoiceLegalMention,
     InvoiceOperationDateRole,
     IvaRate,
     PaymentStatus,
+    invoice_legal_mention_text,
     iva_rate_kind,
     iva_rate_percentage,
     numeric_iva_rate_percentages,
@@ -135,6 +137,7 @@ __all__ = [
     "InvoiceDecompositionPartition",
     "InvoiceError",
     "InvoiceId",
+    "InvoiceLegalMention",
     "InvoiceLine",
     "InvoiceLinkError",
     "InvoiceLinkInconsistencyError",
@@ -152,6 +155,7 @@ __all__ = [
     "derive_invoice_id",
     "find_invoice",
     "find_unmatched",
+    "invoice_legal_mention_text",
     "invoice_line_to_iva_observation",
     "iva_rate_kind",
     "iva_rate_percentage",

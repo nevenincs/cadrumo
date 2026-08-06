@@ -532,9 +532,7 @@ def test_quickfile_result_payload_carries_the_typed_readiness_report_when_not_re
     not_ready = _readiness(
         profile_ready=False,
         ready=False,
-        missing=(
-            ProfilePreflightRequirement(selector="identity.tax_id", section_key="identity", field_key="tax_id"),
-        ),
+        missing=(ProfilePreflightRequirement(selector="identity.tax_id", section_key="identity", field_key="tax_id"),),
     )
     payload = QuickfileResultPayload(
         modelo="130",

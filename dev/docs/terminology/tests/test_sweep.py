@@ -228,9 +228,7 @@ def test_real_sweep_maps_prorrata_to_its_grounding_targets(
     # five shipped fields, while the resolver's SearchRecord does.
     resolved = resolve_chunk_hits(hits, resolver=resolver)
     legal_records = {
-        target.record.id: target.record
-        for target in resolved.resolved
-        if target.surface is GroundingSurface.LEGAL
+        target.record.id: target.record for target in resolved.resolved if target.surface is GroundingSurface.LEGAL
     }
     assert legal_records, "recorded prorrata hits did not resolve to a legal record"
     for target in legal_targets:
@@ -417,11 +415,7 @@ def test_emitted_legal_and_concept_targets_survive_projection_gate(
     query, hits = _load_recorded("sweep-regla-de-prorrata.json")
     resolver = _authoritative_target_resolver
     resolution = resolve_chunk_hits(hits, resolver=resolver)
-    legal_ids = {
-        target.record.id
-        for target in resolution.resolved
-        if target.surface is GroundingSurface.LEGAL
-    }
+    legal_ids = {target.record.id for target in resolution.resolved if target.surface is GroundingSurface.LEGAL}
     emitted_ids = {record.id for record in _authoritative_search_records}
     assert legal_ids
     assert legal_ids <= emitted_ids

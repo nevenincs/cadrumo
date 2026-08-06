@@ -38,10 +38,22 @@ if ($env:RUNNER_TEMP -and (Test-Path $env:RUNNER_TEMP)) {
 } elseif ($env:RUNNER_WORKSPACE) {
     $WorkRoot = Split-Path (Split-Path $env:RUNNER_WORKSPACE -Parent) -Parent
 }
+if (-not $WorkRoot -and $PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot '_work'))) {
+    # Invoked outside a job, so RUNNER_TEMP/RUNNER_WORKSPACE are unset. The hook
+    # is copied to the runner root, so its OWN directory is that root.
+    #
+    # This replaces a hardcoded 'C:\actions-runner\_work'. When the Windows
+    # runner moved into its canonical home the constant pointed at a path that
+    # no longer existed — and because this hook must never redden a build it
+    # always exits 0, so the miss would have been completely invisible: hygiene
+    # simply stops happening and nothing says so. Deriving from $PSScriptRoot
+    # survives any future relocation.
+    $WorkRoot = Join-Path $PSScriptRoot '_work'
+}
 if (-not $WorkRoot) {
-    # script lives at <root>\_work\cadrumo\cadrumo\dev\runners or is copied to
-    # <root>; fall back to the conventional Windows runner work root.
-    $WorkRoot = 'C:\actions-runner\_work'
+    # Nothing to clean from here (e.g. run out of a repository checkout).
+    # Exit quietly rather than guessing at a path.
+    exit 0
 }
 $LogFile   = Join-Path $WorkRoot 'runner-hygiene.log'
 $StateDir  = Join-Path $WorkRoot '.hygiene'

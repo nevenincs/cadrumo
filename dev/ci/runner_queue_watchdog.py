@@ -59,6 +59,25 @@ busy with work outside this repository for longer than the threshold". On this
 fleet the second cannot happen, but the message says what was observed -- a lane
 that did not start and no evidence of that label set being served -- rather than
 asserting the stronger claim the evidence does not support.
+
+It deliberately does NOT try to separate "this lane can never be scheduled" (a
+label no runner carries, like the Scoop lane's) from "the fleet is temporarily
+degraded" (a host asleep). Two reasons. It structurally cannot: the only
+endpoint that would answer it is the forbidden one, so any such split would be
+guesswork dressed as a distinction. And it should not, because the two differ
+only in REMEDY, never in consequence -- a dispatched job on either lane will not
+run, and the correct outcome for the run is identical. The split matters to
+whoever fixes it (provision a runner, or wake a host), and naming the label set
+is what tells them which; it does not matter to the verdict.
+
+The cost of that choice is deliberate and worth stating plainly: while several
+label sets are offline, every packaging run that touches them now terminates
+within minutes instead of hanging. That looks like a lot of red, and it is the
+point -- those runs were never going to produce a result, and the alternative on
+offer is not a green run but a silent one. Suppressing the alarm because the
+fleet is broadly degraded would rebuild the exact silence this exists to remove,
+one level up. What must be protected instead is the check's precision, which is
+why it stays quiet for a lane that is merely busy and never reports its own wait.
 """
 
 from __future__ import annotations

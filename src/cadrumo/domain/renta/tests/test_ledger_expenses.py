@@ -176,7 +176,128 @@ def test_unlinked_refund_is_rejected_before_it_can_enter_calculation() -> None:
         )
 
 
-def test_usage_ratio_default_splits_deductible_and_non_deductible_amounts() -> None:
+def test_wholly_exempt_activity_joins_the_full_iva_amount_to_the_deductible_cost() -> None:
+    """A médico radiólogo's non-deductible input IVA becomes part of the gasto.
+
+    AEAT Manual práctico de Renta 2024, Parte 1, Capítulo 7, caso práctico
+    "determinación del rendimiento neto derivado de actividad profesional en
+    estimación directa, modalidad simplificada" (extracted markdown
+    L19807-L19965). The "Gastos" table lists "IVA soportado" as its own line,
+    unchanged between "valores registrados" and "valores fiscales" (1.600 -> 1.600,
+    L19900), and nota (7) (L19946-19947) states why: "Se deduce como gasto el IVA
+    soportado por tratarse de una actividad exenta de este impuesto que no da
+    derecho a deducir las cuotas soportadas." A radiólogo's clinical activity is
+    exempt (LIVA art. 20.Uno.3.º), so it has NO right to deduct any of its input
+    IVA: the whole 1.600 EUR is fiscally deductible cost, not the base alone.
+
+    The 1.600 IVA figure is AEAT's own; the base is an arbitrary fixture amount
+    (the manual aggregates a year of "gastos corrientes" into one IVA figure with
+    no per-purchase base), so only the addition itself -- not this specific
+    base+IVA total -- is checked against the manual.
+    """
+    fact = _fact(
+        category=SpendingCategory.MATERIAL_OFICINA,
+        amount=Decimal("9600.00"),
+        taxable_base=Decimal("8000.00"),
+        iva_amount=Decimal("1600.00"),
+    )
+
+    result = evaluate_renta_deductibility(
+        fact,
+        resolve_category_profiles(2025)[SpendingCategory.MATERIAL_OFICINA],
+        _context(iva_deduction_ratio=Decimal("0")),
+    )
+
+    assert result.status is RentaDeductibilityStatus.ELIGIBLE
+    assert result.deductible_amount == Decimal("9600.00")
+    assert result.non_deductible_amount == Decimal("0.00")
+
+
+def test_prorrata_rationed_activity_joins_only_the_non_deductible_iva_share() -> None:
+    """A prorrata-general taxpayer joins only the non-recoverable IVA fraction.
+
+    LIVA art. 104.Uno: under prorrata general a single percentage governs how
+    much soportado is deductible; the rest is not recoverable through the IVA
+    return and is PGC NRV 12.ª acquisition cost, same as the wholly-exempt case
+    above but scaled by the non-deductible share instead of the whole cuota.
+    """
+    fact = _fact(
+        category=SpendingCategory.MATERIAL_OFICINA,
+        amount=Decimal("1210.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+
+    result = evaluate_renta_deductibility(
+        fact,
+        resolve_category_profiles(2025)[SpendingCategory.MATERIAL_OFICINA],
+        _context(iva_deduction_ratio=Decimal("0.70")),
+    )
+
+    assert result.status is RentaDeductibilityStatus.ELIGIBLE
+    # 30% of the 210.00 cuota (63.00) has no right to deduct and joins the cost.
+    assert result.deductible_amount == Decimal("1063.00")
+    assert result.non_deductible_amount == Decimal("147.00")
+
+
+def test_full_deduction_right_and_unevaluated_ratio_both_leave_the_base_untouched() -> None:
+    """A ratio of 1 (full right to deduct) and the unset default agree with the historic base-only result."""
+    fact = _fact(
+        category=SpendingCategory.MATERIAL_OFICINA,
+        amount=Decimal("1210.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    profile = resolve_category_profiles(2025)[SpendingCategory.MATERIAL_OFICINA]
+
+    full_right = evaluate_renta_deductibility(fact, profile, _context(iva_deduction_ratio=Decimal("1")))
+    unevaluated = evaluate_renta_deductibility(fact, profile, _context())
+
+    assert full_right.deductible_amount == Decimal("1000.00")
+    assert unevaluated.deductible_amount == Decimal("1000.00")
+
+
+def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split() -> None:
+    """A fact with no ``taxable_base``/``iva_amount`` split is unaffected by the ratio.
+
+    ``gross_amount`` is already IVA-inclusive when no invoice evidence split it
+    into a net base plus a cuota, so folding in a non-deductible IVA share would
+    double-count: there is no separately-known ``iva_amount`` to fold.
+    """
+    fact = RentaDeductibleExpenseFact(
+        transaction_id="tx-1",
+        catalogue_id="ledger-2025",
+        operation_date=date(2025, 3, 8),
+        posting_date=date(2025, 3, 9),
+        gross_amount=Decimal("48.00"),
+        category=SpendingCategory.GASTOS_BANCARIOS,
+        activity_key="main",
+    )
+    assert fact.taxable_base is None
+    assert fact.iva_amount is None
+
+    result = evaluate_renta_deductibility(
+        fact,
+        resolve_category_profiles(2025)[SpendingCategory.GASTOS_BANCARIOS],
+        _context(iva_deduction_ratio=Decimal("0")),
+    )
+
+    assert result.deductible_amount == Decimal("48.00")
+
+
+def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists() -> None:
+    """arrendamiento_vivienda_afecto carries no registry default_ratio.
+
+    It is the renter's parallel to amortizacion / ibi / comunidad
+    vivienda_afecto (HOME_OFFICE_OWNERSHIP siblings, none of which carry a
+    default_ratio either): the raw affectación ratio must come from the
+    operator, at no statutory multiplier, exactly like TELEFONIA_MOVIL below.
+    A registry-supplied ``default_ratio = "0.30"`` here used to fabricate a
+    30% deduction with zero operator input -- not a legally established
+    default, just an arbitrary guess that happened to double as the
+    suministros-only art. 30.2.5.b figure this category was wrongly grounded
+    on.
+    """
     fact = _fact(
         category=SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
         amount=Decimal("1000.00"),
@@ -184,16 +305,25 @@ def test_usage_ratio_default_splits_deductible_and_non_deductible_amounts() -> N
         iva_amount=Decimal("21.00"),
     )
 
-    result = evaluate_renta_deductibility(
+    missing = evaluate_renta_deductibility(
         fact,
         resolve_category_profiles(2025)[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO],
         _context(),
     )
+    with_ratio = evaluate_renta_deductibility(
+        fact,
+        resolve_category_profiles(2025)[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO],
+        _context(usage_ratios={SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO: Decimal("0.30")}),
+    )
 
-    assert result.status is RentaDeductibilityStatus.ELIGIBLE
-    assert result.applied_ratio == Decimal("0.30")
-    assert result.deductible_amount == Decimal("293.7000")
-    assert result.non_deductible_amount == Decimal("706.3000")
+    assert missing.status is RentaDeductibilityStatus.INELIGIBLE
+    assert missing.reason == "missing usage ratio"
+    assert missing.deductible_amount == Decimal("0.00")
+
+    assert with_ratio.status is RentaDeductibilityStatus.ELIGIBLE
+    assert with_ratio.applied_ratio == Decimal("0.30")
+    assert with_ratio.deductible_amount == Decimal("293.7000")
+    assert with_ratio.non_deductible_amount == Decimal("706.3000")
 
 
 def test_usage_ratio_without_default_is_ineligible_until_user_ratio_exists() -> None:

@@ -414,7 +414,7 @@ def _observation_from_iva_compensation_history(
         operand_refs: tuple[CasillaId, ...] = ()
         operand_values: tuple[Decimal, ...] = ()
         if casilla_id == _M303_POSTERIOR_CASILLA and (
-        state.prior_pending_amount is not None and state.applied_amount is not None
+            state.prior_pending_amount is not None and state.applied_amount is not None
         ):
             operand_refs = (_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, _M303_COMPENSACION_APLICADA_CASILLA)
             operand_values = (state.prior_pending_amount, state.applied_amount)

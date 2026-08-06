@@ -33,6 +33,7 @@ ADMINISTRATIVE_TOKENS = ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIAC
 #: ``EVENT-2`` operator scopes, so it stands for a set of periods, not one.
 SYMBOLIC_EVENT_SELECTOR = "EVENT-N"
 
+
 class TestStandardPeriodCode:
     """Verify StandardPeriodCode enum covers expected members."""
 

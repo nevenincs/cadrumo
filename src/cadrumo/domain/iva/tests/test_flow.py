@@ -187,6 +187,72 @@ def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(dire
     )
 
 
+@pytest.mark.parametrize(
+    "direction",
+    (
+        pytest.param(InvoiceKind.ISSUED, id="issued"),
+        pytest.param(InvoiceKind.RECEIVED, id="received"),
+    ),
+)
+def test_derive_flow_classifies_intracomm_service_acquisition_rc_as_autorepercutido(
+    direction: InvoiceKind,
+) -> None:
+    """A B2B service received from an EU supplier self-assesses like the goods case.
+
+    Art. 69.Uno.1.o locates the service in Spain because the recipient is
+    established here, and art. 84.Uno.2.o makes that recipient the sujeto
+    pasivo -- the same position as the intra-community goods acquisition
+    above, so the same flow.
+    """
+    assert (
+        derive_flow_for_classification(
+            category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+            invoice_direction=direction,
+        )
+        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
+    )
+
+
+def test_received_eu_service_reaches_the_devengada_side_not_only_the_deducible() -> None:
+    """The under-declaration this guards is silent, so name it explicitly.
+
+    Falling through to SOPORTADO would reach DEDUCIBLE alone, so the taxpayer
+    would deduct the input IVA while the matching self-assessed output IVA
+    never lands on the devengada side at all. That is a structural
+    under-declaration on Modelo 303, not a casilla mix-up, and it is invisible
+    from the value of any single casilla.
+    """
+    from .. import IvaSettlementSide, is_deducible_flow, is_devengada_flow, settlement_sides_for_flow
+
+    flow = derive_flow_for_classification(
+        category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        invoice_direction=InvoiceKind.RECEIVED,
+    )
+    assert settlement_sides_for_flow(flow) == frozenset(
+        {IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE},
+    )
+    assert is_devengada_flow(flow), "the self-assessed cuota must be declared, not only deducted"
+    assert is_deducible_flow(flow)
+
+
+def test_intracomm_service_supply_is_not_a_reverse_charge_for_the_spanish_supplier() -> None:
+    """The supply counterpart must NOT self-assess, and the asymmetry is the point.
+
+    Sweeping both service categories into the reverse-charge set would be the
+    obvious over-correction: here the operation is not located in Spain at all
+    (art. 69.Uno.1.o places it where the recipient is established), so no
+    Spanish cuota arises for the supplier to self-assess. The recipient
+    self-assesses in their own Member State.
+    """
+    assert (
+        derive_flow_for_classification(
+            category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+            invoice_direction=InvoiceKind.ISSUED,
+        )
+        is IvaFlowDirection.REPERCUTIDO
+    )
+
+
 def test_iva_flow_legal_articles_present_in_registry_toml() -> None:
     """The three LIVA articles backing the flow taxonomy must be in the registry."""
     path = bundled_path("registry", "aeat", "legal", "iva-flow.toml")

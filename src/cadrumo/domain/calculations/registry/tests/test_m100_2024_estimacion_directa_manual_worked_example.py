@@ -228,6 +228,38 @@ _ACTIVIDAD_INPUTS: dict[CasillaId, Decimal] = {
 }
 
 
+# Nine of the inputs above are casillas the registry declares
+# ``input_kind = "bound"``: 0171 to the ledger-income aggregation and the other
+# eight to the ledger-expense one. Supplying them here hand-types values the
+# engine is meant to PRODUCE, so this module grounds the formula chain from
+# 0180 downward and asserts nothing about how those casillas are populated —
+# the aggregation and the binding resolver are both stepped over. That boundary
+# was invisible until it was declared; the scenario runner now refuses an
+# undeclared bound input, so it cannot go quiet again.
+_INGRESOS_LEG_REASON = (
+    "ingresos leg supplied from the manual's own line items; the ledger-driven "
+    "coverage of this same caso practico lives in "
+    "test_ledger_income_chain_aeat_exempt_worked_example.py, which resolves 0171 "
+    "through the aggregation and the binding instead"
+)
+_GASTO_LEG_REASON = (
+    "gasto leg supplied from the manual's own per-box figures; no ledger-driven "
+    "coverage of the estimacion-directa expense aggregation exists yet, so this "
+    "scenario grounds the formula chain above it and claims nothing about it"
+)
+_HAND_TYPED_BOUND_CASILLAS: dict[CasillaId, str] = {
+    validated_casilla_id("0171", surface="0171"): _INGRESOS_LEG_REASON,
+    validated_casilla_id("0186", surface="0186"): _GASTO_LEG_REASON,
+    validated_casilla_id("0193", surface="0193"): _GASTO_LEG_REASON,
+    validated_casilla_id("0194", surface="0194"): _GASTO_LEG_REASON,
+    validated_casilla_id("0202", surface="0202"): _GASTO_LEG_REASON,
+    validated_casilla_id("0203", surface="0203"): _GASTO_LEG_REASON,
+    validated_casilla_id("0206", surface="0206"): _GASTO_LEG_REASON,
+    validated_casilla_id("0208", surface="0208"): _GASTO_LEG_REASON,
+    validated_casilla_id("0217", surface="0217"): _GASTO_LEG_REASON,
+}
+
+
 def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
         id=scenario_id,
@@ -253,6 +285,7 @@ def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -
             ),
         ),
         notes=("raw_evidence_locator: corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L19807-L19965",),
+        hand_typed_bound_casillas=_HAND_TYPED_BOUND_CASILLAS,
     )
 
 

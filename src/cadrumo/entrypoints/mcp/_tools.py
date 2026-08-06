@@ -201,30 +201,30 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
             # the top level. The branches below retain the canonical success/error
             # envelope distinction within that required serializable shape.
             "type": "object",
-        "oneOf": [
-            {
-                "type": "object",
-                "properties": {
-                    "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
-                    "command": {"const": command_key, "type": "string"},
-                    "active_profile": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-                    "status": {"enum": ["success", "warning"], "type": "string"},
-                    "result": result_schema,
-                    "notices": notices_schema,
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
+                        "command": {"const": command_key, "type": "string"},
+                        "active_profile": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "status": {"enum": ["success", "warning"], "type": "string"},
+                        "result": result_schema,
+                        "notices": notices_schema,
+                    },
+                    "required": ["schema_version", "command", "active_profile", "status", "result", "notices"],
+                    "additionalProperties": False,
                 },
-                "required": ["schema_version", "command", "active_profile", "status", "result", "notices"],
-                "additionalProperties": False,
-            },
-            {
-                "type": "object",
-                "properties": {
-                    "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
-                    "command": {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]},
-                    "active_profile": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-                    "status": {"const": "error", "type": "string"},
-                    "error": error_schema,
-                    "notices": notices_schema,
-                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
+                        "command": {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]},
+                        "active_profile": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                        "status": {"const": "error", "type": "string"},
+                        "error": error_schema,
+                        "notices": notices_schema,
+                    },
                     "required": ["schema_version", "command", "active_profile", "status", "error", "notices"],
                     "additionalProperties": False,
                 },

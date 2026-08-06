@@ -126,6 +126,14 @@ _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
     IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
     IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     IntracomOperationType.T: IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+    # The service claves. Before these existed the operator could pick S or I
+    # and the record came back with NO category at all, so an ordinary
+    # intracomunitaria de servicios was ungrounded to every consumer that reads
+    # the IVA treatment. They map to the service categories, not to the goods
+    # ones: a service is no sujeta by the art. 69 localisation rule, where an
+    # entrega de bienes is exempt under art. 25.
+    IntracomOperationType.S: IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+    IntracomOperationType.ADQUISICION_SERVICIOS: (IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE),
 }
 
 
@@ -195,7 +203,7 @@ def invoice_add(
     taxable_base: str = typer.Option("0", "--taxable-base"),
     iva_rate: str | None = typer.Option(None, "--iva-rate"),
     iva_amount: str = typer.Option("0", "--iva-amount"),
-    total_amount: str = typer.Option("0", "--total-amount"),
+    total_amount: str | None = typer.Option(None, "--total-amount"),
     notes: str = typer.Option("", "--notes"),
     country_code: str | None = typer.Option(
         None,
@@ -226,6 +234,13 @@ def invoice_add(
     ),
 ) -> None:
     """Register a new business invoice record on the active bucket."""
+    if total_amount is None:
+        raise _bad(
+            tr(
+                "cli.app.ledger.invoice.total_amount_required",
+                default="--total-amount is required: state the invoice total as a decimal amount, e.g. 121.00.",
+            ),
+        )
     bucket_id = _business_invoice_bucket_id()
     result = _service_for_kind(kind).add(
         bucket_id=bucket_id,
@@ -506,6 +521,20 @@ _CatalogueCountryCodeOpt = Annotated[
         ),
     ),
 ]
+_CatalogueOperationDateOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--operation-date",
+        help=tr(
+            "cli.app.ledger.invoice.operation_date_help",
+            default=(
+                "Date the entrega or prestacion took place (YYYY-MM-DD). This is the"
+                " LIVA art. 75 devengo date that decides which period declares the"
+                " cuota; without it the invoice date stands in for it."
+            ),
+        ),
+    ),
+]
 _CatalogueOperationTypeOpt = Annotated[
     str | None,
     typer.Option(
@@ -521,6 +550,33 @@ _CatalogueOperationTypeOpt = Annotated[
     ),
 ]
 _CatalogueNotesOpt = Annotated[str, typer.Option("--notes")]
+_CatalogueRetentionRateOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--retention-rate",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.retention_rate_help",
+            default=(
+                "RIRPF art. 95.1 retención fraction withheld by the payer"
+                " (0.15 for the general 15%, or 0.07 during the inicio-de-actividad"
+                " window). Requires --retention-amount; a rate alone is refused."
+            ),
+        ),
+    ),
+]
+_CatalogueRetentionAmountOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--retention-amount",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.retention_amount_help",
+            default=(
+                "Amount of IRPF retención withheld by the payer, in euros."
+                " May be supplied alone, or alongside --retention-rate."
+            ),
+        ),
+    ),
+]
 
 
 @catalogue_app.command(
@@ -542,6 +598,9 @@ def catalogue_create(
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
     country_code: _CatalogueCountryCodeOpt = "ES",
     operation_type: _CatalogueOperationTypeOpt = None,
+    operation_date: _CatalogueOperationDateOpt = None,
+    retention_rate: _CatalogueRetentionRateOpt = None,
+    retention_amount: _CatalogueRetentionAmountOpt = None,
     notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
@@ -551,7 +610,10 @@ def catalogue_create(
     content-addressed ``invoice_id`` is the value
     ``aeat app ledger link --invoice-id`` resolves. Supplying an intra-community
     ``--operation-type`` stamps the invoice so the Modelo 349 recapitulative
-    calculation can read it.
+    calculation can read it. Supplying ``--retention-amount`` (optionally with
+    ``--retention-rate``) records a RIRPF art. 95 withholding, which
+    ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
+    a received invoice.
     """
     from pydantic import ValidationError
 
@@ -580,6 +642,11 @@ def catalogue_create(
             notes=notes,
             iva_category=iva_category,
             operation_type=parsed_operation_type,
+            operation_date=(
+                None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")
+            ),
+            retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
+            retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
         )
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
@@ -614,6 +681,8 @@ def catalogue_wizard(
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
     country_code: _CatalogueCountryCodeOpt = "ES",
     operation_type: _CatalogueOperationTypeOpt = None,
+    retention_rate: _CatalogueRetentionRateOpt = None,
+    retention_amount: _CatalogueRetentionAmountOpt = None,
     notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Guided manual-entry invoice creation for when extraction is unavailable.
@@ -655,6 +724,8 @@ def catalogue_wizard(
             notes=notes,
             iva_category=iva_category,
             operation_type=parsed_operation_type,
+            retention_rate=retention_rate,
+            retention_amount=retention_amount,
         )
     except InvoiceValidationError as exc:
         message = tr(exc.translated_message, **(exc.context or {})) if exc.translated_message else str(exc)

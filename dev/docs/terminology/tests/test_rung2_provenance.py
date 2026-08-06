@@ -11,6 +11,7 @@ from dev.docs.terminology._rung2_provenance import (
     Rung2InputProvenance,
     build_rung2_input_provenance,
 )
+from dev.docs.terminology._rung2_query_authority import build_query_alias_authority_provenance
 from dev.docs.terminology._static_matrix import (
     canonical_query_tokens,
     canonical_vocabulary,
@@ -27,16 +28,19 @@ def test_builder_records_raw_source_and_canonical_input_identities() -> None:
     vocabulary = ("  MODELO 130  ", "café", "CAFÉ")
     query_tokens = ("Casilla-15", "GASTO", "CASILLA 15")
 
+    alias_provenance = build_query_alias_authority_provenance()
     provenance = build_rung2_input_provenance(
         source_relpath="src/cadrumo/_data/terminology/relevance.json",
         source_bytes=source_bytes,
         vocabulary=vocabulary,
         query_tokens=query_tokens,
+        query_alias_authority=alias_provenance,
     )
 
     canonical_terms = canonical_vocabulary(vocabulary)
     canonical_tokens = canonical_query_tokens(query_tokens)
     assert provenance.source_sha256 == sha256(source_bytes).hexdigest()
+    assert provenance.query_alias_authority == alias_provenance
     assert provenance.vocabulary_sha256 == vocabulary_fingerprint(canonical_terms)
     assert provenance.query_token_sha256 == query_token_fingerprint(canonical_tokens)
 
@@ -60,6 +64,7 @@ def test_builder_rejects_absolute_or_escaping_source_paths(source_relpath: str) 
             source_bytes=b"relevance",
             vocabulary=("modelo 130",),
             query_tokens=("modelo 130",),
+            query_alias_authority=build_query_alias_authority_provenance(),
         )
 
 
@@ -70,11 +75,28 @@ def test_provenance_rejects_extra_fields() -> None:
         source_bytes=b"relevance",
         vocabulary=("modelo 130",),
         query_tokens=("modelo 130",),
+        query_alias_authority=build_query_alias_authority_provenance(),
     )
     payload = provenance.model_dump()
     payload["unexpected"] = "not part of the provenance contract"
 
     with pytest.raises(ValidationError):
+        Rung2InputProvenance.model_validate(payload)
+
+
+def test_provenance_requires_nested_query_alias_authority_identity() -> None:
+    """The bundle input identity cannot omit the independent alias source."""
+    provenance = build_rung2_input_provenance(
+        source_relpath="src/relevance.json",
+        source_bytes=b"relevance",
+        vocabulary=("modelo 130",),
+        query_tokens=("modelo 130",),
+        query_alias_authority=build_query_alias_authority_provenance(),
+    )
+    payload = provenance.model_dump(mode="python")
+    del payload["query_alias_authority"]
+
+    with pytest.raises(ValidationError, match="query_alias_authority"):
         Rung2InputProvenance.model_validate(payload)
 
 
@@ -85,6 +107,7 @@ def test_provenance_rejects_mutation() -> None:
         source_bytes=b"relevance",
         vocabulary=("modelo 130",),
         query_tokens=("modelo 130",),
+        query_alias_authority=build_query_alias_authority_provenance(),
     )
 
     with pytest.raises(ValidationError):

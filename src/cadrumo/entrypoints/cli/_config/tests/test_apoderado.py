@@ -325,7 +325,6 @@ def test_apoderado_configure_leaves_profile_facts_untouched(_per_bucket_backend:
     assert "RENT" in status.output
 
 
-
 class TestApoderadoEnvelopeContractParity:
     """The wire envelopes carry the canonical models' own constraints.
 

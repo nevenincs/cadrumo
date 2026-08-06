@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
+from ._base_image import linux_base_image
 from ._proof_ledger import record_proof
 from ._smoke_common import relative_manifest_path, require_executable, write_smoke_manifest
 from .python_cohort import load_python_cohort
@@ -581,7 +582,15 @@ def _run_probe(
 def main(argv: list[str] | None = None) -> int:
     """Build the wheel and verify it from a clean Linux Docker image."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--image", default="python:3.13-slim", help="Docker image used for the clean Linux proof.")
+    parser.add_argument(
+        "--image",
+        default=linux_base_image(),
+        help=(
+            "Docker image used for the clean Linux proof. Defaults to the "
+            "`ARG PYTHON_BASE_IMAGE` declared in the repository-root Dockerfile, "
+            "so this proof and the devcontainer image share one base by construction."
+        ),
+    )
     parser.add_argument("--work-dir", help="Empty directory for wheel and Docker smoke artifacts.")
     parser.add_argument(
         "--cohort-dir",

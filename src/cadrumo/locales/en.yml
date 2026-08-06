@@ -1620,9 +1620,8 @@ categories:
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     arrendamiento_vivienda_afecta: Business-use share of home rent
     arrendamiento_vivienda_afecto:
-      notes: Deductible in proportion to the home's business-use floor area (default
-        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
-        art. 30.2.5.b rule 4).
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 29.2 and art. 28.1, rent of the home used for business).
     asesoria_contable:
       label: Accounting advisory fees
       notes: Fully deductible expense, as an independent professional service (Ley
@@ -1744,10 +1743,17 @@ categories:
       notes: Deductible in proportion to the home's business-use floor area (default
         ratio 30%), where the home is only partly used for the activity (Ley 35/2006
         art. 30.2.5.b rule 4).
+    suministros_local_afecto:
+      label: Utilities for business premises
+      notes: 'Fully deductible expense: the premises where the activity is carried
+        on are business assets (Ley 35/2006 art. 29.1.a) and their utilities are deductible
+        expense (art. 28.1). The 30 per cent rule of art. 30.2.5.b does not apply,
+        as it covers only a home partly used for the activity.'
     telefonia_fija:
       label: Landline phone expense
-      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
-        art. 28.1).
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
     telefonia_movil:
       label: Mobile phone expense
       notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
@@ -1833,6 +1839,11 @@ cli:
           value).
         confirm_link_hint_message: Link this invoice to a ledger transaction with
           `aeat app ledger link`.
+        confirm_printed_total_mismatch_message: The total printed on the document
+          does not match the total recorded. The recorded total is derived from the
+          taxable base and the IVA rate, so a difference means the document carries
+          an amount this record does not, such as a recargo de equivalencia, or a
+          figure was misread. Check the document.
         confirm_taxable_base_help: Override the extracted taxable base.
         evidence_id_help: Evidence id (exact match)
         extract_attachment_id_help: Linked attachment id to extract from (alternative
@@ -1857,7 +1868,6 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
-        confirm_printed_total_mismatch_message: 'The total printed on the document does not match the total recorded. The recorded total is derived from the taxable base and the IVA rate, so a difference means the document carries an amount this record does not, such as a recargo de equivalencia, or a figure was misread. Check the document.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
@@ -1900,6 +1910,8 @@ cli:
           wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
           wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
             already exists (%{invoice_id}); nothing was created.'
+          retention_rate_help: 'RIRPF art. 95.1 retención fraction withheld by the payer (0.15 for the general 15%, or 0.07 during the inicio-de-actividad window). Requires --retention-amount; a rate alone is refused.'
+          retention_amount_help: 'Amount of IRPF retención withheld by the payer, in euros. May be supplied alone, or alongside --retention-rate.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -1909,12 +1921,17 @@ cli:
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
         list_help: List business invoices (both kinds unless --kind filters)
+        operation_date_help: Date the entrega or prestacion took place (YYYY-MM-DD).
+          This is the LIVA art. 75 devengo date that decides which period declares
+          the cuota; without it the invoice date stands in for it.
         operation_type_help: 'M349 operation key: E supplies of goods, M supplies
           after an exempt import, H the same via a fiscal representative, A acquisitions
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a business invoice
+        total_amount_required: 'Option --total-amount is required: state the invoice
+          total as a decimal amount, for example 121.00.'
         update_help: Update business invoice details
         view_help: Show one business invoice
         yes_help: Confirm deleting the invoice

@@ -97,11 +97,7 @@ def _detail(
 
 def _pattern_failures(error: ValidationError, field: str) -> list[Mapping[str, object]]:
     """Return the pattern-mismatch entries this error raised for *field*."""
-    return [
-        entry
-        for entry in error.errors()
-        if entry["type"] == "string_pattern_mismatch" and field in entry["loc"]
-    ]
+    return [entry for entry in error.errors() if entry["type"] == "string_pattern_mismatch" and field in entry["loc"]]
 
 
 def test_both_projections_accept_the_same_valid_grounding() -> None:

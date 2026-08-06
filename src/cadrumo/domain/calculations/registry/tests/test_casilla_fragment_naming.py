@@ -143,16 +143,13 @@ def test_every_casilla_fragment_name_is_canonical_and_truthful() -> None:
     )
     assert not violations, (
         f"{len(violations)} casilla fragment naming violation(s); rename the file to the "
-        f"expected stem (or fix its content) so the name keeps telling the truth:\n"
-        + "\n".join(violations[:20])
+        f"expected stem (or fix its content) so the name keeps telling the truth:\n" + "\n".join(violations[:20])
     )
 
 
 def _write_fragment(directory: Path, name: str, casilla_ids: list[str]) -> None:
     directory.mkdir(parents=True, exist_ok=True)
-    blocks = "\n\n".join(
-        f'[[revisions."2024".casillas]]\nid = "{cid}"' for cid in casilla_ids
-    )
+    blocks = "\n\n".join(f'[[revisions."2024".casillas]]\nid = "{cid}"' for cid in casilla_ids)
     (directory / name).write_text(blocks + "\n", encoding="utf-8")
 
 

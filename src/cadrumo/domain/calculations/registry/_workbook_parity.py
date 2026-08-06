@@ -1011,9 +1011,7 @@ def _workbook_output_id_set(
     surface: str,
     values: Mapping[WorkbookOutputId, object],
 ) -> frozenset[WorkbookOutputId]:
-    invalid = sorted(
-        repr(output_id) for output_id in values if not is_registry_id(output_id)
-    )
+    invalid = sorted(repr(output_id) for output_id in values if not is_registry_id(output_id))
     if invalid:
         raise RegistryValidationError(f"{surface} contains invalid workbook output ids: {invalid!r}")
     return frozenset(values)

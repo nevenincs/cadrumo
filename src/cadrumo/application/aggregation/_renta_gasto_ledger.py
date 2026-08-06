@@ -19,8 +19,14 @@ Cumulative window rule (RD 439/2007 art. 110.2):
 Only ACTIVE, EUR-denominated, OUTGOING transactions whose explicit
 ``irpf_category`` marks ``actividad_economica`` or whose
 ``business_classification`` is BUSINESS or MIXED are eligible. The deductible
-amount is the IVA-exclusive base imponible (``taxable_base``). IVA soportado is
-recovered through Modelo 303 and is not a Renta gasto, so a declarable expense
+amount is the IVA-exclusive base imponible (``taxable_base``), plus the
+non-recoverable share of ``iva_amount`` when the activity's IVA-deduction ratio
+(:func:`~._renta_ledger._resolve_iva_deduction_ratio` -- the SAME resolver the
+M100 annual first slice uses, for the SAME ejercicio, so the two filings cannot
+diverge) is less than full: IVA soportado a taxpayer cannot recover through
+Modelo 303 is PGC NRV 12.ª acquisition cost, same as the M100 side (LIRPF arts.
+28-30 base-imponible deductibility governs the pago fraccionado's gasto
+determination identically to the annual declaration). A declarable expense
 without ``taxable_base`` is surfaced as ``missing_taxable_base`` instead of being
 gross-folded into casilla 02. A MIXED transaction contributes its business
 fraction.
@@ -29,6 +35,9 @@ This module deliberately does NOT reuse the Modelo 100 first-slice expense
 pipeline (:mod:`~._renta_ledger`): that path layers invoice-evidence
 reconciliation, category-profile deductibility evaluation, and an annual window
 that are constraint-shape-divergent from the M130 quarterly cumulative gasto sum.
+It DOES share that module's single IVA-deduction-ratio resolver
+(:func:`~._renta_ledger._resolve_iva_deduction_ratio`), the one taxpayer-fact
+lookup the two constraint-shapes have no reason to diverge on.
 """
 
 from __future__ import annotations
@@ -44,6 +53,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, elided_prose
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
+from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions import (
     BusinessClassification,
     OutOfWindowTransactionSummary,
@@ -53,12 +63,14 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...domain.user_profile import UserProfileRecord
 from . import _shared_issue_reasons
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationValidationError, t
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._renta_business_eligibility import renta_expense_business_proportion
+from ._renta_ledger import _resolve_iva_deduction_ratio
 
 # The only casilla M130 deductible-expense aggregation feeds: official box 02
 # ("Gastos"), bound to the ledger renta gasto aggregation. Operator-supplied
@@ -147,8 +159,17 @@ def aggregate_renta_gasto_ledger_from_repositories(
     bucket_id: str,
     period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    profile_record: UserProfileRecord | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
 ) -> RentaGastoLedgerAggregation:
     """Load the transaction catalogue and aggregate cumulative M130 gastos.
+
+    Derives the activity's IVA-deduction ratio through
+    :func:`~._renta_ledger._resolve_iva_deduction_ratio` -- the SAME resolver the
+    M100 annual first slice uses, for the SAME ejercicio (``period.filing_year``),
+    so the two filings cannot diverge on it. ``profile_record`` and
+    ``prorrata_register_repository`` supply the profile and register directly
+    (tests); otherwise both are loaded from the bucket.
 
     Returns a :class:`RentaGastoLedgerAggregation`.
     """
@@ -163,7 +184,18 @@ def aggregate_renta_gasto_ledger_from_repositories(
     # reported uniformly as ``OUTSIDE_PERIOD``.
     window = cumulative_year_to_date_window(period)
     partition = repository.partition_by_date_range(window.start, window.end)
-    result = aggregate_renta_gasto_ledger(partition.in_window, bucket_id=bucket_id, period=period)
+    iva_deduction_ratio = _resolve_iva_deduction_ratio(
+        bucket_id=bucket_id,
+        ejercicio=period.filing_year,
+        profile_record=profile_record,
+        prorrata_register_repository=prorrata_register_repository,
+    )
+    result = aggregate_renta_gasto_ledger(
+        partition.in_window,
+        bucket_id=bucket_id,
+        period=period,
+        iva_deduction_ratio=iva_deduction_ratio,
+    )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
     )
@@ -177,6 +209,7 @@ def aggregate_renta_gasto_ledger(
     *,
     bucket_id: str,
     period: Period,
+    iva_deduction_ratio: Decimal | None = None,
 ) -> RentaGastoLedgerAggregation:
     """Aggregate OUTGOING deductible-expense transactions into M130 casilla 02.
 
@@ -186,6 +219,10 @@ def aggregate_renta_gasto_ledger(
             records so the resulting aggregation cannot be silently misattributed.
         period: The quarterly :class:`Period` whose year anchors the cumulative
             window.
+        iva_deduction_ratio: Optional activity-wide IVA-deduction fraction (LIVA
+            arts. 94/104), joining the non-recoverable share of a row's
+            ``iva_amount`` to its deductible base (PGC NRV 12.ª). ``None`` (the
+            default) preserves the historic base-only behaviour.
 
     Returns a :class:`RentaGastoLedgerAggregation` covering the cumulative
     fiscal window. ``period`` must be quarterly; the cumulative window extends
@@ -204,6 +241,7 @@ def aggregate_renta_gasto_ledger(
             transaction,
             cumulative_start=window.start,
             cumulative_end=window.end,
+            iva_deduction_ratio=iva_deduction_ratio,
         )
         if outcome is None:
             continue
@@ -227,6 +265,7 @@ def _classify_gasto_transaction(
     *,
     cumulative_start: date,
     cumulative_end: date,
+    iva_deduction_ratio: Decimal | None = None,
 ) -> RentaGastoObservation | RentaGastoLedgerAggregationIssue | None:
     """Filter one ledger transaction against the M130 gasto pipeline.
 
@@ -291,10 +330,18 @@ def _classify_gasto_transaction(
         )
 
     # taxable_base is non-None here (the MISSING_TAXABLE_BASE guard above returned
-    # for the None case). IVA soportado is recovered through Modelo 303, so the
-    # IVA-exclusive base imponible is the deductible gasto, scaled by the business
-    # fraction (1 for BUSINESS, business_pct for MIXED).
-    deductible_amount = transaction.taxable_base * proportion
+    # for the None case). IVA soportado recovered through Modelo 303 is not a
+    # Renta gasto, so the IVA-exclusive base imponible is the deductible gasto by
+    # default. When the activity's IVA-deduction ratio is known and less than
+    # full, the non-recoverable share of iva_amount joins the base (PGC NRV
+    # 12.ª) -- mirroring domain.renta._ledger_expenses._deductible_basis_amount
+    # on the M100 side exactly: only when BOTH iva_amount and the ratio are
+    # known, else the historic base-only figure stands. The whole sum is then
+    # scaled by the business fraction (1 for BUSINESS, business_pct for MIXED).
+    deductible_base = transaction.taxable_base
+    if transaction.iva_amount is not None and iva_deduction_ratio is not None:
+        deductible_base += transaction.iva_amount * (Decimal("1") - iva_deduction_ratio)
+    deductible_amount = deductible_base * proportion
     return RentaGastoObservation(
         transaction_id=transaction_id,
         target_casilla_id=_TARGET_CASILLA_GASTOS,

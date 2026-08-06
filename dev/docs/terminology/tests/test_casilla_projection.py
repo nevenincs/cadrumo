@@ -226,18 +226,14 @@ def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -
     assert isinstance(authority, ValidatedRegistryAuthority)
     definition = authority.modelo(Modelo.M121.value)
     latest_revision = max(definition.revisions.values(), key=lambda revision: revision.valid_from)
-    authoritative = next(
-        casilla for casilla in latest_revision.casillas if casilla.id == "decl.ejercicio"
-    )
+    authoritative = next(casilla for casilla in latest_revision.casillas if casilla.id == "decl.ejercicio")
 
     assert authoritative.id == "decl.ejercicio"
     assert authoritative.number == "ejercicio"
     assert authoritative.id != authoritative.number
 
     projected = next(
-        record
-        for record in project_modelo_casillas(Modelo.M121, authority)
-        if record.casilla_id == authoritative.id
+        record for record in project_modelo_casillas(Modelo.M121, authority) if record.casilla_id == authoritative.id
     )
     assert projected.casilla_id == authoritative.id
     assert projected.number == authoritative.number

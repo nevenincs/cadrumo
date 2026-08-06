@@ -169,9 +169,7 @@ def consumption_evidence(
     for node in ast.walk(tree):
         if isinstance(node, ast.Attribute):
             is_qualified_category_reference = (
-                node.attr == category_member
-                and isinstance(node.value, ast.Name)
-                and node.value.id in category_owners
+                node.attr == category_member and isinstance(node.value, ast.Name) and node.value.id in category_owners
             )
             is_field_attribute = settings_field is not None and node.attr == settings_field
             if is_qualified_category_reference or is_field_attribute:

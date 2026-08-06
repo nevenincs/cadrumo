@@ -114,6 +114,75 @@ class InvoiceOperationDateRole(StrEnum):
     ADVANCE_PAYMENT_RECEIVED = "ADVANCE_PAYMENT_RECEIVED"
 
 
+class InvoiceLegalMention(StrEnum):
+    """RD 1619/2012 art. 6.1 fixed legal notices, closed by the reglamento's own wording.
+
+    Each member is one of the LITERALLY QUOTED phrases (each printed between
+    guillemets in the article text) the reglamento requires stated on the
+    invoice when its triggering regime applies. This is evidence of what the
+    issuer PRINTED, never something to derive from
+    :attr:`~cadrumo.domain.invoices.Invoice.iva_category`: manufacturing a
+    mención from our own classification would fabricate evidence of
+    compliance nobody observed on the document. Use
+    :func:`invoice_legal_mention_text` to read the exact wording a member
+    represents.
+
+    art. 6.1.j (the exemption reference) is deliberately absent from this
+    enum: unlike the fixed phrases below, it is a REFERENCE the issuer
+    composes -- to a Directiva 2006/112/CE provision, a LIVA article, or a
+    bare statement that the operation is exempt -- not one closed literal
+    string, so it is represented as free text
+    (:attr:`~cadrumo.domain.invoices.Invoice.exemption_reference`), not a
+    member here.
+
+    Attributes:
+        SELF_BILLED: art. 6.1.l, a destinatario-issued invoice
+            (autofacturación, RD 1619/2012 art. 5).
+        REVERSE_CHARGE: art. 6.1.m, the destinatario is the sujeto pasivo
+            (inversión del sujeto pasivo, LIVA art. 84.Uno).
+        TRAVEL_AGENCY_REGIME: art. 6.1.n, régimen especial de las agencias
+            de viajes.
+        USED_GOODS_REGIME: art. 6.1.o, régimen especial de los bienes
+            usados (REBU).
+        ART_OBJECTS_REGIME: art. 6.1.o, régimen especial de los objetos de
+            arte (REBU).
+        ANTIQUES_COLLECTORS_REGIME: art. 6.1.o, régimen especial de las
+            antigüedades y objetos de colección (REBU).
+        CASH_ACCOUNTING_REGIME: art. 6.1.p, régimen especial del criterio
+            de caja.
+    """
+
+    SELF_BILLED = "SELF_BILLED"
+    REVERSE_CHARGE = "REVERSE_CHARGE"
+    TRAVEL_AGENCY_REGIME = "TRAVEL_AGENCY_REGIME"
+    USED_GOODS_REGIME = "USED_GOODS_REGIME"
+    ART_OBJECTS_REGIME = "ART_OBJECTS_REGIME"
+    ANTIQUES_COLLECTORS_REGIME = "ANTIQUES_COLLECTORS_REGIME"
+    CASH_ACCOUNTING_REGIME = "CASH_ACCOUNTING_REGIME"
+
+
+_INVOICE_LEGAL_MENTION_TEXT: dict[InvoiceLegalMention, str] = {
+    InvoiceLegalMention.SELF_BILLED: "facturación por el destinatario",
+    InvoiceLegalMention.REVERSE_CHARGE: "inversión del sujeto pasivo",
+    InvoiceLegalMention.TRAVEL_AGENCY_REGIME: "régimen especial de las agencias de viajes",
+    InvoiceLegalMention.USED_GOODS_REGIME: "régimen especial de los bienes usados",
+    InvoiceLegalMention.ART_OBJECTS_REGIME: "régimen especial de los objetos de arte",
+    InvoiceLegalMention.ANTIQUES_COLLECTORS_REGIME: "régimen especial de las antigüedades y objetos de colección",
+    InvoiceLegalMention.CASH_ACCOUNTING_REGIME: "régimen especial del criterio de caja",
+}
+
+
+def invoice_legal_mention_text(mention: InvoiceLegalMention) -> str:
+    """Return the exact RD 1619/2012 art. 6.1 phrase ``mention`` represents.
+
+    The reglamento quotes each of these phrases verbatim between guillemets,
+    so this returns exactly that wording -- extracted from the bundled
+    corpus, not retyped -- for a caller comparing against, or rendering,
+    what the invoice document is required to state.
+    """
+    return _INVOICE_LEGAL_MENTION_TEXT[mention]
+
+
 _IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
     IvaRate.RATE_0: IvaRateKind.ZERO,
     IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
@@ -192,10 +261,12 @@ def numeric_iva_rate_percentages() -> frozenset[Decimal]:
 
 __all__ = [
     "InvoiceClass",
+    "InvoiceLegalMention",
     "InvoiceOperationDateRole",
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
+    "invoice_legal_mention_text",
     "iva_rate_kind",
     "iva_rate_percentage",
     "numeric_iva_rate_percentages",

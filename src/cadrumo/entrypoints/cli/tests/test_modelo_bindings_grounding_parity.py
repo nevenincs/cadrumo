@@ -160,6 +160,4 @@ def test_both_rows_require_non_empty_grounding(field: str) -> None:
     for factory in (_list_row, _preview_row):
         with pytest.raises(ValidationError) as error:
             factory(**{field: ()})
-        assert any(
-            entry["type"] == "too_short" and field in entry["loc"] for entry in error.value.errors()
-        )
+        assert any(entry["type"] == "too_short" and field in entry["loc"] for entry in error.value.errors())

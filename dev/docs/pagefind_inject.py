@@ -190,9 +190,7 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
 
     legal_records = project_legal_search_records(root)
     if not legal_records:
-        raise SearchInjectionError(
-            "cannot inject the decided search corpus because the legal projection is empty"
-        )
+        raise SearchInjectionError("cannot inject the decided search corpus because the legal projection is empty")
     out.legal_provisions = len(legal_records)
     out.records.extend(to_search_record(rec) for rec in legal_records)
 
@@ -233,9 +231,7 @@ def materialise_search_records(repo_root: Path | None = None) -> SearchRecordPro
 def _require_complete_projection(materialised: _Materialised) -> None:
     """Reject an incomplete authoritative projection before Pagefind writes."""
     if materialised.casillas == 0:
-        raise SearchInjectionError(
-            "cannot inject an incomplete search corpus because the casilla projection is empty"
-        )
+        raise SearchInjectionError("cannot inject an incomplete search corpus because the casilla projection is empty")
     if materialised.cli_skipped_reason is not None:
         raise SearchInjectionError(
             "cannot inject an incomplete search corpus because the CLI projection "
@@ -473,6 +469,7 @@ def build_record_injector(
     Returns:
         An async callback suitable for ``build_search_index(..., inject=...)``.
     """
+
     async def _inject(index: PagefindIndex) -> None:
         materialised = _materialise_records(repo_root)
         _require_complete_projection(materialised)

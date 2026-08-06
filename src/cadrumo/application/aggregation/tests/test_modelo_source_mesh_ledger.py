@@ -22,7 +22,14 @@ from ....core.classification import SensitivityClass
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.categories import SpendingCategory
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from ....domain.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceLine,
+    InvoiceOperationDateRole,
+    IvaRate,
+    PaymentStatus,
+)
 from ....domain.iva import (
     EUMemberState,
     IvaCategory,
@@ -196,6 +203,7 @@ def _domestic_iva_invoice(
     iva_amount: Decimal,
     bucket_id: str = _BUCKET_ID,
     linked_transaction_ids: tuple[str, ...] = (),
+    operation_date: date | None = None,
 ) -> Invoice:
     line = InvoiceLine(
         description="Operacion interior con IVA",
@@ -221,6 +229,14 @@ def _domestic_iva_invoice(
             "lines": (line,),
             "payment_status": PaymentStatus.PAID,
             "linked_transaction_ids": linked_transaction_ids,
+            **(
+                {}
+                if operation_date is None
+                else {
+                    "operation_date": operation_date,
+                    "operation_date_role": InvoiceOperationDateRole.OPERATION_PERFORMED,
+                }
+            ),
         },
     )
 
@@ -354,6 +370,56 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
     assert exc_info.value.context["period"] == "1T"
+
+
+def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Period attribution follows the art. 75 devengo date, not the issue date.
+
+    RD 1619/2012 art. 11 lets this B2B invoice be issued on 10 April for an
+    operation performed on 28 March, so the record is lawful. Its cuota is
+    devengada in Q1: the domestic-IVA screen must see it while calculating Q1
+    and must NOT see it while calculating Q2. Both quarters are asserted,
+    because a change that moved every invoice one quarter earlier would satisfy
+    the Q1 half alone.
+    """
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice = _domestic_iva_invoice(
+        "LAURA-Q1-OPERATION-INVOICED-IN-Q2",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 4, 10),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        operation_date=date(2025, 3, 28),
+    )
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    def _resolve(code: str) -> object:
+        return LedgerIvaAggregationSourceResolver(
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, code),
+                revision=revision,
+            ),
+        )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        _resolve("1T")
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["period"] == "1T"
+    assert exc_info.value.context["invoice_ids"] == (invoice.invoice_id,)
+
+    # Q2 holds the issue date and nothing else: the invoice already devengo'd.
+    q2_resolution = _resolve("2T")
+    assert q2_resolution.diagnostics == ()  # type: ignore[attr-defined]
     assert exc_info.value.context["invoice_count"] == "1"
     assert exc_info.value.context["invoice_domestic_iva_excess_by_binding"] == {
         "modelo-303-iva-repercutido-general-cuota": "2100.00",
@@ -400,6 +466,60 @@ def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transac
 
     assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
     assert resolution.source_transaction_ids == (transaction.transaction_id,)
+    # The invoice records no fecha de operacion, so its Q1 placement rests on
+    # the issue date. LIVA art. 75.Uno binds devengo to the operation date, so
+    # the substitution is disclosed rather than passed off as a determination.
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["devengo_date_proxy_attribution"]
+    assert "LAURA-1T-SALE" in resolution.diagnostics[0].message
+
+
+def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_date_is_recorded(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The other direction of the proxy advisory, on the real resolve path.
+
+    Same fixture as the accept case above with one field added. An advisory
+    that fires on every invoice would be indistinguishable from one that fires
+    correctly, so the declared-date case is asserted silent as explicitly as
+    the proxy case is asserted noisy.
+    """
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    transaction = _iva_transaction(
+        "laura-1t-sale",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("12100.00"),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        booked_date=date(2025, 2, 10),
+    )
+    invoice = _domestic_iva_invoice(
+        "LAURA-1T-SALE",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        linked_transaction_ids=(transaction.transaction_id,),
+        operation_date=date(2025, 2, 5),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
     assert resolution.diagnostics == ()
 
 

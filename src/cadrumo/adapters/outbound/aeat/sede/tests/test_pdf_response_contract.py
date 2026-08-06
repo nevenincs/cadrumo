@@ -192,7 +192,11 @@ class TestEveryLookalikeWasGenuinelyAdmittedBefore:
         canonical. Pinned as an exact partition so a future edit to the
         fixture list cannot silently drop either class.
         """
-        row_only = {h for h in _NON_PDF_LOOKALIKES if self._retired_row_capture_accepted(h) and not self._retired_sibling_accepted(h)}
+        row_only = {
+            h
+            for h in _NON_PDF_LOOKALIKES
+            if self._retired_row_capture_accepted(h) and not self._retired_sibling_accepted(h)
+        }
         all_three = {h for h in _NON_PDF_LOOKALIKES if self._retired_sibling_accepted(h)}
         assert row_only == {"application/notpdf", "text/pdf", "multipart/pdf"}
         assert all_three == {"x-application/pdf-trap", "application/pdf-invoice"}

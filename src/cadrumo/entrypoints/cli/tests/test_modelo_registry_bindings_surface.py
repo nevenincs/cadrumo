@@ -387,6 +387,7 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     from pathlib import Path
 
     from ....tests import REPO_ROOT
+
     cli_root = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     canonical = cli_root / "_modelo.py"
     forbidden_patterns = (
@@ -421,9 +422,8 @@ def test_bindings_list_and_resolve_emit_no_bucket_event() -> None:
     in by accident, this test fails fast."""
 
     from ....tests import REPO_ROOT
-    canonical_text = (REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_modelo.py").read_text(
-        encoding="utf-8"
-    )
+
+    canonical_text = (REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
     forbidden_emitters = (
         "emit_bucket_event",
         "emit_modelo_bucket_event",

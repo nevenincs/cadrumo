@@ -111,7 +111,9 @@ class TestSaveLoad:
         assert repo.list_csvs() == (record.csv,)
 
     def test_save_persists_only_to_the_secure_database_object(
-        self, repo: JustificanteRepository, tmp_path: Path,
+        self,
+        repo: JustificanteRepository,
+        tmp_path: Path,
     ) -> None:
         """A saved justificante never reaches the plaintext ``justificantes`` directory.
 

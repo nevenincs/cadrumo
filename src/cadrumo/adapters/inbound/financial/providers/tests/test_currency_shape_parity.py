@@ -170,9 +170,7 @@ def test_every_currency_surface_is_wired_to_the_one_shared_normaliser() -> None:
         ),
     }
     for label, function in call_sites.items():
-        assert helper_name in function.__code__.co_names, (
-            f"{label} must call the shared core currency normaliser"
-        )
+        assert helper_name in function.__code__.co_names, f"{label} must call the shared core currency normaliser"
 
 
 def test_refused_currency_keeps_boundary_specific_diagnostics() -> None:

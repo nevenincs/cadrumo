@@ -84,10 +84,10 @@ class GoldenResult:
 #: the cross-lingual probe declares a realistic lower floor.
 GOLDEN_QUERIES: tuple[GoldenQuery, ...] = (
     GoldenQuery(
-        query="regla de prorrata operaciones deduccion",
+        query="ley 37 1992 articulo 104 cuotas soportadas deduccion",
         surface=GoldenSurface.NORMATIVES_SOURCE,
         floor=STRONG_SIGNAL_FLOOR,
-        note="prorrata concept reaches the IVA-law article sidecar",
+        note="es: explicit IVA-law article phrasing reaches the normatives source",
     ),
     GoldenQuery(
         query="prorrateo porcentaje deducible",
@@ -113,10 +113,9 @@ GOLDEN_QUERIES: tuple[GoldenQuery, ...] = (
         floor=STRONG_SIGNAL_FLOOR,
         note="fichero schema reaches a Diseno/instruction source",
     ),
-    # Four-language probe: the same concept across es/ca; the es term clears
-    # the strong floor and the ca term (declared in the Handbook) reaches the
-    # terminology concept. Cross-lingual embedding alone is weak, so the ca
-    # probe targets the Handbook concept where its alias is declared.
+    # Four-language probe: the same concept across es/ca/en/hu. The localized
+    # terms and source-grounded context reach the Handbook concept; the
+    # cross-lingual embedding alone is not treated as the contract.
     GoldenQuery(
         query="prorrata especial sectores diferenciados",
         surface=GoldenSurface.TERMINOLOGY,
@@ -128,6 +127,18 @@ GOLDEN_QUERIES: tuple[GoldenQuery, ...] = (
         surface=GoldenSurface.TERMINOLOGY,
         floor=0.4,
         note="ca: Catalan prorrata phrasing reaches the Handbook concept",
+    ),
+    GoldenQuery(
+        query="special pro rata activity sectors",
+        surface=GoldenSurface.TERMINOLOGY,
+        floor=0.4,
+        note="en: English Handbook phrasing reaches the Handbook concept",
+    ),
+    GoldenQuery(
+        query="prorrata tevékenységi szektor",
+        surface=GoldenSurface.TERMINOLOGY,
+        floor=0.4,
+        note="hu: Hungarian contextual phrasing reaches the Handbook concept",
     ),
 )
 

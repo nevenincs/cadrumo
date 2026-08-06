@@ -27,9 +27,7 @@ _HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/uri-list"
 _OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 _STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
-_STRING_METADATA_MAPPING: TypeAdapter[dict[str, str]] = TypeAdapter(
-    dict[str, str], config=ConfigDict(strict=True)
-)
+_STRING_METADATA_MAPPING: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], config=ConfigDict(strict=True))
 
 
 def normalize_media_type(value: str) -> str:

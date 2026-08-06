@@ -1460,6 +1460,16 @@ class RegistrySnapshot(RegistryModel):
         a period a filing occupies and so cannot become a typed ``Period`` at all.
         The early return is the only honest answer for them.
 
+        Modelo 210's symbolic selector ``EVENT-N`` skips it too, for a different
+        reason worth separating: it is not an event name but a token standing for
+        a SET of periods, which the revision matcher expands to the concrete
+        ``EVENT-1`` / ``EVENT-2`` operator scopes. Those concrete scopes DO carry a
+        filing period and are reconciled normally; only the symbolic form is
+        skipped, because a set has no single period to check against. Verified
+        against the registry rather than assumed: the complete skipped set is
+        M036 ``alta``/``modificacion``/``baja``, M145 ``comunicacion``/``variacion``,
+        and M210 ``EVENT-N``.
+
         It is stated here because the reduced coverage is invisible at the call
         site: nothing about a passing snapshot build reveals that a whole class of
         coordinates skipped this check. Do not read a green build as evidence that
