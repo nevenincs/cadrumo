@@ -18,12 +18,18 @@ here, split across a domestic professional invoice (retention-bearing) and a
 cross-border OSS consumer invoice (the union-scheme axis). A save-drops-field
 regression on any of these optional fields is invisible unless a roundtrip
 fixture actually populates them.
+
+The record-lifecycle stamps (``created_at``, ``updated_at``) carry their own
+fixture and proof pair rather than riding the two above, because what they must
+be shown to survive is their distinctness from ``issued_at``: a fixture reusing
+the document date for either would pass while the boundary confused when the
+DOCUMENT was issued with when the RECORD was entered.
 """
 
 from __future__ import annotations
 
 import json as _json
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -412,3 +418,111 @@ def test_dropped_fx_rate_date_surfaces_at_load(tmp_path: Path) -> None:
 
         with pytest.raises(ValidationError, match="set together"):
             InvoiceCatalogueRepository().load()
+
+
+def _record_lifecycle_stamped_invoice() -> Invoice:
+    """Domestic invoice carrying both record-lifecycle timestamps non-default."""
+
+    return Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "ES-2025-900",
+            "issued_at": date(2025, 5, 2),
+            "counterparty_name": "Cliente Historico SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("500.00"),
+            "iva_total": Decimal("105.00"),
+            "grand_total": Decimal("605.00"),
+            "currency": "EUR",
+            "lines": (
+                InvoiceLine(
+                    description="Servicio profesional",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("500.00"),
+                    subtotal=Decimal("500.00"),
+                    iva_rate=IvaRate.RATE_21,
+                    iva_amount=Decimal("105.00"),
+                ),
+            ),
+            "payment_status": PaymentStatus.PENDING,
+            # Deliberately distinct from each other AND from issued_at: the
+            # record was entered three days after the document was issued and
+            # amended a month later. A fixture reusing issued_at for either
+            # would pass while the boundary confused the document date with the
+            # record date.
+            "created_at": datetime(2025, 5, 5, 9, 30, 0, tzinfo=UTC),
+            "updated_at": datetime(2025, 6, 11, 16, 45, 30, tzinfo=UTC),
+        },
+    )
+
+
+def test_record_lifecycle_timestamps_survive_encrypted_storage_roundtrip(
+    tmp_path: Path,
+) -> None:
+    """Both record-lifecycle stamps round-trip, distinct from the document date.
+
+    These carry the fact the slim business-operation store recorded and the
+    canonical aggregate previously could not hold at all: WHEN the record was
+    entered and last amended, as opposed to when the document was issued. A
+    fold that dropped them would lose an audit fact silently, which is the
+    class of loss this campaign's conservation law exists to prevent.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _record_lifecycle_stamped_invoice()
+        InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={original.invoice_id: original}))
+        loaded = InvoiceCatalogueRepository().load()
+
+    restored = next(iter(loaded.values()))
+    assert restored == original
+    assert restored.created_at == datetime(2025, 5, 5, 9, 30, 0, tzinfo=UTC)
+    assert restored.updated_at == datetime(2025, 6, 11, 16, 45, 30, tzinfo=UTC)
+    # The record dates are not the document date, and the boundary keeps them apart.
+    assert restored.issued_at == date(2025, 5, 2)
+
+
+def test_dropped_created_at_surfaces_as_inequality_at_load(tmp_path: Path) -> None:
+    """Anti-tautology proof for the record-lifecycle stamps.
+
+    Unlike the fx-rate pair these fields carry no cross-field invariant, so a
+    dropped value cannot raise -- it re-defaults to ``None``. The sanctioned
+    proof for that shape is strict INEQUALITY: the reload must not silently
+    compare equal to what was saved.
+
+    If this ever passes with the field dropped, the timestamps are not actually
+    crossing the encrypted boundary and the roundtrip above is tautological --
+    it would be asserting a value the model re-derived rather than one the
+    store returned.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        invoice = _record_lifecycle_stamped_invoice()
+        InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
+
+        record = profile.repository.load(
+            _INVOICE_NAMESPACE,
+            _INVOICE_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_INVOICE_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
+        assert invoice_dict.get("created_at") is not None, (
+            "fixture must persist created_at for this proof to be meaningful"
+        )
+        del invoice_dict["created_at"]
+        profile.repository.save(
+            namespace=_INVOICE_NAMESPACE,
+            object_key=_INVOICE_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        restored = next(iter(InvoiceCatalogueRepository().load().values()))
+
+    assert restored.created_at is None
+    assert restored != invoice
