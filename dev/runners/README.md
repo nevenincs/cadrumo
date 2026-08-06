@@ -13,13 +13,41 @@ operator-identifying and are kept out of committed text (gated by
 `dev/quality/tests/test_doc_privacy.py`). Substitute your own host wherever a
 `<...>` placeholder appears.
 
-| Role                    | Labels                       | Platform | Location                                  | Script               |
-| ----------------------- | ---------------------------- | -------- | ----------------------------------------- | -------------------- |
-| Windows build host      | `self-hosted, Windows, X64`  | Windows  | `C:\actions-runner`                       | `cleanup-windows.ps1`|
-| Linux container runner 1| `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux-1` | `cleanup-linux.sh`   |
-| Linux container runner 2| `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux-2` | `cleanup-linux.sh`   |
-| macOS build host        | `self-hosted, macOS, ARM64`  | macOS    | `~/actions-runner`                        | `cleanup-macos.sh`   |
-| Linux ARM container     | `self-hosted, Linux, ARM64`  | Linux    | colima container `cadrumo-runner-mac-arm` | `cleanup-linux.sh`   |
+| Role                  | Labels                       | Platform | Location                                  | Script               |
+| --------------------- | ---------------------------- | -------- | ----------------------------------------- | -------------------- |
+| Windows build host    | `self-hosted, Windows, X64`  | Windows  | `C:\action-runners\cadrumo`               | `cleanup-windows.ps1`|
+| Linux container runner| `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux-1` | `cleanup-linux.sh`   |
+| macOS build host      | `self-hosted, macOS, ARM64`  | macOS    | `~/action-runners/cadrumo`                | `cleanup-macos.sh`   |
+| Linux ARM container   | `self-hosted, Linux, ARM64`  | Linux    | colima container `cadrumo-runner-mac-arm` | `cleanup-linux.sh`   |
+
+**Every runner root on a host lives under one canonical parent** —
+`C:\action-runners\<repo>\` on Windows, `~/action-runners/<repo>/` on macOS.
+Both machines also host runners for other repositories under the same parent;
+they are separate registrations, because a personal account has no
+organisation-level runner groups and a runner is therefore always scoped to
+exactly one repository.
+
+Moving a runner root is not a plain directory move. Three things embed its
+absolute path and every one of them fails silently:
+
+- **`bin` and `externals` are links** (NTFS junctions on Windows, symlinks on
+  macOS) created by the runner's self-update, pointing at `bin.<version>`. After
+  a move they dangle, `Runner.Listener` disappears, and `run.cmd` spins in its
+  `:launch_helper` restart loop forever.
+- **The launcher** is a scheduled task (Windows) or launchd plist (macOS)
+  holding the old path. It fails at the next logon, not immediately.
+- **The hygiene hook path** in `.env`, plus any hardcoded root inside the
+  cleanup script itself.
+
+There was ONE Linux X64 slot as of the 2026-08-06 consolidation, down from two.
+The queue watchdog tolerates this: it excludes itself from its own scan and
+treats a job queued against an OCCUPIED label set as demonstrably schedulable,
+so jobs waiting behind it are skipped rather than flagged. The cost is
+wall-clock, not correctness — a workflow carrying both the watchdog and another
+Linux X64 job now serialises them, and because the run cannot reach a terminal
+status while a job is still queued, the watchdog stands down only at its
+`MAX_WATCH_SECONDS` window. Weigh that before adding another Linux X64 job to a
+watchdog-bearing workflow.
 
 A runner's REGISTERED name (what `gh api .../actions/runners` reports) and its
 CONTAINER name (what `docker ps` reports) are NOT the same string for the two
