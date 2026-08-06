@@ -53,7 +53,10 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     """A real casilla TOML fragment resolves to its modelo's casilla target."""
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
-    path = "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/civa.repercutido.general__c22.toml"
+    path = (
+        "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes"
+        "/casillas/civa.repercutido.general__c22.toml"
+    )
     # The first declaration occupies lines 1–13; stopping before the next
     # header keeps the source evidence unambiguous for this individual casilla.
     out = resolver.resolve(_hit(path, line_end=13))
