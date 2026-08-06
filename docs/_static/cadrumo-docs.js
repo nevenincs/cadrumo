@@ -1351,8 +1351,10 @@
         segmento = casilla.slice(0, separator);
         number = casilla.slice(separator + 1);
       }
+      var casillaId = normalizeStructuredText(casilla);
       return {
         modelo: normalizeStructuredValue(match[1]),
+        casillaId: casillaId,
         number: normalizeStructuredValue(number),
         segmento: segmento ? normalizeStructuredValue(segmento) : null,
       };
@@ -1362,6 +1364,7 @@
       var meta = data && data.meta;
       if (!meta || meta.kind !== "casilla") return false;
       if (normalizeStructuredValue(meta.modelo) !== address.modelo) return false;
+      if (normalizeStructuredText(meta.casilla_id) === address.casillaId) return true;
       if (normalizeStructuredValue(meta.number) !== address.number) return false;
       return !address.segmento || normalizeStructuredValue(meta.segmento) === address.segmento;
     }
