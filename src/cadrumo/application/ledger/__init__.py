@@ -157,9 +157,11 @@ if TYPE_CHECKING:
     from ._evidence_draft import (
         InvoiceConfirmationResult,
         InvoiceDraft,
+        PrintedTotalDiscrepancy,
         confirm_invoice_draft_from_evidence,
         extract_invoice_draft_from_evidence,
         extract_invoice_fields,
+        printed_total_discrepancy,
     )
     from ._id_resolution import (
         MINIMUM_DISPLAY_ID_WIDTH,
@@ -334,6 +336,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "MergeTransactionsResult": "._models",
     "OperatorIvaDerivationResult": "._llm_classification",
     "PayableInvoiceService": "._business_operation_invoice",
+    "PrintedTotalDiscrepancy": "._evidence_draft",
     "PurchaseInvoiceEvidence": "._evidence",
     "PurchaseInvoiceEvidenceDocument": "._evidence",
     "PurchaseInvoiceEvidenceInputError": "._evidence",
@@ -386,6 +389,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "merge_transactions": "._actions_split_merge",
     "preflight_ledger_tax_readiness": "._preflight",
     "preflight_transaction_catalogue": "._preflight",
+    "printed_total_discrepancy": "._evidence_draft",
     "query_ledger_review_rows": "._actions_manual",
     "reject_llm_suggestion": "._llm_classification",
     "remove_manual_transaction": "._actions_lifecycle",
@@ -512,6 +516,7 @@ __all__ = [
     "MergeTransactionsResult",
     "OperatorIvaDerivationResult",
     "PayableInvoiceService",
+    "PrintedTotalDiscrepancy",
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceDocument",
     "PurchaseInvoiceEvidenceInputError",
@@ -564,6 +569,7 @@ __all__ = [
     "merge_transactions",
     "preflight_ledger_tax_readiness",
     "preflight_transaction_catalogue",
+    "printed_total_discrepancy",
     "query_ledger_review_rows",
     "reject_llm_suggestion",
     "remove_manual_transaction",

@@ -44,7 +44,7 @@ import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -56,6 +56,9 @@ from ._concept_cards import ConceptCardRecord
 from ._legal_projection import project_legal_search_records
 from ._search_record import SearchRecordKind
 from ._unified_record import SearchRecord, to_search_record
+
+if TYPE_CHECKING:
+    from ..pagefind_inject import SearchRecordProjection
 
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
@@ -255,13 +258,23 @@ class TargetResolver:
     or re-parsing per hit.
     """
 
-    def __init__(self, authority: ValidatedRegistryAuthority | None = None) -> None:
+    def __init__(
+        self,
+        authority: ValidatedRegistryAuthority | None = None,
+        *,
+        search_record_projection: SearchRecordProjection | None = None,
+    ) -> None:
         """Build the resolver's indices from the validated authority.
 
         Args:
             authority: The registry authority to read through; defaults to the
                 bundled authority. Injectable so a test can drive a narrowed
                 authority deterministically.
+            search_record_projection: The complete Pagefind/Rung-2 projection
+                to use for CLI records. Supplying it lets a caller share one
+                authoritative projection between resolution and target
+                filtering; when omitted, the projection is materialised here
+                for backwards-compatible standalone resolver construction.
         """
         self._authority = authority if authority is not None else bundled_authority()
         records, _stats = project_casilla_search_records(self._authority)
@@ -282,9 +295,12 @@ class TargetResolver:
         # Index the exact unified records consumed by Pagefind injection. A
         # CLI family source page may resolve only to an actually emitted
         # record; the resolver must not invent a family-level record.
-        from ..pagefind_inject import materialise_search_records
+        if search_record_projection is None:
+            from ..pagefind_inject import materialise_search_records
 
-        cli_projection = materialise_search_records(_REPO_ROOT)
+            cli_projection = materialise_search_records(_REPO_ROOT)
+        else:
+            cli_projection = search_record_projection
         self._cli_records_by_locator: dict[tuple[str, tuple[str, ...]], tuple[SearchRecord, ...]] = {}
         for record in cli_projection.records:
             if record.kind is not SearchRecordKind.CLI:

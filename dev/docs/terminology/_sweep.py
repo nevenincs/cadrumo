@@ -35,7 +35,7 @@ import re
 import unicodedata
 from collections.abc import Iterable
 from pathlib import Path
-from typing import NamedTuple, Protocol, cast
+from typing import TYPE_CHECKING, NamedTuple, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -48,6 +48,9 @@ from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chu
 from ._search_record import SearchRecordKind
 from ._unified_record import SearchRecord
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
+
+if TYPE_CHECKING:
+    from dev.docs.pagefind_inject import SearchRecordProjection
 
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
@@ -433,6 +436,7 @@ def run_sweep(
     handbook: TerminologyHandbook | None = None,
     concept_ids: Iterable[str] | None = None,
     resolver: TargetResolver | None = None,
+    search_record_projection: SearchRecordProjection | None = None,
     max_results: int = DEFAULT_MAX_RESULTS,
     score_floor: float = STRONG_SIGNAL_SCORE_FLOOR,
     port: int = 8766,
@@ -455,6 +459,10 @@ def run_sweep(
         concept_ids: Optional concept-id subset (the bounded test path).
         resolver: A pre-built resolver (reused across queries to avoid
             re-projecting the casilla / concept indices per query).
+        search_record_projection: The complete authoritative Pagefind/Rung-2
+            record projection. When supplied, it is shared with a resolver so
+            the expensive four-language CLI walk runs only once. When omitted,
+            the projection is materialised once for this sweep.
         max_results: Per-query RAG result ceiling.
         score_floor: The wrangling strong-signal floor.
         port: Service port for the reindex step.
@@ -465,7 +473,6 @@ def run_sweep(
         The :class:`SweepResult` -- one mapping per query, plus run provenance.
     """
     queries = enumerate_query_vocabulary(handbook, concept_ids=concept_ids)
-    target_resolver = resolver if resolver is not None else TargetResolver()
     root = repo_root if repo_root is not None else _default_repo_root()
 
     if reindex:
@@ -473,12 +480,28 @@ def run_sweep(
     else:
         reindex_note = "reindex skipped (caller-supplied client; index used as-is)"
 
+    # The resolver's CLI index and the sweep's manifest gate must consume the
+    # exact same complete projection. Materialise it once and pass it through;
+    # otherwise TargetResolver would independently repeat the four
+    # language-pinned CLI subprocess walks before this function materialised
+    # the same records for target filtering.
+    from dev.docs.pagefind_inject import materialise_search_records
+
+    projection = (
+        search_record_projection
+        if search_record_projection is not None
+        else materialise_search_records(root)
+    )
+    target_resolver = (
+        resolver
+        if resolver is not None
+        else TargetResolver(search_record_projection=projection)
+    )
+
     # The mapping boundary may only ship ids emitted by the complete projection
     # consumed by Pagefind and Rung 2. This also rejects resolver-only synthetic
     # PAGE records (for example ``code:*``) without weakening resolution itself.
-    from dev.docs.pagefind_inject import materialise_search_records
-
-    search_records = materialise_search_records(root).records
+    search_records = projection.records
 
     mappings: list[TermRelevanceMapping] = []
     concepts_seen: set[str] = set()

@@ -38,10 +38,10 @@ reach into the private underscore modules inside this package.
 
 Records are classified for calculation use by :func:`decompose_invoice` and
 :func:`partition_invoices`, which yield either the euro components of the
-canonical identity (``total = taxable_base + cuota``; ``cash = total -
-retención``) or the typed :class:`InvoiceDecompositionDefect` reasons that
-exclude the record. An excluded record stays in the catalogue and must be
-surfaced to the operator rather than dropped.
+canonical identity (``total = taxable_base + cuota + recargo + suplido``;
+``cash = total - retención``) or the typed :class:`InvoiceDecompositionDefect`
+reasons that exclude the record. An excluded record stays in the catalogue and
+must be surfaced to the operator rather than dropped.
 
 See Also:
     :class:`Invoice`
@@ -69,7 +69,15 @@ See Also:
 from __future__ import annotations
 
 # isort: off
-from ._enums import IvaRate, PaymentStatus, iva_rate_kind, iva_rate_percentage, numeric_iva_rate_percentages
+from ._enums import (
+    InvoiceClass,
+    InvoiceOperationDateRole,
+    IvaRate,
+    PaymentStatus,
+    iva_rate_kind,
+    iva_rate_percentage,
+    numeric_iva_rate_percentages,
+)
 from ._errors import (
     InvoiceCatalogueError,
     InvoiceError,
@@ -120,6 +128,7 @@ __all__ = [
     "InvoiceCatalogue",
     "InvoiceCatalogueError",
     "InvoiceCatalogueRepositoryProtocol",
+    "InvoiceClass",
     "InvoiceComponents",
     "InvoiceDecomposition",
     "InvoiceDecompositionDefect",
@@ -130,6 +139,7 @@ __all__ = [
     "InvoiceLinkError",
     "InvoiceLinkInconsistencyError",
     "InvoiceNotFoundError",
+    "InvoiceOperationDateRole",
     "InvoicePersistenceError",
     "InvoiceValidationError",
     "IvaInvoiceClassification",

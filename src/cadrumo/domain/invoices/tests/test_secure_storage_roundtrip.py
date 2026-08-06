@@ -35,7 +35,15 @@ from ....adapters.persistence.storage import SensitivityClass
 from ....core import IntracomOperationType
 from ....tests.secure_sql import isolated_runtime_profile
 from ...iva import InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
-from .. import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
+from .. import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceClass,
+    InvoiceLine,
+    InvoiceOperationDateRole,
+    IvaRate,
+    PaymentStatus,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -54,20 +62,35 @@ _HEX64_C = "c" * 64
 
 
 def _domestic_retention_invoice() -> Invoice:
-    """Domestic ISSUED invoice populating the retention + identification axis."""
+    """Domestic ISSUED invoice populating the retention + identification axis.
+
+    Also populates the P06 identity/timing axes -- ``recargo_amount`` and
+    ``suplido_amount`` (both ``Decimal | None`` fields under the same strict
+    JSON-coercion needs as ``retention_amount``), the rectificativa
+    ``series`` / ``rectifies_invoice_number`` pair, and ``operation_date`` /
+    ``operation_date_role`` -- so a save-drops-field regression on any of them
+    is not invisible the way it was for ``recargo_amount`` before this
+    fixture populated it (a JSON round-trip is the only path that exercises
+    the strict-mode Decimal coercion these fields need).
+    """
 
     return Invoice.model_validate(
         {
             "kind": InvoiceKind.ISSUED,
+            "invoice_class": InvoiceClass.RECTIFICATIVA,
+            "series": "R",
+            "rectifies_invoice_number": "F-2025-099",
             "invoice_number": "F-2025-100",
             "issued_at": date(2025, 4, 10),
+            "operation_date": date(2025, 4, 8),
+            "operation_date_role": InvoiceOperationDateRole.OPERATION_PERFORMED,
             "counterparty_name": "Consultora Ibérica SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
             "bucket_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
             "base_total": Decimal("1000.00"),
             "iva_total": Decimal("210.00"),
-            "grand_total": Decimal("1210.00"),
+            "grand_total": Decimal("1287.00"),
             "currency": "EUR",
             "lines": (
                 InvoiceLine(
@@ -86,6 +109,8 @@ def _domestic_retention_invoice() -> Invoice:
             "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
             "retention_rate": Decimal("0.15"),
             "retention_amount": Decimal("150.00"),
+            "recargo_amount": Decimal("52.00"),
+            "suplido_amount": Decimal("25.00"),
             "payment_id": _HEX64_A,
         },
     )
@@ -159,6 +184,13 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
     assert domestic.operation_type is None
     assert domestic.oss_ioss_regime is None
     assert domestic.oss_transaction_kind is None
+    assert domestic.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert domestic.series == "R"
+    assert domestic.rectifies_invoice_number == "F-2025-099"
+    assert domestic.operation_date == date(2025, 4, 8)
+    assert domestic.operation_date_role is InvoiceOperationDateRole.OPERATION_PERFORMED
+    assert domestic.recargo_amount == Decimal("52.00")
+    assert domestic.suplido_amount == Decimal("25.00")
 
     oss = next(v for v in loaded.values() if v.invoice_number == "F-2025-200")
     assert oss.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
@@ -222,6 +254,64 @@ def test_invoice_catalogue_dropped_oss_transaction_kind_surfaces_at_load(
 
         with pytest.raises(ValidationError, match="supplied together"):
             InvoiceCatalogueRepository().load()
+
+
+def _simplificada_advance_payment_invoice() -> Invoice:
+    """A ticket-style invoice with no counterparty tax id and a pago anticipado.
+
+    Populates the two P06 axes the fixtures above do not: a ``None``
+    ``counterparty_tax_id`` (legal under RD 1619/2012 art. 6.1.d outside its
+    three mandatory cases) and ``operation_date_role ==
+    ADVANCE_PAYMENT_RECEIVED`` (LIVA art. 75.Dos).
+    """
+
+    return Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_class": InvoiceClass.SIMPLIFICADA,
+            "invoice_number": "T-2025-500",
+            "issued_at": date(2025, 6, 20),
+            "operation_date": date(2025, 6, 15),
+            "operation_date_role": InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED,
+            "counterparty_name": "Cliente de mostrador",
+            "counterparty_tax_id": None,
+            "counterparty_country": "ES",
+            "base_total": Decimal("40.00"),
+            "iva_total": Decimal("8.40"),
+            "grand_total": Decimal("48.40"),
+            "currency": "EUR",
+            "lines": (
+                InvoiceLine(
+                    description="Reparación urgente",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("40.00"),
+                    subtotal=Decimal("40.00"),
+                    iva_rate=IvaRate.RATE_21,
+                    iva_amount=Decimal("8.40"),
+                ),
+            ),
+            "payment_status": PaymentStatus.PAID,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+        },
+    )
+
+
+def test_simplificada_advance_payment_invoice_survives_encrypted_storage_roundtrip(
+    tmp_path: Path,
+) -> None:
+    """A ``None`` counterparty tax id and the pago-anticipado role both round-trip."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _simplificada_advance_payment_invoice()
+        InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={original.invoice_id: original}))
+        loaded = InvoiceCatalogueRepository().load()
+
+    restored = next(iter(loaded.values()))
+    assert restored == original
+    assert restored.invoice_class is InvoiceClass.SIMPLIFICADA
+    assert restored.counterparty_tax_id is None
+    assert restored.operation_date == date(2025, 6, 15)
+    assert restored.operation_date_role is InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED
 
 
 def _foreign_currency_invoice() -> Invoice:

@@ -1141,30 +1141,53 @@ class Transaction(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def _enforce_gross_equals_base_plus_iva(self) -> Self:
-        """Enforce ``gross == taxable_base + iva_amount`` to the cent.
+    def _enforce_gross_equals_base_plus_iva_plus_recargo(self) -> Self:
+        """Enforce ``gross == taxable_base + iva_amount + recargo_amount`` to the cent.
 
-        The IVA-exclusive :attr:`taxable_base` and the :attr:`iva_amount`
-        charged on the row must reconstitute the IVA-inclusive gross. The
-        gross reference is ``raw.amount`` taken as an absolute value: the
-        tax substrate is denominated in the row's native currency (the
-        aggregation layer carries ``value_in_eur`` as a separate parallel
-        EUR projection and does **not** apply ``fx_rate`` to the base or
-        amount), and the income/expense direction lives on
-        :attr:`direction`, not on the sign of the tax substrate.
+        The IVA-exclusive :attr:`taxable_base`, the :attr:`iva_amount`
+        charged on the row, and the :attr:`recargo_amount` surcharged on it
+        must reconstitute the IVA-inclusive gross. The gross reference is
+        ``raw.amount`` taken as an absolute value: the tax substrate is
+        denominated in the row's native currency (the aggregation layer
+        carries ``value_in_eur`` as a separate parallel EUR projection and
+        does **not** apply ``fx_rate`` to the base or amount), and the
+        income/expense direction lives on :attr:`direction`, not on the sign
+        of the tax substrate.
 
-        For self-assessed IVA categories (reverse charge and imports),
-        the paid cash gross matches the taxable base; the IVA amount is
-        self-assessed but not paid in the transaction itself.
+        Recargo sits on the opposite side of this identity from retención,
+        and that contrast is why it belongs inside the gross. Retención is
+        settlement-side: it reduces what the payer *transfers* without
+        changing what the operation *cost*, which is why every relaxation
+        below is gated on the reconstituted substrate exceeding the cash.
+        Recargo de equivalencia is a price component — LIVA art. 161 has the
+        supplier repercutir it on the entrega alongside the cuota, and the
+        comerciante minorista genuinely owes it — so it is part of the money
+        that moved. Omitting it inverted the check's polarity rather than
+        merely narrowing it: a recargo row reconstitutes *below* its cash and
+        no relaxation covers that direction, so the truthful row (cash
+        including the surcharge) was refused while the falsified one
+        (surcharge charged, cash understated by it) validated.
+
+        A ``recargo_amount`` of ``None`` contributes zero, which is the
+        ordinary case — the overwhelming majority of rows are not supplies to
+        a comerciante minorista.
+
+        For self-assessed IVA categories (reverse charge and imports), the
+        paid cash gross matches the taxable base; the IVA amount is
+        self-assessed but not paid in the transaction itself. Recargo stays
+        out of that branch for the same reason it stays out of the IVA
+        there: on a self-liquidated acquisition the supplier repercutes
+        neither the cuota nor the surcharge, so neither reaches the cash
+        movement this row records.
 
         For professional activity invoices paid or received net of IRPF
         withholding, the bank cash can be lower than the invoice gross while
         the declared base and IVA still need to preserve the invoice substrate.
         That relaxation is accepted only for INCOMING activity rows, or for
         OUTGOING professional-service expense rows, with an explicit
-        actividad-economica ``irpf_category`` and only when
-        ``taxable_base + iva_amount`` is above the cash movement;
-        under-declared invoice gross remains refused.
+        actividad-economica ``irpf_category`` and only when the reconstituted
+        substrate is above the cash movement; under-declared invoice gross
+        remains refused.
 
         For rent expenses paid net of withholding, the same substrate
         preservation is accepted only for OUTGOING rows in the scoped rent
@@ -1176,7 +1199,9 @@ class Transaction(BaseModel):
         :attr:`iva_amount` are present. A row with either field unset (the
         common case — most transactions never carry the tax substrate)
         validates unconditionally, so the invariant cannot break the
-        existing transaction corpus.
+        existing transaction corpus. A recargo declared without either of
+        them is therefore unchecked here too, which is the existing
+        deliberate shape of this gate rather than a new hole.
         """
         if self.taxable_base is None or self.iva_amount is None:
             return self
@@ -1193,8 +1218,9 @@ class Transaction(BaseModel):
                     f"{self.taxable_base} != {expected}",
                 )
             return self
+        recargo = self.recargo_amount or Decimal("0")
         expected = round_to_cents(abs(self.raw.amount))
-        reconstituted = round_to_cents(self.taxable_base + self.iva_amount)
+        reconstituted = round_to_cents(self.taxable_base + self.iva_amount + recargo)
         if reconstituted == expected:
             return self
         if (
@@ -1236,43 +1262,75 @@ class Transaction(BaseModel):
             and reconstituted > expected
         ):
             return self
-        detail = ""
-        if reconstituted > expected and self.direction == TransactionDirection.INCOMING:
-            detail = (
-                " If this is an income receipt paid net of IRPF withholding, "
-                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} for professional invoices "
-                "so the invoice base and IVA can be kept. Run `aeat app ledger categories` "
-                "to list public IRPF category ids."
+        detail = _gross_mismatch_detail(
+            direction=self.direction,
+            category_id=self.category_id,
+            recargo_amount=self.recargo_amount,
+            reconstituted=reconstituted,
+            expected=expected,
+        )
+        if reconstituted != expected:
+            raise TransactionValidationError(
+                "taxable_base + iva_amount + recargo_amount must equal the gross to the cent: "
+                f"{self.taxable_base} + {self.iva_amount} + {recargo} = {reconstituted} != {expected}.{detail}",
             )
-        if (
-            reconstituted > expected
-            and self.direction == TransactionDirection.OUTGOING
-            and self.category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
-        ):
-            detail = (
-                " If this is a professional service invoice paid net of withholding, "
-                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} so the invoice "
-                "base and IVA can be kept. Run `aeat app ledger categories` to list "
-                "public IRPF category ids."
-            )
-        if (
-            reconstituted > expected
-            and self.direction == TransactionDirection.OUTGOING
-            and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
-        ):
+        return self
+
+
+def _gross_mismatch_detail(
+    *,
+    direction: TransactionDirection,
+    category_id: str | None,
+    recargo_amount: Decimal | None,
+    reconstituted: Decimal,
+    expected: Decimal,
+) -> str:
+    """Build the operator hint appended to a gross-reconstitution refusal.
+
+    Each branch names the one field that would legitimately explain the gap it
+    sees, so the refusal is actionable rather than a bare arithmetic mismatch
+    the operator has to decompose. The direction of the gap selects the
+    vocabulary: a substrate *above* the cash is the withholding shape, and a
+    substrate *below* it is the unrecorded-surcharge shape. Returns the empty
+    string when no branch recognises the gap, which leaves the arithmetic to
+    speak for itself rather than guessing.
+    """
+    if reconstituted < expected:
+        if recargo_amount is not None:
+            return ""
+        return (
+            " The cash movement is above the declared substrate. If this is a supply to or "
+            "from a comerciante minorista under recargo de equivalencia (LIVA art. 161), the "
+            "surcharge is part of what was charged: record it with --recargo-amount so the "
+            "gross reconstitutes."
+        )
+    if reconstituted <= expected:
+        return ""
+    if direction == TransactionDirection.OUTGOING:
+        if category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING:
             rent_irpf_ids = format_irpf_category_ids(RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING)
-            detail = (
+            return (
                 " If this is rent paid net of withholding, set irpf_category "
                 f"to the matching rental withholding category ({rent_irpf_ids}) so the invoice "
                 "base and IVA can be kept. Run `aeat app ledger categories` to list public "
                 "IRPF category ids."
             )
-        if reconstituted != expected:
-            raise TransactionValidationError(
-                "taxable_base + iva_amount must equal the gross to the cent: "
-                f"{self.taxable_base} + {self.iva_amount} = {reconstituted} != {expected}.{detail}",
+        if category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING:
+            return (
+                " If this is a professional service invoice paid net of withholding, "
+                f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} so the invoice "
+                "base and IVA can be kept. Run `aeat app ledger categories` to list "
+                "public IRPF category ids."
             )
-        return self
+        return ""
+    if direction == TransactionDirection.INCOMING:
+        return (
+            " If this is an income receipt paid net of IRPF withholding, "
+            f"set irpf_category={IRPF_CATEGORY_ACTIVIDAD_ECONOMICA} for professional invoices "
+            "so the invoice base and IVA can be kept. Run `aeat app ledger categories` "
+            "to list public IRPF category ids."
+        )
+    return ""
 
 
 class BucketTransactionRef(BaseModel):

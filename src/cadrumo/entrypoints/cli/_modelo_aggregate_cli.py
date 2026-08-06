@@ -10,20 +10,27 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from ...application.aggregation import (
+    INVOICE_RETENCION_DEFECT_GUIDANCE,
     CounterpartObservation,
     ForeignAssetIngestObservation,
+    InvoiceRetencionProjection,
+    InvoiceRetencionRouteRequest,
     PerModeloAggregationCommand,
     RetencionObservation,
     WithholdingObservation,
     aggregate_per_modelo,
+    merge_manual_and_routed_retencion_observations,
     persist_percepcion_observations,
     persist_retencion_observations,
+    route_invoice_retenciones,
 )
+from ...application.invoices import resolve_catalogue_invoice
 from ...core import Modelo, Period
 from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry import aggregate_withholding_by_clave
-from ._common import _emit_envelope
+from ._common import _emit_envelope, _load_invoices
 from ._modelo_payloads import ModeloAggregateResult
 
 ResolveYearPeriod = Callable[..., Period]
@@ -75,6 +82,13 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
                 help=tr("cli.app.modelo.aggregate.withholding_observation_help"),
             ),
         ] = None,
+        received_invoice_retencion: Annotated[
+            list[str] | None,
+            typer.Option(
+                "--received-invoice-retencion",
+                help=tr("cli.app.modelo.aggregate.received_invoice_retencion_help"),
+            ),
+        ] = None,
     ) -> None:
         """Delegate per-modelo aggregation execution to the backend service."""
         command = PerModeloAggregationCommand(
@@ -101,6 +115,38 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
                 flag="--withholding-observation",
             ),
         )
+        invoice_retencion_requests = _parse_typed_cli_observations(
+            received_invoice_retencion,
+            model=InvoiceRetencionRouteRequest,
+            flag="--received-invoice-retencion",
+        )
+        excluded_invoice_retencions: tuple[InvoiceRetencionProjection, ...] = ()
+        if invoice_retencion_requests:
+            if command.modelo not in RETENCIONES_MODELOS:
+                raise typer.BadParameter(
+                    tr(
+                        "cli.app.modelo.aggregate.invoice_retencion_wrong_modelo",
+                        modelo=command.modelo,
+                    ),
+                )
+            catalogue = _load_invoices()
+            entries = tuple(
+                (resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme)
+                for request in invoice_retencion_requests
+            )
+            routing = route_invoice_retenciones(entries)
+            excluded_invoice_retencions = routing.excluded
+            # merge_manual_and_routed_retencion_observations refuses a collision, so an
+            # invoice both hand-typed via --retencion-observation and auto-routed here
+            # is a loud error rather than a silent pick or a double-counted rollup.
+            command = command.model_copy(
+                update={
+                    "retencion_observations": merge_manual_and_routed_retencion_observations(
+                        command.retencion_observations,
+                        routing.observations,
+                    ),
+                },
+            )
         if command.modelo == Modelo.M190.value:
             # The CLI entrypoint owns the durable write; aggregate_per_modelo stays pure.
             persist_percepcion_observations(
@@ -110,7 +156,8 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
                 observations=command.withholding_observations,
             )
         if command.modelo in RETENCIONES_MODELOS:
-            # Set-replace persistence keeps calculate and pull on the same observations.
+            # Set-replace persistence keeps calculate and pull on the same observations,
+            # now including any invoice-routed rows merged above.
             persist_retencion_observations(
                 modelo=command.modelo,
                 filing_year=command.period.filing_year,
@@ -149,7 +196,33 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
                 f"clave_breakdown\t{row.clave.value}\t{row.percepcion_count}\t{row.percibido_total}\t{row.retencion_total}"
                 for row in clave_breakdown
             )
-        _emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines)
+        notices = [_invoice_retencion_excluded_notice(projection) for projection in excluded_invoice_retencions]
+        lines.extend(notice.message for notice in notices)
+        _emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)
+
+
+def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -> Notice:
+    """Project one excluded invoice-retención verdict into an operator-facing Notice.
+
+    The excluded half of an :class:`~application.aggregation.InvoiceRetencionRouting`
+    must be surfaced, never dropped -- an excluded retención is a liability the
+    taxpayer may still owe. The guidance text is read from
+    :data:`~application.aggregation.INVOICE_RETENCION_DEFECT_GUIDANCE` rather than
+    invented here, so the CLI renders remediation the routing module already declared.
+    """
+    reasons = ", ".join(defect.value for defect in projection.defects)
+    guidance = "; ".join(dict.fromkeys(INVOICE_RETENCION_DEFECT_GUIDANCE[defect] for defect in projection.defects))
+    return Notice(
+        severity=NoticeSeverity.WARNING,
+        code="modelo.aggregate.invoice_retencion_excluded",
+        message=tr(
+            "cli.app.modelo.aggregate.invoice_retencion_excluded_notice",
+            invoice_id=projection.invoice_id,
+            reasons=reasons,
+        ),
+        suggestion=guidance,
+        context={"invoice_id": projection.invoice_id, "defects": reasons},
+    )
 
 
 def _parse_typed_cli_observations[ObservationT: BaseModel](

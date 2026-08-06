@@ -25,15 +25,19 @@ by construction however complete its amounts look.
 
 The canonical identity the grounded case yields is::
 
-    total (contraprestación) = taxable_base + cuota + recargo
+    total (contraprestación) = taxable_base + cuota + recargo + suplido
     cash                     = total - retención
 
-The two optional terms sit on opposite sides on purpose. Retención is a
-settlement-side deduction, not a price component: it reduces what the payer
-transfers, never what the operation cost. Recargo de equivalencia is the
-reverse -- LIVA art. 161 has the supplier repercutir it on the entrega
+Three optional terms ride this identity and only one of them sits opposite
+the other two. Retención is a settlement-side deduction, not a price
+component: it reduces what the payer transfers, never what the operation
+cost. Recargo de equivalencia and the suplido both join ``total`` instead --
+LIVA art. 161 has the supplier repercutir the recargo on the entrega
 alongside the cuota, so the comerciante minorista owes it and it belongs to
-what the operation cost.
+what the operation cost; a suplido (LIVA art. 78.Tres.3.º) is a sum the
+issuer paid in the client's name and on their behalf, excluded from the base
+imponible but still something the client owes -- a third position on the
+identity, joining neither ``taxable_base`` nor ``cuota``.
 
 See Also:
     :mod:`cadrumo.domain.iva._components`
@@ -165,7 +169,9 @@ class InvoiceComponents(BaseModel):
             declared.
         recargo: The declared recargo de equivalencia in euro; zero when none
             was declared.
-        total: The contraprestación -- ``taxable_base + cuota + recargo``.
+        suplido: The declared suplido (LIVA art. 78.Tres.3.º) in euro; zero
+            when none was declared.
+        total: The contraprestación -- ``taxable_base + cuota + recargo + suplido``.
         cash: What the payer transfers -- ``total - retencion``.
     """
 
@@ -175,6 +181,7 @@ class InvoiceComponents(BaseModel):
     cuota: Decimal
     retencion: Decimal
     recargo: Decimal
+    suplido: Decimal
     total: Decimal
     cash: Decimal
 
@@ -186,14 +193,16 @@ class InvoiceComponents(BaseModel):
         future producer of this type can emit a set of components that does not
         add up, whatever route it took to compute them.
         """
-        if self.total != self.taxable_base + self.cuota + self.recargo:
-            raise InvoiceValidationError("total must equal taxable_base + cuota + recargo")
+        if self.total != self.taxable_base + self.cuota + self.recargo + self.suplido:
+            raise InvoiceValidationError("total must equal taxable_base + cuota + recargo + suplido")
         if self.cash != self.total - self.retencion:
             raise InvoiceValidationError("cash must equal total - retencion")
         if self.retencion < Decimal("0"):
             raise InvoiceValidationError("retencion must be non-negative")
         if self.recargo < Decimal("0"):
             raise InvoiceValidationError("recargo must be non-negative")
+        if self.suplido < Decimal("0"):
+            raise InvoiceValidationError("suplido must be non-negative")
         return self
 
 
@@ -286,7 +295,8 @@ def decompose_invoice(invoice: Invoice) -> InvoiceDecomposition:
         raise InvoiceValidationError("euro components are unavailable on an invoice that passed the FX check")
     retencion = invoice.retention_amount_eur or Decimal("0")
     recargo = invoice.recargo_amount_eur or Decimal("0")
-    total = taxable_base + cuota + recargo
+    suplido = invoice.suplido_amount_eur or Decimal("0")
+    total = taxable_base + cuota + recargo + suplido
     return InvoiceDecomposition(
         invoice_id=invoice.invoice_id,
         category=invoice.iva_category,
@@ -295,6 +305,7 @@ def decompose_invoice(invoice: Invoice) -> InvoiceDecomposition:
             cuota=cuota,
             retencion=retencion,
             recargo=recargo,
+            suplido=suplido,
             total=total,
             cash=total - retencion,
         ),

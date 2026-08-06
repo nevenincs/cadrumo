@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.pagefind_inject import materialise_search_records
+from dev.docs.pagefind_inject import SearchRecordProjection, materialise_search_records
 from dev.docs.terminology._resolution import (
     ChunkHit,
     GroundingSurface,
@@ -53,11 +53,44 @@ _FIXTURES = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture(scope="module")
-def _authoritative_search_records() -> tuple[SearchRecord, ...]:
+def _authoritative_projection() -> SearchRecordProjection:
     """Use the bundled Pagefind/Rung-2 record projection as test authority."""
     projection = materialise_search_records()
+    assert projection.concepts > 0
     assert projection.casillas > 0
-    return projection.records
+    assert projection.legal_provisions > 0
+    assert projection.cli_commands > 0
+    assert projection.cli_options > 0
+    assert projection.cli_skipped_reason is None
+    assert len(projection.records) == (
+        projection.concepts
+        + projection.casillas
+        + projection.legal_provisions
+        + projection.cli_commands
+        + projection.cli_options
+    )
+    cli_languages = {
+        getattr(language, "value", language)
+        for record in projection.records
+        if record.kind is SearchRecordKind.CLI
+        for language in record.descriptions
+    }
+    assert cli_languages == {language.value for language in OutputLanguage}
+    return projection
+
+
+@pytest.fixture(scope="module")
+def _authoritative_search_records(
+    _authoritative_projection: SearchRecordProjection,
+) -> tuple[SearchRecord, ...]:
+    return _authoritative_projection.records
+
+
+@pytest.fixture(scope="module")
+def _authoritative_target_resolver(
+    _authoritative_projection: SearchRecordProjection,
+) -> TargetResolver:
+    return TargetResolver(search_record_projection=_authoritative_projection)
 
 
 class _RecordedClient:
@@ -152,7 +185,10 @@ def test_enumerate_full_vocabulary_is_a_bounded_closed_set() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_real_sweep_maps_prorrata_to_its_grounding_targets() -> None:
+def test_real_sweep_maps_prorrata_to_its_grounding_targets(
+    _authoritative_projection: SearchRecordProjection,
+    _authoritative_target_resolver: TargetResolver,
+) -> None:
     """End-to-end: a real 'regla de prorrata' response maps to its grounding targets.
 
     Replays a response CAPTURED FROM THE LIVE service through the real
@@ -163,12 +199,13 @@ def test_real_sweep_maps_prorrata_to_its_grounding_targets() -> None:
     """
     query, hits = _load_recorded("sweep-regla-de-prorrata.json")
     client: RagSearchClient = _RecordedClient({query: hits})
-    resolver = TargetResolver()
+    resolver = _authoritative_target_resolver
 
     result = run_sweep(
         client=client,
         concept_ids={"prorrata"},
         resolver=resolver,
+        search_record_projection=_authoritative_projection,
         reindex=False,
         score_floor=0.5,
     )
@@ -215,7 +252,9 @@ def test_real_sweep_maps_prorrata_to_its_grounding_targets() -> None:
     assert weights == sorted(weights, reverse=True)
 
 
-def test_sweep_mapping_is_laundered_ids_targets_weights_only() -> None:
+def test_sweep_mapping_is_laundered_ids_targets_weights_only(
+    _authoritative_projection: SearchRecordProjection,
+) -> None:
     """Laundering: the shipped mapping carries NO vectors / scores / paths.
 
     The :class:`TermRelevanceMapping` and its targets serialise to a JSON
@@ -225,7 +264,13 @@ def test_sweep_mapping_is_laundered_ids_targets_weights_only() -> None:
     """
     query, hits = _load_recorded("sweep-regla-de-prorrata.json")
     client: RagSearchClient = _RecordedClient({query: hits})
-    result = run_sweep(client=client, concept_ids={"prorrata"}, reindex=False, score_floor=0.5)
+    result = run_sweep(
+        client=client,
+        concept_ids={"prorrata"},
+        search_record_projection=_authoritative_projection,
+        reindex=False,
+        score_floor=0.5,
+    )
 
     payload = result.model_dump_json()
     lowered = payload.lower()
@@ -239,18 +284,27 @@ def test_sweep_mapping_is_laundered_ids_targets_weights_only() -> None:
     assert set(dumped) == {"record_id", "target", "kind", "surface", "ranking_weight"}
 
 
-def test_sweep_result_is_json_serialisable_for_the_landing_step() -> None:
+def test_sweep_result_is_json_serialisable_for_the_landing_step(
+    _authoritative_projection: SearchRecordProjection,
+) -> None:
     """The SweepResult serialises with one model_dump_json (the landing-step seam)."""
     query, hits = _load_recorded("sweep-regla-de-prorrata.json")
     client: RagSearchClient = _RecordedClient({query: hits})
-    result = run_sweep(client=client, concept_ids={"prorrata"}, reindex=False)
+    result = run_sweep(
+        client=client,
+        concept_ids={"prorrata"},
+        search_record_projection=_authoritative_projection,
+        reindex=False,
+    )
 
     payload = result.model_dump_json(indent=2)
     restored = SweepResult.model_validate_json(payload)
     assert restored == result
 
 
-def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
+def test_below_floor_query_yields_only_the_seeded_concept_card(
+    _authoritative_projection: SearchRecordProjection,
+) -> None:
     """A thin-signal query still surfaces its originating concept card, no more.
 
     With no RAG hits above the floor, the sweep fabricates no grounding target.
@@ -261,7 +315,12 @@ def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
     RAG grounding.
     """
     client: RagSearchClient = _RecordedClient({})  # no hits for any query
-    result = run_sweep(client=client, concept_ids={"prorrata"}, reindex=False)
+    result = run_sweep(
+        client=client,
+        concept_ids={"prorrata"},
+        search_record_projection=_authoritative_projection,
+        reindex=False,
+    )
     assert result.query_count == len(enumerate_query_vocabulary(concept_ids={"prorrata"}))
     # Every mapping carries exactly its originating concept card, nothing more.
     for mapping in result.mappings:
@@ -300,9 +359,10 @@ def test_structured_casilla_matching_is_canonical_then_unique_display_metadata(
 
 def test_structured_casilla_target_is_added_once_at_mapping_boundary(
     _authoritative_search_records: tuple[SearchRecord, ...],
+    _authoritative_target_resolver: TargetResolver,
 ) -> None:
     """An exact projection record augments the mapping while concept seeding stays intact."""
-    resolver = TargetResolver()
+    resolver = _authoritative_target_resolver
     query = SweepQuery(
         query="FORM 00200 FIELD DP200014:00562",
         concept_id="casilla",
@@ -324,9 +384,10 @@ def test_structured_casilla_target_is_added_once_at_mapping_boundary(
 
 def test_unmanifested_resolved_code_target_is_not_shipped(
     _authoritative_search_records: tuple[SearchRecord, ...],
+    _authoritative_target_resolver: TargetResolver,
 ) -> None:
     """The projection gate drops resolver-only ``code:*`` PAGE records."""
-    resolver = TargetResolver()
+    resolver = _authoritative_target_resolver
     resolution = resolve_chunk_hits(
         (ChunkHit(path="src/cadrumo/core/_casilla_id.py", line_start=1, line_end=1, score=1.0),),
         resolver=resolver,
@@ -350,10 +411,11 @@ def test_unmanifested_resolved_code_target_is_not_shipped(
 
 def test_emitted_legal_and_concept_targets_survive_projection_gate(
     _authoritative_search_records: tuple[SearchRecord, ...],
+    _authoritative_target_resolver: TargetResolver,
 ) -> None:
     """Manifest-emitted legal records and deterministic concept seeding remain shipped."""
     query, hits = _load_recorded("sweep-regla-de-prorrata.json")
-    resolver = TargetResolver()
+    resolver = _authoritative_target_resolver
     resolution = resolve_chunk_hits(hits, resolver=resolver)
     legal_ids = {
         target.record.id

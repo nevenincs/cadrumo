@@ -1,11 +1,18 @@
-"""Real-behavior tests for the ``gross == taxable_base + iva_amount`` invariant.
+"""Real-behavior tests for the ``gross == base + iva + recargo`` invariant.
 
 The :class:`cadrumo.domain.transactions.Transaction` model enforces, to the euro
 cent, that a populated tax substrate reconstitutes the IVA-inclusive gross —
 but only when **both** ``taxable_base`` and ``iva_amount`` are present. Rows
 with an unset tax substrate (the common case) must validate unconditionally.
 
-Authority: LLM ledger classification contract.
+The recargo de equivalencia surcharge is *inside* that gross and the IRPF
+retención is *outside* it, which is the axis most of this module turns on: the
+withholding relaxations below all fire when the substrate exceeds the cash,
+while a recargo row's substrate sits level with a cash movement that includes
+the surcharge.
+
+Authority: LLM ledger classification contract; LIVA art. 161 (recargo de
+equivalencia); RIRPF art. 95 (retención sobre ingresos íntegros).
 """
 
 from __future__ import annotations
@@ -17,6 +24,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ...iva import IvaCategory
 from .. import (
     BusinessClassification,
     RawProvenance,
@@ -501,3 +509,188 @@ def test_normalization_keeps_the_catalogue_closed() -> None:
     assert normalize_irpf_category(None) is None
     assert ledger_irpf_category("actividad economica", direction=TransactionDirection.INCOMING) is None
     assert ledger_irpf_category("bogus", direction=TransactionDirection.INCOMING) is None
+
+
+# --- recargo de equivalencia (LIVA art. 161): inside the gross, never beside it ---
+#
+# The worked figures below are one supply at the general tier: base 1000.00,
+# IVA 21 % = 210.00, recargo 5.2 % = 52.00, so the money that moves is 1262.00.
+# Recording the surcharge outside that movement understates the cash by exactly
+# the surcharge, which is the shape these tests refuse.
+
+_RECARGO_BASE = Decimal("1000.00")
+_RECARGO_IVA = Decimal("210.00")
+_RECARGO_CUOTA = Decimal("52.00")
+_RECARGO_GROSS = Decimal("1262.00")
+_RECARGO_GROSS_WITHOUT_SURCHARGE = Decimal("1210.00")
+
+
+def test_supplier_sale_under_recargo_reconstitutes_the_cash_it_received() -> None:
+    """A supplier charging recargo receives base + IVA + recargo, and may record it.
+
+    LIVA art. 161 has the surcharge repercutido on the entrega alongside the
+    cuota, so the 1262.00 that reaches the supplier's account is the truthful
+    gross for the row. Before the surcharge joined the identity this exact row --
+    the only honest way to record the sale -- was the one the model refused.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=_RECARGO_GROSS),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": _RECARGO_BASE,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": _RECARGO_IVA,
+            "recargo_amount": _RECARGO_CUOTA,
+        },
+    )
+
+    assert tx.recargo_amount == _RECARGO_CUOTA
+    assert tx.taxable_base is not None
+    assert tx.iva_amount is not None
+    assert tx.taxable_base + tx.iva_amount + tx.recargo_amount == tx.raw.amount
+
+
+def test_minorista_purchase_under_recargo_reconstitutes_the_cash_it_paid() -> None:
+    """The retailer's side of the same supply is equally recordable.
+
+    The comerciante minorista pays IVA + RE as non-deductible acquisition cost,
+    so the surcharge is inside the payment exactly as it is inside the receipt.
+    The identity is direction-agnostic and this pins that both halves of one real
+    operation can be entered.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=_RECARGO_GROSS),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": _RECARGO_BASE,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": _RECARGO_IVA,
+            "recargo_amount": _RECARGO_CUOTA,
+            "iva_category": IvaCategory.RECARGO_EQUIVALENCIA,
+        },
+    )
+
+    assert tx.recargo_amount == _RECARGO_CUOTA
+    assert tx.raw.amount == _RECARGO_GROSS
+
+
+def test_declared_recargo_missing_from_the_gross_is_refused() -> None:
+    """A surcharge charged but absent from the cash movement is a refusal.
+
+    This is the inverse polarity of the test above, and the pair is the point:
+    the model must accept the row whose cash includes the surcharge and refuse
+    the row that declares the surcharge while understating the cash by it. A
+    model that accepts only the second one does not merely fail to express the
+    truth -- it selects for the falsehood.
+    """
+    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=_RECARGO_GROSS_WITHOUT_SURCHARGE),
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "source_jurisdiction": "ES",
+                "business_classification": BusinessClassification.BUSINESS,
+                "taxable_base": _RECARGO_BASE,
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": _RECARGO_IVA,
+                "recargo_amount": _RECARGO_CUOTA,
+            },
+        )
+
+
+def test_recargo_and_retencion_sit_on_opposite_sides_of_the_identity() -> None:
+    """One row carrying both terms is the only case that catches a side swap.
+
+    A row carrying just one of the two balances identically whichever side that
+    term is on, so every single-term case above would survive a future
+    simplification that moved either one. Here a modulos supplier sells to a
+    retailer under recargo with 1 % retencion withheld at source (RIRPF art.
+    95.6): the surcharge raises what the operation cost to 1262.00 and the
+    withholding lowers what the bank transferred to 1252.00. Moving the recargo
+    to the cash side would put the substrate below the cash, which no relaxation
+    covers, so the swap reddens here and nowhere else.
+    """
+    retencion = Decimal("10.00")
+    cash = _RECARGO_GROSS - retencion
+
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=cash),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": _RECARGO_BASE,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": _RECARGO_IVA,
+            "recargo_amount": _RECARGO_CUOTA,
+            "irpf_category": "actividad_economica",
+        },
+    )
+
+    assert tx.raw.amount == cash
+    assert tx.taxable_base is not None
+    assert tx.iva_amount is not None
+    assert tx.recargo_amount is not None
+    substrate = tx.taxable_base + tx.iva_amount + tx.recargo_amount
+    assert substrate == _RECARGO_GROSS
+    assert substrate - tx.raw.amount == retencion
+
+
+def test_cash_above_substrate_without_recargo_names_the_surcharge_option() -> None:
+    """The refusal must point an operator at the field that would explain the gap.
+
+    Cash above the declared substrate is precisely the shape an unrecorded
+    surcharge produces, and it is the one direction none of the withholding
+    relaxations can explain. The refusal names the recargo option rather than
+    reporting a bare arithmetic mismatch the operator has to decompose.
+    """
+    with pytest.raises(ValidationError, match="recargo de equivalencia"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=_RECARGO_GROSS),
+                "direction": TransactionDirection.OUTGOING,
+                "group_label": None,
+                "source_jurisdiction": "ES",
+                "business_classification": BusinessClassification.BUSINESS,
+                "taxable_base": _RECARGO_BASE,
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": _RECARGO_IVA,
+            },
+        )
+
+
+def test_self_assessed_acquisition_keeps_recargo_out_of_its_gross() -> None:
+    """A self-liquidated acquisition pays the base alone, surcharge included.
+
+    On a reverse-charge acquisition the supplier repercutes neither the cuota
+    nor the surcharge -- the acquirer self-liquidates both -- so neither reaches
+    the cash movement. The self-assessed branch therefore stays
+    ``gross == taxable_base`` even when a recargo is recorded on the row, and
+    this pins that the surcharge was not folded in there by reflex when it was
+    folded into the general branch.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=_RECARGO_BASE),
+            "direction": TransactionDirection.OUTGOING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": _RECARGO_BASE,
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": _RECARGO_IVA,
+            "recargo_amount": _RECARGO_CUOTA,
+            "iva_category": IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        },
+    )
+
+    assert tx.raw.amount == _RECARGO_BASE
+    assert tx.recargo_amount == _RECARGO_CUOTA

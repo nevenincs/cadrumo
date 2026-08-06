@@ -29,9 +29,11 @@ from ....domain.calculations.registry import ModeloRevision, resolve_retenciones
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, iva_category_components
 from ....tests.secure_sql import isolated_runtime_profile
+from .._errors import AggregationValidationError
 from .._invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjectionDefect,
+    merge_manual_and_routed_retencion_observations,
     project_received_invoice_retencion,
     route_invoice_retenciones,
 )
@@ -247,6 +249,57 @@ def test_routed_observations_aggregate_through_the_existing_modelo_111_path() ->
 def test_every_defect_carries_operator_guidance() -> None:
     """A new defect cannot ship without the sentence that tells an operator what to do."""
     assert set(INVOICE_RETENCION_DEFECT_GUIDANCE) == set(InvoiceRetencionProjectionDefect)
+
+
+def test_merge_unions_manual_and_routed_observations() -> None:
+    """The merge is a plain union when the two sides name disjoint invoices."""
+    manual = (
+        RetencionObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ledger-txn-1",
+            perceptor_nif="12345678Z",
+            perceptor_name="Ledger Perceptor",
+            scheme=_PROFESIONAL,
+            taxable_base=Decimal("500.00"),
+            retencion_amount=Decimal("75.00"),
+            accrued_on="2026-02-01",
+        ),
+    )
+    routing = route_invoice_retenciones(((_invoice(), _PROFESIONAL),))
+
+    merged = merge_manual_and_routed_retencion_observations(manual, routing.observations)
+
+    assert merged == (*manual, *routing.observations)
+
+
+def test_merge_refuses_when_a_manual_row_collides_with_a_routed_invoice() -> None:
+    """A hand-typed observation for the SAME invoice the routing already covers is refused.
+
+    ``persist_retencion_observations`` set-replaces the whole per-perceptor window, so
+    silently picking a winner between the two would either double-count the invoice's
+    retención in the rollup or silently drop whichever side lost. Refusing loudly is the
+    only sound choice when a bound value would otherwise gain two writers.
+    """
+    invoice = _invoice()
+    routing = route_invoice_retenciones(((invoice, _PROFESIONAL),))
+    assert routing.observations, "the fixture invoice must route for this collision to be meaningful"
+    duplicate_manual = (
+        RetencionObservation(
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            source_object_id=invoice.invoice_id,
+            perceptor_nif="12345678Z",
+            perceptor_name="Hand-typed duplicate",
+            scheme=_PROFESIONAL,
+            taxable_base=Decimal("1000.00"),
+            retencion_amount=Decimal("150.00"),
+            accrued_on="2026-03-15",
+        ),
+    )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        merge_manual_and_routed_retencion_observations(duplicate_manual, routing.observations)
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["source_object_ids"] == invoice.invoice_id
     assert all(text.strip() for text in INVOICE_RETENCION_DEFECT_GUIDANCE.values())
 
 
