@@ -30,10 +30,10 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
-from ...core.json_contract import OutputSchema, register_schema
 from ...core.parsing import require_iso8601_date
 from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
+from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)

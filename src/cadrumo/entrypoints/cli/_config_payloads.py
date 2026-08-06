@@ -39,9 +39,9 @@ from ...core import HEX_PATTERN_64, Period
 from ...core.config import SecretStoreBackend
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ProfileId
-from ...core.json_contract import OutputSchema, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import UserProfileFact, UserProfileStatus
+from ._schemas import OutputSchema, register_schema
 
 # The two wizard-owned profile result schemas register through the manifest's
 # explicit lazy schema-owner table, NOT here: the `config` group imports this

@@ -17,8 +17,8 @@ from __future__ import annotations
 
 from pydantic import model_validator
 
-from ....core.json_contract import OutputSchema, register_schema
 from ....domain.user_profile import UserProfileFact
+from .._schemas import OutputSchema, register_schema
 
 
 class CensoPullFactPayload(OutputSchema):

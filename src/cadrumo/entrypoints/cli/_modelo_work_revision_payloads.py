@@ -21,9 +21,9 @@ these split schemas so modelo work emitters keep one payload import surface.
 
 from __future__ import annotations
 
-from ...core.json_contract import OutputSchema, register_schema
 from ...domain.modelos import CalculationRevisionId, WorkUnitId
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields, ObservationPayload
+from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("modelo.work.revision")

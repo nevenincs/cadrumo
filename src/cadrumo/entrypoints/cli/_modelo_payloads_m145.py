@@ -1,12 +1,12 @@
 """Modelo 145 local communication payload schemas.
 
-Strict :class:`~core.json_contract.OutputSchema` projections for the
+Strict :class:`~entrypoints.cli._schemas.OutputSchema` projections for the
 ``aeat app modelo m145`` commands. The payloads translate application DTOs into
 stable JSON envelopes while preserving registry legal/source references and
 local communication state.
 
 See Also:
-    :func:`~core.json_contract.register_schema`
+    :func:`~entrypoints.cli._schemas.register_schema`
         Central CLI schema registry used for each Modelo 145 operation name.
     :mod:`~entrypoints.cli._modelo_m145_cli`
         Typer command group that emits these payloads.
@@ -28,8 +28,8 @@ from typing import TYPE_CHECKING
 
 from ...core import CasillaId
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
 from ...domain.calculations.registry import LegalRefId, SourceRefId
+from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
     from ...application.modelo import (

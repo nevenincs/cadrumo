@@ -15,9 +15,9 @@ from typing import Literal
 
 from pydantic import Field
 
-from ...core.json_contract import OutputSchema, register_schema
 from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields
+from ._schemas import OutputSchema, register_schema
 
 #: Closed set of CLI input channels a wizard step resolves to: a direct
 #: ``--casilla`` override, a registry ``--binding`` override, or a

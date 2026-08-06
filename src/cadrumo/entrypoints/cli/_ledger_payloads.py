@@ -42,7 +42,6 @@ from pydantic import Field, field_validator, model_validator
 from ...core import LinkInconsistencyDirection, Period
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import BucketId, SnapshotId, TransactionId
-from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
 from ._ledger_business_payloads import (
     BusinessInvoiceListResult,
     BusinessInvoiceRecordPayload,
@@ -88,6 +87,7 @@ from ._ledger_rule_payloads import (
     RuleApplyResult,
     RuleListResult,
 )
+from ._schemas import OutputRootSchema, OutputSchema, register_schema
 
 _LEDGER_BUSINESS_PAYLOAD_EXPORTS = (
     BusinessInvoiceListResult,

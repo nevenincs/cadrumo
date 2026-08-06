@@ -24,7 +24,6 @@ from ...application.evidence import BundleId, BundleVerificationState
 from ...core import Period
 from ...core.aggregation import RetencionClave
 from ...core.identity import BucketId, ContentDigest
-from ...core.json_contract import OutputSchema, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -34,6 +33,7 @@ from ...domain.buckets import (
 from ...domain.calculations.registry import LegalRefId, ModeloDescribeReport, SourceRefId
 from ...domain.modelos import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ._decimal_wire import NonNegativeDecimalWireText
+from ._schemas import OutputSchema, register_schema
 
 
 class WithholdingClaveBreakdownPayload(OutputSchema):

@@ -15,11 +15,16 @@ from pydantic import ValidationError
 
 from ...application.ledger import (
     LLMProvider,
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
     LLMSplitApplyResult,
     PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
     archive_manual_transaction,
+    attach_manual_transaction_evidence,
     compute_display_id_width,
+    execute_reviewed_decision,
+    is_llm_provider_available,
     mark_transaction_reviewed_excluded,
     merge_transactions,
     remove_manual_transaction,
@@ -27,6 +32,7 @@ from ...application.ledger import (
     restore_manual_transaction,
     split_transaction,
     stash_manual_transaction,
+    suggest_evidence_split,
 )
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
@@ -42,6 +48,7 @@ from ...domain.transactions import (
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
+from ._modelo_rendering import advisory_notice
 
 if TYPE_CHECKING:
     from ...application.ledger import LLMSplitSuggestion, ManualLedgerTransactionResult
@@ -100,8 +107,6 @@ def ledger_attach(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.attach.actor_help")),
 ) -> None:
     """Attach existing secure evidence objects to one ledger transaction."""
-    from ...application.ledger import attach_manual_transaction_evidence
-
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -148,8 +153,6 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
     (``aeat-architecture-boundaries``: name a real way forward, never a bare
     refusal — and never a false one).
     """
-    from ._modelo_rendering import advisory_notice
-
     return [
         advisory_notice(
             "ledger.attach.finalized_revision_stale",
@@ -241,7 +244,6 @@ def ledger_doclink(
     from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
     from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
-    from ...application.ledger import attach_manual_transaction_evidence
     from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
     attachment_source = source.to_attachment_source()
@@ -925,8 +927,6 @@ def _validate_split_llm_options(
     yes: bool,
 ) -> None:
     """Reject manual-override flag combinations and an unconfirmed apply for ``ledger split --llm``."""
-    from ...application.ledger import is_llm_provider_available
-
     if child_amount or child_description:
         raise _bad(
             tr(
@@ -1070,13 +1070,6 @@ def _ledger_split_llm(
     ``--child-description`` flags are the explicit operator override and cannot be
     combined with ``--llm``.
     """
-    from ...application.ledger import (
-        LlmReviewDecision,
-        LlmReviewInvocationOrigin,
-        execute_reviewed_decision,
-        suggest_evidence_split,
-    )
-
     _validate_split_llm_options(
         child_amount=child_amount,
         child_description=child_description,

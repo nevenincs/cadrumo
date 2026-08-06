@@ -39,9 +39,9 @@ from ...application.live import (
 from ...core import Modelo, Period
 from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest, SnapshotId
-from ...core.json_contract import OutputSchema, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import BindingId
+from ._schemas import OutputSchema, register_schema
 
 
 def _is_a_registry_period_token(value: str) -> str:

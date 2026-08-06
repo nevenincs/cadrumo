@@ -863,41 +863,6 @@ SPANISH_ALIAS_HINTS = {
 }
 
 
-def _flatten_module_level_branches(stmts: list[ast.stmt]) -> Iterable[ast.stmt]:
-    """Yield ``stmts``, replacing each ``If``/``Try`` with its own branch contents.
-
-    An optional-dependency fallback (``try: import real / except ImportError:
-    class Fallback: ...``), a ``TYPE_CHECKING`` split, or a platform/feature
-    branch all place real module-level statements one level below
-    ``tree.body`` -- exactly the shape :mod:`adapters.outbound.aeat._playwright`
-    uses to define fallback exception classes only when the optional
-    ``browser`` extra is absent. A def-counting walk that stops at
-    ``tree.body`` never reaches them, so a module built entirely from such a
-    branch counts as zero real defs and misclassifies as a pure re-export
-    shim.
-
-    Recurses through ``If.body``/``If.orelse`` and ``Try.body``/
-    ``Try.handlers[*].body``/``Try.orelse``/``Try.finalbody``, arbitrarily
-    nested (an ``if`` inside a ``try`` inside an ``if``, as in the real
-    ``_playwright.py`` shape). Does NOT descend into a ``FunctionDef``/
-    ``AsyncFunctionDef``/``ClassDef`` body -- those are counted as one real
-    def each by the caller and their own internals are not module-level
-    surface.
-    """
-    for node in stmts:
-        if isinstance(node, ast.If):
-            yield from _flatten_module_level_branches(node.body)
-            yield from _flatten_module_level_branches(node.orelse)
-        elif isinstance(node, ast.Try):
-            yield from _flatten_module_level_branches(node.body)
-            for handler in node.handlers:
-                yield from _flatten_module_level_branches(handler.body)
-            yield from _flatten_module_level_branches(node.orelse)
-            yield from _flatten_module_level_branches(node.finalbody)
-        else:
-            yield node
-
-
 def module_body_defs(tree: ast.Module) -> tuple[int, int, int]:
     """Return (n_imports_stmts, n_real_defs, n_all_assigns).
 
@@ -907,17 +872,11 @@ def module_body_defs(tree: ast.Module) -> tuple[int, int, int]:
     count as real defs, same as a plain ``Assign``, a function, or a class --
     UNLESS the value is a bare ``Name`` reference (``Foo = _internal.Foo`` /
     ``Foo = Foo``), which is itself a re-export alias, not a real definition.
-
-    The walk looks inside module-level ``if``/``try`` branches (see
-    :func:`_flatten_module_level_branches`) so a symbol defined only under a
-    ``TYPE_CHECKING`` split or an optional-dependency fallback still counts;
-    what counts as a real def there is identical to the top level -- the
-    bare-alias exclusion applies the same way inside a branch as outside one.
     """
     n_imports = 0
     n_defs = 0
     n_all = 0
-    for node in _flatten_module_level_branches(tree.body):
+    for node in tree.body:
         if isinstance(node, ast.ImportFrom) and node.module == "__future__":
             continue
         if isinstance(node, (ast.Import, ast.ImportFrom)):

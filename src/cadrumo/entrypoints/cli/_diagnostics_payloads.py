@@ -29,10 +29,10 @@ from decimal import Decimal
 from pydantic import Field, field_validator, model_validator
 
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.json_contract import OutputSchema, register_schema
 from ...core.telemetry import TelemetryEventPayload, TelemetryTier
 from ...core.time import validate_inclusive_iso_date_range
 from ._decimal_wire import DecimalWireText
+from ._schemas import OutputSchema, register_schema
 
 
 # The canonical run-health models express these bounds on real int/Decimal

@@ -63,7 +63,6 @@ from ...core import storage_location as _storage_location
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
-from ...core.json_contract import strict_round_trip as _strict_round_trip
 from ...core.output_rendering import OutputFormat as _OutputFormat
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
 from ._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
@@ -86,6 +85,7 @@ from ._language_argv import apply_language_argv_to_environment as _apply_languag
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
 from ._root_payloads import AppRootResult, RootStatusResult
+from ._schemas import strict_round_trip as _strict_round_trip
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.

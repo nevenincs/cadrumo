@@ -26,8 +26,8 @@ from pydantic import Field
 from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
 from ...core import Period
 from ...core.identity import BucketId
-from ...core.json_contract import OutputSchema, register_schema
 from ...domain.modelos import WorkUnitId
+from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("modelo.m036.alta")
