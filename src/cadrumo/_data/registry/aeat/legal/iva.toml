@@ -1594,7 +1594,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "real_decreto"
-corpus_ref = "corpus/normatives/html/rd-596-2016.html.extracted.md#articulo-primero"
+corpus_ref = "corpus/normatives/html/rd-596-2016.html#articulo-primero"
 document_id = "BOE-A-2016-11575"
 article = "primero"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11575"
