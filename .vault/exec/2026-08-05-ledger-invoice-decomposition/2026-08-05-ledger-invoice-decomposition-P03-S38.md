@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:2416e144c0dfb9ddd44ade59095ee79b1609e66528ff1acb32ef2864bebabb73'
+body_hash: 'sha256:a9855e5fa0e172a1862d690964048047d87b2a93ee39004cdfca515e18c71e47'
 step_id: 'S38'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
@@ -53,3 +53,30 @@ Both income entry points had to gain the repository together. The production res
 An unresolvable invoice id is treated as no evidence rather than as an issue. The ledger surface already reports a broken link, and this pipeline's question is only whether trustworthy figures exist; raising here would report one operator fault twice under two vocabularies.
 
 Four mutations were run against the committed shape, each applied to a copy-aside and restored: ignoring the invoice base (3 failed), copying the expense amount guard verbatim (5 failed), applying a mismatched link instead of refusing it (2 failed), and ignoring the declared retencion (1 failed). The second is the trap the brief named, and the suite catches it five times over. Restore verified post-hoc by SHA-256 match, a residue grep, and `git diff` rather than by trusting the copy step.
+
+### Regression and correction
+
+The first landing (`32dcf3008e`) introduced an under-declaration and was corrected by `cf7e5e315c` (4 files, +195 / -61).
+
+All five evidence guards returned a `RentaIncomeLedgerAggregationIssue`, and returning an issue from the income classifier EXCLUDES the row. An invoice settled in two instalments -- ordinary for professional work -- therefore removed both rows and declared zero where 1060.00 of real income existed:
+
+```
+BEFORE the correction   observations: 0   issues: 2   casilla 01: 0.00
+AFTER  the correction   observations: 2   issues: 0   casilla 01: 1060.00
+                        refusals: partial_or_multi_transaction (x2), grounding: cash_fallback
+```
+
+That replaced an over-declaration of 60 with a 100 % under-declaration, in the sanction direction.
+
+The guards were right; their consequence was not. This is the second time in one Step that copying the expense pipeline's shape was wrong, and the two failures share a root: the expense side and the income side are mirror images, not the same pipeline. An unevidenced gasto must NOT be claimed, so that pipeline excludes it. An unevidenced ingreso must STILL be declared, so this one degrades it. Only the checks transfer; the consequence inverts. The issue-reason enum's own docstring already stated that contract, which is why the correction restores an existing rule rather than inventing one.
+
+The refusals now live in their own closed set, `SalesInvoiceEvidenceRefusal`, deliberately separate from the exclusion enum so the two outcome classes cannot be confused again by a future author reaching for the nearest enum. The row keeps its cash and `CASH_FALLBACK` grounding, and a new `unusable_sales_invoice_evidence` diagnostic names which check rejected the link -- without it the downgrade is invisible, since the row looks exactly like one that never had an invoice.
+
+Enrolling that diagnostic required adding its reason to the closed `Literal` in `_source_mesh.py`. The type refused the unenrolled value at probe time, which is where that class of fault should surface; the sibling advisory learned the same lesson at calculate time by raising `ValidationError` from inside itself. The message is fitted to the same measured 512-character budget and was proved buildable at 1, 2, 3, 25 and 400 rows.
+
+Two tests assert the income FIGURE rather than the presence of a refusal, because the regression is invisible to any test that only checks issues were raised -- which is precisely how it passed eleven green cases.
+
+Mutation-proved: restoring the exclusion reddens 2 cases, dropping the refusal marker reddens 7, deleting a guard reddens 1. Restore verified by SHA-256 match, a residue grep and a post-hoc `git diff`.
+
+Raw counts after the correction, serial (`-n 0`): the module 13 passed; `application/aggregation/tests` 623 passed, 7 deselected; with the registry income binding and CLI JSON conformance suites under both marker lanes, 806 passed.
+
