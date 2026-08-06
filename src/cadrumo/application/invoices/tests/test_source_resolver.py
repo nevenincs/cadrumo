@@ -742,12 +742,12 @@ def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
 
 
 # ---------------------------------------------------------------------------
-# Declarable-coverage proof (invoice-canonical-structure P01.S01)
+# Declarable-coverage proof
 #
-# The fold in P03 deletes the slim store, which is a live M347/M349 source. What
-# has to survive that deletion is not the slim store's OUTPUT but the set of
-# declarable FACTS it contributes, so these tests assert fact-level reachability
-# on the canonical path.
+# Folding the slim store into the canonical structure retires a live M347/M349
+# source. What has to survive that retirement is not the slim store's OUTPUT
+# but the set of declarable FACTS it contributes, so these tests assert
+# fact-level reachability on the canonical path.
 #
 # They deliberately do NOT assert equality against a resolver wired to both
 # stores. That union double-counts an invoice held in both, so a union-equality
