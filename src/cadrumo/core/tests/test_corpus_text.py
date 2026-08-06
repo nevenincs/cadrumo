@@ -239,3 +239,60 @@ def test_structural_heading_selects_one_unmarked_provision_unit() -> None:
 
     assert normalise_corpus_text("término municipal de Lorca") in normalise_corpus_text(text)
     assert normalise_corpus_text("rendimiento neto de módulos de 2024") in normalise_corpus_text(text)
+
+
+def test_structural_title_match_survives_an_abbreviated_period_qualified_heading(tmp_path: Path) -> None:
+    """A title using "Art." immediately followed by a period still resolves by number.
+
+    Regression for the defect ``daa9876ed3`` fixed: ``_canonical_anchor`` folds
+    every ``art``/``articulo`` anchor prefix to the single-letter ``a`` form (so
+    ``articulo-1`` canonicalises to ``a1``), but ``_ARTICLE_TITLE_RE`` still
+    required the literal ``articulo`` prefix on the title side, so the fold's
+    own output could never match its own comparison pattern again.
+
+    This case is deliberately constructed to bypass
+    ``_title_heading_matches_anchor`` -- the OTHER mechanism the same commit
+    added, which already independently covers the real bundled regression
+    fixture (``orden-hac-56-2024.html``, see
+    ``test_multi_unit_sidecar_can_resolve_an_ordinal_article_heading`` above).
+    That mechanism splits a title on its first ``.``/``:`` and canonicalises
+    only the text before it; an "Art." abbreviation followed immediately by a
+    period splits the heading BEFORE the article number ever appears
+    ("Art" alone, dropping "1"), so the heading path fails here by
+    construction and cannot mask a broken ``_ARTICLE_TITLE_RE``. What DOES
+    resolve it is the OTHER structural path
+    (``_is_exact_article_title_match`` and the final digit-group fallback in
+    ``_title_matches_anchor``), which is the one this test exists to pin.
+
+    Synthetic sidecar: no bundled corpus fixture happens to carry this exact
+    abbreviation-plus-period title shape, so this constructs one, declaring no
+    per-unit anchor (forcing the structural title-matching branch) and a
+    second, deliberately non-matching unit so a false match would be caught as
+    an ambiguity error rather than silently passing.
+
+    Mutation-proved by hand before landing: restoring ``_ARTICLE_TITLE_RE`` to
+    its pre-fix ``re.compile(r"^articulo(\\d+)")`` makes this exact scenario's
+    underlying ``_title_matches_anchor`` call return ``False`` where it
+    returns ``True`` today -- confirmed directly against the mutated module,
+    not inferred.
+    """
+    sidecar = tmp_path / "synthetic-abbreviated-article.extracted.json"
+    payload = {
+        "units": [
+            {
+                "anchor": None,
+                "title": "Art.1. Ámbito de aplicación.",
+                "text": "Esta orden se aplica a los obligados tributarios que presenten el modelo correspondiente.",
+            },
+            {
+                "anchor": None,
+                "title": "Art.2. Plazo de presentación.",
+                "text": "El plazo de presentación será el establecido en la disposición adicional segunda.",
+            },
+        ],
+    }
+    sidecar.write_text(json.dumps(payload), encoding="utf-8")
+
+    text = resolve_anchored_extracted_unit(sidecar, anchor="articulo-1")
+
+    assert "obligados tributarios" in text
