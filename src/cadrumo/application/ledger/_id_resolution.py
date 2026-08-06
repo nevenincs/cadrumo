@@ -85,7 +85,9 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
     """
     normalized = (prefix or "").strip().lower()
     if not normalized:
-        raise TransactionIdPrefixError("transaction id prefix is empty")
+        raise TransactionIdPrefixError(
+            translated_message="application.ledger.errors.transaction_id_prefix_empty",
+        )
     if not _HEX_ALPHABET.issuperset(normalized):
         raise TransactionIdPrefixError(
             translated_message="application.ledger.errors.transaction_id_prefix_non_hex",
@@ -190,7 +192,8 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
         if len(resolved) > 1:
             joined = ", ".join(sorted(resolved))
             raise TransactionIdPrefixError(
-                f"transaction id prefix {prefix!r} matches {len(resolved)} transactions: {joined}",
+                translated_message="application.ledger.errors.transaction_id_prefix_ambiguous",
+                context={"prefix": repr(prefix), "count": len(resolved), "matches": joined},
             ) from live_error
         return next(iter(resolved))
 

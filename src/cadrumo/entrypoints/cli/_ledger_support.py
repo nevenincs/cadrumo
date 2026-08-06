@@ -25,14 +25,14 @@ from ...application.ledger import (
     resolve_transaction_id,
 )
 from ...core.decimal import format_decimal
+from ...core.errors import resolve_error_message
 from ...core.i18n import tr
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, OutputSchema
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
 from ._common import _bad, _emit_envelope, parse_decimal_amount, parse_optional_decimal_amount
-from ._schemas import OutputSchema
 
 
 class _TransactionRepo(Protocol):
@@ -110,35 +110,19 @@ def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[s
     return tuple(result.transaction.transaction_id for result in results)
 
 
-def _prefix_error_bad(exc: TransactionIdPrefixError, prefix: str) -> typer.BadParameter:
+def _prefix_error_bad(exc: TransactionIdPrefixError) -> typer.BadParameter:
     """Translate a :exc:`TransactionIdPrefixError` into a localized ``_bad``.
 
-    Wraps the domain-layer exception into ``tr()``-rendered messages so the
-    operator sees a locale-translated explanation rather than a raw Python
-    exception string. Five distinct refusal keys are emitted depending on
-    which invariant was violated.
+    Delegates to the shared :func:`resolve_error_message`, the same resolver
+    already used for this purpose by ``_app_live_portals_cli.py``,
+    ``_modelo_cli_support.py``, ``_modelo_maritime_cli.py``, and
+    ``_review.py``. Every raise site in
+    :func:`~application.ledger.resolve_transaction_id` sets its own
+    ``translated_message`` and ``context``, so the resolver renders the
+    correct locale-translated text for whichever invariant fired without
+    this module re-deriving that mapping from ``str(exc)`` substrings.
     """
-    raw_message = str(exc)
-    if "is empty" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_empty"))
-    if "non-hex" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix))
-    if "longer than" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix))
-    if "no transaction" in raw_message:
-        return _bad(tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix))
-    if "matches" in raw_message:
-        # collision — surface the candidate ids inline so the
-        # operator can lengthen the prefix.
-        _, _, candidates = raw_message.partition(":")
-        return _bad(
-            tr(
-                "cli.ledger.errors.id_prefix_collision",
-                prefix=prefix,
-                candidates=candidates.strip() or "?",
-            ),
-        )
-    return _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message))
+    return _bad(resolve_error_message(exc))
 
 
 def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
@@ -154,7 +138,7 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:
-        raise _prefix_error_bad(exc, prefix) from exc
+        raise _prefix_error_bad(exc) from exc
 
 
 def _invoice_link_error_bad_parameter() -> typer.BadParameter:

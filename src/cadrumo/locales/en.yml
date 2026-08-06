@@ -772,6 +772,7 @@ application:
         remove or replace through the attachments workflow.
       transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count}
         transactions: %{matches}'
+      transaction_id_prefix_empty: transaction id prefix is empty
       transaction_id_prefix_no_match: no transaction matches id prefix %{prefix}
       transaction_id_prefix_non_hex: transaction id prefix %{prefix} contains non-hex
         characters
@@ -1905,13 +1906,16 @@ cli:
           invoice_id_help: Catalogue invoice id (or unambiguous prefix).
           list_help: List reconciliation catalogue invoices.
           remove_help: Delete one reconciliation catalogue invoice.
+          retention_amount_help: Amount of IRPF retención withheld by the payer, in
+            euros. May be supplied alone, or alongside --retention-rate.
+          retention_rate_help: RIRPF art. 95.1 retención fraction withheld by the
+            payer (0.15 for the general 15%, or 0.07 during the inicio-de-actividad
+            window). Requires --retention-amount; a rate alone is refused.
           view_help: Show one reconciliation catalogue invoice by id or unambiguous
             prefix.
           wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
           wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
             already exists (%{invoice_id}); nothing was created.'
-          retention_rate_help: 'RIRPF art. 95.1 retención fraction withheld by the payer (0.15 for the general 15%, or 0.07 during the inicio-de-actividad window). Requires --retention-amount; a rate alone is refused.'
-          retention_amount_help: 'Amount of IRPF retención withheld by the payer, in euros. May be supplied alone, or alongside --retention-rate.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
@@ -4266,15 +4270,6 @@ cli:
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
-      id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
-        transaction: %{candidates}. Lengthen the prefix to disambiguate.'
-      id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
-      id_prefix_not_found: No transaction matches id prefix %{prefix!r}.
-      id_prefix_not_hex: 'Transaction id prefix %{prefix!r} contains non-hex characters
-        (allowed: 0-9, a-f).'
-      id_prefix_too_long: Transaction id prefix %{prefix!r} is longer than 64 characters
-        (a full SHA-256 digest).
-      id_prefix_unknown: 'Unexpected transaction id prefix error: %{message}'
       invalid_category: 'Unknown spending category ''{category}''. Known categories:
         {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal
