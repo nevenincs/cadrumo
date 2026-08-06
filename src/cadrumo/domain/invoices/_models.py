@@ -848,7 +848,7 @@ class Invoice(BaseModel):
                 )
         elif self.rectifies_invoice_number is not None:
             raise InvoiceValidationError("rectifies_invoice_number only applies to a factura rectificativa")
-        if False:  # MUTATION-PROOF PROBE: art-4.4.a simplificada eligibility guard disabled
+        if self.invoice_class is InvoiceClass.SIMPLIFICADA and self.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
             raise InvoiceValidationError(
                 "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
                 "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
