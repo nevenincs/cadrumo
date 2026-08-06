@@ -82,6 +82,15 @@ from ...domain.buckets import (
 
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
+# Structured e-invoice documents (EN16931 CII/UBL, Facturae 3.2.x). Admitted
+# here because the deterministic readers in `adapters.inbound.einvoice` can
+# now read them EXACTLY, on a default install, with no model involved. Before
+# those readers existed this gate refused them, which was the right answer;
+# leaving it refusing them afterwards would be the campaign's own named
+# failure mode -- a deliverable that ships correct, tested and unreachable,
+# readable only if the document happened to arrive through `doclink` or
+# `pull-folder` instead of the front door.
+_STRUCTURED_EXTENSIONS = frozenset({".xml"})
 
 # Concrete MIME types by source extension. The on-host vision reader needs a
 # concrete MIME (image/png vs image/jpeg), which `MediaKind` alone cannot supply.
@@ -97,7 +106,6 @@ _SUFFIX_MIME = {
     ".heif": "image/heif",
 }
 
-_DEFERRED_ADR_REF = "evidence-source-expansion (deferred; only PDF and image inputs are accepted)"
 
 
 def _attachment_kind_for(media_kind: MediaKind) -> AttachmentKind:
@@ -236,14 +244,26 @@ class PurchaseInvoiceEvidencePatch(BaseModel):
 
 
 def _resolve_media_kind(source_path: Path) -> MediaKind:
+    """Admit a source file by extension, refusing with the accepted set named.
+
+    The suffix decides ADMISSION only. What the document actually IS -- and
+    therefore how exactly it can be read -- is derived from its bytes by
+    :func:`~adapters.inbound.einvoice.probe_document_shape` at read time, because
+    a suffix and a declared MIME both answered "PDF" for a ZUGFeRD invoice
+    carrying a complete machine-readable record.
+    """
     suffix = source_path.suffix.lower()
-    if suffix in _PDF_EXTENSIONS:
+    if suffix in _PDF_EXTENSIONS or suffix in _STRUCTURED_EXTENSIONS:
+        # A structured XML document and a PDF are both read through the
+        # document-shape probe; the coarse media kind stays PDF-side because
+        # neither is an image.
         return MediaKind.PDF
     if suffix in _IMAGE_EXTENSIONS:
         return MediaKind.IMAGE
+    accepted = ", ".join(sorted(_PDF_EXTENSIONS | _STRUCTURED_EXTENSIONS | _IMAGE_EXTENSIONS))
     raise PurchaseInvoiceEvidenceInputError(
         f"source path {source_path!s} has unsupported extension {suffix!r}; "
-        f"only PDF and image inputs are accepted. See {_DEFERRED_ADR_REF}.",
+        f"accepted extensions are: {accepted}",
         suggestion="aeat app ledger evidence list",
     )
 

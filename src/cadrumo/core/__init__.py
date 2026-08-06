@@ -109,6 +109,7 @@ from ._credentials import (
     character_class_count,
 )
 from ._declaracion_idioma import DeclaracionIdioma
+from ._document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._descendant_relacion import (
     ART_58_2_ENTITLING_RELACIONES,
     ART_81_1_MATERNIDAD_RELACIONES,
@@ -140,6 +141,7 @@ from ._optional_extras import (
     ANTHROPIC_EXTRA,
     BROWSER_EXTRA,
     GOOGLE_EXTRA,
+    LLM_EXTRA,
     OFX_EXTRA,
     OPTIONAL_EXTRAS,
     MissingOptionalExtraError,
@@ -304,6 +306,7 @@ __all__: list[str] = [
     "IBAN_SHAPE_RE",
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
+    "LLM_EXTRA",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
@@ -326,6 +329,7 @@ __all__: list[str] = [
     "STORAGE_ROOT_SETTINGS_FIELD",
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
+    "STRUCTURED_DOCUMENT_SHAPES",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
@@ -341,6 +345,7 @@ __all__: list[str] = [
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
+    "DocumentShape",
     "DescendantRelacion",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",

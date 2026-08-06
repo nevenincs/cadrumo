@@ -68,6 +68,18 @@ dependencies = [
   "pypdfium2>=5.7.1,<6",
   # PDF sanitiser; content-stream rewriter for PII redaction.
   "pikepdf>=10.0.0,<11",
+  # Imaging primitive behind pypdfium2's `to_pil()` page rasterisation. Same
+  # class as the `lxml` entry above and declared for the same reason: Pillow
+  # DOES reach a default install today, but only as a transitive of pdfplumber
+  # and pikepdf -- incidental supply for a direct reliance, since the
+  # rasteriser calls `bitmap.to_pil()` and then `image.save(...)` itself. A
+  # pdfplumber or pikepdf change dropping Pillow would surface as a runtime
+  # failure on the first page rendered, misdiagnosed as a broken PDF by the
+  # rasteriser's own error wrapping. Declaring it turns that into a resolution
+  # failure instead. The `llm` extra declares it too; that declaration is
+  # correct but not load-bearing, because the two PDF packages keep Pillow in
+  # the base closure regardless.
+  "pillow>=12,<13",
   # Data validation & models
   "pydantic>=2.12.5,<3",
   "pydantic-settings>=2.9.1,<3",
@@ -161,6 +173,24 @@ anthropic = [
 ofx = [
   "ofxtools>=1.1,<2",
 ]
+# Local-inference document reading (the opt-in `cadrumo.llm` subpackage).
+# Gates the probabilistic reading path: rasterising a scan-only invoice
+# on-host and handing it to a local model runtime. Deliberately narrow, and
+# the narrowness is the honest result rather than an oversight -- the local
+# runtime is reached over HTTP on the already-declared `httpx`, page rendering
+# runs on the already-declared `pypdfium2`, and the one direct third-party
+# reliance the path adds beyond the core closure is Pillow, via `to_pil()`.
+# The path carries no model weights, no GPU runtime and no inference library
+# today. The extra exists so that stays a CHECKABLE property: a transformers-
+# or vLLM-served model would land HERE rather than in [project.dependencies],
+# which is the boundary this extra is for.
+#
+# Pillow is ALSO a direct base dependency above. Both declarations are
+# deliberate: the base entry closes the undeclared-direct-reliance defect,
+# this one declares what the inference path needs on its own terms.
+llm = [
+  "pillow>=12,<13",
+]
 # Operator agent-harness runtime. The harness operating layer (rules, personas,
 # skills) ships as reviewed product data in the CORE wheel under
 # `src/cadrumo/_data/agent/` and is read with no extra dependency. This extra gates
@@ -195,6 +225,7 @@ all = [
   "cadrumo[anthropic]",
   "cadrumo[ofx]",
   "cadrumo[agent]",
+  "cadrumo[llm]",
 ]
 
 [build-system]

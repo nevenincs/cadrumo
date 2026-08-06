@@ -27,10 +27,17 @@ _SENSITIVE_SURFACES = (
     SRC_CADRUMO / "application" / "auth",
     SRC_CADRUMO / "application" / "setup",
     SRC_CADRUMO / "application" / "filing" / "_history_repository.py",
-    SRC_CADRUMO / "domain" / "attachments" / "_repository.py",
+    # Four entries below were repointed after the non-vacuity assertion above
+    # caught them resolving to nothing: `domain/{attachments,justificante,
+    # submission}/_repository.py` and `entrypoints/cli/oauth.py` no longer
+    # exist, so the strictest tier had silently stopped scanning four surfaces.
+    # Each is widened to its owning package rather than guessed at a successor
+    # file, because a package cannot cover less than the single module it
+    # replaces.
+    SRC_CADRUMO / "domain" / "attachments",
     SRC_CADRUMO / "domain" / "invoices",
-    SRC_CADRUMO / "domain" / "justificante" / "_repository.py",
-    SRC_CADRUMO / "domain" / "submission" / "_repository.py",
+    SRC_CADRUMO / "domain" / "justificante",
+    SRC_CADRUMO / "domain" / "submission",
     SRC_CADRUMO / "domain" / "transactions",
     SRC_CADRUMO / "domain" / "usage_ratios" / "_service.py",
     SRC_CADRUMO / "adapters" / "persistence" / "profile",
@@ -38,7 +45,11 @@ _SENSITIVE_SURFACES = (
     SRC_CADRUMO / "adapters" / "outbound" / "aeat" / "sede" / "_observation_store.py",
     SRC_CADRUMO / "adapters" / "outbound" / "google",
     SRC_CADRUMO / "adapters" / "outbound" / "llm",
-    SRC_CADRUMO / "entrypoints" / "cli" / "oauth.py",
+    # Successor of the vanished `entrypoints/cli/oauth.py`: the OAuth credential
+    # flow now lives across the `_config/_google*` modules.
+    SRC_CADRUMO / "entrypoints" / "cli" / "_config" / "_google.py",
+    SRC_CADRUMO / "entrypoints" / "cli" / "_config" / "_google_credential_source_cli.py",
+    SRC_CADRUMO / "entrypoints" / "cli" / "_config" / "_google_credential_source_payloads.py",
     SRC_CADRUMO / "entrypoints" / "cli" / "_ledger.py",
 )
 _FORBIDDEN_CALLS = {
@@ -344,6 +355,38 @@ def _function_for_line(path: Path, line_number: int) -> str:
             best_name = name
             best_line = start
     return best_name
+
+
+def test_every_sensitive_surface_resolves_to_real_production_code() -> None:
+    """Every enumerated surface must cover at least one non-test module.
+
+    The strictest persistence tier is an ENUMERATED tuple, not a tree walk, and
+    without this assertion it fails OPEN. ``_iter_python_files`` filters an
+    rglob with no existence check and no ``is_dir()``, so a surface path that
+    does not exist -- or that exists but has been emptied -- yields the empty
+    list, contributes zero violations, and is indistinguishable from a surface
+    pointing at clean code. **The instrument cannot otherwise tell you it lost
+    a surface.**
+
+    Three real events produce that state, and a relocation campaign produces
+    two of them at once: a directory renamed or deleted without updating this
+    list; a directory emptied because its modules moved elsewhere, leaving a
+    named entry over nothing; and a directory enumerated in advance of being
+    created, which iterates nothing while reporting success.
+
+    The assertion is deliberately scoped to all enumerated surfaces rather than
+    to any one campaign's: every entry here is load-bearing, and any future
+    deletion, rename or relocation touching any of them is silently unguarded
+    until this test exists. It names the offending entry so the failure is
+    actionable rather than merely red.
+    """
+    empty = [repo_relative(surface) for surface in _SENSITIVE_SURFACES if not _iter_python_files(surface)]
+    assert empty == [], (
+        "every entry in _SENSITIVE_SURFACES must resolve to at least one non-test module; "
+        f"these resolve to nothing and are therefore unguarded: {empty}. "
+        "Either the path was renamed/deleted/emptied and the entry is stale, or the entry "
+        "was added before its directory existed. Fix the entry -- do not delete this check."
+    )
 
 
 def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend() -> None:

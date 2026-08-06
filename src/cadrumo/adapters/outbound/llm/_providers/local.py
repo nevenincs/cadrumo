@@ -23,6 +23,7 @@ from typing import Protocol, cast, override
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core import LLM_EXTRA, require_optional_extra
 from .....core.config import load_settings
 from .._errors import LLMPdfRasterisationError
 from .._models import LLMProvider
@@ -68,7 +69,20 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
 
     Returns:
         One base64-encoded PNG string per page, in page order.
+
+    Raises:
+        MissingOptionalExtraError: If the ``llm`` extra is not installed.
+        LLMPdfRasterisationError: If the PDF cannot be rendered.
     """
+    # The feature-boundary guard sits ahead of the lazy import, per the
+    # established convention. It is load-bearing here for a specific reason:
+    # Pillow is never imported by name in this module -- ``to_pil()`` reaches
+    # it from inside pypdfium2 -- so an absent Pillow surfaces as a
+    # ``ModuleNotFoundError`` raised deep in the render loop, which the bare
+    # ``except Exception`` below then re-raises as "could not rasterise PDF
+    # pages". That misreports a missing dependency as a broken document. The
+    # guard converts it to one instructive refusal naming the install command.
+    require_optional_extra(LLM_EXTRA)
     import pypdfium2 as pdfium  # lazy: keep the adapter import light, mirror the declaración fast-path
 
     try:

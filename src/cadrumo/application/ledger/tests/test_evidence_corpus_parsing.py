@@ -13,12 +13,18 @@ from __future__ import annotations
 
 import base64
 import json
+from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
 
 import pytest
 from PIL import Image
 
+from ....adapters.inbound.einvoice import (
+    DocumentShape,
+    EInvoiceXmlParseError,
+    parse_einvoice_document,
+)
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
 from ....adapters.outbound.llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 
@@ -119,3 +125,67 @@ def test_every_corpus_fixture_declares_provenance() -> None:
         if meta["provenance"] == "real_corpus":
             assert meta.get("licence")
             assert meta.get("source")
+
+
+def test_zugferd_structured_record_parses_to_its_exact_printed_values() -> None:
+    """The ZUGFeRD fixture is asserted FIELD BY FIELD against its own record.
+
+    Supersedes the neighbouring text-layer check as the fixture's real gate.
+    That one asserts only that a German word appears in the extracted text,
+    which passes for any German-language PDF -- and passes just as happily for
+    a parser returning a wrong tax identifier or swapped parties. This is the
+    difference between "the fixture is readable" and "the fixture is read
+    correctly", and only the second is a gate.
+
+    The tax identifier is pinned deliberately. ZUGFeRD is a Franco-German
+    format whose supplier block carries a Steuernummer alongside the VAT id,
+    and selecting the wrong one accounted for 22 of the 34 wrong fields
+    measured corpus-wide with ZERO missing fields -- the parser was finding
+    every field and choosing the wrong one, which is a selection bug this
+    assertion catches and a coverage gap it would not.
+    """
+    parsed = parse_einvoice_document(_read("zugferd_en16931_invoice.pdf"))
+
+    assert parsed.shape is DocumentShape.XML_CII
+    assert parsed.invoice_number == "471102"
+    assert parsed.supplier_tax_id == "DE123456789", "the VAT number, never the Steuernummer"
+    assert parsed.currency == "EUR"
+    assert parsed.taxable_base == Decimal("473.00")
+    assert parsed.iva_amount == Decimal("56.87")
+    assert parsed.grand_total == Decimal("529.87")
+
+
+def test_zugferd_two_rate_document_does_not_collapse_to_one_pair() -> None:
+    """Both declared rates survive the read, each with its own base and cuota.
+
+    The multi-rate silent collapse is the defect this reading path exists to
+    close: a draft carrying only a flat base/rate/cuota triple sums two bases
+    into one figure and loses a rate, producing an invoice whose printed total
+    no longer reconciles with its declared cuota. A parser returning a single
+    pair here would pass every other assertion in this module.
+    """
+    parsed = parse_einvoice_document(_read("zugferd_en16931_invoice.pdf"))
+
+    rates = sorted(rate for rate, _base, _cuota in parsed.iva_breakdown if rate is not None)
+    assert rates == [Decimal("7.00"), Decimal("19.00")], "both declared rates must survive"
+    assert len(parsed.lines) == 2
+
+    bases = sum((base for _rate, base, _cuota in parsed.iva_breakdown if base is not None), Decimal(0))
+    cuotas = sum((cuota for _rate, _base, cuota in parsed.iva_breakdown if cuota is not None), Decimal(0))
+    # Invoice-level identity is EXACT, not tolerance-bounded: per-line rounding
+    # may not accumulate into the invoice-level total.
+    assert bases == parsed.taxable_base
+    assert cuotas == parsed.iva_amount
+    assert parsed.taxable_base + parsed.iva_amount == parsed.grand_total
+
+
+def test_malformed_structured_document_refuses_rather_than_partially_reading() -> None:
+    """A truncated record raises and yields NO record, not a partial one.
+
+    This is the property the structured path is chosen for. A model handed the
+    same bytes returns a confident, plausible, wrong invoice; the parser
+    refuses outright. A reader returning half a record would be worse than the
+    model, because it would look exact while being wrong.
+    """
+    with pytest.raises(EInvoiceXmlParseError):
+        parse_einvoice_document(b"<rsm:CrossIndustryInvoice><rsm:ExchangedDocument>")

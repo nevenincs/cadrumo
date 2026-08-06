@@ -106,7 +106,7 @@ from ...adapters.outbound.llm import (
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
-from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
+from ...core import STRICT_FROZEN_CONFIG, MissingOptionalExtraError, ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import coerce_finite_european_decimal
@@ -136,6 +136,8 @@ from ._evidence_textlayer import extract_evidence_text
 __all__ = [
     "InvoiceConfirmationResult",
     "InvoiceDraft",
+    "InvoiceDraftLine",
+    "InvoiceDraftRateBreakdown",
     "PrintedTotalDiscrepancy",
     "confirm_invoice_draft_from_evidence",
     "extract_invoice_draft_from_evidence",
@@ -191,6 +193,68 @@ _CURRENCY_CODE_RE = re.compile(
 )
 
 
+class InvoiceDraftLine(BaseModel):
+    """One line item recovered from a structured invoice document.
+
+    Only a structured reader can populate this: a regex or vision reader
+    recovers printed totals, not the document's own line decomposition. The
+    rate is carried as a bare percentage :class:`~decimal.Decimal` (``21``, not
+    ``0.21``) because the draft is pre-confirm operator-facing data; mapping it
+    onto the closed ``IvaRate`` slot enum happens at the parse boundary, which
+    refuses loudly rather than rounding to the nearest slot.
+
+    Attributes:
+        description: Line description as printed, or ``None``.
+        quantity: Billed quantity, or ``None`` when the document omits it.
+        unit_price: Price per unit before tax, or ``None``.
+        taxable_base: Line taxable base before IVA.
+        iva_rate: Line IVA percentage as a whole-number Decimal.
+        iva_amount: Line IVA cuota, or ``None`` when the document states only
+            the rate and lets the total carry the cuota.
+        recargo_rate: Recargo de equivalencia percentage, or ``None``.
+        recargo_amount: Recargo de equivalencia cuota, or ``None``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    description: str | None = None
+    quantity: Decimal | None = None
+    unit_price: Decimal | None = None
+    taxable_base: Decimal | None = None
+    iva_rate: Decimal | None = None
+    iva_amount: Decimal | None = None
+    recargo_rate: Decimal | None = None
+    recargo_amount: Decimal | None = None
+
+
+class InvoiceDraftRateBreakdown(BaseModel):
+    """Per-rate tax subtotal as the document itself declares it.
+
+    This is the field that makes the multi-rate silent collapse detectable. A
+    draft carrying only the flat ``taxable_base`` / ``iva_rate`` /
+    ``iva_amount`` triple structurally cannot represent an invoice charging
+    two rates: the two bases sum into one figure and one of the rates is simply
+    lost, producing an invoice whose printed total no longer reconciles with
+    its declared cuota.
+
+    Attributes:
+        iva_rate: The rate this subtotal is charged at, as a whole-number
+            percentage Decimal.
+        taxable_base: Base charged at this rate.
+        iva_amount: Cuota charged at this rate.
+        recargo_rate: Recargo de equivalencia percentage for this rate.
+        recargo_amount: Recargo de equivalencia cuota for this rate.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    iva_rate: Decimal | None = None
+    taxable_base: Decimal | None = None
+    iva_amount: Decimal | None = None
+    recargo_rate: Decimal | None = None
+    recargo_amount: Decimal | None = None
+
+
 class InvoiceDraft(BaseModel):
     """Best-effort invoice fields extracted from an on-host PDF text layer.
 
@@ -236,6 +300,10 @@ class InvoiceDraft(BaseModel):
     iva_amount: Decimal | None = None
     grand_total: Decimal | None = None
     currency: str | None = None
+    recargo_amount: Decimal | None = None
+    lines: tuple[InvoiceDraftLine, ...] = ()
+    iva_breakdown: tuple[InvoiceDraftRateBreakdown, ...] = ()
+    iva_category: str | None = None
     raw_text_length: int = 0
 
 
@@ -437,7 +505,9 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
     opted out gets a typed refusal naming the capability toggle, never a silent
     empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
     PDF, is converted to the same instructive refusal the classification vision
-    path uses (:func:`~application.provisioning.probe_ollama_vision`).
+    path uses (:func:`~application.provisioning.probe_ollama_vision`). An absent
+    ``llm`` extra is reported separately, with its install hint, so a dependency
+    gap is never remediated as a daemon-reachability problem.
     """
     import httpx
 
@@ -458,6 +528,16 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
 
             images = (base64.b64encode(evidence.data).decode("ascii"),)
         return extract_invoice_fields_from_images(images, settings=settings)
+    except MissingOptionalExtraError as exc:
+        # Ordered ahead of the runtime-failure branch deliberately. A missing
+        # `llm` extra is a dependency problem, not a reachability problem: the
+        # branch below probes the Ollama runtime and answers "ensure the local
+        # Ollama vision model is reachable", which is the wrong remedy and
+        # sends the operator to restart a daemon that was never the fault.
+        raise PurchaseInvoiceEvidenceInputError(
+            f"on-host vision reading is unavailable: {exc}",
+            suggestion=exc.install_hint,
+        ) from exc
     except (httpx.HTTPError, LLMProviderError, LLMPdfRasterisationError) as exc:
         status = probe_ollama_vision(settings)
         fix = status.remediation or "ensure the local Ollama vision model is reachable"

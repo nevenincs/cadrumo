@@ -36,6 +36,7 @@ __all__ = [
     "OPTIONAL_EXTRAS",
     "DependencyStatus",
     "OptionalExtra",
+    "probe_model_runtime_hardware_floor",
     "probe_ollama_vision",
     "probe_optional_extra",
     "probe_optional_extras",
@@ -243,6 +244,115 @@ def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus
         service="playwright-chromium",
         available=True,
         detail=f"Chromium build present under {root}",
+    )
+
+
+def read_total_system_memory_bytes() -> int | None:
+    """Return total physical system memory in bytes, or ``None`` when unreadable.
+
+    Dependency-free on every supported platform: POSIX reads the pair of
+    ``sysconf`` values, Windows calls ``GlobalMemoryStatusEx`` through
+    :mod:`ctypes`. Returns ``None`` rather than raising or guessing when the
+    platform answers nothing, because an unknown quantity must not be reported
+    as a shortfall -- see :func:`probe_model_runtime_hardware_floor`.
+    """
+    names = getattr(os, "sysconf_names", {})
+    if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
+        try:
+            return int(os.sysconf("SC_PAGE_SIZE")) * int(os.sysconf("SC_PHYS_PAGES"))
+        except (OSError, ValueError):
+            return None
+    if sys.platform == "win32":
+        import ctypes
+
+        class _MemoryStatusEx(ctypes.Structure):
+            _fields_ = (  # noqa: RUF012 - ctypes layout, not a mutable class attribute
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            )
+
+        status = _MemoryStatusEx()
+        status.dwLength = ctypes.sizeof(_MemoryStatusEx)
+        try:
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):  # type: ignore[attr-defined]
+                return int(status.ullTotalPhys)
+        except (OSError, AttributeError):
+            return None
+    return None
+
+
+def probe_model_runtime_hardware_floor(
+    settings: Settings | None = None,
+    *,
+    total_memory_bytes: int | None = None,
+) -> DependencyStatus:
+    """Report whether this machine meets the local model runtime's memory floor.
+
+    The third capability axis. The product already distinguishes *installed*
+    (:class:`~cadrumo.core.OptionalExtra`) from *permitted*
+    (:class:`~cadrumo.core.ServiceCapability`); this answers *capable* -- and is
+    named for the floor it measures rather than for the word "capability",
+    which already denotes four unrelated concepts in this tree (modelo-revision
+    capability, terminal capability, operator service capability, optional-extra
+    capability).
+
+    Below the floor the local runtime does not refuse. It loads and thrashes, or
+    is killed mid-read, and the operator sees an unexplained timeout. This probe
+    turns that into a typed row naming the shortfall and the accepted floor.
+
+    Unknown memory reports ``available`` **true** with a detail saying so. That
+    is deliberate and is the safe direction for a *diagnostic*: an unreadable
+    platform must not manufacture a shortfall that blocks a machine which may be
+    perfectly adequate. The refusal is raised only on a *measured* shortfall.
+
+    Args:
+        settings: Settings carrying the configured floor; loaded when omitted.
+        total_memory_bytes: Observed total memory, for callers that have already
+            measured it. Defaults to :func:`read_total_system_memory_bytes`.
+
+    Returns:
+        A :class:`DependencyStatus` on the ``model-runtime-hardware-floor`` row.
+    """
+    resolved = settings if settings is not None else load_settings()
+    floor = resolved.cadrumo_llm_model_runtime_memory_floor_bytes
+    observed = total_memory_bytes if total_memory_bytes is not None else read_total_system_memory_bytes()
+    floor_gib = floor / 1024**3
+    if observed is None:
+        return DependencyStatus(
+            service="model-runtime-hardware-floor",
+            available=True,
+            detail=(
+                f"total system memory could not be read on this platform; the local model "
+                f"runtime floor of {floor_gib:.1f} GiB was not verified"
+            ),
+        )
+    observed_gib = observed / 1024**3
+    if observed < floor:
+        return DependencyStatus(
+            service="model-runtime-hardware-floor",
+            available=False,
+            detail=(
+                f"total system memory {observed_gib:.1f} GiB is below the local model "
+                f"runtime floor of {floor_gib:.1f} GiB for model "
+                f"{resolved.cadrumo_llm_ollama_vision_model!r}"
+            ),
+            remediation=(
+                "use a smaller local vision model (set cadrumo_llm_ollama_vision_model to "
+                "moondream for low-memory hardware), or lower "
+                "cadrumo_llm_model_runtime_memory_floor_bytes if this machine is known good"
+            ),
+        )
+    return DependencyStatus(
+        service="model-runtime-hardware-floor",
+        available=True,
+        detail=f"total system memory {observed_gib:.1f} GiB meets the {floor_gib:.1f} GiB local model runtime floor",
     )
 
 

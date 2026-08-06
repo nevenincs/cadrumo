@@ -177,6 +177,7 @@ dependencies = [
     { name = "openpyxl" },
     { name = "pdfplumber" },
     { name = "pikepdf" },
+    { name = "pillow" },
     { name = "prompt-toolkit" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -208,6 +209,7 @@ all = [
     { name = "google-auth-oauthlib" },
     { name = "mcp" },
     { name = "ofxtools" },
+    { name = "pillow" },
     { name = "playwright" },
     { name = "playwright-stealth" },
 ]
@@ -222,6 +224,9 @@ google = [
     { name = "google-api-python-client" },
     { name = "google-auth" },
     { name = "google-auth-oauthlib" },
+]
+llm = [
+    { name = "pillow" },
 ]
 ofx = [
     { name = "ofxtools" },
@@ -301,6 +306,7 @@ requires-dist = [
     { name = "cadrumo", extras = ["anthropic"], marker = "extra == 'all'" },
     { name = "cadrumo", extras = ["browser"], marker = "extra == 'all'" },
     { name = "cadrumo", extras = ["google"], marker = "extra == 'all'" },
+    { name = "cadrumo", extras = ["llm"], marker = "extra == 'all'" },
     { name = "cadrumo", extras = ["ofx"], marker = "extra == 'all'" },
     { name = "cadrumo-data-manuals", directory = "packaging/cadrumo_data_manuals" },
     { name = "cadrumo-data-official", directory = "packaging/cadrumo_data_official" },
@@ -317,6 +323,8 @@ requires-dist = [
     { name = "openpyxl", specifier = ">=3.1.5,<4" },
     { name = "pdfplumber", specifier = ">=0.11.9,<1" },
     { name = "pikepdf", specifier = ">=10.0.0,<11" },
+    { name = "pillow", specifier = ">=12,<13" },
+    { name = "pillow", marker = "extra == 'llm'", specifier = ">=12,<13" },
     { name = "playwright", marker = "extra == 'browser'", specifier = ">=1.58.0,<2" },
     { name = "playwright-stealth", marker = "extra == 'browser'", specifier = ">=2.0.3,<3" },
     { name = "prompt-toolkit", specifier = ">=3.0,<4" },
@@ -337,7 +345,7 @@ requires-dist = [
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.2" },
     { name = "xlrd", specifier = ">=2.0.1,<3" },
 ]
-provides-extras = ["workbook-windows", "google", "browser", "anthropic", "ofx", "agent", "all"]
+provides-extras = ["workbook-windows", "google", "browser", "anthropic", "ofx", "llm", "agent", "all"]
 
 [package.metadata.requires-dev]
 dev = [
