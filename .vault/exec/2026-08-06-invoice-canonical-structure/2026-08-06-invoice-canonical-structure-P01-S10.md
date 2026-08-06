@@ -5,44 +5,11 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:e147e542f12e065513120d0d43f71b6974743f30849fb8505d2a22adf74c68bb'
+body_hash: 'sha256:ca2d1fa7eaa3f4399cd8c6edfadd2457f640530c1cb7925092b2b8e640764341'
 step_id: 'S10'
 related:
   - "[[2026-08-06-invoice-canonical-structure-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace invoice-canonical-structure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S10 and 2026-08-06-invoice-canonical-structure-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Carry created_at and updated_at onto the canonical aggregate or record their loss as a deliberate decision in the execution record, so no slim field disappears unremarked and ## Scope
-
-- `src/cadrumo/domain/invoices/_models.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Carry created_at and updated_at onto the canonical aggregate or record their loss as a deliberate decision in the execution record, so no slim field disappears unremarked
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/domain/invoices/_models.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Measured whether the record-lifecycle fact is conserved anywhere else on the canonical side before deciding to carry or drop it.
 - Added both stamps to the canonical aggregate as OPTIONAL fields, outside the derived identity.
@@ -81,17 +46,6 @@ The timestamps and the events are the same capability seen from two sides — wh
 
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
-
     uv run --no-sync pytest src/cadrumo/domain/invoices/tests/test_secure_storage_roundtrip.py -p no:randomly -q --no-header
     7 passed in 7.38s
 
@@ -115,8 +69,6 @@ The absence claim behind `S37` was measured, not assumed:
     (no matches)
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The two stamps are added but **not yet populated by any writer**. The aggregate can now hold the fact and the boundary provably preserves it, which is what this Step owed the fold. Populating them on the canonical write paths belongs with `S37`, since a write that stamps the record and emits no event, or emits an event and leaves the record unstamped, is the same audit story told half-way.
 

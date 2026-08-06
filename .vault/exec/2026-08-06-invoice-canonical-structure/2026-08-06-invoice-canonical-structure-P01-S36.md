@@ -5,44 +5,11 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:e5b90bfe5e92a8792dbaa97436be2fd024e700edcc9c5475babc9bde822bb0de'
+body_hash: 'sha256:0600cbb6f4312dc0d8295818129997185ff9a0aa0bedaa0c37e2e6822000c01e'
 step_id: 'S36'
 related:
   - "[[2026-08-06-invoice-canonical-structure-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace invoice-canonical-structure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S36 and 2026-08-06-invoice-canonical-structure-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Remove the ES counterparty-country default from both canonical entry verbs so an omitted country refuses or derives rather than silently stamping a domestic country on a foreign invoice, preserving the slim verb's derive-or-raise behaviour across the fold because country is the routing key for both informativas and ## Scope
-
-- `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Remove the ES counterparty-country default from both canonical entry verbs so an omitted country refuses or derives rather than silently stamping a domestic country on a foreign invoice, preserving the slim verb's derive-or-raise behaviour across the fold because country is the routing key for both informativas
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Made the counterparty country a required option on both canonical entry verbs by moving it into the undefaulted block, which is how this CLI already declares a required option.
 - Rewrote the option help to say it is mandatory and why, so the operator meets the reason rather than a bare parse failure.
@@ -76,17 +41,6 @@ Requiring the option is the honest remedy rather than deriving a fallback, becau
 The locale catalogues needed the same correction: the English leaf described the option as defaulting to `ES`, so leaving it would have shipped help text asserting behaviour the code no longer has.
 
 ## Verification
-
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
 
 The RED, before the tests were reconciled, is what proves the option is genuinely load-bearing rather than decorative:
 
@@ -113,8 +67,6 @@ After reconciliation, including the refusal proof and its positive control:
 A tree-wide sweep of every Python and executable-sequence invocation of the two verbs returns exactly one that omits the option, which is the refusal proof itself.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 A marker trap is worth recording, because the first verification run of this Step was a false green. Running the affected CLI tests by path alone selected nothing: they carry the integration marker and the default expression deselected every one of them. The harness printed "NOTHING RAN" and stated plainly that a green result there means the selection matched nothing rather than that the code is sound. Without that warning the reconciliation would have been recorded as verified against zero executed tests. Every run quoted above therefore carries its marker expression.
 

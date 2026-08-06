@@ -5,44 +5,11 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:0fce3a66a83d18524bb44ef67616d40a3f877cfa3021c55f4ce1200f49b7005b'
+body_hash: 'sha256:04e54342fb161686b2b34b808c2fc0c04d823242ecb8e03d3b11c4fdde5a3a20'
 step_id: 'S03'
 related:
   - "[[2026-08-06-invoice-canonical-structure-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace invoice-canonical-structure with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S03 and 2026-08-06-invoice-canonical-structure-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Inventory every production slim-store consumer and record the named canonical replacement for each in the execution record, refusing to proceed to P03 while any consumer has no replacement and ## Scope
-
-- `src/cadrumo/application/ledger/_business_operation_invoice.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Inventory every production slim-store consumer and record the named canonical replacement for each in the execution record, refusing to proceed to P03 while any consumer has no replacement
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/application/ledger/_business_operation_invoice.py`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Swept every production (non-test) consumer of the slim store by symbol at `HEAD`, covering the model, the repository, both services, the direction enum and the storage namespace.
 - Ran a second sweep over NON-Python production files, because a symbol sweep scoped to `.py` misses the data and catalogue consumers.
@@ -99,17 +64,6 @@ related:
 
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
-
     rg -n "BusinessOperationInvoice|PayableInvoiceService|CollectibleInvoiceService|LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE|business_operation_invoice" --glob "src/cadrumo/**/*.py" --glob "!**/tests/**" -l
     13 files
 
@@ -124,8 +78,6 @@ Error-code parity was confirmed against the registry rather than inferred from t
 The inventory is a measurement and lands no code, so there is no test run to quote. Its claims are falsifiable by re-running the two sweeps above.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 **The Step's predicted RED did not occur and the reason is recorded rather than smoothed over.** The criterion expected the inventory to name at least one production consumer with no canonical replacement. Every consumer has one. The Step's own closing condition is a complete list rather than a clean assertion, so it closes on completeness, but the prediction was wrong and that is stated here rather than left implied by a tick.
 
