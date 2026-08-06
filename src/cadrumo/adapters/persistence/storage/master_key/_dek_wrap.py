@@ -78,6 +78,13 @@ def _decryption_error(message: str) -> DecryptionError:
     return DecryptionError(message, translated_message=_STORAGE_DECRYPTION_MESSAGE_KEY)
 
 
+# ALT-DEK-WRAP-RATIONALE-ENROLLMENT: wraps the bucket DEK under a
+# passphrase-derived KEK for bucket-unlock custody. Deliberately a separate
+# wrap from
+# adapters.persistence.storage.master_key._persisted_session.wrap_profile_session_dek,
+# which wraps the SAME DEK under an ephemeral OS-keychain session key for
+# login-resumption custody -- two key sources for two lifecycle events, not a
+# fork of one custody path.
 def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
     """Wrap `dek` under `kek` using AES-256-GCM keyed to `bucket_id`.
 

@@ -216,6 +216,11 @@ def _validate_nie(candidate: str) -> IdentityDocument:
     return IdentityDocument.NIE
 
 
+# ALT-CIF-LEADER-RATIONALE-DOCUMENTS: this validator enforces a THIRD,
+# digit-only class for _CIF_KIND_DIGIT_ONLY ("ABEH") that the sibling
+# core.identity._tax_id._validate_cif treats as mixed (digit-or-letter
+# accepted); deliberately divergent leader-set policies over the shared
+# _cif_check_value arithmetic above, per that function's own docstring.
 def _validate_cif(candidate: str) -> IdentityDocument:
     """Validate a CIF candidate, raising :class:`IdentityError` on mismatch."""
     match = _CIF_PATTERN.match(candidate)
