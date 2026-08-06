@@ -1,25 +1,50 @@
 # Keep the devcontainer/Dockerfile build context small and avoid baking
-# host-local state (venvs, caches, secrets) into the image layer.
+# host-local state (venvs, caches, secrets, agent scratch) into the image.
+#
+# ALLOWLIST, not a denylist. This is a shared factory worktree: concurrent
+# agents leave dozens of untracked `tmp-*` probe trees, plus `scratch/`,
+# `logs/`, `bucket/`, `pagefind/` and a 15 GB `var/` at the repo root. A
+# denylist silently re-admits every new one — the previous denylist shipped a
+# 1.12 GB context that took 53 s to transfer on every build. Ignoring
+# everything and re-admitting the build's real inputs keeps the context small
+# without maintenance.
+#
+# The devcontainer bind-mounts the live workspace over /workspace at runtime
+# (see .devcontainer/devcontainer.json `workspaceMount`), so what is copied
+# here only has to satisfy the image-build pre-warm and `just
+# devcontainer-test`: the dependency install, `import cadrumo`, and unit-test
+# collection over the `testpaths` declared in pyproject.toml
+# (`src/cadrumo` plus `dev/packaging/tests/test_installed_oracles.py`).
+*
 
-.git/
-.venv/
-venv/
-__pycache__/
-*.py[codz]
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.coverage
-.coverage.*
-htmlcov/
-var/
-docs/_build/
-docs/_inventories/
-docs/api/
-docs/cli/
-.tokens/
+# -- Project metadata the install resolves from ------------------------------
+!pyproject.toml
+!uv.lock
+!.python-version
+!README.md
+!LICENSE
+!NOTICE
+!justfile
+!conftest.py
+
+# -- Source, dev lanes, and the two path-sourced data companions -------------
+# `packaging/` carries cadrumo-data-{manuals,official}, declared as
+# `[tool.uv.sources]` path dependencies; their hatch build hooks force-include
+# from `src/cadrumo/_data/corpus`, so both trees are install-time inputs.
+!src
+!dev
+!packaging
+!env
+
+# -- Noise inside the admitted trees ----------------------------------------
+**/__pycache__
+**/*.py[codz]
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/.coverage
+**/.coverage.*
+**/htmlcov
+**/*.log
+**/var
 env/.env
-node_modules/
-.vscode/
-.idea/
-*.log

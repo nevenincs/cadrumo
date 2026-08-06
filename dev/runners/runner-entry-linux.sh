@@ -1,22 +1,33 @@
 #!/usr/bin/env bash
 # Entrypoint for the cadrumo Linux X64 container runners.
 #
-# This script lives INSIDE the cadrumo-runner-state-<n> named volume, beside the
-# runner's own config and credentials, so it shares the runner's lifetime. The
-# previous incarnation was bind-mounted from an ephemeral temp directory; when
-# that directory was removed Docker recreated the bind source as an empty
-# DIRECTORY at /entry.sh, exec failed, and the container died with code 127 and
-# stayed down despite restart-policy=always.
+# Baked into the runner image at /usr/local/bin/cadrumo-runner-entry.sh (see
+# the `runner` stage of the repository-root Dockerfile). That path is OUTSIDE
+# /home/runner, which the cadrumo-runner-state-<n> volume mounts over, so the
+# entrypoint cannot be shadowed by the volume and cannot go missing.
+#
+# Two earlier incarnations failed differently and both are worth remembering.
+# Bind-mounted from an ephemeral temp directory: when that directory was
+# cleaned up Docker recreated the bind source as an empty DIRECTORY at
+# /entry.sh, exec failed, and the container died with code 127 and stayed down
+# despite restart-policy=always. Copied into the state volume: it survived, but
+# so did every hand-provisioning step around it, and a rebuild silently lost
+# whatever nobody remembered to re-copy.
 set -euo pipefail
 
-# Tools the workflows need that the base runner image does NOT ship -- notably
-# the gh CLI, which dev.release.version_identity shells out to for the tag and
-# release namespace check, and which several workflow steps call directly. They
-# live in the volume rather than the container's writable layer so that
-# recreating the container from the base image does not silently lose them:
-# that is exactly how the gh dependency went missing once already, surfacing as
-# "REFUSED: forge check needs the gh CLI on PATH" mid-release.
-export PATH="/home/runner/tools/bin:${PATH}"
+# Tool paths, most-specific first.
+#
+# /usr/local/bin now carries gh and just from the IMAGE (the upstream runner
+# image ships neither). gh in particular is assumed present the way it is on
+# GitHub-hosted runners: dev.release.version_identity shells out to it for the
+# tag and release namespace check, and its absence surfaces mid-release as
+# "REFUSED: forge check needs the gh CLI on PATH" rather than as a missing-tool
+# error.
+#
+# /home/runner/tools/bin is kept ahead of it for backward compatibility: a
+# container still running on the OLD stock image keeps its volume-provisioned
+# tools, so this one script drives both the pre- and post-cutover fleet.
+export PATH="/home/runner/tools/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:${PATH}"
 
 # The host docker socket is mounted in as root:root 0660, so the unprivileged
 # runner user cannot reach it. The packaging smoke lanes drive nested

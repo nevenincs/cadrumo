@@ -326,17 +326,48 @@ packaging-quick:
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
 # Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile).
+# `--target dev` matches devcontainer.json's `build.target`, so the recipe and
+# the editor build the same stage of the one shared Dockerfile.
+[doc('Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile, `dev` stage).')]
 [group('devcontainer')]
 devcontainer-build:
-    docker build -t cadrumo-devcontainer -f Dockerfile .
+    docker build --target dev -t cadrumo-devcontainer -f Dockerfile .
 
-# Verify the dev image installs cleanly and its pre-baked toolchain works:
-# the editable install imports, the unit suite collects, and Playwright
-# Chromium launches headless with no further provisioning.
-[doc('Verify the dev image installs cleanly and its pre-baked toolchain (imports, unit collection, Playwright) works.')]
+# Verify the dev image installs cleanly and its pre-baked toolchain works.
+# The checks live in `dev/containers/devcontainer_smoke.py`, not inline here:
+# `just` runs plain recipes through PowerShell on Windows, which parses `<` as
+# a reserved operator, so an inline probe containing HTML failed at PARSE time
+# before docker was invoked — reporting a recipe error that said nothing about
+# the image. `bash -lc` is deliberate: it reproduces the LOGIN shell the VS Code
+# integrated terminal uses, which is where the venv once fell off PATH.
+[doc('Verify the dev image installs cleanly and its pre-baked toolchain (imports, unit collection, just, headless Chromium launch) works.')]
 [group('devcontainer')]
 devcontainer-test: devcontainer-build
-    docker run --rm cadrumo-devcontainer bash -lc "python -c 'import cadrumo; print(cadrumo.__file__)' && python -m pytest --collect-only -q -m unit && python -m playwright install --dry-run chromium"
+    docker run --rm cadrumo-devcontainer bash -lc "python dev/containers/devcontainer_smoke.py"
+
+# ── Self-hosted runner image ─────────────────────────────────────────────────
+
+# Build the Linux self-hosted runner image (`runner` stage of the same
+# Dockerfile). Declarative replacement for the hand-provisioned stock
+# container described in dev/runners/README.md.
+[doc('Build the self-hosted Linux runner image (`runner` stage of the shared Dockerfile).')]
+[group('devcontainer')]
+runner-image-build:
+    docker build --target runner -t cadrumo-runner-linux -f Dockerfile .
+
+# Verify the runner image carries every capability the fleet assumes present.
+# Each check below maps to a documented outage: `gh` absent broke a release
+# mid-cohort-seal, `brew` absent broke the acquisition lane's first step, and a
+# `brew` reached through a symlinked prefix breaks `brew link` only at the very
+# end of an install.
+[doc('Verify the runner image carries gh, just, a canonical-prefix brew, and a runnable entrypoint.')]
+[group('devcontainer')]
+runner-image-test: runner-image-build
+    # SINGLE-quoted payload: a double-quoted one lets the HOST shell expand
+    # `$(command -v brew)` before docker ever runs, so the canonical-prefix
+    # check silently compared two empty strings on the host instead of
+    # resolving brew in the container.
+    docker run --rm --entrypoint bash cadrumo-runner-linux -c 'set -e; gh --version | head -1; just --version; brew --version | head -1; resolved=$(readlink -f "$(command -v brew)"); case "$resolved" in /home/linuxbrew/.linuxbrew/*) echo "brew canonical prefix OK (no symlink indirection): $resolved" ;; *) echo "FAIL: brew resolves outside the canonical prefix: $resolved" >&2; exit 1 ;; esac; test -x /usr/local/bin/cadrumo-runner-entry.sh && echo "entrypoint present outside the volume-shadowed /home/runner"; test -x /home/runner/run.sh && echo "runner agent present"'
 
 # Verify codebase security posture using semgrep scans. Single command, no
 # platform-specific preamble needed, so one recipe covers both shells.

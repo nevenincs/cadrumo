@@ -128,83 +128,108 @@ ssh <macos-build-host> '
 
 (Copy `cleanup-macos.sh` to the runner root first, e.g. `scp dev/runners/cleanup-macos.sh <macos-build-host>:~/actions-runner/`.)
 
-## Linux container provisioning (`runner-entry-linux.sh`)
+## How the runners relate to the other container images
 
-The two Linux runners are containers built from the stock
-`ghcr.io/actions/actions-runner` image, so everything that makes them *these*
-runners lives outside the image. Two rules follow, and both were learned by
-outage rather than by design.
+Three container surfaces exist in this repository and they are not independent.
+All of them are declared in the **single repository-root `Dockerfile`**, one
+stage each, one base image declaration each.
 
-**The entrypoint belongs in the runner's own state volume, never on a host
-path.** `runner-entry-linux.sh` is copied to `/home/runner/entry.sh` inside the
-`cadrumo-runner-state-<n>` volume and the container is created with
-`--entrypoint /home/runner/entry.sh`. A container whose entrypoint is
-bind-mounted from a scratch or temp directory dies the moment that directory is
-cleaned up: Docker recreates the missing bind source as an empty **directory**,
-exec fails, and the container exits **127** and stays down *even with*
-`--restart always`. The tell is a mount whose source is a temp path, which
+| Surface | Declared as | Base | Built by |
+| ------- | ----------- | ---- | -------- |
+| Self-hosted Linux runner | `--target runner` | `ARG RUNNER_BASE_IMAGE` (`ghcr.io/actions/actions-runner`, pinned) | `just runner-image-build` |
+| Contributor devcontainer | `--target dev` | `ARG PYTHON_BASE_IMAGE` (`python:3.13-slim-trixie`) | `just devcontainer-build` |
+| Clean-Linux wheel proof | `dev/packaging/smoke_docker.py` | reads `ARG PYTHON_BASE_IMAGE` back from the Dockerfile | the packaging campaign |
+
+The chain at CI time runs top to bottom: a workflow job labelled
+`[self-hosted, Linux, X64]` lands in a **runner container**, which mounts the
+**host** docker socket; the packaging smoke lanes then start **nested**
+clean-Linux containers on the host daemon through that socket to prove a built
+wheel installs from scratch. That is why the Linux cleanup hook prunes the
+*host* daemon from inside the container — the residue it is cleaning was created
+one level up.
+
+The runner keeps a separate base **by necessity, not by drift**: its upstream
+image carries the GitHub Actions runner agent itself (`run.sh`, `config.sh`,
+`Runner.Listener`), built against Ubuntu. There is no build of that agent on the
+Python base. The other two share one base, and share it by construction —
+`dev/packaging/_base_image.py` parses `ARG PYTHON_BASE_IMAGE` out of the
+Dockerfile so the string exists in exactly one place, and
+`dev/packaging/tests/test_container_base_image_singularity.py` fails the build
+if any surface re-declares it.
+
+## Linux container provisioning (the `runner` image)
+
+The Linux runners build from `--target runner`, which bakes in everything that
+makes them *these* runners. Previously they ran the **stock**
+`ghcr.io/actions/actions-runner` image and every such thing was hand-copied into
+the `cadrumo-runner-state-<n>` volume, so a rebuild silently lost whatever
+nobody remembered to re-copy. The lessons below were all learned by outage; they
+are preserved because they explain why the image is shaped the way it is, and
+because the pre-cutover fleet still runs the old scheme.
+
+**The one placement rule: the state volume mounts over `/home/runner`, so
+anything installed there is shadowed at runtime.** That single fact drives every
+path choice in the `runner` stage. Tools go to `/usr/local/bin`, Homebrew to
+`/home/linuxbrew`, the entrypoint to
+`/usr/local/bin/cadrumo-runner-entry.sh` — all outside the shadowed path, and
+therefore all surviving a container rebuild without living in the volume.
+
+**The entrypoint must never come from a host path.** A container whose
+entrypoint is bind-mounted from a scratch or temp directory dies the moment that
+directory is cleaned up: Docker recreates the missing bind source as an empty
+**directory**, exec fails, and the container exits **127** and stays down *even
+with* `--restart always`. The tell is a mount whose source is a temp path, which
 `Test-Path` reports as existing while reading it errors with "is a directory".
+Baking it into the image removes the failure mode entirely.
 
-**Tools the image does not ship belong in the volume too**, under
-`/home/runner/tools/bin`, which the entrypoint prepends to `PATH`. The image
-carries `jq`, `git`, `curl`, `tar` and the docker client; it does **not** carry
-`gh`. Workflows install `just` and `uv` themselves through actions, but nothing
-installs `gh` — it is assumed present, as it is on GitHub-hosted runners. When
-it is absent, `dev.release.version_identity` fails its forge check with
-`REFUSED: forge check needs the gh CLI on PATH`, which surfaces mid-release as a
-cohort-seal failure rather than as a missing-tool error. Installing into the
-volume rather than the container's writable layer is the whole point: a
-recreated container keeps the tools.
+**`gh` is assumed present the way it is on GitHub-hosted runners, and the
+upstream image does not ship it.** The image carries `jq`, `git`, `curl`, `tar`
+and the docker client only. Workflows install `just` and `uv` themselves through
+actions, but nothing installs `gh`; when it is absent
+`dev.release.version_identity` fails its forge check with `REFUSED: forge check
+needs the gh CLI on PATH`, which surfaces mid-release as a cohort-seal failure
+rather than as a missing-tool error. The `runner` stage pins the current
+upstream release (Ubuntu 24.04's own package is several minor versions behind)
+and installs it to `/usr/local/bin`.
 
-**Homebrew is a third class again: a whole tree, not a binary or a package —
-and it is the one thing that must NOT go in the volume.** The acquisition lane
-runs `brew` from the canonical `/home/linuxbrew/.linuxbrew/bin/brew`, and the
-stock image has no Homebrew at all, so a rebuilt container fails that lane's
-very first step, `Verify declared Homebrew release row`, on `test -x
-"$BREW_PATH"`. Install it at the real canonical path:
-
-```bash
-sudo apt-get install -y build-essential procps file git
-sudo mkdir -p /home/linuxbrew && sudo chown runner:runner /home/linuxbrew
-git clone https://github.com/Homebrew/brew /home/linuxbrew/.linuxbrew/Homebrew
-mkdir -p /home/linuxbrew/.linuxbrew/bin
-ln -sfn ../Homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
-/home/linuxbrew/.linuxbrew/bin/brew update --force
-```
-
-**Do not put the tree in the volume and symlink `/home/linuxbrew` at it.** That
-is the obvious way to make it survive a rebuild, and it breaks `brew link`:
-`brew --prefix` still answers `/home/linuxbrew/.linuxbrew` correctly, so the
-install proceeds all the way through building every resource before failing at
-the very end with
+**Homebrew must sit at the canonical prefix, never behind a symlink.** The
+acquisition lane runs `brew` from `/home/linuxbrew/.linuxbrew/bin/brew` and
+fails its very first step, `Verify declared Homebrew release row`, on `test -x
+"$BREW_PATH"` if it is missing. Relocating the tree and symlinking
+`/home/linuxbrew` at it is the obvious way to make it survive a rebuild and it
+breaks `brew link`: `brew --prefix` still answers correctly, so an install
+proceeds all the way through building every resource before failing at the very
+end with
 
 ```
 An unexpected error occurred during the `brew link` step
 Permission denied @ dir_s_mkdir - /linuxbrew
 ```
 
-Homebrew computes relative link traversals against the RESOLVED path. Through a
-symlink the real path is deeper than the canonical one, so the `..` walk climbs
-too far and lands at `/linuxbrew` on the filesystem root. Verify with `readlink
--f "$(command -v brew)"` — it must contain no symlink indirection.
+Homebrew computes relative link traversals against the RESOLVED path, so through
+a symlink the `..` walk climbs too far and lands at `/linuxbrew` on the
+filesystem root. The stage installs at the real path and asserts
+`readlink -f "$(command -v brew)"` stays inside `/home/linuxbrew/` at build
+time, and clones with full history — a `--depth=1` clone leaves `brew --version`
+reporting "shallow or no git repository" and Homebrew refuses to work from it.
 
-So Homebrew is the one dependency that genuinely does not survive a container
-rebuild. Reinstall it, and prefer a correct install over a durable one.
-
-Clone with full history: a `--depth=1` clone leaves `brew --version` reporting
-"shallow or no git repository" and Homebrew refuses to work from it.
+Homebrew was previously described here as "the one dependency that genuinely
+does not survive a container rebuild". In the image it does; that was a
+consequence of provisioning by hand, not a property of Homebrew.
 
 **Retired: the `libatomic1` gap.** The dev lane used to run `pyright`, a Python
 wrapper around a JavaScript analyser. With no `node` on `PATH` it downloaded its
 own, and that build needs `libatomic.so.1`, which the stock image does not
 carry; the lane then died `exit 127` with `error while loading shared
-libraries: libatomic.so.1`. Because a shared library cannot live in the volume
-the way `gh` does, it had to be reinstalled by hand on every container rebuild —
+libraries: libatomic.so.1`. Because a shared library could not live in the volume
+the way `gh` did, it had to be reinstalled by hand on every container rebuild —
 and a rebuild that skipped the step broke the packaging smoke without naming why.
 
 The type checker is now `pyrefly`, a native binary with no JavaScript runtime
 underneath, so this gap no longer exists and the apt step is retired. Nothing
-needs installing for the dev lane's type check.
+needs installing for the dev lane's type check. Note that the failure class it
+represents — a shared library that cannot live in a volume — is exactly what the
+image-based scheme removes.
 
 **A stopped runner is a doomed runner, and the volume dies with it.** This is the
 third failure class and the most expensive, because it is silent. If a container
@@ -230,34 +255,68 @@ rather than weeks.
 They carry identical labels, so a job requesting `[self-hosted, Linux, X64]`
 lands on whichever is free. Any tool present on one and absent on the other is a
 coin-flip failure that reproduces only half the time — the worst debugging shape
-there is. Whenever you provision one, provision both, and verify with the checks
-below rather than assuming. Note that `gh` belongs in the volume at
-`/home/runner/tools/bin` precisely so a container rebuild keeps it; an install
-into the container's writable layer (`/usr/local/bin`) works until the rebuild
-that silently loses it.
+there is. The image is what makes parity structural rather than a habit: two
+containers from the same image tag cannot disagree about their tools. This is
+also why `RUNNER_BASE_IMAGE` is pinned to a release tag and not `:latest` — a
+base that moves between the two `docker create` calls reintroduces exactly the
+drift the image removes.
 
-Recreate a Linux runner like this **when its volume still holds a live
-registration** (`config.sh`, `run.sh`, `.runner`, `.credentials`, and `.env` are
-already there, so it does **not** re-register). If the registration was deleted,
-do not reuse the volume — create a new one and run `config.sh` against a fresh
-registration token first:
+### Building the image
 
 ```bash
+just runner-image-build   # docker build --target runner -t cadrumo-runner-linux .
+just runner-image-test    # gh, just, canonical-prefix brew, entrypoint, agent
+```
+
+`runner-image-test` checks each capability whose absence caused a documented
+outage, including that `brew` resolves with no symlink indirection — a condition
+that otherwise only reveals itself at the very end of a real install.
+
+### Cutover, one runner at a time
+
+The live fleet still runs the stock image; nothing swaps automatically. Cut over
+deliberately, and **never both runners at once** — CI and smoke depend on the
+pair.
+
+1. Build and test the image on the docker host.
+2. Poll busy state (see *Restart discipline*) and pick an **idle** runner.
+3. Recreate it against its existing volume with the command below.
+4. Confirm it comes back online and takes a job before touching the second.
+
+```bash
+docker rm -f cadrumo-runner-linux-2   # idle only, confirmed busy=false
 docker create --name cadrumo-runner-linux-2 --restart always \
   --user runner -w /home/runner \
   -v cadrumo-runner-state-2:/home/runner \
   -v /run/host-services/docker.proxy.sock:/var/run/docker.sock \
   -e RUNNER_MANUALLY_TRAP_SIG=1 -e ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=1 \
-  --entrypoint /home/runner/entry.sh ghcr.io/actions/actions-runner:latest
+  cadrumo-runner-linux
+docker start cadrumo-runner-linux-2
 ```
 
-Verify both classes before trusting the runner with a release lane — each gap
-costs a full smoke run to rediscover, and neither announces itself as a
-missing-dependency error:
+Two differences from the old command. There is no `--entrypoint` override: the
+image declares it, at a path the volume cannot shadow. And the image is
+`cadrumo-runner-linux`, not the upstream tag.
+
+This works **only when the volume still holds a live registration**
+(`config.sh`, `run.sh`, `.runner`, `.credentials`, and `.env` are already there,
+so it does **not** re-register). If the registration was deleted, do not reuse
+the volume — create a new one and run `config.sh` against a fresh registration
+token first.
+
+Note that the runner **agent** itself lives in the volume, seeded from whatever
+image first populated it. Bumping `RUNNER_BASE_IMAGE` therefore does not upgrade
+the agent in an existing volume; the runner self-updates from the service, so
+this is normally a non-issue, but it is the reason an agent-version check reads
+the volume's copy rather than the image's.
+
+Verify before trusting the runner with a release lane — each gap costs a full
+smoke run to rediscover, and none announces itself as a missing-dependency
+error:
 
 ```bash
-docker exec <container> bash -lc 'command -v gh && gh --version'
-docker exec <container> bash -lc 'ldconfig -p | grep -q libatomic && echo libatomic ok'
+docker exec <container> bash -lc 'gh --version && just --version && brew --version'
+docker exec <container> bash -lc 'readlink -f "$(command -v brew)"'  # must stay under /home/linuxbrew/
 ```
 
 Do **not** keep a broken container around as a rollback: `cleanup-linux.sh`
