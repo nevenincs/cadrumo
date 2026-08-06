@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-05'
-body_hash: 'sha256:8e7c854bbf51502f0626bc57edc5569774d63c5a8afc26129d0692730f0c6122'
+modified: '2026-08-06'
+body_hash: 'sha256:0e0cc47389e1bc395f0ffa360bd6b8d219051bf945cfbb5f00e38d1c4a9281dc'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -81,6 +81,7 @@ Formal review follow-up is part of that queue: the P06.S22 Pagefind result contr
 - [x] `P06.S21` - Carry registry help, input-kind, data-type, formula, and locale metadata through the casilla search projection and unified record without changing the opaque identity; `dev/docs/terminology/`.
 - [x] `P06.S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback; `docs/_static/cadrumo-docs.js`.
 - [x] `P06.S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback; `dev/docs/terminology/_resolution.py`.
+- [ ] `P06.S29` - Correct the structured modelo plus casilla route to carry and match canonical casilla_id while retaining display-number and segmento fallback, and add the real-authority gate for an id that differs from its display number; `dev/docs/pagefind_inject.py, docs/_static/cadrumo-docs.js, dev/docs/terminology/tests/test_casilla_projection.py`.
 - [ ] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
 - [ ] `P06.S27` - Defer a Diseño-specific locator/parser contract until an official revision-aware source locator is available while retaining fail-closed target resolution; `dev/docs/terminology/_resolution.py`.
 - [ ] `P06.S28` - Reconcile the Diseño source-resolution verification gate with the validated individual-locator contract before verification runs; `dev/docs/terminology/tests/test_resolution.py`.

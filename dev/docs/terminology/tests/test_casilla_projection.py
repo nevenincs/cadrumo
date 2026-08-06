@@ -25,7 +25,7 @@ import pytest
 
 from cadrumo.core import Modelo
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import bundled_authority
+from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
 from dev.docs.terminology._casilla_projection import CasillaProjectionStats
 from dev.docs.terminology._search_record import CasillaSearchRecord
 
@@ -215,6 +215,37 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
     assert match.number == sample_casilla.number  # type: ignore[attr-defined]
     assert match.segmento == sample_casilla.segmento  # type: ignore[attr-defined]
     assert match.descriptions[OutputLanguage.ES] == sample_casilla.label  # type: ignore[attr-defined]
+
+
+def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -> None:
+    """Modelo 121 keeps its canonical casilla id separate from its display number."""
+    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from dev.docs.terminology._unified_record import to_search_record
+
+    authority = bundled_authority()
+    assert isinstance(authority, ValidatedRegistryAuthority)
+    definition = authority.modelo(Modelo.M121.value)
+    latest_revision = max(definition.revisions.values(), key=lambda revision: revision.valid_from)
+    authoritative = next(
+        casilla for casilla in latest_revision.casillas if casilla.id == "decl.ejercicio"
+    )
+
+    assert authoritative.id == "decl.ejercicio"
+    assert authoritative.number == "ejercicio"
+    assert authoritative.id != authoritative.number
+
+    projected = next(
+        record
+        for record in project_modelo_casillas(Modelo.M121, authority)
+        if record.casilla_id == authoritative.id
+    )
+    assert projected.casilla_id == authoritative.id
+    assert projected.number == authoritative.number
+    assert projected.casilla_id != projected.number
+
+    unified = to_search_record(projected)
+    assert unified.metadata.casilla_id == projected.casilla_id == "decl.ejercicio"
+    assert unified.metadata.number == projected.number == "ejercicio"
 
 
 def test_segmented_modelo_200_projection_uses_canonical_casilla_id() -> None:
