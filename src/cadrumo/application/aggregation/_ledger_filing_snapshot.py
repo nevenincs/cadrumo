@@ -243,6 +243,7 @@ def _evidence_row(
         counterparty=raw.counterparty,
         description=raw.description,
         purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        invoice_id=transaction.invoice_id,
         attachment_ids=transaction.attachment_ids,
         legal_refs=legal_refs,
         source_refs=source_refs,

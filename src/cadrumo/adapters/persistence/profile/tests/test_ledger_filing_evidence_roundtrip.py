@@ -78,6 +78,7 @@ def _evidence() -> LedgerFilingEvidence:
                 counterparty="Proveedor SL",
                 description="Compra material oficina",
                 purchase_invoice_evidence_id="purchase-evidence-1",
+                invoice_id="invoice-1",
                 attachment_ids=("attachment-1",),
                 document_link_ids=("drive-doc-1",),
                 legal_refs=_LEGAL_REFS,

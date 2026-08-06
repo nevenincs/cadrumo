@@ -176,6 +176,17 @@ class LedgerEvidenceRow(BaseModel):
     counterparty: str | None = None
     description: str = ""
     purchase_invoice_evidence_id: str | None = None
+    # A row's reconciliation-catalogue Invoice foreign key, mirroring
+    # Transaction.invoice_id. Carried alongside purchase_invoice_evidence_id,
+    # not instead of it, for the same reason the two are separate evidence
+    # axes on Transaction: a validated Invoice is a distinct, and stronger,
+    # evidence class from a bare PurchaseInvoiceEvidence blob. Without this
+    # field, a row credited only through a linked Invoice at verify time
+    # would still read as evidence-less once bundled here, and the
+    # export/local-filing gate (application/modelo/_ledger_evidence_gate.py)
+    # would block a revision verify had just granted -- a regression proven
+    # by test_modelo_303_verify_and_file_credit_a_linked_validated_invoice.
+    invoice_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     document_link_ids: tuple[str, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
