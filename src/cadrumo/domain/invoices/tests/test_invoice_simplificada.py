@@ -75,11 +75,18 @@ def test_a_missing_tax_id_on_a_non_simplificada_invoice_is_refused() -> None:
         _invoice(invoice_class=InvoiceClass.ORDINARIA)
 
 
-def test_a_simplificada_still_requires_the_tax_id_for_an_exempt_intracommunity_supply() -> None:
-    """RD 1619/2012 art. 6.1.d, 1.º: an entrega intracomunitaria exenta always needs it."""
-    with pytest.raises(ValidationError, match=r"RD 1619/2012 art. 6.1.d"):
+def test_a_simplificada_is_refused_outright_for_an_exempt_intracommunity_supply() -> None:
+    """RD 1619/2012 art. 4.4.a) forbids the class altogether, not merely its tax-id relief.
+
+    Superseded by the stronger art. 4.4.a) eligibility guard
+    (``test_invoice_simplificada_eligibility.py``): supplying a valid foreign
+    tax id does not rescue this combination, because the document must never
+    be SIMPLIFICADA for this category in the first place.
+    """
+    with pytest.raises(ValidationError, match=r"RD 1619/2012 art. 4.4.a"):
         _invoice(
             counterparty_country="DE",
+            counterparty_tax_id="DE123456789",
             iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
         )
 
@@ -136,3 +143,31 @@ def test_two_untagged_simplificadas_do_not_collide_on_invoice_id() -> None:
     second = _invoice(invoice_number="T-2026-002")
 
     assert first.invoice_id != second.invoice_id
+
+
+def test_a_received_simplificada_with_no_supplier_tax_id_is_refused() -> None:
+    """The relief is ISSUED-only: on a RECEIVED invoice, ``counterparty_tax_id`` names the ISSUER.
+
+    Art. 6.1.d's three cases govern the DESTINATARIO's NIF -- the customer on
+    an ISSUED invoice, which is why the relief exists there. On a RECEIVED
+    invoice the destinatario is the taxpayer (this app's own user, whose NIF
+    is not even a field this record carries, since it is already known);
+    ``counterparty_tax_id`` there is the SUPPLIER's own identification, which
+    art. 6.1.d's opening clause and art. 7.1.d both keep mandatory regardless
+    of class. Before this guard, a RECEIVED SIMPLIFICADA with no supplier NIF
+    at all constructed successfully -- a document missing its own issuer's
+    identity, not a legitimately relieved ticket.
+    """
+    with pytest.raises(
+        ValidationError,
+        match="counterparty_tax_id is required unless invoice_class is SIMPLIFICADA and kind is ISSUED",
+    ):
+        _invoice(kind=InvoiceKind.RECEIVED)
+
+
+def test_a_received_simplificada_with_a_supplier_tax_id_is_accepted() -> None:
+    """The truthful RECEIVED case: a real ticket naming its issuing supplier."""
+    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674")
+
+    assert invoice.kind is InvoiceKind.RECEIVED
+    assert invoice.counterparty_tax_id == "B12345674"

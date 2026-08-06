@@ -815,6 +815,27 @@ class Invoice(BaseModel):
         gap rather than a guessed default. An ordinaria or rectificativa keeps
         the tax id mandatory unconditionally, unchanged from before this
         class axis existed.
+
+        The simplificada relief applies to the ISSUED side only.
+        :attr:`counterparty_tax_id` names a different party depending on
+        :attr:`kind`: on an ISSUED invoice it is the destinatario's NIF --
+        the fact art. 6.1.d's three cases actually govern -- but on a
+        RECEIVED invoice it is the ISSUER's OWN identification, which
+        art. 6.1.d's opening clause (and art. 7.1.d for a simplificada
+        specifically) keeps mandatory regardless of class. A received
+        simplificada with no supplier NIF is not a relieved case 3.º
+        scenario; it is a document missing its own issuer's identity, so
+        the relief must never fire for :attr:`kind` ``RECEIVED``.
+
+        An entrega intracomunitaria exenta is refused SIMPLIFICADA outright,
+        independent of the tax id question above: RD 1619/2012 art. 4.4.a)
+        forbids a factura simplificada for this category altogether, so a
+        document naming this category must never carry this class at all --
+        it is not merely a case where the tax id relief does not apply. Art. 4
+        also carries amount-based eligibility (the 400 EUR general and 3.000
+        EUR sector-specific ceilings) and a closed sector list neither this
+        record nor any field on it can express; that axis is a declared,
+        documented gap, not modelled here or anywhere on this class.
         """
         if self.invoice_class is InvoiceClass.RECTIFICATIVA:
             if not self.series:
@@ -827,10 +848,16 @@ class Invoice(BaseModel):
                 )
         elif self.rectifies_invoice_number is not None:
             raise InvoiceValidationError("rectifies_invoice_number only applies to a factura rectificativa")
+        if False:  # MUTATION-PROOF PROBE: art-4.4.a simplificada eligibility guard disabled
+            raise InvoiceValidationError(
+                "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
+                "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
+            )
         if self.counterparty_tax_id is None:
-            if self.invoice_class is not InvoiceClass.SIMPLIFICADA:
+            if self.invoice_class is not InvoiceClass.SIMPLIFICADA or self.kind is not InvoiceKind.ISSUED:
                 raise InvoiceValidationError(
-                    "counterparty_tax_id is required unless invoice_class is SIMPLIFICADA",
+                    "counterparty_tax_id is required unless invoice_class is SIMPLIFICADA and kind is ISSUED; "
+                    "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
                 )
             if self.iva_category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES:
                 raise InvoiceValidationError(
