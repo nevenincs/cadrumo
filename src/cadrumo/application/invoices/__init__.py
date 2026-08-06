@@ -72,6 +72,7 @@ from ._importing import (
     merge_invoice_import,
     parse_invoice_payload,
 )
+from ._issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 from ._lifecycle import (
     CatalogueInvoiceRemoveResult,
     remove_catalogue_invoice,
@@ -144,6 +145,7 @@ __all__ = [
     "invoice_direction_to_source_kind",
     "invoice_display_amounts",
     "invoice_review_status",
+    "issuer_established_in_tai",
     "link_invoice_transaction_catalogues",
     "link_invoice_transaction_repositories",
     "list_invoice_repository_rows",
@@ -162,5 +164,6 @@ __all__ = [
     "remove_catalogue_invoice",
     "resolve_catalogue_invoice",
     "resolve_catalogue_invoice_from_repository",
+    "simplificada_requires_tax_id_for_domestic_issuer",
     "verify_invoice_repository_links",
 ]
