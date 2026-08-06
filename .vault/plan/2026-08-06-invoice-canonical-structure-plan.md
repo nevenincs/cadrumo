@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-06'
-body_hash: 'sha256:ec2684ae490048a5e3b149d373cf57e5693bcb87ea8b3e756d45cf5b9fae1469'
+body_hash: 'sha256:c4411d0b329ace69a275e739c5ef4be6822ba2fcfb4de383a2dbd8b1ecb7b10e'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -242,6 +242,26 @@ So executing `S02` as originally written would have **added a defect**: a second
 `S02` therefore becomes a recording Step, and the live question it carried moves to `S08`: a slim record whose `counterparty_nif` and `eu_iva_id` disagree is an **unmigratable record class**, not a missing canonical field. The fold must state per that class whether it refuses, quarantines or resolves to the EU VAT ID — and it must not silently pick one, because the two ids identify different parties.
 
 **A second gap this measurement opens, for `S08` and `S28`.** The canonical model is stricter than slim on the tax-id/country axis, so the fold must expect slim records the canonical model will refuse outright — any record pairing a domestic-format NIF with a foreign country. That population is invisible to a field-list inventory and is exactly what the `S28` rescope to defaults-and-nullability is for. It is a **narrowing of the operator input contract**, consistent with the correction already recorded in this plan's Description.
+
+**`S09` premise REFUTED at `HEAD`, 2026-08-07. The Step is left OPEN, not closed, because its red state as written is unreachable.**
+
+`S09` is conditioned on "after confirming every production construction site already passes it explicitly", and its criterion offers the reassuring branch: if they all do, the change is "a safety ratchet with no behaviour change". They do not all do.
+
+There are 30 `InvoiceObservation` construction sites, 5 of them production. Four pass `source_kind` explicitly. The fifth, `_counterpart_to_invoice` (`domain/calculations/registry/_counterpart_bindings.py:144`), **omits it**, so every counterpart-derived observation is silently stamped `COLLECTIBLE_INVOICE` — the issued direction — regardless of what it actually was.
+
+That stamp is load-bearing, not cosmetic. `_invoice_bindings.py:522` filters observations with `observation.source_kind == binding.source`, so the defaulted value **selects which bindings the observation feeds**. A silent default on a filter key is not a no-op.
+
+**And the Step cannot simply be executed, because that site has no valid value to pass.** `CounterpartAggregationObservation.source_kind` is a `CounterpartSourceKind` defaulting to `LEDGER_TRANSACTION` (`_counterpart_bindings.py:63-65`), which is a *different taxonomy*: `InvoiceObservation` validates its `source_kind` against the invoice binding family and would **raise** on `LEDGER_TRANSACTION`. So the omission is a taxonomy-boundary fallback, not carelessness — and making the field required without deciding what that adapter passes converts a silent mis-stamp into a hard crash on the M347/M349 path.
+
+The Step therefore needs a decision it does not currently contain, and the options are not equivalent:
+
+- Carry the real direction across the boundary, so a counterpart observation derived from a received operation stamps the payable kind. Highest fidelity, and the only option that fixes the mis-stamp rather than documenting it.
+- Pass `COLLECTIBLE_INVOICE` explicitly at the call site with its reason stated. Preserves today's behaviour exactly and converts an invisible default into a reviewable one, which is what a ratchet Step is for — but it leaves the direction infidelity in place.
+- Widen the invoice source taxonomy to express a counterpart-derived origin. Largest blast radius, and governed by `retired-enum-members-need-consumer-reconciliation`.
+
+**Sequencing note.** This sits in the same adapter the campaign register already flags for dropping `invoice_number` and the IVA rate and amount on the M347/M349 path, and for keying its rollup on a bare-string operation kind that the canonical `Invoice` already types. Deciding this axis in isolation would likely be re-decided by that work, so `S09` should be settled together with that register item rather than ahead of it.
+
+**Reconciliation cost, measured so it is not rediscovered.** 22 of the 30 construction sites omit `source_kind` and would need updating in the same change, 20 of them in the M347 and M349 registry binding tests. Per `retired-enum-members-need-consumer-reconciliation` that reconciliation lands as one coherent accept-or-reject state, not incrementally.
 
 ### Phase `P02`
 
