@@ -484,7 +484,10 @@ class LedgerRentaIncomeAggregationSourceResolver:
             )
             + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
             + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
-            + inferred_actividad_retencion_rate_advisory_observations(aggregation.observations),
+            + inferred_actividad_retencion_rate_advisory_observations(
+                aggregation.observations,
+                bucket_id=context.bucket_id,
+            ),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="ledger_renta_income_aggregation",

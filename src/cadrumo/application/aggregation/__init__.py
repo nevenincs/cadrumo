@@ -194,6 +194,7 @@ from ._retencion_observations_repository import (
 from ._retencion_rate_advisory import (
     ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND,
     INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
+    INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
     administrador_retencion_rate_advisory_observations,
     inferred_actividad_retencion_rate_advisory_observations,
 )
@@ -250,6 +251,7 @@ __all__ = [
     "DEFERRED_SOURCE_KINDS",
     "DIAGNOSTIC_MESSAGE_MAX_LENGTH",
     "INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND",
+    "INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND",
     "INVOICE_RETENCION_DEFECT_GUIDANCE",
     "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",

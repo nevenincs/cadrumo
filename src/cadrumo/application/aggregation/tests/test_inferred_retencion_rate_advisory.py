@@ -12,20 +12,24 @@ VISIBLE without becoming noisy. The whole value of the advisory is the
 discrimination, so that is what is asserted here rather than the weaker "an
 advisory was raised":
 
-* a genuine withholding at ANY grounded art. 95 rate raises NO advisory — the
-  15 % general and 7 % inicio figures of apartado 1, and the sectoral 2 % and 1 %
-  of apartados 4, 5 and 6.1.º. An advisory that fired on the correct domestic-B2B
-  majority, or on an agricultural or módulos filer, would train operators to
+* a withholding at an art. 95.1 PROFESSIONAL rate (15 % or 7 %) raises nothing —
+  those figures are too large for a fee or rounding gap to reach by accident, so
+  the match is a strong claim and an advisory there would train operators to
   ignore the channel;
-* each non-rate shortfall DOES raise exactly one, naming its transaction;
+* a match on a SECTORAL rate only (2 % or 1 %) raises the weaker
+  ``inferred_retencion_sectoral_rate_unconfirmed``, never the unmatched reason —
+  those rates are small enough that a bank fee lands on one by coincidence;
+* each non-rate shortfall raises ``inferred_retencion_rate_unmatched``, naming
+  its transaction;
 * a retención DECLARED on a linked invoice is never screened, because that figure
   is the document's statement rather than something this application inferred;
-* a shortfall that COINCIDES with a statutory rate passes silently — the known
-  limit, asserted here so it stays a documented state rather than a surprise.
+* the active profile WORDS the sectoral advisory and never suppresses it.
 
-If a later edit made the advisory unconditional, the conforming gates go red; if
-it disabled the advisory, the phantom gates go red. Neither direction passes
-silently.
+The two reason codes are asserted structurally rather than by prose, because the
+operator driving this CLI routes on fields. If a later edit made the screen
+unconditional the professional gates go red; if it disabled the screen the
+phantom gates go red; if it merged the two reasons the split gate goes red; and
+if it promoted the profile hint into a filter, the no-profile gate goes red.
 
 The expected figures are invoice arithmetic (declared gross minus declared cash)
 and the statutory RIRPF art. 95 rates read from the registry parameter catalogue,
@@ -58,6 +62,7 @@ from ....domain.transactions import (
 from .._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .._retencion_rate_advisory import (
     INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
+    INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
     inferred_actividad_retencion_rate_advisory_observations,
 )
 
@@ -171,18 +176,20 @@ def test_the_registry_grounds_every_art_95_rate() -> None:
         ("sectoral-objetiva-1pct", "2400.00", Decimal("20.00"), "95.6.1.º estimación objetiva"),
     ],
 )
-def test_a_genuine_sectoral_rate_retencion_raises_no_advisory(
+def test_a_genuine_sectoral_rate_never_raises_the_unmatched_advisory(
     provider_id: str,
     cash: str,
     withheld: Decimal,
     apartado: str,
 ) -> None:
-    """The reason the sectoral rates were grounded: these must stay silent.
+    """A sectoral rate is a real rate: it must never be called unmatched.
 
-    Before art. 95.4/95.5/95.6 were in the registry, the screen knew only 15 %
+    Before art. 95.4/95.5/95.6 were in the registry the screen knew only 15 %
     and 7 %, so an agricultural, forestry or módulos filer withholding at their
-    correct statutory rate raised the advisory on a perfectly correct filing.
-    That is the false positive this closes.
+    correct statutory rate raised the STRONG advisory on a perfectly correct
+    filing. That misclassification is what grounding closed. These rows may
+    still raise the weaker sectoral-coincidence advisory — asserted separately
+    below — but never the unmatched one.
     """
     assert _GROSS - Decimal(cash) == withheld
     assert apartado
@@ -191,26 +198,64 @@ def test_a_genuine_sectoral_rate_retencion_raises_no_advisory(
 
     assert len(observations) == 1
     assert observations[0].withheld_amount == withheld
-    assert inferred_actividad_retencion_rate_advisory_observations(observations) == ()
+    reasons = {
+        diagnostic.reason for diagnostic in inferred_actividad_retencion_rate_advisory_observations(observations)
+    }
+    assert "inferred_retencion_rate_unmatched" not in reasons
 
 
-def test_a_shortfall_coinciding_with_a_statutory_rate_passes_silently() -> None:
-    """The documented limit, asserted so it is a known state and not a surprise.
+def test_a_shortfall_coinciding_with_a_sectoral_rate_raises_the_soft_advisory() -> None:
+    """The €20 catch, recovered as a weaker claim instead of as silence.
 
     A 20,00 EUR correspondent-bank fee on a 2.000,00 base is exactly 1 % — the
     art. 95.4.1.º / 95.6.1.º figure — so it is arithmetically indistinguishable
-    from a genuine engorde or módulos withholding and the screen cannot flag it.
-    Grounding the sectoral rates WIDENED this band rather than narrowing it,
-    which is the accepted cost of not false-firing on correct sectoral filings.
+    from a genuine engorde or módulos withholding. Grounding the sectoral rates
+    made this row silent; the sectoral reason code makes it visible again
+    WITHOUT asserting the certainty the unmatched advisory carries.
 
-    This gate exists so that trade-off is visible in the suite rather than
-    discovered by an operator. If a future design closes it (a declared
-    retención, a régimen signal on the row), this test should change.
+    Keyed on the reason, not the prose: the operator is an autonomous agent that
+    routes on fields, so the two advisories must be separable structurally.
     """
     observations = _observations(_income_row("swift-fee-coincides-with-1pct", cash="2400.00"))
 
     assert observations[0].withheld_amount == Decimal("20.00")
-    assert inferred_actividad_retencion_rate_advisory_observations(observations) == ()
+
+    diagnostics = inferred_actividad_retencion_rate_advisory_observations(observations)
+
+    assert len(diagnostics) == 1
+    assert diagnostics[0].reason == "inferred_retencion_sectoral_rate_unconfirmed"
+    assert diagnostics[0].source_kind == INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND
+
+
+def test_a_professional_rate_match_stays_silent_while_a_sectoral_one_speaks() -> None:
+    """The severity split, asserted as one comparison rather than two beliefs.
+
+    300,00 is 15 % of the base and 20,00 is 1 %; both are statutory products, and
+    the screen treats them differently ONLY because a fee can reach 1 % by
+    accident and cannot reach 15 %. If a later edit collapsed the two branches,
+    one side of this assertion fails whichever way it collapsed.
+    """
+    professional = _observations(_income_row("prof-15pct", cash="2120.00"))
+    sectoral = _observations(_income_row("sect-1pct", cash="2400.00"))
+
+    assert inferred_actividad_retencion_rate_advisory_observations(professional) == ()
+    assert len(inferred_actividad_retencion_rate_advisory_observations(sectoral)) == 1
+
+
+def test_the_sectoral_advisory_fires_even_when_no_profile_is_available() -> None:
+    """Absent profile changes the WORDING and never suppresses the diagnostic.
+
+    This is the gate against the obvious future "improvement": promoting the
+    profile hint into a filter. With no bucket the hint is unavailable, and the
+    advisory must still fire, saying only that it could not be checked.
+    """
+    observations = _observations(_income_row("sect-no-profile", cash="2400.00"))
+
+    diagnostics = inferred_actividad_retencion_rate_advisory_observations(observations, bucket_id=None)
+
+    assert len(diagnostics) == 1
+    assert diagnostics[0].reason == "inferred_retencion_sectoral_rate_unconfirmed"
+    assert "could not be checked" in diagnostics[0].message
 
 
 def test_a_genuine_fifteen_percent_retencion_raises_no_advisory() -> None:
@@ -296,14 +341,16 @@ def test_a_cuota_less_exempt_row_is_screened_on_the_same_rate_basis() -> None:
     assert diagnostics[0].reason == "inferred_retencion_rate_unmatched"
 
 
-def test_the_advisory_discriminates_within_one_mixed_aggregation() -> None:
-    """The conforming row stays silent while the phantoms fire, in one pass.
+def test_the_advisory_splits_one_mixed_aggregation_three_ways() -> None:
+    """All three outcomes in one pass, keyed on reason rather than on count.
 
     The per-scenario gates above could each pass with a screen that keyed on
-    something incidental to how a single row was built. Running all six together
-    and asserting that exactly the four phantoms are named is the property that
-    matters: an unconditional advisory yields six here, a disabled one yields
-    zero, and only a rate-discriminating screen yields these four.
+    something incidental to how a single row was built. Running every shape
+    together and asserting WHICH bucket each lands in is the property that
+    matters, and it fails whichever way a later edit collapses the branches:
+    an unconditional screen puts the two professional rows in a bucket, a
+    disabled one empties both, and merging the reason codes moves the sectoral
+    row into the unmatched set.
     """
     observations = _observations(
         _income_row("mixed-genuine-15", cash="2120.00"),
@@ -317,14 +364,23 @@ def test_the_advisory_discriminates_within_one_mixed_aggregation() -> None:
 
     assert len(observations) == 7
 
+    # Keyed on the withheld amount rather than the provider id: transaction_id is
+    # a derived hash, and the amount is both stable and the quantity the screen
+    # actually reasons about.
+    amount_by_id = {observation.transaction_id: observation.withheld_amount for observation in observations}
     diagnostics = inferred_actividad_retencion_rate_advisory_observations(observations)
-    flagged = {
-        observation.transaction_id
-        for observation in observations
-        if any(observation.transaction_id in diagnostic.message for diagnostic in diagnostics)
-    }
-    silent = {observation.transaction_id for observation in observations} - flagged
+    by_reason: dict[str, set[Decimal]] = {}
+    for diagnostic in diagnostics:
+        named = {amount for transaction_id, amount in amount_by_id.items() if transaction_id in diagnostic.message}
+        by_reason.setdefault(diagnostic.reason, set()).update(named)
+    spoken = set().union(*by_reason.values()) if by_reason else set()
+    silent = set(amount_by_id.values()) - spoken
 
-    assert len(diagnostics) == 4
-    assert len(flagged) == 4
-    assert len(silent) == 3
+    assert by_reason["inferred_retencion_rate_unmatched"] == {
+        Decimal("18.50"),
+        Decimal("0.50"),
+        Decimal("48.40"),
+        Decimal("250.00"),
+    }
+    assert by_reason["inferred_retencion_sectoral_rate_unconfirmed"] == {Decimal("40.00")}
+    assert silent == {Decimal("300.00"), Decimal("140.00")}

@@ -112,6 +112,12 @@ CalculationSourceDiagnosticReason = Literal[
     # credit is an over-claim. Screened on the rate rather than on the inference
     # marker so the correct domestic-B2B majority stays silent.
     "inferred_retencion_rate_unmatched",
+    # The weaker sibling: the inferred figure DOES equal a statutory sectoral
+    # rate, but 1 % and 2 % are small enough that a bank fee or discount reaches
+    # them by accident. Kept a separate reason rather than a reworded message so
+    # an automated operator routes on the field; the two carry different
+    # epistemic weight and must not be collapsed.
+    "inferred_retencion_sectoral_rate_unconfirmed",
     "official_box_unpopulated",
     "prior_payment_not_deducted",
     "prior_payment_minoracion_not_captured",

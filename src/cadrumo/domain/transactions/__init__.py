@@ -169,6 +169,8 @@ from ._retencion_parameters import (
     RirpfArt95RetencionRates,
     load_retencion_actividades_rates,
     maximum_supported_activity_retencion_rate,
+    professional_activity_retencion_rates,
+    sectoral_activity_retencion_rates,
     statutory_activity_retencion_rates,
 )
 from ._service import (
@@ -295,12 +297,14 @@ __all__ = [
     "normalize_irpf_category",
     "parse_response",
     "parse_split_response",
+    "professional_activity_retencion_rates",
     "profiles_for_provider",
     "prompt_spec_with_every_spending_category",
     "prompt_spec_with_saturation_fields",
     "resolve_classifier",
     "resolve_profile",
     "resolve_split_proposer",
+    "sectoral_activity_retencion_rates",
     "set_classification",
     "snapshot_classification_state",
     "statutory_activity_retencion_rates",
