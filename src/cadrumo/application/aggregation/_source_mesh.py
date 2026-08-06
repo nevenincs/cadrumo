@@ -97,6 +97,12 @@ CalculationSourceDiagnosticReason = Literal[
     # "ungrounded_income_substrate", where no invoice was linked at all: here
     # the operator did the linking and the link itself is what needs repair.
     "unusable_sales_invoice_evidence",
+    # An invoice folded into this period whose LIVA art. 75 devengo date was
+    # not recorded, so its issue date stood in for it. The figures are the best
+    # available, not a legal determination: an operation performed near a
+    # quarter boundary and invoiced in the next one is declared in the wrong
+    # period by exactly this substitution.
+    "devengo_date_proxy_attribution",
     "oss_no_live_source",
     "missing_transaction_evidence",
     "administrador_retencion_rate_mismatch",

@@ -1833,6 +1833,11 @@ cli:
           value).
         confirm_link_hint_message: Link this invoice to a ledger transaction with
           `aeat app ledger link`.
+        confirm_printed_total_mismatch_message: The total printed on the document
+          does not match the total recorded. The recorded total is derived from the
+          taxable base and the IVA rate, so a difference means the document carries
+          an amount this record does not, such as a recargo de equivalencia, or a
+          figure was misread. Check the document.
         confirm_taxable_base_help: Override the extracted taxable base.
         evidence_id_help: Evidence id (exact match)
         extract_attachment_id_help: Linked attachment id to extract from (alternative
@@ -1857,7 +1862,6 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
-        confirm_printed_total_mismatch_message: 'The total printed on the document does not match the total recorded. The recorded total is derived from the taxable base and the IVA rate, so a difference means the document carries an amount this record does not, such as a recargo de equivalencia, or a figure was misread. Check the document.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
@@ -1915,11 +1919,13 @@ cli:
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a business invoice
+        total_amount_required: 'Option --total-amount is required: state the invoice
+          total as a decimal amount, for example 121.00.'
         update_help: Update business invoice details
         view_help: Show one business invoice
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
-        total_amount_required: 'Option --total-amount is required: state the invoice total as a decimal amount, for example 121.00.'
+        operation_date_help: 'Date the entrega or prestacion took place (YYYY-MM-DD). This is the LIVA art. 75 devengo date that decides which period declares the cuota; without it the invoice date stands in for it.'
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).

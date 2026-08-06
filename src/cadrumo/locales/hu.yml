@@ -1901,6 +1901,12 @@ cli:
           érték megtartásához).
         confirm_link_hint_message: Kapcsold össze ezt a számlát egy könyvelési tétellel
           a `aeat app ledger link` paranccsal.
+        confirm_printed_total_mismatch_message: A dokumentumon szereplő végösszeg
+          nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból
+          és az áfakulcsból származik, ezért az eltérés azt jelenti, hogy a dokumentum
+          olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
+          felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
+          került. Ellenőrizze a dokumentumot.
         confirm_taxable_base_help: Felülírja a kinyert adóalapot.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
@@ -1929,7 +1935,6 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
-        confirm_printed_total_mismatch_message: 'A dokumentumon szereplő végösszeg nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból és az áfakulcsból származik, ezért az eltérés azt jelenti, hogy a dokumentum olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra került. Ellenőrizze a dokumentumot.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
@@ -1993,11 +1998,13 @@ cli:
         operation_type_invalid: 'A --operation-type értéke csak a következők egyike
           lehet: {valid}'
         remove_help: Üzleti számla törlése.
+        total_amount_required: 'A --total-amount megadása kötelező: adja meg a számla
+          végösszegét tizedes értékként, például 121.00.'
         update_help: Üzleti számla adatainak frissítése.
         view_help: Üzleti számla adatainak megjelenítése.
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
-        total_amount_required: 'A --total-amount megadása kötelező: adja meg a számla végösszegét tizedes értékként, például 121.00.'
+        operation_date_help: 'A teljesites (termekertekesites vagy szolgaltatasnyujtas) idopontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adofizetesi kotelezettseg keletkezesenek napja, amely meghatarozza, melyik idoszakban kell az adot bevallani; ennek hianyaban a szamla kelte lep a helyebe.'
       prorrata:
         activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevékenységi kód (ismételhető,
           legalább egy).

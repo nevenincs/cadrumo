@@ -36,6 +36,7 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepositoryProtocol,
+    InvoiceOperationDateRole,
     InvoiceValidationError,
     IvaRate,
     PaymentStatus,
@@ -107,6 +108,7 @@ def build_catalogue_invoice(
     notes: str = "",
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
+    operation_date: date | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
@@ -168,6 +170,13 @@ def build_catalogue_invoice(
         invoice_payload["iva_category"] = iva_category.value
     if operation_type is not None:
         invoice_payload["operation_type"] = operation_type.value
+    if operation_date is not None:
+        # LIVA art. 75.Uno: the general-regime devengo. The art. 75.Dos
+        # advance-payment role carries its own preconditions (money actually
+        # received, art. 25 entregas excluded) and is not something this
+        # operator-supplied date can assert, so it is not offered here.
+        invoice_payload["operation_date"] = operation_date.isoformat()
+        invoice_payload["operation_date_role"] = InvoiceOperationDateRole.OPERATION_PERFORMED.value
     _stamp_fx_conversion(invoice_payload, currency=currency, issued_at=issued_at, rate_provider=rate_provider)
     return Invoice.model_validate(invoice_payload)
 
@@ -221,6 +230,7 @@ def create_catalogue_invoice(
     notes: str = "",
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
+    operation_date: date | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> CatalogueInvoiceCreateResult:
@@ -248,6 +258,7 @@ def create_catalogue_invoice(
         notes=notes,
         iva_category=iva_category,
         operation_type=operation_type,
+        operation_date=operation_date,
         rate_provider=rate_provider,
     )
     catalogue = repo.load()

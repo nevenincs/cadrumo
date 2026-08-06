@@ -18,7 +18,15 @@ from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....domain.calculations.registry import CasillaId
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
+from ....domain.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceLine,
+    InvoiceOperationDateRole,
+    IvaRate,
+    PaymentStatus,
+    derive_invoice_id,
+)
 from ....domain.iva import (
     EUMemberState,
     InvoiceKind,
@@ -159,6 +167,7 @@ def _m369_invoice(
     transaction_kind: TransactionKind,
     base_amount: Decimal,
     iva_amount: Decimal,
+    operation_date: date | None = None,
 ) -> Invoice:
     line = InvoiceLine(
         description=f"OSS supply {invoice_number}",
@@ -193,6 +202,8 @@ def _m369_invoice(
         payment_status=PaymentStatus.PAID,
         oss_ioss_regime=OssIossRegime.UNION_SCHEME,
         oss_transaction_kind=transaction_kind,
+        operation_date=operation_date,
+        operation_date_role=(None if operation_date is None else InvoiceOperationDateRole.OPERATION_PERFORMED),
     )
 
 
@@ -305,6 +316,76 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
             assert wu_repo.load().work_units[work_unit.work_unit_id].current_calculation_revision_id == (
                 result.revision.calculation_revision_id
             )
+
+
+def test_m369_oss_projection_follows_the_devengo_date_and_discloses_the_proxy(
+    m369_objects: SecureObjectRepository,
+) -> None:
+    """OSS period attribution is the art. 75 devengo date, and says which one it used.
+
+    Two invoices, both issued in Q2 2026. One records a Q1 operation date, so
+    it devengo'd in Q1 and belongs on Q1's Modelo 369; the other records none,
+    so its Q2 placement is a substitution the operator is told about. Asserting
+    both directions matters: a change that moved every invoice one quarter
+    earlier, or an advisory that fired on every invoice, would each satisfy one
+    half alone.
+    """
+    revision = _revision("369", _M369_REVISION)
+    invoice_repo = InvoiceCatalogueRepository(objects=m369_objects)
+    invoice_repo.save(
+        InvoiceCatalogue.from_invoices(
+            (
+                _m369_invoice(
+                    invoice_number="OSS-DE-Q1-OPERATION",
+                    issued_at=date(2026, 4, 10),
+                    counterparty_name="DE Consumer",
+                    counterparty_tax_id="DE123456789",
+                    counterparty_country="DE",
+                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                    base_amount=Decimal("100.00"),
+                    iva_amount=Decimal("19.00"),
+                    operation_date=date(2026, 3, 28),
+                ),
+                _m369_invoice(
+                    invoice_number="OSS-FR-NO-OPERATION-DATE",
+                    issued_at=date(2026, 4, 12),
+                    counterparty_name="FR Consumer",
+                    counterparty_tax_id="FR12345678901",
+                    counterparty_country="FR",
+                    transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+                    base_amount=Decimal("200.00"),
+                    iva_amount=Decimal("40.00"),
+                ),
+            ),
+        ),
+    )
+
+    def _resolve(code: str) -> Any:
+        return OssIossLedgerSourceResolver(invoice_repository=invoice_repo).resolve(
+            CalculationSourceContext(
+                bucket_id=_M369_BUCKET,
+                modelo="369",
+                filing_year=_M369_YEAR,
+                period=Period.from_year_and_code(_M369_YEAR, code),
+                revision=revision,
+            ),
+        )
+
+    q1 = _resolve("1T")
+    q2 = _resolve("2T")
+
+    # The declared-date invoice devengo'd in Q1 and carries no proxy advisory.
+    assert Decimal(q1.binding_values[_M369_DE_SERVICES_BINDING]) == Decimal("19.00")
+    assert Decimal(q1.binding_values[_M369_FR_SERVICES_BINDING]) == Decimal("0")
+    assert [diag.reason for diag in q1.diagnostics] == []
+
+    # The undated one landed in Q2 on its issue date, disclosed as a substitution.
+    assert Decimal(q2.binding_values[_M369_FR_SERVICES_BINDING]) == Decimal("40.00")
+    assert Decimal(q2.binding_values[_M369_DE_SERVICES_BINDING]) == Decimal("0")
+    proxy = [diag for diag in q2.diagnostics if diag.reason == "devengo_date_proxy_attribution"]
+    assert len(proxy) == 1
+    assert "OSS-FR-NO-OPERATION-DATE" in proxy[0].message
+    assert "OSS-DE-Q1-OPERATION" not in proxy[0].message
 
 
 def test_m369_unresolved_oss_source_refuses_verification_and_export(

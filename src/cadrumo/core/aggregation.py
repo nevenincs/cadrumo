@@ -513,6 +513,58 @@ class LedgerIncomeGrounding(StrEnum):
     CASH_FALLBACK = "cash_fallback"
 
 
+class InvoiceDevengoRank(StrEnum):
+    """Which source produced the LIVA art. 75 devengo date an invoice files under.
+
+    Period attribution -- which quarter a cuota is declared in, which filing
+    year an annual reconciliation sees -- resolves on the art. 75 devengo date.
+    That date is when the operation occurred, and the invoice date appears
+    nowhere in art. 75.Uno: a B2B invoice may be issued up to the fifteenth of
+    the following month while still belonging to the earlier period, so the
+    issue date is wrong at exactly the month and quarter boundaries where
+    attribution changes.
+
+    A fallback chain therefore cannot hand back a bare date. The two ranks
+    below are not two spellings of one answer: one is a fact the taxpayer
+    recorded, the other is a substitute that is right most of the time and
+    wrong precisely where it matters. Returning them undifferentiated would let
+    a consumer treat the substitute as the fact, which is the mistake the
+    marker exists to prevent.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract, beside :class:`LedgerIncomeGrounding`, which answers the parallel
+    question for the income measure. Consumers must branch on the member, never
+    on ``operation_date is None``: the marker is the fact.
+
+    D10's third named rank -- the bank movement date -- is NOT a member here.
+    An invoice always carries an issue date, so the invoice-side chain
+    terminates at :attr:`ISSUE_DATE_PROXY` and can never reach a movement date;
+    the movement-date substitution belongs to the ledger-transaction side,
+    whose dates have their own owners in
+    :mod:`cadrumo.domain.transactions._dates`. Declaring a member no producer
+    on this axis can emit would be dead capacity wearing the shape of coverage.
+    """
+
+    OPERATION_DATE_DECLARED = "operation_date_declared"
+    """The invoice records its own devengo-relevant date and it was used.
+
+    Covers both art. 75 clauses: the general-regime operation date
+    (art. 75.Uno) and a pago anticipado's collection date (art. 75.Dos). Which
+    clause supplied it is a separate axis, recorded on the invoice's own
+    ``operation_date_role``; this marker answers only whether the date is a
+    declared fact or a substitute.
+    """
+
+    ISSUE_DATE_PROXY = "issue_date_proxy"
+    """No devengo date was recorded, so the issue date stood in for it.
+
+    The attribution is a best available guess, not a legal determination. It
+    agrees with the declared fact for every operation invoiced in its own
+    period and diverges exactly at the boundary cases, so a period whose
+    figures rest on this rank is one an operator should be told about.
+    """
+
+
 class LedgerWithholdingDerivation(StrEnum):
     """How a ledger income row's retención figure was arrived at.
 

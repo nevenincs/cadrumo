@@ -18,13 +18,19 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core import IntracomOperationType, Period
+from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
-from ....domain.invoices import InvoiceValidationError, PaymentStatus
+from ....domain.invoices import InvoiceOperationDateRole, InvoiceValidationError, PaymentStatus
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.modelos import Modelo349OperadorRow
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import CalculationSourceContext
+from ...aggregation import (
+    CalculationSourceContext,
+    invoice_devengo_in_period,
+    proxy_attributed_invoice_ids,
+    resolve_invoice_devengo,
+)
 from .. import (
     InvoiceCatalogueSourceResolver,
     build_catalogue_invoice,
@@ -348,3 +354,156 @@ def test_build_catalogue_invoice_rounds_half_cent_cuota_away_from_zero() -> None
     assert invoice.lines[0].iva_amount == Decimal("2.21")
     assert invoice.base_total == Decimal("10.50")
     assert invoice.grand_total == Decimal("12.71")
+
+
+def test_an_operator_supplied_operation_date_survives_to_a_declared_devengo_rank(tmp_path: Path) -> None:
+    """The operator has a route to a declared devengo date, and it reaches the rank.
+
+    Period attribution reads the LIVA art. 75 devengo date and discloses when
+    it had to substitute the issue date. That disclosure asks the operator to
+    record a fecha de operacion, so the route from the creation service to a
+    declared rank has to exist end to end -- an advisory whose remedy no
+    surface can carry out is permanent noise, not a safeguard.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        recorded = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Cliente Norte SL",
+            counterparty_tax_id="A58818501",
+            counterparty_country="ES",
+            invoice_number="2026-Q1-OP",
+            issued_at=date(2026, 4, 10),
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            operation_date=date(2026, 3, 28),
+        )
+        reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
+        assert reloaded is not None
+        assert reloaded.operation_date == date(2026, 3, 28)
+        assert reloaded.operation_date_role is InvoiceOperationDateRole.OPERATION_PERFORMED
+
+        devengo = resolve_invoice_devengo(reloaded)
+        assert devengo.devengo_date == date(2026, 3, 28)
+        assert devengo.rank is InvoiceDevengoRank.OPERATION_DATE_DECLARED
+        assert invoice_devengo_in_period(reloaded, period=Period.from_year_and_code(2026, "1T")) is True
+        assert proxy_attributed_invoice_ids((reloaded,)) == ()
+
+
+def test_omitting_the_operation_date_leaves_the_record_on_the_issue_date_proxy(tmp_path: Path) -> None:
+    """The other direction: the field stays optional and the rank says so.
+
+    Recording a fecha de operacion must not become a precondition for creating
+    an invoice -- refusing the ordinary case would be a far worse defect than
+    the substitution it prevents.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        recorded = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Cliente Norte SL",
+            counterparty_tax_id="A58818501",
+            counterparty_country="ES",
+            invoice_number="2026-Q2-NO-OP",
+            issued_at=date(2026, 4, 10),
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+        )
+        reloaded = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(recorded.invoice.invoice_id)
+        assert reloaded is not None
+        assert reloaded.operation_date is None
+        assert resolve_invoice_devengo(reloaded).rank is InvoiceDevengoRank.ISSUE_DATE_PROXY
+        assert proxy_attributed_invoice_ids((reloaded,)) == (reloaded.invoice_id,)
+
+
+def test_m349_excludes_a_self_contradicting_record_but_names_it(tmp_path: Path) -> None:
+    """An art. 25 exemption recorded alongside a repercuted cuota grounds neither.
+
+    The record asserts two things that cannot both be true: an entrega
+    intracomunitaria exenta and IVA charged on it. Modelo 349 declares the base
+    imponible of the exempt operation, so neither assertion can be trusted to
+    produce it, and the contract cannot tell which one the operator got wrong.
+
+    Excluded but NOT silent. A missing intracomunitaria is an under-declaration
+    however it went missing, so the exclusion has to arrive with the record
+    named.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
+        contradictory = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Waren GmbH",
+            counterparty_tax_id="DE123456789",
+            counterparty_country="DE",
+            invoice_number="GOODS-OUT-2026-001",
+            issued_at=date(2026, 2, 10),
+            taxable_base=Decimal("5000.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            # The CLI derives the category from the operation type before
+            # calling this service; the service itself does not, so the test
+            # supplies the pair the operator's path would have produced.
+            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            operation_type=IntracomOperationType.E,
+            repository=repository,
+        ).invoice
+        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="349",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision=_modelo_349_revision(),
+            ),
+        )
+
+    assert contradictory.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+    assert contradictory.iva_total == Decimal("1050.00")
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
+    assert resolution.detail_rows == ()
+    messages = [diagnostic.message for diagnostic in resolution.diagnostics]
+    assert len(messages) == 1
+    assert "GOODS-OUT-2026-001" in messages[0]
+    assert "cuota_contradicts_category" in messages[0]
+
+
+def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Path) -> None:
+    """The other direction: the same operation, recorded consistently, declares.
+
+    Identical to the contradiction case except the cuota is zero, as LIVA
+    art. 25 requires. A check that fired on both would have destroyed the
+    recapitulativa rather than protected it.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
+        create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Waren GmbH",
+            counterparty_tax_id="DE123456789",
+            counterparty_country="DE",
+            invoice_number="GOODS-OUT-2026-002",
+            issued_at=date(2026, 2, 10),
+            taxable_base=Decimal("5000.00"),
+            iva_rate=Decimal("0"),
+            currency="EUR",
+            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            operation_type=IntracomOperationType.E,
+            repository=repository,
+        )
+        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="349",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision=_modelo_349_revision(),
+            ),
+        )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("5000.00")
+    assert resolution.diagnostics == ()

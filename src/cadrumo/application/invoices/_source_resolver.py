@@ -20,6 +20,7 @@ source provenance emitted through one resolver envelope.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 
@@ -43,11 +44,18 @@ from ...domain.calculations.registry import (
     resolve_invoice_binding_values,
     selector_as_dict,
 )
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import (
+    Invoice,
+    InvoiceCatalogueRepositoryProtocol,
+    InvoiceDecomposition,
+    InvoiceDecompositionDefect,
+    decompose_invoice,
+)
 from ...domain.iva import InvoiceKind, IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, validate_m349_country_prefix_context
 from ..aggregation import (
     CalculationSourceContext,
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
     storage_degradation_resolution,
@@ -157,10 +165,16 @@ class InvoiceCatalogueSourceResolver:
             if _invoice_in_context(invoice, context) and _invoice_source_kind(invoice) in active_sources
         )
         catalogue_observed_items: list[tuple[Invoice, InvoiceObservation]] = []
+        incoherent: list[tuple[Invoice, InvoiceDecomposition]] = []
         for invoice in source_invoices:
             observation = _invoice_observation(invoice, context=context)
-            if observation is not None:
-                catalogue_observed_items.append((invoice, observation))
+            if observation is None:
+                continue
+            verdict = _m349_incoherent_verdict(invoice, context=context)
+            if verdict is not None:
+                incoherent.append((invoice, verdict))
+                continue
+            catalogue_observed_items.append((invoice, observation))
         catalogue_observed = tuple(catalogue_observed_items)
         try:
             business_invoices = _load_business_operation_invoices(
@@ -201,9 +215,112 @@ class InvoiceCatalogueSourceResolver:
                     },
                 ),
             ),
+            diagnostics=_m349_incoherence_diagnostics(incoherent, resolver_id=self.resolver_id),
             provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in catalogue_observed)
             + tuple(_business_invoice_provenance(invoice, observation) for invoice, observation in business_observed),
         )
+
+
+_M349_SELF_CONTRADICTION_DEFECTS: frozenset[InvoiceDecompositionDefect] = frozenset(
+    {
+        InvoiceDecompositionDefect.CUOTA_CONTRADICTS_CATEGORY,
+        InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND,
+    },
+)
+"""Decomposition defects where two declarations on one record disagree.
+
+Both members describe a record whose operator made two assertions that cannot
+both be true -- an entrega exenta under LIVA art. 25 carrying a repercuted
+cuota, or a one-directional category recorded on its impossible side. The
+remaining members describe something ABSENT, which on this surface is a gap in
+what the record can express rather than evidence that its figures are wrong.
+"""
+
+
+def _m349_incoherent_verdict(
+    invoice: Invoice,
+    *,
+    context: CalculationSourceContext,
+) -> InvoiceDecomposition | None:
+    """Return the decomposition verdict when it disqualifies an M349 record.
+
+    Scoped to Modelo 349 deliberately, and only after the clave is settled.
+
+    Modelo 349 is the one invoice-sourced surface whose declared figure is
+    conditioned on the declared IVA treatment: the clave is CHOSEN from
+    :attr:`~cadrumo.domain.invoices.Invoice.iva_category`, and the base
+    declared under it is the base imponible of an operation the record asserts
+    is exenta under LIVA art. 25. A record simultaneously claiming that
+    exemption and carrying a repercuted cuota contradicts itself, and the
+    contract cannot tell which of the two declarations is the mistake, so it
+    grounds neither.
+
+    Modelo 347 asks a different question and is deliberately NOT checked here.
+    Its declared figure is the total contraprestacion of operations with one
+    third party (RD 1065/2007 art. 34), which the invoice's own totals identity
+    already bounds and which no IVA category conditions. Running the contract
+    there would drop real above-threshold operations out of an informativa on
+    the strength of an unrelated missing field. The OSS/IOSS path is excluded
+    for the same reason plus a stronger one: no
+    :class:`~cadrumo.domain.iva.IvaCategory` member names an OSS operation at
+    all -- the OSS axis is the regime and transaction kind -- so every
+    legitimate OSS invoice would come back ungrounded, and that path already
+    runs the coherence check that does apply to it, cross-checking the
+    persisted cuota against the destination Member State's published rate.
+
+    Within Modelo 349 the check is narrowed again, to the defects where the
+    record CONTRADICTS ITSELF. Absence is deliberately not disqualifying, and
+    the reason is measured rather than cautious: ``IntracomOperationType.S``
+    and ``I`` -- an ordinary prestacion or adquisicion de servicios
+    intracomunitaria -- map to no :class:`~cadrumo.domain.iva.IvaCategory`
+    member at all, because the enum names goods, acquisitions and
+    triangulation but not services. Treating an absent category as
+    disqualifying therefore drops an entire lawful operation class out of the
+    recapitulativa, which is a far larger under-declaration than the
+    contradiction the check exists to catch. ``FX_UNRESOLVED`` is likewise
+    excluded here because the unconverted-foreign gate upstream already
+    withholds those records.
+    """
+    if context.modelo != Modelo.M349.value:
+        return None
+    verdict = decompose_invoice(invoice)
+    contradictions = tuple(defect for defect in verdict.defects if defect in _M349_SELF_CONTRADICTION_DEFECTS)
+    if not contradictions:
+        return None
+    return verdict.model_copy(update={"defects": contradictions})
+
+
+def _m349_incoherence_diagnostics(
+    incoherent: Sequence[tuple[Invoice, InvoiceDecomposition]],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return one advisory per record the decomposition contract disqualified.
+
+    Excluded-but-VISIBLE. The record stays in the catalogue and stays editable;
+    what it must not do is disappear from the recapitulativa without the
+    operator being told, because a missing intracomunitaria is an
+    under-declaration whether it was dropped by a contradiction or by silence.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="ungrounded_income_substrate",
+            source_kind=str(_invoice_source_kind(invoice)),
+            resolver_id=resolver_id,
+            source_ref=f"invoice:{invoice.invoice_id}",
+            message=(
+                f"invoice {invoice.invoice_number!r} declares an intracommunity operation "
+                f"the decomposition contract could not ground "
+                f"({', '.join(defect.value for defect in verdict.defects)}), so its base is "
+                "NOT declared on this Modelo 349"
+            ),
+            remedy=(
+                "Reconcile the invoice's declared IVA treatment with the amounts recorded on "
+                "it, then recalculate so the operation reaches the recapitulativa"
+            ),
+        )
+        for invoice, verdict in incoherent
+    )
 
 
 def _invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:

@@ -1979,6 +1979,11 @@ cli:
           el valor extraido).
         confirm_link_hint_message: Vincula esta factura a un movimiento del libro
           con `aeat app ledger link`.
+        confirm_printed_total_mismatch_message: El total impreso en el documento no
+          coincide con el total registrado. El total registrado se deriva de la base
+          imponible y del tipo de IVA, por lo que una diferencia significa que el
+          documento incluye un importe que este registro no recoge, como un recargo
+          de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
@@ -2006,7 +2011,6 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
-        confirm_printed_total_mismatch_message: 'El total impreso en el documento no coincide con el total registrado. El total registrado se deriva de la base imponible y del tipo de IVA, por lo que una diferencia significa que el documento incluye un importe que este registro no recoge, como un recargo de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
@@ -2067,11 +2071,13 @@ cli:
           C sustituciones del destinatario en consigna'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura de negocio
+        total_amount_required: 'La opción --total-amount es obligatoria: indique el
+          total de la factura como importe decimal, por ejemplo 121.00.'
         update_help: Actualiza los datos de una factura de negocio
         view_help: Muestra una factura de negocio
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
-        total_amount_required: 'La opción --total-amount es obligatoria: indique el total de la factura como importe decimal, por ejemplo 121.00.'
+        operation_date_help: 'Fecha en que se realizo la entrega o prestacion (AAAA-MM-DD). Es la fecha de devengo del art. 75 LIVA que determina en que periodo se declara la cuota; sin ella se utiliza la fecha de factura.'
       prorrata:
         activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).

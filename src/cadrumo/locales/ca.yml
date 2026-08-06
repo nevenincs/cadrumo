@@ -1969,6 +1969,11 @@ cli:
           el valor extret).
         confirm_link_hint_message: Vincula aquesta factura a un moviment del llibre
           amb `aeat app ledger link`.
+        confirm_printed_total_mismatch_message: El total imprès al document no coincideix
+          amb el total registrat. El total registrat es deriva de la base imposable
+          i del tipus d'IVA, de manera que una diferència significa que el document
+          inclou un import que aquest registre no recull, com ara un recàrrec d'equivalència,
+          o que s'ha llegit malament alguna xifra. Reviseu el document.
         confirm_taxable_base_help: Sobreescriu la base imposable extreta.
         evidence_id_help: Identificador del justificant (coincidència exacta)
         extract_attachment_id_help: Identificador de l'adjunt vinculat del qual extreure
@@ -1996,7 +2001,6 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
-        confirm_printed_total_mismatch_message: 'El total imprès al document no coincideix amb el total registrat. El total registrat es deriva de la base imposable i del tipus d''IVA, de manera que una diferència significa que el document inclou un import que aquest registre no recull, com ara un recàrrec d''equivalència, o que s''ha llegit malament alguna xifra. Reviseu el document.'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici
@@ -2057,11 +2061,13 @@ cli:
           consigna, C substitucions del destinatari en consigna'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura de negoci
+        total_amount_required: 'L''opció --total-amount és obligatòria: indiqueu el
+          total de la factura com a import decimal, per exemple 121.00.'
         update_help: Actualitza les dades d'una factura de negoci
         view_help: Mostra una factura de negoci
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
-        total_amount_required: 'L''opció --total-amount és obligatòria: indiqueu el total de la factura com a import decimal, per exemple 121.00.'
+        operation_date_help: 'Data en que es va fer el lliurament o la prestacio (AAAA-MM-DD). Es la data de meritacio de l''art. 75 LIVA que determina en quin periode es declara la quota; sense aquesta s''utilitza la data de factura.'
       prorrata:
         activity_code_help: Codi d'activitat CNAE / IAE agrupat en aquest sector (repetible,
           com a mínim un).

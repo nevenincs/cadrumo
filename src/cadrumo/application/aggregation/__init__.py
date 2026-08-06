@@ -105,7 +105,12 @@ from ._foreign_assets import (
     declarable_asset_classes_720,
     declarable_class,
 )
-from ._invoice_devengo import invoice_devengo_date
+from ._invoice_devengo import (
+    InvoiceDevengo,
+    invoice_devengo_in_period,
+    proxy_attributed_invoice_ids,
+    resolve_invoice_devengo,
+)
 from ._invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjection,
@@ -154,11 +159,13 @@ from ._modelo_bindings import (
 )
 from ._models import CasillaAggregation, CasillaProvenance
 from ._oss_ioss import (
+    OssIossInvoiceProjection,
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
     aggregate_oss_ioss_bindings,
     aggregate_oss_ioss_from_repositories,
     oss_ioss_candidates_from_repositories,
+    project_oss_ioss_invoices_from_repositories,
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
@@ -167,7 +174,11 @@ from ._percepciones_observations_repository import (
     percepcion_observation_key,
     persist_percepcion_observations,
 )
-from ._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
+from ._renta_income_ledger import (
+    RentaIncomeObservation,
+    aggregate_renta_income_ledger,
+    aggregate_renta_m100_income_ledger,
+)
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -267,6 +278,7 @@ __all__ = [
     "ForeignAssetIngestObservation",
     "ForeignAssetsAggregation",
     "ForeignAssetsAggregationSourceResolver",
+    "InvoiceDevengo",
     "InvoiceRetencionProjection",
     "InvoiceRetencionProjectionDefect",
     "InvoiceRetencionRouteRequest",
@@ -286,6 +298,7 @@ __all__ = [
     "ModeloSourceResolver",
     "OperationKind347",
     "OperationKind349",
+    "OssIossInvoiceProjection",
     "OssIossLedgerCandidate",
     "OssIossLedgerSourceResolver",
     "PerModeloAggregationCommand",
@@ -325,6 +338,7 @@ __all__ = [
     "aggregate_renta_income_ledger",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
+    "aggregate_renta_m100_income_ledger",
     "aggregate_retenciones_111",
     "aggregate_retenciones_115",
     "aggregate_retenciones_123",
@@ -346,7 +360,7 @@ __all__ = [
     "declarable_for_347",
     "evaluate_ledger_filing_staleness",
     "get_per_modelo_aggregation_contract",
-    "invoice_devengo_date",
+    "invoice_devengo_in_period",
     "iva_ledger_missing_fact_reasons",
     "merge_manual_and_routed_retencion_observations",
     "merge_source_resolutions",
@@ -357,7 +371,10 @@ __all__ = [
     "persist_percepcion_observations",
     "persist_retencion_observations",
     "precedence_ladder_sources",
+    "project_oss_ioss_invoices_from_repositories",
     "project_received_invoice_retencion",
+    "proxy_attributed_invoice_ids",
+    "resolve_invoice_devengo",
     "retencion_observation_key",
     "route_invoice_retenciones",
     "row_fingerprint",

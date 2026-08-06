@@ -78,6 +78,11 @@ from ...domain.transactions import (
 from ...domain.usage_ratios import UsageRatioPersistenceError
 from ._errors import AggregationValidationError, t
 from ._impatriado_income_ledger import aggregate_impatriado_income_ledger_from_repositories
+from ._invoice_devengo import (
+    devengo_proxy_attribution_diagnostics,
+    invoice_devengo_in_period,
+    resolve_invoice_devengo,
+)
 from ._irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
 from ._iva_ledger import (
     IvaLedgerAggregationIssueReason,
@@ -194,7 +199,7 @@ class LedgerIvaAggregationSourceResolver:
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
         )
-        _raise_if_m303_invoice_domestic_iva_would_be_silent(
+        devengo_compared_invoices = _raise_if_m303_invoice_domestic_iva_would_be_silent(
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
@@ -216,6 +221,11 @@ class LedgerIvaAggregationSourceResolver:
             source_transaction_ids=tuple(sorted(transaction_ids)),
             diagnostics=_out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
+                source_kind="ledger_iva_aggregation",
+                resolver_id=self.resolver_id,
+            )
+            + devengo_proxy_attribution_diagnostics(
+                devengo_compared_invoices,
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
             )
@@ -999,7 +1009,7 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     transaction_binding_values: Mapping[BindingId, Decimal],
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
-) -> None:
+) -> tuple[Invoice, ...]:
     """Refuse M303 when domestic invoice IVA would be absent from ledger totals.
 
     Modelo 303's domestic IVA boxes are sourced from ``ledger_iva_aggregation``:
@@ -1010,16 +1020,21 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     that the filing is about to use, calculating a zero/subtotal filing would
     silently under-declare. Refuse and require the operator to link/classify the
     transactions that feed the canonical ledger path.
+
+    Returns:
+        The invoices whose domestic IVA was compared against the ledger, so the
+        caller can disclose how their period placement was arrived at. Empty
+        when the screen does not apply or found nothing to compare.
     """
     if str(context.modelo) != Modelo.M303.value:
-        return
-    invoice_observations, invoice_ids = _m303_standard_domestic_invoice_iva_observations(
+        return ()
+    invoice_observations, invoice_ids, compared_invoices = _m303_standard_domestic_invoice_iva_observations(
         context=context,
         period=period,
         invoice_repository=invoice_repository,
     )
     if not invoice_observations:
-        return
+        return ()
     invoice_binding_values = resolve_iva_ledger_binding_values(
         context.revision,
         invoice_observations,
@@ -1032,7 +1047,7 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
         > (transaction_value := transaction_binding_values.get(binding_id, Decimal("0")))
     }
     if not missing_binding_values:
-        return
+        return compared_invoices
     raise AggregationValidationError(
         t("errors.error.error_modelo_aggregation_binding"),
         context={
@@ -1059,24 +1074,29 @@ def _m303_standard_domestic_invoice_iva_observations(
     context: CalculationSourceContext,
     period: Period,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
-) -> tuple[tuple[IvaLedgerObservation, ...], tuple[str, ...]]:
+) -> tuple[tuple[IvaLedgerObservation, ...], tuple[str, ...], tuple[Invoice, ...]]:
     try:
         repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=context.bucket_id)
         catalogue = repository.load()
     except _STORAGE_DEGRADATION_ERRORS:
-        return (), ()
+        return (), (), ()
     observations: list[IvaLedgerObservation] = []
     invoice_ids: set[str] = set()
+    compared_invoices: list[Invoice] = []
     for invoice in catalogue.values():
         if not _m303_standard_domestic_invoice_in_period(invoice, context=context, period=period):
             continue
+        # The date the observation carries must be the date it was SELECTED on,
+        # or the record would state one quarter while being declared in another.
+        devengo = resolve_invoice_devengo(invoice)
+        contributed = False
         for line_index, line in enumerate(invoice.lines):
             if line.iva_amount <= Decimal("0"):
                 continue
             observations.append(
                 invoice_line_to_iva_observation(
                     invoice_id=f"invoice:{invoice.invoice_id}:{line_index}",
-                    issued_at=invoice.issued_at,
+                    issued_at=devengo.devengo_date,
                     invoice_kind=invoice.kind,
                     iva_rate=line.iva_rate,
                     base_amount=line.subtotal,
@@ -1084,7 +1104,10 @@ def _m303_standard_domestic_invoice_iva_observations(
                 ),
             )
             invoice_ids.add(invoice.invoice_id)
-    return tuple(observations), tuple(invoice_ids)
+            contributed = True
+        if contributed:
+            compared_invoices.append(invoice)
+    return tuple(observations), tuple(invoice_ids), tuple(compared_invoices)
 
 
 def _m303_standard_domestic_invoice_in_period(
@@ -1095,7 +1118,7 @@ def _m303_standard_domestic_invoice_in_period(
 ) -> bool:
     return (
         invoice.bucket_id == context.bucket_id
-        and period.contains(invoice.issued_at)
+        and invoice_devengo_in_period(invoice, period=period)
         and invoice.counterparty_country.strip().upper() == "ES"
     )
 

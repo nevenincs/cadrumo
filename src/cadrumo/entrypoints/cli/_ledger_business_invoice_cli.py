@@ -513,6 +513,20 @@ _CatalogueCountryCodeOpt = Annotated[
         ),
     ),
 ]
+_CatalogueOperationDateOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--operation-date",
+        help=tr(
+            "cli.app.ledger.invoice.operation_date_help",
+            default=(
+                "Date the entrega or prestacion took place (YYYY-MM-DD). This is the"
+                " LIVA art. 75 devengo date that decides which period declares the"
+                " cuota; without it the invoice date stands in for it."
+            ),
+        ),
+    ),
+]
 _CatalogueOperationTypeOpt = Annotated[
     str | None,
     typer.Option(
@@ -549,6 +563,7 @@ def catalogue_create(
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
     country_code: _CatalogueCountryCodeOpt = "ES",
     operation_type: _CatalogueOperationTypeOpt = None,
+    operation_date: _CatalogueOperationDateOpt = None,
     notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
@@ -587,6 +602,9 @@ def catalogue_create(
             notes=notes,
             iva_category=iva_category,
             operation_type=parsed_operation_type,
+            operation_date=(
+                None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")
+            ),
         )
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
