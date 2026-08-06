@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-06'
-body_hash: 'sha256:a019c0411f96d968b5b7c65d4d8a23fa63c2bc2593f55325ac6fd205e7d8e83d'
+body_hash: 'sha256:ab9abc2cf1895cb4f3d6bf86f4347c3d70035927c7720a1324a77b8ca03b95aa'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -378,21 +378,19 @@ The parser rule is unchanged by the retraction - leave unset, never guess - but 
 now **"the document did not state a category"** rather than "no member exists to map to." An
 absent category is a gap in the *record*, not in the *enum*.
 
-**Read the sibling campaign's documents from the working tree, not from HEAD, until someone
-lands the delta.** This section cites five of that campaign's Step ids - `P02.S07`, `P02.S26`,
-`P02.S27`, `P04.S18`, `P01.S34` - and a peer commit swept its ADR and plan into history at an
-older state mid-session. Verified rather than relayed: both documents differ between HEAD and the
-working tree at the time of writing, and that lane reports the committed copy carries a
-whole-plan gate its own later sweep proved false. A receiving team resolving those Step ids
-against HEAD would get stale text for every one of them.
+**Check a cited Step id against the tree before relying on it, rather than inheriting a verdict
+about which copy is authoritative.** This section cites five of that campaign's Step ids -
+`P02.S07`, `P02.S26`, `P02.S27`, `P04.S18`, `P01.S34`. Both campaigns were authored in a shared
+worktree with concurrent agents committing, so at points during authoring the committed and
+working copies disagreed - in both directions, and not for the same files at the same time.
 
-The same caution applies in reverse and is worth stating because it is easy to assume otherwise:
-**this campaign's documents were also swept into a commit mid-session and HEAD is likewise
-behind.** The committed copy is coherent and carries the post-audit remediation - checked
-directly, it holds the corrected latency figures and none of the vacuous pre-remediation Steps -
-but it predates the final cross-lane work: it is short two Steps, and it lacks the semantic-sweep
-record, the retracted enum-gap claim, and the coordination corrections above. **The working tree
-is the authority for both campaigns until the delta lands.**
+The check is one command per document, `git show HEAD:<path>` diffed against the working copy,
+and it answers for the moment you run it, which is the only moment that matters. **Run it rather
+than trusting any sentence about which copy is ahead, including this one.** An earlier draft of
+this paragraph asserted a specific staleness verdict; it was accurate when measured and false
+within the hour. That is the same failure this plan's audit records at two other levels - a stale
+docstring, and a stale traps paragraph in this very section - and it is why a durable instruction
+points at the instrument while a reading of the instrument is not durable.
 
 **Not shared:** this plan does not touch the invoice stores, the canonical writer, the bulk
 import surface, or the M303 and M390 screens. `Invoice.lines` and the per-line aggregation
