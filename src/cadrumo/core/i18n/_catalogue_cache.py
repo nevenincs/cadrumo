@@ -11,19 +11,38 @@ objects from the parsed node tree" step is always pure Python and scales with
 node count. A JSON reload of the pre-flattened map costs single-digit tens of
 milliseconds).
 
-Mirrors :mod:`domain.calculations.registry._validate_verdict`'s shape: JSON,
-not pickle (the payload is a plain ``dict[str, str | None]``, so there is no
-reason to accept pickle's arbitrary-code-on-load surface for a runtime
-artefact a wheel ships); a source-digest key embedded in the payload; any
-mismatch, corruption, or foreign shape is a cache MISS, not a cache HIT with a
-wrong answer -- ``read_catalogue_cache`` deletes the stale file and returns
-``None`` so the caller re-parses YAML and rewarms. Stale and absent are the
-same code path by construction: the digest is part of the lookup key, so a
-cache written for an older source can never be mistaken for a match against
-the current one.
+Mirrors two precedents together, one per risk it addresses:
 
-The digest is computed over the source file's RAW BYTES, never the parsed
-content: cheap (no YAML parse needed to compute it), and immune to a
+* :mod:`domain.calculations.registry._validate_verdict`'s KEYING shape: JSON,
+  not pickle (the payload is a plain ``dict[str, str | None]``, so there is no
+  reason to accept pickle's arbitrary-code-on-load surface for a runtime
+  artefact a wheel ships); a source-digest key embedded in the payload. This
+  alone catches "the YAML changed" -- any mismatch is a cache MISS, not a
+  cache HIT with a wrong answer. Stale and absent collapse to one code path
+  by construction: the digest is part of the lookup key, so a cache written
+  for an older source can never be mistaken for a match against the current
+  one.
+* :mod:`domain.calculations.registry._compiled_cache`'s INTEGRITY shape: an
+  embedded digest of the payload itself, re-verified on read. The source-key
+  match alone cannot catch a payload that is corrupt or truncated UNDER a
+  valid key -- a crash, a killed process, or two processes racing to warm the
+  same cache could in principle leave a structurally-valid-but-incomplete
+  ``flat`` dict that still parses and still carries a matching source digest.
+  ``payload_digest`` (a content hash of ``flat`` itself, recomputed on every
+  read) closes that gap: a truncated or tampered payload fails this check
+  even when the source digest happens to match, and is treated identically
+  to a source-digest mismatch -- delete, return ``None``, re-derive.
+
+``atomic_write_best_effort_text`` (used by both precedents and this module)
+already writes via a same-directory tempfile followed by :func:`os.replace`,
+which is atomic on both POSIX and Windows: a reader always observes either
+the complete old file or the complete new one, never a partial write from
+THIS process's own write. The payload-digest check is the second, independent
+line of defence against a corrupt file arriving by some other path (a
+different, non-atomic writer; bit rot; manual tampering).
+
+The source digest is computed over the source file's RAW BYTES, never the
+parsed content: cheap (no YAML parse needed to compute it), and immune to a
 semantically-equivalent reformat producing a different hash for identical
 data.
 """
@@ -37,7 +56,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ..atomic_write import atomic_write_best_effort_text
 from ..external_constants import UTF_8_ENCODING
-from ..hashing import sha256_hex
+from ..hashing import content_hash_hex, sha256_hex
 from .._storage_taxonomy import StorageCategory
 from .._storage_taxonomy_locations import storage_path
 
@@ -52,7 +71,10 @@ class _FlatCatalogueCache(BaseModel):
 
     ``source_digest`` binds this payload to the exact source bytes it was
     derived from; the read path recomputes the current source digest and
-    only trusts the cache when the two match.
+    only trusts the cache when the two match. ``payload_digest`` binds this
+    payload to ITS OWN content, independently of the source: a truncated or
+    corrupted ``flat`` dict fails this check even when ``source_digest``
+    still matches (see the module docstring's integrity-shape paragraph).
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -60,7 +82,18 @@ class _FlatCatalogueCache(BaseModel):
     schema_version: str
     locale: str
     source_digest: str
+    payload_digest: str
     flat: dict[str, str | None]
+
+
+def _compute_payload_digest(flat: dict[str, str | None]) -> str:
+    """Return the content-hash of ``flat`` itself, independent of its source.
+
+    Detects a structurally-valid-but-incomplete or tampered payload that a
+    source-digest match alone cannot: the digest changes with any addition,
+    removal, or alteration of a key or value.
+    """
+    return content_hash_hex(flat)
 
 
 def compute_source_digest(raw_source: bytes) -> str:
@@ -88,11 +121,14 @@ def read_catalogue_cache(locale: str, *, source_digest: str) -> dict[str, str | 
     """Return the cached flat map for ``locale`` if it matches ``source_digest``.
 
     Any absence, read failure, foreign/corrupt shape, schema-version
-    mismatch, or digest mismatch is treated identically: the stale or
-    unreadable file is best-effort deleted and ``None`` is returned so the
-    caller falls back to parsing the source YAML directly. There is no
-    "serve it anyway" branch -- a cache that cannot be trusted is exactly as
-    useful as no cache.
+    mismatch, source-digest mismatch, OR payload-digest mismatch is treated
+    identically: the stale or unreadable file is best-effort deleted and
+    ``None`` is returned so the caller falls back to parsing the source YAML
+    directly. There is no "serve it anyway" branch -- a cache that cannot be
+    trusted is exactly as useful as no cache. The payload-digest check runs
+    even when the source digest matches, because a matching source digest
+    only proves "this cache was derived from the current source at some
+    point" -- it says nothing about whether ``flat`` itself survived intact.
     """
     path = catalogue_cache_path(locale)
     if not path.is_file():
@@ -115,6 +151,14 @@ def read_catalogue_cache(locale: str, *, source_digest: str) -> dict[str, str | 
         )
         _delete_catalogue_cache(path)
         return None
+    if cached.payload_digest != _compute_payload_digest(cached.flat):
+        _LOGGER.debug(
+            "Locale catalogue cache at %s failed its payload-integrity check "
+            "(truncated or corrupted despite a matching source digest); deleting and re-parsing",
+            path,
+        )
+        _delete_catalogue_cache(path)
+        return None
     return cached.flat
 
 
@@ -125,6 +169,7 @@ def write_catalogue_cache(locale: str, *, source_digest: str, flat: dict[str, st
         schema_version=_CACHE_SCHEMA_VERSION,
         locale=locale,
         source_digest=source_digest,
+        payload_digest=_compute_payload_digest(flat),
         flat=flat,
     )
     try:
