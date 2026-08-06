@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c70a7197a52c552f4c5f3ee604a28d0975bfb559d8223d3c2f7f0e93ef7f976'
+body_hash: 'sha256:53c1bf44ee2ec17f2ad4ca55ffabdcbd7d5b3df8cd7049c136e9386db31fa1d0'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S09]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S10]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S28]]'
+  - '[[2026-08-06-invoice-canonical-structure-P01-S30]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S35]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S36]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S07]]'
@@ -49,6 +50,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P01-S09` - Remove the COLLECTIBLE_INVOICE default from InvoiceObservation.source_kind and make the direction axis required, after confirming every production construction site already passes it explicitly
 - `2026-08-06-invoice-canonical-structure-P01-S10` - Carry created_at and updated_at onto the canonical aggregate or record their loss as a deliberate decision in the execution record, so no slim field disappears unremarked
 - `2026-08-06-invoice-canonical-structure-P01-S28` - Produce the three-lane capability inventory covering income, business operations and purchase evidence, listing for BOTH stores every field, validator, CLI verb, downstream binding and persistence or custody behaviour, each with its named canonical replacement and the test that proves it, and scoping the field comparison to a per-axis diff of DEFAULTS AND NULLABILITY rather than field presence, because an axis that routes a filing can be permissive on the canonical side and strict on the slim side, which converts a loud failure into a quiet wrong answer and is invisible to a field-list inventory, treating any entry with no named replacement as a blocker on the fold rather than a waiver
+- `2026-08-06-invoice-canonical-structure-P01-S30` - Add the parameters that make the canonical writer reach parity with what the canonical model already claims to represent, namely invoice-class, series, rectifies-invoice-number and recargo-amount, which no production path can set today so every canonically written invoice is ORDINARIA with no series and no recargo by construction and rectificativas are unrepresentable
 - `2026-08-06-invoice-canonical-structure-P01-S35` - Close the bucket-attribution asymmetry before the fold, making a persisted canonical Invoice carry a bucket_id by requiring it at the construction boundary rather than defaulting to None, and correcting the InvoiceCatalogueRepository ownership-guard docstring which today asserts as its stated justification that most invoices carry no bucket at all, a premise the production writers refute because every canonical construction path passes a resolved bucket_id
 - `2026-08-06-invoice-canonical-structure-P01-S36` - Remove the ES counterparty-country default from both canonical entry verbs so an omitted country refuses or derives rather than silently stamping a domestic country on a foreign invoice, preserving the slim verb's derive-or-raise behaviour across the fold because country is the routing key for both informativas
 - `2026-08-06-invoice-canonical-structure-P02-S07` - Stop synthesising exactly one line at BOTH synthesis sites, the canonical builder and the live bulk importer, accepting a supplied line set and proving a two-line invoice at different rates persists and aggregates per line with no persisted-schema change
