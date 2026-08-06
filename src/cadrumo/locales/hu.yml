@@ -381,6 +381,9 @@ aggregation:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
         tartományon kívül van.
+      invoice_retencion_collision: A(z) %{source_object_ids} számlá(k)hoz tartozó
+        levonás-megfigyelés(eke)t kézzel is megadták és a --received-invoice-retencion
+        is irányította; az összesítés előtt szüntesse meg a duplikációt.
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
       perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
@@ -2210,6 +2213,11 @@ cli:
         foreign_asset_observation_help: JSON ForeignAssetObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. Több megfigyeléshez ismételje meg.
+        invoice_retencion_excluded_notice: 'A(z) %{invoice_id} számla nem került a
+          levonás-tárolóba: %{reasons}.'
+        invoice_retencion_wrong_modelo: A --received-invoice-retencion a perceptoronkénti
+          levonás-tárolóba irányít; a(z) %{modelo} modelo nem a 111, 115, 123, 180,
+          190, 193 egyike.
         json_not_object: A(z) {flag} értékének JSON-objektumnak kell lennie.
         json_parse_error: A(z) {flag} értékének JSON-objektumnak kell lennie; érvénytelen
           JSON a(z) {pos}. bájtnál.
@@ -2218,6 +2226,11 @@ cli:
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
+        received_invoice_retencion_help: JSON InvoiceRetencionRouteRequest objektum,
+          amely egy beérkezett számla bejelentett levonását a perceptoronkénti tárolóba
+          irányítja (invoice_id, scheme). A scheme a perceptor tevékenységére vonatkozó
+          jogi tény, amelyet a rendszer sosem következtet ki a számlából. Több számlához
+          ismételje meg.
         retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
           collectible_invoice lehet. A 111-es Modelo munka esetén a rendimientos_trabajo

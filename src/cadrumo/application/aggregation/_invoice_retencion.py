@@ -26,6 +26,14 @@ enum that might is deliberately deferred to its own decision. So the caller
 declares it, and this module refuses to guess: choosing a scheme here would
 file a figure under a clave the taxpayer never asserted.
 
+The production caller is the ``modelo aggregate`` CLI: an operator (or the LLM
+operator on their behalf) declares ``(invoice, scheme)`` pairs via
+``--received-invoice-retencion``, and :func:`merge_manual_and_routed_retencion_observations`
+unions the resulting observations with any hand-typed
+``--retencion-observation`` rows into the ONE set the CLI passes to
+``persist_retencion_observations`` -- never two separate persist calls for one
+window, since that write is set-replace.
+
 See Also:
     :mod:`~._retenciones`
         The observation type, the aggregators, and the source-kind taxonomy.
@@ -45,17 +53,17 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.iva import IvaRetencionRole, iva_category_components
-from ._errors import AggregationValidationError
+from ._errors import AggregationValidationError, t
 from ._retenciones import RetencionObservation, RetencionScheme
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable, Mapping, Sequence
 
     from ...domain.invoices import Invoice
 
@@ -110,6 +118,15 @@ class InvoiceRetencionProjectionDefect(StrEnum):
     The euro base and retención are unknown, and the store holds euro figures.
     """
 
+    MISSING_COUNTERPARTY_TAX_ID = "missing_counterparty_tax_id"
+    """A factura simplificada declared a retención but names no perceptor.
+
+    Modelo 111 requires the perceptor's NIF; an invoice may legitimately carry
+    no ``counterparty_tax_id`` (RD 1619/2012 art. 6.1.d), but a supplier
+    withholding tax is one of the cases that article makes the tax id
+    mandatory for regardless, so this exclusion should be rare in practice.
+    """
+
 
 INVOICE_RETENCION_DEFECT_GUIDANCE: Final[Mapping[InvoiceRetencionProjectionDefect, str]] = MappingProxyType(
     {
@@ -128,6 +145,10 @@ INVOICE_RETENCION_DEFECT_GUIDANCE: Final[Mapping[InvoiceRetencionProjectionDefec
         ),
         InvoiceRetencionProjectionDefect.FX_UNRESOLVED: (
             "resolve the invoice's conversion rate; the retenciones store holds euro figures"
+        ),
+        InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID: (
+            "record the supplier's counterparty_tax_id; Modelo 111 cannot file a retención "
+            "without identifying the perceptor"
         ),
     },
 )
@@ -189,6 +210,21 @@ class InvoiceRetencionRouting(BaseModel):
     excluded: tuple[InvoiceRetencionProjection, ...]
 
 
+class InvoiceRetencionRouteRequest(BaseModel):
+    """One operator-declared ``(invoice, scheme)`` pair to route at aggregation time.
+
+    The wire shape the ``modelo aggregate`` CLI parses ``--received-invoice-retencion``
+    JSON into. The scheme is supplied here rather than read off the invoice for the
+    same reason :func:`project_received_invoice_retencion` never infers it: it is a
+    legal fact about the perceptor's activity the invoice record does not carry.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    invoice_id: str = Field(min_length=1)
+    scheme: RetencionScheme
+
+
 def project_received_invoice_retencion(
     invoice: Invoice,
     *,
@@ -218,6 +254,8 @@ def project_received_invoice_retencion(
     # are defects, so neither reaches this branch.
     if base is None or retencion is None:  # pragma: no cover - guarded by the defect sweep
         raise AggregationValidationError("euro figures are unavailable on an invoice that passed the defect sweep")
+    if invoice.counterparty_tax_id is None:  # pragma: no cover - guarded by the defect sweep
+        raise AggregationValidationError("perceptor tax id is unavailable on an invoice that passed the defect sweep")
     return InvoiceRetencionProjection(
         invoice_id=invoice.invoice_id,
         observation=RetencionObservation(
@@ -256,6 +294,52 @@ def route_invoice_retenciones(
     return InvoiceRetencionRouting(observations=tuple(observations), excluded=tuple(excluded))
 
 
+def merge_manual_and_routed_retencion_observations(
+    manual_observations: Sequence[RetencionObservation],
+    routed_observations: Sequence[RetencionObservation],
+) -> tuple[RetencionObservation, ...]:
+    """Union hand-typed and invoice-routed observations for one persist call.
+
+    ``persist_retencion_observations`` is a SET-REPLACE write: whatever this
+    returns becomes the *entire* per-perceptor window for one
+    ``(modelo, filing_year, period)``, so a caller must union every source
+    before persisting rather than call it once per source. Rather than pick a
+    winner when the operator has *also* hand-typed an observation this module
+    would independently route from the same invoice, the union refuses --  a
+    bound value has one writer, and a silent pick would either double-count
+    the invoice's retención in the per-perceptor rollup or silently drop
+    whichever side lost.
+
+    Args:
+        manual_observations: Observations the operator declared directly (a
+            ledger-sourced retención, or a hand-typed invoice observation).
+        routed_observations: Observations :func:`route_invoice_retenciones`
+            produced for this same persist call.
+
+    Returns:
+        The union of both sequences, manual observations first.
+
+    Raises:
+        AggregationValidationError: A manual observation shares its
+            ``(source_kind, source_object_id)`` identity with a routed one --
+            the same invoice was both hand-typed and auto-routed in one call.
+    """
+    routed_identities = {(obs.source_kind, obs.source_object_id) for obs in routed_observations}
+    colliding = sorted(
+        {
+            obs.source_object_id
+            for obs in manual_observations
+            if (obs.source_kind, obs.source_object_id) in routed_identities
+        },
+    )
+    if colliding:
+        raise AggregationValidationError(
+            t("aggregation.retenciones.errors.invoice_retencion_collision"),
+            context={"source_object_ids": ", ".join(colliding)},
+        )
+    return (*manual_observations, *routed_observations)
+
+
 def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]:
     """Yield every reason the invoice does not route.
 
@@ -281,13 +365,17 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]
         yield InvoiceRetencionProjectionDefect.NON_RESIDENT_SUPPLIER
     if invoice.currency != DEFAULT_CURRENCY and invoice.fx_rate is None:
         yield InvoiceRetencionProjectionDefect.FX_UNRESOLVED
+    if invoice.counterparty_tax_id is None:
+        yield InvoiceRetencionProjectionDefect.MISSING_COUNTERPARTY_TAX_ID
 
 
 __all__ = [
     "INVOICE_RETENCION_DEFECT_GUIDANCE",
     "InvoiceRetencionProjection",
     "InvoiceRetencionProjectionDefect",
+    "InvoiceRetencionRouteRequest",
     "InvoiceRetencionRouting",
+    "merge_manual_and_routed_retencion_observations",
     "project_received_invoice_retencion",
     "route_invoice_retenciones",
 ]

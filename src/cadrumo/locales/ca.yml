@@ -406,6 +406,9 @@ aggregation:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès
         %{min_year}-%{max_year}.
+      invoice_retencion_collision: La(es) observació(ons) de retenció de la(es) factura(es)
+        %{source_object_ids} es van declarar manualment i també mitjançant --received-invoice-retencion;
+        elimineu el duplicat abans d'agregar.
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no
@@ -2270,6 +2273,11 @@ cli:
           l'opció per a diverses observacions
         foreign_asset_observation_help: Objecte JSON ForeignAssetObservation; repeteix
           l'opció per a diverses observacions
+        invoice_retencion_excluded_notice: 'La factura %{invoice_id} no es va encaminar
+          cap a l''emmagatzematge de retencions: %{reasons}.'
+        invoice_retencion_wrong_modelo: --received-invoice-retencion encamina cap
+          a l'emmagatzematge de retencions per perceptor; el model %{modelo} no és
+          un dels 111, 115, 123, 180, 190, 193.
         json_not_object: '{flag} ha de ser un objecte JSON.'
         json_parse_error: '{flag} ha de ser un objecte JSON; JSON no vàlid al byte
           {pos}.'
@@ -2279,6 +2287,10 @@ cli:
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12
           mesos.'
+        received_invoice_retencion_help: Objecte JSON InvoiceRetencionRouteRequest
+          que encamina la retenció declarada d'una factura rebuda cap a l'emmagatzematge
+          per perceptor (invoice_id, scheme). L'scheme és un fet legal sobre l'activitat
+          del perceptor i mai s'infereix de la factura. Repetible per a diverses factures.
         retencion_observation_help: Objecte JSON RetencionObservation; repeteix l'opció
           per a diverses observacions
         withholding_observation_help: Observació de retenció per perceptor i clau

@@ -409,6 +409,9 @@ aggregation:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
         %{min_year}-%{max_year}.
+      invoice_retencion_collision: La(s) observación(es) de retención de la(s) factura(s)
+        %{source_object_ids} se declararon manualmente y también mediante --received-invoice-retencion;
+        elimine el duplicado antes de agregar.
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
@@ -2286,6 +2289,11 @@ cli:
         foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
+        invoice_retencion_excluded_notice: 'La factura %{invoice_id} no se enrutó
+          al almacén de retenciones: %{reasons}.'
+        invoice_retencion_wrong_modelo: --received-invoice-retencion enruta al almacén
+          de retenciones por perceptor; el modelo %{modelo} no es uno de 111, 115,
+          123, 180, 190, 193.
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
           {pos}.'
@@ -2295,6 +2303,10 @@ cli:
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,
           01-12 meses.'
+        received_invoice_retencion_help: Objeto JSON InvoiceRetencionRouteRequest
+          que enruta la retención declarada de una factura recibida al almacén por
+          perceptor (invoice_id, scheme). El scheme es un hecho legal sobre la actividad
+          del perceptor y nunca se infiere de la factura. Repetible para varias facturas.
         retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
           debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.

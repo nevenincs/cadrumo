@@ -364,6 +364,9 @@ aggregation:
     errors:
       filing_year_out_of_range: Filing year %{filing_year} is outside the supported
         range %{min_year}-%{max_year}.
+      invoice_retencion_collision: Retención observation(s) for invoice(s) %{source_object_ids}
+        were declared both manually and by --received-invoice-retencion; remove the
+        duplicate before aggregating.
       perceptor_nif_blank: Perceptor NIF must not be blank.
       perceptor_observations_missing: No per-perceptor retention observations exist
         for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
@@ -2112,6 +2115,11 @@ cli:
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
+        invoice_retencion_excluded_notice: 'Invoice %{invoice_id} was not routed into
+          the retenciones store: %{reasons}.'
+        invoice_retencion_wrong_modelo: --received-invoice-retencion routes into the
+          retenciones per-perceptor store; modelo %{modelo} is not one of 111, 115,
+          123, 180, 190, 193.
         json_not_object: '{flag} must be a JSON object.'
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         json_validation_error: 'The value of {flag} is not a valid observation object:
@@ -2119,6 +2127,10 @@ cli:
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'
+        received_invoice_retencion_help: JSON InvoiceRetencionRouteRequest object
+          routing one received invoice's declared retención into the per-perceptor
+          store (invoice_id, scheme). The scheme is a legal fact about the perceptor's
+          activity and is never inferred from the invoice. Repeat for multiple invoices.
         retencion_observation_help: 'JSON RetencionObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. For Modelo 111 trabajo, scheme rendimientos_trabajo
