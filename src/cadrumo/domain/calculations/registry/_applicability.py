@@ -98,12 +98,11 @@ from pydantic import BaseModel, Field, StringConstraints
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
 from ....core.time import today_madrid
-from ...deadlines import (
+from ...deadlines import FiscalResidency, IVARegime
+from ...deadlines.taxpayer_model import (
     EntityType,
-    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
-    IVARegime,
     TaxpayerProfile,
 )
 from ._applicability_labels import PAYER_FACT_INCOMPLETE_LABELS as _PAYER_FACT_INCOMPLETE_LABELS

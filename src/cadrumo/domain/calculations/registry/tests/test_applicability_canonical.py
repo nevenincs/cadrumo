@@ -2,20 +2,16 @@
 
 Pins the applicability collapse to the single domain
 source: ``derive_modelo_applicability`` access paths must resolve to the
-same object in memory and both retired re-export bridges must stay absent.
+same object in memory and the retired application shim must stay absent.
 
 Assertions:
 - The former application overview re-export shim is not importable.
-- The former ``registry.applicability`` focused re-export bridge is not
-  importable either -- every public symbol it carried is already exported
-  by the package's own top-level facade, and the bridge had no consumer of
-  the underscore-prefixed internal constants it also carried.
-- The function object imported via the package facade is identity-equal to
+- The function object imported via the domain facade is identity-equal to
   the domain implementation.
 
 See Also:
-    :func:`~domain.calculations.registry.derive_modelo_applicability`
-        Public package facade this test pins to the implementation object.
+    :func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
+        Public domain facade this test pins to the implementation object.
     :func:`~domain.calculations.registry._applicability.iter_modelo_applicability_rules`
         Canonical rule-table iterator checked for annual withholding refs.
 """
@@ -45,28 +41,12 @@ def test_application_overview_applicability_shim_is_absent() -> None:
         importlib.import_module("cadrumo.application.overview._applicability")
 
 
-def test_registry_applicability_focused_bridge_is_absent() -> None:
-    """The registry.applicability focused re-export bridge must not exist.
-
-    Per the operator directive collapsing every redefinition onto its single
-    canonical home: every public symbol this bridge carried was already
-    re-exported by ``cadrumo.domain.calculations.registry`` itself, and none
-    of the underscore-prefixed internal constants it also carried had a
-    consumer through the bridge. A recurrence of the bridge (an accidental
-    restore, or a new cross-package import reaching for the focused module
-    instead of the package facade) must be flagged here, not silently
-    re-introduced.
-    """
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.domain.calculations.registry.applicability")
-
-
 def test_facade_reexport_is_identity_equal_to_domain() -> None:
-    """The package facade re-export resolves to the same object as the implementation."""
+    """The domain facade re-export resolves to the same object as the implementation."""
     domain_mod = importlib.import_module("cadrumo.domain.calculations.registry._applicability")
-    facade_mod = importlib.import_module("cadrumo.domain.calculations.registry")
+    facade_mod = importlib.import_module("cadrumo.domain.calculations.registry.applicability")
     assert facade_mod.derive_modelo_applicability is domain_mod.derive_modelo_applicability, (
-        "package facade derive_modelo_applicability is not the same object as the domain implementation"
+        "domain facade applicability.derive_modelo_applicability is not the same object as the domain implementation"
     )
 
 

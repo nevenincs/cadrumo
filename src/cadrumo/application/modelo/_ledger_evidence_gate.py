@@ -41,49 +41,25 @@ def _enum_or_none[EnumT: StrEnum](enum_type: type[EnumT], value: str | None) -> 
         return None
 
 
-# ALT-EVIDENCE-GRADE-RATIONALE-LEDGER-GATE: deliberately looser, on the
-# attachment_ids axis, than the calculate-path deductible-side test
-# application.aggregation._evidence_advisory._row_has_deduction_grade_evidence
-# (LIVA art. 97 enumerative there); tightening it here would create an
-# unrecoverable finalized-revision dead end -- see the divergence paragraph
-# in this docstring below for why it is recorded rather than closed.
 def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
     """Return whether the bundled row carries any linked evidence at all.
 
-    ``invoice_id`` is credited here for the same reason it is credited at
-    verify time (:func:`~application.aggregation._evidence_advisory._row_has_deduction_grade_evidence`):
-    without it, a row verify granted specifically BECAUSE it carried a linked,
-    validated ``Invoice`` -- and only that -- would bundle with
-    ``purchase_invoice_evidence_id`` and ``attachment_ids`` both empty, and
-    this gate would then block export/local-filing on a revision verify just
-    granted. That is not a hypothetical: it reproduced on the first version of
-    the verify-time fix, caught by
-    ``test_modelo_303_verify_and_file_credit_a_linked_validated_invoice``
-    before this line existed. Omitting the credit here does not merely widen
-    the accepted-vs-verify divergence documented below -- it manufactures a
-    NEW permanent dead end, the exact failure class the surrounding campaign
-    exists to close.
-
-    Otherwise this stays DELIBERATELY looser than the verify-time deductible
-    test on the ``attachment_ids`` axis, which was tightened to the
-    purchase-invoice/invoice axis because LIVA art. 97 enumerates the
+    This is DELIBERATELY looser than the verify-time deductible test, which was
+    tightened to the purchase-invoice axis because LIVA art. 97 enumerates the
     documents that support a deduction. Two standards for one legal rule is a
-    real divergence on THAT axis, and it is recorded rather than swept,
-    because closing it here would cost more than it buys.
+    real divergence, and it is recorded rather than swept, because closing it
+    here would cost more than it buys.
 
     Verify now blocks a deductible row lacking deduction-grade evidence, so no
-    revision finalized after that promotion can reach this gate carrying
-    neither ``purchase_invoice_evidence_id`` nor ``invoice_id``. Tightening
-    the ``attachment_ids`` copy therefore changes behaviour only for revisions
-    finalized BEFORE that promotion — and for those there is no way out: the
-    bundle is frozen and never recomputed, a finalized revision cannot be
-    re-verified (the idempotent guard returns the existing granting report),
-    and recalculating returns the same content-addressed revision because
-    attaching an invoice does not change any tax fact. That is a permanent
-    dead end, which is the failure class this surface's own campaign exists to
-    close. An unreachable divergence on the attachment axis is the cheaper of
-    the two; a reachable one on the invoice axis is not, which is why it is
-    closed rather than recorded.
+    revision finalized after that promotion can reach this gate carrying one.
+    Tightening this copy therefore changes behaviour only for revisions
+    finalized BEFORE it — and for those there is no way out: the bundle is
+    frozen and never recomputed, a finalized revision cannot be re-verified (the
+    idempotent guard returns the existing granting report), and recalculating
+    returns the same content-addressed revision because attaching an invoice
+    does not change any tax fact. That is a permanent dead end, which is the
+    failure class this surface's own campaign exists to close. An unreachable
+    divergence is the cheaper of the two.
 
     The refusal message below says "purchase invoice evidence" while this test
     accepts any attachment, which reads as an overclaim. It is not one in
@@ -92,7 +68,7 @@ def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
     reader of this file, not an operator, which is why it is answered with this
     comment rather than a message change.
     """
-    return bool(row.purchase_invoice_evidence_id) or bool(row.invoice_id) or bool(row.attachment_ids)
+    return bool(row.purchase_invoice_evidence_id) or bool(row.attachment_ids)
 
 
 def _invoice_kind_for(direction: TransactionDirection | None) -> InvoiceKind | None:

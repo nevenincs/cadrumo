@@ -127,7 +127,8 @@ def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
     The special case must resolve ``taxpayer.entity_type`` against the object's
     ``entity_type`` attribute, mirroring the ``iva.regime`` -> ``iva_regime`` pattern.
     """
-    from ....deadlines import EntityType, IVARegime, TaxpayerProfile
+    from ....deadlines import IVARegime
+    from ....deadlines.taxpayer_model import EntityType, TaxpayerProfile
 
     profile = TaxpayerProfile(
         tax_id="B12345674",

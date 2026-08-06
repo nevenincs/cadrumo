@@ -12,9 +12,8 @@ legally grounded side blocks.
 What counts as evidence differs by side, and the difference is statutory rather
 than a severity preference. LIVA art. 97 is enumerative — "únicamente se
 considerarán documentos justificativos del derecho a la deducción" followed by a
-closed list — so only the purchase-invoice evidence axis or a linked, validated
-reconciliation-catalogue invoice silences the deductible side. The output side
-has no equivalent constitutive requirement and no CLI path that mints
+closed list — so only the purchase-invoice axis silences the deductible side. The
+output side has no equivalent constitutive requirement and no CLI path that mints
 issued-invoice evidence, so any linked document silences it. Holding the
 deductible side to the looser test would leave the blocking gate laxer than the
 statute it cites.
@@ -83,12 +82,6 @@ def _row_has_linked_evidence(transaction: Transaction) -> bool:
     return bool(transaction.purchase_invoice_evidence_id) or bool(transaction.attachment_ids)
 
 
-# ALT-EVIDENCE-GRADE-RATIONALE-ADVISORY: this calculate-path test is
-# deliberately stricter, on the attachment_ids axis, than
-# application.modelo._ledger_evidence_gate._row_has_linked_evidence, the
-# filing-grade gate's deductible-side test. LIVA art. 97 is enumerative for
-# this side; the filing gate's looser attachment_ids acceptance is a recorded
-# divergence (see that function's own docstring), not an oversight.
 def _row_has_deduction_grade_evidence(transaction: Transaction) -> bool:
     """Return whether the row carries evidence capable of supporting a deduction.
 
@@ -105,20 +98,8 @@ def _row_has_deduction_grade_evidence(transaction: Transaction) -> bool:
     precisely so a customs liquidation or a justificante contable can be
     registered through it. Accepting a bare attachment here would hold the
     blocking gate to a laxer standard than the statute it cites.
-
-    ``invoice_id`` is credited alongside ``purchase_invoice_evidence_id``, not
-    instead of it. It references the reconciliation-catalogue
-    :class:`~cadrumo.domain.invoices.Invoice` record, which only exists behind
-    the sanctioned catalogue writer's content validators (RD 1619/2012 art. 6),
-    and ``ledger link`` refuses to stamp a ``Transaction.invoice_id`` that does
-    not resolve to one already in that catalogue -- so its mere presence on the
-    row is evidence the referenced record passed validation, without this
-    module reaching into a repository to re-check it. A validated ``Invoice`` is
-    STRONGER evidence than a bare ``PurchaseInvoiceEvidence`` blob (whose fields
-    are all optional and carry no art. 6 content check), so crediting it here
-    only widens what already passes; it never narrows what already blocks.
     """
-    return bool(transaction.purchase_invoice_evidence_id) or bool(transaction.invoice_id)
+    return bool(transaction.purchase_invoice_evidence_id)
 
 
 def _is_cuota_bearing_iva_category(category: IvaCategory | None) -> bool:
@@ -226,11 +207,10 @@ def missing_evidence_advisory_observations(
     business/mixed row with a strictly-positive IVA quota that lacks the evidence
     its settlement side requires:
 
-    - a deductible input-IVA row carrying no purchase-invoice evidence and no
-      linked, validated reconciliation-catalogue invoice. A generic attachment
-      does NOT satisfy this side: LIVA art. 97 enumerates the documents that
-      establish the right to deduct and an attachment is not among them. This
-      diagnostic blocks verification downstream.
+    - a deductible input-IVA row carrying no purchase-invoice evidence. A generic
+      attachment does NOT satisfy this side: LIVA art. 97 enumerates the
+      documents that establish the right to deduct and an attachment is not among
+      them. This diagnostic blocks verification downstream.
     - an output-IVA row whose IVA category is legally expected to bear a
       devengada cuota — i.e. not in
       :data:`~cadrumo.domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES` — carrying no

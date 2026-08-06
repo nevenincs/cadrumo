@@ -42,10 +42,10 @@ from ....domain.calculations.registry import (
     derive_modelo_202_modality,
 )
 from ....domain.deadlines import (
-    EntityType,
     IVARegime,
     TaxpayerProfile,
 )
+from ....domain.deadlines.taxpayer_model import EntityType
 from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
