@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:9d85dc9714f63c5ec92af45c35389a8c309d5f7cecc53cece5b6e392c776683c'
+body_hash: 'sha256:0e43769c1a0aab5d78b10e1351ea9c0e5bfde48686b4631e8593ed7e0b687752'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -50,6 +50,7 @@ Let exempt invoices recover their retencion by relaxing the inference preconditi
 - [x] `P03.S20` - Route received-invoice retencion into the existing per-perceptor store behind retenciones_aggregation, never a second parallel retencion path; `src/cadrumo/application/aggregation`.
 - [x] `P03.S37` - Let an invoice record that its customer is under recargo de equivalencia, so an unrecorded surcharge stops being indistinguishable from one that does not apply; `src/cadrumo/domain/invoices/_models.py`.
 - [x] `P03.S38` - Let the income aggregation read a linked sales invoice for its base, cuota and retencion, following the derive-on-read shape the expense pipeline already proves; `src/cadrumo/application/aggregation/_renta_income_ledger.py`.
+- [x] `P03.S39` - Let a general-regime row carry its art. 75 devengo date, so IVA stops being attributed to the bank movement date for the one regime whose law binds it to the operation date; `src/cadrumo/domain/transactions/_models.py, src/cadrumo/domain/transactions/_dates.py, src/cadrumo/application/aggregation/_iva_ledger.py`.
 
 ### Phase `P04` - Verify severity escalation
 
