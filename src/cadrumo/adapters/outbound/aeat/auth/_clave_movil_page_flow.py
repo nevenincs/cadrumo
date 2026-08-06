@@ -22,7 +22,7 @@ import contextlib
 import json
 import time
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -39,6 +39,7 @@ from ....persistence.storage import (
     secure_object_repository_for_active_bucket,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
+from .._representation_gate import wait_for_own_name_representation_selector
 from ._authenticator_types import BrowserPageLike
 from ._clave_movil_support import (
     DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS as _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
@@ -584,24 +585,17 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
     async def _wait_for_own_name_representation_selector(self, page: BrowserPageLike) -> str:
         """Return the configured own-name selector that AEAT renders first."""
         pre303 = self._settings.external_constants().aeat.pre303
-        wait_for = getattr(page, "wait_for_selector", None)
-        if wait_for is None:
-            raise AeatLoginAssertionError(
-                "Playwright page does not expose wait_for_selector(); cannot drive AEAT own-name representation gate",
-            )
-        last_error: PlaywrightError | None = None
-        for selector in _own_name_representation_selectors(
-            pre303.representation_own_name_label_selector,
-            pre303.representation_own_name_selector,
-        ):
-            try:
-                await wait_for(selector, timeout=self._settings.cadrumo_browser_selector_probe_timeout_ms)
-                return selector
-            except PlaywrightError as exc:
-                last_error = exc
-        if last_error is not None:
-            raise last_error
-        raise AeatLoginAssertionError("AEAT own-name representation selector configuration is empty")
+
+        def _raise_configuration_error(message: str) -> NoReturn:
+            raise AeatLoginAssertionError(message)
+
+        return await wait_for_own_name_representation_selector(
+            page,
+            own_name_label_selector=pre303.representation_own_name_label_selector,
+            own_name_selector=pre303.representation_own_name_selector,
+            probe_timeout_ms=self._settings.cadrumo_browser_selector_probe_timeout_ms,
+            raise_configuration_error=_raise_configuration_error,
+        )
 
     async def _own_name_representation_is_already_selected(self, page: BrowserPageLike) -> bool:
         """Return whether AEAT already selected the own-name representation radio."""
@@ -649,15 +643,6 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 last_error = exc
         if last_error is not None:
             raise last_error
-
-
-def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
-    deduped: list[str] = []
-    for selector in selectors:
-        value = selector.strip()
-        if value and value not in deduped:
-            deduped.append(value)
-    return tuple(deduped)
 
 
 def _alert_continue_button_selectors(modal_selector: str, button_text: str) -> tuple[str, ...]:
