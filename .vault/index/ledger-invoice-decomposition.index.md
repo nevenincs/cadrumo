@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#ledger-invoice-decomposition'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:f67d3d331df8c6cc2a6ae2ef97ebcf2ed137846bd16755e64af83f7652746f02'
+body_hash: 'sha256:be6e6c399f254026e3ad0a258ea4ae766e2d2c6f571c8982ad847d8bd59eeeeb'
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S01]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S02]]'
@@ -21,10 +21,12 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-P02-S18]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P02-S19]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P02-S21]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P02-S27]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S11]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S12]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S13]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S20]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P03-S38]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P04-S14]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S15]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S16]]'
@@ -32,11 +34,13 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S22]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S23]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S24]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S26]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-loader-fingerprint-format-trap-audit]]'
   - '[[2026-08-05-ledger-invoice-decomposition-plan]]'
   - '[[2026-08-05-ledger-invoice-decomposition-reference]]'
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
+  - '[[2026-08-06-ledger-invoice-decomposition-research]]'
 ---
 
 # `ledger-invoice-decomposition` feature index
@@ -68,6 +72,7 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 - `2026-08-05-ledger-invoice-decomposition-P02-S18` - Re-key the component-expectation table on the category and invoice-kind pair, declaring the retencion role per row so an issued credit and a received liability stop sharing a shape
 - `2026-08-05-ledger-invoice-decomposition-P02-S19` - Reconcile the rich-invoice IvaRate enum against the registry rate table, closing the missing members rather than leaving a rate the registry knows and the record cannot express
 - `2026-08-05-ledger-invoice-decomposition-P02-S21` - Bundle the place-of-supply articles governing cross-border category selection, so the judgement is grounded rather than derived from counterparty country
+- `2026-08-05-ledger-invoice-decomposition-P02-S27` - Correct the six-entry LIVA batch document_id to its BOE identifier as one coherent change, then hand it to the operator for re-stamp
 - `2026-08-05-ledger-invoice-decomposition-P03-S11` - Relax the withheld-inference precondition to category-determinable cuota so exempt invoices recover their retencion, keeping the registry max-rate bound
 - `2026-08-05-ledger-invoice-decomposition-P03-S12` - Add the invoice retencion consistency validator, holding retencion outside the grand total
 - `2026-08-05-ledger-invoice-decomposition-P03-S13` - Add the partial-invoice decomposition contract so an ungrounded record is excluded but visible rather than silently dropped
@@ -79,6 +84,8 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 - `2026-08-05-ledger-invoice-decomposition-P05-S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition
 - `2026-08-05-ledger-invoice-decomposition-P05-S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded
 - `2026-08-05-ledger-invoice-decomposition-P05-S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously
+- `2026-08-05-ledger-invoice-decomposition-P05-S26` - Name the dropped retencion credit in the ungrounded advisory, not only the income mis-measurement, since the lost credit is the larger half of the harm
+- `2026-08-05-ledger-invoice-decomposition-P03-S38` - Let the income aggregation read a linked sales invoice for its base, cuota and retencion, following the derive-on-read shape the expense pipeline already proves
 
 ### plan
 
@@ -91,3 +98,4 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 ### research
 
 - `2026-08-05-ledger-invoice-decomposition-research` - `ledger-invoice-decomposition` research: `Calculation chain fragmentation across ledger, invoice, modelo and engine`
+- `2026-08-06-ledger-invoice-decomposition-research` - `ledger-invoice-decomposition` research: `{topic}`

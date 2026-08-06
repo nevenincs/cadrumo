@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2961d8c683e650089be2be724aa17778232ded1d19c741a5c12dab27bcf93eb'
+body_hash: 'sha256:d5997e2768f134cf805e04c0fc1165bf47eae04b6c1a4bd8d307dc13b3bbefb0'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-adr]]"
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
@@ -143,11 +143,78 @@ application layer, and one deliberate asymmetry had no control that would fail i
 normalised away. Eighteen tests were added closing those gaps. Three had genuinely adequate
 coverage as found — the finding is not that everything is untested.
 
+### The devengo date is the operation date, and nothing in the system can state it
+
+Investigated 2026-08-06, after this document had scoped the question out. It is not
+orthogonal to the component model: it decides which period every component lands in.
+
+LIVA article 75.Uno, bundled corpus read verbatim, fixes devengo at the operation. For
+entregas de bienes, "cuando tenga lugar su puesta a disposición del adquirente"; for
+prestaciones de servicios, "cuando se presten, ejecuten o efectúen las operaciones
+gravadas". AEAT states the same and adds the consequence: a business-to-business invoice
+may be issued as late as the fifteenth of the following month, and it "deberá declararse
+en el periodo en que se ha producido el devengo de la operación o el pago anticipado".
+The invoice date appears nowhere in article 75.Uno.
+
+Article 75.Dos carves out pagos anticipados: where the price is collected before the
+hecho imponible, devengo moves to collection, "en el momento del cobro total o parcial
+del precio por los importes efectivamente percibidos", excluding article 25 entregas.
+So the collection date is not merely a bad proxy to be replaced everywhere — for a
+prepayment it IS the devengo date, partially.
+
+Several widely-read secondary sources state flatly that the tax is devengado when the
+invoice is issued. That is the paraphrase this project's grounding discipline exists to
+catch: usually true, legally wrong, and wrong in exactly the month and quarter boundary
+cases where period attribution changes. An operation on 25 June invoiced on 10 July
+belongs to the second quarter.
+
+MEASURED at HEAD before the correction: a general-regime row was attributed to its bank
+movement date, and the devengo date could not be recorded at all — the field existed but
+was refused unless the taxpayer was on criterio de caja, which is precisely the regime
+where collection governs instead. An invoice issued in the first quarter and paid in the
+third declared its IVA in the third. The structural half is corrected; what remains is
+that no substrate holds the authoritative date.
+
+### The invoice record cannot express what the law requires of it
+
+Four instances of one shape, found separately and better treated as a class. In each,
+bundled or cited law describes a property of a Spanish invoice that the record cannot
+hold.
+
+Recargo de equivalencia was the sharpest, because the identity did not merely omit it:
+`grand_total == base_total + iva_total` exactly, so a supplier invoicing a comerciante
+minorista had the truthful document REFUSED and the falsified one — surcharge charged
+but dropped from the total — ACCEPTED. The model selected for wrong data. Corrected;
+the identity now carries the recargo term.
+
+Still unexpressible: suplidos, excluded from the base imponible under LIVA article
+78.Tres.3, which join total and cash while joining neither base nor cuota — a third
+position on the identity rather than a second recargo; the factura rectificativa of LIVA
+article 89, whose law is bundled and cited while the record has no amendment shape; the
+factura simplificada, refused because `counterparty_tax_id` is required; and the
+operation date required by RD 1619/2012 article 6.1.f whenever it differs from the issue
+date, which is also the missing authority for the devengo finding above.
+
+MEASURED: a search for suplido, descuento, rappel, anticipo, impagado, incobrable,
+concurso, devolución and permuta across the invoice, transaction, IVA and aggregation
+domains returns zero files for every one of them. Autoconsumo and prorrata, by contrast,
+are well represented. The gap is specific, not general.
+
+Corpus state: only article 2 of RD 1619/2012 is bundled. Article 6, the mandatory
+content list, and article 11, the issuance deadline, are not, so neither can be verified
+against bundled authoritative text.
+
 ### What was not investigated
 
-Devengo versus cobros timing. The ledger is cash-dated while estimación directa defaults to
-accrual unless the RD 439/2007 article 7.2 election is made. This is pre-existing, orthogonal
-to the component model, and out of scope here — recorded so it is not mistaken for covered.
+The item-to-tier assignment — which goods and services sit in which IVA tier per window,
+the article 91 lists and the transient decrees that move items between them — remains a
+declared judgement rather than a registry axis, as the ADR states.
+
+The accounting step establishing that IVA repercutido is excluded from the income measure
+(PGC norma de registro y valoración, Código de Comercio) was not in the bundled corpus when
+the reference document was written. The ADR records a live BOE cross-check closing that gap;
+bundling the text is a named obligation of the implementation plan, and until it lands the
+grounding is a cited framework rather than bundled verbatim text.
 
 The accounting step establishing that IVA repercutido is excluded from the income measure
 (PGC norma de registro y valoración, Código de Comercio) was not in the bundled corpus when
@@ -175,3 +242,10 @@ grounding is a cited framework rather than bundled verbatim text.
 - LIVA article 20 — cited for the exempt-services case, corpus bundling pending
 - PGC RD 1514/2007 NRV 12.ª and 14.ª — live BOE cross-check recorded in the ADR, not yet bundled
 - RD 439/2007 article 95.1 — retención rates, live-verified, registry parameters pending
+- LIVA article 75.Uno and 75.Dos — bundled corpus, read verbatim 2026-08-06
+- AEAT sede, "¿En qué momento tengo que repercutir el IVA (devengo)?" — live, 2026-08-06
+- LIVA article 78.Tres.3 — suplidos, cited for the unexpressible-property class
+- LIVA article 89 — factura rectificativa, bundled and cited, unrepresentable
+- LIVA article 161 — recargo de equivalencia, grounding the corrected invoice identity
+- RD 1619/2012 articles 6 and 11 — mandatory content and issuance deadline, NOT bundled
+  (only article 2 is); cited live from BOE, bundling is an implementation obligation

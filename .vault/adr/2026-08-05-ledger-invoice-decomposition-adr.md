@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:2dc7ad27bc0edda2e98c3216bb51ddd0679d73744256511faea2caac9dff9689'
+body_hash: 'sha256:9b2e11097a7ff9782065fb37dd6a63eb238c1692c44ee86363b51a7e30a0ef42'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
@@ -192,9 +192,13 @@ missing-substrate advisory, keeping the fallback).
   existing cheap gates, not reorder them.
 - The rich `Invoice` totals discipline (line tolerance 0.01, invoice-level exact) and
   the fixed `derive_invoice_id` input set must not be silently altered: retención
-  stays OUTSIDE `grand_total` (`grand_total == base_total + iva_total` restated
-  deliberately; retención is a settlement-side deduction, not a price component), and
-  new shape fields are non-identity fields.
+  stays OUTSIDE `grand_total` because it is a settlement-side deduction, not a price
+  component. AMENDED 2026-08-06 (D10): the identity is
+  `grand_total == base_total + iva_total + recargo_amount`. The earlier restatement
+  omitting the recargo term was not a simplification but a defect — it refused the
+  truthful invoice of a supplier selling to a comerciante minorista and accepted the
+  falsified one, so the model selected for wrong data. Recargo is a price component
+  under LIVA art. 161 and sits INSIDE the total, on the opposite side from retención.
 - `IrpfCategory`/retención-type closed-enum authoring was explicitly deferred to its
   own decision by `2026-06-04-llm-ledger-classification-adr`; this record does not
   pre-empt it (see Consequences — operator questions).
@@ -387,6 +391,69 @@ between tiers) remains a declared category-selection judgement (operator, or
 LLM-selection under the closed-list guard); authoring per-window item lists as a
 registry axis would be its own decision with its own corpus ingest.
 
+**D10 — the devengo date is the operation date, and it is a recorded fact (ruled
+2026-08-06).** Every period attribution — which quarter a cuota is declared in, which
+filing year an annual reconciliation sees — resolves on the LIVA art. 75 devengo date.
+That date is when the operation occurred: for entregas de bienes "cuando tenga lugar su
+puesta a disposición del adquirente", for prestaciones de servicios "cuando se presten,
+ejecuten o efectúen las operaciones gravadas" (bundled corpus, read verbatim; AEAT
+concurs). The invoice date appears nowhere in art. 75.Uno. Art. 75.Dos moves devengo to
+collection for pagos anticipados, "por los importes efectivamente percibidos", excluding
+art. 25 entregas.
+
+Three consequences bind implementation:
+
+*No derivable proxy is authoritative.* A B2B invoice may be issued up to the fifteenth of
+the following month while still being declarable in the earlier period, so the issue date
+is wrong at exactly the month and quarter boundaries where attribution changes. The bank
+movement date is wrong for the general regime and right only for a prepayment. The devengo
+date is therefore a RECORDED fact, never inferred. Where a fallback chain exists it MUST
+declare which rank produced the date — operation-date-declared, issue-date-proxy,
+movement-date-proxy — through the same grounding-marker discipline D2 established for the
+income measure, so a proxy is never mistaken for the fact.
+
+*The general regime is the regime that needs it.* Criterio de caja is the regime where
+collection governs; the general regime is bound to the operation date. Gating the devengo
+field on criterio de caja therefore withheld it from the only regime whose law requires
+it. LANDED (commit `8a783e869e`): `operation_date` is recordable on any regime, still
+required under criterio de caja, span-aware, and opt-in — a row without one keeps filing
+on its movement date, so nothing already recorded changes quarter.
+
+*Payment timing is not uniformly wrong.* A change making the operation date universally
+authoritative would break art. 75.Dos. Pagos anticipados are not representable at all
+today and are named work, not an assumption.
+
+**D11 — the invoice is a legally-grounded canonical schema (ruled 2026-08-06).** The
+record has been extended field by field as each defect surfaced, and the accumulated shape
+now fails a class of cases rather than isolated ones: four separate findings are all "the
+law describes a property of a Spanish invoice the record cannot hold". Piecemeal extension
+is rejected; the invoice becomes one typed canonical schema whose field set is derived from
+what the law requires an invoice to state, not from what consumers have so far needed.
+
+Scope of the schema, each axis typed and none free-form: identity (number, series, issue
+date, operation date where it differs per RD 1619/2012 art. 6.1.f, invoice class —
+ordinaria, simplificada, rectificativa); directionality (issued/received, and the roles
+that inverts per D4); counterparty (name, tax id, country, with the simplificada carve-out
+that no tax id exists); the money identity in full —
+`grand_total == base_total + iva_total + recargo_amount`, `cash == grand_total −
+retention_amount`, plus the suplido term which joins total and cash while joining neither
+base nor cuota (LIVA art. 78.Tres.3); per-line tier kind and operation date resolving the
+percentage through `lookup_rate` per D9; retención rate and amount in the role the kind
+dictates; the IVA category and its Axis-A components; FX; payment lifecycle; and the
+amendment linkage a rectificativa needs to name what it corrects (LIVA art. 89).
+
+Two constraints on the shape. It MUST remain a classifier-not-refusal boundary in the sense
+D2 established: a partial invoice is a real document the taxpayer holds, so construction
+keeps accepting it and the decomposition contract renders the verdict. And the identity
+guards MUST refuse the FALSIFIED document rather than the truthful one — the recargo defect
+is the worked example of getting that backwards, and every new term on the identity is to
+be checked against that failure mode explicitly.
+
+Corpus obligation, gating: RD 1619/2012 art. 6 (mandatory content) and art. 11 (issuance
+deadline) are NOT bundled — only art. 2 is. The mandatory-content list is the authority
+from which this schema's field set is derived, so bundling it precedes authoring the
+schema, per `legal-grounding-verifies-bundled-authoritative-corpus`.
+
 **Named change list for the implementation plan.**
 
 1. Registry selectors: `fact` required (no default) on the renta and impatriado
@@ -435,6 +502,30 @@ registry axis would be its own decision with its own corpus ingest.
     surface; retire the numeric `IvaRate` members once operator question 5
     (coverage window) is answered. Direction ruled here; convergence is
     plan-level.
+14. Bundle RD 1619/2012 art. 6 and art. 11 into the corpus from BOE consolidated
+    text (only art. 2 is bundled today). Art. 6 is the authority the D11 field set
+    derives from, so this precedes schema authoring, not follows it.
+15. Per D11: author the canonical invoice schema against art. 6's mandatory-content
+    list — invoice class (ordinaria / simplificada / rectificativa), series, operation
+    date, suplido term, amendment linkage for the rectificativa, and the simplificada
+    carve-out on `counterparty_tax_id`. Every identity guard carries a test proving it
+    refuses the FALSIFIED document and admits the truthful one, the recargo failure
+    mode stated explicitly.
+16. Per D10: thread the operation date from the invoice into period attribution with a
+    declared rank marker (operation-declared / issue-proxy / movement-proxy), surfaced
+    on both the pull and calculate paths per `one-aggregation-path-pull-equals-calculate`.
+    A proxy-attributed row is visible, never silently equated with a declared one.
+17. Per D10: represent pagos anticipados (LIVA art. 75.Dos) so a prepayment devengues on
+    collection for the amount received, with the art. 25 exclusion honoured. Nothing in
+    the tree expresses this today.
+18. Cross-modelo multi-period acceptance tests: one accumulative invoice life driven
+    through M303 and M390 and through M130 and M100 across several periods, asserting the
+    same operation lands in one period on both the quarterly and annual sides; plus an
+    adversarial suite of deliberately degraded invoices (missing base, missing cuota,
+    recargo dropped from the total, retención netted into the total, operation date
+    contradicting the issue date, rectificativa with no referent, simplificada above the
+    threshold) each asserting the specific refusal or advisory rather than merely that
+    something failed.
 
 ## Rationale
 
