@@ -22,8 +22,10 @@ from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
 from ....domain.invoices import (
+    InvoiceLine,
     InvoiceOperationDateRole,
     InvoiceValidationError,
+    IvaRate,
     PaymentStatus,
     decompose_invoice,
 )
@@ -588,3 +590,120 @@ def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: P
     assert ("FR", "E") not in rows
     assert ("IT", "A") not in rows
     assert resolution.diagnostics == ()
+
+
+def _mixed_rate_lines() -> tuple[InvoiceLine, ...]:
+    """A 21% line and a 10% line, the ordinary mixed-rate invoice."""
+    return (
+        InvoiceLine(
+            description="Consultoria",
+            quantity=Decimal("1"),
+            unit_price=Decimal("1000.00"),
+            subtotal=Decimal("1000.00"),
+            iva_rate=IvaRate.RATE_21,
+            iva_amount=Decimal("210.00"),
+        ),
+        InvoiceLine(
+            description="Transporte de viajeros",
+            quantity=Decimal("1"),
+            unit_price=Decimal("500.00"),
+            subtotal=Decimal("500.00"),
+            iva_rate=IvaRate.RATE_10,
+            iva_amount=Decimal("50.00"),
+        ),
+    )
+
+
+def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line(
+    tmp_path: Path,
+) -> None:
+    """A mixed-rate invoice keeps its per-rate breakdown through persistence.
+
+    Every canonically-written invoice previously carried exactly one
+    synthesised line at one rate, because the builder derived the line from a
+    single taxable base and a single rate. A real invoice mixing 21% and 10% is
+    ordinary, and collapsing it reports the correct GRAND TOTAL while
+    attributing the whole cuota to one rate -- which is precisely the axis the
+    IVA modelos declare, so the error is invisible in the total and wrong in
+    the return.
+
+    Persisted through the real encrypted repository rather than asserted on the
+    in-memory model, because the claim is that the breakdown SURVIVES, not
+    merely that the builder assembled it.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        result = create_catalogue_invoice(
+            bucket_id=profile.bucket_id,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Cliente Mixto SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="F-2026-MIXED-001",
+            issued_at=date(2026, 4, 1),
+            taxable_base=Decimal("1500.00"),
+            iva_rate=None,
+            currency="EUR",
+            lines=_mixed_rate_lines(),
+            repository=InvoiceCatalogueRepository(objects=profile.repository),
+        )
+        restored = InvoiceCatalogueRepository(objects=profile.repository).load().get(result.invoice.invoice_id)
+
+    assert restored is not None
+    assert len(restored.lines) == 2
+    assert [line.iva_rate for line in restored.lines] == [IvaRate.RATE_21, IvaRate.RATE_10]
+    # Per-rate cuota, not one blended figure: 210 belongs to the 21% base and
+    # 50 to the 10% base, and a collapse would put all 260 on a single rate.
+    assert [line.iva_amount for line in restored.lines] == [Decimal("210.00"), Decimal("50.00")]
+    assert restored.base_total == Decimal("1500.00")
+    assert restored.iva_total == Decimal("260.00")
+    assert restored.grand_total == Decimal("1760.00")
+
+
+def test_a_supplied_line_set_refuses_a_taxable_base_that_disagrees_with_it() -> None:
+    """Two disagreeing sources of truth for the base must refuse, not resolve.
+
+    With a line set supplied the caller states the base twice: once as the
+    summed subtotals and once as ``taxable_base``. Silently preferring either
+    would let a caller believe the other was recorded, and on this field that
+    means declaring a base the operator never entered.
+    """
+    with pytest.raises(InvoiceValidationError, match="summed line subtotals"):
+        build_catalogue_invoice(
+            bucket_id=None,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Cliente Mixto SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="F-2026-MIXED-002",
+            issued_at=date(2026, 4, 1),
+            taxable_base=Decimal("1400.00"),
+            iva_rate=None,
+            currency="EUR",
+            lines=_mixed_rate_lines(),
+        )
+
+
+def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
+    """Positive control: the additive change leaves the single-rate path intact.
+
+    The overwhelming majority of invoices carry one rate, and every existing
+    caller omits the line set. If this regressed, the mixed-rate proof above
+    would still pass while the common path broke.
+    """
+    invoice = build_catalogue_invoice(
+        bucket_id=None,
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Cliente Simple SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        invoice_number="F-2026-SIMPLE-001",
+        issued_at=date(2026, 4, 1),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+    )
+
+    assert len(invoice.lines) == 1
+    assert invoice.lines[0].iva_rate is IvaRate.RATE_21
+    assert invoice.iva_total == Decimal("210.00")
+    assert invoice.grand_total == Decimal("1210.00")

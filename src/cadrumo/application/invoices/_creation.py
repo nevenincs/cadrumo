@@ -10,16 +10,24 @@ field, so ``link --invoice-id`` cannot resolve it. Only the rich
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 
 :func:`create_catalogue_invoice` builds a strict :class:`Invoice` from
-operator-friendly fields — synthesising a single line item from a taxable base
-and IVA rate, mirroring the single-line synthesis the import path uses — and
-persists it through the sanctioned :class:`InvoiceCatalogueRepository` (no
-parallel write path). The returned :attr:`Invoice.invoice_id` is the
+operator-friendly fields and persists it through the sanctioned
+:class:`InvoiceCatalogueRepository` (no parallel write path). A caller that
+supplies no line set gets a single line synthesised from the taxable base and
+IVA rate; a caller that supplies one gets those lines, which is how an invoice
+carrying several IVA rates is expressed.
+
+This is the ONE line-synthesis site. The bulk import path does not carry its
+own: it routes every row through :func:`build_catalogue_invoice`, so the two
+transports cannot disagree about the shape they produce. Its row model does
+still admit only one rate per row, which is a limit of that file format rather
+than a second synthesis to keep in step. The returned :attr:`Invoice.invoice_id` is the
 content-addressed hash ``link --invoice-id`` resolves, closing the documented
 add->link gap without collapsing the two stores.
 """
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 
@@ -36,6 +44,7 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepositoryProtocol,
+    InvoiceLine,
     InvoiceOperationDateRole,
     InvoiceValidationError,
     IvaRate,
@@ -111,14 +120,28 @@ def build_catalogue_invoice(
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
+    lines: Sequence[InvoiceLine] | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
 
-    A single line item is synthesised from ``taxable_base`` and the resolved
-    IVA rate slot; the invoice totals are derived from that line so the
-    :class:`Invoice` arithmetic invariants hold. The returned invoice carries
-    no linked transactions yet — ``link --invoice-id`` populates them later.
+    When ``lines`` is omitted a single line item is synthesised from
+    ``taxable_base`` and the resolved IVA rate slot, and the invoice totals are
+    derived from that line so the :class:`Invoice` arithmetic invariants hold.
+    The returned invoice carries no linked transactions yet — ``link
+    --invoice-id`` populates them later.
+
+    When ``lines`` IS supplied they are authoritative and the totals are summed
+    from them, which is what lets one invoice carry several IVA rates. A real
+    invoice mixing 21% and 10% lines is not exotic — collapsing it to one line
+    at a single rate reports the right grand total while attributing the cuota
+    to the wrong rate, and the per-rate breakdown is precisely what the IVA
+    modelos declare.
+
+    ``taxable_base`` must then AGREE with the summed line subtotals, and a
+    mismatch refuses rather than resolving. Two disagreeing sources of truth
+    for the same base is the shape that silently mis-declares, so the caller is
+    made to state one number, not two.
 
     ``iva_category`` carries the intra-community classification the M349
     recapitulative resolver reads for historical goods/triangulation records.
@@ -147,18 +170,32 @@ def build_catalogue_invoice(
     # registry-resolved rate, never a hand-typed percentage. EXEMPT /
     # NOT_SUBJECT resolve to None and carry a zero cuota.
     pct = iva_rate_percentage(rate_slot)
-    iva_amount = Decimal("0") if pct is None else round_to_cents(taxable_base * pct)
-    base_total = round_to_cents(taxable_base)
-    iva_total = iva_amount
+    if lines:
+        if not all(isinstance(item, InvoiceLine) for item in lines):
+            raise InvoiceValidationError("lines must be InvoiceLine records")
+        base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
+        iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
+        declared_base = round_to_cents(taxable_base)
+        if declared_base != base_total:
+            raise InvoiceValidationError(
+                f"taxable_base {declared_base} does not equal the summed line subtotals {base_total}",
+            )
+        payload_lines = [item.model_dump(mode="json") for item in lines]
+    else:
+        iva_amount = Decimal("0") if pct is None else round_to_cents(taxable_base * pct)
+        base_total = round_to_cents(taxable_base)
+        iva_total = iva_amount
+        payload_lines = [
+            {
+                "description": invoice_number or "Invoice",
+                "quantity": "1",
+                "unit_price": format(base_total, "f"),
+                "subtotal": format(base_total, "f"),
+                "iva_rate": rate_slot.value,
+                "iva_amount": format(iva_amount, "f"),
+            },
+        ]
     grand_total = base_total + iva_total
-    line = {
-        "description": invoice_number or "Invoice",
-        "quantity": "1",
-        "unit_price": format(base_total, "f"),
-        "subtotal": format(base_total, "f"),
-        "iva_rate": rate_slot.value,
-        "iva_amount": format(iva_amount, "f"),
-    }
     invoice_payload: dict[str, object] = {
         "bucket_id": bucket_id,
         "kind": kind.value,
@@ -172,7 +209,7 @@ def build_catalogue_invoice(
         "grand_total": format(grand_total, "f"),
         "currency": currency,
         "payment_status": payment_status.value,
-        "lines": [line],
+        "lines": payload_lines,
         "notes": notes,
     }
     if iva_category is not None:
@@ -246,6 +283,7 @@ def create_catalogue_invoice(
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
+    lines: Sequence[InvoiceLine] | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> CatalogueInvoiceCreateResult:
@@ -276,6 +314,7 @@ def create_catalogue_invoice(
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
+        lines=lines,
         rate_provider=rate_provider,
     )
     catalogue = repo.load()
