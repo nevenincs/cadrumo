@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:d94e416682fd182aef7a94613082e3adc0381c1674cd2812473ed2c5798d13c5'
+body_hash: 'sha256:362d2f433cf026015659919aedc31064f87c3f944688b20f9df71886d2f14059'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -69,7 +69,7 @@ Findings the campaign surfaced in the registry and core surfaces that are real b
 Work this campaign found and cannot close, recorded so it is not silently dropped. Each row names why it is not ours and what the owning party must do.
 
 - [x] `P04.S15` - Repair the four core tests broken by the root-only Modelo localization migration, it stripped title and official_name and label from the M036 manifest without updating hand-derived expectations; `src/cadrumo/core/tests/test_toml_registry_parity.py`.
-- [ ] `P04.S16` - Re-pin the model-facing description digest once the description sources settle, the gate forbids re-pinning from a dirty tree and the locale and CLI help surfaces are actively churning; `dev/packaging/tests/test_verify_distribution_identity.py`.
+- [x] `P04.S16` - Re-pin the model-facing description digest once the description sources settle, the gate forbids re-pinning from a dirty tree and the locale and CLI help surfaces are actively churning; `dev/packaging/tests/test_verify_distribution_identity.py`.
 - [x] `P04.S17` - Record a finding about the 204 semantic-dedup exec records rather than remediating them, all 204 carry empty Description Outcome and Notes and were bulk-scaffolded in one commit so 0 resolve to an implementing commit, and unchecking would assert work the tree shows was done; `.vault/exec/2026-06-13-semantic-dedup-epic`.
 - [x] `P04.S20` - Resolve the import-hygiene test-debt failures from the maternidad private reaches, raising a baseline designed to only decrease would invert the ratchet so establish whether the debt is legitimate before admitting it; `src/cadrumo/tests/test_import_hygiene_gate.py`.
 - [x] `P04.S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent; `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`.
