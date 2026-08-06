@@ -3,14 +3,13 @@ tags:
   - '#exec'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:46ef99524ee7d95c3bebb8645b9acbb0b516c38bdb7f9cc76a54f136ac8ff1ce'
+body_hash: 'sha256:fb61458b30fc4ef1fe0be113e7363e80469b9586f5c86b37b7416fb3200ad84c'
 step_id: 'S15'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
 ---
-
 # Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test
 
 ## Scope
@@ -53,3 +52,29 @@ Run in process by rebinding the registry fact aggregator, so no broken state eve
 - Apply the retencion rate to the IVA-inclusive total instead of the base: 2 of 7 red.
 
 The four gates that stay green under all three are the arithmetic identity, the statutory-rate premise, and the two advisory-screen assertions, none of which reads a resolved binding value. That is the expected partition rather than a coverage gap.
+
+## Second pass: the Step was asking for a source that does not exist
+
+The step text asked for an AEAT worked example carrying a retencion. The Notes above recorded a blocker for not using the bundled manual-oracle corpus, and that blocker was the wrong one. It said the corpus mechanism is scoped to computed casillas and cannot express a grounding claim about a bound one. True as stated, and routable around: ground the first COMPUTED casilla downstream of the bound one instead, which is exactly what the sibling exempt-services step then did without needing any gate change. The governing decision has since admitted bound casillas outright, so that blocker is retired twice over.
+
+The real obstacle is upstream of any gate, and it was measured rather than assumed.
+
+### The finding: AEAT publishes no worked professional retencion
+
+No bundled AEAT surface publishes a worked retencion figure on actividad-economica income. Searched exhaustively on 2026-08-06:
+
+- All six renta manuals, 2020 through 2025. Every "Caso practico" heading was enumerated (44 across the set) and each body scanned for a retencion figure. Every numeric retencion in the corpus is rendimientos del trabajo (Cap. 3), rendimientos del capital mobiliario or inmobiliario at 19 per cent (Cap. 5: "Retenciones (19% s/450) = 85,50", "19% s/1.502 = 285,38", "Retenciones soportadas (19% s/15.600) = 2.964"), or atribucion de rentas (Cap. 10: 570 total, itemised by the manual as 228 on intereses and 342 on dividendos). None on actividad economica or profesional.
+- All six IVA manuals. The string "retenci" occurs ONCE in the entire 831.344-character 2024 normalised text, inside a facturacion-obligations sentence. No figures.
+- The bundled Modelo 130 instructions. One occurrence of "ejemplo", used as "por ejemplo" in the casilla 18 prose. No worked example and no figures of any kind.
+- All 48 bundled instruction documents. Only Modelo 210 carries retencion worked examples, and they are IRNR dividends and imputed real-estate income, a different chain.
+- The Sociedades manual's retenciones are Impuesto sobre Sociedades and already back the Modelo 202 oracle.
+
+So the RIRPF art. 95 professional rate ships in the bundled corpus as NORMATIVE TEXT ONLY, in the consolidated RD 439/2007 art. 95 excerpt, and never as a worked figure. This is not a defect in this codebase. It is a gap in what AEAT itself publishes as worked examples, and it withdraws an entire grounding class from the most common autonomo case this product serves.
+
+### What the step now claims, and what it does not
+
+The step text is amended to state the grounding this module ACTUALLY has. `test_ledger_income_chain_oracle_rated.py` grounds the withheld figure on the registry rate parameter, which carries its own BOE citation and resolves to the bundled consolidated RIRPF art. 95 text reading "15 por ciento sobre los ingresos integros satisfechos". That is NORMATIVE-TEXT grounding, and it is the strongest grounding available for this chain.
+
+It is NOT external-oracle grounding, and the step must not read as though it were. No casilla of this chain is declared in `externally_grounded_casilla_ids`, and none may be: that field asserts a bundled oracle figure exists for the casilla, and for the professional retencion none does. Enrollment in a verification contract is not grounding, and neither is a rate citation; keeping those three tiers distinct is the whole point of the grounding discipline, and collapsing them here would put a claim on the registry that no evidence backs.
+
+Closing the step on that amended claim rather than on the original one is the honest resolution. Re-opening it becomes possible only if AEAT publishes, or this repository bundles, a worked example that prints a professional retencion against its ingresos integros.

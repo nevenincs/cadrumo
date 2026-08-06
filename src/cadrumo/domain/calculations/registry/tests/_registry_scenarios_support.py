@@ -34,6 +34,28 @@ def _inputs(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
     return validated_casilla_id_map(values, surface="test_registry_scenarios.inputs")
 
 
+#: Casilla 0171 ("Ingresos de explotación") is ``input_kind = "bound"`` on the
+#: M100 2025 revision, to ``renta-2025-ledger-income-0171``. The archetype
+#: scenarios below supply it directly, which hand-types a value the engine
+#: produces by aggregating ledger substrate and resolving that binding — so the
+#: chain that populates it is stepped over here and nothing these scenarios
+#: assert speaks to it.
+#:
+#: That is the right trade for these fixtures: they exist to exercise the
+#: estimación-directa FORMULA chain and its downstream cuota path across several
+#: archetypes, and building ledger substrate for each would turn every one of
+#: them into an aggregation test. Declaring it keeps the boundary visible where
+#: a reader meets the scenario, rather than leaving them to infer end-to-end
+#: coverage the fixtures never claimed.
+_INGRESOS_EXPLOTACION_2025: CasillaId = validated_casilla_id("0171", surface="_INGRESOS_EXPLOTACION_2025")
+_HAND_TYPED_INGRESOS_2025: dict[CasillaId, str] = {
+    _INGRESOS_EXPLOTACION_2025: (
+        "archetype fixture exercising the estimacion-directa formula chain and the cuota path below it; "
+        "the ledger-income aggregation feeding this casilla is out of its scope and is covered separately"
+    ),
+}
+
+
 @lru_cache(maxsize=1)
 def _m100_2025_refs_by_target() -> dict[CasillaId, tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]]:
     modelo, _catalogues = _committed_modelo("100")
@@ -143,6 +165,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 "0606": Decimal("13.00"),
             },
         ),
+        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS_2025,
         binding_values={
             "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
@@ -277,6 +300,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
         filing_year=2025,
         period="0A",
         inputs=_inputs({"0171": Decimal("100000.00")}),
+        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS_2025,
         binding_values={
             "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
@@ -335,6 +359,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
         filing_year=2025,
         period="0A",
         inputs=_inputs({"0171": Decimal("100.00"), "0181": Decimal("500.00")}),
+        hand_typed_bound_casillas=_HAND_TYPED_INGRESOS_2025,
         binding_values={
             "renta-2025-profile-has-economic-activity": Decimal("1"),
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),

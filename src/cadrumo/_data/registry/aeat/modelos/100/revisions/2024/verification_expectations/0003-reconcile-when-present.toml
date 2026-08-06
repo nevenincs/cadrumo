@@ -16,7 +16,14 @@ computed_casilla_ids = []
 # its own caso practico table for a medico radiologo actividad profesional in
 # estimacion directa simplificada (see
 # corpus/manual_oracles/modelo-100-2024-estimacion-directa-simplificada.json
-# and test_m100_2024_estimacion_directa_manual_worked_example.py). 0012
+# and test_m100_2024_estimacion_directa_manual_worked_example.py). 0180
+# ("Total ingresos computables") reproduces 138.400,00 from that same caso
+# practico, the "Total ingresos" row of its own valores-fiscales column; it is
+# the first published total downstream of casilla 0171 ("Ingresos de
+# explotacion"), which is bound to the ledger-income aggregation, so grounding
+# it makes the aggregation and its binding resolver independently checked
+# rather than only the formula chain above them (see
+# test_ledger_income_chain_aeat_exempt_worked_example.py). 0012
 # ("Total ingresos integros computables"), 0017 ("Rendimiento neto previo"),
 # 0022 ("Rendimiento neto") and 0025 ("Rendimiento neto reducido") of the
 # rendimientos-del-trabajo chain reproduce 17.240,00 / 13.640,00 / 8.140,00 /
@@ -62,7 +69,7 @@ computed_casilla_ids = []
 # and test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py).
 # The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
 # both declarations symmetrically against the bundled corpus.
-externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0513", "0514", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
+externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0180", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0513", "0514", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",
