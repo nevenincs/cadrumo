@@ -7,11 +7,7 @@
   "family2_shim_modules": {
     "_note": "Every module the scanner classifies as a Family-2 shim / pure-reexport surface. Each is a DOCUMENTED bridge: a single non-__init__ public re-export module is an acceptable canonical source when it carries a docstring explaining why. The gate fails if a NEW undocumented shim appears that is not in this list.",
     "paths": [
-      "src/cadrumo/application/workflow/_utils.py",
-      "src/cadrumo/domain/calculations/registry/applicability.py",
-      "src/cadrumo/domain/deadlines/taxpayer_model.py",
-      "src/cadrumo/domain/transactions/_ids.py",
-      "src/cadrumo/entrypoints/cli/_schemas.py"
+      "src/cadrumo/domain/transactions/_ids.py"
     ]
   },
   "family3_pinned_duplicate_symbols": {
