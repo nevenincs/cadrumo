@@ -626,6 +626,34 @@ def _run_evidence_confirm(
         f"currency\t{invoice.currency}",
     ]
     notices: list[Notice] = []
+    if result.total_discrepancy is not None:
+        # The derived total stands; this only reports that the document disagrees
+        # with it. A recargo de equivalencia, an unread rate that fell back to the
+        # EXEMPT slot, or a misread base all surface here as a figure the record
+        # could not represent -- silently dropping the printed total is what let
+        # those through.
+        discrepancy = result.total_discrepancy
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.evidence.confirm.printed_total_mismatch",
+                message=tr(
+                    "cli.app.ledger.evidence.confirm_printed_total_mismatch_message",
+                    default=(
+                        "The total printed on the document does not match the total recorded. "
+                        "The recorded total is derived from the taxable base and the IVA rate, so a "
+                        "difference means the document carries an amount this record does not, such "
+                        "as a recargo de equivalencia, or a figure was misread. Check the document."
+                    ),
+                ),
+                context={
+                    "printed_total": format(discrepancy.printed_total, "f"),
+                    "recorded_total": format(discrepancy.recorded_total, "f"),
+                    "difference": format(discrepancy.difference, "f"),
+                    "currency": invoice.currency,
+                },
+            ),
+        )
     if not result.created:
         notices.append(
             Notice(

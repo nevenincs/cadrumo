@@ -1857,6 +1857,7 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
+        confirm_printed_total_mismatch_message: 'The total printed on the document does not match the total recorded. The recorded total is derived from the taxable base and the IVA rate, so a difference means the document carries an amount this record does not, such as a recargo de equivalencia, or a figure was misread. Check the document.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year

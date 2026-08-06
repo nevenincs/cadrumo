@@ -136,9 +136,11 @@ from ._evidence_textlayer import extract_evidence_text
 __all__ = [
     "InvoiceConfirmationResult",
     "InvoiceDraft",
+    "PrintedTotalDiscrepancy",
     "confirm_invoice_draft_from_evidence",
     "extract_invoice_draft_from_evidence",
     "extract_invoice_fields",
+    "printed_total_discrepancy",
 ]
 
 # A Spanish NIF / NIE / CIF token: 8 digits + letter, or a leading letter
@@ -466,6 +468,81 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         ) from exc
 
 
+class PrintedTotalDiscrepancy(BaseModel):
+    """The document's printed total disagreeing with the total actually recorded.
+
+    The confirm path never persists a model-read or text-read figure as the
+    invoice total: ``grand_total`` is DERIVED from the taxable base and the
+    registry-resolved rate slot
+    (:func:`~application.invoices.build_catalogue_invoice`). That derivation is
+    the correct behaviour and this record does not change it -- the printed
+    figure stays an advisory cross-check and never overwrites the derived value,
+    exactly as the evidence-reading discipline requires.
+
+    What this record adds is the other half of that same discipline: when the
+    two disagree, say so. A disagreement is never noise, because the derived
+    total is arithmetically fixed at ``base + cuota``; anything the document
+    prints beyond that is a component the record could not represent, or a
+    misread of one it could:
+
+    - A **recargo de equivalencia** invoice (LIVA art. 161) prints
+      ``base + cuota + recargo``. The recargo has nowhere to go on this path,
+      so the record silently understates the document by exactly that surcharge.
+    - An **unread rate** resolves to :attr:`~domain.invoices.IvaRate.EXEMPT`
+      (``iva_rate=None`` is the base-only slot), minting a zero-cuota invoice
+      whose printed total still shows the cuota that was charged.
+    - A **misread base** propagates into the derived total and diverges from the
+      printed one.
+
+    All three are silent under-declarations that the printed total detects for
+    free, having already been read. Discarding it unexamined is what let them
+    through.
+
+    Attributes:
+        printed_total: The total actually printed on the document, as recovered
+            by the on-host reader.
+        recorded_total: The total derived from the confirmed base and rate slot,
+            i.e. what the persisted invoice carries.
+        difference: ``printed_total - recorded_total``. Positive means the
+            document totals MORE than the record -- the under-declaration
+            direction, and the one a recargo produces.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    printed_total: Decimal
+    recorded_total: Decimal
+    difference: Decimal
+
+
+def printed_total_discrepancy(*, draft: InvoiceDraft, invoice: Invoice) -> PrintedTotalDiscrepancy | None:
+    """Return the printed-vs-recorded total disagreement, or ``None`` when they agree.
+
+    Compares only when the reader actually recovered a total: a document whose
+    total could not be read grounds no cross-check, and reporting a discrepancy
+    against an absent figure would manufacture an alert out of missing data
+    rather than out of conflicting data.
+
+    Args:
+        draft: The extraction the confirmation was based on.
+        invoice: The invoice that was persisted (or matched on a guarded no-op).
+
+    Returns:
+        :class:`PrintedTotalDiscrepancy` when the document printed a total that
+        differs from the recorded one, else ``None``.
+    """
+    printed = draft.grand_total
+    if printed is None:
+        return None
+    if printed == invoice.grand_total:
+        return None
+    return PrintedTotalDiscrepancy(
+        printed_total=printed,
+        recorded_total=invoice.grand_total,
+        difference=printed - invoice.grand_total,
+    )
+
+
 class InvoiceConfirmationResult(BaseModel):
     """Outcome of confirming a reviewed :class:`InvoiceDraft` into an :class:`Invoice`.
 
@@ -479,6 +556,12 @@ class InvoiceConfirmationResult(BaseModel):
             ``False`` when an invoice with the identical derived identity
             already existed and this call returned it unchanged (the guarded
             idempotent-retry no-op).
+        total_discrepancy: Set when the document's printed total disagrees with
+            the derived total now on record -- see
+            :class:`PrintedTotalDiscrepancy` for why that is always worth
+            surfacing. ``None`` when they agree or no total was readable. The
+            field rides the RESULT rather than being recomputed by each caller
+            so a consumer cannot silently omit the check.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -486,6 +569,7 @@ class InvoiceConfirmationResult(BaseModel):
     invoice: Invoice
     draft: InvoiceDraft
     created: bool
+    total_discrepancy: PrintedTotalDiscrepancy | None = None
 
 
 def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) -> str | None:
@@ -711,7 +795,15 @@ def confirm_invoice_draft_from_evidence(
         # `link_attachment_invoice` dedups) so a re-confirm never regresses the
         # provenance link even if it was never wired for this evidence before.
         link_attachment_invoice(attachment_store, attachment_id=resolved_attachment_id, invoice_id=existing.invoice_id)
-        return InvoiceConfirmationResult(invoice=existing, draft=draft, created=False)
+        return InvoiceConfirmationResult(
+            invoice=existing,
+            draft=draft,
+            created=False,
+            # Re-asserted on the guarded no-op for the same reason the provenance
+            # link is: a retry must not silently drop a discrepancy the first
+            # confirm surfaced, or the alert becomes something a re-run clears.
+            total_discrepancy=printed_total_discrepancy(draft=draft, invoice=existing),
+        )
 
     result = create_catalogue_invoice(
         bucket_id=bucket_id,
@@ -739,7 +831,12 @@ def confirm_invoice_draft_from_evidence(
         attachment_id=resolved_attachment_id,
         invoice_id=result.invoice.invoice_id,
     )
-    return InvoiceConfirmationResult(invoice=result.invoice, draft=draft, created=True)
+    return InvoiceConfirmationResult(
+        invoice=result.invoice,
+        draft=draft,
+        created=True,
+        total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
+    )
 
 
 def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDraft) -> date:

@@ -2006,6 +2006,7 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
+        confirm_printed_total_mismatch_message: 'El total impreso en el documento no coincide con el total registrado. El total registrado se deriva de la base imponible y del tipo de IVA, por lo que una diferencia significa que el documento incluye un importe que este registro no recoge, como un recargo de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio

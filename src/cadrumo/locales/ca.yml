@@ -1996,6 +1996,7 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
+        confirm_printed_total_mismatch_message: 'El total imprès al document no coincideix amb el total registrat. El total registrat es deriva de la base imposable i del tipus d''IVA, de manera que una diferència significa que el document inclou un import que aquest registre no recull, com ara un recàrrec d''equivalència, o que s''ha llegit malament alguna xifra. Reviseu el document.'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici

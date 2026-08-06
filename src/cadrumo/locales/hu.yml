@@ -1929,6 +1929,7 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
+        confirm_printed_total_mismatch_message: 'A dokumentumon szereplő végösszeg nem egyezik a rögzített végösszeggel. A rögzített végösszeg az adóalapból és az áfakulcsból származik, ezért az eltérés azt jelenti, hogy a dokumentum olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra került. Ellenőrizze a dokumentumot.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
