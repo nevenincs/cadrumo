@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:5e723112f20e78a3663f2e89e4fe8c36b7b69b592c796c35b20aecc24345481c'
+body_hash: 'sha256:be076ef3a836bdedd008b514ae42b20d10860a6ea953a7a540f632e9d36c27b9'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -41,4 +41,4 @@ The accepted ADR Update 10 defines `cadrumo-jcs-utf8-lf-v1` as the single Python
 
 ## Verification boundary
 
-The current source evidence is vaultspec-rag discovery, targeted source reading, static typing/lint/syntax/diff checks, and formal review. Tests, builds, model downloads, matrix generation, Pagefind/runtime probes, live RAG sweeps, reindexing, deployment, and generated-artifact release remain deferred by instruction. Consequently the VaultSpec plan remains at 12 of 24 steps closed, with P02.S04 as the next open step; source presence must not be reported as shipped-site acceptance.
+The current source evidence is vaultspec-rag discovery, targeted source reading, static typing/lint/syntax/diff checks, and formal review. Tests, builds, model downloads, matrix generation, Pagefind/runtime probes, live RAG sweeps, reindexing, deployment, and generated-artifact release remain deferred by instruction. Consequently the VaultSpec plan remains at 12 of 28 steps closed, with P02.S04 as the next open step; source presence must not be reported as shipped-site acceptance.

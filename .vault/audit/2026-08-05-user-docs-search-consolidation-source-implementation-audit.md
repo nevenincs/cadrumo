@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:a58462e2c84c8e5abe1ed4e1290e8ce8fb1b8d18f8e1b16091473ad6a55685d1'
+body_hash: 'sha256:b5f3361464f2befd237faf7762bbf6fcfd598ed50fe3f633c4015f4d1a779142'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -91,6 +91,18 @@ After fresh vaultspec-rag grounding of the exact Rung-2 modules, the project Ruf
 ### assembled-input-authority | low | Rung-2 input handoff now rejects mismatched or degraded source payloads
 
 Fresh vaultspec-rag grounding of the P02.S04 contract showed that `Rung2CompilationInputs` relied on annotations plus fingerprint checks, while direct dataclass construction could still carry the wrong runtime model, an empty/degraded sweep, or vocabulary/query-token tuples that did not come from the committed sweep mappings. The source boundary now enforces exact validated runtime types, a non-empty authoritative record projection, a consistent non-degraded sweep, and equality between the canonical sweep-derived identities and the supplied identities before provider compilation. `basedpyright`, Ruff, and focused diff checks pass. This is source remediation only; P02.S04 remains open until the real provider, matrix artifact, licence, and acceptance evidence exists.
+
+### bridge-order-parity-followup | low | PASS: committed Python ordering now matches the browser contract
+
+Fresh vaultspec-rag grounding and exact inspection of commit `c2f7a464ce` confirm that `SemanticBridgeEntry` now requires targets in descending `ranking_weight` order with UTF-8 `record_id` ordering for ties. The browser validator applies the same comparator. The change preserves duplicate-id rejection and hashes the ordered target list, so Python loading and browser acceptance no longer disagree on this contract. A focused LUNA Max review was dispatched but timed out; this PASS is based on the exact source/diff review and is not agent approval.
+
+No tests, builds, artifact loading, runtime probes, model downloads, reindexing, live sweeps, or deployment were run. This finding does not close P02.S04, P02.S25, or any acceptance row.
+
+### legal-surface-recheck | low | PASS: current legal targets remain generated and provenance-separated
+
+Fresh vaultspec-rag grounding over P05.S14-S17, followed by exact RAG code-file reads and local relevance/record inspection, confirms that the legal projection emits the dedicated `LEGAL` kind, generated site-relative provision targets, and BOE provenance as metadata. The injector requires a non-empty legal projection; the resolver uses the generated target and refuses ambiguous provision identity; and the committed relevance entries inspected use generated legal anchors rather than direct BOE URLs. No legal source correction is justified in this continuation.
+
+P05.S14-S17 remain open only for their named generated-surface, parity, build, and runtime evidence. No tests, builds, generated artifacts, Pagefind probes, live sweeps, reindexing, model downloads, or deployment were run.
 
 ## 2026-08-05 RAG-grounded Pagefind narrowing remediation
 

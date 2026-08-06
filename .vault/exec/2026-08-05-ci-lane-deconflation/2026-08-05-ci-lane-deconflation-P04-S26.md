@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:d2954ef2357c80f1a78eaa92ef0c841398f04667841915f4cefb57a8a43d4a55'
+body_hash: 'sha256:eba776b65bbdb05415b1dd7e86edcc3db3db867d769eb5c062bfe782ba6d3502'
 step_id: 'S26'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
@@ -79,3 +79,30 @@ counterfactual leaving orphaned definitions behind produced a wrong number from 
 quoted command; and it does not catch a tautological test, which quotes exactly as cleanly as
 a real one. Stretching one field across those would produce a convention that is followed and
 does not work, which is a worse outcome than a narrow one that does.
+
+### The rule's first application demonstrated its own failure mode
+
+Hours after this convention landed, the run gathering evidence for another row of this plan
+produced the exact defect the convention exists to surface — in my hands, having just written
+it.
+
+    uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests -m integration -n 8
+    1 failed, 2882 passed, 9 warnings in 593.49s
+
+    SerialTestsHeldWarning: Held 2 serial-marked test(s) out of this run because
+    xdist workers are active; they did NOT execute.
+
+**The 2882 does not cover the module set.** Two cold-start budget tests were held out entirely
+because workers were active, so a record citing "2882 passed" as evidence the module set is
+green would have been wrong in the direction this convention was written to catch — and the
+number is large enough to look conclusive.
+
+Note what saved it: not care, but the fact that the invocation was quoted rather than
+summarised. The held-out warning travels with the run's own output. Paraphrase it to "the CLI
+integration tests pass" and the two unexecuted tests disappear from the record with nothing to
+mark their absence.
+
+This is a better argument for the convention than the rationale above it, because the
+rationale describes three near-misses by other people and this is an instance in the hands of
+the person who had just decided the rule was necessary. A convention that only its author
+remembers to apply is a habit; one whose violation is visible in the artefact is a control.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e8eae05804c17247cac0cac7b26f29de16ffb224cd17b3a562630c048f8d8ff'
+body_hash: 'sha256:b6739c94bbbe42d258892ca17c87e7137ed548b50f701bdf0c21d4cad0153051'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -46,11 +46,13 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S37]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S38]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S39]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S40]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S41]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S43]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S45]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S46]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S47]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S48]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
@@ -120,11 +122,13 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P04-S37` - 2026-08-04-minimo-descendientes-eligibility-P04-S37
 - `2026-08-04-minimo-descendientes-eligibility-P04-S38` - Advise or confirm at the point working months are declared that the child is a hijo rather than a grandchild or a minor under judicial guarda, because the ordinary predicate never reads relacion so both populations compute correctly for Art. 58.1 and 58.2 while only Art. 81.1 over-grants, and the over-grant additionally requires declared months, so that narrow conjunction reaches every already-stored record which no new enum member can do
 - `2026-08-04-minimo-descendientes-eligibility-P04-S39` - Model both limbs of the fallecimiento rule in one slice
+- `2026-08-04-minimo-descendientes-eligibility-P04-S40` - Prorate the Art. 81.2 guarderia increment per child by the intersection of the child age-eligible months, which are computable per month from the birth date, with the declared spend months where a monthly map exists, then bound by the mother qualifying-month count and by that child own non-subsidised spend, and for a child declaring only an annual total use the age-eligible month count as the proration basis rather than assuming twelve or refusing, disclosing the approximation as an advisory in both cases because the mother employment months are a count and their simultaneity cannot be verified until S44 gives them month identity
 - `2026-08-04-minimo-descendientes-eligibility-P04-S41` - Bound the interpolated descendant list in both maternidad advisories
 - `2026-08-04-minimo-descendientes-eligibility-P04-S43` - Amend the stale blocker in the S16 record and the contradictory plan prose
 - `2026-08-04-minimo-descendientes-eligibility-P04-S45` - 2026-08-04-minimo-descendientes-eligibility-P04-S45
 - `2026-08-04-minimo-descendientes-eligibility-P04-S46` - Cut two over-cap advisories under the diagnostic message limit
 - `2026-08-04-minimo-descendientes-eligibility-P04-S47` - 2026-08-04-minimo-descendientes-eligibility-P04-S47
+- `2026-08-04-minimo-descendientes-eligibility-P04-S48` - Stop the calculate boundary projecting an internal ValidationError to the generic CLI-validation refusal, because the operator is told to check arguments that are correct while the real cause reaches only the error log, which is the same defect S20 fixed for the descendiente add verb still live on calculate
 
 ### plan
 
@@ -133,4 +137,4 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 ### research
 
 - `2026-08-04-minimo-descendientes-eligibility-research` - `minimo-descendientes-eligibility` research: `Art. 58/61 LIRPF eligibility conditions unmodelled in the mínimo por descendientes derivation`
-- `2026-08-05-minimo-descendientes-eligibility-diagnostic-message-headroom-census-research` - `minimo-descendientes-eligibility` research: `diagnostic message headroom: a tree-wide census this campaign cannot claim to have closed`
+- `2026-08-05-minimo-descendientes-eligibility-diagnostic-message-headroom-census-research` - 2026-08-05-minimo-descendientes-eligibility-diagnostic-message-headroom-census-research

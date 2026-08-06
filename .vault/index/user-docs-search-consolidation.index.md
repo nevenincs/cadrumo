@@ -6,7 +6,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:c16126c21a73daac2074de12abe5a069b8a38356e6ef5eea336f9bfacec3d098'
+body_hash: 'sha256:270f06439f01909080a07cd7e97f3608b1bd39dd9fa57374b60e71e7fe8d0257'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -48,10 +48,13 @@ related:
   - '[[2026-08-04-user-docs-search-consolidation-p06-s23-review-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-p06-s24-review-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research]]'
+  - '[[2026-08-05-user-docs-search-consolidation-jcs-vector-consumer-review-audit]]'
   - '[[2026-08-05-user-docs-search-consolidation-p02-s04-query-token-matrix-audit]]'
   - '[[2026-08-05-user-docs-search-consolidation-p02-s04-static-matrix-audit]]'
   - '[[2026-08-05-user-docs-search-consolidation-pagefind-narrowing-audit]]'
+  - '[[2026-08-05-user-docs-search-consolidation-rung2-acceptance-fixture-review-audit]]'
   - '[[2026-08-05-user-docs-search-consolidation-rung2-evaluation-audit]]'
+  - '[[2026-08-05-user-docs-search-consolidation-rung2-manifest-role-review-audit]]'
   - '[[2026-08-05-user-docs-search-consolidation-source-contract-reference]]'
   - '[[2026-08-05-user-docs-search-consolidation-source-implementation-audit]]'
 ---
@@ -78,9 +81,12 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-04-user-docs-search-consolidation-p06-s23-review-audit` - `user-docs-search-consolidation` audit: `P06 deterministic enrollment follow-up`
 - `2026-08-04-user-docs-search-consolidation-p06-s24-review-audit` - `user-docs-search-consolidation` audit: `P06.S24 casilla enrollment gate review`
 - `2026-08-05-user-docs-search-consolidation-p02-s04-query-token-matrix-audit` - `user-docs-search-consolidation` audit: `P02.S04 query-token matrix contract review`
+- `2026-08-05-user-docs-search-consolidation-jcs-vector-consumer-review-audit` - `user-docs-search-consolidation` audit: `JCS vector consumer hardening review`
 - `2026-08-05-user-docs-search-consolidation-p02-s04-static-matrix-audit` - `user-docs-search-consolidation` audit: `P02.S04 bounded static matrix compiler review`
 - `2026-08-05-user-docs-search-consolidation-pagefind-narrowing-audit` - `user-docs-search-consolidation` audit: `Pagefind narrowing remediation source review`
+- `2026-08-05-user-docs-search-consolidation-rung2-acceptance-fixture-review-audit` - `user-docs-search-consolidation` audit: `Audit the Rung-2 acceptance fixture contract correction`
 - `2026-08-05-user-docs-search-consolidation-rung2-evaluation-audit` - `user-docs-search-consolidation` audit: `Rung-2 evaluator source review`
+- `2026-08-05-user-docs-search-consolidation-rung2-manifest-role-review-audit` - `user-docs-search-consolidation` audit: `Audit the Rung-2 manifest role disjointness correction`
 - `2026-08-05-user-docs-search-consolidation-source-implementation-audit` - `user-docs-search-consolidation` audit: source implementation review
 
 ### exec

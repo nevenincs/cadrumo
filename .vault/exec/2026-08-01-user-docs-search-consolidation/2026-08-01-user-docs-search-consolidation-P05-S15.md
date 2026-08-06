@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:67d52ef331dd4d47527729d871d7888201f3e06cddd6120028f88222de2cd9d0'
+body_hash: 'sha256:5cec71536d41afd43810b5c6203c5f3b4118b95c7e8b89dcceac075a3e1a07ba'
 step_id: 'S15'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -65,3 +65,7 @@ Static verification only: RAG grounding, Ruff, basedpyright, and `git diff --che
 Fresh vaultspec-rag grounding over the injector, legal projection, and all-kind materialisation gate identified a remaining source-level omission: the injector already refused a skipped CLI projection but could continue if the registry-backed legal projection returned no records. The materializer now raises `SearchInjectionError` before record injection when the decided legal projection is empty. This preserves the fifth `LEGAL` kind as a mandatory source surface; it does not replace the generated-page, parity, build, or runtime gates owned by P05.S14-S17.
 
 Static evidence only: vaultspec-rag grounding, AST parsing, and focused diff checks. No tests, builds, Pagefind runs, generated artifacts, live probes, reindexing, deployment, or runtime acceptance were run.
+
+### 2026-08-05 LUNA Max legal projection re-audit
+
+Fresh vaultspec-rag grounding and an independent LUNA Max review of the disjoint `dev/docs/terminology/_legal_projection.py` seam found no source defect and made no edit. The projection emits all validated legal records, takes generated targets only from the renderer inventory, fails closed on missing targets, and preserves BOE permalinks as provenance rather than search destinations. Ruff, basedpyright (0 errors, 0 warnings, 0 notes), and focused `git diff --check` passed for the owned file. P05.S15 remains open for its separate generated-surface, build, parity, and runtime gates; no tests, builds, Pagefind, generated artifacts, probes, sweeps, reindexing, deployment, or model downloads were run.

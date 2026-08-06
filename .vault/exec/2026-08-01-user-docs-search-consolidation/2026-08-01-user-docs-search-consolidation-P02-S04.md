@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:483a43cfb51a84907c6bdf5467de095e61dfa94ef2f4ac99db53573e2bd127d0'
+body_hash: 'sha256:0a965e47ced8d51d2a0b898d06be7cea1d270a60f4cc38251a9d2e6268375cd1'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -96,6 +96,28 @@ Open evidence tasklist (not a plan closure signal):
 
 No tests, builds, model downloads, matrix or manifest generation, Pagefind/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run. P02.S04 remains open; the source implementation is not being represented as artifact or shipped-site acceptance.
 
+### 2026-08-05 continuation: current-plan source boundary recheck
+
+Fresh vaultspec-rag grounding for the active P02.S04 seam returned the current static-matrix audit, query-token audit, accepted Rung-2 ADR, source-contract reference, and P02.S04/P02.S25/P02.S26 execution records. Exact RAG code-file reads and local symbol/history confirmation covered the model-agnostic compiler, assembled-input authority, bridge/bundle attestation, shared JCS canonicalizer, browser fail-closed reader, and raw-byte provider boundary. The source surfaces are present and the only live Rung-2 code diff in the shared worktree is peer WIP in `_model2vec_provider.py`, which was preserved and not touched.
+
+No additional source-level correction is justified in the disjoint P02.S04/P02.S25 surfaces. The remaining requirements are independently reviewed local provider/package/model/tokenizer evidence, installed-version proof, matrix and manifest generation, quantisation/size/held-out acceptance, and the authorized runtime/parity gates. The configured code-search route again rejected the server's `codebase` alias with `unknown_source_type`; no bypass or reindex was used. An independent LUNA Extra-High review was dispatched for this bounded source-only question but timed out; no agent approval is claimed.
+
+No tests, builds, model downloads, matrix or manifest generation, Pagefind/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run. P02.S04 remains open; source readiness is not artifact or shipped-site acceptance.
+
+### 2026-08-05 LUNA Max input/compiler review
+
+Fresh vaultspec-rag grounding and exact source review by the delegated LUNA Max worker found no concrete defect in `_rung2_inputs.py` or `_rung2_compiler.py`. The input seam binds committed relevance, current Handbook vocabulary, authoritative Pagefind records, and provenance fail-closed; the compiler passes validated contracts through the bridge and writes only after complete validation. No files were edited.
+
+Targeted `git diff --check` passed. No tests, builds, downloads, matrix or manifest generation, runtime probes, sweeps, reindexing, deployment, or other paths were touched. P02.S04 remains open for real provider/package/model/tokenizer evidence, generated artifact, and measured acceptance.
+
+### 2026-08-05 LUNA Extra High peer-WIP review
+
+A read-only LUNA Extra High review, grounded with vaultspec-rag and exact current source, found one high-severity and one low-severity issue in the uncommitted P02.S07 evaluator WIP: semantic abstention results can be composed when candidates are non-empty, and lexical composition ties lack the required UTF-8 record-id fallback. These files are peer-owned WIP and were not edited. The findings remain open remediation for the owning source slice; P02.S04 remains open for provider and artifact evidence as well as these cross-contract findings.
+
+### 2026-08-06 source-only relevance-loader hardening
+
+Fresh vaultspec-rag grounding over the P02 source boundary and the exact Pagefind injection loader identified a documented fail-closed gap: a present relevance file decoded with invalid UTF-8 raised `UnicodeDecodeError` before the existing `(OSError, ValidationError)` handler could convert it to `SearchInjectionError`. A LUNA Max worker added `UnicodeDecodeError` to that tuple in `dev/docs/pagefind_inject.py`. LUNA Extra High review passed: missing-file behavior, existing validation behavior, and the loader-before-injection ordering are unchanged. Parent verification passed Ruff, basedpyright, and `git diff --check`. No tests, builds, Pagefind generation, browser/runtime probes, matrix/bundle generation, live sweeps, reindexing, deployment, or release activity was performed. P02.S04 remains open for the pinned provider evidence, generated matrix/artifact, acceptance, and runtime gates.
+
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 
 The source seam now distinguishes candidate result rows from the separate
@@ -156,3 +178,11 @@ Static verification only: Python AST parsing, JavaScript syntax checking, and fo
 The remaining medium review finding is closed by commit `96ba221c43`. The weight-sorted Pagefind card pass now marks injected records as lexical-card matches, covering declared alias hits even when the title differs; title matching remains the stronger intra-band signal, and semantic candidates remain additive and visible. The focused post-fix formal review returned PASS with no remaining findings.
 
 Verification remains static-only: JavaScript syntax and focused diff whitespace checks passed. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, deployment, or generated-artifact release were run.
+
+## 2026-08-05 source continuation: direct-construction invariant audit
+
+Fresh `vaultspec-rag` semantic grounding over the P02.S04 execution record, static-matrix audit, accepted Rung-2 contract, and bridge/input records, followed by exact `vaultspec-rag` code-file reads, audited the direct model-construction boundary. `StaticEmbeddingMatrix` already requires matching dimension/counts, canonical unique UTF-8 row order, complete token inventory alignment, complete unique query-token order, row dimension equality, vocabulary/query-token fingerprints, artifact hash, and canonical serialized byte count. Its nested row models already reject non-finite or zero-valued vectors, non-float32 scales, and inconsistent token-id counts. `RecordManifest`, `SemanticBridge`, and `Rung2SearchBundle` likewise enforce count/order/hash/manifest-link invariants.
+
+The codebase semantic endpoint still rejects the server's `codebase` alias with `unknown_source_type`; no reindex or bypass was used. The vault semantic results and exact code-file retrieval provide the grounding for this bounded source audit. No additional source defect is justified, so no P02.S04 code correction was made.
+
+Scoped static verification passed: Ruff, basedpyright (0 errors, 0 warnings, 0 notes), Python AST parsing, and focused diff whitespace validation. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run. P02.S04 remains open for the pinned provider/package/model/tokenizer evidence, generated artifact, licence/quantization/held-out acceptance, and runtime gates.

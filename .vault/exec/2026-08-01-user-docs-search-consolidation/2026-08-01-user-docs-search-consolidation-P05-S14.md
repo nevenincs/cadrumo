@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:c9262efdb89a1577f496483971aa7504e0203c7f769c574b31efb10c0d29c567'
+body_hash: 'sha256:c2a6974c913c6b3cc386699831543d7ff2308daa29bbc8e5fe9c1b77cc397cae'
 step_id: 'S14'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -45,3 +45,19 @@ alias is rejected; this is tracked in vaultspec-rag issue #350. No reindex or
 bypass was attempted. No tests, builds, Pagefind runs, live probes, deployment,
 or other runtime gates were run. S14 remains open for the authorized runtime
 and documentation-build acceptance; P05.S15-S17 remain outstanding.
+
+### 2026-08-06 source audit: legal catalogue decode failure boundary
+
+Fresh vaultspec-rag grounding and exact retrieval of `dev/docs/legal_reference.py` found that `load_legal_provisions()` catches `OSError` and `tomllib.TOMLDecodeError` around `read_text(encoding="utf-8")`, but not `UnicodeError`. A malformed catalogue fragment can therefore escape as a raw `UnicodeDecodeError` instead of the module's `LegalReferenceError` fail-closed boundary. The file is peer-modified with an unrelated strict-typing diff, so it was not edited in this tranche; the owner should extend that narrow exception tuple and then re-run the scoped static/behavioral evidence. No tests, builds, generated pages, runtime probes, or deployment were run.
+
+### 2026-08-05 source continuation: legal-reference typing boundary
+
+Fresh `vaultspec-rag` grounding over the P05 legal plan/ADR, legal projection, generated legal-reference authority, and current source audits identified a strict-typing gap at the untyped `tomllib` boundary: the legal surface behavior was already fail-closed, but direct strict analysis could not prove the table shapes or the shared catalogue-path authority. The source correction makes the shared catalogue path public, narrows TOML tables with explicit runtime-preserving casts after existing checks, and retains all existing field, permalink, duplicate-id, slug, anchor, and output-boundary validation. No legal id, generated target, BOE provenance rule, or search-record behavior changed.
+
+Scoped Ruff and basedpyright pass with 0 errors, 0 warnings, and 0 notes for the legal-reference/glossary modules; AST parsing and focused diff checks pass. A broader Rung-2 static scope also passes Ruff, basedpyright, AST, Node syntax, and diff checks. No tests, builds, generated legal pages, Pagefind/runtime probes, live sweeps, reindexing, model downloads, deployment, or artifact release were run. P05.S14 remains open for its authorized build and runtime evidence.
+
+## 2026-08-05 source continuation: legal-reference typing boundary
+
+Fresh `vaultspec-rag` grounding over the P05 legal plan/ADR, legal projection, generated legal-reference authority, and current source audits identified a strict-typing gap at the untyped `tomllib` boundary: the legal surface behavior was already fail-closed, but direct strict analysis could not prove the table shapes or the shared catalogue-path authority. The source correction makes the shared catalogue path public, narrows TOML tables with explicit runtime-preserving casts after existing checks, and retains all existing field, permalink, duplicate-id, slug, anchor, and output-boundary validation. No legal id, generated target, BOE provenance rule, or search-record behavior changed.
+
+Scoped Ruff and basedpyright pass with 0 errors, 0 warnings, and 0 notes for the legal-reference/glossary modules; AST parsing and focused diff checks pass. A broader Rung-2 static scope also passes Ruff, basedpyright, AST, Node syntax, and diff checks. No tests, builds, generated legal pages, Pagefind/runtime probes, live sweeps, reindexing, model downloads, deployment, or artifact release were run. P05.S14 remains open for its authorized build and runtime evidence.

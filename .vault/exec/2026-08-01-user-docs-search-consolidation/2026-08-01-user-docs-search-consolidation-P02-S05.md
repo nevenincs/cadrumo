@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:c23e8b61a4afc2aff298b6d154da563a3e23d0b29d2aef26b3400a0f6194d954'
+body_hash: 'sha256:47113f76e085f671326b463eb65847fe3b608f15bfd696558672c1edeaed618a'
 step_id: 'S05'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -49,3 +49,11 @@ The permitted static boundary completed after the source re-audit:
 - `vaultspec-core check --feature user-docs-search-consolidation --no-fix` returned `ok` with zero errors. It reported two pre-existing warnings for empty `## Scope` and `## Recommendations` sections in `.vault/audit/2026-08-05-user-docs-search-consolidation-pagefind-narrowing-audit.md`; those unrelated audit contents were preserved.
 
 No tests, builds, runtime/browser probes, matrix generation, model or artifact downloads, live sweeps, reindexing, deployment, or artifact release were run. P02.S05 remains open because the accepted Rung-2 matrix/bundle, measured acceptance values, independent parity/behavior evidence, and built proof are still absent.
+
+### 2026-08-05 LUNA Max controller re-audit
+
+Fresh vaultspec-rag grounding and exact reads were followed by a bounded LUNA Max review of the shared browser controller. The review reconfirmed that `createSearchController` is shared by the palette and inline search page; structured modelo/casilla resolution remains the first refusal; the optional Rung-2 loader fails closed on missing, malformed, unauthorised, or hash/provenance-inconsistent payloads; semantic candidates enforce coverage, cosine and runner-up thresholds, bridge hydration, deterministic ordering, and the five-result cap; and compose preserves lexical precedence and display-class bands. No concrete source defect was justified, so `docs/_static/cadrumo-docs.js` was not edited. P02.S05 remains open for the accepted matrix/bundle, measured acceptance evidence, and built-surface behavioural proof. No tests, builds, browser probes, artifact generation, model downloads, sweeps, reindexing, deployment, or VaultSpec plan closure were performed.
+
+### 2026-08-06 source-only controller cleanup
+
+Fresh vaultspec-rag grounding over the accepted search ADR, the P02.S05 execution boundary, and an exact read of `docs/_static/cadrumo-docs.js` identified a redundant second identical `select(index)` declaration inside `createSearchController`. A LUNA Max worker removed only that duplicate from the shared controller; the first declaration remains the sole selection implementation. Parent review confirmed the focused diff contains no other file change. `node --check`, `git diff --check`, and an exact declaration-count check passed. No tests, builds, browser/runtime probes, generated artifacts, matrix/bundle generation, live sweeps, reindexing, deployment, or release activity was performed. P02.S05 remains open because the shipped artifact and behavioral/runtime evidence are still absent.

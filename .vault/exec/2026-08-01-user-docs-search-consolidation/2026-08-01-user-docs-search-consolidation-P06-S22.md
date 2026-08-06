@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-04'
+modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:6b13fa46d59621b87d5afc67b8fe27b7f1436e0f409104c5fde2fc1641b25563'
+body_hash: 'sha256:cd571c127f0ab100e28a19b1b1cf9f28d21ff04668b2dc7acf167df2ad5cb8cd'
 step_id: 'S22'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -39,3 +39,9 @@ Commits `a4281864a9e31438ccc9b536657cb89d7576020f` and `21436e572dce4ae84de9358f
 ## Notes
 
 The implementation agents ran RAG discovery, `node --check`, and `git diff --check`. The focused Pagefind correction is committed and its fresh formal review returned PASS with no findings. Tests, builds, Pagefind compilation, deployment, and live probes were not run. P06.S24 still owns the browser/Pagefind integration and exact M130 result gate.
+
+### 2026-08-05 exact-query source re-audit
+
+Fresh vaultspec-rag searches over the active plan, the accepted consolidation ADR, the P06 enrollment research, and the exact-query execution records, followed by exact reads of the registry projection, unified record funnel, Pagefind injector, and shared browser controller, confirm the deterministic `modelo 130 casilla 15` source contract. The bundled M130 registry declaration carries canonical `id = "15"` and `number = "15"`; `_from_casilla()` preserves that identity and localized descriptions; `_content_for()` indexes the record title (`Modelo 130 · casilla 15`) plus aliases and descriptions; and `searchStructuredCasilla()` filters `kind = casilla`, validates normalized `modelo`/`number`/optional `segmento` metadata, and accepts only one returned target from `result.data().url`. Exact enrollment therefore does not depend on RAG relevance: it is a registry projection plus shipped-record and metadata contract. RAG remains the semantic matching source for non-structured user language.
+
+This establishes source readiness only. The Pagefind build, exact browser result, rendered destination, projection census, and localized-definition gate remain unexecuted under the standing no-test/no-build boundary and belong to P06.S24. No source edit, test, build, Pagefind compilation, live probe, sweep, reindexing, model download, generated artifact, or deployment was performed.

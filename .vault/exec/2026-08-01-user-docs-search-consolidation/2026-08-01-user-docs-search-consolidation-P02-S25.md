@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:fc79febfa5155cb1fc399f3fd234f0df318179ff03792712a4d527879161a7e3'
+body_hash: 'sha256:9c8c0a8ac89f6e6865bc481e28f3478be7c0f8c1ba2a9a8fdc08fa3e4f3a4b8a'
 step_id: 'S25'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -67,3 +67,17 @@ A fresh vaultspec-rag code search for the browser nested self-attestation seam, 
 This current source fact supersedes the earlier review's statement that browser nested hash parity was still absent. That historical statement is retained above for audit continuity; no source duplication or correction is justified in this slice.
 
 The remaining P02.S25 evidence gap is independent execution of the Python and JavaScript golden-vector consumers. The committed vector corpus is present in shared peer WIP, but neither consumer was executed under the standing no-tests/no-verification boundary. P02.S25 therefore remains open pending authorized parity execution and the downstream artifact/runtime acceptance gates. No tests, builds, model downloads, matrix or manifest generation, runtime probes, sweeps, reindexing, deployment, or release acceptance were run.
+
+### 2026-08-05 JavaScript vector consumer fail-closed validation
+
+Fresh vaultspec-rag grounding over ADR Update 10, P02.S25, the JCS corpus, and the Python consumer identified that `verify.mjs` read the corpus without enforcing its contract version or structural outcome boundary. LUNA Max added the smallest validation in the independent JavaScript consumer: exact `cadrumo-jcs-utf8-lf-v1` contract, non-empty object/vector corpus, object entries with string ids, and exactly one expected-byte or rejected outcome. The LUNA Extra High formal review returned PASS with no blocking finding and confirmed the JavaScript consumer remains independent of Python. P02.S25 remains open for authorized Python/JavaScript parity execution and downstream artifact acceptance. No tests, Node execution, builds, artifacts, runtime probes, model downloads, sweeps, reindexing, deployment, or release acceptance were run.
+
+### 2026-08-05 Sol approval of ADR Update 10
+
+The delegated Sol architecture authority returned **APPROVE** for ADR Update 10 (cross-runtime canonical JSON and nested self-attestation), with no blocking architectural findings. The decision confirms one `cadrumo-jcs-utf8-lf-v1` byte contract across Python and JavaScript, aligned matrix/manifest/bridge/bundle/config schema increments, nested hash and size checks, and fail-closed fallback to Pagefind. The review identified no architectural defect; `Rung2SearchBundle` is correctly implemented in `_rung2_bridge.py` rather than a separate `_rung2_bundle.py` module.
+
+This is architecture approval only. P02.S25 remains open pending independently executed Python/JavaScript golden-vector parity and the downstream artifact/runtime gates. In the current source-only lane, Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, Node syntax, and focused diff checks passed for the affected seams. No tests, builds, vector-consumer execution, generated artifacts, model downloads, runtime probes, live sweeps, reindexing, deployment, or release acceptance were run.
+
+### 2026-08-05 JavaScript consumer static recheck
+
+Fresh vaultspec-rag grounding and the exact LUNA source diff confirm that the independent JavaScript vector consumer now validates the `cadrumo-jcs-utf8-lf-v1` corpus contract before consuming vectors: the corpus must be a non-empty object with a non-empty vector list, each entry must have a string id, and each entry must declare exactly one expected-byte outcome or explicit rejection. `node --check dev/docs/terminology/jcs_vectors/verify.mjs` and focused `git diff --check` pass. This is static evidence only; the Python and JavaScript consumers remain unexecuted, so P02.S25 stays open for authorized parity evidence and downstream artifact gates. No tests, builds, vector execution, artifact generation, runtime probes, model downloads, sweeps, reindexing, deployment, or release acceptance were run.

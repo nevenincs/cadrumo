@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-05'
 body_schema: 'body-v1'
-body_hash: 'sha256:656b7cf7097975a878bf3f942fc3c4230d8ee5040f5899dd99341a6f5adafee4'
+body_hash: 'sha256:81c80f548dfd6167e81649412a5d5584afa59ccf5c2ecd9a93930fe78e0880da'
 step_id: 'S06'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -34,6 +34,18 @@ The source-side P02.S06 contract is present. The acceptance boundary validates c
 No shipped matrix, real provider/package/model/tokenizer manifests, measured quantization evidence, or held-out acceptance evidence is present. P02.S06 therefore remains unchecked: this record establishes source readiness, not licence-gate or artifact acceptance.
 
 ## Notes
+
+### 2026-08-05 source contract correction
+
+Fresh `vaultspec-rag` grounding and exact production/test reads identified a stale acceptance fixture: `dev/docs/terminology/tests/test_rung2_acceptance.py` supplied the retired Rung-2 config schema literal `cadrumo.docs-search.rung2-config.v1` while the production acceptance model and browser contract require the exported `RUNG2_CONFIG_SCHEMA_VERSION` v2 constant. The LUNA Max worker changed only that fixture to import and use the production constant. The LUNA Extra High review returned PASS; its only finding was LOW and non-blocking: no dedicated assertion independently rejects retired v1, while production validation remains strict.
+
+No tests, builds, runtime probes, artifact generation, downloads, live sweeps, reindexing, or deployment were run. P02.S06 remains open because real matrix/provider/licence evidence and authorized acceptance gates are still absent.
+
+### 2026-08-05 LUNA Max acceptance/manifest review
+
+Fresh vaultspec-rag grounding and exact source review by the delegated LUNA Max worker found no concrete defect in `_rung2_acceptance.py` or `_content_manifest.py`. The acceptance boundary validates the exact bundle bytes, shared size bound, input-provenance fingerprints, ratified model identity/licence/dimension, and shared normalization; the manifest contract verifies explicit local raw bytes, roles, revisions, hashes, path safety, and unexpected-file policy. No files were edited.
+
+Ruff, basedpyright (0 errors, 0 warnings, 0 notes), AST parsing, and targeted `git diff --check` passed. No tests, builds, downloads, matrix or manifest generation, runtime probes, sweeps, reindexing, deployment, or other paths were touched. P02.S06 remains open for real evidence and authorized acceptance gates.
 
 ## Notes
 
