@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:505915e81714d50d5ca640859bc218894d16ffcb7d84a5b17fc31cb93a73aea6'
+body_hash: 'sha256:5500345013e1cf5ea5911411a93c4e2548a8e6e21713d90bdde9a9f02d9bec58'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
@@ -295,3 +295,92 @@ this audit applies to the campaign: **when the same failure recurs three times, 
 is the finding and the individual instances are not.** The same reasoning that promoted F11
 from three working-tree-versus-HEAD mistakes applies to three flag-cluster corruptions, and it
 would be inconsistent to draw the rule for the campaign's errors and not for my own tooling.
+
+## F13 - The per-feature table: the scaffold signature is uniform, so filling is unavailable almost everywhere
+
+F6 reported ~1321 empty-Outcome records across 15 features and left open whether they were one
+defect or several. Measured per feature, with the signature established on the semantic-dedup
+204 - single scaffold date, single creating commit, narrative sections wholly empty:
+
+    feature                                    recs  empty  narr  dates  1 commit   plan
+    docstring-google-style                      994    993   993      1      yes  994/994
+    semantic-dedup-epic                         239    204   204      1      yes  239/239
+    profile-lifecycle-cli                        64     47    47      1      yes    64/64
+    centralized-output-redaction                 82     34    34      1      yes    82/82
+    declaracion-extraction-architecture         128     15    15      1     no(2) 218/218
+    emit-envelope-schema-burndown                24     11    11      1      yes  208/208
+    bindings-interface-hardening                 32     10    10      1      yes    33/33
+    live-justificante-reconcile                  14      8     8      1      yes    14/14
+    codebase-solidification                     418      3     3      2     no(2) 690/690
+    auth-cert-recovery-custody                   56      3     3      1      yes    56/56
+    ledger-invoice-decomposition                 57      3     3      1      yes    57/59
+    user-docs-search-consolidation               33      2     0      1      yes    23/33
+    ... 6 further features with 1 each
+
+    TOTAL  1340 empty-Outcome, of which 1338 empty-narrative
+
+**Corrected count.** F6 said ~1321; the exact figure is **1340**, and the earlier number was an
+approximation from a coarser grouping. Stated because a later reader comparing the two should
+know which is measured.
+
+**The signature is uniform.** Every feature's empty records share a single scaffold date, and
+all but three resolve to a single creating commit. This is not fifteen separate lapses; it is
+one mechanism recurring - exec records generated in bulk after their Steps were already
+checked, so that each checked Step had a file to point at.
+
+**And the decisive column is `narr`: 1338 of 1340 are wholly empty**, carrying no Description,
+no Outcome and no Notes. So the question F6 left open resolves against the hopeful answer:
+**there is almost no population of ordinary partially-filled records where filling is
+genuinely possible.** Reconstruction is unavailable tree-wide for the same reasons established
+on the 204 - the date is the scaffold date, the paths are shared, and an empty body carries no
+symbol to trace.
+
+**The two exceptions are the only genuinely fillable records in the tree.**
+`user-docs-search-consolidation` has 2 empty-Outcome records whose Description and Notes ARE
+populated. Those are ordinary unfinished records, their authors are identifiable, and they are
+worth filling. Two, out of 1340.
+
+> **CHALLENGED AND UPHELD, 2026-08-06.** The campaign lead ran an independent tree-wide sweep
+> that reported **56** fillable records across four features absent from the table above, and
+> appended a correction here asserting the finding was inverted. **That challenge was wrong and
+> is withdrawn. The figures above stand unchanged.**
+>
+> The defect was in the challenger's section extractor. It located a section by its `##`
+> heading and terminated it at the next match of `^##+\s` — **which also matches `###`.** Any
+> `## Outcome` whose content is organised under `###` subheadings was therefore truncated to
+> zero characters and scored as empty. Worked example:
+> `2026-07-27-conformance-cli-P03-S16.md` carries `## Outcome` at line 33 followed by
+> `### Ruling: this CLI may not write operator_reviewed, deliberately` at line 35 — a
+> substantial authored outcome, read as absent.
+>
+> Both predicates run over the same corpus settle it:
+>
+>     terminator ^##+\s  (matches ###)   ->  1386 empty-Outcome,  56 "fillable"
+>     terminator ^##(?!#)\s (same level) ->  1321 empty-Outcome,   2 fillable
+>
+> The corrected sweep reproduces this table's conclusion independently, and locates both
+> fillable records in `user-docs-search-consolidation` exactly as stated. All 56 were false
+> positives of the challenger's own making, concentrated — as the artefact predicts — in the
+> features whose authors used subheadings.
+>
+> **Recorded rather than deleted, because the near-miss is the finding.** A correction asserting
+> an inverted conclusion was one commit from entering this record, and it would have been more
+> damaging than the error it claimed to fix: it would have licensed four campaigns to hunt
+> records that do not exist. What stopped it was the author of the challenged table refusing to
+> amend on an unreproduced number and asking for a single filename instead — the cheapest
+> possible request, and the one that made the predicate difference visible in one step.
+
+**What this table is for.** It is deliberately not a remediation plan. Per-feature counts let
+each owning campaign see its own share and decide what that share warrants; a single
+tree-wide number invites either a mass rewrite nobody should perform or the shrug that has
+kept this invisible. `2026-06-13-semantic-dedup-epic` and `2026-06-09-docstring-google-style`
+each carry their own provenance audit; the remainder are now visible here rather than nowhere.
+
+**The exclusion, restated because the natural failure mode is an upward correction.** A further
+1776 records carry no `## Outcome` section at all. That is an older template rather than an
+unfilled one and is NOT part of this finding. Anyone re-measuring will encounter 1776 + 1340
+and must not report ~3100.
+
+**The one structural remedy, noted rather than proposed:** a gate refusing to check a Step
+whose exec record has an empty Outcome would have prevented every row in this table. That is
+the harness owner's decision.

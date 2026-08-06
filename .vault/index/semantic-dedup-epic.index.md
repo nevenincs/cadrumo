@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#semantic-dedup-epic'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:16c5f0dba6f05961fd8b277f66e130ef6c43b21788074b68e0d208d963a5b0df'
+body_hash: 'sha256:981661af4c35ec7e1f11b97c2d30322dd56a18695ce54ce0958eab7ae6ced6d0'
 related:
   - '[[2026-06-13-semantic-dedup-epic-W01-P01-S01]]'
   - '[[2026-06-13-semantic-dedup-epic-W01-P01-S02]]'
@@ -252,6 +252,7 @@ related:
   - '[[2026-06-13-semantic-dedup-epic-plan]]'
   - '[[2026-06-13-semantic-dedup-epic-research]]'
   - '[[2026-06-14-semantic-dedup-epic-audit]]'
+  - '[[2026-08-06-semantic-dedup-epic-exec-record-provenance-audit]]'
 ---
 
 # `semantic-dedup-epic` feature index
@@ -268,6 +269,7 @@ Auto-generated index of all documents tagged with `#semantic-dedup-epic`.
 
 - `2026-06-13-semantic-dedup-epic-audit` - `semantic-dedup-epic` audit: `Semantic Deduplication Discovery Pass 1`
 - `2026-06-14-semantic-dedup-epic-audit` - `semantic-dedup-epic` audit: `Semantic Deduplication Discovery Pass 2 (RAG cluster sweep)`
+- `2026-08-06-semantic-dedup-epic-exec-record-provenance-audit` - `semantic-dedup-epic` audit: `204 of 239 execution records carry no authored content at all`
 
 ### exec
 

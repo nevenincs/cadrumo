@@ -212,7 +212,7 @@ def test_a_bundled_path_call_resolves_through_a_local_alias() -> None:
         "def build():\n"
         "    _data_root = bundled_path()\n"
         '    corpus_root = _data_root.parent / "fixtures" / "justificantes"\n'
-        "    target = corpus_root / \"130.pdf\"\n"
+        '    target = corpus_root / "130.pdf"\n'
         "    target.write_bytes(b'x')\n"
     )
     assert _origin_at(source) == "bundled_path"

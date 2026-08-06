@@ -498,16 +498,12 @@ def compile_static_embedding_matrix(
     silently dropped or replaced by a fallback vector.
     """
     if max_serialized_bytes <= 0 or max_serialized_bytes > DEFAULT_MAX_SERIALIZED_BYTES:
-        raise MatrixCompilationError(
-            f"max_serialized_bytes must be between 1 and {DEFAULT_MAX_SERIALIZED_BYTES}"
-        )
+        raise MatrixCompilationError(f"max_serialized_bytes must be between 1 and {DEFAULT_MAX_SERIALIZED_BYTES}")
     terms = canonical_vocabulary(vocabulary)
     tokens = canonical_query_tokens(query_tokens)
     metadata = ModelMetadata.model_validate(provider.metadata)
     observations = tuple(EmbeddingObservation.model_validate(row) for row in provider.embed(terms))
-    query_observations = tuple(
-        QueryTokenObservation.model_validate(row) for row in provider.embed_query_tokens(tokens)
-    )
+    query_observations = tuple(QueryTokenObservation.model_validate(row) for row in provider.embed_query_tokens(tokens))
     expected = set(terms)
     by_term: dict[str, EmbeddingObservation] = {}
     for observation in observations:
@@ -681,8 +677,7 @@ def _quantize_vector(
         raise MatrixCompilationError(f"embedding for {term!r} has no non-zero component")
     scale = _as_float32(peak / 127.0, term=term)
     quantized = tuple(
-        max(-127, min(127, _round_half_away_from_zero(_as_float32(value / scale, term=term))))
-        for value in normalized
+        max(-127, min(127, _round_half_away_from_zero(_as_float32(value / scale, term=term)))) for value in normalized
     )
     return scale, quantized
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:b572b0e937536c825ada1a4311f9167b9e12d4e4d0244f7646357e971dcd60f7'
+body_hash: 'sha256:7b1be357efda083570300689ff9e7301611679e66689c9a81a16c35ee522a6c0'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -123,6 +123,20 @@ Fresh vaultspec-rag grounding over the P02 source boundary and the exact Pagefin
 The independently reviewed temporary provider lane supplied `model2vec==0.8.2`, `minishlab/potion-multilingual-128M` at revision `e7421cd79c75fc506b88bb75723ae0a234994720`, MIT provenance, dimension 256, and raw provider/model/tokenizer manifests. The clean provider-source root was used for compilation. The validated temporary bundle is 2,130,942 canonical bytes with raw SHA-256 `3d2db2c75ba8ff5e259d22db4fef0589993f36c643f74b6246eb9a91b4dde5f1`; its embedded artifact hash is `64d1f26196f054549b5984c5dc4b4f19d0d01da5f1263fbba083a01279791f90`.
 
 The bundle was not promoted to the repository or enabled in the browser because the standing held-out ladder and full locale/build gates are not accepted. P02.S04 remains open for a committed, accepted artifact and the dependent measured/runtime closure.
+
+### 2026-08-06 LUNA MAX representation-parity remediation and fresh measurement
+
+Fresh vaultspec-rag grounding over ADR Update 6/R8/R9, `_static_matrix.py`, `_model2vec_provider.py`, and the browser evaluator identified that candidate term rows were pooled over all phrase subwords while the browser averages independently normalized query-token rows. Exact admitted terms could therefore be fully covered but score below the cosine floor.
+
+LUNA MAX corrected only `_model2vec_provider.py`: each normalized word is independently finite-float32 L2-normalized, then equal-pooled; model token ids remain concatenated. LUNA EXTRA HIGH reviewed the final hunk and returned PASS. No thresholds, held-out data, aliases, browser code, ADR, standing report, or generated artifact changed.
+
+The focused Rung-2 contract suite returned `67 passed in 6.16s`. Ruff, basedpyright (`0 errors, 0 warnings, 0 notes`), `node --check docs/_static/cadrumo-docs.js`, and scoped `git diff --check` passed. An isolated real `model2vec==0.8.2` provider probe passed; browser-equivalent quantized cosine was `0.999922780` and `0.999940864` for representative terms.
+
+A fresh temporary compile over current inputs produced 8,498 records, 112 queries, 152 query tokens, 2,133,672 bytes, SHA-256 `eaf23a5f384333c3c72cc2f6143c7d10295dc320f028add24ef545cb6ada72c6`; semantic replay reached 22/32 hits, 10 misses, miss rate `0.3125`, while coverage remained 92/123 (`0.7479674796747967`) with 10 below the minimum. This improves the prior diagnostic 18/32 result but remains rejected: full-ladder, locale/kind parity, and acceptance evidence are not supplied. The bundle was not promoted, the browser remains disabled, and deployment was not performed. P02.S04-P02.S07 remain open.
+
+### 2026-08-06 explicit LUNA MAX review
+
+Fresh vaultspec-rag exact-source grounding confirmed the model-agnostic compiler/input/provenance boundary; the live semantic service was unavailable while its watcher rebuilt the code index, so no unavailable search result was treated as evidence. An explicit LUNA MAX review found no additional P02.S04 source defect and changed no files. The focused real Rung-2 contract suite returned 67 passed; Ruff, basedpyright (0 errors, 0 warnings, 0 notes), and scoped diff validation passed. The remaining blocker is acceptance of a pinned provider-backed committed artifact: the temporary approximately 2.13 MB bundle measures 22/32 semantic hits (0.3125 miss rate) and 92/123 token coverage, with ten queries below the minimum. P02.S04 remains open; no artifact was promoted, no browser enablement or deployment occurred.
 
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 

@@ -166,6 +166,7 @@ def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
     surfaces would hand an operator (or the agent harness) a dead instruction.
     """
     from ....tests import REPO_ROOT
+
     scanned: list[Path] = []
     src_root = REPO_ROOT / "src" / "cadrumo"
     scanned.extend(src_root.rglob("*.py"))
@@ -287,6 +288,7 @@ def test_retired_reset_and_sandbox_spellings_absent_from_source_and_docs() -> No
     those surfaces would hand an operator (or the agent harness) an instruction
     the live CLI refuses."""
     from ....tests import REPO_ROOT
+
     scanned: list[Path] = []
     src_root = REPO_ROOT / "src" / "cadrumo"
     scanned.extend(src_root.rglob("*.py"))

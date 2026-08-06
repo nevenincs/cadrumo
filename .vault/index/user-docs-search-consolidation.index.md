@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:55825fbbb34fcbde548d78ebe5ff005e5571f6d43c247891444801adff87677a'
+body_hash: 'sha256:81cc15e43dadf3776e9294c470b39d6e2e571c3ebe61fad1ce0986e53195c391'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -17,6 +17,9 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P02-S07]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S25]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S26]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S31]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S32]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S33]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S08]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S09]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S18]]'
@@ -63,9 +66,11 @@ related:
   - '[[2026-08-05-user-docs-search-consolidation-rung2-manifest-role-review-audit]]'
   - '[[2026-08-05-user-docs-search-consolidation-source-contract-reference]]'
   - '[[2026-08-05-user-docs-search-consolidation-source-implementation-audit]]'
+  - '[[2026-08-06-user-docs-search-consolidation-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-canonical-casilla-id-matcher-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-controller-cleanup-audit]]'
   - '[[2026-08-06-user-docs-search-consolidation-final-implementation-review-audit]]'
+  - '[[2026-08-06-user-docs-search-consolidation-p02-s32-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -100,9 +105,11 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-05-user-docs-search-consolidation-rung2-evaluation-audit` - `user-docs-search-consolidation` audit: `Rung-2 evaluator source review`
 - `2026-08-05-user-docs-search-consolidation-rung2-manifest-role-review-audit` - `user-docs-search-consolidation` audit: `Audit the Rung-2 manifest role disjointness correction`
 - `2026-08-05-user-docs-search-consolidation-source-implementation-audit` - `user-docs-search-consolidation` audit: source implementation review
+- `2026-08-06-user-docs-search-consolidation-audit` - 2026-08-06-user-docs-search-consolidation-audit
 - `2026-08-06-user-docs-search-consolidation-canonical-casilla-id-matcher-audit` - `user-docs-search-consolidation` audit: `Canonical casilla exact-search identity review`
 - `2026-08-06-user-docs-search-consolidation-controller-cleanup-audit` - `user-docs-search-consolidation` audit: `shared search controller cleanup review`
 - `2026-08-06-user-docs-search-consolidation-final-implementation-review-audit` - `user-docs-search-consolidation` audit: `final implementation review`
+- `2026-08-06-user-docs-search-consolidation-p02-s32-audit` - `user-docs-search-consolidation` audit: `P02.S32 formal code review`
 
 ### exec
 
@@ -133,6 +140,9 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P03-S08` - 2026-08-01-user-docs-search-consolidation-P03-S08
 - `2026-08-01-user-docs-search-consolidation-P06-S27` - Design locator contract boundary
 - `2026-08-01-user-docs-search-consolidation-P06-S28` - Reconcile Diseño verification contract
+- `2026-08-01-user-docs-search-consolidation-P02-S31` - Capture the real Pagefind lexical observations for the held-out corpus through the browser controller, reconcile the composed-ladder drop against the semantic evaluator, and preserve any failed gate as evidence
+- `2026-08-01-user-docs-search-consolidation-P02-S32` - Introduce an independent versioned query and alias authority from RAG-grounded project vocabulary, bind its provenance into Rung-2 inputs, and recompile and remeasure without using held-out terms
+- `2026-08-01-user-docs-search-consolidation-P02-S33` - Propagate the nested query-alias authority provenance through the Rung-2 bundle and browser validator, rejecting the pre-amendment shape
 - `2026-08-01-user-docs-search-consolidation-P04-S13` - Redeploy and live-verify the full-mode index, the casilla destination pages, and the language roots, recording the live checks in the exec record
 - `2026-08-01-user-docs-search-consolidation-P06-S29` - Correct the structured modelo plus casilla route to carry and match canonical casilla_id while retaining display-number and segmento fallback, and add the real-authority gate for an id that differs from its display number
 - `2026-08-01-user-docs-search-consolidation-P06-S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input

@@ -333,9 +333,7 @@ class SearchRecord(BaseModel):
 # Uniform serialisation funnel
 # ---------------------------------------------------------------------------
 
-KindRecord = (
-    LegalSearchRecord | CasillaSearchRecord | CliSurfaceRecord | CliOptionRecord | ConceptCardRecord
-)
+KindRecord = LegalSearchRecord | CasillaSearchRecord | CliSurfaceRecord | CliOptionRecord | ConceptCardRecord
 
 
 def to_search_record(record: KindRecord, *, sweep_score: float | None = None) -> SearchRecord:

@@ -79,6 +79,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _UTF_8: Final[str] = "utf-8"
 _NON_SPANISH_LOCALES: Final[tuple[str, ...]] = ("en", "ca", "hu")
 
+
 class CoverageKind(StrEnum):
     """The four enumerable target surfaces a coverage report measures.
 
@@ -318,14 +319,10 @@ def compute_casilla_coverage_census(
 
     projected = set(by_id)
     exact_target = {
-        record_id
-        for record_id, records in by_id.items()
-        if any(_has_exact_target(record) for record in records)
+        record_id for record_id, records in by_id.items() if any(_has_exact_target(record) for record in records)
     }
     definition = {
-        record_id
-        for record_id, records in by_id.items()
-        if any(_has_definition(record) for record in records)
+        record_id for record_id, records in by_id.items() if any(_has_definition(record) for record in records)
     }
     locale = authored_locale
     referenced = _referenced_record_ids(resolved_relevance)
@@ -339,8 +336,7 @@ def compute_casilla_coverage_census(
         CasillaCoverageKind.RELEVANCE: relevance_ids,
     }
     surfaces = tuple(
-        _casilla_surface_coverage(surface, projected, coverage_by_surface[surface])
-        for surface in CasillaCoverageKind
+        _casilla_surface_coverage(surface, projected, coverage_by_surface[surface]) for surface in CasillaCoverageKind
     )
     return CasillaCoverageCensus(surfaces=surfaces)
 

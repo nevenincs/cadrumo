@@ -48,6 +48,7 @@ def _is_modelo_source_key(key: str) -> bool:
 
     return key.startswith(_MODELO_SCHEMA_PREFIX) and key.endswith(_MODELO_SOURCE_SUFFIXES)
 
+
 # Recursive YAML node: either a leaf string or a nested mapping.
 type _LocaleNode = str | dict[str, "_LocaleNode"] | None
 
@@ -262,8 +263,7 @@ def test_modelo_spanish_values_are_authority_source() -> None:
         if _is_modelo_source_key(key) and (not isinstance(value, str) or not value.strip())
     )
     assert offenders == [], (
-        "es.yml is the mandatory official Modelo source; these schema leaves are missing or blank: "
-        f"{offenders[:10]}"
+        f"es.yml is the mandatory official Modelo source; these schema leaves are missing or blank: {offenders[:10]}"
     )
 
 

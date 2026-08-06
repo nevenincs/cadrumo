@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -110,6 +111,60 @@ def test_wizard_creates_invoice_from_provided_fields() -> None:
     assert stored is not None
     assert stored.counterparty_name == "Papeleria Sol SL"
     assert stored.base_total == stored.grand_total - stored.iva_total
+
+
+def test_wizard_records_retention_amount_alone() -> None:
+    """An amount alone is a legitimate retención declaration (#66).
+
+    The invoice model accepts ``retention_amount`` without a rate -- many
+    real invoices record what was withheld without stating the rate that
+    produced it. Before this CLI wiring, neither catalogue creation path
+    could set either field at all.
+    """
+    result = invoke_cached_cli(
+        ["--format", "json", *_BASE_ARGS, "--invoice-number", "2026-0901", "--retention-amount", "15.00"],
+    )
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result.output)
+
+    stored = InvoiceCatalogueRepository().load().get(str(payload["invoice_id"]))
+    assert stored is not None
+    assert stored.retention_amount == Decimal("15.00")
+    assert stored.retention_rate is None
+
+
+def test_wizard_records_retention_rate_with_matching_amount() -> None:
+    """A rate is accepted alongside a consistent amount (RIRPF art. 95.1 15%)."""
+    result = invoke_cached_cli(
+        [
+            "--format", "json", *_BASE_ARGS,
+            "--invoice-number", "2026-0902",
+            "--retention-rate", "0.15",
+            "--retention-amount", "15.00",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result.output)
+
+    stored = InvoiceCatalogueRepository().load().get(str(payload["invoice_id"]))
+    assert stored is not None
+    assert stored.retention_rate == Decimal("0.15")
+    assert stored.retention_amount == Decimal("15.00")
+
+
+def test_wizard_refuses_a_retention_rate_without_an_amount() -> None:
+    """A rate alone is refused, naming the field: it declares a proportion of nothing.
+
+    ``Invoice._validate_retencion_consistency`` never derives the amount from
+    the rate -- inferring it would manufacture a figure the operator never
+    stated.
+    """
+    result = invoke_cached_cli(
+        ["--format", "json", *_BASE_ARGS, "--invoice-number", "2026-0903", "--retention-rate", "0.15"],
+    )
+    assert result.exit_code != 0, result.output
+    assert "retention_rate" in result.output
+    assert "retention_amount" in result.output
 
 
 def test_wizard_created_invoice_roundtrips_through_encrypted_boundary() -> None:

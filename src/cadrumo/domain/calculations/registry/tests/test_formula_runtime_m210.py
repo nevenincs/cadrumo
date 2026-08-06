@@ -148,7 +148,9 @@ def test_irnr_resolve_tipo_gravamen_resolves_dividend_baseline_rate() -> None:
 def test_keyed_bracket_resolution_rejects_overlapping_official_m210_rate_windows() -> None:
     """A contradictory rate row must not silently replace Art. 25.1.f's 19% dividend rate."""
     snapshot = _current_m210_snapshot()
-    parameter = next(parameter for parameter in snapshot.revision.parameters if parameter.id == "m210-tipo-gravamen-2025")
+    parameter = next(
+        parameter for parameter in snapshot.revision.parameters if parameter.id == "m210-tipo-gravamen-2025"
+    )
     dividend = next(entry for entry in parameter.keyed_brackets if entry.key == "dividend")
 
     assert resolve_keyed_bracket(parameter, key="dividend", filing_year=2025) == Decimal("0.19")

@@ -2060,6 +2060,8 @@ cli:
             no está disponible.
           wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura
             con esta identidad (%{invoice_id}); no se creó nada.'
+          retention_rate_help: 'Fracción de retención del art. 95.1 RIRPF que retiene el pagador (0,15 para el 15% general, o 0,07 durante el periodo de inicio de actividad). Requiere --retention-amount; una fracción sola se rechaza.'
+          retention_amount_help: 'Importe de la retención de IRPF retenida por el pagador, en euros. Puede indicarse solo, o junto con --retention-rate.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)

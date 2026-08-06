@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:71915cd45ae6b347ac52be2178672a1eb6a6cc428149df000cb09291b4d2d352'
+body_hash: 'sha256:26f4ed577f0fff695e8fcb9f5bdd0cc11e507bf0ed7ffeca67fdfcb63de6325e'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -306,3 +306,50 @@ The matrix, record-manifest, bridge, bundle, and browser-config schema versions 
 ### Consequences
 
 P02.S25 remains open until this amendment is accepted, the canonicalizer and nested self-attestation are implemented, and independent Python/JavaScript verification is authorized and passes. The amendment does not authorize tests, builds, model downloads, matrix generation, live RAG sweeps, reindexing, generated artifacts, Pagefind/runtime probes, artifact release, or deployment.
+
+## Update 11 (2026-08-06): independent Rung-2 query/alias authority and provenance
+
+The Rung-2 input assembler currently treats the committed relevance sweep and the current Handbook enumeration as one effective query authority. P02.S32 needs a separately owned, reviewed source for additional admitted aliases. This amendment narrows that addition without changing the accepted matrix representation, normalization, bridge, ranking order, thresholds, held-out evaluation corpus, 3 MB envelope, or runtime-no-RAG boundary. The decision is grounded in `2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research` and the fresh vaultspec-rag architecture review.
+
+### Decision
+
+Add one committed build-time authority at `src/cadrumo/_data/terminology/rung2/query-alias-authority.json`.
+
+The artifact MUST use the exact schema version `cadrumo.docs-search.rung2-query-aliases.v1`, a positive monotonically increasing `authority_version`, and a strict `entries` array. Each entry MUST contain:
+
+- `concept_id`, identifying an approved Terminology Handbook concept;
+- `language`, using the existing four-language contract;
+- `query`, a bounded non-empty admitted alias;
+- `canonical_query`, matching a current preferred, admitted, or hidden Handbook query for the same concept and language;
+- `status`, exactly `ratified`;
+- `review_reason`, explaining the independent RAG-grounded project-vocabulary review; and
+- `reviewed_at`, the review date.
+
+The authority is the owner only of independently ratified additional aliases. The Handbook remains the user-facing terminology and existing lexical-query authority. `synonym-candidates.json` remains a mining and review queue, not this authority. `relevance.json` remains the RAG-produced target mapping, not the owner of alias admission. The held-out corpus remains evaluation-only and MUST never supply authority entries.
+
+RAG grounds candidate discovery and review at build preparation time. Each admitted alias is swept independently through vaultspec-rag and receives its own laundered mapping. The implementation MUST NOT copy a canonical query's targets, persist vectors, snippets, raw scores, or RAG output, or invoke RAG at runtime.
+
+The deterministic sweep vocabulary is the union of the current Handbook query enumeration and the ratified authority entries. The assembler MUST require exact one-to-one parity between that combined query set and the committed relevance mappings, then derive the canonical combined vocabulary, query-token inventory, fingerprints, and sweep from that same set. `Rung2CompilationInputs` MUST carry the validated authority model rather than an untyped dictionary.
+
+### Provenance contract
+
+Extend the immutable `Rung2InputProvenance` with a required nested `query_alias_authority` identity containing:
+
+- the repository-relative authority path;
+- the exact authority schema version;
+- the positive authority version; and
+- the SHA-256 digest of the raw committed JSON bytes.
+
+The existing relevance source identity and raw-byte digest remain separate. Vocabulary and query-token digests continue to cover the canonical combined sequence. The nested identity MUST be included in the hash-covered bundle provenance and in serialized-byte accounting. The applicable bundle/config schema versions MUST increment with the changed required provenance shape; old, missing, extra, or mismatched provenance MUST be rejected without a compatibility reader.
+
+### Fail-closed boundary
+
+Compilation or measurement MUST refuse when the authority is missing, malformed, wrong-versioned, unratified, path-invalid, tampered, duplicated, or non-canonical; when an entry names an unknown or non-approved concept; when its canonical query is not a current Handbook query for the same concept and language; when normalized aliases collide with one another or with existing Handbook queries; when an authority query equals a held-out evaluation query; when the combined relevance mappings are not an exact one-to-one match; or when the combined sweep, manifest targets, vocabulary, token inventory, fingerprints, or nested provenance disagree.
+
+Remeasurement MUST retain the existing held-out query and digest. A changed evaluation corpus is a separately reviewed decision, not an input side effect of alias admission.
+
+### Implementation and consequences
+
+P02.S32 owns the strict loader/schema, deterministic ordering and anchoring checks, sweep union, combined-input parity, nested provenance binding, and the associated Python/browser contract tests. It does not change matrix rows, query-token pooling, semantic thresholds, D8 band-first lexical ordering, the legal/casilla record taxonomy, or the client runtime boundary. The browser remains lexical-authoritative and semantic-disabled until the existing Rung-2 acceptance gates pass.
+
+This amendment adds one reviewable build-time data authority and its provenance identity. It does not authorize held-out leakage, a fresh artifact release, deployment, or runtime RAG.

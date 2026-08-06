@@ -563,6 +563,7 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     ``WorkUnit`` competes with the canonical surface."""
 
     from ....tests import REPO_ROOT
+
     source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_work_unit.py"
     forbidden = "class WorkUnit("
@@ -584,6 +585,7 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     storage location."""
 
     from ....tests import REPO_ROOT
+
     source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
     # _namespace_registry.py is the centralised namespace declaration table;

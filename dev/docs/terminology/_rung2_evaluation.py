@@ -147,6 +147,16 @@ class Rung2SemanticCandidateResult(BaseModel):
     candidates: tuple[Rung2SemanticCandidate, ...]
     status: Rung2CandidateStatus
 
+    @model_validator(mode="after")
+    def _enforce_status_candidates(self) -> Rung2SemanticCandidateResult:
+        """Make abstention status and candidate payload mutually exclusive."""
+        if self.status is Rung2CandidateStatus.CANDIDATES:
+            if not self.candidates:
+                raise ValueError("candidate status requires at least one semantic candidate")
+        elif self.candidates:
+            raise ValueError("abstention status cannot carry semantic candidates")
+        return self
+
 
 class Rung2LexicalObservation(BaseModel):
     """One explicitly captured Pagefind row needed by the browser ladder.
@@ -338,6 +348,42 @@ class Rung2EvaluationRow(BaseModel):
     reason: Rung2EvaluationReason
     matched_record_id: _RecordId | None
 
+    @model_validator(mode="after")
+    def _enforce_result_invariants(self) -> Rung2EvaluationRow:
+        """Keep the reported outcome bound to expected/candidate membership."""
+        expected_ids = set(self.expected_record_ids)
+        candidate_ids = set(self.candidate_record_ids)
+        matching_ids = expected_ids & candidate_ids
+        if self.hit:
+            if self.reason is not Rung2EvaluationReason.HIT:
+                raise ValueError("a hit row must use the hit reason")
+            if self.matched_record_id is None:
+                raise ValueError("a hit row must report its matched record id")
+            if self.matched_record_id not in matching_ids:
+                raise ValueError("matched record id must belong to expected and candidate ids")
+        else:
+            if self.reason is Rung2EvaluationReason.HIT:
+                raise ValueError("a miss row cannot use the hit reason")
+            if self.matched_record_id is not None:
+                raise ValueError("a miss row cannot report a matched record id")
+            if matching_ids:
+                raise ValueError("a row with expected/candidate membership must be a hit")
+
+        if self.reason is Rung2EvaluationReason.TARGET_MISMATCH:
+            if not candidate_ids:
+                raise ValueError("a target-mismatch row must contain candidates")
+        elif self.reason in {
+            Rung2EvaluationReason.NO_COMPOSED_CANDIDATE,
+            Rung2EvaluationReason.EMPTY_QUERY,
+            Rung2EvaluationReason.INSUFFICIENT_COVERAGE,
+            Rung2EvaluationReason.NON_FINITE_QUERY_VECTOR,
+            Rung2EvaluationReason.ZERO_QUERY_VECTOR,
+            Rung2EvaluationReason.RUNNER_UP_AMBIGUITY,
+            Rung2EvaluationReason.NO_COSINE_MATCH,
+        } and candidate_ids:
+            raise ValueError("an abstention row cannot contain candidates")
+        return self
+
 
 class Rung2Evaluation(BaseModel):
     """Held-out semantic or composed-ladder measurement without acceptance."""
@@ -359,6 +405,24 @@ class Rung2Evaluation(BaseModel):
         if not math.isfinite(value):
             raise ValueError("held-out miss rate must be finite")
         return value
+
+    @model_validator(mode="after")
+    def _enforce_aggregate_invariants(self) -> Rung2Evaluation:
+        """Keep aggregate counts and miss rate derived from the emitted rows."""
+        if self.case_count != len(self.rows):
+            raise ValueError("evaluation case count does not match its rows")
+        expected_hit_count = sum(row.hit for row in self.rows)
+        expected_miss_count = len(self.rows) - expected_hit_count
+        if self.hit_count != expected_hit_count:
+            raise ValueError("evaluation hit count does not match its rows")
+        if self.miss_count != expected_miss_count:
+            raise ValueError("evaluation miss count does not match its rows")
+        if self.hit_count + self.miss_count != self.case_count:
+            raise ValueError("evaluation hit and miss counts do not partition its cases")
+        expected_miss_rate = expected_miss_count / len(self.rows)
+        if self.held_out_miss_rate != expected_miss_rate:
+            raise ValueError("evaluation miss rate does not match its rows")
+        return self
 
 
 class Rung2CoverageEvidence(BaseModel):
@@ -785,8 +849,7 @@ def compare_rung2_top_five(
                 if record_id not in observation.int8_record_ids
             ),
             lost_count=sum(
-                record_id not in observation.int8_record_ids
-                for record_id in observation.float32_record_ids
+                record_id not in observation.int8_record_ids for record_id in observation.float32_record_ids
             ),
         )
         for observation in validated_observations
@@ -867,12 +930,22 @@ def _compare_composition_entries(
         assert right.semantic_ranking_weight is not None
         if left.semantic_ranking_weight != right.semantic_ranking_weight:
             return -1 if left.semantic_ranking_weight > right.semantic_ranking_weight else 1
-        if left.record_id.encode(_UTF_8) != right.record_id.encode(_UTF_8):
-            return -1 if left.record_id.encode(_UTF_8) < right.record_id.encode(_UTF_8) else 1
+        record_id_order = _compare_utf8_record_ids(left.record_id, right.record_id)
+        if record_id_order:
+            return record_id_order
     if left.relevance_rank != right.relevance_rank:
         return -1 if left.relevance_rank < right.relevance_rank else 1
-    if left.record_id.encode(_UTF_8) != right.record_id.encode(_UTF_8):
-        return -1 if left.record_id.encode(_UTF_8) < right.record_id.encode(_UTF_8) else 1
+    return _compare_utf8_record_ids(left.record_id, right.record_id)
+
+
+def _compare_utf8_record_ids(left: str, right: str) -> int:
+    """Compare record ids by canonical UTF-8 bytes for deterministic ties."""
+    left_bytes = left.encode(_UTF_8)
+    right_bytes = right.encode(_UTF_8)
+    if left_bytes < right_bytes:
+        return -1
+    if left_bytes > right_bytes:
+        return 1
     return 0
 
 

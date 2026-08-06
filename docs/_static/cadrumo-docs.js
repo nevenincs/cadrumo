@@ -239,7 +239,8 @@
    * The bundle is the schema-v3 Rung2SearchBundle emitted by _rung2_bridge.py:
    * it contains the schema-v4 matrix, hash-linked bridge, authoritative record
    * manifest, and required input_provenance object
-   *   { source_relpath, source_sha256, vocabulary_sha256, query_token_sha256 }
+   *   { source_relpath, source_sha256, query_alias_authority,
+   *     vocabulary_sha256, query_token_sha256 }
    * under one measured byte bound. Raw source bytes are not shipped, so this
    * reader validates the embedded, hash-covered source identity only. URLs
    * are consumed only from that manifest; this code never parses an id or
@@ -251,6 +252,7 @@
   var RUNG2_MATRIX_SCHEMA_VERSION = 4;
   var RUNG2_MANIFEST_SCHEMA_VERSION = 2;
   var RUNG2_BRIDGE_SCHEMA_VERSION = 2;
+  var RUNG2_QUERY_ALIAS_AUTHORITY_SCHEMA = "cadrumo.docs-search.rung2-query-aliases.v1";
   var RUNG2_MODEL_REPOSITORY = "minishlab/potion-multilingual-128M";
   var RUNG2_MODEL_REVISION = "e7421cd79c75fc506b88bb75723ae0a234994720";
   var RUNG2_MODEL_LICENSE = "MIT";
@@ -295,6 +297,17 @@
       throw new Error(label + "." + key + " is required");
     }
     return value[key];
+  }
+
+  function rung2RepositoryRelativePath(value, label) {
+    var sourceRelpath = rung2RequiredString(value, "source_relpath", label);
+    var normalisedPath = sourceRelpath.trim().replace(/\\/g, "/");
+    if (sourceRelpath.length > 512 || sourceRelpath !== normalisedPath ||
+        !normalisedPath || normalisedPath.charAt(0) === "/" || /^[A-Za-z]:/.test(normalisedPath) ||
+        normalisedPath.split("/").some(function (part) { return !part || part === "." || part === ".."; })) {
+      throw new Error(label + ".source_relpath must be repository-relative and non-escaping");
+    }
+    return normalisedPath;
   }
 
   function rung2Hex(value, label) {
@@ -966,16 +979,18 @@
   function rung2ValidateInputProvenance(provenance, matrix, bridge) {
     rung2Object(provenance, "Rung-2 input_provenance");
     rung2Keys(provenance, [
-      "source_relpath", "source_sha256", "vocabulary_sha256", "query_token_sha256",
+      "source_relpath", "source_sha256", "query_alias_authority", "vocabulary_sha256", "query_token_sha256",
     ], "Rung-2 input_provenance");
-    var sourceRelpath = rung2RequiredString(provenance, "source_relpath", "Rung-2 input_provenance");
-    var normalisedPath = sourceRelpath.trim().replace(/\\/g, "/");
-    if (sourceRelpath.length > 512 || sourceRelpath !== normalisedPath ||
-        !normalisedPath || normalisedPath.charAt(0) === "/" || /^[A-Za-z]:/.test(normalisedPath) ||
-        normalisedPath.split("/").some(function (part) { return !part || part === "." || part === ".."; })) {
-      throw new Error("Rung-2 input_provenance.source_relpath must be repository-relative and non-escaping");
-    }
+    rung2RepositoryRelativePath(provenance, "Rung-2 input_provenance");
     rung2Hex(provenance.source_sha256, "Rung-2 input_provenance.source_sha256");
+    var aliasAuthority = rung2Object(provenance.query_alias_authority, "Rung-2 query_alias_authority");
+    rung2Keys(aliasAuthority, ["source_relpath", "schema_version", "authority_version", "source_sha256"], "Rung-2 query_alias_authority");
+    if (aliasAuthority.schema_version !== RUNG2_QUERY_ALIAS_AUTHORITY_SCHEMA) {
+      throw new Error("Rung-2 query alias authority schema mismatch");
+    }
+    rung2RepositoryRelativePath(aliasAuthority, "Rung-2 query_alias_authority");
+    rung2Integer(aliasAuthority.authority_version, 1, Number.MAX_SAFE_INTEGER, "Rung-2 query_alias_authority.authority_version");
+    rung2Hex(aliasAuthority.source_sha256, "Rung-2 query_alias_authority.source_sha256");
     rung2Hex(provenance.vocabulary_sha256, "Rung-2 input_provenance.vocabulary_sha256");
     rung2Hex(provenance.query_token_sha256, "Rung-2 input_provenance.query_token_sha256");
     if (provenance.vocabulary_sha256 !== matrix.vocabulary_sha256 ||
@@ -1552,19 +1567,19 @@
     function dataToCards(results, limit, fromCardPass) {
       return Promise.all(
         results.slice(0, limit).map(function (result) {
-          return result.data();
+          return Promise.resolve(result.data()).then(function (data) {
+            var card = cardFromPagefind(
+              data.meta,
+              data.meta && data.meta.title,
+              data.url,
+              data.excerpt,
+              fromCardPass
+            );
+            card.pagefindId = result.id;
+            return card;
+          });
         })
-      ).then(function (datas) {
-        return datas.map(function (data) {
-          return cardFromPagefind(
-            data.meta,
-            data.meta && data.meta.title,
-            data.url,
-            data.excerpt,
-            fromCardPass
-          );
-        });
-      });
+      );
     }
 
     /* The injected term/casilla/CLI records and the docs pages share one index
@@ -1601,21 +1616,21 @@
                 var cardResults = cardRes && cardRes.results ? cardRes.results : [];
                 var pageResults = pageRes && pageRes.results ? pageRes.results : [];
                 /* The weight-sorted pass ties every concept card at the flat
-                 * tier-one weight, so capture each url's relevance rank from the
-                 * textual pass and carry it onto the card; compose() breaks
-                 * within-tier ties by it, floating the best textual match to the
-                 * top of its tier while cards still sit above full-text pages. */
+                 * tier-one weight, so join its rows to the textual pass by
+                 * Pagefind's ephemeral result id; compose() breaks within-tier
+                 * ties by that rank, floating the best textual match to the top
+                 * of its tier while cards still sit above full-text pages. */
                 var relRank = {};
                 pageResults.forEach(function (r, i) {
-                  if (relRank[r.url] === undefined) relRank[r.url] = i;
+                  if (relRank[r.id] === undefined) relRank[r.id] = i;
                 });
                 return dataToCards(cardResults, 12, true).then(function (cards) {
                   return dataToCards(pageResults, 6, false).then(function (pages) {
                     var all = cards.concat(pages);
                     all.forEach(function (item) {
                       item.relRank =
-                        relRank[item.href] !== undefined
-                          ? relRank[item.href]
+                        relRank[item.pagefindId] !== undefined
+                          ? relRank[item.pagefindId]
                           : Number.MAX_SAFE_INTEGER;
                     });
                     return { cards: all, structured: false };

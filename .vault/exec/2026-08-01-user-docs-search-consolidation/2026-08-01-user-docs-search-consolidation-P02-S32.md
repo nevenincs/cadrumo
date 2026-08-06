@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:e5f72ce5b4d19e5d2bc81e2c8e628c3097b03b5f610df1b8560721fd7dcac877'
+body_hash: 'sha256:1df74682d6d1355dbc7be8bd3b00813fe8276026953b3d23374cf60ca792256f'
 step_id: 'S32'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -70,3 +70,7 @@ exit 0
 - Fresh vaultspec-rag grounding used the accepted Update 11 ADR and the code seams in `_rung2_inputs.py`, `_rung2_provenance.py`, `_sweep.py`, and the new authority module before implementation.
 - The reindex request was accepted by the resident service; no relevance JSON, matrix, browser bundle, or deployment artifact was written by this execution.
 - LUNA MAX and LUNA EXTRA HIGH coding slots were delegated with exclusive scopes but returned no patch before their inactive slots were closed; the parent completed the same bounded implementation locally without touching their absent scopes.
+
+### 2026-08-06 follow-up review hardening
+
+The raw-byte provenance helper now reloads the committed authority and rejects a mismatched supplied model; the added tamper test passes. The complete Rung-2 contract selection was rerun as `62 passed in 8.67s`; ruff, basedpyright, node syntax, and the isolated browser gate remain clean. P02.S33 carries the browser-validator correction found during review.

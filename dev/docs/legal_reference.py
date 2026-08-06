@@ -346,8 +346,7 @@ def _required_text(body: dict[str, object], *, path: Path, legal_id: str) -> tup
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field 'required_text' must be a string array")
     string_items = tuple(item for item in items if isinstance(item, str))
     return tuple(
-        _validate_authored_text(item, path=path, legal_id=legal_id, field="required_text")
-        for item in string_items
+        _validate_authored_text(item, path=path, legal_id=legal_id, field="required_text") for item in string_items
     )
 
 
@@ -619,10 +618,7 @@ def render_legal_reference(
     grouped: dict[str, list[LegalProvisionRecord]] = {}
     for record in ordered:
         grouped.setdefault(record.document_id, []).append(record)
-    pages = tuple(
-        _render_document_page(document_id, tuple(grouped[document_id]))
-        for document_id in sorted(grouped)
-    )
+    pages = tuple(_render_document_page(document_id, tuple(grouped[document_id])) for document_id in sorted(grouped))
     targets = {legal_id: target for page in pages for legal_id, target in page.targets.items()}
     anchors = {legal_id: anchor for page in pages for legal_id, anchor in page.anchor_by_id.items()}
     grounding_count = sum(len(page.grounding_by_id) for page in pages)

@@ -55,9 +55,7 @@ def test_same_revision_in_two_periods_gets_distinct_identifiers() -> None:
     [
         (
             "modelo",
-            lambda: registry_snapshot_id(
-                modelo="131", revision_id="2019-y-siguientes", filing_year=2025, period="1T"
-            ),
+            lambda: registry_snapshot_id(modelo="131", revision_id="2019-y-siguientes", filing_year=2025, period="1T"),
         ),
         (
             "revision_id",

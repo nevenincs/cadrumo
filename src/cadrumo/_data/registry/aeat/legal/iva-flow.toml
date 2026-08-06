@@ -592,3 +592,29 @@ required_text = [
     "transporte de viajeros o de mercancías por carretera",
     "régimen simplificado",
 ]
+
+[legal."rd-1624-1992:art-69"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-69.html#a69"
+document_id = "BOE-A-1992-28925"
+article = "69"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a69"
+published_at = 1992-12-31
+effective_from = 2013-10-27
+review_status = "reviewed"
+reviewed_at = 2026-08-06
+reviewed_by = "agent-review"
+notes = """RIVA art 69: plazos para las anotaciones registrales. Es la norma operativa a \
+la que remite el art 35 del RD 1065/2007 para fijar el periodo de imputacion del Modelo \
+347, de modo que citar el art 35 sin este articulo deja la referencia a un salto de \
+distancia de la regla efectiva. Las operaciones deben estar asentadas en los libros \
+registro en el momento de la liquidacion y pago del impuesto o, en todo caso, antes de \
+que finalice el plazo de presentacion en periodo voluntario. Texto extraido de la API de \
+datos abiertos del BOE el 2026-08-06 tomando la ultima version consolidada, redaccion \
+BOE-A-2013-11216 en vigor desde 2013-10-27."""
+required_text = [
+    "Plazos para las anotaciones registrales",
+    "antes de que finalice el plazo legal para realizar la referida liquidación y pago",
+]

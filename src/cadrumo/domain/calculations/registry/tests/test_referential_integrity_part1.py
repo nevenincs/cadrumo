@@ -313,7 +313,9 @@ def test_snapshot_integrity_checks_casilla_alias_refs() -> None:
     revision = minimal_revision(casillas=(casilla,))
     snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
 
-    with pytest.raises(RegistryValidationError, match=rf"casilla 01\.alias {re.escape(_ALTERNATE_ALIAS_KEY)}\.legal_refs"):
+    with pytest.raises(
+        RegistryValidationError, match=rf"casilla 01\.alias {re.escape(_ALTERNATE_ALIAS_KEY)}\.legal_refs"
+    ):
         check_all_id_references(snapshot)
 
 

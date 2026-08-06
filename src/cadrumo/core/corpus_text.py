@@ -128,7 +128,12 @@ def resolve_anchored_extracted_unit(
         return _render_unit(*exact[0], include_title=include_title)
     if len(exact) > 1:
         raise CorpusAnchorResolutionError(f"anchor {anchor!r} is duplicated in {sidecar_path}")
-    if len(units) == 1:
+    if len(units) == 1 and not any(_canonical_anchor(unit_anchor) for unit_anchor, _title, _text in units):
+        # Whole-file fallback, narrowed to sidecars that declare NO anchor at
+        # all. Falling back for a file that DOES declare one made the anchor
+        # unfalsifiable: any string resolved, including a wrong article, so an
+        # anchor pointing at the wrong provision read exactly like a right one.
+        # A single-unit file with a declared id is checkable, so it is checked.
         return _render_unit(*units[0][1:], include_title=include_title)
 
     structural = [(title, text) for _unit_anchor, title, text in units if _title_matches_anchor(title, target)]
@@ -158,11 +163,21 @@ def _render_unit(title: str, text: str, *, include_title: bool) -> str:
     return text
 
 
+#: Two notations for the same article anchor coexist in the corpus: the
+#: extractor emits ``#aN`` while the convenio entries were authored as
+#: ``#art-N``. They name the same provision, so they are folded to one key
+#: rather than being treated as a mismatch. Anchored here rather than fixed at
+#: 42 call sites because one rule cannot drift out of step the way 42 edits can,
+#: and because a genuine collision (a file declaring both forms) still raises
+#: through the existing duplicate check instead of resolving silently.
+_ARTICLE_PREFIX_RE: Final = re.compile(r"^(?:articulos?|arts?)(?=\d)")
+
+
 def _canonical_anchor(value: str) -> str:
     normalised = _NON_ALNUM_RE.sub("", normalise_corpus_text(value).lstrip("#"))
     for ordinal, number in _SPANISH_ORDINALS.items():
         normalised = normalised.replace(ordinal, number)
-    return normalised
+    return _ARTICLE_PREFIX_RE.sub("a", normalised, count=1)
 
 
 def _title_matches_anchor(title: str, target: str) -> bool:

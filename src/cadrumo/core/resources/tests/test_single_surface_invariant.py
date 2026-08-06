@@ -179,6 +179,8 @@ def test_no_production_module_walks_out_of_the_package() -> None:
         "(resolve operator paths through the application data root instead — "
         f"Settings.cadrumo_local_storage_root): {offenders}"
     )
+
+
 def test_resources_package_re_exports_boundary() -> None:
     """The boundary functions stay accessible through the package init."""
 

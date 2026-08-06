@@ -190,4 +190,3 @@ def resolve_profile_export_values(
         if value is not None:
             values[str(field_id)] = value
     return values
-

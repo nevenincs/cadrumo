@@ -424,7 +424,6 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
         return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
 
 
-
 class CertificateSubjectNifReader(Protocol):
     """Reads the subject NIF/NIE out of a PKCS#12 bundle on disk.
 

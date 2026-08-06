@@ -235,22 +235,27 @@ for definition in resources().modelos.authority.modelos:
         core_ok = len(cores) == 1
         label_ok = label_state in ("identical", "year_token_only")
         tier = (
-            "T1-rubber-stamp" if label_ok and core_ok and len(legal) == 1
-            else "T2-legal-refs-review" if label_ok and core_ok
-            else "T3-wording-review" if core_ok
+            "T1-rubber-stamp"
+            if label_ok and core_ok and len(legal) == 1
+            else "T2-legal-refs-review"
+            if label_ok and core_ok
+            else "T3-wording-review"
+            if core_ok
             else "T4-full-adjudication"
         )
-        rows.append({
-            "modelo": definition.id,
-            "casilla_id": cid,
-            "revisions": sorted(per),
-            "label_state": label_state,
-            "core_stable": core_ok,
-            "legal_refs_stable": len(legal) == 1,
-            "unvalidated_drift": sorted(f for f in INFO if len({dict(t)[f] for t in infos}) > 1),
-            "partially_stamped": any(c.continuidad_id for c in per.values()),
-            "tier": tier,
-        })
+        rows.append(
+            {
+                "modelo": definition.id,
+                "casilla_id": cid,
+                "revisions": sorted(per),
+                "label_state": label_state,
+                "core_stable": core_ok,
+                "legal_refs_stable": len(legal) == 1,
+                "unvalidated_drift": sorted(f for f in INFO if len({dict(t)[f] for t in infos}) > 1),
+                "partially_stamped": any(c.continuidad_id for c in per.values()),
+                "tier": tier,
+            }
+        )
 
 order = {"T1-rubber-stamp": 0, "T2-legal-refs-review": 1, "T3-wording-review": 2, "T4-full-adjudication": 3}
 rows.sort(key=lambda r: (order[r["tier"]], r["modelo"], r["casilla_id"]))
@@ -365,16 +370,23 @@ else:
     label_state = "SUBSTANTIVELY DIVERGENT -- adjudicate reword vs repurpose"
 info_drift = sorted(f for f in INFO if len({str(getattr(c, f, None)) for c in occ.values()}) > 1)
 print("\n=== drift classification ===")
-print(f"  validated core stable:  {core_ok}\n  legal_refs stable:      {legal_ok}\n  label:                  {label_state}")
+print(
+    f"  validated core stable:  {core_ok}\n  legal_refs stable:      {legal_ok}\n  label:                  {label_state}"
+)
 print(f"  unvalidated drift:      {info_drift or 'none'}  (no strict failure; a renumbering tell)")
 tidy = label_state in ("byte-identical", "identical after normalise")
 resolved = not label_state.startswith("UNRESOLVED")
 suggestion = (
-    "NO SUGGESTION -- labels did not resolve" if not resolved
-    else "unchanged" if core_ok and legal_ok and tidy
-    else "label_evolved" if core_ok and legal_ok
-    else "legal_refs_evolved" if core_ok and tidy
-    else "label_and_legal_refs_evolved" if core_ok
+    "NO SUGGESTION -- labels did not resolve"
+    if not resolved
+    else "unchanged"
+    if core_ok and legal_ok and tidy
+    else "label_evolved"
+    if core_ok and legal_ok
+    else "legal_refs_evolved"
+    if core_ok and tidy
+    else "label_and_legal_refs_evolved"
+    if core_ok
     else "NO SUGGESTION -- core drifts; suspect renumbering/repurposed"
 )
 print(f"  suggested evolution_kind (verify against official sources!): {suggestion}")

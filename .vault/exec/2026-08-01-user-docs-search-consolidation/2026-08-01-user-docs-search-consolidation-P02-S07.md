@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:45d07474ce050fc42394a50e15b67dad83b29f56b135d8bd6cb626fbcba8c461'
+body_hash: 'sha256:35547909f3afebf89492e0a69ab6a32ba79ca74d7d5b1de2500d6c21d00480e6'
 step_id: 'S07'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -80,6 +80,24 @@ A coarse read-only calibration sweep over the reproducible bundle varied the exp
 Fresh `vaultspec-rag` searches and the accepted Sol-medium architecture disposition confirm that the Rung-2 representations and D8 band-first ladder remain unchanged. The real Pagefind capture found the installed result API exposes an ephemeral `id` plus `data()`, with the destination URL in `data.url`; the controller's prior `result.url` relevance join was therefore invalid. The LUNA MAX repair carries the Pagefind id through the two-pass join, retains `data.url` for destination/dedupe, and does not promote direct model identity across the accepted legal DOC band.
 
 Focused real verification passed: `uv run --no-sync pytest -q dev/docs/terminology/tests/test_rung2_evaluation.py` returned `10 passed in 9.57s`; `uv run --no-sync pytest -q -m integration dev/docs/tests/test_search_page_inline_ladder.py dev/docs/tests/test_palette_ranking.py` returned `3 passed in 43.86s`; `node --check docs/_static/cadrumo-docs.js` and scoped `git diff --check` passed. The full local Pagefind build and 32-query browser capture are recorded in P02.S31. The miss-rate/acceptance evidence remains rejected; no browser enablement, artifact promotion, commit, push, or deployment occurred.
+
+### 2026-08-06 provider-parity remeasurement (diagnostic only)
+
+The LUNA MAX representation-parity correction in `_model2vec_provider.py` was measured against the real pinned `model2vec==0.8.2` provider and the current authoritative inputs. The fresh temporary bundle contained 8,498 records, 112 queries, and 152 query tokens; it measured 22/32 semantic hits (miss rate `0.3125`) and aggregate coverage 92/123 (`0.7479674796747967`). This is an improvement over the prior diagnostic 18/32 semantic result, but it remains above the ratified `0.10` miss-rate ceiling and below the `0.8` coverage policy floor. The ten remaining rows are coverage failures, not cosine-floor failures.
+
+This measurement does not replace `rung2-report.json`, does not claim a full-ladder replay, locale/kind parity, browser acceptance, artifact promotion, or enablement, and does not close P02.S04-P02.S07. The accepted Update 11 authority remains zero-entry and held-out queries remain evaluation-only; no held-out phrase, threshold relaxation, or synthetic alias was introduced. Deployment was not performed.
+
+### 2026-08-06 SOL-high architecture disposition and closed-vocabulary failure classification
+
+A one-time SOL-high architecture adjudication, grounded in the accepted Rung-2 ADR/Update 11 and the prior successful vaultspec-rag semantic grounding, confirms that the current representation, normalization, query-token coverage contract, thresholds, bridge, and runtime boundary must not be changed under the existing ADR. Fresh semantic retrieval is currently unavailable: the managed vaultspec-rag service reports a stalled code-index job, GPU capacity exhaustion, and an incomplete local code collection; the fallback search explicitly warns that absence is not evidence. Exact RAG source-file retrieval and the prior resident semantic results remain the grounding used for this disposition.
+
+The current pinned-provider diagnostic remains 22/32 semantic hits (miss rate 0.3125), 92/123 covered query tokens (0.7479674796747967), and ten below the 0.8 coverage floor; quantization top-five loss is 0/32. The held-out corpus remains evaluation-only. No held-out query or token was added to the authority, no threshold was lowered, and no browser configuration was enabled.
+
+Read-only classification of the ten below-floor queries found no current Handbook/relevance query-token identity that the assembler failed to enroll, so no category-3 implementation divergence is evidenced. The missing surfaces fall into two bounded groups: query scaffolding/function words (cuando, presento, que, es, para, mis, como, funciona, a, este, dar, alta, un, sin) that the closed vocabulary is not required to admit; and domain words (autonomos, trabajadores, oficina, pagar, factura, luz, deducible, autonomo, hacienda, vender, francia, libro, ingresos, gastos) that could be candidates only after independent, non-held-out ratification. The existing synonym queue confirms that deducible is rejected as too broad/tax-directional and pro-rata remains proposed; neither is admissible authority. The committed authority therefore correctly remains zero-entry.
+
+The four-locale committed relevance surface was checked without changing it: ES has 91 mappings over 49 concepts, EN 17 over 15 concepts, CA 1 over 1 concept, and HU 3 over 3 concepts. This is source-side locale evidence only; it is not a substitute for the outstanding built/deployed per-root parity gates.
+
+The SOL disposition is to close none of P02.S04-P02.S07. The minimum safe continuation is to obtain independent RAG-grounded ratification evidence for any domain alias candidate, or obtain a separately approved ADR amendment before changing representation/coverage semantics, then recompile the same accepted matrix and rerun the existing gates. No source correction is justified by this failure classification. Deployment is also not evidenced: the current AWS session is expired and the accepted Rung-2/build gates are not green.
 
 ## Notes
 

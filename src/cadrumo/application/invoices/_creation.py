@@ -109,6 +109,8 @@ def build_catalogue_invoice(
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
     operation_date: date | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
@@ -122,6 +124,13 @@ def build_catalogue_invoice(
     recapitulative resolver reads for historical goods/triangulation records.
     ``operation_type`` carries the explicit Modelo 349 clave for invoice
     records that need a key not represented by an IVA category.
+
+    ``retention_rate`` / ``retention_amount`` record the RIRPF art. 95
+    withholding a payer settles against a received invoice (or a customer
+    against an issued one). Neither is derived here: :class:`Invoice`'s own
+    ``_validate_retencion_consistency`` accepts an amount alone, requires an
+    amount whenever a rate is supplied, and refuses either that does not
+    match the invoice's ``base_total``.
     """
     from ...domain.invoices import iva_rate_percentage
 
@@ -177,6 +186,10 @@ def build_catalogue_invoice(
         # operator-supplied date can assert, so it is not offered here.
         invoice_payload["operation_date"] = operation_date.isoformat()
         invoice_payload["operation_date_role"] = InvoiceOperationDateRole.OPERATION_PERFORMED.value
+    if retention_rate is not None:
+        invoice_payload["retention_rate"] = format(retention_rate, "f")
+    if retention_amount is not None:
+        invoice_payload["retention_amount"] = format(retention_amount, "f")
     _stamp_fx_conversion(invoice_payload, currency=currency, issued_at=issued_at, rate_provider=rate_provider)
     return Invoice.model_validate(invoice_payload)
 
@@ -231,6 +244,8 @@ def create_catalogue_invoice(
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
     operation_date: date | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> CatalogueInvoiceCreateResult:
@@ -259,6 +274,8 @@ def create_catalogue_invoice(
         iva_category=iva_category,
         operation_type=operation_type,
         operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
         rate_provider=rate_provider,
     )
     catalogue = repo.load()

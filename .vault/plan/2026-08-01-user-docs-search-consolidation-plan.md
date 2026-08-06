@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-06'
-body_hash: 'sha256:104bea76cc2a4cc6d2027de7c3e4eba6ae981f1be96d4f2219393946c56ad701'
+body_hash: 'sha256:f9b4f9aabdb62207a9317b4268bbe596e28a922668d70bea427811cffef74836'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -41,6 +41,9 @@ Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model 
 - [ ] `P02.S07` - Re-run the held-out miss-rate measurement over the rung-2-enabled ladder and commit the report as the new standing baseline beside the 0.1875 pre-rung-2 figure; `src/cadrumo/_data/terminology/evaluation/`.
 - [x] `P02.S25` - Establish a shared canonical JSON byte contract or equivalent artifact evidence so the browser can fail closed on nested matrix, manifest, bridge, target-list, and bundle self-attestation hashes before Rung-2 artifact acceptance; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
 - [x] `P02.S26` - Define and implement independent provider-package/model and tokenizer-content verification from an ADR-ratified byte-manifest contract before Rung-2 matrix compilation or artifact acceptance; `dev/docs/terminology/_model2vec_provider.py and the accepted ADR/schema`.
+- [ ] `P02.S31` - Capture the real Pagefind lexical observations for the held-out corpus through the browser controller, reconcile the composed-ladder drop against the semantic evaluator, and preserve any failed gate as evidence; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
+- [ ] `P02.S32` - Introduce an independent versioned query and alias authority from RAG-grounded project vocabulary, bind its provenance into Rung-2 inputs, and recompile and remeasure without using held-out terms; `src/cadrumo/_data/terminology/ and dev/docs/terminology/`.
+- [x] `P02.S33` - Propagate the nested query-alias authority provenance through the Rung-2 bundle and browser validator, rejecting the pre-amendment shape; `dev/docs/terminology/_rung2_bridge.py, docs/_static/cadrumo-docs.js, and dev/docs/terminology/tests/`.
 
 ### Phase `P03` - Verification and honest close
 

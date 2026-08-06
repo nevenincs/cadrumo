@@ -34,9 +34,6 @@ __all__ = [
 ]
 
 
-
-
-
 class CapabilitySource(StrEnum):
     """Why a capability resolved the way it did."""
 

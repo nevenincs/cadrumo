@@ -86,7 +86,9 @@ _ALREADY_REFUSED_HOSTILE: tuple[str, ...] = (f"https://{_WWW6_HOST}:8443{_TARGET
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE, ids=("username-only", "username-and-password", "cleartext-http"))
+@pytest.mark.parametrize(
+    "landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE, ids=("username-only", "username-and-password", "cleartext-http")
+)
 def test_movil_refuses_a_hostile_authority_that_ends_in_the_aeat_suffix(
     tmp_path: Path,
     landing_url: str,
@@ -99,7 +101,9 @@ def test_movil_refuses_a_hostile_authority_that_ends_in_the_aeat_suffix(
     assert _is_landing(_movil(tmp_path), landing_url) is False
 
 
-@pytest.mark.parametrize("landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE, ids=("username-only", "username-and-password", "cleartext-http"))
+@pytest.mark.parametrize(
+    "landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE, ids=("username-only", "username-and-password", "cleartext-http")
+)
 def test_permanente_refuses_a_hostile_authority_that_ends_in_the_aeat_suffix(
     tmp_path: Path,
     landing_url: str,

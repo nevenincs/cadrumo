@@ -23,6 +23,7 @@ from dev.docs.terminology._rung2_bridge import (
     build_rung2_search_bundle,
 )
 from dev.docs.terminology._rung2_provenance import build_rung2_input_provenance
+from dev.docs.terminology._rung2_query_authority import build_query_alias_authority_provenance
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._static_matrix import (
     EMBEDDING_MATRIX_SCHEMA_VERSION,
@@ -312,6 +313,7 @@ def test_build_rung2_search_bundle_validates_projected_mapping_tuple_contract() 
         source_bytes=b"projected relevance",
         vocabulary=("prorrata",),
         query_tokens=("prorrata",),
+        query_alias_authority=build_query_alias_authority_provenance(),
     )
 
     bundle = build_rung2_search_bundle(

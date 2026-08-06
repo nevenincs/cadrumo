@@ -525,7 +525,6 @@ def test_export_field_rejects_numeric_kind() -> None:
         ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": 99})
 
 
-
 class TestVerificationVocabulariesAreClosed:
     """A verification expectation cannot declare a meaningless obligation.
 

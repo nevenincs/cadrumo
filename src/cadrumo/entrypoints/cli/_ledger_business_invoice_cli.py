@@ -550,6 +550,33 @@ _CatalogueOperationTypeOpt = Annotated[
     ),
 ]
 _CatalogueNotesOpt = Annotated[str, typer.Option("--notes")]
+_CatalogueRetentionRateOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--retention-rate",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.retention_rate_help",
+            default=(
+                "RIRPF art. 95.1 retención fraction withheld by the payer"
+                " (0.15 for the general 15%, or 0.07 during the inicio-de-actividad"
+                " window). Requires --retention-amount; a rate alone is refused."
+            ),
+        ),
+    ),
+]
+_CatalogueRetentionAmountOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--retention-amount",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.retention_amount_help",
+            default=(
+                "Amount of IRPF retención withheld by the payer, in euros."
+                " May be supplied alone, or alongside --retention-rate."
+            ),
+        ),
+    ),
+]
 
 
 @catalogue_app.command(
@@ -572,6 +599,8 @@ def catalogue_create(
     country_code: _CatalogueCountryCodeOpt = "ES",
     operation_type: _CatalogueOperationTypeOpt = None,
     operation_date: _CatalogueOperationDateOpt = None,
+    retention_rate: _CatalogueRetentionRateOpt = None,
+    retention_amount: _CatalogueRetentionAmountOpt = None,
     notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
@@ -581,7 +610,10 @@ def catalogue_create(
     content-addressed ``invoice_id`` is the value
     ``aeat app ledger link --invoice-id`` resolves. Supplying an intra-community
     ``--operation-type`` stamps the invoice so the Modelo 349 recapitulative
-    calculation can read it.
+    calculation can read it. Supplying ``--retention-amount`` (optionally with
+    ``--retention-rate``) records a RIRPF art. 95 withholding, which
+    ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
+    a received invoice.
     """
     from pydantic import ValidationError
 
@@ -613,6 +645,8 @@ def catalogue_create(
             operation_date=(
                 None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")
             ),
+            retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
+            retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
         )
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
@@ -647,6 +681,8 @@ def catalogue_wizard(
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
     country_code: _CatalogueCountryCodeOpt = "ES",
     operation_type: _CatalogueOperationTypeOpt = None,
+    retention_rate: _CatalogueRetentionRateOpt = None,
+    retention_amount: _CatalogueRetentionAmountOpt = None,
     notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Guided manual-entry invoice creation for when extraction is unavailable.
@@ -688,6 +724,8 @@ def catalogue_wizard(
             notes=notes,
             iva_category=iva_category,
             operation_type=parsed_operation_type,
+            retention_rate=retention_rate,
+            retention_amount=retention_amount,
         )
     except InvoiceValidationError as exc:
         message = tr(exc.translated_message, **(exc.context or {})) if exc.translated_message else str(exc)

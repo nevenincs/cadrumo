@@ -92,9 +92,12 @@ def test_product_identity_distinguishes_prose_from_identity_context() -> None:
 
 def test_product_identity_normalizes_only_unambiguous_stale_command_prefixes() -> None:
     """The shared normalizer preserves prose, machine identifiers, and authority names."""
-    assert normalise_product_identity_references(
-        "Cadrumo serves AEAT; run cadrumo app status, keep cadrumo-mcp and CADRUMO_TOKEN."
-    ) == "Cadrumo serves AEAT; run aeat app status, keep cadrumo-mcp and CADRUMO_TOKEN."
+    assert (
+        normalise_product_identity_references(
+            "Cadrumo serves AEAT; run cadrumo app status, keep cadrumo-mcp and CADRUMO_TOKEN."
+        )
+        == "Cadrumo serves AEAT; run aeat app status, keep cadrumo-mcp and CADRUMO_TOKEN."
+    )
 
 
 def test_product_identity_is_immutable() -> None:

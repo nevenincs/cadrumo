@@ -120,3 +120,63 @@ def test_a_foreign_simplificada_does_not_trigger_case_3() -> None:
     profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
 
     assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
+
+
+def test_a_received_invoice_with_a_tax_id_does_not_trigger_case_3() -> None:
+    """The reachable RECEIVED case: a present tax id already answers everything case 3.º could ask."""
+    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674")
+    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+
+    assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
+
+
+def test_the_kind_guard_holds_even_for_a_shape_invoice_itself_already_refuses() -> None:
+    """Proves the ``kind`` check on its own terms, not merely as an artefact of another guard.
+
+    A tax-id-less RECEIVED SIMPLIFICADA cannot be built through ``Invoice``'s
+    normal construction path -- its own class-consistency validator already
+    refuses that combination (see ``test_invoice_simplificada.py``), which
+    means ``counterparty_tax_id is None`` alone already implies ``kind is
+    ISSUED`` for every real ``Invoice``. That makes this predicate's ``kind``
+    check currently unreachable through valid data: a test built only from
+    real invoices could see it deleted and stay green, exactly the class of
+    silent, never-fired guard this campaign has been finding.
+
+    ``model_copy(update=...)`` bypasses pydantic validation (unlike
+    reconstructing via ``Invoice(...)``), so it can force the
+    otherwise-unreachable combination onto an already-valid model without
+    touching any other field. This is testing the FUNCTION's own contract in
+    isolation, independent of whether ``Invoice`` will always guarantee the
+    combination cannot occur.
+    """
+    invoice = _invoice(kind=InvoiceKind.RECEIVED, counterparty_tax_id="B12345674").model_copy(
+        update={"counterparty_tax_id": None},
+    )
+    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+
+    assert simplificada_requires_tax_id_for_domestic_issuer(invoice, profile) is False
+
+
+def test_a_canarias_or_ceuta_melilla_resident_is_a_pinned_known_limitation() -> None:
+    """PINNED KNOWN-WRONG BEHAVIOUR, over-strict and therefore the safer of the two mistakes.
+
+    ``TaxpayerProfile`` has no field distinguishing a Canarias- or
+    Ceuta/Melilla-resident taxpayer (IGIC/IPSI territory, outside the LIVA
+    TAI) from a mainland one, so ``fiscal_residency == RESIDENT_IRPF`` reads
+    ``True`` for both even though only the mainland taxpayer is genuinely
+    established in the TAI. This predicate therefore WRONGLY reports
+    "established" for a Canarias/Ceuta/Melilla issuer and so wrongly demands
+    a counterparty NIF the law does not actually require there -- never the
+    reverse.
+
+    This test pins that CURRENT behaviour deliberately, using the only
+    profile shape this codebase can construct for such a taxpayer today
+    (there is no way to declare "resident, but in Canarias" on
+    ``TaxpayerProfile``). It must fail, on purpose, the day a territorial-
+    scope fact is added to the profile and this predicate is updated to read
+    it for a genuinely Canarias/Ceuta/Melilla-flagged profile: that failure
+    is the reminder pointing at exactly what to fix.
+    """
+    profile = _profile(fiscal_residency=FiscalResidency.RESIDENT_IRPF)
+
+    assert issuer_established_in_tai(profile) is True  # wrong for a Canarias/Ceuta/Melilla resident; see docstring

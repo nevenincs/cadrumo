@@ -48,9 +48,7 @@ def test_authoritative_legal_pages_are_docutils_clean() -> None:
     """The registry-backed legal pages contain no docutils warnings."""
     result = render_legal_reference(_REPO_ROOT)
     failures = [
-        f"{page.output_relpath}: {messages}"
-        for page in result.pages
-        if (messages := _system_messages(page.rst))
+        f"{page.output_relpath}: {messages}" for page in result.pages if (messages := _system_messages(page.rst))
     ]
 
     assert not failures, "generated legal-reference RST has docutils diagnostics:\n" + "\n".join(failures)

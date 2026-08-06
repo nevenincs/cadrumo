@@ -179,6 +179,8 @@ def _period_strictly_before_activity_start(period: Period, activity_start_date: 
 
 
 ObservationPayload = _ObservationPayload
+
+
 def period_strictly_before_activity_start(period: Period, activity_start_date: date) -> bool:
     return _period_strictly_before_activity_start(period, activity_start_date)
 

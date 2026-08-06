@@ -262,7 +262,9 @@ def _declared_literals(node: ast.AnnAssign) -> frozenset[str]:
     if not call.args or not isinstance(call.args[0], ast.Set):
         return frozenset()
     return frozenset(
-        element.value for element in call.args[0].elts if isinstance(element, ast.Constant) and isinstance(element.value, str)
+        element.value
+        for element in call.args[0].elts
+        if isinstance(element, ast.Constant) and isinstance(element.value, str)
     )
 
 
@@ -464,7 +466,7 @@ def test_the_detector_fires_on_a_stale_declaration() -> None:
     """A declared literal absent from the rest of the module is caught."""
     source = (
         'from typing import Final\n\nPINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})\n'
-        '\ndef f(tmp_path):\n    return tmp_path\n'
+        "\ndef f(tmp_path):\n    return tmp_path\n"
     )
     entry = _synthetic_module(source)
     assert entry.declared - set(entry.used) == {"buckets"}
@@ -515,19 +517,19 @@ def test_the_detector_catches_a_dict_value_and_a_tuple_element_not_only_a_join_c
     [
         (
             "a docstring mentioning a taxonomy word inside prose",
-            'from typing import Final\n\n'
+            "from typing import Final\n\n"
             '"""This module talks about the llm usage/telemetry/cache logical paths."""\n'
-            'PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(set())\n',
+            "PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(set())\n",
         ),
         (
             "a multi-line embedded text blob containing a slash-joined literal",
-            'from typing import Final\nfrom textwrap import dedent\n\n'
-            'PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(set())\n'
+            "from typing import Final\nfrom textwrap import dedent\n\n"
+            "PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(set())\n"
             'SCRIPT = dedent("""\\nroot.parent / "secrets"\\n""")\n',
         ),
         (
             "an over-length string that happens to contain a taxonomy word",
-            'from typing import Final\n\nPINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(set())\n'
+            "from typing import Final\n\nPINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(set())\n"
             'MESSAGE = "this failure message is unusually long and mentions a cache in passing here"\n',
         ),
     ],
@@ -545,11 +547,7 @@ def test_the_detector_stays_silent_on_each_control(label: str, source: str) -> N
 
 def test_a_module_with_no_declaration_is_out_of_scope() -> None:
     """A module that never opted in is not scanned at all -- confirmed against a real file."""
-    non_pinning = next(
-        path
-        for path in package_python_files()
-        if path.name == "test_storage_kind_parity_gate.py"
-    )
+    non_pinning = next(path for path in package_python_files() if path.name == "test_storage_kind_parity_gate.py")
     tree = ast_for_path(non_pinning)
     assert tree is not None
     assert _declaration_node(tree) is None, (

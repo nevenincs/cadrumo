@@ -5,44 +5,11 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c4665420e678b443f1094bf3fa8a06ab421de628d914f12f08190b6377cccd0'
+body_hash: 'sha256:2a17dc870e3630cbee18c45ee0f83742cb042ee6e3093c163ebf9cc8467ec61c'
 step_id: 'S49'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ledger-invoice-decomposition with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S49 and 2026-08-05-ledger-invoice-decomposition-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides and ## Scope
-
-- `src/cadrumo/application/aggregation/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides
 

@@ -1910,6 +1910,8 @@ cli:
           wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
           wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
             already exists (%{invoice_id}); nothing was created.'
+          retention_rate_help: 'RIRPF art. 95.1 retención fraction withheld by the payer (0.15 for the general 15%, or 0.07 during the inicio-de-actividad window). Requires --retention-amount; a rate alone is refused.'
+          retention_amount_help: 'Amount of IRPF retención withheld by the payer, in euros. May be supplied alone, or alongside --retention-rate.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations

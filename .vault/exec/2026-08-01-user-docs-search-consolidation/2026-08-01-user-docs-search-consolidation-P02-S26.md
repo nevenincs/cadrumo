@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:3477cd51752dcf4d8db3c3448bdae4b12eb8439082eabcbd3d7d78c1c21d2340'
+body_hash: 'sha256:2dba36eda264e5830ec6d55c4bcef85eb6b6c9bb5e87a6544304874bc7215bee'
 step_id: 'S26'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -65,3 +65,11 @@ Fresh vaultspec-rag grounding of the manifest-role audit, accepted ADR Update 8,
 The verified evidence identifies model2vec 0.8.2, provider revision c90140706ed2162c75c6f004b66e37a342fd8f1a, Potion revision e7421cd79c75fc506b88bb75723ae0a234994720, model snapshot root 869266e7140deabcaa3e5e0e69c7e017af5507d07006114690fb05d3ab06c9d6, provider-source root 581adaf84f2b25e40a2b930852c5ac65223166b02cc31126ca8267450d20dcef, tokenizer-configuration root ca3339ad4370f46cf5189c54a3cbac46e13f0639e66cf173a2ebe07f2ce86ede, and tokenizer-vocabulary root 16d9434a6dba49dffd2a831ceb73bcbab2662b32d7bd3d0c4a2544e3b4c22d3b. The model snapshot and tokenizer role projections are contained and disjoint under the source contract.
 
 The installed-provider verification was executed against the local verified roots and manifests with the production PotionModel2VecProvider; it returned provider_version 0.8.2, model_revision e7421cd79c75fc506b88bb75723ae0a234994720, dimension 256, and bundle SHA f220aa7876b2d77dade0d7710b6b6456204ba4717148f73c66aeb6aac7f6be19. This satisfies the previously open P02.S26 evidence boundary. It does not accept the Rung-2 bundle or enable the browser: P02.S04, P02.S05, P02.S06, P02.S07, P02.S25, locale/kind parity, and deployment remain independently gated.
+
+### 2026-08-06 LUNA MAX provider-boundary remediation and verification
+
+Fresh vaultspec-rag grounding over the accepted provider contract, P02.S26 evidence, and the current provider source confirmed the selected `model2vec==0.8.2` lane. The live code search shows the production adapter loads the reviewed local snapshot with `force_download=False` and embeds with `use_multiprocessing=False`; the LUNA MAX remediation additionally derives the `[UNK]` identity from the tokenizer and rejects a missing, invalid, or negative tokenizer id before embedding. This closes the previously reviewed conditional unknown-token boundary without changing the pinned model, manifest schema, or browser contract.
+
+Authorized focused real-behaviour verification returned `67 passed in 20.84s` across the static-matrix, provider-boundary consumers, acceptance, evaluator, report, provenance, input, and query-authority suites. Ruff, basedpyright (`0 errors, 0 warnings, 0 notes`), `node --check docs/_static/cadrumo-docs.js`, and scoped `git diff --check` also passed. The documented RAG CLI lane was used because the MCP `codebase` alias remains rejected as `unknown_source_type`.
+
+The verified provider/model evidence and the rejected standing Rung-2 report remain unchanged: the bundle is not promoted or enabled, no deployment was performed, and shared-worktree peer WIP was preserved.

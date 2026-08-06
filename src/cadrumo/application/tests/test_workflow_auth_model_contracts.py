@@ -175,10 +175,7 @@ class TestCertificateSourceName:
     def test_overlength_name_is_refused(self) -> None:
         with pytest.raises(ValidationError):
             CertificateSourceRecord(name="x" * 161, certificate_path="p", registered_at=_AWARE)
-        assert (
-            CertificateSourceRecord(name="x" * 160, certificate_path="p", registered_at=_AWARE).name
-            == "x" * 160
-        )
+        assert CertificateSourceRecord(name="x" * 160, certificate_path="p", registered_at=_AWARE).name == "x" * 160
 
     def test_cleanup_witness_carries_the_same_contract(self) -> None:
         witness = AuthCleanupCertificateSource(name=self._PADDED, registered_at=_AWARE)
@@ -199,11 +196,13 @@ class TestCertificateSourceName:
         padded record is unreachable from a canonical selector.
         """
         state = AuthState(
-            certificate_sources={self._PADDED: CertificateSourceRecord(
-                name=self._PADDED,
-                certificate_path="p",
-                registered_at=_AWARE,
-            )},
+            certificate_sources={
+                self._PADDED: CertificateSourceRecord(
+                    name=self._PADDED,
+                    certificate_path="p",
+                    registered_at=_AWARE,
+                )
+            },
             active_certificate_source=self._PADDED,
         )
         assert state.active_certificate_source == self._CANONICAL

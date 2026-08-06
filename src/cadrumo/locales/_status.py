@@ -196,8 +196,7 @@ def _catalogue_record(
             leaves.get(key),
             reference_value=(modelo_source_leaves if is_modelo_key else reference_leaves).get(key),
             is_reference_locale=(
-                locale_file == _REFERENCE_LOCALE_FILE
-                or (is_modelo_key and locale_file == _MODELO_SOURCE_LOCALE_FILE)
+                locale_file == _REFERENCE_LOCALE_FILE or (is_modelo_key and locale_file == _MODELO_SOURCE_LOCALE_FILE)
             ),
             allowlisted=key in allowed_keys,
         )

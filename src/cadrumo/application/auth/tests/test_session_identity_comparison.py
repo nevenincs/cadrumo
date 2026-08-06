@@ -300,7 +300,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-
 class TestClaveIdentityIsComparedCanonically:
     """The Cl@ve ownership guard compares taxpayers, not strings.
 
@@ -364,10 +363,13 @@ class TestClaveIdentityIsComparedCanonically:
 
     def test_a_matching_canonical_pair_is_accepted(self) -> None:
         """Anti-tautology: the guard must not simply refuse everything."""
-        assert self._assert_guard(
-            profile_tax_id=self._CANONICAL,
-            dni_nie=self._CANONICAL,
-        ) == self._CANONICAL
+        assert (
+            self._assert_guard(
+                profile_tax_id=self._CANONICAL,
+                dni_nie=self._CANONICAL,
+            )
+            == self._CANONICAL
+        )
 
     def test_absent_credentials_and_blank_profile_identity_keep_their_behaviour(self) -> None:
         """The pre-existing empty-value contract is unchanged by the normalisation."""

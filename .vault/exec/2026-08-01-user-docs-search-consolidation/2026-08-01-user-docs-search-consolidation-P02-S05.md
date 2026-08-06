@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a895a9009e0200153a7b2045434c57bbdd5ee15000c66baa5da32b5108e2c24'
+body_hash: 'sha256:854d2794a6581d8f92b9fcf7f6ba275e9635245e4c69819372693aaa6cff46b1'
 step_id: 'S05'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -61,3 +61,7 @@ Fresh vaultspec-rag grounding over the accepted search ADR, the P02.S05 executio
 ### 2026-08-06 authorized runtime continuation
 
 The source client-side cosine bridge and fail-closed browser path were exercised by the Rung-2 acceptance and composition checks, but no accepted browser configuration was emitted. The independent Pagefind capture showed that lexical card observations can crowd semantic candidates; the LUNA Max correction now treats card-pass origin as provenance rather than direct identity and uses direct-match strength plus semantic score for the tie. The semantic tier remains disabled until the held-out and locale/kind acceptance gates pass.
+
+### 2026-08-06 explicit LUNA EXTRA HIGH review
+
+Fresh vaultspec-rag exact-source grounding of the current controller confirmed fail-closed bundle loading, bounded token coverage/cosine/margin checks, five-result capping, structured-casilla and Pagefind precedence, and shared palette/search-page wiring. The live semantic search service was unavailable during its code-index rebuild, so no unavailable search result was treated as evidence. An explicit LUNA EXTRA HIGH review found no P02.S05 source defect and changed no files; node syntax and scoped diff validation passed. P02.S05 remains open for an accepted shipped matrix/bundle, measured acceptance and locale/kind parity, and built-surface behavioural proof; browser enablement and deployment remain deferred.

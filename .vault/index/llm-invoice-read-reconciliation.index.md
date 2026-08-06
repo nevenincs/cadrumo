@@ -6,8 +6,9 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:b38dc9ee3eb51bfeb8d961cfe7090b881bddefeeeec4efec2ad675a032b6bf4d'
+body_hash: 'sha256:dd71004b8703163f26975da3e19e10de7dddd1c3867105005dd71308d928da71'
 related:
+  - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
 ---
 
@@ -16,6 +17,10 @@ related:
 Auto-generated index of all documents tagged with `#llm-invoice-read-reconciliation`.
 
 ## Documents
+
+### adr
+
+- `2026-08-06-llm-invoice-read-reconciliation-adr` - `llm-invoice-read-reconciliation` adr: `Direction-aware evidence reading, and the two questions the invoice-read path cannot answer alone` | (**status:** `proposed`)
 
 ### research
 

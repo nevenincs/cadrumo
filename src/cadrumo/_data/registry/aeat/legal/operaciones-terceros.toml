@@ -141,3 +141,30 @@ published_at = 2011-12-12
 applies_from = 2011-12-13
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-19397"
 review_status = "reviewed"
+
+[legal."rd-1065-2007:art-35"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-35.html#a35"
+document_id = "BOE-A-2007-15984"
+article = "35"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a35"
+published_at = 2007-09-05
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-06
+reviewed_by = "agent-review"
+notes = """RD 1065/2007 art 35: criterios de imputacion temporal del Modelo 347. Es la \
+regla que decide a que periodo se imputa una operacion, distinta del art 31 (quien \
+declara) y de los arts 33/34 (que importe se declara). La operacion se entiende \
+producida en el periodo en que, conforme al art 69 del Reglamento del IVA, debe \
+realizarse la anotacion registral de la factura -- NO en la fecha de devengo del art 75 \
+LIVA. Las operaciones en regimen especial del criterio de caja son la excepcion y se \
+imputan al devengo del art 163 terdecies LIVA. Texto extraido de la API de datos \
+abiertos del BOE el 2026-08-06 tomando la ultima version consolidada, redaccion \
+BOE-A-2013-11216 en vigor desde 2014-01-01."""
+required_text = [
+    "Criterios de imputación temporal",
+    "se debe realizar la anotación registral de la factura",
+]

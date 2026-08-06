@@ -1986,6 +1986,8 @@ cli:
             elérhető.
           wizard_idempotent_noop: 'Idempotens no-op: már létezik ilyen azonosságú
             számla (%{invoice_id}); semmi sem jött létre.'
+          retention_rate_help: 'A RIRPF 95.1. cikke szerinti visszatartási hányad, amelyet a kifizető von le (0,15 az általános 15%-hoz, vagy 0,07 a tevékenység megkezdésének időszakában). A --retention-amount megadása kötelező; önmagában a hányad megadása elutasításra kerül.'
+          retention_amount_help: 'A kifizető által levont IRPF visszatartás összege euróban. Megadható önállóan, vagy a --retention-rate paraméterrel együtt.'
         country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
           műveletek).
         eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi

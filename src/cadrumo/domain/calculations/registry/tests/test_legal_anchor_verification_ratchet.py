@@ -35,14 +35,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _IMPOSSIBLE_ANCHOR: Final[str] = "zzz-no-such-anchor-zzz"
 
-_UNVERIFIED_ANCHOR_CEILING: Final[int] = 318
-"""Entries whose anchor a wrong value would pass, measured 2026-08-05.
+_UNVERIFIED_ANCHOR_CEILING: Final[int] = 90
+"""Entries whose anchor a wrong value would pass, re-measured 2026-08-06.
 
-Shrink-only. Restricting the single-unit fallback to files that declare no unit
-ids at all takes this to 90 -- the entries whose corpus file genuinely carries
-no internal anchors, where whole-file matching is the correct behaviour and not
-a gap. Raising this number means new entries were added whose anchor nothing
-checks, which is the regression the ceiling exists to catch.
+Shrink-only. The 318 this replaces was inflated by the resolver falling back to
+a sidecar's sole unit for ANY requested anchor, including files that declared an
+id it could have checked against. Narrowing that fallback to files declaring no
+id at all -- the prediction this docstring already carried -- lands on 90: the
+entries whose corpus file genuinely has no internal anchors, where whole-file
+matching is correct rather than a gap.
+
+The 228 entries that left this population were never anchor-less; they were
+unfalsifiable. Of them, 42 declared an anchor that did not match their sidecar's
+unit id, and every one was the ``art-N`` versus ``aN`` notation split, naming the
+right article in the wrong spelling -- folded together in the resolver's anchor
+canonicalisation rather than by editing 42 call sites. Zero pointed at a
+different provision; that was the number that decided this was a contained fix
+and not a campaign.
+
+Raising this number means new entries were added whose anchor nothing checks,
+which is the regression the ceiling exists to catch.
 """
 
 _MINIMUM_CLASSIFIED_ENTRIES: Final[int] = 550

@@ -403,7 +403,7 @@ class PreviousFilingSourceResolver:
             report = resolve_bindings_from_local_store(
                 snapshot,
                 repository=self._repository,
-                   activity_start_date=activity_start_date_for_bucket(str(context.bucket_id)),
+                activity_start_date=activity_start_date_for_bucket(str(context.bucket_id)),
                 excluded_binding_ids=self._excluded_binding_ids,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:

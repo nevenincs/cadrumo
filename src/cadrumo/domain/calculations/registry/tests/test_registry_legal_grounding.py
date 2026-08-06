@@ -380,7 +380,11 @@ def test_legal_entry_document_id_agrees_with_its_own_permalink(
     # Anti-vacuity: a scan that matched nothing would satisfy the assertion below
     # perfectly while checking no entry at all, and would keep passing if the
     # permalink field were renamed out from under it.
-    assert len(checked) >= 50, f"self-agreement scan covered only {len(checked)} entries -- the matcher is not reaching the catalogue"
+    assert len(checked) >= 50, (
+        f"self-agreement scan covered only {len(checked)} entries -- the matcher is not reaching the catalogue"
+    )
     assert len(set(checked.values())) > 1, "scan saw only one document -- it is not spanning the catalogue"
 
-    assert not disagreements, "legal catalogue entries contradict their own permalink:\n" + "\n".join(sorted(disagreements))
+    assert not disagreements, "legal catalogue entries contradict their own permalink:\n" + "\n".join(
+        sorted(disagreements)
+    )

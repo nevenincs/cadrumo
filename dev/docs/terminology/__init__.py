@@ -29,7 +29,6 @@ from ._concept_cards import (
     TermAlias,
     project_concept_cards,
 )
-from ._jcs import CANONICAL_JSON_CONTRACT, CanonicalJsonError, canonical_json_bytes
 from ._content_manifest import (
     RAW_BYTE_MANIFEST_SCHEMA_VERSION,
     RawByteManifest,
@@ -38,6 +37,7 @@ from ._content_manifest import (
     build_raw_byte_manifest,
     verify_raw_byte_manifest,
 )
+from ._jcs import CANONICAL_JSON_CONTRACT, CanonicalJsonError, canonical_json_bytes
 from ._legal_projection import LegalSearchRecord, project_legal_search_records
 from ._miss_rate import (
     DEFAULT_RUNG2_MISS_RATE_THRESHOLD,
@@ -75,8 +75,8 @@ from ._resolution import (
 from ._rung2_bridge import (
     BRIDGE_SCHEMA_VERSION,
     BUNDLE_SCHEMA_VERSION,
-    BridgeCompilationError,
     RECORD_MANIFEST_SCHEMA_VERSION,
+    BridgeCompilationError,
     RecordManifest,
     RecordManifestEntry,
     Rung2SearchBundle,
@@ -95,9 +95,11 @@ from ._rung2_compiler import (
     compile_rung2_search_bundle,
 )
 from ._rung2_inputs import (
+    QueryAliasAuthorityProvenance,
     Rung2CompilationInputs,
     Rung2InputError,
     Rung2InputProvenance,
+    Rung2QueryAliasAuthority,
     build_rung2_compilation_inputs,
 )
 from ._search_record import (
@@ -198,12 +200,13 @@ __all__ = [
     "POTION_MODEL_REPOSITORY",
     "POTION_MODEL_REVISION",
     "RAW_BYTE_MANIFEST_SCHEMA_VERSION",
+    "RECORD_MANIFEST_SCHEMA_VERSION",
     "ROW_ORDER",
     "STRONG_SIGNAL_SCORE_FLOOR",
     "BridgeCompilationError",
+    "CanonicalJsonError",
     "CasillaProjectionStats",
     "CasillaSearchRecord",
-    "CanonicalJsonError",
     "ChunkHit",
     "CliOptionRecord",
     "CliProjectionStats",
@@ -232,6 +235,7 @@ __all__ = [
     "ProviderProvenance",
     "QuantizedEmbeddingRow",
     "QuantizedQueryTokenRow",
+    "QueryAliasAuthorityProvenance",
     "QueryTokenObservation",
     "RagSearchClient",
     "RankingTier",
@@ -244,7 +248,6 @@ __all__ = [
     "RawByteManifestError",
     "RecordManifest",
     "RecordManifestEntry",
-    "RECORD_MANIFEST_SCHEMA_VERSION",
     "RelativeCosineThresholds",
     "ResolutionResult",
     "ResolvedTarget",
@@ -255,6 +258,7 @@ __all__ = [
     "Rung2Decision",
     "Rung2InputError",
     "Rung2InputProvenance",
+    "Rung2QueryAliasAuthority",
     "Rung2SearchBundle",
     "SearchRecord",
     "SearchRecordBase",
@@ -284,8 +288,8 @@ __all__ = [
     "build_record_manifest",
     "build_rung2_compilation_inputs",
     "build_rung2_search_bundle",
-    "canonical_query_tokens",
     "canonical_json_bytes",
+    "canonical_query_tokens",
     "canonical_vocabulary",
     "canonical_vocabulary_bytes",
     "compile_and_write_rung2_search_bundle",

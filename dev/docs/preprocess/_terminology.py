@@ -48,9 +48,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
             )
         ]
 
-    units = split_units_by_budget(
-        [PreprocessUnit(text=text, title=source.stem, section="concept")]
-    )
+    units = split_units_by_budget([PreprocessUnit(text=text, title=source.stem, section="concept")])
     return [
         PreprocessOutput(
             source_kind=SourceDocumentKind.TERMINOLOGY_CONCEPT,

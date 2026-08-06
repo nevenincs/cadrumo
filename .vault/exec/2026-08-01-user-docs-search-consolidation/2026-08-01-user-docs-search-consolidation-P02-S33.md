@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:3ed45b78dba7c5851d26f45d50a2de630e9d8e6b569352374a16108d1bf3f620'
+body_hash: 'sha256:cade6eca5c43d2acbcba0088f49fc486af13c34aa5014db9f83cb4b12af49612'
 step_id: 'S33'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -51,3 +51,7 @@ completed successfully
 - The review finding was grounded against the accepted Update 11 ADR and the current browser validator; the browser was still enforcing the pre-amendment flat provenance shape.
 - The rerun of the failed full-text browser case passed in isolation. The multi-test run remains recorded as a partial/unverified boundary rather than being waved through.
 - Deployment remains deferred and Rung-2 acceptance remains open.
+
+### 2026-08-06 follow-up review hardening
+
+The adjacent P02.S32 provenance review also added a raw-byte/model identity tamper guard; the complete Rung-2 suite remains `62 passed in 8.67s`. The browser correction itself remains source-only and Rung-2 stays disabled.

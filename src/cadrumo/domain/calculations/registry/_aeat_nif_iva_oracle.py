@@ -28,7 +28,7 @@ from pydantic import AnyUrl, Field, field_validator
 
 from ....core.config import Settings
 from ._checker_oracle_flow import (
-       CheckerBaseModel,
+    CheckerBaseModel,
     compare_verdict_field,
     decode_replay_observation,
     normalize_expected_verdicts,

@@ -58,9 +58,7 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     rules = data["rule"]
     assert len(rules) == 6
     for rule in rules:
-        assert rule["pattern"].startswith(
-            ("src/cadrumo/_data/corpus/", "src/cadrumo/_data/terminology/concepts/")
-        )
+        assert rule["pattern"].startswith(("src/cadrumo/_data/corpus/", "src/cadrumo/_data/terminology/concepts/"))
         assert _HOOK_COMMAND in rule["command"]
         assert rule["on_error"] == "skip"
         assert rule["timeout_s"] > 0

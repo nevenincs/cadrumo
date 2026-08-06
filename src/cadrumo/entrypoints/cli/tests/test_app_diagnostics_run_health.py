@@ -211,18 +211,34 @@ def test_run_health_payloads_mirror_their_canonical_bounds() -> None:
     assert provider_row.min_duration_ms is None
 
     for label, model, base, override in (
-        ("empty provider", LlmRunProviderPayload,
-         {"provider": "claude", "runs": 1, "succeeded": 1, "failed": 0}, {"provider": ""}),
-        ("negative runs", LlmRunProviderPayload,
-         {"provider": "claude", "runs": 1, "succeeded": 1, "failed": 0}, {"runs": -1}),
+        (
+            "empty provider",
+            LlmRunProviderPayload,
+            {"provider": "claude", "runs": 1, "succeeded": 1, "failed": 0},
+            {"provider": ""},
+        ),
+        (
+            "negative runs",
+            LlmRunProviderPayload,
+            {"provider": "claude", "runs": 1, "succeeded": 1, "failed": 0},
+            {"runs": -1},
+        ),
         ("empty run id", RunRecordPayload, _RUN_RECORD_BASE, {"run_id": ""}),
         ("empty caller", RunRecordPayload, _RUN_RECORD_BASE, {"caller": ""}),
         ("negative duration", RunRecordPayload, _RUN_RECORD_BASE, {"duration_ms": -1}),
         ("negative entries", LatencyPercentilesPayload, {"entries": 1}, {"entries": -1}),
-        ("empty error kind", ErrorKindCountPayload,
-         {"error_kind": "timeout", "provider": "claude", "count": 1}, {"error_kind": ""}),
-        ("zero error count", ErrorKindCountPayload,
-         {"error_kind": "timeout", "provider": "claude", "count": 1}, {"count": 0}),
+        (
+            "empty error kind",
+            ErrorKindCountPayload,
+            {"error_kind": "timeout", "provider": "claude", "count": 1},
+            {"error_kind": ""},
+        ),
+        (
+            "zero error count",
+            ErrorKindCountPayload,
+            {"error_kind": "timeout", "provider": "claude", "count": 1},
+            {"count": 0},
+        ),
     ):
         model.model_validate(base)  # positive control: the base must be accepted
         try:

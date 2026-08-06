@@ -101,9 +101,7 @@ def test_iva_rate_numeric_kinds_match_registry_served_window() -> None:
     """Every :class:`IvaRate` numeric slot maps to a registry kind the served window resolves, and no more."""
     registry_kinds = _registry_numeric_kinds_for_served_window()
     enum_kinds = frozenset(
-        kind
-        for member in IvaRate
-        if (kind := iva_rate_kind(member)) is not None and kind in _NUMERIC_RATE_KINDS
+        kind for member in IvaRate if (kind := iva_rate_kind(member)) is not None and kind in _NUMERIC_RATE_KINDS
     )
 
     assert enum_kinds == registry_kinds, (

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:be6e6c399f254026e3ad0a258ea4ae766e2d2c6f571c8982ad847d8bd59eeeeb'
+body_hash: 'sha256:8cfecdd2bf1025b4dd4d8f3bcfdedb5f6bbaffb79c11c1c0414d22aae76554a3'
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S01]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S02]]'
@@ -26,20 +26,46 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S12]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S13]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S20]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P03-S37]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P03-S38]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P03-S39]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P04-S14]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P04-S36]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S15]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S16]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S17]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S22]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S23]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S24]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S25]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P05-S26]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S28]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S29]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S30]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S31]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S32]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S33]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S34]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P05-S35]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S40]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S41]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S42]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S43]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S44]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S45]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S47]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S49]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S50]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S51]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S52]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S53]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S56]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-loader-fingerprint-format-trap-audit]]'
   - '[[2026-08-05-ledger-invoice-decomposition-plan]]'
   - '[[2026-08-05-ledger-invoice-decomposition-reference]]'
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
+  - '[[2026-08-06-ledger-invoice-decomposition-iva-deduction-ratio-producer-research]]'
 ---
 
 # `ledger-invoice-decomposition` feature index
@@ -84,7 +110,32 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 - `2026-08-05-ledger-invoice-decomposition-P05-S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded
 - `2026-08-05-ledger-invoice-decomposition-P05-S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously
 - `2026-08-05-ledger-invoice-decomposition-P05-S26` - Name the dropped retencion credit in the ungrounded advisory, not only the income mis-measurement, since the lost credit is the larger half of the harm
+- `2026-08-05-ledger-invoice-decomposition-P03-S37` - Let an invoice record that its customer is under recargo de equivalencia, so an unrecorded surcharge stops being indistinguishable from one that does not apply
 - `2026-08-05-ledger-invoice-decomposition-P03-S38` - Let the income aggregation read a linked sales invoice for its base, cuota and retencion, following the derive-on-read shape the expense pipeline already proves
+- `2026-08-05-ledger-invoice-decomposition-P03-S39` - Let a general-regime row carry its art. 75 devengo date, so IVA stops being attributed to the bank movement date for the one regime whose law binds it to the operation date
+- `2026-08-05-ledger-invoice-decomposition-P04-S36` - Decide whether the external-grounding gate admits bound casillas, since a bound value is as oracle-checkable as a computed one, before amending the S15 and S16 Step texts
+- `2026-08-05-ledger-invoice-decomposition-P05-S25` - Gate every advisory message builder as constructible at zero, one and many items against its own model's declared cap, read from the field rather than restated
+- `2026-08-05-ledger-invoice-decomposition-P05-S28` - Drive a received invoice through to the committed Modelo 111 binding values, asserting the filed casillas against the invoice figures rather than stopping at the aggregation totals
+- `2026-08-05-ledger-invoice-decomposition-P05-S29` - Drive the same invoice through to the committed Modelo 303 repercutido bindings so the IVA leg reaches a filed casilla like the income and retenciones legs already do
+- `2026-08-05-ledger-invoice-decomposition-P05-S30` - Reconcile the duplicated binding-level assertions between the cross-domain scenario and the rated oracle module, keeping one owner for the shared claim
+- `2026-08-05-ledger-invoice-decomposition-P05-S31` - Read the statutory retencion rate from the registry general_rate at every oracle expectation site, reserving the bound accessor for assertions genuinely about the inference cap
+- `2026-08-05-ledger-invoice-decomposition-P05-S32` - Add a sub-cap oracle case on the 7 percent inicio-de-actividad registry rate so the bound is calibrated at more than one point
+- `2026-08-05-ledger-invoice-decomposition-P05-S33` - Extract the shared oracle fixture scaffolding while keeping each test body separate, so a scenario change lands once
+- `2026-08-05-ledger-invoice-decomposition-P05-S34` - Bundle the PGC norms cited in the oracle docstrings, or mark them not-yet-bundled so the citation stops asserting grounding it lacks
+- `2026-08-05-ledger-invoice-decomposition-P05-S35` - Restore the marker integrity the two campaign-owned test modules broke, so the marker gate stops reporting a campaign surface as unclassified
+- `2026-08-05-ledger-invoice-decomposition-P06-S40` - Bundle RD 1619/2012 articles 6 and 11 from BOE consolidated text, since only article 2 ships today and article 6 is the authority the schema field set derives from
+- `2026-08-05-ledger-invoice-decomposition-P06-S41` - Let the invoice record its fecha de operacion, so the art. 75 devengo date has an authoritative source instead of the issue-date proxy
+- `2026-08-05-ledger-invoice-decomposition-P06-S42` - Let the invoice carry a suplido, which joins total and cash while joining neither base nor cuota, taking a third position on the identity rather than a second recargo
+- `2026-08-05-ledger-invoice-decomposition-P06-S43` - Let a factura rectificativa name what it corrects, so the cuota rectification LIVA article 89 requires becomes representable
+- `2026-08-05-ledger-invoice-decomposition-P06-S44` - Key the counterparty tax-id requirement to the three cases article 6.1.d enumerates, and in those same cases require a structurally-valid NIF-IVA rather than any tax id, so an intra-community supply stops accepting a domestic number
+- `2026-08-05-ledger-invoice-decomposition-P06-S45` - Represent pagos anticipados so a prepayment devengues on collection for the amount received, honouring the article 25 exclusion
+- `2026-08-05-ledger-invoice-decomposition-P06-S47` - Wire route_invoice_retenciones into the invoice lifecycle so a received invoice's retencion reaches Modelo 111, asserting the filed figure moves rather than that the projection returns a value
+- `2026-08-05-ledger-invoice-decomposition-P06-S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides
+- `2026-08-05-ledger-invoice-decomposition-P06-S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases
+- `2026-08-05-ledger-invoice-decomposition-P06-S51` - Bundle RD 1619/2012 art. 4 and refuse a factura simplificada for an entrega intracomunitaria exenta (art. 4.4.a), declaring the amount-threshold and sector-list eligibility axis unverified pending an ADR amendment
+- `2026-08-05-ledger-invoice-decomposition-P06-S52` - Carry recargo de equivalencia inside the ledger transaction totals identity, so the substrate Modelo 303 and 130 actually read stops refusing the truthful row and accepting the falsified one
+- `2026-08-05-ledger-invoice-decomposition-P06-S53` - Refuse a missing --total-amount on the slim invoice add CLI verb instead of silently defaulting the total to zero, since the total drives whether a counterparty is declared at all under the RD 1065/2007 art. 31 Modelo 347 threshold
+- `2026-08-05-ledger-invoice-decomposition-P06-S56` - Join the non-deductible share of a fact's input IVA to the IRPF-deductible cost basis via a new RentaDeductibilityContext.iva_deduction_ratio axis, grounded on the AEAT Manual practico Renta 2024 medico radiologo nota 7 worked example (activity exempt from IVA, no right to deduct), leaving the axis unwired from any production taxpayer-fact source as a named follow-up
 
 ### plan
 
@@ -97,4 +148,4 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 ### research
 
 - `2026-08-05-ledger-invoice-decomposition-research` - `ledger-invoice-decomposition` research: `Calculation chain fragmentation across ledger, invoice, modelo and engine`
-- `2026-08-06-ledger-invoice-decomposition-research` - `ledger-invoice-decomposition` research: `{topic}`
+- `2026-08-06-ledger-invoice-decomposition-iva-deduction-ratio-producer-research` - `ledger-invoice-decomposition` research: `iva_deduction_ratio producer design (open, unresolved)`

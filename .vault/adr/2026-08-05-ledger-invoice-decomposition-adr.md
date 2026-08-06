@@ -9,6 +9,7 @@ body_hash: 'sha256:19586f96c8844c2802e45d0f7ecc51df1151ac44541320aa039db1b9a5e9f
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
+  - '[[2026-08-06-ledger-invoice-decomposition-iva-deduction-ratio-producer-research]]'
 ---
 # `ledger-invoice-decomposition` adr: `Invoice decomposition and income grounding` | (**status:** `proposed`)
 

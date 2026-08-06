@@ -1085,8 +1085,7 @@ def cuota_less_m303_categories_from_table() -> frozenset[IvaCategory]:
         category
         for category, rows in arising.items()
         if all(
-            row.cuota is IvaComponentPresence.ZERO_BY_LAW
-            or row.cuota_settlement is IvaCuotaSettlement.REGIMEN_ESPECIAL
+            row.cuota is IvaComponentPresence.ZERO_BY_LAW or row.cuota_settlement is IvaCuotaSettlement.REGIMEN_ESPECIAL
             for row in rows
         )
     )

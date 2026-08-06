@@ -210,6 +210,4 @@ def test_no_bare_directory_name_literal_survives_in_the_layout_module() -> None:
         storage_location(StorageCategory.BUCKET_AUDIT).subpath,
     )
     for name in governed:
-        assert name not in literals, (
-            f"_layout.py re-types the governed layout name {name!r}; read the taxonomy instead"
-        )
+        assert name not in literals, f"_layout.py re-types the governed layout name {name!r}; read the taxonomy instead"

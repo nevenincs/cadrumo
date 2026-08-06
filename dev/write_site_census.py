@@ -995,8 +995,7 @@ def main(argv: list[str] | None = None) -> int:
     # this line exists to prevent, especially under --scope tests where
     # tracing hits it far more often than production.
     print(
-        f"unresolved rate {unresolved_rate:.0%} ({unresolved_count} of {len(sites)}) "
-        "-- read these, do not trust them",
+        f"unresolved rate {unresolved_rate:.0%} ({unresolved_count} of {len(sites)}) -- read these, do not trust them",
     )
     for provenance, count in Counter(site.provenance for site in sites).most_common():
         print(f"  {provenance:14s} {count:4d}")

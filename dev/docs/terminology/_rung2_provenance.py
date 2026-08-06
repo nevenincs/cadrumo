@@ -20,6 +20,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, StringConstraints, field_validator
 
+from ._rung2_query_authority import QueryAliasAuthorityProvenance
 from ._static_matrix import (
     canonical_query_tokens,
     canonical_vocabulary,
@@ -28,6 +29,7 @@ from ._static_matrix import (
 )
 
 __all__ = [
+    "QueryAliasAuthorityProvenance",
     "Rung2InputProvenance",
     "build_rung2_input_provenance",
 ]
@@ -50,6 +52,7 @@ class Rung2InputProvenance(BaseModel):
 
     source_relpath: _RepositoryRelativePath
     source_sha256: _Sha256
+    query_alias_authority: QueryAliasAuthorityProvenance
     vocabulary_sha256: _Sha256
     query_token_sha256: _Sha256
 
@@ -72,6 +75,7 @@ def build_rung2_input_provenance(
     source_bytes: bytes,
     vocabulary: Iterable[str],
     query_tokens: Iterable[str],
+    query_alias_authority: QueryAliasAuthorityProvenance,
 ) -> Rung2InputProvenance:
     """Build deterministic provenance from raw bytes and canonical input material.
 
@@ -85,6 +89,7 @@ def build_rung2_input_provenance(
     return Rung2InputProvenance(
         source_relpath=source_relpath,
         source_sha256=sha256(source_bytes).hexdigest(),
+        query_alias_authority=query_alias_authority,
         vocabulary_sha256=vocabulary_fingerprint(canonical_terms),
         query_token_sha256=query_token_fingerprint(canonical_tokens),
     )

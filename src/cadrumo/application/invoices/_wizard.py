@@ -198,6 +198,50 @@ def _validate_iva_rate(raw: str | None) -> Decimal | None:
     return value
 
 
+def _validate_retention_amount(raw: str | None) -> Decimal | None:
+    """Validate the operator-typed RIRPF art. 95 retención amount.
+
+    A blank or absent value is a legitimate "no retención" declaration, not a
+    refusal: most catalogue invoices carry none. Never derived from a rate --
+    :class:`Invoice`'s own ``_validate_retencion_consistency`` is the single
+    place that checks amount-vs-rate-vs-base_total consistency; this helper
+    only rejects a malformed or negative token.
+    """
+    if raw is None:
+        return None
+    if not raw.strip():
+        return None
+    value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if value is None:
+        raise _WizardFieldError(field="retention_amount", reason=f"invalid decimal amount: {raw!r}")
+    if value < 0:
+        raise _WizardFieldError(field="retention_amount", reason="must not be negative")
+    return value
+
+
+def _validate_retention_rate(raw: str | None) -> Decimal | None:
+    """Validate the operator-typed RIRPF art. 95 retención rate.
+
+    A fraction, matching :attr:`Invoice.retention_rate` (0.15 for the general
+    15 %, 0.07 during the RIRPF art. 95.1 párrafo 2 inicio-de-actividad
+    window) -- never a percentage. The upper bound catches a percentage
+    written into this fractional field.
+    """
+    if raw is None:
+        return None
+    if not raw.strip():
+        return None
+    value = try_parse_canonical_decimal(raw)
+    if value is None:
+        raise _WizardFieldError(field="retention_rate", reason=f"invalid decimal fraction: {raw!r}")
+    if value < 0 or value > 1:
+        raise _WizardFieldError(
+            field="retention_rate",
+            reason="must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
+        )
+    return value
+
+
 def _validate_country_code(raw: str) -> str:
     try:
         return validate_country_code(raw)
@@ -227,6 +271,8 @@ def create_invoice_via_wizard(
     notes: str = "",
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
+    retention_rate: str | None = None,
+    retention_amount: str | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceWizardResult:
     """Validate every field, then create (or resolve) one catalogue invoice.
@@ -254,6 +300,11 @@ def create_invoice_via_wizard(
         notes: Free-text notes.
         iva_category: Optional intra-community IVA classification.
         operation_type: Optional Modelo 349 operation-type clave.
+        retention_rate: Raw RIRPF art. 95 retención fraction string (0.15 /
+            0.07), or ``None``/blank for no declared rate. Requires
+            ``retention_amount``; never derives it.
+        retention_amount: Raw RIRPF art. 95 retención euro amount string, or
+            ``None``/blank for no declared retención.
         repository: Optional injected catalogue repository (tests).
 
     Returns:
@@ -314,6 +365,18 @@ def create_invoice_via_wizard(
     except _WizardFieldError as exc:
         field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
 
+    resolved_retention_amount: Decimal | None = None
+    try:
+        resolved_retention_amount = _validate_retention_amount(retention_amount)
+    except _WizardFieldError as exc:
+        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
+
+    resolved_retention_rate: Decimal | None = None
+    try:
+        resolved_retention_rate = _validate_retention_rate(retention_rate)
+    except _WizardFieldError as exc:
+        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
+
     if field_errors:
         joined = "; ".join(f"{err.field}: {err.reason}" for err in field_errors)
         raise InvoiceValidationError(
@@ -346,6 +409,8 @@ def create_invoice_via_wizard(
             notes=notes,
             iva_category=iva_category,
             operation_type=operation_type,
+            retention_rate=resolved_retention_rate,
+            retention_amount=resolved_retention_amount,
         )
     except (InvoiceValidationError, ValidationError, CoreValidationError) as exc:
         reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
@@ -378,6 +443,8 @@ def create_invoice_via_wizard(
         notes=notes,
         iva_category=iva_category,
         operation_type=operation_type,
+        retention_rate=resolved_retention_rate,
+        retention_amount=resolved_retention_amount,
         repository=repo,
     )
     return InvoiceWizardResult(invoice=result.invoice, already_existed=False)

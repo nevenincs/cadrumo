@@ -194,8 +194,7 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     # ledger backend package so the backend-owned tokens are found wherever the
     # decomposition relocated them.
     ledger_backend = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted((REPO_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
+        path.read_text(encoding="utf-8") for path in sorted((REPO_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
     )
     forbidden_cli_tokens = (
         "CsvProvider",
