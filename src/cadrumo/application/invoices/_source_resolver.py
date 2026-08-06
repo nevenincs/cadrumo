@@ -339,7 +339,26 @@ def _is_m347_declarante_summary_binding(binding: DataBindingDefinition) -> bool:
 
 
 def _invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> bool:
-    if invoice.bucket_id != context.bucket_id:
+    """Whether this invoice is declarable for the context's bucket and period.
+
+    Only a POPULATED, mismatching bucket excludes. An unattributed invoice
+    belongs to the store it was loaded from, and that store is opened against
+    ``context.bucket_id`` -- with ``InvoiceCatalogueRepository`` refusing a
+    foreign row on read, so nothing another bucket owns reaches here.
+
+    Treating ``None`` as a mismatch is what this reads as if the check is
+    written against the bucket id alone, and it is silent: an unattributed
+    invoice compares unequal to every real bucket, so it drops out of M347 and
+    M349 with no defect, no advisory and no refusal. Nothing downstream of the
+    filter can tell "this taxpayer had no such operations" apart from "the
+    filter discarded them", which is the shape a declaration must never take.
+
+    This is the same rule the persistence guard applies, deliberately: the two
+    layers previously disagreed about whether an unattributed invoice was
+    normal, and a disagreement about that between the store and the projection
+    is resolved in favour of declaring.
+    """
+    if invoice.bucket_id is not None and invoice.bucket_id != context.bucket_id:
         return False
     return _date_in_period(invoice.issued_at, period=context.period)
 

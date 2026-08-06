@@ -121,11 +121,23 @@ class InvoiceCatalogueRepository:
         Applied on both directions through one helper: a check on only one of
         them leaves the other as the way in.
 
-        ``bucket_id is None`` is UNATTRIBUTED, not foreign, and is allowed --
-        the field is optional and most invoices carry no bucket at all. Only a
-        populated, mismatching bucket is refused. A repository constructed with
-        an injected store and no resolved bucket has nothing to compare against
-        and checks nothing.
+        ``bucket_id is None`` is UNATTRIBUTED, not foreign, and is allowed.
+        Only a populated, mismatching bucket is refused. A repository
+        constructed with an injected store and no resolved bucket has nothing
+        to compare against and checks nothing.
+
+        That tolerance is deliberate but it is NOT evidence that unattributed
+        invoices are ordinary. An earlier form of this docstring justified the
+        allowance by asserting that most invoices carry no bucket at all, and
+        the writers refute it: ``create_catalogue_invoice`` types ``bucket_id``
+        as a required ``str``, and each of its production callers -- the CLI
+        create verb, the evidence confirm boundary, the guided wizard and the
+        bulk importer -- resolves one before calling. No production path
+        persists an unattributed invoice. The allowance covers injected-store
+        test seams and keeps a legitimately-unattributed record readable rather
+        than stranding it; it does not describe the normal case, and a reader
+        must not conclude from it that leaving the bucket unset is
+        unremarkable.
 
         Raises:
             InvoicePersistenceError: An invoice names a bucket other than the

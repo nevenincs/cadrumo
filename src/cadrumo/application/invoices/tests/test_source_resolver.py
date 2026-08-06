@@ -74,7 +74,7 @@ def secure_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _invoice(
     *,
-    bucket_id: str,
+    bucket_id: str | None,
     kind: InvoiceKind = InvoiceKind.ISSUED,
     invoice_number: str,
     issued_at: date,
@@ -971,3 +971,83 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     canonical_facts = _declarable_facts(_invoice_observation(canonical, context=context))
 
     assert canonical_facts == slim_facts
+
+
+def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """An invoice carrying no bucket must not vanish from the informativas.
+
+    The repository is opened against one bucket and refuses a foreign row on
+    read, so an invoice loaded here came from THIS bucket's encrypted store.
+    An unattributed one therefore belongs to this bucket; it simply never had
+    the redundant field stamped.
+
+    Comparing on the bucket id alone treats that as a mismatch and drops the
+    record from M347 and M349 with no defect, no advisory and no refusal --
+    and nothing downstream can distinguish "this taxpayer had no such
+    operations" from "the filter discarded them". The persistence guard
+    already treats an unattributed record as belonging rather than foreign, so
+    before this the two layers disagreed about the same record.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    unattributed = _invoice(
+        bucket_id=None,
+        invoice_number="F-2026-UNATTRIBUTED",
+        issued_at=date(2026, 1, 15),
+        counterparty_tax_id="DE123456789",
+        base_total=Decimal("1000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    )
+    repository.save(InvoiceCatalogue.from_invoices((unattributed,)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("1000.00")
+
+
+def test_an_invoice_naming_another_bucket_is_still_excluded(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Positive control: the attribution filter is narrowed, not removed.
+
+    Admitting unattributed invoices must not admit invoices that positively
+    name a DIFFERENT bucket. Without this control the change above would read
+    as correct while having disabled cross-bucket isolation, which is a
+    confidentiality failure rather than a declaration one -- one taxpayer's
+    invoice surfacing in another's return.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    foreign = _invoice(
+        bucket_id=_OTHER_BUCKET_ID,
+        invoice_number="F-2026-FOREIGN",
+        issued_at=date(2026, 1, 16),
+        counterparty_tax_id="DE987654321",
+        base_total=Decimal("500.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    )
+    repository.save(InvoiceCatalogue.from_invoices((foreign,)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
+    assert resolution.provenance == ()
