@@ -19,7 +19,6 @@ from ...application.ledger import (
     PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
     archive_manual_transaction,
-    attach_manual_transaction_evidence,
     compute_display_id_width,
     mark_transaction_reviewed_excluded,
     merge_transactions,
@@ -101,6 +100,8 @@ def ledger_attach(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.attach.actor_help")),
 ) -> None:
     """Attach existing secure evidence objects to one ledger transaction."""
+    from ...application.ledger import attach_manual_transaction_evidence
+
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -240,6 +241,7 @@ def ledger_doclink(
     from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
     from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
+    from ...application.ledger import attach_manual_transaction_evidence
     from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
     attachment_source = source.to_attachment_source()

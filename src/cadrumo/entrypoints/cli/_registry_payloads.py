@@ -23,6 +23,7 @@ from datetime import datetime
 
 from pydantic import Field
 
+from ...core.json_contract import OutputSchema, register_schema
 from ...domain.calculations.registry import (
     CrossReferenceApplicabilityDeclaracion,
     ExportLayoutId,
@@ -39,7 +40,6 @@ from ...domain.calculations.registry import (
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
 )
-from ._schemas import OutputSchema, register_schema
 
 
 class RegistryWorkbookParityDetailPayload(OutputSchema):

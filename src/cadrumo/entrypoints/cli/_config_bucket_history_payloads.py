@@ -29,13 +29,13 @@ from datetime import datetime
 
 from pydantic import Field
 
+from ...core.json_contract import OutputSchema, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
     BucketEventObjectType,
     BucketEventType,
 )
-from ._schemas import OutputSchema, register_schema
 
 
 class BucketHistoryEventPayload(OutputSchema):

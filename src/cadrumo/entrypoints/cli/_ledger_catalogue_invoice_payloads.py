@@ -30,9 +30,9 @@ from pydantic import Field, model_validator
 
 from ...core import IntracomOperationType
 from ...core.identity import BucketId, TransactionId, validate_spanish_tax_id
+from ...core.json_contract import OutputSchema, register_schema
 from ...domain.invoices import InvoiceId, PaymentStatus, validate_country_code, validate_iva_number
 from ...domain.iva import InvoiceKind
-from ._schemas import OutputSchema, register_schema
 
 
 class CatalogueInvoiceRecordPayload(OutputSchema):

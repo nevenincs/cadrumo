@@ -33,6 +33,7 @@ from ...application.calculations import ObservationSourceKind
 from ...application.modelo import validate_modelo_work_deadline_posture
 from ...core import BindingSourceKind, Period
 from ...core.identity import BucketId
+from ...core.json_contract import OutputSchema, register_schema
 from ...domain.buckets import (
     BucketActorLabel,
     BucketEventId,
@@ -110,7 +111,6 @@ from ._payloads_modelo_reconcile import (
     ModeloReconciliationDiffPayload,
     WorkCompareTaxationResult,
 )
-from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloExportResult as _AppModeloExportResult

@@ -1,7 +1,7 @@
 """Review-package build/verify CLI payload schemas.
 
-Strict :class:`~entrypoints.cli._schemas.OutputSchema` subclasses registered
-through :func:`~entrypoints.cli._schemas.register_schema` for the ``aeat app
+Strict :class:`~core.json_contract.OutputSchema` subclasses registered
+through :func:`~core.json_contract.register_schema` for the ``aeat app
 modelo review-package build`` and ``aeat app modelo review-package verify``
 verbs. Kept in its own module (mirroring the ``_modelo_aux_payloads`` split
 for the evidence-bundle audit payloads) so the review-package CLI surface has
@@ -32,8 +32,8 @@ from pydantic import Field
 
 from ...core import HEX_PATTERN_64, Period
 from ...core.identity import BucketId
+from ...core.json_contract import OutputSchema, register_schema
 from ...domain.modelos import CalculationRevisionId, WorkUnitId
-from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("modelo.review_package.build")

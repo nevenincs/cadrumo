@@ -1,28 +1,51 @@
-"""Characterisation of the pre303 alert-modal dismissal divergence.
+"""Characterisation of the pre303 alert-modal dismissal, post-collapse.
 
 Round-3 semantic duplicate discovery found `_dismiss_pre303_alert_modal_if_present`
 implemented twice -- once in `auth._clave_movil_page_flow` (a method on
 `_ClaveMovilPageFlowMixin`), once in `sede._iva_compensation_wallet` (a free
 function) -- with no cross-reference between the two, and TWO real
 behavioural divergences rather than a calling-convention difference: (1) the
-auth copy checks the modal's CSS `"show"` class before acting at all, the
-wallet copy does a raw substring check on the page HTML with no class-state
-test; (2) the auth copy tries several continue-button selector variants with
+auth copy checked the modal's CSS `"show"` class before acting at all, the
+wallet copy did a raw substring check on the page HTML with no class-state
+test; (2) the auth copy tried several continue-button selector variants with
 a generic fallback, the wallet copy tried exactly one constructed selector
 with no fallback.
 
-Neither implementation had any test coverage before this module. This module
-started as a CHARACTERISATION pass -- pinning what each implementation did,
-not what it should do -- so the class-gate question (1) could be decided on
-evidence. That question is still held pending real-page evidence: it REMOVES
-an action (the wallet declining to click), and this synthetic fixture cannot
-prove that removal safe on AEAT's actual page. The fallback question (2) was
-judged STRICTLY ADDITIVE -- a candidate selector can only succeed where the
-current code already failed, so no working click path can regress -- and was
-promoted into `adapters.outbound.aeat._representation_gate` in the same
-landing that updated this module's fallback tests to match. The class-gate
-tests below remain a live characterisation of a held decision; the fallback
-tests below now characterise the POST-promotion shared behaviour.
+This module started as a CHARACTERISATION pass -- pinning what each
+implementation did, not what it should do -- so the class-gate question (1)
+could be decided on evidence rather than argument. The four cells it produced:
+
+    ==========  =================  ===================
+                shown              present-but-hidden
+    ==========  =================  ===================
+    auth        clicks             declines
+    wallet      clicks             ALSO clicks
+    ==========  =================  ===================
+
+Two separate rulings followed, on two different timelines. The fallback
+axis (2) was judged STRICTLY ADDITIVE -- a candidate selector can only
+succeed where the current code already failed, so no working click path can
+regress -- and was promoted immediately. The class-gate axis (1) was
+initially HELD: it REMOVES an action (the wallet declining to click), and
+the synthetic fixture below cannot prove that removal safe on AEAT's actual
+page. That hold was subsequently OVERRIDDEN by operator directive: the two
+independent implementations were ruled a critical double declaration, and
+the auth predicate -- checking the modal actually carries `"show"` before
+acting -- was ruled canonical. The wallet's substring-only version is
+deleted, not kept as an alternative, per
+:func:`~adapters.outbound.aeat.dismiss_pre303_alert_modal_if_present`.
+
+**The residual risk the override accepts does not disappear because the
+directive arrived.** The synthetic fixture proves the two implementations
+differed on the structure their own selector-construction code expects, not
+that the class-check is correct against AEAT's real page. If the wallet's
+modal can render shown WITHOUT the `"show"` class on that specific page, this
+collapse trades a demonstrated over-click risk for an undemonstrated hang
+risk. That is why the wallet caller now supplies a diagnostic
+(`on_declined_hidden_modal`) that must surface in its own log output when it
+declines -- see `test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal`
+below. The evidence that would close this gap for good -- a real capture of
+the modal in both states, or an observed live run -- still does not exist.
 
 ## Fixture provenance
 
@@ -35,16 +58,18 @@ implementations actually inspect (`#alertsModal`, its `class` attribute, and
 one continue button), using the real configured selectors
 (`Settings.external_constants().aeat.pre303.alert_modal_selector` /
 `.alert_continue_button_text`) rather than invented ones. It proves the two
-implementations differ on the structure AS WE UNDERSTAND IT from reading their
-selector-construction code -- which is weaker than proving they differ on
-AEAT's real page, since the real page's exact markup (surrounding modal
-framework classes, whether the button carries additional wrapper elements) is
-unverified. Treat every assertion below as "given this reasonable synthetic
-shape," not "given AEAT's actual page."
+implementations differ (and, post-collapse, now agree) on the structure AS WE
+UNDERSTAND IT from reading their selector-construction code -- which is
+weaker than proving their behaviour matches AEAT's real page, since the real
+page's exact markup (surrounding modal framework classes, whether the button
+carries additional wrapper elements) is unverified. Treat every assertion
+below as "given this reasonable synthetic shape," not "given AEAT's actual
+page."
 """
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Awaitable, Callable
 
 import pytest
@@ -75,7 +100,8 @@ _HTML_SHOWN = f"""
 
 # SYNTHETIC — identical to _HTML_SHOWN except the modal carries no "show"
 # class: present in the DOM, not visually up. This is the state the two
-# implementations are hypothesised to treat differently.
+# pre-collapse implementations treated differently, and the collapsed
+# canonical predicate now treats identically for both callers.
 _HTML_HIDDEN = f"""
 <html><body>
   <div id="{_MODAL_SELECTOR.lstrip('#')}" class="modal" role="dialog">
@@ -89,8 +115,8 @@ _HTML_HIDDEN = f"""
 # SYNTHETIC — shown, but the continue button's own text does not contain the
 # configured button text at all (an icon-only or differently-worded button is
 # a real AEAT UI possibility not excluded by anything either implementation
-# checks). Isolates the auth path's ".modal-footer button[type=\"button\"]"
-# fallback selector, which the wallet path has no equivalent for.
+# checks). Isolates the generic ".modal-footer button[type=\"button\"]"
+# fallback selector.
 _HTML_SHOWN_UNLABELLED_BUTTON = f"""
 <html><body>
   <div id="{_MODAL_SELECTOR.lstrip('#')}" class="modal show" role="dialog">
@@ -106,11 +132,11 @@ class _FakePage:
     """Minimal page double exposing only `content()` / `click()`.
 
     `click()` decides success by an explicit, hand-declared predicate over the
-    exact selector strings the two real implementations are known to
-    construct (read from their source, not reimplemented) -- it is not a CSS
-    engine. `PlaywrightError` is raised for a selector this predicate says
-    would not match, mirroring the timeout-then-raise behaviour of a real
-    Playwright `page.click()` against a selector with zero matches.
+    exact selector strings the real implementation is known to construct
+    (read from source, not reimplemented) -- it is not a CSS engine.
+    `PlaywrightError` is raised for a selector this predicate says would not
+    match, mirroring the timeout-then-raise behaviour of a real Playwright
+    `page.click()` against a selector with zero matches.
     """
 
     def __init__(self, html: str, *, click_matches: Callable[[str], bool]) -> None:
@@ -139,11 +165,6 @@ def _matches_when_shown_unlabelled(selector: str) -> bool:
     return ".show" in selector and "modal-footer" in selector
 
 
-def _matches_regardless_of_show_class(selector: str) -> bool:
-    """The wallet's selector never requires `.show`, so it matches whenever the modal id and button text agree."""
-    return _MODAL_SELECTOR in selector
-
-
 async def _run_auth(page: _FakePage) -> None:
     provider = ClaveMovilAuthProvider(load_settings())
     await provider._dismiss_pre303_alert_modal_if_present(page)  # noqa: SLF001 -- characterisation of the private method itself
@@ -160,7 +181,7 @@ def _run(coro_factory: Callable[[], Awaitable[None]]) -> None:
 
 
 def test_auth_dismisses_the_modal_when_shown() -> None:
-    """Today: the auth path clicks through when the modal carries the "show" class."""
+    """Cell 1/4: auth clicks through when the modal carries the "show" class."""
     page = _FakePage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_auth(page))
@@ -169,11 +190,10 @@ def test_auth_dismisses_the_modal_when_shown() -> None:
 
 
 def test_auth_declines_when_the_modal_is_present_but_hidden() -> None:
-    """Today: the auth path performs ZERO clicks when the modal lacks the "show" class.
+    """Cell 2/4: auth performs ZERO clicks when the modal lacks the "show" class.
 
-    This is the class-state check the wallet path lacks. It is the auth
-    path's correct-looking behaviour, not asserted here as "correct" -- only
-    as what it currently does.
+    This is now the CANONICAL predicate, not merely "auth's own behaviour" --
+    both callers share this check post-collapse.
     """
     page = _FakePage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
@@ -183,41 +203,70 @@ def test_auth_declines_when_the_modal_is_present_but_hidden() -> None:
 
 
 def test_wallet_dismisses_the_modal_when_shown() -> None:
-    """Today: the wallet path clicks through when the modal is genuinely shown."""
-    page = _FakePage(_HTML_SHOWN, click_matches=_matches_regardless_of_show_class)
+    """Cell 3/4: wallet clicks through when the modal is genuinely shown.
+
+    Post-collapse, the wallet's selectors are ``.show``-scoped too (the
+    canonical predicate is unconditional, not parameterised per caller), so
+    the matching predicate here is the SAME one the auth test above uses --
+    before the collapse this used a `.show`-agnostic predicate instead.
+    """
+    page = _FakePage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_wallet(page))
 
     assert page.attempted_selectors, "wallet path did not attempt to dismiss a shown modal"
 
 
-def test_wallet_ALSO_clicks_when_the_modal_is_present_but_hidden() -> None:
-    """Today: the wallet path clicks the SAME selector even when the modal has no "show" class.
+def test_wallet_now_declines_when_the_modal_is_present_but_hidden() -> None:
+    """Cell 4/4, POST-COLLAPSE: wallet now performs ZERO clicks on a present-but-hidden modal.
 
-    This is the demonstrated divergence, not an inference: `_wallet_dismiss`
-    performs a raw substring check for the modal id anywhere in the page HTML
-    -- present in both `_HTML_SHOWN` and `_HTML_HIDDEN` -- and constructs one
-    selector with no `.show` qualifier, so it cannot distinguish the two
-    states the auth path's class check separates. On AEAT's real live money
-    surface, this is the direction the team lead's ruling identified as
-    dangerous: clicking a continue button because a hidden element's markup
-    happened to be present in the DOM.
+    This is the cell the four-cell table names as CHANGED. Before the
+    collapse this test (as `test_wallet_ALSO_clicks_when_the_modal_is_present_but_hidden`)
+    asserted the opposite -- that the wallet clicked here too, demonstrating
+    the divergence the operator later ruled a critical double declaration.
+    The assertion is inverted deliberately, not silently: if it fails, the
+    collapse has been undone (a second implementation reappeared, or the
+    canonical predicate stopped checking `"show"`), which is exactly the
+    regression this module exists to catch.
     """
-    page = _FakePage(_HTML_HIDDEN, click_matches=_matches_regardless_of_show_class)
+    page = _FakePage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_wallet(page))
 
-    assert page.attempted_selectors, (
-        "wallet path declined to click a hidden modal -- if this assertion ever fails, "
-        "the divergence characterised by this module has been closed and this test (and "
-        "the finding it pins) should be revisited, not silently left red"
+    assert page.attempted_selectors == [], (
+        f"wallet path clicked a modal with no 'show' class: {page.attempted_selectors} "
+        "-- the collapse to the auth predicate has regressed"
     )
 
 
-def test_auth_falls_back_to_the_generic_modal_footer_button_when_unlabelled() -> None:
-    """Today: the auth path's third selector variant catches a button with no matching text.
+def test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The wallet's decline must be visible in its own log output, not silent.
 
-    `_alert_continue_button_selectors` appends
+    Declining is NEW behaviour for the wallet reader (the deleted
+    substring-only version would have clicked in exactly this case), on a
+    live AEAT money-surface reader with an unproven-on-the-real-page
+    predicate, so a decline here must be diagnosable from the wallet's own
+    output rather than read off a stack trace three layers away if the read
+    subsequently stalls. The auth caller passes no diagnostic callback
+    (matching its own unchanged pre-collapse behaviour); this test is
+    wallet-specific.
+    """
+    page = _FakePage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
+
+    with caplog.at_level(logging.WARNING, logger="cadrumo.adapters.outbound.aeat.sede._iva_compensation_wallet"):
+        _run(lambda: _run_wallet(page))
+
+    assert any(
+        "declining to dismiss" in record.message and _MODAL_SELECTOR in record.message for record in caplog.records
+    ), f"expected a WARNING naming the declined modal, got: {[r.message for r in caplog.records]}"
+
+
+def test_auth_falls_back_to_the_generic_modal_footer_button_when_unlabelled() -> None:
+    """The canonical predicate's third selector variant catches a button with no matching text.
+
+    `continue_button_selectors` appends
     `f'{modal_selector}.show .modal-footer button[type="button"]'` as a final
     fallback after the two text-matching variants. This fixture's button
     carries no text matching the configured button text at all, isolating
@@ -233,25 +282,16 @@ def test_auth_falls_back_to_the_generic_modal_footer_button_when_unlabelled() ->
     )
 
 
-def test_wallet_now_shares_the_generic_modal_footer_fallback() -> None:
-    """The selector-fallback axis is UNIFIED (landed after this module first pinned the gap).
+def test_wallet_shares_the_generic_modal_footer_fallback() -> None:
+    """The wallet reaches the SAME fallback the auth path does, via the one shared implementation.
 
-    The team lead's ruling on the four cells split the two divergences:
-    the selector fallback was strictly additive (adding a candidate can
-    only succeed where the current code already failed) and was promoted
-    into `adapters.outbound.aeat._representation_gate.continue_button_selectors`
-    / `click_first_matching_selector`; the "show" class gate was held as a
-    behaviour REMOVAL pending real-page evidence (see the class-gate tests
-    above, still red-line accurate). This test replaces
-    `test_wallet_has_no_fallback_for_an_unlabelled_continue_button`, which
-    pinned the pre-promotion gap and would now fail as a false regression
-    signal if left unchanged -- the gap it named is the one this landing
-    closed.
+    Post-collapse, the wallet's selectors are also ``.show``-scoped (the
+    canonical predicate is unconditional), so this uses the same matching
+    predicate as the auth-side fallback test above -- before the collapse
+    this used a `.show`-agnostic predicate, since the wallet's own selectors
+    were unscoped then.
     """
-    # Wallet selectors are never ".show"-scoped (scoped_to_shown=False), so the
-    # matching predicate here checks only for the fallback shape, unlike the
-    # auth-side predicate above which requires ".show" too.
-    page = _FakePage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=lambda s: "modal-footer" in s)
+    page = _FakePage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=_matches_when_shown_unlabelled)
 
     _run(lambda: _run_wallet(page))
 

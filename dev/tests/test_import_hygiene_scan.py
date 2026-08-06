@@ -107,14 +107,104 @@ def test_find_shim_modules_still_flags_a_non_main_pure_reexport_module() -> None
 
     Guards against the exclusion in the prior test over-broadening to skip
     every import-only module rather than only the ``__main__.py`` entrypoint
-    shape.
+    shape. Previously pointed at ``entrypoints/cli/_schemas.py``, itself a
+    documented Family-2 bridge that has since been retired by its own
+    consumer-repointing commit; ``domain/transactions/_ids.py`` is the
+    current still-committed example of the same genuine shape (a single
+    ``from ...core.identity import TransactionId`` plus ``__all__``, zero
+    real defs), reconfirmed live against the scanner's module-level ``if``/
+    ``try`` branch-flattening fix.
     """
-    reexport_path = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_schemas.py"
+    reexport_path = REPO_ROOT / "src" / "cadrumo" / "domain" / "transactions" / "_ids.py"
     assert reexport_path.is_file()
 
     shims = find_shim_modules([reexport_path], facades={})
 
     assert any(shim.reason == "pure_reexport_shape" for shim in shims)
+
+
+def test_find_shim_modules_does_not_flag_the_real_optional_dependency_fallback() -> None:
+    """``_playwright.py`` defines its fallback classes inside ``if``/``try`` branches, not a shim.
+
+    Was misclassified as ``pure_reexport_shape`` before ``module_body_defs``
+    looked inside module-level ``if TYPE_CHECKING:`` / ``try: ... except
+    ImportError:`` branches: its two real class definitions
+    (``PlaywrightError``, ``PlaywrightTimeoutError``) sit one level below
+    ``tree.body``, where the un-widened walk could not see them. Deleting
+    this module as a documented Family-2 bridge would have broken
+    importability for any installation without the optional ``browser``
+    extra -- a regression dressed as a dedup, so this pins the live file
+    against the real classifier rather than a synthetic stand-in.
+    """
+    playwright_path = REPO_ROOT / "src" / "cadrumo" / "adapters" / "outbound" / "aeat" / "_playwright.py"
+    assert playwright_path.is_file()
+
+    shims = find_shim_modules([playwright_path], facades={})
+
+    assert shims == [], f"_playwright.py must not classify as a shim: {shims}"
+
+
+def test_module_body_defs_sees_a_class_defined_only_inside_a_try_except_branch(tmp_path: Path) -> None:
+    """The general mechanism, isolated from the real fixture: a def inside ``try``/``except`` counts.
+
+    Constructs the minimal synthetic shape the real ``_playwright.py`` fix
+    targets -- an import-only-looking module whose sole real definition sits
+    inside a ``try: import real_thing / except ImportError: class
+    Fallback: ...`` branch -- so this test does not depend on
+    ``_playwright.py`` continuing to exist in this exact shape.
+    """
+    from ..import_hygiene_scan import module_body_defs
+
+    synthetic = tmp_path / "synthetic_optional_dependency_fallback.py"
+    synthetic.write_text(
+        "from __future__ import annotations\n"
+        "try:\n"
+        "    from somewhere import RealThing as Thing\n"
+        "except ImportError:\n"
+        "    class Thing:\n"
+        '        """Fallback used only when the optional dependency is absent."""\n'
+        "\n"
+        '__all__ = ["Thing"]\n',
+        encoding="utf-8",
+    )
+
+    tree = ast.parse(synthetic.read_text(encoding="utf-8"))
+    n_imports, n_defs, n_all = module_body_defs(tree)
+
+    assert n_defs == 1, "a class defined only inside a try/except branch must count as a real def"
+    assert n_imports == 1
+    assert n_all == 1
+
+
+def test_module_body_defs_still_ignores_a_bare_alias_inside_a_conditional_branch(tmp_path: Path) -> None:
+    """Widening the walk into branches must not start counting bare aliases as real defs.
+
+    ``Foo = Bar`` is a re-export alias whether it sits at the top level or
+    inside an ``if``/``try`` branch; the bare-``Name``/``Attribute`` exclusion
+    in :func:`module_body_defs` must apply identically in both places, or the
+    branch-flattening fix would itself manufacture false negatives (a genuine
+    shim built entirely from conditional aliases escaping detection).
+    """
+    from ..import_hygiene_scan import module_body_defs
+
+    synthetic = tmp_path / "synthetic_conditional_alias_only.py"
+    synthetic.write_text(
+        "from __future__ import annotations\n"
+        "import sys\n"
+        "from . import _windows_impl, _posix_impl\n"
+        "if sys.platform == 'win32':\n"
+        "    impl = _windows_impl\n"
+        "else:\n"
+        "    impl = _posix_impl\n"
+        "\n"
+        '__all__ = ["impl"]\n',
+        encoding="utf-8",
+    )
+
+    tree = ast.parse(synthetic.read_text(encoding="utf-8"))
+    _n_imports, n_defs, _n_all = module_body_defs(tree)
+
+    assert n_defs == 0, "a platform-branch bare-Name alias is still an alias, not a real def"
 
 
 def test_walk_module_imports_tolerates_file_removed_after_discovery(tmp_path: Path) -> None:

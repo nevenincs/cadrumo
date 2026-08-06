@@ -28,9 +28,9 @@ from ...application.modelo import (
 )
 from ...core import Modelo
 from ...core.identity import BucketId
+from ...core.json_contract import OutputSchema, register_schema
 from ...domain.modelos import WorkUnitId
 from ._decimal_wire import DecimalWireText
-from ._schemas import OutputSchema, register_schema
 
 
 class ModeloReconciliationDiffPayload(OutputSchema):
