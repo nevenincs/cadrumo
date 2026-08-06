@@ -81,6 +81,36 @@ def verify_legal_reference(
         )
 
 
+def legal_reference_quotes_corpus(
+    reference: LegalReference,
+    quotation: str,
+    *,
+    source_root: Path,
+) -> bool:
+    """Report whether ``quotation`` occurs in ``reference``'s bundled corpus text.
+
+    This is the ``required_text`` presence check above, exposed for a caller
+    that holds a quotation of its own rather than one declared on the reference.
+    The corpus text itself stays private: a caller that could read it could
+    also mint a quotation from it, which would make the check circular.
+
+    Args:
+        reference: The legal reference whose corpus text is authoritative.
+        quotation: Candidate verbatim text.
+        source_root: Repository root the corpus reference resolves against.
+
+    Returns:
+        ``True`` when the normalised quotation is present in the normalised
+        corpus text. An empty quotation is never present.
+
+    Raises:
+        RegistryValidationError: If the corpus evidence cannot be read.
+    """
+    if not quotation.strip():
+        return False
+    return normalise_corpus_text(quotation) in _legal_corpus_text(source_root, reference)
+
+
 def verify_legal_catalogue(
     legal: Mapping[str, LegalReference],
     *,

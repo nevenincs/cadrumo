@@ -6,10 +6,11 @@ already performs:
 * Every :class:`cadrumo.domain.iva.IvaCategory` member must be present.
 * Every regulation must carry at least one
   :class:`cadrumo.domain.iva.IvaCitation`.
-* Every citation must have non-empty
-  :attr:`cadrumo.domain.iva.IvaCitation.quoted_text`.
 * Every citation identity must resolve to a verified, article-qualified
   registry legal reference with bundled corpus evidence.
+* Every citation claiming verified grounding must carry a quotation that
+  actually occurs in that reference's bundled corpus text. Non-emptiness was
+  the prior check and is not grounding: it passes for any string at all.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from ...core.logging import get_logger
 from ._schema import (
     IvaCatalogue,
     IvaCategory,
+    IvaCitationGrounding,
     IvaVerificationIssue,
     IvaVerificationReport,
 )
@@ -37,7 +39,11 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
     """
     # Keep this local: registry binding modules consume the IVA public facade.
     from ...core.resources import bundled_path
-    from ..calculations.registry import bundled_authority, verify_legal_reference
+    from ..calculations.registry import (
+        bundled_authority,
+        legal_reference_quotes_corpus,
+        verify_legal_reference,
+    )
 
     issues: list[IvaVerificationIssue] = []
     legal = bundled_authority().catalogues.legal
@@ -65,12 +71,16 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                 ),
             )
         for citation in regulation.citations:
-            if not citation.quoted_text.strip():
+            # An UNRESOLVED citation is empty by design: it was read against
+            # the corpus and refused, and its reason is recorded beside it.
+            # Flagging it here would erase the distinction between a citation
+            # nobody checked and one that failed the check.
+            if citation.grounding is IvaCitationGrounding.VERIFIED and not citation.quoted_text.strip():
                 issues.append(
                     IvaVerificationIssue(
                         level="error",
                         code="empty_quoted_text",
-                        message=f"citation {citation.legal_reference!r} has empty quoted_text",
+                        message=f"citation {citation.legal_reference!r} claims verified grounding with no quotation",
                         category_id=regulation.category.value,
                     ),
                 )
@@ -107,6 +117,43 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                         code="legal_reference_unverified",
                         message=(
                             f"citation legal_reference {citation.legal_reference!r} has invalid corpus evidence: {exc}"
+                        ),
+                        category_id=regulation.category.value,
+                    ),
+                )
+                continue
+            # A non-empty quotation is not yet grounding. This reads the stored
+            # text back against the bundled corpus, which is the only check that
+            # separates a transcription from an assertion about one.
+            if citation.grounding is not IvaCitationGrounding.VERIFIED:
+                continue
+            try:
+                quoted = legal_reference_quotes_corpus(
+                    reference,
+                    citation.quoted_text,
+                    source_root=bundled_path(),
+                )
+            except Exception as exc:
+                issues.append(
+                    IvaVerificationIssue(
+                        level="error",
+                        code="quotation_uncheckable",
+                        message=(
+                            f"citation {citation.legal_reference!r} quotation could not be read "
+                            f"against the bundled corpus: {exc}"
+                        ),
+                        category_id=regulation.category.value,
+                    ),
+                )
+                continue
+            if not quoted:
+                issues.append(
+                    IvaVerificationIssue(
+                        level="error",
+                        code="quotation_absent_from_corpus",
+                        message=(
+                            f"citation {citation.legal_reference!r} claims verified grounding, but its "
+                            "quotation does not occur in the bundled corpus text for that reference"
                         ),
                         category_id=regulation.category.value,
                     ),

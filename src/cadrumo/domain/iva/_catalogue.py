@@ -17,11 +17,10 @@ from types import MappingProxyType
 from pydantic import TypeAdapter, ValidationError
 
 from ...core import read_toml
-from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError
-from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
+from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationGrounding, IvaRegulation
 
 _OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 _STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
@@ -127,16 +126,11 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
     return IvaRegulation.model_validate(
         {
             "category": category,
-            "label": tr(str(data.get("label"))),
-            "description": tr(str(data.get("description"))),
-            "triggers_when": tr(str(data.get("triggers_when"))),
-            "iva_treatment": tr(str(data.get("iva_treatment"))),
             "requires_reverse_charge": data.get("requires_reverse_charge"),
             "requires_supplier_iva_id": data.get("requires_supplier_iva_id"),
             "manual_references": tuple(manual_refs),
             "citations": tuple(
-                _parse_citation(raw_citation)
-                for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)
+                _parse_citation(raw_citation) for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)
             ),
             "notes": data.get("notes", ""),
         },
@@ -150,7 +144,12 @@ def _parse_citation(raw_citation: object) -> IvaCitation:
     return IvaCitation.model_validate(
         {
             "legal_reference": data.get("legal_reference"),
-            "quoted_text": tr(str(data.get("quoted_text"))),
+            # Inline authoritative Spanish, never resolved through a
+            # translation key: verifying a quotation against the bundled
+            # corpus needs the literal text at the citation site.
+            "quoted_text": str(data.get("quoted_text") or ""),
+            "grounding": IvaCitationGrounding(str(data.get("grounding") or "verified")),
+            "unresolved_reason": str(data.get("unresolved_reason") or ""),
         },
     )
 

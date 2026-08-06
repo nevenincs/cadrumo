@@ -6,11 +6,10 @@ The schema is frozen and strict wherever the loader idiom permits it,
 matching the current registry-backed legal grounding conventions.
 
 Closed catalogues (:class:`IvaCategory`, :class:`EUMemberState`,
-:class:`IvaRateKind`) are :class:`enum.StrEnum`
-subclasses. Multilingual fields use :class:`cadrumo.core.i18n.tr` to ensure
-the internationalization engine can dynamically resolve the correct locale
-at runtime for UI labels and descriptions. Legal quotes remain Spanish-
-authoritative.
+:class:`IvaRateKind`) are :class:`enum.StrEnum` subclasses. Every prose field
+is stored inline and Spanish-authoritative: a citation's ``quoted_text`` is
+verbatim BOE text, which is evidence rather than a label, and so has no
+locale-resolved form.
 """
 
 from __future__ import annotations
@@ -32,7 +31,6 @@ from pydantic import (
 )
 
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.i18n import Translatable as tr
 from ...core.parsing import parse_iso8601_date
 from ._errors import IvaValidationError
 
@@ -325,20 +323,6 @@ _ManualRef = Annotated[
 """Free-form reference to a Manual práctico IVA rule id or section reference."""
 
 
-def _require_translatable(translatable: tr, field_name: str) -> None:
-    """Assert a :class:`cadrumo.core.i18n.tr` carries a non-empty translation key.
-
-    Args:
-        translatable: The translatable mapping under validation.
-        field_name: Dotted field name surfaced in the error message.
-
-    Raises:
-        IvaValidationError: If the translation key is missing or empty.
-    """
-    if not str(translatable).strip():
-        raise IvaValidationError(f"{field_name}: missing authoritative translation key")
-
-
 class _IvaStrictFrozen(BaseModel):
     """Shared base config: strict validation, immutable, extras forbidden."""
 
@@ -428,31 +412,90 @@ class IvaRateRecord(_IvaStrictFrozen):
         return self
 
 
+class IvaCitationGrounding(StrEnum):
+    """Whether a citation's text was read against the corpus, or refused.
+
+    The distinction is the point. An unverified citation and one examined and
+    found unsupportable look identical when both simply lack text, and the
+    catalogue spent its whole life in that state: every quotation was a
+    translation key resolving to the literal word "Quoted text", so nothing
+    could tell a grounded citation from an ungrounded one.
+    """
+
+    VERIFIED = "verified"
+    """The quotation was read from the bundled corpus and supports the claim."""
+
+    UNRESOLVED = "unresolved"
+    """Examined and refused: the cited article does not support the category.
+
+    Not "not yet checked". A citation carrying this has been read against the
+    corpus and the reason it failed is recorded beside it.
+    """
+
+
 class IvaCitation(_IvaStrictFrozen):
     """A legal or regulatory citation backing a :class:`IvaRegulation`.
 
-    The :attr:`quoted_text` field must be an authoritative translation key
-    pointing to a non-empty Spanish string. It may be a faithful paraphrase
-    of the article's statutory language when a verbatim extract is not
-    practical. Legal identity and evidence are owned by the registry entry
-    named in :attr:`legal_reference`.
+    :attr:`quoted_text` holds the authoritative Spanish INLINE, not a
+    translation key. Verifying a quotation against the bundled corpus requires
+    the literal text at the citation site; indirecting it means the record no
+    longer carries its own evidence, whatever the key resolves to.
 
     Attributes:
         legal_reference: Article-qualified registry legal-reference id.
-        quoted_text: Non-empty Spanish quote or faithful paraphrase.
+        quoted_text: Verbatim Spanish from the bundled corpus. Empty only when
+            :attr:`grounding` is ``UNRESOLVED``.
+        grounding: Whether the text was verified or the citation refused.
+        unresolved_reason: Why the citation could not be grounded. Required
+            when, and only when, :attr:`grounding` is ``UNRESOLVED``.
     """
 
     legal_reference: _RegistryLegalRef = Field(
         description="Article-qualified id resolved through the registry legal catalogue.",
     )
-    quoted_text: tr = Field(
-        description="Non-empty Spanish quote (or faithful paraphrase).",
+    quoted_text: str = Field(
+        default="",
+        description="Verbatim Spanish from the bundled corpus; empty only when grounding is unresolved.",
+    )
+    grounding: IvaCitationGrounding = Field(
+        default=IvaCitationGrounding.VERIFIED,
+        description="Whether the quotation was verified against the corpus, or examined and refused.",
+    )
+    unresolved_reason: str = Field(
+        default="",
+        description="Why the citation could not be grounded; required when grounding is unresolved.",
     )
 
     @model_validator(mode="after")
     def _validate(self) -> IvaCitation:
-        """Enforce the advertised non-empty citation text invariant."""
-        _require_translatable(self.quoted_text, f"IvaCitation[{self.legal_reference}].quoted_text")
+        """Hold each grounding state to the evidence it claims.
+
+        Unlike the validator this replaced, both branches can fail. The old
+        one asserted a translatable was non-empty AFTER the loader had already
+        resolved it through a fallback that never yields an empty string, so
+        it inspected ``"Quoted text"``, found it non-empty, and passed for
+        every citation in the catalogue.
+        """
+        where = f"IvaCitation[{self.legal_reference}]"
+        if self.grounding is IvaCitationGrounding.VERIFIED:
+            if not self.quoted_text.strip():
+                raise IvaValidationError(f"{where}: a verified citation must carry its verbatim quotation")
+            if self.unresolved_reason.strip():
+                raise IvaValidationError(f"{where}: a verified citation must not carry an unresolved reason")
+        else:
+            if not self.unresolved_reason.strip():
+                raise IvaValidationError(
+                    f"{where}: an unresolved citation must record WHY it could not be grounded, "
+                    "so that it reads as examined and refused rather than merely unchecked",
+                )
+            if self.quoted_text.strip():
+                # verify_catalogue deliberately skips the empty-quotation check
+                # for this state, so text parked here would never be read
+                # against the corpus while the record says it could not be.
+                raise IvaValidationError(
+                    f"{where}: an unresolved citation must not carry a quotation; "
+                    "text that survived the corpus read belongs under verified grounding",
+                )
         return self
 
 
@@ -467,10 +510,6 @@ class IvaRegulation(_IvaStrictFrozen):
 
     Attributes:
         category: The IVA situation codified by this rule.
-        label: Short human-readable label key.
-        description: One-paragraph plain-language description key.
-        triggers_when: Plain-language description of when this rule fires (key).
-        iva_treatment: Plain-language description of the fiscal treatment (key).
         requires_reverse_charge: Whether the rule triggers
             *inversión del sujeto pasivo*.
         requires_supplier_iva_id: Whether a supplier NIF-IVA is mandatory.
@@ -481,14 +520,6 @@ class IvaRegulation(_IvaStrictFrozen):
     """
 
     category: IvaCategory = Field(description="The IVA situation codified by this rule.")
-    label: tr = Field(description="Short human-readable label key.")
-    description: tr = Field(description="One-paragraph plain-language description key.")
-    triggers_when: tr = Field(
-        description="Plain-language description of when this rule fires (key).",
-    )
-    iva_treatment: tr = Field(
-        description="Plain-language description of the fiscal treatment (key).",
-    )
     requires_reverse_charge: bool = Field(
         description="Whether the rule triggers inversión del sujeto pasivo.",
     )
@@ -509,10 +540,6 @@ class IvaRegulation(_IvaStrictFrozen):
     @model_validator(mode="after")
     def _validate(self) -> IvaRegulation:
         """Enforce the translation-key and at-least-one-citation invariants."""
-        _require_translatable(self.label, f"IvaRegulation[{self.category.value}].label")
-        _require_translatable(self.description, f"IvaRegulation[{self.category.value}].description")
-        _require_translatable(self.triggers_when, f"IvaRegulation[{self.category.value}].triggers_when")
-        _require_translatable(self.iva_treatment, f"IvaRegulation[{self.category.value}].iva_treatment")
         if not self.citations:
             raise IvaValidationError(f"IvaRegulation[{self.category.value}]: at least one IvaCitation is required")
         return self

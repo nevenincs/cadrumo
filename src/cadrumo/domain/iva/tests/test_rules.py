@@ -7,8 +7,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from ....core.i18n import Translatable as tr
-from .. import IvaCategory, IvaCitation, cite, resolve_catalogue
+from .. import IvaCategory, IvaCitation, IvaCitationGrounding, cite, resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -25,18 +24,69 @@ def test_catalogue_has_at_least_33_citations() -> None:
     assert total >= 33
 
 
-def test_every_citation_has_non_empty_quoted_text() -> None:
+def test_every_citation_states_its_grounding_and_carries_the_evidence_for_it() -> None:
+    """A citation must either quote the corpus or say why it could not.
+
+    This replaces an assertion that every citation carried non-empty text.
+    That check passed for all of them and verified nothing: quoted_text was a
+    translation key, the loader resolved it before the assertion ran, and the
+    fallback never yields an empty string -- so the test was reading the word
+    "Quoted text" and finding it non-empty.
+
+    Both branches below can fail, which is the point.
+    """
     for regulation in _CATALOGUE:
         for citation in regulation.citations:
-            assert citation.quoted_text.strip()
+            if citation.grounding is IvaCitationGrounding.VERIFIED:
+                assert citation.quoted_text.strip(), (
+                    f"{regulation.category.value}/{citation.legal_reference} claims verified grounding "
+                    "but carries no quotation"
+                )
+                assert not citation.unresolved_reason.strip()
+            else:
+                assert citation.unresolved_reason.strip(), (
+                    f"{regulation.category.value}/{citation.legal_reference} is unresolved but records no reason, "
+                    "so it reads as unchecked rather than as examined and refused"
+                )
 
 
-def test_iva_citation_rejects_blank_quoted_text_at_schema_boundary() -> None:
-    with pytest.raises(ValidationError, match="quoted_text"):
+def test_iva_citation_rejects_a_verified_claim_with_no_quotation() -> None:
+    with pytest.raises(ValidationError, match="must carry its verbatim quotation"):
         IvaCitation.model_validate(
             {
                 "legal_reference": "ley-37-1992:art-90",
-                "quoted_text": tr("   "),
+                "quoted_text": "   ",
+            },
+        )
+
+
+def test_iva_citation_rejects_an_unresolved_claim_with_no_reason() -> None:
+    """Unresolved without a reason is indistinguishable from unchecked."""
+    with pytest.raises(ValidationError, match="must record WHY"):
+        IvaCitation.model_validate(
+            {
+                "legal_reference": "ley-37-1992:art-90",
+                "quoted_text": "",
+                "grounding": IvaCitationGrounding.UNRESOLVED,
+                "unresolved_reason": "   ",
+            },
+        )
+
+
+def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> None:
+    """Text parked under unresolved grounding is never read against the corpus.
+
+    ``verify_catalogue`` skips the empty-quotation check for this state by
+    design, so a candidate quotation stored here would read as evidence to
+    anyone printing the field while the record itself says it has none.
+    """
+    with pytest.raises(ValidationError, match="must not carry a quotation"):
+        IvaCitation.model_validate(
+            {
+                "legal_reference": "ley-37-1992:art-90",
+                "quoted_text": "El tipo impositivo sera el 21 por ciento",
+                "grounding": IvaCitationGrounding.UNRESOLVED,
+                "unresolved_reason": "candidate text that did not match the bundled corpus",
             },
         )
 

@@ -41,6 +41,35 @@ def test_partial_catalogue_reports_only_the_gaps() -> None:
     assert len(missing) == 1
 
 
+def test_a_plausible_quotation_absent_from_the_corpus_is_reported() -> None:
+    """The clean result above is only worth reading if this one reds.
+
+    The substituted text is deliberately plausible -- correct article, correct
+    sentence shape, wrong rate -- because that is the failure the check exists
+    for. A non-emptiness check, which is what this replaced, passes it happily.
+    """
+    original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL_21]
+    fabricated = IvaCitation.model_validate(
+        {
+            "legal_reference": original.citations[0].legal_reference,
+            "quoted_text": "El Impuesto se exigira al tipo del 25 por ciento",
+        },
+    )
+    report = verify_catalogue(
+        IvaCatalogue(
+            regulations={
+                **_CATALOGUE.regulations,
+                IvaCategory.DOMESTIC_GENERAL_21: original.model_copy(
+                    update={"citations": (fabricated, *original.citations[1:])},
+                ),
+            },
+        ),
+    )
+    assert [issue.code for issue in report.errors] == ["quotation_absent_from_corpus"], [
+        issue.model_dump() for issue in report.errors
+    ]
+
+
 def test_unknown_registry_legal_reference_is_reported() -> None:
     original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL_21]
     invalid_citation = IvaCitation.model_validate(

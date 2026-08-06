@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:410d588b24434137bd88ade54f03bf3a385937fbde55ae7a6cda91a183a88ca0'
+body_hash: 'sha256:d27b98d9b8418eb2a7238ea70c823a02bf529103a2732e1060902b9b0e9020b4'
 related:
   - "[[2026-08-06-iva-catalogue-prose-grounding-research]]"
 ---
@@ -61,6 +61,21 @@ catalogue's keys are not carried in the locale catalogues.
 
 All twenty-four cited articles resolve in the bundled consolidated LIVA text,
 so no corpus work is a prerequisite.
+
+The verification pass that followed this decision split the thirty-nine
+citations thirty-four to five. Five could not be grounded, in three distinct
+shapes: an article that states a rule adjacent to the one its category claims,
+a category whose situation the cited article does not address at all, and one
+sentinel category that carries no legal basis because it denotes the absence of
+a classification rather than a treatment.
+
+Two of the thirty-four survived a careful hand-read and were still wrong. Both
+were paraphrases close enough to the enacted text to pass inspection: one
+collapsed a two-level enumeration into a single sentence, the other carried
+wording the cited article does not contain. Neither was caught by reading; both
+were caught the moment the stored text was read back against the corpus. That
+is the strongest available argument that the replacement invariant had to be
+machine-checked rather than author-attested.
 
 ## Constraints
 
@@ -140,6 +155,30 @@ LIVA text as it is written. The remaining four fields per category are
 documentation-grade and follow in the same pass, because the mechanism is
 identical.
 
+The four documentation fields were deleted rather than authored. The
+distinction that decides this is that their content was irrecoverable, not
+merely untranslated: the keys resolved to a fallback derived from the final key
+segment, so no prior Spanish text existed anywhere to move inline. Authoring
+them would have meant writing new prose for a surface with no reader, under a
+decision whose whole basis is that no such reader exists. Deletion is therefore
+the honest form of the same decision, and a later operator surface can add the
+fields back with content written for it.
+
+A citation's grounding is now declared rather than assumed. Each carries a
+state -- verified or unresolved -- and the record must hold the evidence for
+whichever it claims: a verified citation carries its quotation and no reason, an
+unresolved one carries its reason and no quotation. The second half matters as
+much as the first, because the corpus check skips the unresolved state by
+design, so candidate text parked there would never be read against anything
+while reading as evidence to anyone who printed it.
+
+The replacement invariant is corpus containment, not non-emptiness. The
+normalised quotation must occur in the normalised corpus text for its own legal
+reference, reusing the mechanism the registry already applies to declared
+required text. It is mutation-proved with a plausible substitution -- correct
+article, correct sentence shape, wrong rate -- which the prior non-emptiness
+check accepts and this one rejects.
+
 The change waits on the in-flight work in the same production files landing
 first.
 
@@ -159,6 +198,13 @@ established per-revision translation layer with the authoritative Spanish
 remaining the legal source, rather than restoring key indirection at the
 citation site.
 
+One of the five unresolved citations needs a scope decision this decision does
+not make. The zero-rated domestic category has no general Spanish zero rate to
+cite, which suggests the category is either narrower than its name or should be
+retired in favour of the exemption categories that carry real articles. Both are
+substantive changes to a closed taxonomy with existing data, so the citation is
+recorded unresolved and the question referred rather than settled here.
+
 ## Consequences
 
 Twenty categories' legal bases become checkable against the bundled corpus for
@@ -175,4 +221,11 @@ keys lands in the same position.
 
 A validator disappears that never guarded anything, which slightly reduces the
 apparent number of checks over this registry while leaving the real number
-unchanged.
+unchanged. What replaces it raises the real number for the first time: thirty-
+four quotations are now read back against the corpus on every catalogue
+verification, and five categories state in the record itself that their legal
+basis is unresolved and why.
+
+The five unresolved citations are a visible gap where there was previously a
+clean surface. That is an improvement in accuracy and a regression in
+appearance, and the appearance was false.

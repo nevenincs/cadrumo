@@ -1,344 +1,278 @@
 [[regulations]]
 category = "domestic_general_21"
-label = "iva.catalogue.label_365838"
-description = "iva.catalogue.description_217010"
-triggers_when = "iva.catalogue.triggers_when_142813"
-iva_treatment = "iva.catalogue.iva_treatment_888336"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-90"
-quoted_text = "iva.catalogue.domestic_general_21.citations.0.quoted_text"
+quoted_text = "Artículo 90. Tipo impositivo general. Uno. El Impuesto se exigirá al tipo del 21 por ciento, salvo lo dispuesto en el artículo siguiente. Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo. Tres."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-4"
-quoted_text = "iva.catalogue.domestic_general_21.citations.1.quoted_text"
+quoted_text = "Artículo 4. Hecho imponible. Uno. Estarán sujetas al impuesto las entregas de bienes y prestaciones de servicios realizadas en el ámbito espacial del impuesto por empresarios o profesionales a título oneroso, con carácter habitual u ocasional, en el"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "domestic_reduced_10"
-label = "iva.catalogue.label_027962"
-description = "iva.catalogue.description_983244"
-triggers_when = "iva.catalogue.triggers_when_029777"
-iva_treatment = "iva.catalogue.iva_treatment_786939"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
-quoted_text = "iva.catalogue.domestic_reduced_10.citations.0.quoted_text"
+quoted_text = "Uno. Se aplicará el tipo del 10 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
-quoted_text = "iva.catalogue.domestic_reduced_10.citations.1.quoted_text"
+quoted_text = "Uno. Se aplicará el tipo del 10 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "domestic_super_reduced_4"
-label = "iva.catalogue.label_915730"
-description = "iva.catalogue.description_069076"
-triggers_when = "iva.catalogue.triggers_when_352485"
-iva_treatment = "iva.catalogue.iva_treatment_774580"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
-quoted_text = "iva.catalogue.domestic_super_reduced_4.citations.0.quoted_text"
+quoted_text = "Dos. Se aplicará el tipo del 4 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
-quoted_text = "iva.catalogue.domestic_super_reduced_4.citations.1.quoted_text"
+quoted_text = "Dos. Se aplicará el tipo del 4 por ciento a las operaciones siguientes: 1. Las entregas, adquisiciones intracomunitarias o importaciones de los bienes que se indican a"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "domestic_zero"
-label = "iva.catalogue.label_996028"
-description = "iva.catalogue.description_640356"
-triggers_when = "iva.catalogue.triggers_when_739440"
-iva_treatment = "iva.catalogue.iva_treatment_872035"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-91"
-quoted_text = "iva.catalogue.domestic_zero.citations.0.quoted_text"
+quoted_text = ""
+grounding = "unresolved"
+unresolved_reason = "art. 91's ONLY 0% provision is apartado Cuatro, restricted to donativos to Ley 49/2002 entities. The category's apparent claim (name, Axis-A row, classifier hint) is a GENERAL domestic 0% rate. Two candidate readings: (a) the category was meant for the donation case and is named too broadly; (b) it was meant for the temporary alimentos-basicos 0% of RDL 20/2022, which is NOT in the bundled corpus and was not chased. Category intent unrecoverable: notes empty, keys opaque. Exports/intra-community supplies are exentas plenas with their own categories (arts. 21, 25) so they are not the referent. NOT grounded: a real quotation here would make a narrow provision read as authorising a general rate."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-24"
-quoted_text = "iva.catalogue.domestic_zero.citations.1.quoted_text"
+quoted_text = ""
+grounding = "unresolved"
+unresolved_reason = "SECOND unresolved citation on this category, and it deepens the first. art. 24 is 'Exenciones relativas a regimenes aduaneros y fiscales' - zona franca, perfeccionamiento activo, depositos aduaneros. It contains NO zero-rate provision (searched: no 'tipo del 0', no 'tipo cero'). So domestic_zero's two citations point at art. 91 (rates, whose only 0% is the Ley 49/2002 donation case) and art. 24 (customs regimes), which are unrelated to each other and neither of which supports a general domestic zero rate. The pattern suggests the category is a grab-bag rather than a treatment with a legal basis - which strengthens the case that its SCOPE is the defect, not its citations."
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "domestic_exempt"
-label = "iva.catalogue.label_342635"
-description = "iva.catalogue.description_311472"
-triggers_when = "iva.catalogue.triggers_when_049241"
-iva_treatment = "iva.catalogue.iva_treatment_795653"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-20"
-quoted_text = "iva.catalogue.domestic_exempt.citations.0.quoted_text"
+quoted_text = "Artículo 20. Exenciones en operaciones interiores. Uno. Estarán exentas de este impuesto las siguientes operaciones: 1.º Las prestaciones de servicios y las entregas de bienes accesorias a ellas que constituyan el servicio postal universal siempre que sean realizadas por el operador u"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-20"
-quoted_text = "iva.catalogue.domestic_exempt.citations.1.quoted_text"
+quoted_text = "Artículo 20. Exenciones en operaciones interiores. Uno. Estarán exentas de este impuesto las siguientes operaciones: 1.º Las prestaciones de servicios y las entregas de bienes accesorias a ellas que constituyan el servicio postal universal siempre que sean realizadas por el operador u"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "domestic_not_subject"
-label = "iva.catalogue.label_385669"
-description = "iva.catalogue.description_196978"
-triggers_when = "iva.catalogue.triggers_when_425274"
-iva_treatment = "iva.catalogue.iva_treatment_078140"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-7"
-quoted_text = "iva.catalogue.domestic_not_subject.citations.0.quoted_text"
+quoted_text = "Artículo 7. Operaciones no sujetas al impuesto. No estarán sujetas al impuesto: 1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan o sean susceptibles de constituir una"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-7"
-quoted_text = "iva.catalogue.domestic_not_subject.citations.1.quoted_text"
+quoted_text = "Artículo 7. Operaciones no sujetas al impuesto. No estarán sujetas al impuesto: 1.º La transmisión de un conjunto de elementos corporales y, en su caso, incorporales que, formando parte del patrimonio empresarial o profesional del sujeto pasivo, constituyan o sean susceptibles de constituir una"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "domestic_reverse_charge"
-label = "iva.catalogue.label_198815"
-description = "iva.catalogue.description_425875"
-triggers_when = "iva.catalogue.triggers_when_234924"
-iva_treatment = "iva.catalogue.iva_treatment_847858"
 requires_reverse_charge = true
 requires_supplier_iva_id = true
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-84"
-quoted_text = "iva.catalogue.domestic_reverse_charge.citations.0.quoted_text"
+quoted_text = "2.º Los empresarios o profesionales para quienes se realicen las operaciones sujetas al Impuesto en los supuestos que se indican a continuación: a) Cuando las mismas se efectúen por personas o entidades no establecidas en el territorio de aplicación del"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-84"
-quoted_text = "iva.catalogue.domestic_reverse_charge.citations.1.quoted_text"
+quoted_text = "2.º Los empresarios o profesionales para quienes se realicen las operaciones sujetas al Impuesto en los supuestos que se indican a continuación: a) Cuando las mismas se efectúen por personas o entidades no establecidas en el territorio de aplicación del"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "intra_community_supply"
-label = "iva.catalogue.label_375372"
-description = "iva.catalogue.description_170404"
-triggers_when = "iva.catalogue.triggers_when_605383"
-iva_treatment = "iva.catalogue.iva_treatment_816799"
 requires_reverse_charge = false
 requires_supplier_iva_id = true
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-25"
-quoted_text = "iva.catalogue.intra_community_supply.citations.0.quoted_text"
+quoted_text = "Artículo 25. Exenciones en las entregas de bienes destinados a otro Estado miembro. Estarán exentas del impuesto las siguientes operaciones: Uno."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-164"
-quoted_text = "iva.catalogue.intra_community_supply.citations.1.quoted_text"
+quoted_text = "Uno. Sin perjuicio de lo establecido en el título anterior, los sujetos pasivos del Impuesto estarán obligados, con los requisitos, límites y condiciones que se determinen reglamentariamente, a: 1.º) Presentar declaraciones relativas al comienzo, modificación y cese de las actividades que"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "intra_community_acquisition_reverse_charge"
-label = "iva.catalogue.label_576993"
-description = "iva.catalogue.description_027697"
-triggers_when = "iva.catalogue.triggers_when_477522"
-iva_treatment = "iva.catalogue.iva_treatment_373587"
 requires_reverse_charge = true
 requires_supplier_iva_id = true
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-13"
-quoted_text = "iva.catalogue.intra_community_acquisition_reverse_charge.citations.0.quoted_text"
+quoted_text = "Artículo 13. Hecho imponible. Estarán sujetas las siguientes operaciones realizadas en el ámbito espacial de aplicación del Impuesto: 1.ª Las adquisiciones intracomunitarias de bienes efectuadas a título oneroso por empresarios, profesionales o personas"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-84"
-quoted_text = "iva.catalogue.intra_community_acquisition_reverse_charge.citations.1.quoted_text"
+quoted_text = ""
+grounding = "unresolved"
+unresolved_reason = "citations[0]=art-13 is correct and primary (it defines the hecho imponible). citations[1]=art-84 is the questionable one: the sujeto pasivo of an intra-community ACQUISITION OF GOODS is art. 85, quoted here, not art. 84. Art. 84's only intra-community text is Uno.2.o(a), the entregas subsiguientes of a TRIANGULATION (art. 26.Tres) - a different operation owned by intra_community_triangulation. Apparent correct provision: art. 85."
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "intra_community_triangulation"
-label = "iva.catalogue.label_357358"
-description = "iva.catalogue.description_747833"
-triggers_when = "iva.catalogue.triggers_when_253417"
-iva_treatment = "iva.catalogue.iva_treatment_660394"
 requires_reverse_charge = true
 requires_supplier_iva_id = true
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-26"
-quoted_text = "iva.catalogue.intra_community_triangulation.citations.0.quoted_text"
+quoted_text = "Artículo 26. Exenciones en las adquisiciones intracomunitarias de bienes. Estarán exentas del impuesto: Uno. Las adquisiciones intracomunitarias de bienes cuya entrega en el territorio de aplicación del impuesto hubiera estado, en todo caso, no sujeta o"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-15"
-quoted_text = "iva.catalogue.intra_community_triangulation.citations.1.quoted_text"
+quoted_text = "Artículo 15. Concepto de adquisición intracomunitaria de bienes. Uno. Se entenderá por adquisición intracomunitaria de bienes: a) La obtención del poder de disposición sobre bienes muebles corporales expedidos o transportados al territorio de aplicación"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "export_third_country_zero_rated"
-label = "iva.catalogue.label_620271"
-description = "iva.catalogue.description_889069"
-triggers_when = "iva.catalogue.triggers_when_824512"
-iva_treatment = "iva.catalogue.iva_treatment_338490"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-21"
-quoted_text = "iva.catalogue.export_third_country_zero_rated.citations.0.quoted_text"
+quoted_text = "Artículo 21. Exenciones en las exportaciones de bienes. Estarán exentas del impuesto, en las condiciones y con los requisitos que se establezcan reglamentariamente, las siguientes operaciones: 1.º Las entregas de bienes expedidos o transportados fuera de la Comunidad por el transmitente o por"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-21"
-quoted_text = "iva.catalogue.export_third_country_zero_rated.citations.1.quoted_text"
+quoted_text = "Artículo 21. Exenciones en las exportaciones de bienes. Estarán exentas del impuesto, en las condiciones y con los requisitos que se establezcan reglamentariamente, las siguientes operaciones: 1.º Las entregas de bienes expedidos o transportados fuera de la Comunidad por el transmitente o por"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "export_assimilated_zero_rated"
-label = "iva.catalogue.export_assimilated_zero_rated.label"
-description = "iva.catalogue.export_assimilated_zero_rated.description"
-triggers_when = "iva.catalogue.export_assimilated_zero_rated.triggers_when"
-iva_treatment = "iva.catalogue.export_assimilated_zero_rated.iva_treatment"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-22"
-quoted_text = "iva.catalogue.export_assimilated_zero_rated.citations.0.quoted_text"
+quoted_text = "Artículo 22. Exenciones en las operaciones asimiladas a las exportaciones. Estarán exentas del impuesto, en las condiciones y con los requisitos que se establezcan reglamentariamente, las siguientes operaciones: Uno."
 retrieval_date = 2026-06-29
 
 [[regulations]]
 category = "import_third_country"
-label = "iva.catalogue.label_889802"
-description = "iva.catalogue.description_247574"
-triggers_when = "iva.catalogue.triggers_when_775302"
-iva_treatment = "iva.catalogue.iva_treatment_869170"
 requires_reverse_charge = true
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-17"
-quoted_text = "iva.catalogue.import_third_country.citations.0.quoted_text"
+quoted_text = "Artículo 17. Hecho imponible. Estarán sujetas al impuesto las importaciones de bienes, cualquiera que sea el fin a que se destinen y la condición del"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-18"
-quoted_text = "iva.catalogue.import_third_country.citations.1.quoted_text"
+quoted_text = "Artículo 18. Concepto de importación de bienes. Uno. Tendrá la consideración de importación de bienes: Primero."
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "recargo_equivalencia"
-label = "iva.catalogue.label_243153"
-description = "iva.catalogue.description_951487"
-triggers_when = "iva.catalogue.triggers_when_060209"
-iva_treatment = "iva.catalogue.iva_treatment_837679"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-148"
-quoted_text = "iva.catalogue.recargo_equivalencia.citations.0.quoted_text"
+quoted_text = "Artículo 148. Régimen especial del recargo de equivalencia. Uno. El régimen especial del recargo de equivalencia se aplicará a los comerciantes minoristas que sean personas físicas o entidades en régimen de atribución de rentas en el Impuesto sobre la"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-154"
-quoted_text = "iva.catalogue.recargo_equivalencia.citations.1.quoted_text"
+quoted_text = "Artículo 154. Contenido del régimen especial del recargo de equivalencia. Uno. La exacción del Impuesto sobre el Valor Añadido exigible a los comerciantes minoristas a quienes resulte aplicable este régimen especial se efectuará mediante la repercusión"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "regimen_simplificado"
-label = "iva.catalogue.label_574464"
-description = "iva.catalogue.description_837760"
-triggers_when = "iva.catalogue.triggers_when_809073"
-iva_treatment = "iva.catalogue.iva_treatment_720111"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-122"
-quoted_text = "iva.catalogue.regimen_simplificado.citations.0.quoted_text"
+quoted_text = "Artículo 122. Régimen simplificado. Uno. El régimen simplificado se aplicará a los sujetos pasivos del Impuesto sobre el Valor Añadido que reúnan los siguientes requisitos: 1.º Que sean personas físicas o entidades en régimen de atribución de rentas en el Impuesto sobre la Renta de las Personas Físicas, siempre que en este último caso todos sus socios, herederos, comuneros o partícipes sean personas físicas."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-123"
-quoted_text = "iva.catalogue.regimen_simplificado.citations.1.quoted_text"
+quoted_text = "Artículo 123. Contenido del régimen simplificado. Uno. En las actividades acogidas al régimen simplificado la determinación de las cuotas tributarias se llevará a cabo mediante el método de índices, módulos u otros parámetros objetivos que se determinen reglamentariamente por cada actividad. Dos."
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "operacion_no_sujeta"
-label = "iva.catalogue.label_765009"
-description = "iva.catalogue.description_113281"
-triggers_when = "iva.catalogue.triggers_when_020809"
-iva_treatment = "iva.catalogue.iva_treatment_703895"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-68"
-quoted_text = "iva.catalogue.operacion_no_sujeta.citations.0.quoted_text"
+quoted_text = "Artículo 68. Lugar de realización de las entregas de bienes. El lugar de realización de las entregas de bienes se determinará según las reglas siguientes: Uno."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-69"
-quoted_text = "iva.catalogue.operacion_no_sujeta.citations.1.quoted_text"
+quoted_text = "Uno. Las prestaciones de servicios se entenderán realizadas en el territorio de aplicación del Impuesto, sin perjuicio de lo dispuesto en el apartado siguiente de este artículo y en los artículos 70 y 72 de esta Ley, en los siguientes casos: 1.º Cuando el destinatario sea un empresario o profesional que actúe como tal y radique en el citado territorio la sede de su actividad económica, o tenga en el mismo un establecimiento"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "erroneous_invoice"
-label = "iva.catalogue.label_947785"
-description = "iva.catalogue.description_243075"
-triggers_when = "iva.catalogue.triggers_when_035779"
-iva_treatment = "iva.catalogue.iva_treatment_592112"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-89"
-quoted_text = "iva.catalogue.erroneous_invoice.citations.0.quoted_text"
+quoted_text = "Artículo 89. Rectificación de las cuotas impositivas repercutidas. Uno. Los sujetos pasivos deberán efectuar la rectificación de las cuotas impositivas repercutidas cuando el importe de las mismas se hubiese determinado incorrectamente o se produzcan las circunstancias que, según lo dispuesto"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-89"
-quoted_text = "iva.catalogue.erroneous_invoice.citations.1.quoted_text"
+quoted_text = "Artículo 89. Rectificación de las cuotas impositivas repercutidas. Uno. Los sujetos pasivos deberán efectuar la rectificación de las cuotas impositivas repercutidas cuando el importe de las mismas se hubiese determinado incorrectamente o se produzcan las circunstancias que, según lo dispuesto"
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "unknown"
-label = "iva.catalogue.label_775396"
-description = "iva.catalogue.description_306964"
-triggers_when = "iva.catalogue.triggers_when_512869"
-iva_treatment = "iva.catalogue.iva_treatment_732254"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
@@ -346,20 +280,20 @@ notes = "Classifier sentinel; cannot be emitted as a filing-grade result."
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-164"
-quoted_text = "iva.catalogue.unknown.citations.0.quoted_text"
+quoted_text = ""
+grounding = "unresolved"
+unresolved_reason = "BOTH of this category's citations are art-164. art. 164 imposes declaration, invoicing and registration obligations on sujetos pasivos; it says nothing about an unknown or unclassified state. `unknown` is an application-level classifier sentinel - its own notes say it 'cannot be emitted as a filing-grade result' - so it has no tax treatment to ground and arguably needs no legal citation at all. Citing law here manufactures the appearance of a legal basis for a construct that has none by design."
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-164"
-quoted_text = "iva.catalogue.unknown.citations.1.quoted_text"
+quoted_text = ""
+grounding = "unresolved"
+unresolved_reason = "Duplicate of citations[0]: same article, same category, distinguishing text unrecoverable. Same reasoning - a sentinel is not a tax treatment."
 retrieval_date = 2026-04-13
 
 [[regulations]]
 category = "intra_community_service_supply"
-label = "iva.catalogue.intra_community_service_supply.label"
-description = "iva.catalogue.intra_community_service_supply.description"
-triggers_when = "iva.catalogue.intra_community_service_supply.triggers_when"
-iva_treatment = "iva.catalogue.intra_community_service_supply.iva_treatment"
 requires_reverse_charge = false
 requires_supplier_iva_id = true
 manual_references = []
@@ -367,20 +301,16 @@ notes = "Prestacion de servicios B2B a un empresario establecido en otro Estado 
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-69"
-quoted_text = "iva.catalogue.intra_community_service_supply.citations.0.quoted_text"
+quoted_text = "Uno. Las prestaciones de servicios se entenderán realizadas en el territorio de aplicación del Impuesto, sin perjuicio de lo dispuesto en el apartado siguiente de este artículo y en los artículos 70 y 72 de esta Ley, en los siguientes casos: 1.º Cuando el destinatario sea un empresario o profesional que actúe como tal y radique en el citado territorio la sede de su actividad económica, o tenga en el mismo un establecimiento"
 retrieval_date = 2026-08-06
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-70"
-quoted_text = "iva.catalogue.intra_community_service_supply.citations.1.quoted_text"
+quoted_text = "Artículo 70. Lugar de realización de las prestaciones de servicios. Reglas especiales. Uno. Se entenderán prestados en el territorio de aplicación del Impuesto los siguientes servicios: 1.º Los relacionados con bienes inmuebles que radiquen en el citado"
 retrieval_date = 2026-08-06
 
 [[regulations]]
 category = "intra_community_service_acquisition_reverse_charge"
-label = "iva.catalogue.intra_community_service_acquisition_reverse_charge.label"
-description = "iva.catalogue.intra_community_service_acquisition_reverse_charge.description"
-triggers_when = "iva.catalogue.intra_community_service_acquisition_reverse_charge.triggers_when"
-iva_treatment = "iva.catalogue.intra_community_service_acquisition_reverse_charge.iva_treatment"
 requires_reverse_charge = true
 requires_supplier_iva_id = true
 manual_references = []
@@ -388,10 +318,10 @@ notes = "Adquisicion de servicios a un prestador establecido en otro Estado miem
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-69"
-quoted_text = "iva.catalogue.intra_community_service_acquisition_reverse_charge.citations.0.quoted_text"
+quoted_text = "Uno. Las prestaciones de servicios se entenderán realizadas en el territorio de aplicación del Impuesto, sin perjuicio de lo dispuesto en el apartado siguiente de este artículo y en los artículos 70 y 72 de esta Ley, en los siguientes casos: 1.º Cuando el destinatario sea un empresario o profesional que actúe como tal y radique en el citado territorio la sede de su actividad económica, o tenga en el mismo un establecimiento"
 retrieval_date = 2026-08-06
 
 [[regulations.citations]]
 legal_reference = "ley-37-1992:art-84"
-quoted_text = "iva.catalogue.intra_community_service_acquisition_reverse_charge.citations.1.quoted_text"
+quoted_text = "2.º Los empresarios o profesionales para quienes se realicen las operaciones sujetas al Impuesto en los supuestos que se indican a continuación: a) Cuando las mismas se efectúen por personas o entidades no establecidas en el territorio de aplicación del"
 retrieval_date = 2026-08-06
