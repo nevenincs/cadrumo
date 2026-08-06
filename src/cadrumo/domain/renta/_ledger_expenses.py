@@ -89,6 +89,34 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     statutory_cap_variant_id: str | None = Field(default=None, min_length=1, max_length=64)
     statutory_cap_person_count: int = Field(default=1, ge=1)
     exclusive_use_confirmed: bool = False
+    iva_deduction_ratio: Decimal | None = Field(default=None, ge=Decimal("0"), le=Decimal("1"))
+    """Fraction of the fact's input IVA the activity affords a right to deduct (LIVA arts. 94/104).
+
+    ``None`` (the default) means the axis has not been evaluated for this fact and
+    preserves the historic base-only behaviour: when an invoice-evidenced
+    ``taxable_base`` is known, only that net-of-IVA base becomes the IRPF-deductible
+    cost. That is correct for the common case (an activity with full deduction
+    rights recovers its input IVA through Modelo 303, so the IVA is not also an
+    IRPF expense), but it is silently wrong whenever the activity's right to deduct
+    is less than total: PGC NRV 12.ª treats non-recoverable input IVA as part of
+    the acquisition cost, so the portion the taxpayer cannot deduct for IVA
+    purposes must join the IRPF gasto. Populating this field with the resolved
+    IVA-deduction percentage (``1`` for full deduction, ``0`` for a wholly exempt
+    activity with no right to deduct, a fractional value under prorrata general or
+    especial) makes ``1 - iva_deduction_ratio`` of ``iva_amount`` join the
+    deductible base. See :func:`evaluate_renta_deductibility`.
+
+    Populated by :func:`~application.aggregation._renta_ledger.aggregate_renta_ledger_expenses_from_repositories`
+    for the M100 annual first slice, via
+    ``application.aggregation._renta_ledger._resolve_iva_deduction_ratio``: a
+    wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
+    otherwise the bucket's ``domain.prorrata_register.ProrrataRegister``
+    whole-entity entry for the ejercicio contributes its in-force provisional
+    percentage under ``GENERAL`` or ``ESPECIAL``. The M130 quarterly pagos
+    fraccionados gasto path (``application.aggregation._renta_gasto_ledger``)
+    does not construct a :class:`RentaDeductibilityContext` at all and is not
+    wired to this axis -- a named follow-up, not silently covered here.
+    """
     residence_ccaa: CCAA | None = None
     """Ordinary residence comunidad autonoma, sourced from ``TaxResidenceProfile.ccaa``.
 
@@ -334,13 +362,19 @@ def evaluate_renta_deductibility(
     profile: CategoryProfile,
     context: RentaDeductibilityContext,
 ) -> RentaDeductibilityResult:
-    """Evaluate one classified ledger fact and return a :class:`RentaDeductibilityResult`."""
+    """Evaluate one classified ledger fact and return a :class:`RentaDeductibilityResult`.
+
+    ``deductible_basis`` (see :func:`_deductible_basis_amount`) folds in the
+    non-deductible-for-IVA-purposes share of the fact's input IVA when
+    ``context.iva_deduction_ratio`` states it, so an exempt or prorrata-rationed
+    activity does not lose that real cost.
+    """
     if profile.category is not fact.category:
         raise RentaValidationError(
             f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}",
         )
     rule = profile.proportionality
-    deductible_basis = _deductible_basis_amount(fact)
+    deductible_basis = _deductible_basis_amount(fact, context)
     deductible_abs: Decimal
     applied_ratio: Decimal | None
     cap_applied: Decimal | None = None
@@ -411,8 +445,23 @@ def evaluate_renta_deductibility(
     )
 
 
-def _deductible_basis_amount(fact: RentaDeductibleExpenseFact) -> Decimal:
-    return fact.taxable_base if fact.taxable_base is not None else fact.gross_amount
+def _deductible_basis_amount(fact: RentaDeductibleExpenseFact, context: RentaDeductibilityContext) -> Decimal:
+    """Return the IRPF-deductible cost basis, joining non-deductible input IVA to it.
+
+    Uses the net-of-IVA ``taxable_base`` when known, falling back to
+    ``gross_amount`` (already IVA-inclusive) when no invoice evidence split it.
+    When the fact carries both a ``taxable_base`` and an ``iva_amount``, and
+    ``context.iva_deduction_ratio`` states the activity's IVA-deduction
+    percentage, the portion of ``iva_amount`` the activity has no right to deduct
+    (PGC NRV 12.ª) joins the base as real acquisition cost. A ``None`` ratio (not
+    yet evaluated) or a missing ``iva_amount`` leaves the base untouched, matching
+    the historic behaviour.
+    """
+    base = fact.taxable_base if fact.taxable_base is not None else fact.gross_amount
+    if fact.taxable_base is None or fact.iva_amount is None or context.iva_deduction_ratio is None:
+        return base
+    non_deductible_iva = fact.iva_amount * (Decimal("1") - context.iva_deduction_ratio)
+    return base + non_deductible_iva
 
 
 def build_renta_deductible_expense_observation(

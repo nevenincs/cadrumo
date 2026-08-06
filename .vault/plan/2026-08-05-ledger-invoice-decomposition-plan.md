@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:9291eed22d659744f9a2d82cc29a5b080a0b552f29124ed1b5054ec50d2c85e7'
+body_hash: 'sha256:ea74add7bd9737bd869c3ce0dbb9a5065a9da980f3ec66199150f04b133c9ddf'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -102,3 +102,4 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [x] `P06.S53` - Refuse a missing --total-amount on the slim invoice add CLI verb instead of silently defaulting the total to zero, since the total drives whether a counterparty is declared at all under the RD 1065/2007 art. 31 Modelo 347 threshold; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
 - [ ] `P06.S55` - Wire simplificada_requires_tax_id_for_domestic_issuer to an operator-facing Notice, since it is exported and tested with zero production callers, and create_catalogue_invoice does not yet accept invoice_class or an optional tax id at all, so the state it evaluates cannot even be created through the CLI create flow today, sequenced after P06.S46 whose consumer wiring likely serves both; `src/cadrumo/application/invoices, src/cadrumo/entrypoints/cli`.
 - [x] `P06.S56` - Join the non-deductible share of a fact's input IVA to the IRPF-deductible cost basis via a new RentaDeductibilityContext.iva_deduction_ratio axis, grounded on the AEAT Manual practico Renta 2024 medico radiologo nota 7 worked example (activity exempt from IVA, no right to deduct), leaving the axis unwired from any production taxpayer-fact source as a named follow-up; `src/cadrumo/domain/renta/_ledger_expenses.py, src/cadrumo/domain/renta/tests/test_ledger_expenses.py`.
+- [x] `P06.S57` - Wire RentaDeductibilityContext.iva_deduction_ratio to a real producer: a wholly EXENTO iva.regime profile fact resolves to zero, otherwise the bucket's ProrrataRegister whole-entity entry contributes its in-force provisional percentage, mirroring the resolution the M303 side already applies; `src/cadrumo/application/aggregation/_renta_ledger.py, src/cadrumo/application/aggregation/tests/test_renta_ledger.py, src/cadrumo/domain/renta/_ledger_expenses.py`.

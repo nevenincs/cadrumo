@@ -31,9 +31,10 @@ from typing import overload
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodKind, elided_prose
+from ...core import Modelo, Period, PeriodKind, ProrrataRegisterRegime, elided_prose
 from ...core.resources import resources
 from ...domain.calculations.registry import CasillaId
 from ...domain.categories import CategoryProfile, SpendingCategory
@@ -43,8 +44,10 @@ from ...domain.contribuyente import (
     TaxResidenceProfileError,
     parse_tax_region,
 )
+from ...domain.deadlines import IVARegime
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol
 from ...domain.iva import InvoiceKind
+from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
     RentaDeductibilityContext,
@@ -220,6 +223,75 @@ def _resolve_residence_ccaa(
         return None
 
 
+def _resolve_iva_deduction_ratio(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    profile_record: UserProfileRecord | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
+) -> Decimal | None:
+    """Resolve the activity's IVA-deduction fraction for :attr:`RentaDeductibilityContext.iva_deduction_ratio`.
+
+    Two independent taxpayer facts feed this axis, checked in order:
+
+    1. A wholly ``EXENTO`` :attr:`~domain.deadlines.TaxpayerProfile.iva_regime`
+       (LIVA art. 20, no right to deduct under art. 94.Uno a contrario) resolves
+       to ``0`` outright. This is deliberately NOT a prorrata-register state: a
+       taxpayer performing ONLY sin-derecho operations never triggers LIVA
+       art. 102.Uno prorrata (which requires con-derecho and sin-derecho
+       operations "conjuntamente"), so the register legitimately carries no
+       entry for them.
+    2. Otherwise, the bucket's :class:`~domain.prorrata_register.ProrrataRegister`
+       whole-entity (``sector_id=None``) entry for ``ejercicio``: a ``GENERAL``
+       or ``ESPECIAL`` regime entry contributes its in-force provisional
+       percentage (LIVA art. 104.Uno + 105.Uno) as a ``0``-``1`` ratio, mirroring
+       the resolution :func:`~application.aggregation._iva_ledger._active_prorrata_apportionment`
+       already applies on the M303 side -- the SAME percentage that governed
+       what this ejercicio's ledger rows actually recovered through IVA, so the
+       two filings stay consistent for the same ejercicio. A ``NINGUNA`` regime,
+       an interrupted or absent entry, or an unresolved provisional percentage
+       all fall through to ``None``.
+
+    Returns ``None`` -- the historic base-only fallback -- when neither fact
+    resolves a ratio (no profile, an unparseable regime, no register entry, or
+    an unresolved percentage). Never fabricates a percentage.
+
+    Args:
+        bucket_id: Stable bucket identifier used to load the profile and register.
+        ejercicio: Filing year to resolve the register entry for.
+        profile_record: Optional :class:`UserProfileRecord` override for testing;
+            when ``None`` the record is loaded from the bucket.
+        prorrata_register_repository: Optional
+            :class:`~domain.prorrata_register.ProrrataRegisterRepositoryProtocol`
+            override for testing; when ``None`` the bucket's register is loaded.
+    """
+    record = profile_record
+    if record is None:
+        try:
+            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        except ProfileNotFoundError:
+            record = None
+    if record is not None:
+        raw_regime = fact_value(record, "iva.regime")
+        if raw_regime is not None:
+            try:
+                regime = IVARegime(str(raw_regime).strip().upper())
+            except ValueError:
+                regime = None
+            if regime is IVARegime.EXENTO:
+                return Decimal("0")
+
+    repository = prorrata_register_repository or ProrrataRegisterRepository(bucket_id=bucket_id)
+    register = repository.load()
+    entry = register.entry_for(ejercicio, sector_id=None)
+    if entry is None or entry.regime not in (ProrrataRegisterRegime.GENERAL, ProrrataRegisterRegime.ESPECIAL):
+        return None
+    resolution = register.resolve_provisional(ejercicio, sector_id=None)
+    if resolution.percentage is None:
+        return None
+    return resolution.percentage / Decimal("100")
+
+
 def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
@@ -232,6 +304,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     modelo: str = Modelo.M100.value,
     profile_record: UserProfileRecord | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -245,6 +318,14 @@ def aggregate_renta_ledger_expenses_from_repositories(
     to supply the per-:class:`CCAA` override layer forwarded to
     :func:`aggregate_renta_ledger_expenses` (defaulting to the empty
     registry-provisioned layer, :func:`resolve_region_category_profiles`).
+
+    Also derives the activity's IVA-deduction ratio (:func:`_resolve_iva_deduction_ratio`)
+    from the bucket's ``iva.regime`` profile fact and its
+    :class:`~domain.prorrata_register.ProrrataRegister`, so the non-recoverable
+    share of input IVA joins the IRPF-deductible cost basis (PGC NRV 12.ª) for
+    an exempt or prorrata-rationed activity. ``prorrata_register_repository``
+    supplies the register directly (tests); otherwise it is loaded from the
+    bucket.
 
     Returns a :class:`RentaLedgerExpenseAggregation`.
     """
@@ -274,6 +355,13 @@ def aggregate_renta_ledger_expenses_from_repositories(
         )
     invoices = invoices_repository.load()
     residence_ccaa = _resolve_residence_ccaa(bucket_id=bucket_id, profile_record=profile_record)
+    resolved_ejercicio = profile_year if profile_year is not None else period.filing_year
+    iva_deduction_ratio = _resolve_iva_deduction_ratio(
+        bucket_id=bucket_id,
+        ejercicio=resolved_ejercicio,
+        profile_record=profile_record,
+        prorrata_register_repository=prorrata_register_repository,
+    )
     return aggregate_renta_ledger_expenses(
         transactions,
         invoices,
@@ -285,6 +373,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         modelo=modelo,
         residence_ccaa=residence_ccaa,
         region_category_overrides=region_category_overrides,
+        iva_deduction_ratio=iva_deduction_ratio,
     )
 
 
@@ -300,6 +389,7 @@ def aggregate_renta_ledger_expenses(
     modelo: str = Modelo.M100.value,
     residence_ccaa: CCAA | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
+    iva_deduction_ratio: Decimal | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -322,6 +412,11 @@ def aggregate_renta_ledger_expenses(
         region_category_overrides: Optional per-:class:`CCAA` category-profile
             override layer; defaults to :func:`resolve_region_category_profiles`
             (empty) so every fact falls through to the state year profile.
+        iva_deduction_ratio: Optional activity-wide IVA-deduction fraction
+            (LIVA arts. 94/104), threaded onto :class:`RentaDeductibilityContext`
+            so the non-recoverable share of a fact's input IVA joins its
+            IRPF-deductible cost basis. ``None`` (the default) preserves the
+            historic base-only behaviour.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -338,6 +433,7 @@ def aggregate_renta_ledger_expenses(
         profile_year=resolved_profile_year,
         usage_ratios=dict(usage_ratios or {}),
         residence_ccaa=residence_ccaa,
+        iva_deduction_ratio=iva_deduction_ratio,
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
@@ -629,10 +725,10 @@ def _purchase_invoice_evidence_payload(
             reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
             detail=(
                 "transaction references no confirmed invoice in the catalogue, so this expense carries no "
-                "invoice totals to fold in; if the reference names a registered evidence record, confirm it "
-                "into an invoice with `aeat app ledger evidence confirm`, then re-attach this transaction to "
-                "the confirmed invoice id -- confirming alone leaves the transaction pointing at the evidence "
-                "record and this same advisory recurs"
+                "invoice totals to fold in; if the reference names a registered evidence record, confirming "
+                "it into an invoice does NOT repoint this transaction, and no verb currently replaces an "
+                "already-set purchase-invoice-evidence reference -- so record the expense against the "
+                "confirmed invoice on a transaction that has no evidence reference yet"
             ),
         )
     if invoice.bucket_id != bucket_id:
