@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:2536aa9797d35aed5374c210d178f75c88a1cea4c547d9f8f53a91ae5345513c'
+body_hash: 'sha256:3bfe9d9a7576987b7cdcddcb61c7f7ff867627323ab7de612e739057c5356ea0'
 step_id: 'S44'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-plan]]"
@@ -68,5 +68,7 @@ Two mutation-proofs, both restoring `_models.py` byte-exact afterwards (SHA-256 
 See the S41 record for the shared commit rationale and the peer-commit interaction on `application/aggregation`.
 
 **Case 3.º of art. 6.1.d (domestic operation, issuer established in the territorio de aplicación del impuesto) is a declared gap, not a guessed default.** `Invoice` carries no field naming where its issuer is established, so this case cannot be read from the record. Case 3.º is close to universal for a Spanish-established taxpayer's domestic operations, so leaving it unenforced is a real, if narrow, under-enforcement risk for a domestic simplificada with no declared IVA category or a domestic-rated category outside the two modelled cases. Flagged for the team lead rather than resolved unilaterally: closing it would require either a new issuer-establishment axis on `Invoice` or keying the requirement on domestic-vs-foreign `counterparty_country`, and the second reading conflates the ISSUER's establishment (what the law actually asks) with the counterparty's residency (a different fact the invoice does carry). The shared task list's item #41 ("the tax-id requirement keys on country, not on the IVA category art. 6.1.d actually names") is addressed by the country-consistency fix above for the intra-community case specifically; the case 3.º gap itself remains open.
+
+**Update, same day, operator-requested:** the case 3.º gap was closed in a follow-up commit `b721701389`, at the user's explicit request. The fact turned out not to need a new field at all: `TaxpayerProfile.fiscal_residency` (`FiscalResidency`, TRLIRNR art. 2) already carries it. `application/invoices/_issuer_establishment.py` derives `issuer_established_in_tai(profile)` from it (`RESIDENT_IRPF`/undeclared -> established, `NON_RESIDENT_IRNR` -> not, with the non-resident-with-permanent-establecimiento-permanente carve-out named rather than modelled, since this codebase has no such axis) and composes `simplificada_requires_tax_id_for_domestic_issuer(invoice, profile)`. Deliberately kept ADVISORY-weight and NOT wired into a construction-time or verify-time refusal -- an ordinary domestic ticket with no identified customer is common, legitimate practice, and this is the least certain of the three art. 6.1.d cases the codebase can evaluate. Wiring the actual `Notice` emission remains P06.S46's scope (wiring decomposition-adjacent advisories to a real consumer); this follow-up ships the predicate + tests only, ready for that wiring.
 
 **One unrelated pre-existing test failure observed in the broad 4283-test run**, confirmed NOT caused by this Step: `test_preclassified_candidate_outside_period_blocks_binding_resolution` in `application/aggregation/tests/test_iva_ledger.py` fails in isolation too, and `application/aggregation/_iva_ledger.py` carries live uncommitted peer WIP (`git status` shows it modified, unrelated to any commit in this record) at the time of this run.
