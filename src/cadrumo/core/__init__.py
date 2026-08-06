@@ -109,12 +109,12 @@ from ._credentials import (
     character_class_count,
 )
 from ._declaracion_idioma import DeclaracionIdioma
-from ._document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._descendant_relacion import (
     ART_58_2_ENTITLING_RELACIONES,
     ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
+from ._document_shape import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._fts_query import fts_or_group
@@ -345,8 +345,8 @@ __all__: list[str] = [
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
-    "DocumentShape",
     "DescendantRelacion",
+    "DocumentShape",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",

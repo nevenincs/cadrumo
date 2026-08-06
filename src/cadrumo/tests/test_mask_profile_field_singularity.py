@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ._inventory import SRC_CADRUMO, aeat_relative, leaf_name, production_ast_items, repo_relative
+from ._inventory import aeat_relative, leaf_name, production_ast_items, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -120,7 +120,9 @@ def masking_verdict_signature_violations(
         if not _returns_bool(node):
             continue
         sensitivity_args = [
-            arg for arg in _all_positional_and_keyword_args(node) if _annotation_is_optional_sensitivity_class(arg.annotation)
+            arg
+            for arg in _all_positional_and_keyword_args(node)
+            if _annotation_is_optional_sensitivity_class(arg.annotation)
         ]
         if not sensitivity_args:
             continue
@@ -170,7 +172,9 @@ def test_the_canonical_function_itself_matches_the_signature_this_gate_pins(
 
     violations = masking_verdict_signature_violations(repo_relative(canonical_path), tree, is_canonical=False)
 
-    assert len(violations) == 1, f"expected exactly one masking-verdict signature in the canonical module; got {violations}"
+    assert len(violations) == 1, (
+        f"expected exactly one masking-verdict signature in the canonical module; got {violations}"
+    )
     assert MASK_PROFILE_FIELD_NAME in violations[0]
 
 
@@ -339,7 +343,9 @@ def test_rule_ignores_a_bool_return_with_no_sensitivity_parameter() -> None:
         is_canonical=False,
     )
 
-    assert violations == [], f"a bare bool-returning function with no sensitivity parameter must not match; got {violations}"
+    assert violations == [], (
+        f"a bare bool-returning function with no sensitivity parameter must not match; got {violations}"
+    )
 
 
 def test_rule_ignores_an_optional_sensitivity_parameter_with_a_non_bool_return() -> None:
@@ -349,4 +355,6 @@ def test_rule_ignores_an_optional_sensitivity_parameter_with_a_non_bool_return()
         is_canonical=False,
     )
 
-    assert violations == [], f"an Optional[SensitivityClass] parameter with a non-bool return must not match; got {violations}"
+    assert violations == [], (
+        f"an Optional[SensitivityClass] parameter with a non-bool return must not match; got {violations}"
+    )

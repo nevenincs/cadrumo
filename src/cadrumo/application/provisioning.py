@@ -266,7 +266,7 @@ def read_total_system_memory_bytes() -> int | None:
         import ctypes
 
         class _MemoryStatusEx(ctypes.Structure):
-            _fields_ = (  # noqa: RUF012 - ctypes layout, not a mutable class attribute
+            _fields_ = (
                 ("dwLength", ctypes.c_ulong),
                 ("dwMemoryLoad", ctypes.c_ulong),
                 ("ullTotalPhys", ctypes.c_ulonglong),
