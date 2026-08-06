@@ -142,11 +142,11 @@ def _nif_iva_shape_suggestion() -> str:
 _playwright_stage = build_playwright_stage_runner(
     surface_label="NIF-IVA",
     log_prefix="nif iva",
-    shape_suggestion=_nif_iva_shape_suggestion(),
+    shape_suggestion=_nif_iva_shape_suggestion,
     logger=logger,
 )
 
-_locate: _LocateHelper = make_locate_helper("NIF-IVA", _nif_iva_shape_suggestion())
+_locate: _LocateHelper = make_locate_helper("NIF-IVA", _nif_iva_shape_suggestion)
 
 DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30000
 _COUNTRY_SELECTORS: tuple[str, ...] = (

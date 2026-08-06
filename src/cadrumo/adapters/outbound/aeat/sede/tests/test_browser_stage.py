@@ -30,7 +30,7 @@ async def test_shape_timeout_reports_external_shape_change() -> None:
             timeout_ms=250,
             surface_label="Demo Surface",
             log_prefix="demo surface",
-            shape_suggestion="Check whether the external page shape changed.",
+            shape_suggestion=lambda: "Check whether the external page shape changed.",
             logger=get_logger(__name__),
             timeout_is_shape_change=True,
         )
@@ -51,7 +51,7 @@ async def test_navigation_timeout_reports_live_navigation_failure() -> None:
             timeout_ms=250,
             surface_label="Demo Surface",
             log_prefix="demo surface",
-            shape_suggestion="Check whether the external page shape changed.",
+            shape_suggestion=lambda: "Check whether the external page shape changed.",
             logger=get_logger(__name__),
         )
 
@@ -71,7 +71,7 @@ async def test_playwright_error_reports_cause_type() -> None:
             timeout_ms=250,
             surface_label="Demo Surface",
             log_prefix="demo surface",
-            shape_suggestion="Check whether the external page shape changed.",
+            shape_suggestion=lambda: "Check whether the external page shape changed.",
             logger=get_logger(__name__),
         )
 

@@ -169,11 +169,11 @@ def _groi_shape_suggestion() -> str:
 _playwright_stage = build_playwright_stage_runner(
     surface_label="GROI",
     log_prefix="groi",
-    shape_suggestion=_groi_shape_suggestion(),
+    shape_suggestion=_groi_shape_suggestion,
     logger=logger,
 )
 
-_locate: _LocateHelper = make_locate_helper("GROI", _groi_shape_suggestion())
+_locate: _LocateHelper = make_locate_helper("GROI", _groi_shape_suggestion)
 
 
 class GroiNifVerdict(_SedeCheckerModel):

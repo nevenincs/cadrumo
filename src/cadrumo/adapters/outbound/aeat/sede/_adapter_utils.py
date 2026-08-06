@@ -158,7 +158,7 @@ def require_playwright_page(raw_page: object) -> Page:
 
 def make_locate_helper(
     surface_label: str,
-    shape_suggestion: str,
+    shape_suggestion: Callable[[], str],
 ) -> Callable[[Page, tuple[str, ...], str, str, int], Coroutine[Any, Any, Locator]]:
     """Return a ``_locate`` coroutine pre-bound to ``surface_label`` and ``shape_suggestion``.
 
@@ -166,15 +166,18 @@ def make_locate_helper(
     same body, differing only in the ``surface_label`` and ``shape_suggestion``
     strings they inject. This factory eliminates that duplicate; each driver calls::
 
-        _locate = make_locate_helper("GROI", _groi_shape_suggestion())
+        _locate = make_locate_helper("GROI", _groi_shape_suggestion)
 
     and then uses ``_locate(page, selectors, stage=..., description=..., timeout_ms=...)``
     directly.
 
     Args:
         surface_label: Sede surface name for log and error messages.
-        shape_suggestion: Localised guidance string appended to
-            :class:`~._errors.SedeParseError` when all selectors fail.
+        shape_suggestion: Thunk returning the localised guidance string
+            appended to :class:`~._errors.SedeParseError` when all
+            selectors fail. Passed as a callable, not a resolved string, so
+            the translation lookup runs only on that failure path instead
+            of forcing the locale catalogue to load at import time.
 
     Returns:
         An async callable with the same signature as the internal ``_locate``
@@ -493,7 +496,7 @@ async def first_visible_locator(
     timeout_ms: int,
     probe_timeout_ms: int,
     surface_label: str,
-    shape_suggestion: str,
+    shape_suggestion: Callable[[], str],
 ) -> Locator:
     """Return the first selector in ``selectors`` that resolves to a visible element.
 
@@ -517,8 +520,8 @@ async def first_visible_locator(
         probe_timeout_ms: Per-selector visibility probe budget (ms).
         surface_label: Sede surface name included in log and error
             messages (e.g. ``"GROI"``).
-        shape_suggestion: Localised guidance string appended to
-            :class:`SedeParseError` when all selectors fail.
+        shape_suggestion: Thunk returning the localised guidance string
+            appended to :class:`SedeParseError` when all selectors fail.
 
     Returns:
         The first ``Locator`` from ``selectors`` whose element was
@@ -545,7 +548,7 @@ async def first_visible_locator(
         f"{surface_label} expected page element was not visible: {description}",
         failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
         context={"stage": stage, "expected": description, "timeout_ms": timeout_ms},
-        suggestion=shape_suggestion,
+        suggestion=shape_suggestion(),
     )
 
 
