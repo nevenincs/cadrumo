@@ -103,11 +103,25 @@ immediately re-checking it fails again, which is the discriminator between a sta
 recording and an unstable producer. The output carries the same events in a different
 order, all sharing one timestamp because the documentation sandbox freezes the clock.
 
-Three call sites sort event lists by occurred-at alone. A stable sort preserves input
-order, so with every timestamp equal the result is only as deterministic as whatever
-order the store returns. A secondary sort key would make it reproducible. The exact
-site behind the profile-history path was not pinned, and the fix is not attempted here
-because it touches an audit-trail surface owned by another campaign.
+The first diagnosis offered here was wrong and is corrected. It claimed the ordering
+sorts on the timestamp alone and wants a secondary key. It does not: the canonical
+order key is already a pair of timestamp and event identifier, and its own docstring
+describes precisely this hazard and why the identifier breaks the tie. That mechanism
+is sound and needs no change.
+
+The real cause sits one level down. The tie-breaking identifier is content-addressed,
+derived from the event body, and the body carries a profile identifier that is
+generated afresh on every sandbox run. The recorded output masks that identifier to a
+placeholder, so two runs render what look like identical events in a different order
+while their true sort keys genuinely differ. The ordering is deterministic for a fixed
+dataset and unstable across runs that mint new identifiers, which is why refreshing and
+immediately re-checking still fails.
+
+That points the repair at the documentation harness rather than at the audit-trail
+ordering: a sandbox that seeded a fixed profile identifier would make the whole
+sequence reproducible without touching production ordering semantics. Not attempted
+here, and deliberately so, because the wrong repair was nearly committed on the first
+reading and the harness is owned elsewhere.
 
 This is worth fixing on its own merit rather than for this campaign: while it stands,
 the documentation lane can never be green, and a permanently red lane is one everyone
@@ -148,11 +162,25 @@ immediately re-checking it fails again, which is the discriminator between a sta
 recording and an unstable producer. The output carries the same events in a different
 order, all sharing one timestamp because the documentation sandbox freezes the clock.
 
-Three call sites sort event lists by occurred-at alone. A stable sort preserves input
-order, so with every timestamp equal the result is only as deterministic as whatever
-order the store returns. A secondary sort key would make it reproducible. The exact
-site behind the profile-history path was not pinned, and the fix is not attempted here
-because it touches an audit-trail surface owned by another campaign.
+The first diagnosis offered here was wrong and is corrected. It claimed the ordering
+sorts on the timestamp alone and wants a secondary key. It does not: the canonical
+order key is already a pair of timestamp and event identifier, and its own docstring
+describes precisely this hazard and why the identifier breaks the tie. That mechanism
+is sound and needs no change.
+
+The real cause sits one level down. The tie-breaking identifier is content-addressed,
+derived from the event body, and the body carries a profile identifier that is
+generated afresh on every sandbox run. The recorded output masks that identifier to a
+placeholder, so two runs render what look like identical events in a different order
+while their true sort keys genuinely differ. The ordering is deterministic for a fixed
+dataset and unstable across runs that mint new identifiers, which is why refreshing and
+immediately re-checking still fails.
+
+That points the repair at the documentation harness rather than at the audit-trail
+ordering: a sandbox that seeded a fixed profile identifier would make the whole
+sequence reproducible without touching production ordering semantics. Not attempted
+here, and deliberately so, because the wrong repair was nearly committed on the first
+reading and the harness is owned elsewhere.
 
 This is worth fixing on its own merit rather than for this campaign: while it stands,
 the documentation lane can never be green, and a permanently red lane is one everyone
