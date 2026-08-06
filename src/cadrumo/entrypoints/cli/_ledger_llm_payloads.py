@@ -21,7 +21,7 @@ applies elsewhere, or rejects a model proposal.
 
 from __future__ import annotations
 
-from ._schemas import OutputSchema
+from ...core.json_contract import OutputSchema
 
 
 class LedgerClassifyLlmSuggestResult(OutputSchema):

@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schema for the ``aeat app quickfile`` envelope.
 
 Projects the application :class:`~application.modelo.QuickfileResult` onto a
-strict :class:`~entrypoints.cli._schemas.OutputSchema` registered under the
+strict :class:`~core.json_contract.OutputSchema` registered under the
 ``quickfile`` command path. The per-stage outcomes and the terminal export
 receipt (path reference only — never raw fichero bytes) are surfaced so a machine
 consumer can read exactly which stage the chain reached and where it halted.
@@ -13,7 +13,7 @@ from ...application.modelo import QuickfileResult, QuickfileStage, QuickfileStag
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core import Period
 from ._modelo_payloads import ModeloExportPayload
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 
 class QuickfileStageOutcomePayload(OutputSchema):

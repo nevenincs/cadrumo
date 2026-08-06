@@ -21,7 +21,7 @@ from pydantic import Field, field_validator
 from ...core.decimal import try_parse_canonical_decimal
 from ...domain.categories import ProportionalityKind, SpendingCategory
 from ...domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 
 def _validated_ratio_text(value: str, *, field: str) -> str:

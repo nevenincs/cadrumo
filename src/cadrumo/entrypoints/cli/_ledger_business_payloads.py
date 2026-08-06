@@ -15,8 +15,8 @@ Covers three CLI sub-app payload families:
 * P07 -- the ``inventory`` sub-app.
 * P08 -- the purchase-invoice ``evidence`` sub-app.
 
-Each class is a strict :class:`~entrypoints.cli._schemas.OutputSchema`
-subclass, decorated with :func:`~entrypoints.cli._schemas.register_schema`
+Each class is a strict :class:`~core.json_contract.OutputSchema`
+subclass, decorated with :func:`~core.json_contract.register_schema`
 so the JSON-contract test suite can enumerate the surface. Re-imported into
 :mod:`~entrypoints.cli._ledger_payloads` so existing ``from ._ledger_payloads import
 BusinessInvoiceRecordPayload`` (etc.) call sites keep resolving unchanged.
@@ -31,7 +31,7 @@ from pydantic import AfterValidator, Field
 
 from ...domain.contribuyente.inventory import INVENTORY_SCHEMA_VERSION, MovementKind, ValuationMethod
 from ._decimal_wire import bounded_decimal_wire_text
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 from ._wire_scalars import IsoDateText, enum_value_text
 
 _ZERO = Decimal("0")

@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from ...domain.modelos import CalculationRevisionId, WorkUnitId
 from ._modelo_revision_payload_parts import CalculationRevisionProjectionFields, ObservationPayload
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 
 @register_schema("modelo.work.revision")

@@ -21,7 +21,7 @@ from pydantic import Field, model_validator
 from ...application.modelo import ResultSummaryRole
 from ...domain.calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
 from ...domain.modelos import CalculationRevisionId, WorkUnitId
-from ._schemas import OutputSchema
+from ...core.json_contract import OutputSchema
 
 
 class DetailRowPayload(OutputSchema):

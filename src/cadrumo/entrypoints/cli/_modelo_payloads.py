@@ -110,7 +110,7 @@ from ._payloads_modelo_reconcile import (
     ModeloReconciliationDiffPayload,
     WorkCompareTaxationResult,
 )
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloExportResult as _AppModeloExportResult

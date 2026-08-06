@@ -16,7 +16,7 @@ from pydantic import Field
 from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
 from ...domain.modelos import CalculationRevisionAmendmentKind, FilingRecordId
 from ._modelo_payloads import ModeloRecordPayload
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 
 class AmendWizardCorrectedCasillaPayload(OutputSchema):

@@ -26,13 +26,12 @@ from ...application.ledger import (
 )
 from ...core.decimal import format_decimal
 from ...core.i18n import tr
-from ...core.json_contract import Notice
+from ...core.json_contract import Notice, OutputSchema
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
 from ._common import _bad, _emit_envelope, parse_decimal_amount, parse_optional_decimal_amount
-from ._schemas import OutputSchema
 
 
 class _TransactionRepo(Protocol):

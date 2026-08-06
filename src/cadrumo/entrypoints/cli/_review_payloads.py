@@ -22,7 +22,7 @@ from ...application.review import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
 from ...core.time import UtcInstant
 from ...domain.calculations.registry import LegalRefId
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 
 class ReviewQueueRowPayload(OutputSchema):

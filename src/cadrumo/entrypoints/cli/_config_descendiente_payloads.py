@@ -41,7 +41,7 @@ from pydantic import Field, StringConstraints, model_validator
 
 from ...core import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.time import today_madrid
-from ._schemas import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, register_schema
 
 DescendantNif = Annotated[
     str,

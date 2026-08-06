@@ -85,7 +85,7 @@ from ._language_argv import apply_language_argv_to_environment as _apply_languag
 from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
 from ._root_payloads import AppRootResult, RootStatusResult
-from ._schemas import strict_round_trip as _strict_round_trip
+from ...core.json_contract import strict_round_trip as _strict_round_trip
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.

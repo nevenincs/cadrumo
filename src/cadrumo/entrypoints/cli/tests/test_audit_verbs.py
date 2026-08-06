@@ -156,7 +156,7 @@ def test_audit_replay_result_schema_is_not_registered() -> None:
     """The retired replay leaf's result schema (`modelo.audit.replay`) must no
     longer be a registered output schema."""
 
-    from .._schemas import SCHEMA_REGISTRY
+    from ....core.json_contract import SCHEMA_REGISTRY
 
     assert "modelo.audit.replay" not in SCHEMA_REGISTRY
 

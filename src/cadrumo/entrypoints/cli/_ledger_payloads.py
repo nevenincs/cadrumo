@@ -87,7 +87,7 @@ from ._ledger_rule_payloads import (
     RuleApplyResult,
     RuleListResult,
 )
-from ._schemas import OutputRootSchema, OutputSchema, register_schema
+from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
 
 _LEDGER_BUSINESS_PAYLOAD_EXPORTS = (
     BusinessInvoiceListResult,
