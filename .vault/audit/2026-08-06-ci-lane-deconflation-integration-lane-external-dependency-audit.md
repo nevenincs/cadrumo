@@ -96,6 +96,40 @@ dispatched run is therefore not queued behind capacity, it is unsatisfiable unti
 returns. The evidence needed to resolve the twenty-seven is not merely absent, it cannot
 currently be obtained.
 
+### docs-lane-sequence-nondeterminism | medium | Two documented sequences produce different output on consecutive identical runs
+
+Two history sequences cannot be satisfied by any recorded golden. Refreshing one and
+immediately re-checking it fails again, which is the discriminator between a stale
+recording and an unstable producer. The output carries the same events in a different
+order, all sharing one timestamp because the documentation sandbox freezes the clock.
+
+Three call sites sort event lists by occurred-at alone. A stable sort preserves input
+order, so with every timestamp equal the result is only as deterministic as whatever
+order the store returns. A secondary sort key would make it reproducible. The exact
+site behind the profile-history path was not pinned, and the fix is not attempted here
+because it touches an audit-trail surface owned by another campaign.
+
+This is worth fixing on its own merit rather than for this campaign: while it stands,
+the documentation lane can never be green, and a permanently red lane is one everyone
+learns to ignore.
+
+### docs-lane-teaches-an-export-that-cannot-succeed | high | The Modelo 100 export refuses for want of an authoritative value, and the docs teach it as working
+
+Exporting Modelo 100 fails because the export layout has no declared auxiliary version.
+Every schema for the modelo makes that block mandatory, no bundled dictionary declares
+the rows, and no bundled source carries an authoritative value. The system therefore
+refuses rather than inventing a token that would satisfy the schema while asserting
+something unverified.
+
+The refusal is correct and is exactly the grounding discipline this project requires.
+The problem is that a documentation page teaches this export as a working step, so the
+lane fails on a product gap rather than a documentation defect.
+
+Deliberately not silenced. The sequence framework can declare a non-zero exit as
+expected, which would turn the lane green while documenting a blocked feature as though
+it were intended. That is a content decision for the documentation owner, and taking it
+inside a lane-fixing change would hide a real gap behind a green signal.
+
 ## Recommendations
 
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
@@ -106,6 +140,40 @@ currently be obtained.
      followed by a paragraph carrying the detail. integration parallel lane depends on a live ECB service is a concise kebab-case slug,
      {level} is the severity (critical, high, medium, low), and {summary} is a one-line
      statement. Append continuously as findings surface; do not rewrite settled entries. -->
+
+### docs-lane-sequence-nondeterminism | medium | Two documented sequences produce different output on consecutive identical runs
+
+Two history sequences cannot be satisfied by any recorded golden. Refreshing one and
+immediately re-checking it fails again, which is the discriminator between a stale
+recording and an unstable producer. The output carries the same events in a different
+order, all sharing one timestamp because the documentation sandbox freezes the clock.
+
+Three call sites sort event lists by occurred-at alone. A stable sort preserves input
+order, so with every timestamp equal the result is only as deterministic as whatever
+order the store returns. A secondary sort key would make it reproducible. The exact
+site behind the profile-history path was not pinned, and the fix is not attempted here
+because it touches an audit-trail surface owned by another campaign.
+
+This is worth fixing on its own merit rather than for this campaign: while it stands,
+the documentation lane can never be green, and a permanently red lane is one everyone
+learns to ignore.
+
+### docs-lane-teaches-an-export-that-cannot-succeed | high | The Modelo 100 export refuses for want of an authoritative value, and the docs teach it as working
+
+Exporting Modelo 100 fails because the export layout has no declared auxiliary version.
+Every schema for the modelo makes that block mandatory, no bundled dictionary declares
+the rows, and no bundled source carries an authoritative value. The system therefore
+refuses rather than inventing a token that would satisfy the schema while asserting
+something unverified.
+
+The refusal is correct and is exactly the grounding discipline this project requires.
+The problem is that a documentation page teaches this export as a working step, so the
+lane fails on a product gap rather than a documentation defect.
+
+Deliberately not silenced. The sequence framework can declare a non-zero exit as
+expected, which would turn the lane green while documenting a blocked feature as though
+it were intended. That is a content decision for the documentation owner, and taking it
+inside a lane-fixing change would hide a real gap behind a green signal.
 
 ## Recommendations
 
