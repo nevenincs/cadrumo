@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from ...deadlines.taxpayer_model import TaxpayerProfile
+from ...deadlines import TaxpayerProfile
 
 __all__ = ["PayerFact", "payer_fact_holds"]
 

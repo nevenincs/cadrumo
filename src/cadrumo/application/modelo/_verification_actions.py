@@ -375,10 +375,29 @@ def _missing_evidence_findings(
                     # until a recalculate produces a revision that matches the
                     # ledger. Naming only "rerun verification" sent the operator
                     # who took the second route straight into that refusal.
-                    f"Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with "
-                    f"`aeat app ledger attach {diagnostic.binding_id} --purchase-invoice-evidence-id EVIDENCE_ID`, "
-                    "then rerun verification. If instead you reclassify the row to drop the deduction, "
-                    "recalculate before verifying."
+                    #
+                    # `evidence confirm` is named first and `evidence add` +
+                    # `attach --purchase-invoice-evidence-id` second, not the
+                    # reverse. Only `confirm` mints a real reconciliation-catalogue
+                    # `Invoice`, which passes RD 1619/2012 art. 6 content
+                    # validation before it can satisfy this gate; a bare
+                    # `PurchaseInvoiceEvidence` record from `attach` has every
+                    # content field optional and is not checked against art. 6 at
+                    # all. Leading with the unvalidated path taught the operator
+                    # to take it, which is what left this gate's own satisfying
+                    # condition weaker than the statute it cites.
+                    # This branch's total length is bound by the 500-char
+                    # `_FindingMessage` elision cap (domain/modelos/_verification_report.py),
+                    # and this text sits within a few characters of it -- a
+                    # binding_id is a fixed-length sha256 hex digest, so the
+                    # budget does not vary between rows, but adding prose here
+                    # needs a fresh length check, not an assumption of headroom.
+                    f"Register the invoice with `aeat app ledger evidence add PATH`, confirm it with `aeat app "
+                    "ledger evidence confirm --kind received --evidence-id ID --counterparty-name NAME`, bind it "
+                    f"with `aeat app ledger link {diagnostic.binding_id} --invoice-id ID`, then rerun "
+                    f"verification. `aeat app ledger attach {diagnostic.binding_id} "
+                    "--purchase-invoice-evidence-id ID` also satisfies this gate but skips art. 6 content "
+                    "validation -- prefer confirm."
                     if is_deductible_gap
                     else (
                         f"Advisory only: keep issued/sales invoice support for ledger row {diagnostic.binding_id}. "

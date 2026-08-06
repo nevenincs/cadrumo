@@ -29,13 +29,13 @@ from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.time import now as utc_now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventObjectType,
     BucketEventType,
     emit_bucket_event,
 )
-from ._utils import utc_now
 
 SYSTEM_BUCKET_ID: Final[str] = "system"
 WORKFLOW_STATE_OBJECT_ID: Final[str] = "cadrumo.workflow:state"

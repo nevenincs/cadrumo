@@ -25,7 +25,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....application.aggregation import RetencionObservationRepository
+from ....application.aggregation import AggregationValidationError, RetencionObservationRepository
 from ....application.invoices import create_catalogue_invoice
 from ....application.modelo import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics, create_work_unit
 from ....application.user_profile import UserProfileLifecycleRepository
@@ -329,9 +329,15 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
     Same producer call, same base/rate/counterparty/category as
     :func:`test_producer_created_invoice_routes_through_aggregate_cli_into_m111`
     -- only ``retention_rate``/``retention_amount`` differ (both ``None``,
-    the pre-#66 state). The invoice is excluded for
-    ``no_retencion_declared``, and the M111 casillas this Step's producer
-    populates stay at zero.
+    the pre-#66 state). The invoice is excluded for ``no_retencion_declared``,
+    so the per-perceptor store stays empty and the M111 calculate path refuses
+    for want of any observation rather than emitting an all-blank filing.
+
+    The refusal is the mutation signal. Its companion above calculates
+    successfully and moves the casillas, so the two outcomes still discriminate:
+    routing a retención produces values, routing an invoice without one produces
+    no observation at all. Asserting zeroed casillas here would instead require
+    the silent zero the resolver deliberately refuses.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 producer retencion") as profile:
         objects: SecureObjectRepository = profile.repository
@@ -370,8 +376,10 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
         )
         assert stored == ()
 
-        values = _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
+        with pytest.raises(AggregationValidationError) as exc_info:
+            _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
 
-    assert values.get("09", Decimal("0")) == Decimal("0")
-    assert values.get("28", Decimal("0")) == Decimal("0")
-    assert values.get("30", Decimal("0")) == Decimal("0")
+    assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
+    assert exc_info.value.context["modelo"] == "111"
+    assert exc_info.value.context["period"] == "1T"
+    assert "--retencion-observation" in (exc_info.value.suggestion or "")

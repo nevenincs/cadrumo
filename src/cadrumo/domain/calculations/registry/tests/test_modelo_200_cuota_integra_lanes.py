@@ -35,10 +35,12 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import CasillaId, calculate_registry_snapshot, validated_casilla_id
-from ..applicability import (
+from .. import (
+    CasillaId,
     Modelo202Modality,
+    calculate_registry_snapshot,
     derive_modelo_202_modality,
+    validated_casilla_id,
 )
 from ._registry_schema_support import _committed_snapshot
 

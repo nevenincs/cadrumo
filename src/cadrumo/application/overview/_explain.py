@@ -5,7 +5,7 @@
 verdict is DERIVED from the three-axis
 :class:`~domain.deadlines.TaxpayerProfile` taxpayer model through
 the registry-grounded
-:func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
+:func:`~domain.calculations.registry.derive_modelo_applicability`
 rule table, never assumed from an autónomo default. An undeclared taxpayer
 model yields an explicit ``incomplete`` verdict: the service
 reports "declare your taxpayer type first" rather than a confident
@@ -33,9 +33,9 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
 from ...core.time import now, today_madrid
-from ...domain.calculations.registry import LegalRefId
-from ...domain.calculations.registry.applicability import (
+from ...domain.calculations.registry import (
     ApplicabilityVerdict,
+    LegalRefId,
     derive_modelo_applicability,
 )
 from ...domain.deadlines import (
@@ -216,7 +216,7 @@ def build_overview_explain(
 
     The ``applicable`` flag and the ``verdict`` are DERIVED from the
     three-axis taxpayer model through
-    :func:`~domain.calculations.registry.applicability.derive_modelo_applicability`
+    :func:`~domain.calculations.registry.derive_modelo_applicability`
     — never from an autónomo default. An undeclared taxpayer
     model yields an ``INCOMPLETE`` verdict: the service
     reports "declare your taxpayer type first" instead of a confident

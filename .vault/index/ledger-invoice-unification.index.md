@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#ledger-invoice-unification'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:dcc9439ee698e1f68cd2c47b7228afbda280fa71f7286d7f17af432ce4281e2f'
+body_hash: 'sha256:0bad556dd2892c40d94629291eb784884c8754019bedcc38d28e0ec99cd2b22a'
 related:
   - '[[2026-06-10-ledger-invoice-unification-P01-S01]]'
   - '[[2026-06-10-ledger-invoice-unification-P01-S02]]'
@@ -53,7 +53,7 @@ Auto-generated index of all documents tagged with `#ledger-invoice-unification`.
 
 ### adr
 
-- `2026-06-10-ledger-invoice-unification-adr` - `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `accepted`)
+- `2026-06-10-ledger-invoice-unification-adr` - `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `superseded`)
 
 ### audit
 

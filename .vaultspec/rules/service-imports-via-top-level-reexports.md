@@ -46,11 +46,26 @@ set are structural data).
 
 - **Good:** a new ``cadrumo.application.bucket_maintenance`` service imports
   ``rename_profile`` from ``cadrumo.application.user_profile`` (the package
-  ``__all__`` re-export), promoted before the service file was authored; the six
-  documented non-``__init__`` bridge modules — ``registry/applicability.py``,
-  ``deadlines/taxpayer_model.py``, ``transactions/_ids.py``, ``cli/_schemas.py``,
-  ``outbound/aeat/_playwright.py``, ``workflow/_utils.py`` — remain acceptable
-  canonical sources under Ruling 4.
+  ``__all__`` re-export), promoted before the service file was authored.
+- **Superseded:** Ruling 4's six documented non-``__init__`` bridge modules are
+  NOT a standing exception anymore. An operator directive collapsing every
+  redefinition onto its single canonical home overrides Ruling 4 project-wide:
+  ``workflow/_utils.py``, ``deadlines/taxpayer_model.py``, and
+  ``registry/applicability.py`` are removed, their consumers repointed to the
+  owning package's own facade (``core.time``/``domain.contribuyente``,
+  ``domain.deadlines``, ``domain.calculations.registry`` respectively);
+  ``cli/_schemas.py`` is removed, its 47 consumers repointed to
+  ``core.json_contract``. ``outbound/aeat/_playwright.py`` is EXCLUDED from the
+  removal, not kept as a Ruling-4 survivor: it is not a re-export at all — it
+  defines its own optional-``playwright``-extra fallback exception classes with
+  no canonical definition elsewhere, and `dev/import_hygiene_scan.py`
+  misclassifies it as `pure_reexport_shape` because its walk does not see
+  definitions nested inside a `try`/`except ImportError` branch (a scanner
+  blind spot worth fixing separately). ``transactions/_ids.py`` is held, not
+  kept: its canonical target is ``core.identity`` for every consumer including
+  the four inside ``domain/invoices/``, but those four sit inside a
+  concurrently-frozen invoice-lane collapse and the removal is deferred to
+  that team rather than forced through the freeze.
 - **Good:** an underscore-named symbol reached by two or more unrelated production
   packages is renamed to public and promoted to ``__all__`` (Ruling 3.i); one
   reached by exactly one narrow caller instead gets a purpose-built narrower public
