@@ -4,13 +4,15 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:9b2db473dba44d31a80599aeb66890b3ca314855dd63406d415c7f8e0956a2f6'
+body_hash: 'sha256:9291eed22d659744f9a2d82cc29a5b080a0b552f29124ed1b5054ec50d2c85e7'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-reference]]'
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
 ---
+
+<!-- RETIRED: S54 -->
 
 # `ledger-invoice-decomposition` plan
 
@@ -57,15 +59,15 @@ Let exempt invoices recover their retencion by relaxing the inference preconditi
 Escalate the missing-substrate advisory to a verify-stage refusal only where the under-declaration direction is certain, on operator ratification.
 
 - [ ] `P04.S14` - Escalate the advisory to a verify-stage refusal only for a row declaring a cuota-less category with no taxable base, pending operator ratification; `src/cadrumo/application/modelo`.
-- [ ] `P04.S36` - Decide whether the external-grounding gate admits bound casillas, since a bound value is as oracle-checkable as a computed one, before amending the S15 and S16 Step texts; `.vault/adr`.
+- [x] `P04.S36` - Decide whether the external-grounding gate admits bound casillas, since a bound value is as oracle-checkable as a computed one, before amending the S15 and S16 Step texts; `.vault/adr`.
 
 ### Phase `P05` - Oracle grounding and roundtrip coverage
 
 Prove the chain against external AEAT authority rather than against itself, anchored on a worked example carrying retencion and an exempt-services example, with roundtrip coverage for every new persisted field.
 
-- [ ] `P05.S15` - Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `P05.S16` - Ground the chain on an exempt-services example proving the under-declaration direction is closed; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `P05.S17` - Add strict roundtrip coverage for every new persisted field, with an anti-tautology proof that a deleted field is refused on load; `src/cadrumo/application/calculations/tests`.
+- [x] `P05.S15` - Ground the chain's retencion on the registry RIRPF art. 95 rate parameter and record that no bundled AEAT worked example publishes a professional retencion figure, so external-oracle grounding is unavailable for this chain and the casilla is never declared externally grounded; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `P05.S16` - Ground the chain on an exempt-services example proving the under-declaration direction is closed; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `P05.S17` - Add strict roundtrip coverage for every new persisted field, with an anti-tautology proof that a deleted field is refused on load; `src/cadrumo/application/calculations/tests`.
 - [x] `P05.S22` - Prove one well-formed ledger invoice surfaces consistently in renta income, retenciones and IVA together in a single scenario, with the three figures reconciling to the same decomposition; `src/cadrumo/application/aggregation/tests`.
 - [x] `P05.S23` - Prove an ambiguous or incomplete invoice is excluded from all three domains WITH a visible advisory, never silently dropped and never silently folded; `src/cadrumo/application/aggregation/tests`.
 - [x] `P05.S24` - Prove each cross-domain assertion fails when the code is wrong, by mutating the decomposition and confirming the scenario reddens rather than passing vacuously; `src/cadrumo/application/aggregation/tests`.
@@ -90,10 +92,13 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [x] `P06.S43` - Let a factura rectificativa name what it corrects, so the cuota rectification LIVA article 89 requires becomes representable; `src/cadrumo/domain/invoices/_models.py`.
 - [x] `P06.S44` - Key the counterparty tax-id requirement to the three cases article 6.1.d enumerates, and in those same cases require a structurally-valid NIF-IVA rather than any tax id, so an intra-community supply stops accepting a domestic number; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/_validators.py`.
 - [x] `P06.S45` - Represent pagos anticipados so a prepayment devengues on collection for the amount received, honouring the article 25 exclusion; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/application/aggregation`.
-- [ ] `P06.S46` - Wire the invoice decomposition contract to a consumer so its defect verdicts reach an operator, since it classifies nothing today and the aggregation paths each carry their own inline guard set instead; `src/cadrumo/application/aggregation, src/cadrumo/application/invoices`.
+- [x] `P06.S46` - Wire the invoice decomposition contract to a consumer so its defect verdicts reach an operator, since it classifies nothing today and the aggregation paths each carry their own inline guard set instead; `src/cadrumo/application/aggregation, src/cadrumo/application/invoices`.
 - [x] `P06.S47` - Wire route_invoice_retenciones into the invoice lifecycle so a received invoice's retencion reaches Modelo 111, asserting the filed figure moves rather than that the projection returns a value; `src/cadrumo/application/aggregation/_invoice_retencion.py, src/cadrumo/application/invoices`.
-- [ ] `P06.S48` - Thread the operation date into period attribution with a declared rank marker naming which source produced it, surfaced identically on the pull and calculate paths; `src/cadrumo/application/aggregation`.
+- [x] `P06.S48` - Thread the operation date into period attribution with a declared rank marker naming which source produced it, surfaced identically on the pull and calculate paths; `src/cadrumo/application/aggregation`.
 - [x] `P06.S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides; `src/cadrumo/application/aggregation/tests`.
 - [x] `P06.S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases; `src/cadrumo/domain/invoices/tests`.
 - [x] `P06.S51` - Bundle RD 1619/2012 art. 4 and refuse a factura simplificada for an entrega intracomunitaria exenta (art. 4.4.a), declaring the amount-threshold and sector-list eligibility axis unverified pending an ADR amendment; `src/cadrumo/_data/corpus/normatives/html, src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/tests`.
 - [x] `P06.S52` - Carry recargo de equivalencia inside the ledger transaction totals identity, so the substrate Modelo 303 and 130 actually read stops refusing the truthful row and accepting the falsified one; `src/cadrumo/domain/transactions/_models.py, src/cadrumo/domain/transactions/tests/test_gross_invariant.py`.
+- [x] `P06.S53` - Refuse a missing --total-amount on the slim invoice add CLI verb instead of silently defaulting the total to zero, since the total drives whether a counterparty is declared at all under the RD 1065/2007 art. 31 Modelo 347 threshold; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [ ] `P06.S55` - Wire simplificada_requires_tax_id_for_domestic_issuer to an operator-facing Notice, since it is exported and tested with zero production callers, and create_catalogue_invoice does not yet accept invoice_class or an optional tax id at all, so the state it evaluates cannot even be created through the CLI create flow today, sequenced after P06.S46 whose consumer wiring likely serves both; `src/cadrumo/application/invoices, src/cadrumo/entrypoints/cli`.
+- [x] `P06.S56` - Join the non-deductible share of a fact's input IVA to the IRPF-deductible cost basis via a new RentaDeductibilityContext.iva_deduction_ratio axis, grounded on the AEAT Manual practico Renta 2024 medico radiologo nota 7 worked example (activity exempt from IVA, no right to deduct), leaving the axis unwired from any production taxpayer-fact source as a named follow-up; `src/cadrumo/domain/renta/_ledger_expenses.py, src/cadrumo/domain/renta/tests/test_ledger_expenses.py`.
