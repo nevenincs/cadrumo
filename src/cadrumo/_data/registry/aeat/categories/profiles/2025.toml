@@ -955,7 +955,7 @@ notes = "categories.registry.amortizacion_vivienda_afecto.notes"
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
 reference = "Ley 35/2006"
-locator = "art. 30.2.5.b (regla 4ª, amortización vivienda afecta)"
+locator = "art. 29.2 y art. 28.1 (amortización de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.amortizacion_vivienda_afecto.citations.0.quote"
 
@@ -978,7 +978,7 @@ notes = "categories.registry.ibi_vivienda_afecto.notes"
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
 reference = "Ley 35/2006"
-locator = "art. 30.2.5.b (regla 2ª, tributos no estatales vivienda afecta)"
+locator = "art. 29.2 y art. 28.1 (tributos no estatales de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.ibi_vivienda_afecto.citations.0.quote"
 
@@ -1001,7 +1001,7 @@ notes = "categories.registry.comunidad_vivienda_afecto.notes"
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
 reference = "Ley 35/2006"
-locator = "art. 30.2.5.b (regla 2ª, gastos titularidad vivienda afecta)"
+locator = "art. 29.2 y art. 28.1 (gastos de titularidad de la vivienda parcialmente afecta)"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.comunidad_vivienda_afecto.citations.0.quote"
 
