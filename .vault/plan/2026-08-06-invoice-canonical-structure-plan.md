@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-06'
-body_hash: 'sha256:84fb6b6deb1f15c7c1b30ccdeb95931c6194d2b34f96e21ddaf451a627e1aa45'
+body_hash: 'sha256:ef98f0ef5f5bb8392c52f9c74c84490116445731eab9805b2f70caafdb247101'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -62,7 +62,7 @@ Capability conservation is this plan's organising law and this phase is where th
 - [ ] `P01.S34` - Re-decide the M349 treatment of an absent iva_category now that its stated justification is stale, the enum having gained intra-community service members in 7502ee65ed while the resolver docstring still says services map to no member, and either correct the reasoning while keeping the behaviour or change the behaviour, never leaving a filing-path guard resting on a false premise; `src/cadrumo/application/invoices/_source_resolver.py`.
 - [x] `P01.S35` - Close the bucket-attribution asymmetry before the fold, making a persisted canonical Invoice carry a bucket_id by requiring it at the construction boundary rather than defaulting to None, and correcting the InvoiceCatalogueRepository ownership-guard docstring which today asserts as its stated justification that most invoices carry no bucket at all, a premise the production writers refute because every canonical construction path passes a resolved bucket_id; `src/cadrumo/domain/invoices/_models.py`.
 - [x] `P01.S36` - Remove the ES counterparty-country default from both canonical entry verbs so an omitted country refuses or derives rather than silently stamping a domestic country on a foreign invoice, preserving the slim verb's derive-or-raise behaviour across the fold because country is the routing key for both informativas; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [ ] `P01.S37` - Give the canonical invoice write paths the bucket lifecycle events the slim store emits, because the canonical creation, mutation and deletion paths emit no bucket event of any kind while the slim services emit six dedicated event types and return their ids in the operator mutation result, so repointing the bare verbs would drop the invoice audit trail and the bucket-event-ids field together, and deleting the slim store would orphan six enum members that then need consumer reconciliation; `src/cadrumo/application/invoices/_creation.py`.
+- [x] `P01.S37` - Give the canonical invoice write paths the bucket lifecycle events the slim store emits, because the canonical creation, mutation and deletion paths emit no bucket event of any kind while the slim services emit six dedicated event types and return their ids in the operator mutation result, so repointing the bare verbs would drop the invoice audit trail and the bucket-event-ids field together, and deleting the slim store would orphan six enum members that then need consumer reconciliation; `src/cadrumo/application/invoices/_creation.py`.
 
 ### Phase `P02` - Extend the writer surface to the canonical model and the confirm boundary
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:f8dca050ebe71d17c7e0516c75706d506781780d0a18cb1aa82c7cbb7827e1e8'
+body_hash: 'sha256:c67f7e6348311ba5c4ee5cbfd0189fc12b4309360ff0c6874a674a4547540b85'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S30]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S35]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S36]]'
+  - '[[2026-08-06-invoice-canonical-structure-P01-S37]]'
   - '[[2026-08-06-invoice-canonical-structure-P02-S07]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
@@ -55,6 +56,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P01-S30` - Add the parameters that make the canonical writer reach parity with what the canonical model already claims to represent, namely invoice-class, series, rectifies-invoice-number and recargo-amount, which no production path can set today so every canonically written invoice is ORDINARIA with no series and no recargo by construction and rectificativas are unrepresentable
 - `2026-08-06-invoice-canonical-structure-P01-S35` - Close the bucket-attribution asymmetry before the fold, making a persisted canonical Invoice carry a bucket_id by requiring it at the construction boundary rather than defaulting to None, and correcting the InvoiceCatalogueRepository ownership-guard docstring which today asserts as its stated justification that most invoices carry no bucket at all, a premise the production writers refute because every canonical construction path passes a resolved bucket_id
 - `2026-08-06-invoice-canonical-structure-P01-S36` - Remove the ES counterparty-country default from both canonical entry verbs so an omitted country refuses or derives rather than silently stamping a domestic country on a foreign invoice, preserving the slim verb's derive-or-raise behaviour across the fold because country is the routing key for both informativas
+- `2026-08-06-invoice-canonical-structure-P01-S37` - Give the canonical invoice write paths the bucket lifecycle events the slim store emits, because the canonical creation, mutation and deletion paths emit no bucket event of any kind while the slim services emit six dedicated event types and return their ids in the operator mutation result, so repointing the bare verbs would drop the invoice audit trail and the bucket-event-ids field together, and deleting the slim store would orphan six enum members that then need consumer reconciliation
 - `2026-08-06-invoice-canonical-structure-P02-S07` - Stop synthesising exactly one line at BOTH synthesis sites, the canonical builder and the live bulk importer, accepting a supplied line set and proving a two-line invoice at different rates persists and aggregates per line with no persisted-schema change
 
 ### plan
