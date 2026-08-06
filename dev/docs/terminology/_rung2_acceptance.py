@@ -18,6 +18,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ._miss_rate import DEFAULT_RUNG2_MISS_RATE_THRESHOLD
 from ._model2vec_provider import (
     POTION_MODEL_DIMENSION,
     POTION_MODEL_LICENSE,
@@ -59,7 +60,7 @@ class Rung2AcceptanceEvidence(BaseModel):
     payload_bytes: int = Field(ge=1, le=DEFAULT_MAX_SERIALIZED_BYTES)
     quantization_accepted: Literal[True]
     held_out_top_five_loss: Literal[False]
-    held_out_miss_rate: float = Field(ge=0.0, le=0.1)
+    held_out_miss_rate: float = Field(ge=0.0, le=DEFAULT_RUNG2_MISS_RATE_THRESHOLD)
     no_locale_or_kind_regression: Literal[True]
 
     @field_validator(
