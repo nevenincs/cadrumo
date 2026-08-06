@@ -28,7 +28,7 @@ add->link gap without collapsing the two stores.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
@@ -39,6 +39,12 @@ from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
+from ...domain.buckets import (
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+    emit_bucket_event,
+)
 from ...domain.currency import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,
@@ -80,6 +86,64 @@ class CatalogueInvoiceCreateResult(BaseModel):
 
     invoice: Invoice
     catalogue: InvoiceCatalogue
+    bucket_event_ids: tuple[str, ...] = ()
+
+
+# An invoice's DIRECTION decides which lifecycle event it emits, so the
+# canonical store speaks the same event vocabulary the slim store did rather
+# than inventing a second one. Issued invoices are collectible (a customer owes
+# us); received ones are payable (we owe a vendor).
+_CREATED_EVENT_BY_KIND: dict[InvoiceKind, tuple[BucketEventType, BucketEventObjectType]] = {
+    InvoiceKind.ISSUED: (BucketEventType.COLLECTIBLE_INVOICE_CREATED, BucketEventObjectType.COLLECTIBLE_INVOICE),
+    InvoiceKind.RECEIVED: (BucketEventType.PAYABLE_INVOICE_CREATED, BucketEventObjectType.PAYABLE_INVOICE),
+}
+
+_INVOICE_EVENT_PAYLOAD_VERSION = 1
+
+
+def _emit_catalogue_invoice_created(
+    *,
+    invoice: Invoice,
+    bucket_id: str,
+    event_repository: BucketEventHistoryRepositoryProtocol | None,
+    occurred_at: datetime,
+    actor: str,
+) -> tuple[str, ...]:
+    """Append the creation event for a canonically-written invoice.
+
+    The canonical write paths emitted NO bucket event of any kind, while the
+    slim store emitted six types and returned their ids to the operator. So
+    repointing the operator's verbs onto this store would have dropped the
+    invoice audit trail and the event-ids field in the same change -- a
+    capability loss with no replacement, which is why it blocked the fold.
+
+    The event type is chosen by direction so this store speaks the vocabulary
+    that already exists rather than minting a parallel one; the six members
+    outlive the slim store that used to be their only emitter.
+    """
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import secure_object_repository_for_bucket
+
+    repository = event_repository or BucketEventHistoryRepository(
+        objects=secure_object_repository_for_bucket(bucket_id),
+    )
+    event_type, object_type = _CREATED_EVENT_BY_KIND[invoice.kind]
+    event = emit_bucket_event(
+        repository=repository,
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=object_type,
+        object_id=invoice.invoice_id,
+        payload={
+            "invoice_number": invoice.invoice_number,
+            "invoice_date": invoice.issued_at.isoformat(),
+            "counterparty_nif": invoice.counterparty_tax_id or "",
+        },
+        payload_version=_INVOICE_EVENT_PAYLOAD_VERSION,
+    )
+    return (event.event_id,)
 
 
 def _resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
@@ -319,6 +383,9 @@ def create_catalogue_invoice(
     lines: Sequence[InvoiceLine] | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
+    event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+    actor: str = "cli",
 ) -> CatalogueInvoiceCreateResult:
     """Persist one rich catalogue :class:`Invoice` and return the updated catalogue.
 
@@ -365,7 +432,22 @@ def create_catalogue_invoice(
     updated[invoice.invoice_id] = invoice
     new_catalogue = InvoiceCatalogue.model_validate({"invoices": updated})
     repo.save(new_catalogue)
-    return CatalogueInvoiceCreateResult(invoice=invoice, catalogue=new_catalogue)
+    # Emitted AFTER the save, so the audit trail never records a creation that
+    # did not persist. The reverse order would leave an event pointing at an
+    # invoice that is not there, which is worse than a missing event: it reads
+    # as evidence.
+    event_ids = _emit_catalogue_invoice_created(
+        invoice=invoice,
+        bucket_id=bucket_id,
+        event_repository=event_repository,
+        occurred_at=occurred_at or datetime.now(UTC),
+        actor=actor,
+    )
+    return CatalogueInvoiceCreateResult(
+        invoice=invoice,
+        catalogue=new_catalogue,
+        bucket_event_ids=event_ids,
+    )
 
 
 __all__ = [

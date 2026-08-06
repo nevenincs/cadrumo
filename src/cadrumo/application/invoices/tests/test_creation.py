@@ -806,3 +806,55 @@ def test_the_default_invoice_class_is_still_ordinaria() -> None:
     assert invoice.series is None
     assert invoice.recargo_amount is None
     assert invoice.grand_total == Decimal("1210.00")
+
+
+@pytest.mark.parametrize(
+    ("kind", "expected_event"),
+    [
+        (InvoiceKind.ISSUED, "COLLECTIBLE_INVOICE_CREATED"),
+        (InvoiceKind.RECEIVED, "PAYABLE_INVOICE_CREATED"),
+    ],
+)
+def test_canonical_creation_emits_the_lifecycle_event_for_its_direction(
+    tmp_path: Path,
+    kind: InvoiceKind,
+    expected_event: str,
+) -> None:
+    """The canonical store now emits the audit trail the slim store carried.
+
+    The canonical write paths emitted NO bucket event of any kind, while the
+    slim services emitted six types and returned their ids in the operator's
+    mutation result. Repointing the operator's verbs onto this store would
+    therefore have dropped the invoice audit trail and the event-ids field in
+    one change, and deleting the slim store would have orphaned six enum
+    members. That is why the conservation inventory ruled this a blocking row.
+
+    Parametrised over both directions because the event type is chosen BY
+    direction: a single-direction test would pass while the other half emitted
+    the wrong event, which is the same silent mis-attribution the campaign has
+    already found on other axes.
+    """
+    from ....domain.buckets import BucketEventType
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        result = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=kind,
+            counterparty_name="Papeleria Sol SL",
+            counterparty_tax_id="A58818501",
+            counterparty_country="ES",
+            invoice_number=f"EV-2026-{kind.value}",
+            issued_at=date(2026, 6, 1),
+            taxable_base=Decimal("100.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+        )
+        from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+
+        history = BucketEventHistoryRepository(objects=profile.repository).load().events.values()
+
+    assert len(result.bucket_event_ids) == 1
+    emitted = [event for event in history if event.event_id == result.bucket_event_ids[0]]
+    assert len(emitted) == 1, "the returned event id must resolve in the bucket history"
+    assert emitted[0].event_type is getattr(BucketEventType, expected_event)
+    assert emitted[0].object_id == result.invoice.invoice_id
