@@ -6,8 +6,10 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:0418271b7468fc48697d098658945f7ed2d760c34ffdf48c2e37c19e89cc8780'
+body_hash: 'sha256:c98cd644d7a11013fa6106cea8d9729fb5b2cb872c6d3b463ba0c347a33f54b2'
 related:
+  - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
+  - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -29,6 +31,11 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 ### audit
 
 - `2026-08-06-invoice-canonical-structure-audit` - `invoice-canonical-structure` audit: `Fresh-context honesty review of the campaign`
+
+### exec
+
+- `2026-08-06-invoice-canonical-structure-P01-S01` - Prove declarable coverage, that every declarable fact the slim store contributes today is reachable on the canonical path for both M347 per-party totals and M349 operator rows, asserting fact-level reachability and never output-equality with the double-counting two-store union
+- `2026-08-06-invoice-canonical-structure-P01-S02` - Record that canonical M349 party identity is already conserved structurally and do NOT add eu_iva_id to the canonical aggregate, because a non-ES counterparty_country forces counterparty_tax_id to be that country's published NIF-IVA through the central NIF_IVA_FORMATS authority including the GR to EL prefix mapping, so a second identity field would install a second party-identity authority on the one axis where a disagreement mis-declares an intra-community operator, then hand the slim eu_iva_id versus counterparty_nif disagreement to the fold rule in S08 as a record class rather than a missing field
 
 ### plan
 
