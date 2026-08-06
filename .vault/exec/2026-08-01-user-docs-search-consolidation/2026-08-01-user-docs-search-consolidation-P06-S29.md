@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:07094350912f01464cebd813dcdcdbedbdfe33f7c12e012643499dde49d24556'
+body_hash: 'sha256:15e41e9fee4f1ca68933e242fc4a52226d4d8db14496a479c511225ecf58b8b1'
 step_id: 'S29'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -24,17 +24,18 @@ related:
 - Ground the canonical identity contract and the production projection/unified-record seams with vaultspec-rag before editing.
 - Confirm from the bundled authority that Modelo 121 declares canonical id `decl.ejercicio` with display number `ejercicio`.
 - Add a real-authority regression gate that checks the authoritative row, production projection, and unified typed metadata preserve the distinct identity and display fields.
-- Review the gate with a LUNA Extra High code-review agent.
-- Leave the peer-owned Pagefind injector and shared browser controller unchanged until their unrelated WIP is released or coordinated for integration.
+- Add Pagefind `casilla_id` metadata and make the structured browser route compare the complete canonical token before retaining number/segment fallback.
+- Review the gate and source correction with a LUNA Extra High code-review agent.
+- Preserve all unrelated peer WIP in the two affected files; do not broadly stage or commit them.
 
 ## Outcome
 
-The real-authority regression gate is present in `dev/docs/terminology/tests/test_casilla_projection.py`. It proves that projection and unified metadata do not collapse canonical `casilla_id` into display `number`. The Pagefind metadata/matcher correction remains open and is tracked by P06.S29; P06.S24 remains open for the broader acceptance gate.
+The real-authority regression gate is present in `dev/docs/terminology/tests/test_casilla_projection.py`. The source correction is present in the uncommitted peer-owned hunks of `dev/docs/pagefind_inject.py` and `docs/_static/cadrumo-docs.js`: canonical `casilla_id` is emitted, the full query token is preserved, canonical matching is attempted first, and display-number/segment fallback remains. P06.S29 remains open because the required gates and built/runtime evidence are not authorized or available yet; P06.S24 remains open for the broader acceptance gate.
 
 ## Verification
 
-No tests, typing gates, builds, generated artifacts, browser probes, sweeps, reindexing, deployment, or release actions were run. The scoped `git diff --check` completed with exit code 0. LUNA Extra High review reported no findings. VaultSpec check reported zero errors and one pre-existing stale feature-index warning.
+No tests, typing gates, builds, generated artifacts, browser probes, sweeps, reindexing, deployment, or release actions were run. The scoped `git diff --check` completed with exit code 0. LUNA Extra High review reported no findings. VaultSpec check reported zero errors and one pre-existing stale feature-index warning. The RAG code route reported the current target-matching index and canonical identity sources.
 
 ## Notes
 
-The source test gate is intentionally unexecuted under the explicit no-tests boundary. The shared worktree contains unrelated peer WIP, including changes in `dev/docs/pagefind_inject.py` and `docs/_static/cadrumo-docs.js`; those changes were preserved and not broadly staged or overwritten.
+The source test gate and canonical matcher are intentionally unexecuted/unprobed under the explicit no-tests boundary. The shared worktree contains unrelated peer WIP in the same two files; those changes were preserved and not broadly staged, committed, or overwritten.
