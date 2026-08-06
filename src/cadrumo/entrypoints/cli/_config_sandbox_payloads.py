@@ -11,8 +11,8 @@ from pydantic import Field
 
 from ...application.bucket_maintenance import BucketNamespaceInventoryRow
 from ...core.identity import BucketId
+from ...core.json_contract import OutputSchema, register_schema
 from ._config_payloads import ProfilePointerPayload
-from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("config.profile.sandbox.create")
