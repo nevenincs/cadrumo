@@ -96,6 +96,25 @@ required_text = [
     "Los empresarios o profesionales para quienes se realicen las operaciones",
 ]
 
+[legal."ley-37-1992:art-85"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a85"
+document_id = "BOE-A-1992-28740"
+article = "85"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a85"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-06
+reviewed_by = "agent-review"
+notes = "LIVA art 85: sujetos pasivos de las adquisiciones intracomunitarias de bienes. Distinto de art. 84, que gobierna la inversion del sujeto pasivo para servicios/entregas de no establecidos; el sujeto pasivo de una AIB de bienes es quien realiza la adquisicion, por remision al art. 71."
+required_text = [
+    "Sujetos pasivos",
+    "En las adquisiciones intracomunitarias de bienes los sujetos pasivos del impuesto serán quienes las realicen",
+]
+
 [legal."ley-37-1992:art-88"]
 evidence_tier = "legal_authority"
 authority = "boe"

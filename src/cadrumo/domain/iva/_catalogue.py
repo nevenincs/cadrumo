@@ -133,6 +133,7 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
                 _parse_citation(raw_citation) for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)
             ),
             "notes": data.get("notes", ""),
+            "legal_basis_exempt": bool(data.get("legal_basis_exempt", False)),
         },
     )
 

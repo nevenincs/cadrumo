@@ -5,7 +5,8 @@ already performs:
 
 * Every :class:`cadrumo.domain.iva.IvaCategory` member must be present.
 * Every regulation must carry at least one
-  :class:`cadrumo.domain.iva.IvaCitation`.
+  :class:`cadrumo.domain.iva.IvaCitation`, unless it declares
+  ``legal_basis_exempt`` (a classifier sentinel with no tax treatment).
 * Every citation identity must resolve to a verified, article-qualified
   registry legal reference with bundled corpus evidence.
 * Every citation claiming verified grounding must carry a quotation that
@@ -61,7 +62,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
         )
 
     for regulation in catalogue:
-        if not regulation.citations:
+        if not regulation.citations and not regulation.legal_basis_exempt:
             issues.append(
                 IvaVerificationIssue(
                     level="error",

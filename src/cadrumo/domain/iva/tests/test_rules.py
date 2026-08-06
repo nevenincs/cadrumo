@@ -98,10 +98,25 @@ def test_cite_domestic_general_renders_its_registry_legal_reference() -> None:
     assert "Art. 90" in rendered
 
 
-def test_every_committed_regulation_has_citations() -> None:
+def test_every_committed_regulation_has_citations_unless_legal_basis_exempt() -> None:
+    """Every regulation is grounded, except a declared classifier sentinel.
+
+    ``IvaCategory.UNKNOWN`` codifies no tax treatment -- it is an
+    application-level "could not classify" state -- so it carries no
+    citations and is the sole carve-out, declared via
+    ``legal_basis_exempt`` rather than merely absent.
+    """
     assert len(_CATALOGUE) > 0, "IVA regulation catalogue must be non-empty for citation check to mean anything"
     checked = 0
     for regulation in _CATALOGUE:
-        assert regulation.citations, regulation.category.value
+        if regulation.legal_basis_exempt:
+            assert not regulation.citations, regulation.category.value
+        else:
+            assert regulation.citations, regulation.category.value
         checked += 1
     assert checked == len(_CATALOGUE), "every regulation in the catalogue must be checked"
+
+
+def test_unknown_category_is_the_sole_legal_basis_exempt_regulation() -> None:
+    exempt = [regulation.category for regulation in _CATALOGUE if regulation.legal_basis_exempt]
+    assert exempt == [IvaCategory.UNKNOWN]

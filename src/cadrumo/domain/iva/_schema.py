@@ -515,8 +515,16 @@ class IvaRegulation(_IvaStrictFrozen):
         requires_supplier_iva_id: Whether a supplier NIF-IVA is mandatory.
         manual_references: Optional Manual práctico IVA rule ids or section
             references.
-        citations: At least one :class:`IvaCitation` is required.
+        citations: At least one :class:`IvaCitation` is required, unless
+            :attr:`legal_basis_exempt` is set.
         notes: Free-form reviewer notes.
+        legal_basis_exempt: True only for a category that codifies no tax
+            treatment at all (an application-level classifier sentinel), so
+            citing law for it would manufacture the appearance of a legal
+            basis a construct without one by design. Citing an unrelated or
+            over-broad article is not this: that is a wrong citation on a
+            category that DOES need grounding, and must be fixed, not
+            exempted.
     """
 
     category: IvaCategory = Field(description="The IVA situation codified by this rule.")
@@ -530,17 +538,30 @@ class IvaRegulation(_IvaStrictFrozen):
         description="Optional Manual práctico IVA rule ids or section refs.",
     )
     citations: tuple[IvaCitation, ...] = Field(
-        description="At least one IvaCitation is required.",
+        description="At least one IvaCitation is required, unless legal_basis_exempt is set.",
     )
     notes: str = Field(
         default="",
         description="Free-form reviewer notes.",
     )
+    legal_basis_exempt: bool = Field(
+        default=False,
+        description="True only for a classifier sentinel that codifies no tax treatment.",
+    )
 
     @model_validator(mode="after")
     def _validate(self) -> IvaRegulation:
-        """Enforce the translation-key and at-least-one-citation invariants."""
-        if not self.citations:
+        """Enforce the at-least-one-citation invariant and its sole carve-out."""
+        if self.legal_basis_exempt:
+            if self.citations:
+                raise IvaValidationError(
+                    f"IvaRegulation[{self.category.value}]: legal_basis_exempt must carry no citations",
+                )
+            if not self.notes.strip():
+                raise IvaValidationError(
+                    f"IvaRegulation[{self.category.value}]: legal_basis_exempt requires notes explaining why",
+                )
+        elif not self.citations:
             raise IvaValidationError(f"IvaRegulation[{self.category.value}]: at least one IvaCitation is required")
         return self
 

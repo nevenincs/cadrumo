@@ -142,11 +142,9 @@ quoted_text = "Artículo 13. Hecho imponible. Estarán sujetas las siguientes op
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-legal_reference = "ley-37-1992:art-84"
-quoted_text = ""
-grounding = "unresolved"
-unresolved_reason = "citations[0]=art-13 is correct and primary (it defines the hecho imponible). citations[1]=art-84 is the questionable one: the sujeto pasivo of an intra-community ACQUISITION OF GOODS is art. 85, quoted here, not art. 84. Art. 84's only intra-community text is Uno.2.o(a), the entregas subsiguientes of a TRIANGULATION (art. 26.Tres) - a different operation owned by intra_community_triangulation. Apparent correct provision: art. 85."
-retrieval_date = 2026-04-13
+legal_reference = "ley-37-1992:art-85"
+quoted_text = "Artículo 85. Sujetos pasivos. En las adquisiciones intracomunitarias de bienes los sujetos pasivos del impuesto serán quienes las realicen, de conformidad con lo previsto en el artículo 71 de esta Ley."
+retrieval_date = 2026-08-06
 
 [[regulations]]
 category = "intra_community_triangulation"
@@ -276,21 +274,8 @@ category = "unknown"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
 manual_references = []
-notes = "Classifier sentinel; cannot be emitted as a filing-grade result."
-
-[[regulations.citations]]
-legal_reference = "ley-37-1992:art-164"
-quoted_text = ""
-grounding = "unresolved"
-unresolved_reason = "BOTH of this category's citations are art-164. art. 164 imposes declaration, invoicing and registration obligations on sujetos pasivos; it says nothing about an unknown or unclassified state. `unknown` is an application-level classifier sentinel - its own notes say it 'cannot be emitted as a filing-grade result' - so it has no tax treatment to ground and arguably needs no legal citation at all. Citing law here manufactures the appearance of a legal basis for a construct that has none by design."
-retrieval_date = 2026-04-13
-
-[[regulations.citations]]
-legal_reference = "ley-37-1992:art-164"
-quoted_text = ""
-grounding = "unresolved"
-unresolved_reason = "Duplicate of citations[0]: same article, same category, distinguishing text unrecoverable. Same reasoning - a sentinel is not a tax treatment."
-retrieval_date = 2026-04-13
+notes = "Classifier sentinel; cannot be emitted as a filing-grade result. Carries no legal basis by design: it names an application-level 'could not classify' state, not a tax treatment, so it has no article to codify. The two citations previously stamped here were both art-164 (sujeto-pasivo declaration/registration duties), which says nothing about an unknown or unclassified state and only manufactured the appearance of grounding. Whether `unknown` belongs in IvaCategory at all is a separate, open, closed-taxonomy design question with consumers; this exemption does not resolve it."
+legal_basis_exempt = true
 
 [[regulations]]
 category = "intra_community_service_supply"
