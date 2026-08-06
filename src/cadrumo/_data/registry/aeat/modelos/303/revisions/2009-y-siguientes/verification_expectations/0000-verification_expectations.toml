@@ -1,9 +1,0 @@
-[[revisions.2009-y-siguientes.verification_expectations]]
-id = "modelo-303-iva-chain-verification"
-computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general", "iva.compensacion-aplicada-periodo", "iva.compensacion-pendiente-periodos-posteriores", "iva.resultado", "iva.compensacion-generada-periodo", "iva.compensacion-disponible-fin-periodo"]
-tolerance = "0.00"
-rounding = "money-2"
-min_coverage = "1"
-discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]

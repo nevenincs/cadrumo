@@ -1,6 +1,0 @@
-[[revisions."2024-y-siguientes".constructs]]
-id = "modelo-296-calculation-construct"
-legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-hac-56-2024:art-1"]
-source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
-formulas = ["modelo-296-total"]
-application_links = ["modelo-296-calculation", "modelo-296-deadline", "modelo-296-filing", "modelo-296-2024-y-siguientes-verification", "modelo-296-review", "modelo-296-approval", "modelo-296-reconciliation", "modelo-296-workflow"]

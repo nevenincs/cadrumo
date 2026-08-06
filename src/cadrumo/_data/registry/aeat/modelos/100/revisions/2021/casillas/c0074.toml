@@ -1,9 +1,0 @@
-[[revisions."2021".casillas]]
-id = "0074"
-number = "0074"
-section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "boolean"
-semantic_role = "irpf_inmueble_arrendamiento_accesorio_flag"
-continuidad_id = "irpf-inmueble-arrendamiento-accesorio-flag"
-legal_refs = ["ley-35-2006:art-22"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]

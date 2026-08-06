@@ -1,4 +1,0 @@
-@step Write the operator harness into a workspace directory.
-@result aeat --format json app agent --output ./operator-workspace
-@expect result.layout == "workspace"
-@expect exit_code == 0

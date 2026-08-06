@@ -1,7 +1,0 @@
-[[revisions."2025".filing_schedules]]
-id = "modelo-189-anual"
-period_kind = "annual"
-periods = ["0A"]
-profile_condition_mode = "all"
-legal_refs = ["orden-eha-3481-2008:art-5"]
-source_refs = ["aeat-modelo-189-procedure", "boe-modelo-189-base-order"]

@@ -1,7 +1,0 @@
-[[revisions."2017-y-siguientes".constructs]]
-id = "modelo-122-regularizacion"
-legal_refs = ["orden-hfp-105-2017:art-5", "orden-hfp-105-2017:art-7", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-122-procedure", "enrolled-modelo-122-layout"]
-casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-122-filing", "modelo-122-verification"]
-workbook_parity_refs = ["modelo-122-orden-static-layout"]

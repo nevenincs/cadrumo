@@ -1,9 +1,0 @@
-[[revisions."2024".casillas]]
-id = "1819"
-number = "1819"
-section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
-data_type = "text"
-semantic_role = "irpf_ganancia_inmueble_referencia_catastral_1"
-continuidad_id = "irpf-ganancia-inmueble-referencia-catastral-1"
-legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

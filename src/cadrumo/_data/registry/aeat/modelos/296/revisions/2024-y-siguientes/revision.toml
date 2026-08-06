@@ -1,6 +1,0 @@
-[revisions."2024-y-siguientes"]
-valid_from = 2024-01-01
-period_selector = { year_from = 2024, periods = ["0A"] }
-orden_aplicabilidad = ["orden-hac-56-2024:art-1"]
-legal_refs = ["orden-hac-56-2024:art-1", "trlirnr-rdleg-5-2004:art-24"]
-source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]

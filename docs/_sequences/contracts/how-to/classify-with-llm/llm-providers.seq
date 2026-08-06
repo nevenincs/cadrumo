@@ -1,5 +1,0 @@
-@step List the provider CLIs visible on the path.
-@result aeat --format json app ledger providers
-@expect result.providers[0].provider == "claude"
-@expect result.providers[0].available == false
-@expect exit_code == 0

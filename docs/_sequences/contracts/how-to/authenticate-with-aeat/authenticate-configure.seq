@@ -1,3 +1,0 @@
-@step Configure a provider that needs a file, such as your digital certificate.
-@static aeat config auth configure --provider certificate --file ./certificate.p12
-@blocked credential-store Needs certificate custody in the OS credential store, absent from the sandbox.

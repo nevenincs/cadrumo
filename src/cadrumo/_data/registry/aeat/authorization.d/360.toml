@@ -1,5 +1,0 @@
-[modelo]
-modelo = "360"
-renta_years = [2024, 2025]
-evidence_class = "data_fidelity"
-enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_360_adhoc_fidelity.py"

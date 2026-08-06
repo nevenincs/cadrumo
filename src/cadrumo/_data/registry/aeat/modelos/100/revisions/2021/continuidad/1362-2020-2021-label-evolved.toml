@@ -1,8 +1,0 @@
-[[revisions."2021".casilla_continuidad_evolutions]]
-id = "m100-1362-2020-2021-label-evolved"
-continuidad_id = "irpf-anexo-c-exceso-patrim-protegido-ejercicio-actual"
-from_revision = "2020"
-to_revision = "2021"
-evolution_kind = "label_evolved"
-legal_refs = ["ley-35-2006:art-54"]
-source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-renta-2021-manual-parte1", "boe-modelo-100-2021-form", "aeat-modelo-100-procedure"]

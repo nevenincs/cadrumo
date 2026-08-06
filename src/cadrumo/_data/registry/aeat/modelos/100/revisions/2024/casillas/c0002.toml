@@ -1,9 +1,0 @@
-[[revisions."2024".casillas]]
-id = "0002"
-number = "0002"
-section = ["toma_datos_ampliada", "rdto_trabajo"]
-data_type = "boolean"
-semantic_role = "irpf_rdto_trabajo_cesion_derechos_autor_anticipo_flag"
-continuidad_id = "irpf-rdto-trabajo-cesion-derechos-autor-anticipo-flag"
-legal_refs = ["ley-35-2006:art-17"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

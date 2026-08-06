@@ -1,5 +1,0 @@
-[modelo]
-modelo = "193"
-renta_years = [2025, 2026]
-evidence_class = "reconciliation"
-enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_193_123_reconciliation_continuity.py"

@@ -1,9 +1,0 @@
-[[revisions."2024".casillas]]
-id = "0659"
-number = "0659"
-section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
-data_type = "boolean"
-semantic_role = "irpf_familia_numerosa_hijos_exceden_minimo_flag"
-continuidad_id = "irpf-familia-numerosa-hijos-exceden-minimo-flag"
-legal_refs = ["ley-35-2006:art-81-bis"]
-source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]

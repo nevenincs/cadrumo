@@ -1,9 +1,0 @@
-[[revisions."2023".casillas]]
-id = "0082"
-number = "0082"
-section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-data_type = "integer"
-semantic_role = "irpf_inmueble_dias_arrendamiento_negocio"
-continuidad_id = "irpf-inmueble-dias-arrendamiento-negocio"
-legal_refs = ["ley-35-2006:art-25"]
-source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

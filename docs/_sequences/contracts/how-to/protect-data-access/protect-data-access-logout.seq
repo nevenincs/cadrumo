@@ -1,8 +1,0 @@
-@step Confirm a profile is currently active.
-aeat config profile status
-@step Close the active session and clear the active-profile selection.
-aeat config logout
-@step Confirm that no profile remains active.
-@result aeat --format json config profile status
-@expect result.configured == false
-@expect exit_code == 0
