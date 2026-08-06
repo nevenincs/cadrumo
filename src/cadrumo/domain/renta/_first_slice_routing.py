@@ -73,7 +73,21 @@ FIRST_SLICE_EXPENSE_CASILLAS: Mapping[SpendingCategory, CasillaId] = {
         "0193",
         surface="FIRST_SLICE_EXPENSE_CASILLAS.VEHICULO_MANTENIMIENTO",
     ),
-    # -- casilla 0194: Suministros (home-office utilities, art. 30.2.5.b) -
+    # -- casilla 0194: Suministros --------------------------------------
+    # Two legally distinct populations share this box. Utilities of premises
+    # used for the activity deduct in full: the immovable property where the
+    # activity is carried on is afecto under art. 29.1.a), so its costs are
+    # ordinary deductible expense under art. 28.1. Utilities of a DWELLING
+    # only partly given over to the activity are governed instead by the
+    # art. 30.2.5.a b) carve-out, which grants 30 % of the affected floor-area
+    # proportion precisely because a vivienda habitual cannot be exclusively
+    # affected. Routing a local's bills through a home-office category applies
+    # an article that does not govern the taxpayer, so the two keep separate
+    # members.
+    SpendingCategory.SUMINISTROS_LOCAL_AFECTO: validated_casilla_id(
+        "0194",
+        surface="FIRST_SLICE_EXPENSE_CASILLAS.SUMINISTROS_LOCAL_AFECTO",
+    ),
     SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: validated_casilla_id(
         "0194",
         surface="FIRST_SLICE_EXPENSE_CASILLAS.SUMINISTROS_HOME_OFFICE_LUZ",

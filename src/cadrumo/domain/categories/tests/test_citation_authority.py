@@ -63,7 +63,10 @@ def test_shipped_profiles_still_load_under_the_constraint() -> None:
     registry = load_category_profile_registry()
     citations = [c for profiles in registry.values() for p in profiles.values() for c in p.proportionality.citations]
 
-    assert len(citations) == 162
+    # Moves whenever a profile gains or loses a citation: +4 when
+    # suministros_local_afecto landed with its art. 29.1.a and art. 28.1
+    # citations across the 2024 and 2025 registries.
+    assert len(citations) == 166
     assert {str(c.url).split("/")[2] for c in citations} <= {
         CITATION_SEDE_BARE_HOST_FIXTURE,
         "www.boe.es",

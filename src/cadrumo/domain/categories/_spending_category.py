@@ -26,6 +26,7 @@ class SpendingCategory(StrEnum):
     ARRENDAMIENTO_LOCAL = "arrendamiento_local"
     ARRENDAMIENTO_VIVIENDA_AFECTO = "arrendamiento_vivienda_afecto"
     IBI_LOCAL_AFECTO = "ibi_local_afecto"
+    SUMINISTROS_LOCAL_AFECTO = "suministros_local_afecto"
     SUMINISTROS_HOME_OFFICE_LUZ = "suministros_home_office_luz"
     SUMINISTROS_HOME_OFFICE_AGUA = "suministros_home_office_agua"
     SUMINISTROS_HOME_OFFICE_GAS = "suministros_home_office_gas"
@@ -108,6 +109,11 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
         SpendingCategory.ARRENDAMIENTO_LOCAL,
         SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO,
         SpendingCategory.IBI_LOCAL_AFECTO,
+        # Utilities of premises used for the activity. Deliberately PREMISES and
+        # not HOME_OFFICE_SUMINISTROS: the home-office family is bound to the
+        # censo vivienda-area invariant, which a local has no data to satisfy,
+        # and its 30 % multiplier comes from a rule that governs a dwelling.
+        SpendingCategory.SUMINISTROS_LOCAL_AFECTO,
     ),
     SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS: (
         SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,

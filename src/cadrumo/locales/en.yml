@@ -1744,6 +1744,12 @@ categories:
       notes: Deductible in proportion to the home's business-use floor area (default
         ratio 30%), where the home is only partly used for the activity (Ley 35/2006
         art. 30.2.5.b rule 4).
+    suministros_local_afecto:
+      label: Utilities for business premises
+      notes: 'Fully deductible expense: the premises where the activity is carried
+        on are business assets (Ley 35/2006 art. 29.1.a) and their utilities are deductible
+        expense (art. 28.1). The 30 per cent rule of art. 30.2.5.b does not apply,
+        as it covers only a home partly used for the activity.'
     telefonia_fija:
       label: Landline phone expense
       notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
@@ -1913,6 +1919,9 @@ cli:
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
         list_help: List business invoices (both kinds unless --kind filters)
+        operation_date_help: Date the entrega or prestacion took place (YYYY-MM-DD).
+          This is the LIVA art. 75 devengo date that decides which period declares
+          the cuota; without it the invoice date stands in for it.
         operation_type_help: 'M349 operation key: E supplies of goods, M supplies
           after an exempt import, H the same via a fiscal representative, A acquisitions
           of goods, T triangular supplies, S services supplied, I services acquired,
@@ -1925,7 +1934,6 @@ cli:
         view_help: Show one business invoice
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
-        operation_date_help: 'Date the entrega or prestacion took place (YYYY-MM-DD). This is the LIVA art. 75 devengo date that decides which period declares the cuota; without it the invoice date stands in for it.'
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).

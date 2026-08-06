@@ -133,6 +133,36 @@ url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
 quote = "categories.registry.ibi_local_afecto.citations.1.quote"
 
 [[profiles]]
+category = "suministros_local_afecto"
+display_label = "categories.registry.suministros_local_afecto.label"
+iva_hint = "general"
+
+# Full deductibility, and the grounding is deliberately NOT the home-office
+# rule. The immovable property where the activity is carried on is an elemento
+# patrimonial afecto under art. 29.1.a), so its supply costs are ordinary
+# deductible expense under art. 28.1. The art. 30.2.5.a b) 30 % rule is a
+# restrictive carve-out for a vivienda habitual only partly given over to the
+# activity, and carries no statutory_multiplier here because it does not govern
+# a local used for the activity.
+[profiles.proportionality]
+kind = "full_deductible"
+notes = "categories.registry.suministros_local_afecto.notes"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 29.1.a"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "categories.registry.suministros_local_afecto.citations.0.quote"
+
+[[profiles.proportionality.citations]]
+source = "ley_irpf"
+reference = "Ley 35/2006"
+locator = "art. 28.1"
+url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "categories.registry.suministros_local_afecto.citations.1.quote"
+
+[[profiles]]
 category = "suministros_home_office_luz"
 display_label = "categories.registry.home_office_luz"
 iva_hint = "general"

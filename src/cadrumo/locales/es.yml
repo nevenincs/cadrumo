@@ -1889,6 +1889,12 @@ categories:
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
         (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
         (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+    suministros_local_afecto:
+      label: Suministros del local afecto
+      notes: 'Gasto totalmente deducible: el inmueble donde se desarrolla la actividad
+        esta afecto (Ley 35/2006 art. 29.1.a) y sus suministros son gasto deducible
+        (art. 28.1). No se aplica la regla del 30 por ciento del art. 30.2.5.b, reservada
+        a la vivienda habitual parcialmente afecta.'
     telefonia_fija:
       label: Telefonía fija
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
@@ -2064,6 +2070,9 @@ cli:
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
         list_help: Lista las facturas de negocio (ambos tipos salvo que --kind filtre)
+        operation_date_help: Fecha en que se realizo la entrega o prestacion (AAAA-MM-DD).
+          Es la fecha de devengo del art. 75 LIVA que determina en que periodo se
+          declara la cuota; sin ella se utiliza la fecha de factura.
         operation_type_help: 'Clave de operación M349: E entregas, M entregas posteriores
           a importación exenta, H las mismas por representante fiscal, A adquisiciones,
           T entregas triangulares, S servicios prestados, I servicios adquiridos,
@@ -2077,7 +2086,6 @@ cli:
         view_help: Muestra una factura de negocio
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
-        operation_date_help: 'Fecha en que se realizo la entrega o prestacion (AAAA-MM-DD). Es la fecha de devengo del art. 75 LIVA que determina en que periodo se declara la cuota; sin ella se utiliza la fecha de factura.'
       prorrata:
         activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).

@@ -1810,6 +1810,13 @@ categories:
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
         (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
         art. 30.2.5.b szabály 4.ª).
+    suministros_local_afecto:
+      label: Uzleti helyiseg kozuzemi koltsegei
+      notes: 'Teljes egeszeben levonhato koltseg: a tevekenyseg vegzesenek helyet
+        ado ingatlan uzleti eszkoznek minosul (Ley 35/2006 art. 29.1.a), ezert kozuzemi
+        koltsegei levonhatok (art. 28.1). A 30 szazalekos szabaly (art. 30.2.5.b)
+        nem alkalmazando, mert az csak a reszben uzleti celra hasznalt lakohelyre
+        vonatkozik.'
     telefonia_fija:
       label: Vezetékes telefon-költség
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
@@ -1990,6 +1997,10 @@ cli:
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
         list_help: Üzleti számlák listázása (mindkét típus, ha a --kind nem szűr).
+        operation_date_help: A teljesites (termekertekesites vagy szolgaltatasnyujtas)
+          idopontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adofizetesi kotelezettseg
+          keletkezesenek napja, amely meghatarozza, melyik idoszakban kell az adot
+          bevallani; ennek hianyaban a szamla kelte lep a helyebe.
         operation_type_help: 'M349 műveleti kód: E termékértékesítés, M adómentes
           importot követő értékesítés, H ugyanez adóügyi képviselő útján, A termékbeszerzés,
           T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
@@ -2004,7 +2015,6 @@ cli:
         view_help: Üzleti számla adatainak megjelenítése.
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
-        operation_date_help: 'A teljesites (termekertekesites vagy szolgaltatasnyujtas) idopontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adofizetesi kotelezettseg keletkezesenek napja, amely meghatarozza, melyik idoszakban kell az adot bevallani; ennek hianyaban a szamla kelte lep a helyebe.'
       prorrata:
         activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevékenységi kód (ismételhető,
           legalább egy).
