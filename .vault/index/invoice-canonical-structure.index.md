@@ -6,12 +6,13 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:aff7bd7bc92d07231ea8b2e341256c635cd2d6c7cd637427c0fcb89deddc8b9f'
+body_hash: 'sha256:a73c397683f6131c7a0ef28e6d0b56f9bce3a72e3739df4edede0f2caf65445e'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S03]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S10]]'
+  - '[[2026-08-06-invoice-canonical-structure-P01-S35]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S36]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P01-S02` - Record that canonical M349 party identity is already conserved structurally and do NOT add eu_iva_id to the canonical aggregate, because a non-ES counterparty_country forces counterparty_tax_id to be that country's published NIF-IVA through the central NIF_IVA_FORMATS authority including the GR to EL prefix mapping, so a second identity field would install a second party-identity authority on the one axis where a disagreement mis-declares an intra-community operator, then hand the slim eu_iva_id versus counterparty_nif disagreement to the fold rule in S08 as a record class rather than a missing field
 - `2026-08-06-invoice-canonical-structure-P01-S03` - Inventory every production slim-store consumer and record the named canonical replacement for each in the execution record, refusing to proceed to P03 while any consumer has no replacement
 - `2026-08-06-invoice-canonical-structure-P01-S10` - Carry created_at and updated_at onto the canonical aggregate or record their loss as a deliberate decision in the execution record, so no slim field disappears unremarked
+- `2026-08-06-invoice-canonical-structure-P01-S35` - Close the bucket-attribution asymmetry before the fold, making a persisted canonical Invoice carry a bucket_id by requiring it at the construction boundary rather than defaulting to None, and correcting the InvoiceCatalogueRepository ownership-guard docstring which today asserts as its stated justification that most invoices carry no bucket at all, a premise the production writers refute because every canonical construction path passes a resolved bucket_id
 - `2026-08-06-invoice-canonical-structure-P01-S36` - Remove the ES counterparty-country default from both canonical entry verbs so an omitted country refuses or derives rather than silently stamping a domestic country on a foreign invoice, preserving the slim verb's derive-or-raise behaviour across the fold because country is the routing key for both informativas
 
 ### plan
