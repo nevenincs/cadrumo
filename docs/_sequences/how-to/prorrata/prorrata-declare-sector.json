@@ -1,0 +1,47 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "prorrata",
+        "declare-sector",
+        "--sector-id",
+        "arrendamiento",
+        "--letra",
+        "c",
+        "--activity-code",
+        "6820"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.prorrata.declare_sector",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "count": 1,
+          "sector": {
+            "letra": "c",
+            "member_activity_codes": [
+              "6820"
+            ],
+            "sector_id": "arrendamiento"
+          }
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "prorrata-declare-sector"
+}

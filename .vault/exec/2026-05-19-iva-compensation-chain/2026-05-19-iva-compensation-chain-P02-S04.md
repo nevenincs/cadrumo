@@ -1,0 +1,31 @@
+---
+tags:
+  - '#exec'
+  - '#iva-compensation-chain'
+date: '2026-07-05'
+modified: '2026-07-17'
+body_hash: 'sha256:9e8f84f9fe74e7c7243ed1e5ba67be2fb48440d6ede0dbc308dabc89bcb73732'
+step_id: 'S04'
+related:
+  - "[[2026-05-19-iva-compensation-chain-plan]]"
+---
+
+# run targeted unit tests and registry validation for 303 and 390
+
+## Scope
+
+- `tests`
+
+## Description
+
+- Reconciled the historical checked `P02.S04` row to a per-step exec record.
+- Anchored the validation evidence to commit `8173494bf1`, which persisted the IVA compensation-chain execution summary and its targeted test inventory.
+- Verified at HEAD that the chain plan row remains checked and that `vaultspec-core vault plan status 2026-05-19-iva-compensation-chain-plan --json` reports no missing exec ids.
+
+## Outcome
+
+The row now has a canonical exec record created through `vaultspec-core vault add exec`. This pass changed no source, registry, test, source-kind, resolver convention, validator convention, or plan checkbox state.
+
+## Notes
+
+This is a traceability repair only. The chain plan remains open at `P03.S01` because the linked live IVA wallet plan is still 101 of 102, with `W06.P15.S56` open for operator/live verification evidence.

@@ -1,0 +1,4 @@
+@step List every registered certificate.
+@result aeat --format json config auth certificate list
+@expect result.active_source == ""
+@expect exit_code == 0

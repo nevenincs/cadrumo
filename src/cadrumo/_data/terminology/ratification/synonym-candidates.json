@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "generated_by": "dev.docs.terminology._synonym_mining",
+  "thresholds": {
+    "minimum_cosine": 0.78,
+    "minimum_margin": 0.05,
+    "minimum_ratio": 1.08
+  },
+  "entries": [
+    {
+      "concept_id": "prorrata",
+      "source_term": "prorrateo",
+      "candidate": "prorateo",
+      "language": "es",
+      "action": "hidden_search_form",
+      "cosine": 0.91,
+      "nearest_competing_cosine": 0.74,
+      "competing_concept_id": "prorrata-especial",
+      "status": "ratified",
+      "review_reason": "Unaccented single-r spelling variant for prorrateo; useful for search but not rendered as an admitted term.",
+      "reviewed_at": "2026-06-10"
+    },
+    {
+      "concept_id": "prorrata",
+      "source_term": "pro rata",
+      "candidate": "pro-rata",
+      "language": "en",
+      "action": "admitted_term",
+      "cosine": 0.88,
+      "nearest_competing_cosine": 0.72,
+      "competing_concept_id": "prorrata-especial",
+      "status": "proposed"
+    },
+    {
+      "concept_id": "prorrata",
+      "source_term": "regla de prorrata",
+      "candidate": "deducible",
+      "language": "es",
+      "action": "admitted_term",
+      "cosine": 0.8,
+      "nearest_competing_cosine": 0.78,
+      "competing_concept_id": "iva",
+      "status": "rejected",
+      "review_reason": "Too broad and tax-directional; would collide with deductible versus non-deductible concepts rather than naming prorrata.",
+      "reviewed_at": "2026-06-10"
+    }
+  ]
+}

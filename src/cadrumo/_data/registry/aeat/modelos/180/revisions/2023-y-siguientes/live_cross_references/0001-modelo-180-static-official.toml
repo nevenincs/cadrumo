@@ -1,0 +1,11 @@
+[[revisions.2023-y-siguientes.live_cross_references]]
+id = "modelo-180-static-official"
+evidence_tier = "layout_authority"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-180-static-official"
+forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "modificar", "anular"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]

@@ -1,0 +1,268 @@
+"""Real-artifact tests for the generated Cadrumo Homebrew tap snapshot."""
+
+from __future__ import annotations
+
+import hashlib
+import re
+import shutil
+import sys
+import tomllib
+from dataclasses import dataclass, replace
+from pathlib import Path
+
+import pytest
+from dev.packaging._smoke_common import build_sdist, commit_defined_build_root, run_checked
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_GENERATOR = _REPO_ROOT / "packaging" / "homebrew" / "generate.py"
+_RESOURCE = re.compile(
+    r'\s+resource "([^"]+)" do\n'
+    r'\s+url "([^"]+)"\n'
+    r'\s+sha256 "([0-9a-f]{64})"\n'
+    r"\s+end",
+)
+
+
+@dataclass(frozen=True)
+class BuiltCohort:
+    """One real sdist-and-companion cohort shared by formula tests."""
+
+    directory: Path
+    root: Path
+    manuals: Path
+    official: Path
+    version: str
+    release_base: str
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+@pytest.fixture(scope="module")
+def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
+    """Build the real root and companion source distributions."""
+    uv = shutil.which("uv")
+    assert uv is not None
+    root_dir = tmp_path_factory.mktemp("homebrew-cohort")
+    build_dir = root_dir / "build"
+    # Build from a commit-defined root, not the working tree: in the shared
+    # worktree a peer's uncommitted edit would otherwise ride into the sdist,
+    # and the formula this test asserts on would describe bytes matching no
+    # commit. On a clean checkout this IS the tree, so CI pays nothing.
+    build_root = commit_defined_build_root(_REPO_ROOT, build_dir)
+    root = build_sdist(build_dir, uv, build_root=build_root)
+    companion_dir = build_dir / "companions"
+    manuals_project = build_root / "packaging" / "cadrumo_data_manuals"
+    official_project = build_root / "packaging" / "cadrumo_data_official"
+    run_checked([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=manuals_project)
+    run_checked([uv, "build", "--sdist", "--out-dir", str(companion_dir)], cwd=official_project)
+    manuals = next(companion_dir.glob("cadrumo_data_manuals-*.tar.gz"))
+    official = next(companion_dir.glob("cadrumo_data_official-*.tar.gz"))
+    cohort = root_dir / "cohort"
+    cohort.mkdir()
+    copied = []
+    for artifact in (root, manuals, official):
+        target = cohort / artifact.name
+        shutil.copy2(artifact, target)
+        copied.append(target)
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
+        version = tomllib.load(handle)["project"]["version"]
+    return BuiltCohort(
+        directory=cohort,
+        root=copied[0],
+        manuals=copied[1],
+        official=copied[2],
+        version=version,
+        release_base=f"https://github.com/nevenincs/cadrumo/releases/download/v{version}",
+    )
+
+
+def _generate(cohort: BuiltCohort, output: Path, *, release_base: str | None = None) -> Path:
+    run_checked(
+        [
+            sys.executable,
+            str(_GENERATOR),
+            "--cohort-dir",
+            str(cohort.directory),
+            "--lock",
+            str(_REPO_ROOT / "uv.lock"),
+            "--version",
+            cohort.version,
+            "--release-base-url",
+            cohort.release_base if release_base is None else release_base,
+            "--output-dir",
+            str(output),
+        ],
+        cwd=_REPO_ROOT,
+    )
+    return output / "Formula" / "cadrumo.rb"
+
+
+def test_formula_is_deterministic_and_binds_the_real_cohort(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """The tap snapshot pins the exact sdist, companions, Python, and commands."""
+    first = _generate(built_cohort, tmp_path / "first")
+    second = _generate(built_cohort, tmp_path / "second")
+    assert first.read_bytes() == second.read_bytes()
+    formula = first.read_text(encoding="utf-8")
+
+    assert formula.startswith("class Cadrumo < Formula\n")
+    assert "include Language::Python::Virtualenv" in formula
+    assert f'url "{built_cohort.release_base}/{built_cohort.root.name}"' in formula
+    assert f'sha256 "{_sha256(built_cohort.root)}"' in formula
+    assert 'depends_on "python@3.13"' in formula
+    assert 'depends_on "cmake" => :build' in formula
+    assert 'depends_on "jpeg-turbo"' in formula
+    assert 'depends_on "qpdf"' in formula
+    assert 'uses_from_macos "libffi"' in formula
+    assert 'on_linux do\n    depends_on "zlib-ng-compat"' in formula
+    # The install method drops Homebrew's pac-ret branch protection on Linux
+    # arm64 only (Apple-Virtualization guests fault on the retaa instruction;
+    # native macOS arm64 keeps the hardening) and builds argon2-cffi-bindings
+    # with isolation off against the venv cffi, so it no longer uses the bare
+    # virtualenv_install_with_resources.
+    # Pinned as a MODIFIER `if`, not a block: `brew audit --strict` fails a
+    # block `if` with a single-line body (Style/IfUnlessModifier), and that
+    # audit is a hard gate on the macOS acquisition leg, so the block form
+    # made the formula unshippable.
+    assert (
+        'ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b") if OS.linux? && Hardware::CPU.arm?'
+    ) in formula
+    # The block form opens the guard on its own line; the modifier form never
+    # does. Anchoring on that whole line keeps this a real check -- the bare
+    # condition string also appears in the modifier line, so asserting on it
+    # alone would be satisfied by the very form this pins.
+    assert "\n    if OS.linux? && Hardware::CPU.arm?\n" not in formula
+    assert (
+        'venv.pip_install resources.reject { |r| ["argon2-cffi-bindings", "cryptography"].include?(r.name) }'
+    ) in formula
+    assert 'venv.pip_install resource("argon2-cffi-bindings"), build_isolation: false' in formula
+    # cryptography's maturin backend shells out to the `maturin` executable, so
+    # the venv bin must be on PATH before its isolation-off install.
+    assert 'ENV.prepend_path "PATH", libexec/"bin"' in formula
+    assert 'venv.pip_install resource("cryptography"), build_isolation: false' in formula
+    assert "venv.pip_install_and_link buildpath" in formula
+    assert 'assert_predicate bin/"aeat", :executable?' in formula
+    assert 'assert_predicate bin/"cadrumo-mcp", :executable?' in formula
+    assert 'shell_output("#{bin}/aeat --version")' in formula
+
+    resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
+    assert resources["cadrumo-data-manuals"] == (
+        f"{built_cohort.release_base}/{built_cohort.manuals.name}",
+        _sha256(built_cohort.manuals),
+    )
+    assert resources["cadrumo-data-official"] == (
+        f"{built_cohort.release_base}/{built_cohort.official.name}",
+        _sha256(built_cohort.official),
+    )
+    assert "mcp" in resources
+    assert "tzdata" not in resources
+    # 70 locked + 2 data companions + 3 isolation-disabled build backends
+    # (setuptools -- the venv from `python -m venv` ships none and Homebrew
+    # installs resources --no-deps; setuptools-scm for argon2; maturin for
+    # cryptography) = 75. The locked count rose from 67 when `textual` became a
+    # runtime dependency for the flow frontend and brought linkify-it-py and
+    # uc-micro-py in with it; the drift went unseen because this test could not
+    # reach its assertions while its fixture was erroring at setup.
+    assert "setuptools" in resources
+    assert "setuptools-scm" in resources
+    assert "maturin" in resources
+    assert len(resources) == 75
+    assert all(url.startswith("https://") for url, _digest in resources.values())
+    # macOS is ARM-only (Intel dropped 2026-07-21), so no resource is macOS
+    # conditional any more and the on_macos block disappears entirely; Linux
+    # still spans two architectures and keeps its block.
+    assert formula.count("  on_macos do\n") == 0
+    assert formula.count("  on_linux do\n") == 1
+    assert '    resource "secretstorage" do' in formula
+    assert '    resource "jeepney" do' in formula
+    # greenlet's marker excludes macOS arm64, so it is now Linux-common:
+    # emitted once inside on_linux, with no architecture split on either side.
+    assert formula.count('resource "greenlet" do') == 1
+    assert '    resource "greenlet" do' in formula
+    assert "on_intel do" not in formula
+    assert "on_arm do" not in formula
+
+
+def test_formula_resources_match_the_locked_pypi_sdists(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """Every non-cohort resource is one exact sdist from ``uv.lock``."""
+    formula = _generate(built_cohort, tmp_path / "tap").read_text(encoding="utf-8")
+    resources = {name: (url, digest) for name, url, digest in _RESOURCE.findall(formula)}
+    lock = tomllib.loads((_REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
+    locked_sdists = {
+        package["name"]: (
+            package["sdist"]["url"],
+            package["sdist"]["hash"].removeprefix("sha256:"),
+        )
+        for package in lock["package"]
+        if package.get("source", {}).get("registry") == "https://pypi.org/simple" and "sdist" in package
+    }
+    for name, material in resources.items():
+        if name.startswith("cadrumo-data-"):
+            continue
+        if name == "setuptools-scm":
+            # Added as the argon2 build backend for the isolation-disabled build;
+            # it is not a runtime dependency so it is absent from the lock. Pin it
+            # to its declared PyPI sdist instead.
+            assert material == (
+                "https://files.pythonhosted.org/packages/4f/a4/00a9ac1b555294710d4a68d2ce8dfdf39d72aa4d769a7395d05218d88a42/setuptools_scm-8.1.0.tar.gz",
+                "42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7",
+            )
+            continue
+        if name == "maturin":
+            # Added as the cryptography build backend for the isolation-disabled
+            # build; not a runtime dependency, so absent from the lock. Pin it to
+            # its declared PyPI sdist instead.
+            assert material == (
+                "https://files.pythonhosted.org/packages/e7/b3/addd877f871fb1860d46d3a4f206ecb10b946c85846805e6367631926fd3/maturin-1.14.1.tar.gz",
+                "9d6577a62cd08e0ceba7a0db06fb098e0c9b1b3429bad747a4f3a18215a1b3df",
+            )
+            continue
+        assert material == locked_sdists[name]
+
+
+def test_generator_rejects_renamed_foreign_companion(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """A filename-compatible archive with foreign metadata cannot enter the tap."""
+    foreign = tmp_path / "foreign"
+    foreign.mkdir()
+    shutil.copy2(built_cohort.root, foreign / built_cohort.root.name)
+    shutil.copy2(built_cohort.official, foreign / built_cohort.manuals.name)
+    shutil.copy2(built_cohort.official, foreign / built_cohort.official.name)
+    with pytest.raises(SystemExit):
+        _generate(
+            replace(built_cohort, directory=foreign),
+            tmp_path / "tap",
+        )
+
+
+@pytest.mark.parametrize(
+    "release_base",
+    (
+        "http://github.com/nevenincs/cadrumo/releases/download/v0.2.1",
+        "https://github.com/nevenincs/cadrumo/releases/latest/download",
+        "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1?mutable=1",
+    ),
+)
+def test_generator_rejects_mutable_release_urls(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+    release_base: str,
+) -> None:
+    """The formula cannot be generated against a mutable release endpoint."""
+    with pytest.raises(SystemExit):
+        _generate(built_cohort, tmp_path / "tap", release_base=release_base)

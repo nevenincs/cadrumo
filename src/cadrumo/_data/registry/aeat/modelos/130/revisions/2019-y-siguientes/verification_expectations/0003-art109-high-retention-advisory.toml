@@ -1,0 +1,17 @@
+# Art. 109 RIRPF: when the taxpayer profile says the 70% income-coverage
+# exception is met for covered professional, agricultural, livestock, or
+# forestry activity income, verifying an M130 draft should surface a
+# non-blocking warning.
+#
+# Casilla 06 is an amount of retenciones, not the amount of income subject
+# to retencion. This predicate therefore reads the profile/deadline fact and
+# must not infer Art. 109 from casilla 06 / casilla 01.
+#
+# The formula for casilla 17 remains the official form arithmetic
+# (casilla 14 - casilla 15 - casilla 16); Art. 109 belongs to
+# applicability/deadline/profile behavior.
+[[revisions."2019-y-siguientes".verification_predicates]]
+predicate_id = "modelo-130-art109-exencion-alta-retencion"
+expression = 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-109"]

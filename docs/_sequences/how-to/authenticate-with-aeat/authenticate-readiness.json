@@ -1,0 +1,65 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Authentication is not configured yet.\nprovider\t\nconfigured\tFalse\nauthenticated\tFalse\navailable\tFalse\nactive_profile\t<profile-id>\nactive_profile_status\tready\nactive_profile_registered\tTrue\nactive_profile_record_present\tTrue\nactive_profile_next_action\taeat app overview status\nbackend_configured\tFalse\nbackend_available\tFalse\ncertificate_path\t\nhealth_severity\t\nhealth_summary\t\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "auth",
+        "test"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.test",
+        "notices": [],
+        "result": {
+          "active_profile": "<profile-id>",
+          "active_profile_next_action": "aeat app overview status",
+          "active_profile_record_present": true,
+          "active_profile_registered": true,
+          "active_profile_status": "ready",
+          "authenticated": false,
+          "available": false,
+          "backend_available": false,
+          "backend_configured": false,
+          "certificate_path": "",
+          "configured": false,
+          "health_severity": "",
+          "health_summary": "",
+          "persisted_session_expired": null,
+          "persisted_session_present": false,
+          "persisted_session_state": "no_provider",
+          "probe_result": "no_provider",
+          "probe_summary": "No auth provider is configured; nothing to probe locally.",
+          "provider": ""
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-readiness"
+}

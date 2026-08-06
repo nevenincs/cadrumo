@@ -1,0 +1,323 @@
+[legal."orden-hfp-823-2022:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-823-2022.html#a1"
+document_id = "BOE-A-2022-14168"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168#a1"
+published_at = 2022-08-30
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HFP/823/2022 articulo 1: aprueba el Modelo 345 y sus disenos de registro."
+required_text = [
+    "Se aprueba el modelo 345",
+    "anexo de la presente orden",
+    "tres primeros",
+]
+
+[legal."orden-hfp-823-2022:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-823-2022.html#a2"
+document_id = "BOE-A-2022-14168"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168#a2"
+published_at = 2022-08-30
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HFP/823/2022 articulo 2: remite la obligacion de presentar el Modelo 345 a las personas o entidades del articulo 53 del RD 1065/2007."
+required_text = [
+    "personas o entidades a las que se refiere",
+    "Real Decreto",
+    "1065/2007",
+]
+
+[legal."orden-hfp-823-2022:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-823-2022.html#a3"
+document_id = "BOE-A-2022-14168"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168#a3"
+published_at = 2022-08-30
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HFP/823/2022 articulo 3: define el objeto de informacion del Modelo 345 sobre participes, aportaciones y contribuciones a sistemas de prevision social."
+required_text = [
+    "modelo",
+    "Planes, fondos de pensiones",
+    "anexo de la presente orden",
+]
+
+[legal."orden-hfp-823-2022:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-823-2022.html#a4"
+document_id = "BOE-A-2022-14168"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168#a4"
+published_at = 2022-08-30
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HFP/823/2022 articulo 4: fija el plazo reglamentario anual del Modelo 345 entre el 1 y el 31 de enero."
+required_text = [
+    "entre el",
+    "31 de enero de cada",
+    "natural inmediato anterior",
+]
+
+[legal."orden-hfp-823-2022:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-823-2022.html#a5"
+document_id = "BOE-A-2022-14168"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168#a5"
+published_at = 2022-08-30
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2022-14168 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HFP/823/2022 articulo 5: remite la presentacion del Modelo 345 a la presentacion electronica regulada por Orden HAP/2194/2013."
+required_text = [
+    "Formas de",
+    "modelo",
+    "Orden HAP/2194/2013",
+]
+
+[legal."orden-hfp-528-2023:art-unico"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-528-2023.html#articulo-unico"
+document_id = "BOE-A-2023-12666"
+article = "unico"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12666#a1"
+published_at = 2023-05-30
+effective_from = 2023-05-31
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/528/2023 articulo unico: modifica los campos clave, subclave y nuevos campos adicionales del registro de declarado del Modelo 345."
+required_text = [
+    "Se modifica el campo",
+    "SUBCLAVE",
+    "DATOS ADICIONALES PARA LA CLAVE M",
+]
+
+[legal."orden-hfp-528-2023:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-528-2023.html#dfunica"
+document_id = "BOE-A-2023-12666"
+article = "disposicion final unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12666#dfunica"
+published_at = 2023-05-30
+effective_from = 2023-05-31
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-12666 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/528/2023 disposicion final unica: aplica por primera vez sus modificaciones del Modelo 345 a declaraciones del ejercicio 2023."
+required_text = [
+    "declaraciones informativas correspondientes al ejercicio",
+    "2023",
+    "a partir de",
+    "2024",
+]
+
+[legal."orden-hfp-1397-2023:art-sexto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1397-2023.html#a6"
+document_id = "BOE-A-2023-26632"
+article = "sexto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632#a6"
+published_at = 2023-12-29
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1397/2023 articulo sexto: modifica la subclave 03 de la clave A del registro de declarado del Modelo 345."
+required_text = [
+    "Orden HFP/823/2022",
+    "subclave",
+    "trabajadores por cuenta propia",
+]
+
+[legal."orden-hfp-1397-2023:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1397-2023.html#dfunica"
+document_id = "BOE-A-2023-26632"
+article = "disposicion final unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632#dfunica"
+published_at = 2023-12-29
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-26632 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1397/2023 disposicion final unica: aplica por primera vez su modificacion del Modelo 345 a declaraciones del ejercicio 2023."
+required_text = [
+    "modelo",
+    "345",
+    "ejercicio",
+    "2023",
+]
+
+[legal."orden-hac-1504-2024:art-octavo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1504-2024.html#a8"
+document_id = "BOE-A-2024-27528"
+article = "octavo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528#a8"
+published_at = 2024-12-31
+effective_from = 2025-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2024-27528 HTML from BOE on 2026-07-01"
+notes = "Orden HAC/1504/2024 articulo octavo: modifica clave, subclave y el campo de rendimientos del trabajo no superiores a 60.000 euros del Modelo 345."
+required_text = [
+    "Orden HFP/823/2022",
+    "Se modifica el campo",
+    "RENDIMIENTOS",
+]
+
+[legal."orden-hac-1430-2025:art-septimo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1430-2025.html#a7"
+document_id = "BOE-A-2025-25389"
+article = "septimo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389#a7"
+published_at = 2025-12-16
+effective_from = 2025-12-17
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2025-25389 HTML from BOE on 2026-07-01"
+notes = "Orden HAC/1430/2025 articulo septimo: modifica el campo de rendimientos integros del trabajo superiores a 60.000 euros del Modelo 345."
+required_text = [
+    "Orden HFP/823/2022",
+    "Se modifica el campo",
+    "superiores a",
+]
+
+[sources."aeat-modelo-345-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_345/files/modelo-345-procedure.html"
+sha256 = "2ba17b3cd7b1bbb239f9a375d24a5f4d2c87abea9ed70a106eddca3cb560df2f"
+bytes = 54886
+retrieved_at = 2026-07-01
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI25.shtml"
+review_status = "reviewed"
+
+[sources."aeat-modelo-345-deadlines"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_345/files/modelo-345-deadlines.html"
+sha256 = "23219c5aba68b3a565a532cf9c092233e458e3c69b37cd39bb04bbc469d8d4bc"
+bytes = 6187
+retrieved_at = 2026-07-01
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-345-decla_____ncia-declaracion-anual-aportaciones_/plazos-presentacion.html"
+review_status = "reviewed"
+
+[sources."aeat-dr-345-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/instructions/modelo_345/files/DR_Modelo_345_2025.pdf"
+sha256 = "fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd"
+bytes = 331991
+retrieved_at = 2026-07-01
+published_at = 2025-12-12
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_345_2025.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-345-base-order"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-823-2022.html"
+sha256 = "f879a2cf8d81cafa3070447fb3b088a10414269564f2515548c32707fce418fc"
+bytes = 140036
+retrieved_at = 2026-07-01
+published_at = 2022-08-30
+applies_from = 2023-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168"
+review_status = "reviewed"
+
+[sources."boe-modelo-345-2023-amendment-hfp-528"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-528-2023.html"
+sha256 = "e1a8360dda5b810e2e99825fa87f11cf44cdd0e6be3ddaa5ae04076b0afb292a"
+bytes = 83118
+retrieved_at = 2026-07-01
+published_at = 2023-05-30
+applies_from = 2023-05-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12666"
+review_status = "reviewed"
+
+[sources."boe-modelo-345-2023-amendment-hfp-1397"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1397-2023.html"
+sha256 = "e0d6ab7b1c067894d756b8d1d6d72b9f13634e5b8fe2e8434e69c3ea8cad39da"
+bytes = 65344
+retrieved_at = 2026-07-01
+published_at = 2023-12-29
+applies_from = 2024-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26632"
+review_status = "reviewed"
+
+[sources."boe-modelo-345-2024-amendment-hac-1504"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1504-2024.html"
+sha256 = "a457ba5c3f0d154ec58bb5347275765b4e930c70b462bd8ba93d560070f2cad8"
+bytes = 152419
+retrieved_at = 2026-07-01
+published_at = 2024-12-31
+applies_from = 2025-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528"
+review_status = "reviewed"
+
+[sources."boe-modelo-345-2025-amendment-hac-1430"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1430-2025.html"
+sha256 = "18d600aed76f64c48b4bc86b25ef624c7c6b3a5fe347763c94977851fa5359bf"
+bytes = 110714
+retrieved_at = 2026-07-01
+published_at = 2025-12-16
+applies_from = 2025-12-17
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389"
+review_status = "reviewed"

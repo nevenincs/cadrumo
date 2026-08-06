@@ -1,0 +1,6 @@
+@step Record when the activity started so the quarter is a valid obligation.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Add the quarter's income row directly with its tax fields.
+@setup aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key qs-venta
+@step Add the quarter's deductible expense row.
+@setup aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key qs-compra

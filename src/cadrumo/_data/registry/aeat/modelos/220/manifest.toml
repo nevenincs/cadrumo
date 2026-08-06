@@ -1,0 +1,18 @@
+[modelo]
+id = "220"
+tax_domain = "is"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hac-657-2025:art-3",
+    "ley-27-2014:art-124",
+]
+source_refs = [
+    "aeat-dr-220-2023",
+    "aeat-dr-220-2024",
+    "aeat-dr-220-2025",
+    "aeat-modelo-200-manual-2024",
+    "aeat-modelo-200-manual-2025",
+    "boe-modelo-200-2025-form",
+]

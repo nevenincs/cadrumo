@@ -1,0 +1,52 @@
+[[revisions."esquema-exterior".constructs]]
+id = "modelo-369-esquema-exterior"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-octiesdecies",
+    "ley-37-1992:art-163-noniesdecies",
+    "ley-37-1992:art-163-vicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "iva.exterior.de.services-cuota",
+    "iva.exterior.cuota-total",
+]
+formulas = ["modelo-369-exterior-cuota-total"]
+bindings = ["modelo-369-exterior-de-external-services-21pct"]
+workbook_parity_refs = ["modelo-369-exterior-dr-2021"]
+live_cross_references = [
+    "modelo-369-exterior-static-documentation",
+    "modelo-369-exterior-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-exterior-portal",
+    "modelo-369-exterior-filing",
+    "modelo-369-exterior-extractor",
+    "modelo-369-exterior-verification",
+    "modelo-369-exterior-deadline",
+    "modelo-369-exterior-calculation",
+    "modelo-369-exterior-review",
+    "modelo-369-exterior-approval",
+    "modelo-369-exterior-reconciliation",
+    "modelo-369-exterior-workflow",
+]
+filing_schedules = ["modelo-369-exterior-trimestral"]
+deadline_windows = [
+    "modelo-369-exterior-2025-ext-1t",
+    "modelo-369-exterior-2025-ext-2t",
+    "modelo-369-exterior-2025-ext-3t",
+    "modelo-369-exterior-2025-ext-4t",
+    "modelo-369-exterior-2026-ext-1t",
+]
+
+# -----------------------------------------------------------------------------
+# Esquema Union — quarterly per HAC/610/2021 art 2(b) and LIVA 163 unvicies
+# -----------------------------------------------------------------------------

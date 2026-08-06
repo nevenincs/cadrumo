@@ -1,0 +1,114 @@
+---
+tags:
+  - "#exec"
+  - "#cross-domain-continuity"
+date: 2026-05-27
+modified: '2026-07-17'
+body_hash: 'sha256:70dfc941726ebad313142e07e09fe7b6bbc81d522dcb3a71e4157e4351a87a29'
+related:
+  - "[[2026-05-26-cross-domain-continuity-W09-P41-S208]]"
+  - "[[2026-05-26-cross-domain-continuity-P19-S210]]"
+---
+
+# cross-domain-continuity Code Review
+
+## Commit d9c002a51 -- #210 M200 tipo IS ERD 23 percent derivation from INCN
+
+**Status: PASS**
+
+Scope: formulas.toml, parameters.toml, bindings.toml, constructs.part-001.toml, is.toml, five HTML stubs, one test file.
+
+---
+
+### Standing Gates
+
+- **G1 (no naked env reads):** No Python production code modified. Gate vacuously passes.
+- **G2 (typed pydantic at boundaries):** Registry TOML schema-validated by the loader. No boundary layer code changed. Gate passes.
+- **G3 (tr() for user messages):** No user-facing strings added. Gate passes.
+- **G4 (locale via scaffold + audit):** No locale files touched. Gate passes.
+- **G5 (no shims/duplication):** Two new parameters (is.modelo-200.tipo-gravamen-erd scalar + is.modelo-200.cuota-integra-bracket-erd bracket) are additive. No shim, re-export, or duplicate introduced. Gate passes.
+- **G6 (no tautological tests):** Oracle values grounded in Ley 31/2022 Art. 39 (Aitor SAL 850k -> 23; SA 1.5M -> 25; new-entity 200k -> 15; cooperativa 500k -> 20; ERD parameter = 23). Anti-tautology: INCN exactly 1.000.000 (not qualifying) -> tipo 25, confirming strict less-than. Gate passes.
+
+---
+
+### Critical Question Answers
+
+**CQ1 -- Profile field consultation correctness**
+
+new_entity_first_two_profit_periods = True -> 15%: Correct. Outermost if_then_else on modelo-200-2024-profile-new-entity-flag routes all eight legal-form keys to is.modelo-200.tipo-gravamen-new-entity-first-2-years (value 15). Priority is correct.
+
+legal_entity_form = sin_fines_lucrativos (Maria case): Correct. In both the ERD lane and the general lane the dispatch table routes sin_fines_lucrativos to is.modelo-200.tipo-gravamen-non-profit-special-regime (value 10). Maria pays 10% regardless of INCN.
+
+legal_entity_form = sal (Aitor case): Correct. With INCN = 850k below 1M and new-entity-flag = 0 the ERD lane routes sal to is.modelo-200.tipo-gravamen-erd (value 23). Oracle test confirms.
+
+incn_prior_12_months < 1_000_000 -> 23%: Correct. less_than predicate with literal = 1000000. Boundary test at exactly 1M returns 25%, confirming strict inequality.
+
+Default -> 25%: Correct. General lane routes sl/sa/sal/sll/scm/other to is.modelo-200.tipo-gravamen-general.
+
+**CQ2 -- Casilla DP200014:00558 computation status**
+
+DP200014:00558 was already the target of formula modelo-200-tipo-gravamen-por-forma-juridica in the prior revision; no manual-to-computed flip was needed. The diff replaces the single lookup_parameter_by_entity_type expression with the three-lane nested if_then_else. The casilla remains fully computed. Correct.
+
+**CQ3 -- legal_refs completeness**
+
+The tipo formula carries [ley-27-2014:art-29, ley-27-2014:art-30, ley-31-2022:art-39]. Covers the general rate, related provisions, and the ERD modification.
+
+The task brief requests ley-27-2014:art-29-1, ley-27-2014:art-29-2, and ley-49-2002:art-10. None are present. The registry uses article-level IDs (art-29) not paragraph-level (art-29-1, art-29-2) as a pre-existing convention -- this commit is consistent. ley-49-2002:art-10 is not registered in is.toml and is absent from tipo-gravamen-non-profit-special-regime legal_refs. Pre-existing provenance gap, not introduced here.
+
+2026-06-29 currentization: the paragraph-level reference convention remains unchanged, but the regime-specific gap is closed. `ley-49-2002:art-10` is registered in `is.toml`, backed by bundled corpus excerpt `corpus/normatives/html/ley-49-2002-art-10.html#a10`, and cited by the non-profit 10% scalar parameter, its cuota bracket, and the 00558/00562 formulas.
+
+**CQ4 -- Cross-cut with #183 and #234**
+
+#183 (cuota-integra Path-B Estado-share binding fix): The cuota-integra formula INCN < 1M lane previously dispatched all forms to is.modelo-200.tipo-gravamen-pyme; it now routes general-rate forms to is.modelo-200.cuota-integra-bracket-erd and cooperativas/sin_fines_lucrativos to their own brackets. The tributacion-estado-porcentaje binding and Estado-share logic are untouched. No conflict.
+
+#234 (Maria Ley 49/2002 10% formula): sin_fines_lucrativos dispatch to 10% is preserved in all three lanes. No duplication.
+
+**CQ5 -- Wizard catalogue parity (#228/#239 family)**
+
+No wizard, profile-wizard, or CLI entrypoint files modified. Commit is purely registry + test. No regression vector.
+
+**CQ6 -- Locale keys**
+
+No locale files modified. No new user-facing strings. Gate passes.
+
+**CQ7 -- Oracle test coverage**
+
+Sergio shape (INCN 4.2M -> 25): Covered by test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m (SA, INCN 1.5M -> 25) and the pre-existing form-dispatch test (INCN 10M -> 25). Any value above 1M exercises the same general lane.
+
+Aitor shape (SAL, INCN 850k -> 23): Directly exercised by test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m.
+
+Maria shape (sin_fines_lucrativos -> 10): Covered by pre-existing test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form (INCN 10M, above ERD threshold). 2026-06-29 currentization adds test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold for sin_fines_lucrativos + INCN 500k -> 10 and cuota 100.000 on a 1.000.000 base.
+
+New-entity shape (new-entity = True -> 15): Directly exercised by test_new_entity_flag_overrides_erd_threshold (SL, INCN 200k, flag = 1 -> 15).
+
+**CQ8 -- Anti-tautology**
+
+test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m uses INCN = 1.000.000 (boundary, not qualifying) -> tipo 25. Combined with the ERD test at INCN 850k -> tipo 23, the same entity form (SA / SAL) at two INCN values straddling 1M produces different rates. Anti-tautology gate passes.
+
+---
+
+### Findings
+
+**TIPO-001 | RESOLVED 2026-06-29 | sin_fines_lucrativos oracle covers ERD lane**
+
+Resolved by test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold, which calculates the real Modelo 200 snapshot for sin_fines_lucrativos with INCN 500k and asserts 00558 = 10 and 00562 = 100.000 on a 1.000.000 base. The Maria oracle now covers both the general lane and the ERD-threshold lane.
+
+**TIPO-002 | RESOLVED 2026-06-29 | ley-49-2002:art-10 registered for non-profit rate**
+
+Resolved by registering `ley-49-2002:art-10` in the IS legal catalogue and adding the bundled BOE corpus excerpt verified against BOE-A-2002-25039 art. 10. The reference is now carried by `is.modelo-200.tipo-gravamen-non-profit-special-regime`, `is.modelo-200.cuota-integra-bracket-non-profit-special-regime`, the tipo-gravamen formula, the cuota-integra formula, the Modelo 200 completeness manifest, the revision, and the foundation construct.
+
+**TIPO-003 | LOW | Paragraph-level art refs (art-29-1, art-29-2) not used**
+
+The registry convention uses article-level IDs throughout. The task brief requests paragraph-level precision. Pre-existing convention gap, out of scope for this commit.
+
+**TIPO-004 | LOW | bindings.toml required_text corrected from reserva especial to base imponible**
+
+Two source citations on existing SAL-related bindings had required_text corrected from reserva especial to base imponible. Legitimate fix (SAL binding concerns base imponible). No logic change.
+
+---
+
+### Verdict
+
+**PASS** -- No CRITICAL or HIGH issues. The three-lane tipo formula is correctly structured. The ERD 23% rate is properly scoped to INCN < 1M for general-rate forms only. Special regimes (cooperative 20%, non-profit 10%) are preserved across all three lanes. The new-entity override takes unconditional priority. The anti-tautology boundary test is present and effective. Four LOW findings are all pre-existing gaps or minor oracle coverage notes; none block merge.
+
+Follow-up recommended (non-blocking): decide whether the registry should introduce paragraph-level LIS identifiers such as `ley-27-2014:art-29-1` and `ley-27-2014:art-29-2`, or keep the current article-level convention.

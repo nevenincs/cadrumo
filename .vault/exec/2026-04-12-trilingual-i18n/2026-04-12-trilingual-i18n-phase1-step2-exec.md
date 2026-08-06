@@ -1,0 +1,23 @@
+---
+tags:
+  - "#exec"
+  - "#trilingual-i18n"
+date: 2026-04-12
+modified: '2026-07-17'
+body_hash: 'sha256:c8649cb03a7324731bedeaee53a515b27e27cf4d600b6695e05f8b169987ef0f'
+related:
+  - "[[2026-04-12-trilingual-i18n-plan]]"
+---
+
+# Implement core i18n primitives
+
+Implemented in `src/aeat/core/i18n/__init__.py`:
+- `Language` (StrEnum): es, en, hu
+- `Translatable` (TypedDict): Nested-dict shape for translations
+- `TranslationFallback` (StrEnum): fallback policies
+- `get_translation`: retrieve translation with fallback
+- `require_authoritative`: enforce presence of domain authoritative language
+- `with_translation`: inject translations into dicts
+- `TranslationError` inheriting from `aeat.core.errors.AeatError`
+
+Used full type hinting and Google-style docstrings.

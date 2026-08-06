@@ -1,0 +1,9 @@
+@step Record a transaction with a wrong price to correct.
+aeat --format json app ledger add --date 2026-03-15 --amount 100.00 --direction OUTGOING --description "Office chair" --idempotency-key correct-update
+@capture transaction_id result.transaction_id
+@step Change the amount and description in one command.
+aeat app ledger update {transaction_id} --amount 121.00 --description "Office chair, corrected price"
+@step The original id still resolves; view it to confirm the correction.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.amount == "121"
+@expect result.transaction.description == "Office chair, corrected price"

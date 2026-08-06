@@ -1,0 +1,9 @@
+@step Record a row so the ledger is not already empty.
+@setup aeat --format json app ledger add --date 2026-03-15 --amount 10.00 --direction OUTGOING --description "To be cleared" --idempotency-key correct-reset
+@step Preview the reset without clearing anything.
+aeat app ledger reset --reason "re-importing all statements" --dry-run
+@step Clear the whole ledger for the active profile.
+aeat app ledger reset --reason "re-importing all statements" --yes
+@step Confirm no transactions remain.
+@result aeat --format json app ledger list
+@expect result.total == 0

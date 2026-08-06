@@ -1,0 +1,32 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#sal-reserva-especial'
+date: '2026-08-05'
+modified: '2026-08-05'
+body_schema: 'body-v1'
+body_hash: 'sha256:6584436c295e9d59ac39bf00edda959ea9a975053f0c455288d12f53a48804fc'
+related:
+  - '[[2026-05-27-sal-reserva-especial-S01]]'
+  - '[[2026-06-04-sal-reserva-especial-adr]]'
+  - '[[2026-06-04-sal-reserva-especial-research]]'
+---
+
+# `sal-reserva-especial` feature index
+
+Auto-generated index of all documents tagged with `#sal-reserva-especial`.
+
+## Documents
+
+### adr
+
+- `2026-06-04-sal-reserva-especial-adr` - `sal-reserva-especial` adr: `warning closeout authority alignment` | (**status:** `accepted`)
+
+### exec
+
+- `2026-05-27-sal-reserva-especial-S01` - sal-reserva-especial S01 — SAL/SLL LegalEntityForm + reserva especial régimen (Ley 44/2015)
+
+### research
+
+- `2026-06-04-sal-reserva-especial-research` - `sal-reserva-especial` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.

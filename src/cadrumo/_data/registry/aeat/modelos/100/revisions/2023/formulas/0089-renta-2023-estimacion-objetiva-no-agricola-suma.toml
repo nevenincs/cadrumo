@@ -1,0 +1,13 @@
+[[revisions."2023".formulas]]
+id = "renta-2023-estimacion-objetiva-no-agricola-suma"
+target_casilla_id = "1482"
+expression = { op = "sum", args = [
+    { casilla_id = "1481" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación objetiva", "rendimiento neto"]

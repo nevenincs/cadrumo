@@ -1,0 +1,20 @@
+[[revisions.2023-2024.formulas]]
+id = "modelo-202-2023-2024-modalidad-40-2-a-ingresar"
+target_casilla_id = "03"
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
+expression = { op = "subtract", args = [
+    { op = "percent", args = [
+        { casilla_id = "01" },
+        { parameter = "is.modalidad_cuota.percentage" },
+    ] },
+    { casilla_id = "02" },
+] }
+
+[[revisions.2023-2024.formulas.source_citations]]
+source_ref = "aeat-modelo-202-instructions-2023-2024"
+required_text = [
+    "clave [03]",
+    "porcentaje del 18%",
+]

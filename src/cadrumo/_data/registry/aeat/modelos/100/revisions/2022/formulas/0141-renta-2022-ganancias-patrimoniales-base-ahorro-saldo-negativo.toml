@@ -1,0 +1,17 @@
+[[revisions."2022".formulas]]
+id = "renta-2022-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+target_casilla_id = "0425"
+expression = { op = "max", args = [
+    { op = "subtract", args = [
+        { casilla_id = "0423" },
+        { casilla_id = "0422" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["pérdidas", "base imponible del ahorro"]

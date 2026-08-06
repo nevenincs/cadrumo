@@ -1,0 +1,8 @@
+@step Record the alta you filed at the sede, with the sede receipt number.
+aeat --format json app modelo m036 alta --declared-on 2026-01-10 --sede-justificante ACUSE-036-2026
+@capture declaration_id result.declaration_id
+@step Read the saved record back by its id to confirm it persisted.
+@result aeat --format json app modelo m036 view {declaration_id}
+@expect result.event_kind == "alta"
+@expect result.declared_on == "2026-01-10"
+@expect exit_code == 0

@@ -1,0 +1,77 @@
+# Catalan translation of the Cadrumo documentation.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 14:00+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../disclaimer.md:1
+msgid "Disclaimer"
+msgstr "Avís legal"
+
+#: ../../disclaimer.md:3
+msgid ""
+"Cadrumo, including its `aeat` command-line interface, is a software "
+"utility, not a tax advisor. It gives no tax, legal, accounting, or "
+"financial advice, creates no advisory relationship, and is not affiliated"
+" with, endorsed by, or connected to the Agencia Estatal de Administración"
+" Tributaria (AEAT)."
+msgstr ""
+"Cadrumo, inclosa la seva interfície de línia d'ordres `aeat`, és una "
+"utilitat de programari, no pas un assessor fiscal. No ofereix cap "
+"assessorament fiscal, jurídic, comptable ni financer, no estableix cap "
+"relació d'assessorament i no està afiliat a l'Agencia Estatal de "
+"Administración Tributaria (AEAT), ni avalat ni vinculat per aquesta."
+
+#: ../../disclaimer.md:8
+msgid ""
+"Nothing Cadrumo produces is advice or a guarantee. No calculation, draft,"
+" verification, or export assures you that a figure, form, or filing is "
+"correct, complete, or compliant with current law. You alone are "
+"responsible for the accuracy, completeness, and legality of every figure "
+"you enter and every declaration you file, and you should review every "
+"output before you rely on it."
+msgstr ""
+"Res del que produeix Cadrumo no és assessorament ni cap garantia. Cap "
+"càlcul, esborrany, verificació ni exportació no t'assegura que una xifra, "
+"un formulari o una presentació siguin correctes, complets o conformes amb "
+"la legislació vigent. Ets l'únic responsable de l'exactitud, la integritat "
+"i la legalitat de cada xifra que introdueixes i de cada declaració que "
+"presentes, i has de revisar cada resultat abans de confiar-hi."
+
+#: ../../disclaimer.md:14
+msgid ""
+"Cadrumo never files. It does not submit to the AEAT and cannot file for "
+"you. You file yourself, through official channels, and bear sole "
+"responsibility for that filing. Because tax law changes and depends on "
+"your circumstances, consult a qualified professional such as an asesor "
+"fiscal or gestor for advice on your situation."
+msgstr ""
+"Cadrumo no presenta mai res. No fa cap presentació davant l'AEAT i no pot "
+"presentar en nom teu. Ets tu qui presenta, pels canals oficials, i "
+"n'assumeixes la responsabilitat exclusiva. Com que la legislació fiscal "
+"canvia i depèn de les teves circumstàncies, consulta un professional "
+"qualificat, com ara un assessor fiscal o gestor, per obtenir assessorament "
+"sobre la teva situació."
+
+#: ../../disclaimer.md:20
+msgid ""
+"Cadrumo is provided \"as is\", without warranty of any kind, under the "
+"Apache License 2.0. The authors accept no liability for any loss, "
+"penalty, interest, or other damage arising from its use."
+msgstr ""
+"Cadrumo es proporciona \"tal com és\", sense cap mena de garantia, sota la "
+"llicència Apache License 2.0. Els autors no accepten cap responsabilitat "
+"per cap pèrdua, sanció, interès o altre dany que derivi del seu ús."

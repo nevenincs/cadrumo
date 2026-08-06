@@ -1,0 +1,26 @@
+[[revisions.2023-2024.formulas]]
+id = "modelo-202-2023-2024-resultado-previo-b2"
+target_casilla_id = "26"
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
+expression = { op = "subtract", args = [
+    { op = "add", args = [
+        { op = "subtract", args = [
+            { op = "add", args = [
+                { op = "add", args = [{ casilla_id = "22" }, { casilla_id = "25" }] },
+                { casilla_id = "50" },
+            ] },
+            { casilla_id = "42" },
+        ] },
+        { casilla_id = "51" },
+    ] },
+    { casilla_id = "52" },
+] }
+
+[[revisions.2023-2024.formulas.source_citations]]
+source_ref = "aeat-modelo-202-instructions-2023-2024"
+required_text = [
+    "la clave [26]",
+    "clave [22] + clave [25] + clave [50]",
+]

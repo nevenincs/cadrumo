@@ -1,0 +1,457 @@
+[[revisions.2023-y-siguientes.export_layouts]]
+id = "modelo-180-fichero-boe-2023"
+
+[[revisions.2023-y-siguientes.export_layouts.records]]
+id = "modelo-180-perceptor"
+record_type = "perceptor"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "180"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-decl-nif"
+offset = 9
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-nif"
+offset = 18
+length = 9
+kind = "casilla"
+casilla_id = "perc.nif"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-nif-representante-legal"
+offset = 27
+length = 9
+kind = "casilla"
+casilla_id = "perc.nif-representante-legal"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-nombre"
+offset = 36
+length = 40
+kind = "casilla"
+casilla_id = "perc.nombre"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-provincia"
+offset = 76
+length = 2
+kind = "casilla"
+casilla_id = "perc.provincia"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-modalidad"
+offset = 78
+length = 1
+kind = "casilla"
+casilla_id = "perc.modalidad"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-base"
+offset = 79
+length = 14
+kind = "casilla"
+casilla_id = "perc.base"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-porcentaje-retencion"
+offset = 93
+length = 4
+kind = "casilla"
+casilla_id = "perc.porcentaje-retencion"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-retenciones"
+offset = 97
+length = 13
+kind = "casilla"
+casilla_id = "perc.retenciones"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-ejercicio-devengo"
+offset = 110
+length = 4
+kind = "casilla"
+casilla_id = "perc.ejercicio-devengo"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-situacion-inmueble"
+offset = 114
+length = 1
+kind = "casilla"
+casilla_id = "perc.situacion-inmueble"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-referencia-catastral"
+offset = 115
+length = 20
+kind = "casilla"
+casilla_id = "perc.referencia-catastral"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-tipo-via"
+offset = 135
+length = 5
+kind = "casilla"
+casilla_id = "perc.inmueble-tipo-via"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-nombre-via"
+offset = 140
+length = 50
+kind = "casilla"
+casilla_id = "perc.inmueble-nombre-via"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-tipo-numeracion"
+offset = 190
+length = 3
+kind = "casilla"
+casilla_id = "perc.inmueble-tipo-numeracion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-numero-casa"
+offset = 193
+length = 5
+kind = "casilla"
+casilla_id = "perc.inmueble-numero-casa"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-calificador-numero"
+offset = 198
+length = 3
+kind = "casilla"
+casilla_id = "perc.inmueble-calificador-numero"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-bloque"
+offset = 201
+length = 3
+kind = "casilla"
+casilla_id = "perc.inmueble-bloque"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-portal"
+offset = 204
+length = 3
+kind = "casilla"
+casilla_id = "perc.inmueble-portal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-escalera"
+offset = 207
+length = 3
+kind = "casilla"
+casilla_id = "perc.inmueble-escalera"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-planta"
+offset = 210
+length = 3
+kind = "casilla"
+casilla_id = "perc.inmueble-planta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-puerta"
+offset = 213
+length = 3
+kind = "casilla"
+casilla_id = "perc.inmueble-puerta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-complemento"
+offset = 216
+length = 40
+kind = "casilla"
+casilla_id = "perc.inmueble-complemento"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-localidad"
+offset = 256
+length = 30
+kind = "casilla"
+casilla_id = "perc.inmueble-localidad"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-municipio"
+offset = 286
+length = 30
+kind = "casilla"
+casilla_id = "perc.inmueble-municipio"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-codigo-municipio"
+offset = 316
+length = 5
+kind = "casilla"
+casilla_id = "perc.inmueble-codigo-municipio"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-provincia"
+offset = 321
+length = 2
+kind = "casilla"
+casilla_id = "perc.inmueble-provincia"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-inmueble-codigo-postal"
+offset = 323
+length = 5
+kind = "casilla"
+casilla_id = "perc.inmueble-codigo-postal"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.export_layouts.records.fields]]
+id = "modelo-180-perc-resto"
+offset = 328
+length = 173
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+

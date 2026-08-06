@@ -1,0 +1,9 @@
+@step List every form the tool knows.
+aeat --format json app modelo list
+@step Narrow the catalogue to the 2026 fiscal year.
+aeat --format json app modelo list --year 2026
+@step Look up Modelo 303 in detail.
+@result aeat --format json app modelo describe 303
+@expect result.code == "303"
+@expect result.cadence == "quarterly"
+@expect exit_code == 0

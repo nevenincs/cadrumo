@@ -1,0 +1,3 @@
+@step Run the annual-period ledger preflight for the income year.
+  @result aeat --format json app ledger preflight --year 2025 --period 0A
+  @expect exit_code == 0

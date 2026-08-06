@@ -1,0 +1,28 @@
+# Modelo 151 (régimen especial de impatriados, Ley Beckham) — base liquidable
+# general ledger binding, ejercicios 2025 y siguientes.
+#
+# art. 93.2 LIRPF taxes the impatriado by the IRNR scope rules, so the base
+# liquidable general admits ONLY Spanish-source income. The impatriado income
+# aggregation (source ledger_impatriado_income_aggregation) folds the annual
+# ES-source total into impatriado.base-liquidable-general and segregates every
+# foreign-source or jurisdiction-unresolved ledger row as a typed
+# BECKHAM_FOREIGN_SOURCE_SEGREGATED issue — never a silent ES coercion
+# (no-silent-under-declaration).
+#
+# The parte del ahorro (art. 93.2.e.2º -> art. 25.1.f TRLIRNR) is captured in the
+# separate impatriado.base-liquidable-ahorro casilla and taxed by the escala del
+# ahorro. That savings base is a manual input in this revision: the source-scoped
+# ledger classifier for savings income (dividends, interest, capital gains) is a
+# separate follow-up, mirroring how the general base was manual before its
+# classifier landed.
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-151-impatriado-base-liquidable-general"
+source = "ledger_impatriado_income_aggregation"
+selector = { modelo = "151", target_casilla_id = "impatriado.base-liquidable-general", fact = "ingresos_integros_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]

@@ -1,0 +1,178 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "overview",
+        "status"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "overview.status",
+        "notices": [
+          {
+            "code": "overview.status.next_step",
+            "context": null,
+            "message": "aeat app ledger import <bank-statement.csv> --provider csv - import bank transactions.",
+            "severity": "info",
+            "suggestion": null
+          },
+          {
+            "code": "overview.status.next_step",
+            "context": null,
+            "message": "aeat app ledger review - review imported rows.",
+            "severity": "info",
+            "suggestion": null
+          },
+          {
+            "code": "overview.status.next_step",
+            "context": null,
+            "message": "aeat --help - return to the command guide.",
+            "severity": "info",
+            "suggestion": null
+          },
+          {
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "038": "applicability_undetermined",
+              "100": "applicable_window_missing",
+              "111": "applicability_undetermined",
+              "115": "applicability_undetermined",
+              "117": "applicability_undetermined",
+              "121": "applicability_undetermined",
+              "122": "applicability_undetermined",
+              "123": "applicability_undetermined",
+              "126": "applicability_undetermined",
+              "128": "applicability_undetermined",
+              "130": "applicability_undetermined",
+              "131": "applicability_undetermined",
+              "136": "applicability_undetermined",
+              "140": "applicability_undetermined",
+              "143": "applicability_undetermined",
+              "156": "applicability_undetermined",
+              "165": "applicability_undetermined",
+              "179": "applicability_undetermined",
+              "180": "applicability_undetermined",
+              "181": "applicability_undetermined",
+              "182": "applicability_undetermined",
+              "185": "applicability_undetermined",
+              "186": "applicability_undetermined",
+              "187": "applicability_undetermined",
+              "188": "applicability_undetermined",
+              "189": "applicability_undetermined",
+              "190": "applicability_undetermined",
+              "193": "applicability_undetermined",
+              "194": "applicability_undetermined",
+              "210": "applicability_undetermined",
+              "216": "applicability_undetermined",
+              "220": "applicability_undetermined",
+              "222": "applicability_undetermined",
+              "231": "applicability_undetermined",
+              "232": "applicability_undetermined",
+              "233": "applicability_undetermined",
+              "234": "applicability_undetermined",
+              "238": "applicability_undetermined",
+              "270": "applicability_undetermined",
+              "280": "applicability_undetermined",
+              "289": "applicability_undetermined",
+              "296": "applicability_undetermined",
+              "303": "applicability_undetermined",
+              "308": "applicability_undetermined",
+              "309": "applicability_undetermined",
+              "322": "applicability_undetermined",
+              "341": "applicability_undetermined",
+              "345": "applicability_undetermined",
+              "347": "applicability_undetermined",
+              "349": "applicability_undetermined",
+              "353": "applicability_undetermined",
+              "360": "applicability_undetermined",
+              "361": "applicability_undetermined",
+              "369": "applicability_undetermined",
+              "379": "applicability_undetermined",
+              "380": "applicability_undetermined",
+              "390": "applicability_undetermined",
+              "490": "applicability_undetermined",
+              "576": "applicability_undetermined",
+              "592": "applicability_undetermined",
+              "604": "applicability_undetermined",
+              "720": "applicability_undetermined",
+              "721": "applicability_undetermined",
+              "763": "applicability_undetermined",
+              "848": "applicability_undetermined"
+            },
+            "message": "65 filing obligation(s) could not be positively scoped for this profile and may be under-reported: 038, 100, 111, 115, 117, 121, 122, 123, 126, 128, 130, 131, 136, 140, 143, 156, 165, 179, 180, 181, 182, 185, 186, 187, 188, 189, 190, 193, 194, 210, 216, 220, 222, 231, 232, 233, 234, 238, 270, 280, 289, 296, 303, 308, 309, 322, 341, 345, 347, 349, 353, 360, 361, 369, 379, 380, 390, 490, 576, 592, 604, 720, 721, 763, 848. Investigate each with 'aeat app overview explain <modelo>'.",
+            "severity": "warning",
+            "suggestion": "aeat app overview explain 038"
+          }
+        ],
+        "result": {
+          "active_profile": "<profile-id>",
+          "active_profile_name": "docs-sequence-sandbox",
+          "calculation_revisions": 0,
+          "discarded_work_units": 0,
+          "drafts": 0,
+          "filing_obligation_advisories": [],
+          "invoices": 0,
+          "period": null,
+          "transactions": 0,
+          "unreadable_rows": 0,
+          "unsupported_work_create_modelos": [],
+          "verbose": null,
+          "work_units": 0
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.list",
+        "notices": [
+          {
+            "code": "modelo.work.list.next_action",
+            "context": null,
+            "message": "Inspect one work unit's full state with `aeat app modelo work status`, then draft or recalculate it with `aeat app modelo work calculate`.",
+            "severity": "info",
+            "suggestion": null
+          }
+        ],
+        "result": {
+          "bucket_id_filter": null,
+          "include_discarded": false,
+          "operation": "modelo.work.list",
+          "work_unit_count": 0,
+          "work_units": []
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "irpf-lifecycle-position"
+}

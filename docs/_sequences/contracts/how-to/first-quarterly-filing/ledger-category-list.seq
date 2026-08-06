@@ -1,0 +1,3 @@
+@step List the accepted expense categories.
+@result aeat --format json app ledger categories
+@expect exit_code == 0

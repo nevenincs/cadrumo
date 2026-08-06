@@ -1,0 +1,13 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-trabajo-suma-rendimientos-netos-previos"
+target_casilla_id = "0018"
+expression = { op = "copy", args = [
+    { casilla_id = "0017" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["rendimientos del trabajo", "Rendimiento neto previo"]

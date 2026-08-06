@@ -1,0 +1,22 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#code-duplication-sweep'
+date: '2026-08-05'
+modified: '2026-08-05'
+body_schema: 'body-v1'
+body_hash: 'sha256:5beadf041a30263518be3d012b301935ed9e385fc2742195738834b8edae7db7'
+related:
+  - '[[2026-05-19-retirement-residue-audit]]'
+---
+
+# `code-duplication-sweep` feature index
+
+Auto-generated index of all documents tagged with `#code-duplication-sweep`.
+
+## Documents
+
+### audit
+
+- `2026-05-19-retirement-residue-audit` - Retirement-Residue Audit: May 19, 2026

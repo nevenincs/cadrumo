@@ -1,0 +1,6 @@
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-202"
+source_modelo = "202"
+treatment = "non_dependency"
+legal_refs = ["ley-35-2006:art-27", "ley-27-2014:art-40", "orden-hac-277-2026:art-3"]
+source_refs = ["boe-modelo-100-2025-form", "aeat-modelo-202-instructions"]

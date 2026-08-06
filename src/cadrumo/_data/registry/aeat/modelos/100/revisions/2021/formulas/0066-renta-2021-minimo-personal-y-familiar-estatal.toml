@@ -1,0 +1,16 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-minimo-personal-y-familiar-estatal"
+target_casilla_id = "0519"
+expression = { op = "sum", args = [
+    { casilla_id = "0511" },
+    { casilla_id = "0513" },
+    { casilla_id = "0515" },
+    { casilla_id = "0517" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["Mínimo personal y familiar", "Mínimo del contribuyente"]

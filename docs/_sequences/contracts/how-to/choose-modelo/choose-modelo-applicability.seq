@@ -1,0 +1,11 @@
+:seed: choose-modelo-autonomo
+@step Confirm the active profile is loaded and carries the basics.
+aeat config profile status
+@step Ask whether Modelo 303 applies for 2026, and read the rationale.
+aeat --format json app overview explain 303 --year 2026
+@expect result.applicable == true
+@expect result.verdict == "applicable"
+@step Check filing readiness for the first-quarter Modelo 303 context.
+@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@expect result.ready == true
+@expect exit_code == 0

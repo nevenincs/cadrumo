@@ -1,0 +1,6 @@
+# Artículo 6. Concepto y clases de bienes inmuebles.
+
+1. A los exclusivos efectos catastrales, tiene la consideración de bien inmueble la parcela o porción de suelo de una misma naturaleza, enclavada en un término municipal y cerrada por una línea poligonal que delimita, a tales efectos, el ámbito espacial del derecho de propiedad de un propietario o de varios pro indiviso y, en su caso, las construcciones emplazadas en dicho ámbito, cualquiera que sea su dueño, y con independencia de otros derechos que recaigan sobre el inmueble.
+3. A cada bien inmueble se le asignará como identificador una referencia catastral, constituida por un código alfanumérico que permite situarlo inequívocamente en la cartografía oficial del Catastro.
+Dicha identificación deberá figurar en todos los documentos que reflejen relaciones de naturaleza económica o con trascendencia tributaria vinculadas al inmueble, conforme establece el título V de esta Ley.
+Se modifica el apartado 3 por la disposición final 18.2 de la Ley 2/2011, de 4 de marzo. Ref. BOE-A-2011-4117.

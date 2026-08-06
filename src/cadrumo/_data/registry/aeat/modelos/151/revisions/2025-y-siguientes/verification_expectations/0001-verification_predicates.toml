@@ -1,0 +1,19 @@
+# Soundness gates (no-silent-under-declaration), ejercicios 2025 y siguientes.
+# Each cuota íntegra is formula-derived from its base liquidable via
+# lookup_bracket, so a positive base with a zero cuota would only be reachable
+# through a registry regression, not a legitimate operator omission -- but the
+# verify gate must still surface it rather than silently granting
+# VERIFICADO_COMPLETO. ADVISORY (non-blocking): mirrors the M131 01->02 and M200
+# 00501->DP200014:00552 worked-pattern guards.
+
+[[revisions."2025-y-siguientes".verification_predicates]]
+predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
+expression = 'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-93"]
+
+[[revisions."2025-y-siguientes".verification_predicates]]
+predicate_id = "modelo-151-base-ahorro-implica-cuota-ahorro"
+expression = 'implies_nonzero(["impatriado.base-liquidable-ahorro", "impatriado.cuota-integra-ahorro"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-93"]

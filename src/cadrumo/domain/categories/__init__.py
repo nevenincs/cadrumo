@@ -1,0 +1,92 @@
+"""Public facade for AEAT spending-category taxonomy and profiles.
+
+This package owns the closed autónomo expense vocabulary,
+:class:`SpendingCategory`, its grouping surface
+:class:`SpendingCategoryFamily`, and the
+:data:`CATEGORY_FAMILY_MEMBERS` membership table. Category identifiers are the
+stable values used by ledger rows, invoice rows, usage-ratio overrides, Renta
+deductibility, and LLM classification hints; renaming an enum member is a
+breaking storage and calculation change.
+
+Year-specific profile data is loaded from committed TOML under
+``registry/aeat/categories/profiles`` through
+:func:`load_category_profile_registry`,
+:func:`resolve_category_profiles`, and
+:func:`load_category_profiles_from_manual`. Runtime Python owns validation and
+resolution behaviour, not legal profile values.
+
+Each :class:`CategoryProfile` binds a category to
+:class:`ProportionalityRule`, :class:`ProportionalityKind`,
+:class:`StatutoryCapPeriod`, :class:`StatutoryCapVariant`,
+:class:`IvaDeductibilityHint`, and at least one :class:`CategoryCitation` /
+:class:`CategoryCitationSource`, preserving the explainability chain back to
+BOE, AEAT help, or Manual práctico evidence. :func:`effective_usage_ratio`
+applies only the factual proportionality multiplier; modelo applicability,
+casilla routing, and filing-grade legal treatment remain in
+:mod:`domain.calculations.registry` and the application source mesh.
+
+See Also:
+    :mod:`domain.usage_ratios`
+        Stores operator overrides keyed by concrete
+        :class:`SpendingCategory` values whose proportionality kind permits a
+        user ratio.
+    :mod:`domain.renta`
+        Evaluates category profiles and citations into Renta deductible-expense
+        observations.
+    :mod:`application.ledger`
+        Validates ledger ``category_id`` / ``usage_ratio_id`` facts before the
+        application source mesh feeds modelo calculation.
+    :mod:`domain.invoices`
+        Carries the same stable category identifiers on invoice and purchase
+        evidence records used by aggregation.
+    :mod:`domain.calculations.registry`
+        Owns modelo applicability, binding declarations, formulas, and casilla
+        routing outside this taxonomy surface.
+"""
+
+from __future__ import annotations
+
+from ._corpus import load_category_profiles_from_manual
+from ._profile import CategoryProfile, IvaDeductibilityHint
+from ._proportionality import (
+    CategoryCitation,
+    CategoryCitationSource,
+    ProportionalityKind,
+    ProportionalityRule,
+    StatutoryCapPeriod,
+    StatutoryCapVariant,
+    effective_usage_ratio,
+    parse_http_url,
+)
+from ._registry import (
+    load_category_profile_registry,
+    resolve_category_profiles,
+)
+from ._spending_category import (
+    CATEGORY_FAMILY_MEMBERS,
+    SpendingCategory,
+    SpendingCategoryFamily,
+    categories_for_family,
+    family_for,
+)
+
+__all__ = [
+    "CATEGORY_FAMILY_MEMBERS",
+    "CategoryCitation",
+    "CategoryCitationSource",
+    "CategoryProfile",
+    "IvaDeductibilityHint",
+    "ProportionalityKind",
+    "ProportionalityRule",
+    "SpendingCategory",
+    "SpendingCategoryFamily",
+    "StatutoryCapPeriod",
+    "StatutoryCapVariant",
+    "categories_for_family",
+    "effective_usage_ratio",
+    "family_for",
+    "load_category_profile_registry",
+    "load_category_profiles_from_manual",
+    "parse_http_url",
+    "resolve_category_profiles",
+]

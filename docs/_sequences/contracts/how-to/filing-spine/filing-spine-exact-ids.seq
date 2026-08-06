@@ -1,0 +1,15 @@
+:seed: iva-evidence-2026
+@step Create the work unit for the filing target.
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Calculate the quarter so a saved revision carries a reference number.
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@capture revision_id result.calculation_revision_id
+@step Verify a specific calculation by its reference number.
+aeat --format json app modelo work verify {revision_id}
+@step File a specific calculation by its reference number.
+aeat --format json app modelo work file {revision_id}
+@step Export a specific work unit and revision by their reference numbers.
+@result aeat --format json app modelo export {work_unit_id} --revision {revision_id} --output ./modelo-303.boe
+@expect result.byte_size == 7365
+@expect exit_code == 0

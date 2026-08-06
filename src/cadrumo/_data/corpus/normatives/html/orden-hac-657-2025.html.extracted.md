@@ -1,0 +1,27 @@
+Orden HAC/657/2025 (BOE-A-2025-12818) - Impuesto sobre Sociedades
+Orden HAC/657/2025, de 21 de junio, por la que se aprueban los modelos de declaración del
+Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondientes a
+establecimientos permanentes para los períodos impositivos iniciados entre el 1 de enero y el
+31 de diciembre de 2024.
+Artículo 1. Aprobación de los modelos de declaración.
+Se aprueba el modelo 200 de declaración del Impuesto sobre Sociedades y del Impuesto sobre la
+Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de
+rentas constituidas en el extranjero con presencia en territorio español), cuyo contenido figura
+en el anexo I. Modelo 200: Declaración del Impuesto sobre Sociedades.
+Artículo 3. Pago de las deudas tributarias resultantes de las declaraciones del Impuesto sobre
+Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos
+permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con
+presencia en territorio español, Modelos 200 y 220, mediante domiciliación bancaria.
+2. La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse
+desde el día 1 de julio hasta el 22 de julio de 2025, ambos inclusive.
+Artículo 6. Plazo de presentación.
+1. De acuerdo con lo dispuesto en el artículo 124.1 de la Ley 27/2014, de 27 de noviembre, el
+modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente
+orden, se presentará en el plazo de los 25 días naturales siguientes a los seis meses posteriores
+a la conclusión del período impositivo.
+Disposición final única. Entrada en vigor.
+La presente orden entrará en vigor el día 1 de julio de 2025.
+Provenance: verbatim excerpt transcribed from the BOE consolidated text of Orden HAC/657/2025
+(https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818), Articles 1, 3, and 6 plus the final
+disposition, covering the Modelo 200 approval, the payment domiciliation window, and the filing
+deadline.

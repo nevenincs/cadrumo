@@ -1,0 +1,50 @@
+# Semantic index exclusions. Git exclusions still apply separately; this file
+# removes generated, duplicated, or low-signal text from VaultSpec RAG.
+
+# Generated provider copies of the canonical VaultSpec rule/skill surfaces.
+.agents/
+.claude/
+.codex/
+.gemini/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+
+# Generated documentation surfaces. Keep hand-written docs/ pages indexable.
+docs/_build/
+docs/cli/
+docs/api/
+
+# Raw BOE normatives HTML is indexed through the .vaultragpreprocess.toml
+# hook rules (article-aware units). The pre-rename exclusion that once traded
+# raw markup for sidecars pointed at src/aeat and has been dead since the
+# CADRUMO package rename; the sidecar exclusion below is the dedup now.
+
+# Local caches, reports, and ad-hoc execution output that may appear before
+# .gitignore pruning catches up.
+.campaign-runs/
+.import_linter_cache/
+.playwright-mcp/
+.pytest_cache/
+.ruff_cache/
+.ty_cache/
+.pyrefly_cache/
+.complexipy_cache/
+htmlcov/
+output/
+playwright-report/
+test-results/
+scratch/
+tmp/
+tmp_*/
+temp/
+cache/
+var/
+
+# Extraction sidecars: the committed product corpus payload (shipped search
+# index source, wheel corpus text, manual-oracle evidence anchors). The dev
+# index now reads the same text from the SOURCE files through the
+# .vaultragpreprocess.toml hook rules, so indexing the sidecars too would
+# double-count every corpus document (docs-terminology-search ADR Update 1).
+*.extracted.md
+*.extracted.json

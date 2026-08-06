@@ -1,0 +1,9 @@
+:seed: autonomo-irpf-2026
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@step List the saved calculation revisions for the filing.
+aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
+@step Show the current revision's persisted casilla values and provenance.
+@result aeat --format json app modelo work revision --modelo 303 --year 2026 --period 1T
+@expect result.casilla_values.71 == "105.00"
+@expect exit_code == 0

@@ -1,0 +1,16 @@
+[revisions."2010-y-siguientes"]
+valid_from = 2010-04-01
+period_selector = { year_from = 2010, periods = ["AD-HOC"] }
+orden_aplicabilidad = ["orden-eha-789-2010:art-7"]
+legal_refs = [
+    "orden-eha-789-2010:art-7",
+    "orden-eha-789-2010:art-8",
+    "orden-eha-789-2010:art-9",
+    "orden-eha-789-2010:art-10",
+]
+source_refs = [
+    "aeat-modelo-361-procedure",
+    "aeat-modelo-361-devolucion-solicitada",
+    "aeat-modelo-361-lista-operaciones",
+    "boe-modelo-361-form",
+]

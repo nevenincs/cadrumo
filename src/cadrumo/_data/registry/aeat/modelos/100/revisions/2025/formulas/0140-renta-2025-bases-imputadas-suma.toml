@@ -1,0 +1,13 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-bases-imputadas-suma"
+target_casilla_id = "0265"
+expression = { op = "sum", args = [
+    { casilla_id = "0259" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-85"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible", "imputadas"]

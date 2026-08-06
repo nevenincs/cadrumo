@@ -1,0 +1,4 @@
+# Artículo 42 quater. Obligación de informar sobre monedas virtuales situadas en el extranjero.
+
+1. Las personas físicas y jurídicas residentes en territorio español, los establecimientos permanentes en dicho territorio de personas o entidades no residentes, y las entidades a que se refiere el artículo 35.4 de la Ley 58/2003, de 17 de diciembre, General Tributaria, vendrán obligados a presentar una declaración informativa anual referente a la totalidad de las monedas virtuales situadas en el extranjero de las que resulten ser titulares, o respecto de las cuales tengan la condición de beneficiarios o autorizados o de alguna otra forma ostenten poder de disposición.
+Esta obligación informativa se realizará mediante el Modelo 721.

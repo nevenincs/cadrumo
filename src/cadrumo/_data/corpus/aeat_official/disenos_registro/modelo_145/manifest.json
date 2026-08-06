@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "145",
+  "retrieved_at": "2026-05-14",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr145v20.pdf"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "145",
+      "title": "145 - Diseno de registro version 2.0 (31-01-2012) (PDF)",
+      "source_page": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr145v20.pdf",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr145v20.pdf",
+      "stored_path": "files/dr145v20.pdf",
+      "original_filename": "dr145v20.pdf",
+      "content_type": "application/pdf",
+      "bytes": 32295,
+      "sha256": "fe29e8df4db859b41c66aaaf96c1bd27bc2af9063d98a61e62f21832c091765c",
+      "retrieved_at": "2026-05-14"
+    }
+  ]
+}

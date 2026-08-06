@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cadrumo.neve.md/sitemap.xml
+Sitemap: https://cadrumo.neve.md/docs/sitemap.xml

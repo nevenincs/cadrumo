@@ -1,0 +1,54 @@
+# RET-1 P02 enrollment edits for src/aeat/application/modelo/_calculation_actions.py
+#
+# Captured 2026-06-24 by r2-autonomo-130-eoy. These are the ONLY P02 changes to
+# this file (the calc-mesh enrollment of RetencionesAggregationSourceResolver).
+# HELD (not committed) because the file is in a live edit-race with the casilla-id
+# agent's validate_casilla_input_ids WIP. Re-apply these 4 edits on the
+# clean-committed HEAD version once its owner commits, then commit P02 atomically
+# with the other 9 P02 files. Each edit is an exact anchor against the clean
+# pre-WIP HEAD (which uses normalize_casilla_input_aliases, NOT
+# validate_casilla_input_ids).
+#
+# After re-applying: `git diff -- <file>` MUST show ONLY these hunks, and
+# `grep -c validate_casilla_input_ids <file>` MUST be 0 before committing.
+
+## Edit 1 — ENROLLED comment block (in the _BUCKET_AGGREGATION_OWNED_SOURCES header comment)
+ANCHOR (old):
+#   ledger_oss_aggregation           — OssIossLedgerSourceResolver (S09)
+#   collectible_invoice              — InvoiceCatalogueSourceResolver (S09)
+INSERT BETWEEN them (new middle lines):
+#   retenciones_aggregation          — RetencionesAggregationSourceResolver (RET-1):
+#                                      materialises the M180/190/193 distinct
+#                                      perceptor-NIF count from the dedicated
+#                                      per-perceptor retención store
+
+## Edit 2 — _BUCKET_AGGREGATION_OWNED_SOURCES frozenset
+ANCHOR (old):
+        "ledger_oss_aggregation",
+        "collectible_invoice",
+ADD between them:
+        "retenciones_aggregation",
+
+## Edit 3 — import inside _resolve_bucket_source_mesh (the `from ..aggregation import (...)` block)
+ANCHOR (old):
+        OssIossLedgerSourceResolver,
+        collect_unhandled_source_diagnostics,
+ADD between them:
+        RetencionesAggregationSourceResolver,
+
+## Edit 4 — merge_source_resolutions tuple
+ANCHOR (old):
+            OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(context),
+ADD immediately after that line:
+            # M180/190/193 distinct perceptor-NIF count (retenciones_aggregation):
+            # reads the dedicated per-perceptor retención store and materialises the
+            # "número total de perceptores" box via the validated distinct-count
+            # primitive — replacing the wrong sum-of-quarterly-M115-counts relation
+            # (RET-1). Empty store on a declaring revision surfaces a no-silent advisory.
+            RetencionesAggregationSourceResolver().resolve(context),
+
+## And the enrollment-test pin (separate file — already applied + clean, NOT in this race):
+# src/aeat/application/aggregation/tests/test_source_resolver_enrollment.py
+#   - comment "Eight are wired" -> "Nine are wired", "All eleven" -> "All twelve"
+#   - add "aeat.application.aggregation.RetencionesAggregationSourceResolver" to
+#     _ENROLLED_SOURCE_MESH_RESOLVERS (12 == 12)

@@ -1,0 +1,19 @@
+[revisions."2008-y-siguientes"]
+valid_from = 2008-01-01
+period_selector = { year_from = 2008, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = [
+    "orden-eha-3434-2007:art-1",
+    "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
+]
+orden_aplicabilidad = [
+    "orden-eha-3434-2007:art-1",
+]
+source_refs = [
+    "aeat-dr-322-2023",
+    "aeat-dr-322-2024-2025",
+    "aeat-dr-322-2026",
+    "aeat-modelo-322-procedure",
+    "boe-modelo-322-2007-form",
+    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
+]

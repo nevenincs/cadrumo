@@ -1,0 +1,10 @@
+@step Record a card payment that mixes business and personal items.
+aeat --format json app ledger add --date 2026-03-15 --amount 121.00 --direction OUTGOING --description "Mixed receipt" --idempotency-key correct-split
+@capture transaction_id result.transaction_id
+@step Split the payment into two parts.
+aeat --format json app ledger split {transaction_id} --child-amount 100.00 --child-description "office supplies" --child-amount 21.00 --child-description "personal items" --reason "mixed receipt" --yes
+@capture first_part result.child_transactions[0].full_id
+@step Confirm the first part is an active transaction of its own.
+@result aeat --format json app ledger view {first_part}
+@expect result.transaction.amount == "100"
+@expect result.transaction.lifecycle_state == "ACTIVE"

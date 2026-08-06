@@ -1,0 +1,45 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#calc-engine-grounding-swarm'
+date: '2026-08-05'
+modified: '2026-08-05'
+body_schema: 'body-v1'
+body_hash: 'sha256:791d1e6115ae29f174ed820e3338b590b42c8a4d3e500b0c389d645aea94a54f'
+related:
+  - '[[2026-05-16-calc-engine-grounding-swarm-audit]]'
+  - '[[2026-05-31-calc-engine-grounding-restoration-S01]]'
+  - '[[2026-05-31-calc-engine-grounding-restoration-S02]]'
+  - '[[2026-05-31-calc-engine-grounding-restoration-S03]]'
+  - '[[2026-05-31-calc-engine-grounding-restoration-S04]]'
+  - '[[2026-05-31-calc-engine-grounding-restoration-S05]]'
+  - '[[2026-06-04-calc-engine-grounding-swarm-adr]]'
+  - '[[2026-06-04-calc-engine-grounding-swarm-research]]'
+---
+
+# `calc-engine-grounding-swarm` feature index
+
+Auto-generated index of all documents tagged with `#calc-engine-grounding-swarm`.
+
+## Documents
+
+### adr
+
+- `2026-06-04-calc-engine-grounding-swarm-adr` - `calc-engine-grounding-swarm` adr: `warning closeout authority alignment` | (**status:** `accepted`)
+
+### audit
+
+- `2026-05-16-calc-engine-grounding-swarm-audit` - `calc-engine-grounding-swarm` audit: `Calculation engine grounding`
+
+### exec
+
+- `2026-05-31-calc-engine-grounding-restoration-S01` - calc-engine-grounding-restoration S01 — CRIT-1: modelo_project casilla_observations
+- `2026-05-31-calc-engine-grounding-restoration-S02` - calc-engine-grounding-restoration S02 — CRIT-2: ModeloCasillaProvenance missing formula_id
+- `2026-05-31-calc-engine-grounding-restoration-S03` - calc-engine-grounding-restoration S03 — CRIT-3: RegistryFiledStateDrift discards provenance
+- `2026-05-31-calc-engine-grounding-restoration-S04` - calc-engine-grounding-restoration S04 — HIGH-1: modelo compare delta_rows no provenance
+- `2026-05-31-calc-engine-grounding-restoration-S05` - calc-engine-grounding-restoration S05 — HIGH-2: Google Sheets calc CLI missing legal_refs/source_refs
+
+### research
+
+- `2026-06-04-calc-engine-grounding-swarm-research` - `calc-engine-grounding-swarm` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.

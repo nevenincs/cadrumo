@@ -1,0 +1,134 @@
+[[revisions.2019-2022.export_layouts]]
+id = "modelo-180-fichero-boe-2014"
+
+[[revisions.2019-2022.export_layouts.records]]
+id = "modelo-180-declarante"
+record_type = "declarante"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "1"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "180"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-nif"
+offset = 9
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-total-perceptores"
+offset = 136
+length = 9
+kind = "casilla"
+casilla_id = "decl.total-perceptores"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-base-total"
+offset = 145
+length = 16
+kind = "casilla"
+casilla_id = "decl.base-total"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-retenciones-total"
+offset = 161
+length = 15
+kind = "casilla"
+casilla_id = "decl.retenciones-total"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-blancos"
+offset = 176
+length = 62
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+
+[[revisions.2019-2022.export_layouts.records.fields]]
+id = "modelo-180-decl-sello-electronico"
+offset = 238
+length = 263
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2014"]
+

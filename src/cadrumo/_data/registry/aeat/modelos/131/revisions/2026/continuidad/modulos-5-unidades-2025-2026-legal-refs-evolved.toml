@@ -1,0 +1,17 @@
+[[revisions."2026".casilla_continuidad_evolutions]]
+id = "m131-modulos-5-unidades-2024-2026-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-5-unidades"
+from_revision = "2024"
+to_revision = "2026"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-modelo-131-recuperacion-declaraciones", "boe-modelo-131-2007-form"]
+
+[[revisions."2026".casilla_continuidad_evolutions]]
+id = "m131-modulos-5-unidades-2025-2026-legal-refs-evolved"
+continuidad_id = "irpf-pf-modulos-5-unidades"
+from_revision = "2025"
+to_revision = "2026"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-modelo-131-recuperacion-declaraciones", "boe-modelo-131-2007-form"]

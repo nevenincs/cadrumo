@@ -1,0 +1,12 @@
+:seed: autonomo-irpf-2026
+@setup aeat app modelo work create --modelo 130 --year 2026 --period 1T
+@step List every field the modelo binds, with its source and readiness label.
+aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T
+@step Focus on the fields that have no value yet.
+aeat --format json app modelo bindings list --modelo 130 --year 2026 --period 1T --missing
+@step Preview what a value would produce, without saving anything.
+aeat --format json app modelo bindings resolve --modelo 130 --year 2026 --period 1T --binding irpf.previous_year_economic_activity_net_income=0
+@step Supply the first-period bindings during calculation.
+@result aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect result.saved == true
+@expect exit_code == 0

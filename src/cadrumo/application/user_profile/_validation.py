@@ -1,0 +1,387 @@
+"""Schema-driven validation service for user-profile lifecycle commands.
+
+:class:`ProfileValidationService` validates a :class:`UserProfileRecord`
+against a loaded schema definition and returns structured
+:class:`ProfileValidationIssue` entries for every constraint violation.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import Final
+
+from ...core.errors import BaseSeverity
+from ...domain.user_profile import (
+    ProfileFieldDefinition,
+    ProfileSchemaDefinition,
+    ProfileSectionDefinition,
+    ProfileValueRefusalKind,
+    UserProfileFact,
+    UserProfileRecord,
+    derived_selector_for_path,
+    profile_value_refusal,
+    section_field_key,
+)
+from . import (
+    ProfileValidationIssue,
+    ProfileValidationReport,
+)
+from ._completeness import (
+    IVA_REGIME_PATH,
+    conditional_profile_missing_required,
+    iva_regime_required,
+    missing_required_field_paths,
+)
+from ._projections import in_window_order
+
+REQUIRED_FIELD_MISSING_CODE: Final[str] = "required_field_missing"
+"""Issue code for a schema-required field absent from the fact set."""
+
+CONDITIONAL_REQUIRED_FIELD_MISSING_CODE: Final[str] = "conditional_required_field_missing"
+"""Issue code for a field required only under some other fact's value."""
+
+NUMERIC_VALUE_ISSUE_CODE: Final[str] = "numeric_field_invalid"
+"""Issue code for a numeric field carrying a non-number or an out-of-range value.
+
+Deliberately NOT a completeness code: a malformed or out-of-range value is a
+bad answer rather than a missing one, so it refuses even while a profile is
+still ``SETUP_INCOMPLETE``, exactly as a bad date or an unknown enum token
+already does. Deferring it would let a wrong number sit in a profile until
+the ACTIVE promotion and then refuse the promotion instead of the write that
+caused it.
+"""
+
+BOOLEAN_VALUE_ISSUE_CODE: Final[str] = "boolean_field_invalid"
+"""Issue code for a boolean field carrying something that is not a yes/no answer.
+
+Not a completeness code, for the same reason as its numeric sibling: an
+unreadable answer is a bad one rather than a missing one. A blank is refused
+here rather than deferred, because a boolean field's readers resolve an
+unreadable value to ``False`` -- so a value admitted unread does not stay
+undecided, it silently becomes "no".
+"""
+
+ENUM_VALUE_ISSUE_CODE: Final[str] = "invalid_enum_value"
+"""Issue code for an enum field carrying a token outside its declared set."""
+
+DATE_VALUE_ISSUE_CODE: Final[str] = "invalid_date_value"
+"""Issue code for a date field carrying something that is not a calendar day."""
+
+EMAIL_VALUE_ISSUE_CODE: Final[str] = "invalid_email_value"
+"""Issue code for an email field carrying something that is not an address.
+
+Not a completeness code, for the same reason as its siblings: an entry that
+is not an address is a bad answer rather than a missing one. The declaration
+was previously the only content-format type in the schema that nothing
+checked, so ``banana`` stored and stayed.
+"""
+
+DERIVED_FIELD_ISSUE_CODE: Final[str] = "derived_field_not_editable"
+"""Issue code for a write aimed at a path the engine computes.
+
+Path legitimacy, not value admissibility, which is why it is judged here beside
+``unknown_field`` rather than through the value-refusal authority: it must keep
+answering once the per-year field declarations are gone and there is no
+declaration left to judge against.
+
+Evaluated BEFORE the field-index lookup. While those declarations still stand
+the lookup succeeds, so a check placed after it would never run and the write
+would be admitted by the type checks below.
+
+A CLEAR is exempt, and the exemption is load-bearing rather than a softening.
+The validator judges the whole merged fact set on every edit, so a fact stored
+at a derived path before this rule existed is re-judged on every later edit to
+any other field. Refusing a clear too would leave no way to remove it: the
+profile could not be edited, cleared or promoted through the lifecycle API at
+all, with no in-band remedy. That was measured, not reasoned.
+
+Exempting the clear costs nothing the rule was protecting. The injectors
+compute always and overwrite whatever the index holds, so a stored value at a
+derived path is already inert for calculation; the rule exists to stop a value
+being WRITTEN, and a clear writes none. What it buys is that a profile carrying
+a stale fact is recoverable instead of bricked.
+"""
+
+_ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
+    ProfileValueRefusalKind.ENUM: ENUM_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.DATE: DATE_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.NUMERIC: NUMERIC_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.BOOLEAN: BOOLEAN_VALUE_ISSUE_CODE,
+    ProfileValueRefusalKind.EMAIL: EMAIL_VALUE_ISSUE_CODE,
+}
+"""How a refusal kind is reported as an issue.
+
+Exhaustive over :class:`ProfileValueRefusalKind` by construction, and pinned
+as such by a test: a new kind added to the domain rule with no entry here
+would otherwise raise a :exc:`KeyError` at the moment a taxpayer's value
+tripped it, turning a refusal that should have been reported into a crash.
+"""
+
+COMPLETENESS_ISSUE_CODES: Final[frozenset[str]] = frozenset(
+    {REQUIRED_FIELD_MISSING_CODE, CONDITIONAL_REQUIRED_FIELD_MISSING_CODE},
+)
+"""The issue codes that mean "not finished yet" rather than "malformed".
+
+A profile born ``SETUP_INCOMPLETE`` defers exactly these; every other
+blocking issue (bad shape, bad value, unknown path) still refuses at
+registration. The lifecycle service re-applies them in full at the ACTIVE
+promotion — see
+:meth:`~cadrumo.application.user_profile.ProfileLifecycleService.complete_setup`.
+"""
+
+
+class ProfileValidationService:
+    """Validate a profile record against a loaded schema.
+
+    Stateless. Constructed with a loaded :class:`ProfileSchemaDefinition`
+    so the same instance can validate many records or commands.
+    """
+
+    def __init__(self, *, schema: ProfileSchemaDefinition) -> None:
+        self._schema = schema
+        self._field_index: dict[str, tuple[ProfileSectionDefinition, ProfileFieldDefinition]] = {}
+        for section in schema.sections:
+            for field in section.fields:
+                self._field_index[f"{section.key}.{field.key}"] = (section, field)
+
+    @property
+    def schema(self) -> ProfileSchemaDefinition:
+        return self._schema
+
+    def validate_record(self, record: UserProfileRecord) -> ProfileValidationReport:
+        """Validate every fact on a profile against the schema.
+
+        Args:
+            record: The :class:`UserProfileRecord` whose facts are validated.
+
+        Returns a :class:`ProfileValidationReport`.
+        """
+        return self._build_report(record.profile_id, record.facts)
+
+    def validate_facts(self, profile_id: str, facts: Iterable[UserProfileFact]) -> ProfileValidationReport:
+        """Validate a free-standing collection of facts.
+
+        Returns a :class:`ProfileValidationReport`.
+        """
+        return self._build_report(profile_id, tuple(facts))
+
+    def _build_report(
+        self,
+        profile_id: str,
+        facts: tuple[UserProfileFact, ...],
+    ) -> ProfileValidationReport:
+        issues: list[ProfileValidationIssue] = []
+        for fact in facts:
+            issues.extend(self._validate_one_fact(fact))
+        issues.extend(self._required_field_issues(facts))
+        issues.extend(self._conditional_completeness_issues(facts))
+        issues.extend(self._unenforced_expiry_issues(facts))
+        return ProfileValidationReport(
+            profile_id=profile_id,
+            schema_version=self._schema.version,
+            issues=tuple(issues),
+        )
+
+    def _validate_one_fact(self, fact: UserProfileFact) -> tuple[ProfileValidationIssue, ...]:
+        derived = derived_selector_for_path(fact.path, self._schema.derived_selectors)
+        if derived is not None and fact.value is not None:
+            return (
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code=DERIVED_FIELD_ISSUE_CODE,
+                    path=fact.path,
+                    message=(
+                        f"path {fact.path!r} is computed by the engine and cannot be written; "
+                        f"edit the facts it derives from with {derived.entry_surface!r}"
+                    ),
+                ),
+            )
+        binding = self._field_index.get(section_field_key(fact.path))
+        if binding is None:
+            return (
+                ProfileValidationIssue(
+                    severity=BaseSeverity.ERROR,
+                    code="unknown_field",
+                    path=fact.path,
+                    message=f"path {fact.path!r} does not match any schema field",
+                ),
+            )
+        section, field = binding
+        return (
+            *self._validate_value_type(field, fact),
+            *self._validate_effective_window(section, field, fact),
+        )
+
+    @staticmethod
+    def _validate_value_type(
+        field: ProfileFieldDefinition,
+        fact: UserProfileFact,
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Reject a fact whose value does not satisfy its declared field type.
+
+        The verdict comes from
+        :func:`~cadrumo.domain.user_profile.profile_value_refusal` rather
+        than being formed here, so this door admits a value under exactly the
+        rule the readers judge it by and the rule an operator surface refuses
+        it by. The per-type rules -- enum token, numeric range, yes/no
+        readability, ISO calendar day, address shape -- used to be split between that domain
+        authority and this method, which is how a screen wanting to refuse a
+        bad date where it was typed had nothing to ask and would have had to
+        restate the layout itself.
+
+        What stays here is the ISSUE VOCABULARY: a refusal kind is turned
+        into the code an issue report carries. That is this layer's, because
+        the codes are the report's contract rather than a property of the
+        value.
+
+        The schema arrives by injection, so a caller validating against a
+        synthetic schema is checked against ITS declarations rather than the
+        shipped ones -- which is why the declaration, not the fact carrier,
+        is what enforcement reads.
+        """
+        refusal = profile_value_refusal(field, fact.value)
+        if refusal is None:
+            return ()
+        return (
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=_ISSUE_CODE_BY_REFUSAL_KIND[refusal.kind],
+                path=fact.path,
+                message=refusal.message,
+            ),
+        )
+
+    def _validate_effective_window(
+        self,
+        section: ProfileSectionDefinition,
+        field: ProfileFieldDefinition,
+        fact: UserProfileFact,
+    ) -> tuple[ProfileValidationIssue, ...]:
+        if (fact.valid_from is not None or fact.valid_to is not None) and not (
+            section.effective_dated or field.effective_dated
+        ):
+            return (
+                ProfileValidationIssue(
+                    severity=BaseSeverity.WARNING,
+                    code="effective_window_unused",
+                    path=fact.path,
+                    message=(
+                        f"path {fact.path!r} carries an effective window but neither "
+                        f"section {section.key!r} nor field {field.key!r} is effective-dated"
+                    ),
+                ),
+            )
+        return ()
+
+    @staticmethod
+    def _unenforced_expiry_issues(
+        facts: tuple[UserProfileFact, ...],
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Report a ``valid_to`` that ends nothing, because no reader consults it.
+
+        The effective-window resolvers order on ``valid_from`` and take the
+        last fact per path; ``valid_to`` is not consulted, since honouring
+        expiry needs an ``as_of`` the caller supplies rather than the clock.
+        An operator who records an end date is therefore describing a state
+        the profile does not enter.
+
+        The warning is scoped to the case where that is true. A closed
+        window on a fact some LATER fact supersedes is accurate
+        bookkeeping - the later ``valid_from`` already ends it, and warning
+        there would report correct records as suspect. Only the effective
+        fact's own ``valid_to`` is inert, because nothing after it takes
+        over, so the path keeps projecting past the date the operator gave.
+
+        Selection reuses the projection's own ordering rather than
+        restating it. A second copy of the rule could drift from the one
+        the readers use, and this check is only meaningful while it names
+        exactly the fact they resolve to.
+
+        Args:
+            facts: Every fact on the record, in declaration order.
+
+        Returns:
+            One WARNING per path whose effective fact carries a ``valid_to``.
+        """
+        effective: dict[str, UserProfileFact] = {}
+        for fact in in_window_order(facts):
+            effective[fact.path] = fact
+        return tuple(
+            ProfileValidationIssue(
+                severity=BaseSeverity.WARNING,
+                code="effective_window_end_not_enforced",
+                path=path,
+                message=(
+                    f"path {path!r} declares valid_to {fact.valid_to.isoformat()!r} but the value "
+                    f"keeps resolving after it; record a later valid_from at {path!r} to supersede it"
+                ),
+            )
+            for path, fact in effective.items()
+            if fact.valid_to is not None
+        )
+
+    def _required_field_issues(
+        self,
+        facts: tuple[UserProfileFact, ...],
+    ) -> tuple[ProfileValidationIssue, ...]:
+        # Presence is VALUE-bearing, never fact-bearing. A cleared field is a
+        # fact carrying ``value=None``, so keying on the fact existing let a
+        # clear not merely evade this check but affirmatively SATISFY it:
+        # clearing a required field silenced the very issue its absence
+        # raises. The overview built from the same record already reads
+        # presence this way, so the enforcing surface now agrees with the one
+        # the operator is shown.
+        # Repeatable sections were skipped wholesale here, so 13 of the 15
+        # fields the schema declares required were never reached and the
+        # declaration bound nothing. Removing that skip alone would have been
+        # wrong in BOTH directions at once, because the presence set drops the
+        # row index: an empty section would raise (demanding every taxpayer
+        # hold an attribution entity) while a second, incomplete row would
+        # pass. The shared row-aware helper is what makes "required" mean
+        # per-row, and the overview reads the same one so the enforcing
+        # surface and the displayed one cannot drift apart again.
+        values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
+        return tuple(
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=REQUIRED_FIELD_MISSING_CODE,
+                path=path,
+                message=f"required field {path} is missing",
+            )
+            for path in missing_required_field_paths(self._schema, values)
+            if not (path == IVA_REGIME_PATH and not iva_regime_required(values))
+        )
+
+    def _conditional_completeness_issues(
+        self,
+        facts: tuple[UserProfileFact, ...],
+    ) -> tuple[ProfileValidationIssue, ...]:
+        values = {fact.path: self._render_fact_value(fact.value) for fact in facts if fact.value is not None}
+        return tuple(
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
+                path=path,
+                message=f"conditionally required field {path} is missing",
+            )
+            for path in conditional_profile_missing_required(values)
+        )
+
+    @staticmethod
+    def _render_fact_value(value: object) -> str:
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        return str(value)
+
+
+__all__ = [
+    "BOOLEAN_VALUE_ISSUE_CODE",
+    "COMPLETENESS_ISSUE_CODES",
+    "CONDITIONAL_REQUIRED_FIELD_MISSING_CODE",
+    "DATE_VALUE_ISSUE_CODE",
+    "EMAIL_VALUE_ISSUE_CODE",
+    "ENUM_VALUE_ISSUE_CODE",
+    "NUMERIC_VALUE_ISSUE_CODE",
+    "REQUIRED_FIELD_MISSING_CODE",
+    "ProfileValidationService",
+]

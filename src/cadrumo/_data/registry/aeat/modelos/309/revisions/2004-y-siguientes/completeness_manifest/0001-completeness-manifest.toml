@@ -1,0 +1,22 @@
+# Calculation-completeness manifest for revision 2004-y-siguientes: the
+# casillas in this revision's calculation closure (formula targets,
+# formula-expression refs, formula/binding endpoints, verification
+# operands), keyed by canonical casilla_id plus reviewed segment/number
+# metadata. Derived off-load-path from the registry calculation
+# surface; the drift re-verification test re-derives it.
+[revisions."2004-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-309-2023"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-309-2023"]
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+number = "iva.autorepercutido.intracomunitaria"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.cuota-no-periodica-total"
+number = "iva.cuota-no-periodica-total"
+
+[[revisions."2004-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.soportado.recargo-equivalencia"
+number = "iva.soportado.recargo-equivalencia"

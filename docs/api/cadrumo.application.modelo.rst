@@ -1,0 +1,107 @@
+cadrumo.application.modelo package
+==================================
+
+.. automodule:: cadrumo.application.modelo
+   :members:
+   :show-inheritance:
+   :ignore-module-all:
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.application.modelo._action_errors
+   cadrumo.application.modelo._amendment_actions
+   cadrumo.application.modelo._amendment_kind_resolution
+   cadrumo.application.modelo._art109_activity_income
+   cadrumo.application.modelo._art20_advisory
+   cadrumo.application.modelo._art52_advisory
+   cadrumo.application.modelo._attribution_received_advisory
+   cadrumo.application.modelo._autonomic_deduccion_advisory
+   cadrumo.application.modelo._bienes_inversion_advisory
+   cadrumo.application.modelo._binding_readiness
+   cadrumo.application.modelo._binding_resolution
+   cadrumo.application.modelo._borrador_binding
+   cadrumo.application.modelo._calculate_input
+   cadrumo.application.modelo._calculation_actions
+   cadrumo.application.modelo._calculation_aggregation_context
+   cadrumo.application.modelo._calculation_diagnostics
+   cadrumo.application.modelo._calculation_helpers
+   cadrumo.application.modelo._calculation_modelo_adjustments
+   cadrumo.application.modelo._calculation_preparation
+   cadrumo.application.modelo._calculation_resolution
+   cadrumo.application.modelo._calculation_source_policy
+   cadrumo.application.modelo._calculation_source_staging
+   cadrumo.application.modelo._data_inventory
+   cadrumo.application.modelo._decimal_parsing
+   cadrumo.application.modelo._dt12_advisory
+   cadrumo.application.modelo._dt12_antiquity_advisory
+   cadrumo.application.modelo._export
+   cadrumo.application.modelo._external_import_actions
+   cadrumo.application.modelo._filed_revision_observation
+   cadrumo.application.modelo._filing_actions
+   cadrumo.application.modelo._history
+   cadrumo.application.modelo._iva_wallet_gate
+   cadrumo.application.modelo._iva_wallet_seed
+   cadrumo.application.modelo._ledger_drift_gate
+   cadrumo.application.modelo._ledger_evidence_gate
+   cadrumo.application.modelo._local_observation_actions
+   cadrumo.application.modelo._local_observation_spreadsheet
+   cadrumo.application.modelo._m036_lifecycle
+   cadrumo.application.modelo._m145_communication
+   cadrumo.application.modelo._m145_communication_records
+   cadrumo.application.modelo._m210_agrupacion_renta
+   cadrumo.application.modelo._m210_convenio_lob_advisory
+   cadrumo.application.modelo._m210_rate
+   cadrumo.application.modelo._m303_m349_reconcile
+   cadrumo.application.modelo._m349_ledger_guard
+   cadrumo.application.modelo._maritime_preview
+   cadrumo.application.modelo._minimo_descendientes_advisory
+   cadrumo.application.modelo._objective_estimation_advisory
+   cadrumo.application.modelo._official_box_advisory
+   cadrumo.application.modelo._participation_index_rebuild
+   cadrumo.application.modelo._ports
+   cadrumo.application.modelo._prior_payment_advisory
+   cadrumo.application.modelo._profile_binding
+   cadrumo.application.modelo._profile_export_binding
+   cadrumo.application.modelo._profile_readiness_gate
+   cadrumo.application.modelo._projection
+   cadrumo.application.modelo._prorrata_regularizacion_advisory
+   cadrumo.application.modelo._quickfile
+   cadrumo.application.modelo._reconcile
+   cadrumo.application.modelo._reconcile_casilla
+   cadrumo.application.modelo._reconciliation_records
+   cadrumo.application.modelo._registry_discovery
+   cadrumo.application.modelo._registry_helpers
+   cadrumo.application.modelo._registry_resources
+   cadrumo.application.modelo._required_binding_gate
+   cadrumo.application.modelo._result_disposition_resolution
+   cadrumo.application.modelo._result_summary
+   cadrumo.application.modelo._review_package
+   cadrumo.application.modelo._review_package_collab_audit
+   cadrumo.application.modelo._review_package_counter_sign
+   cadrumo.application.modelo._review_package_feedback
+   cadrumo.application.modelo._review_package_keypair
+   cadrumo.application.modelo._review_package_recipient_encryption
+   cadrumo.application.modelo._review_package_recipient_registry
+   cadrumo.application.modelo._review_package_recipient_replay_guard
+   cadrumo.application.modelo._review_package_review_only_workspace
+   cadrumo.application.modelo._review_package_signing
+   cadrumo.application.modelo._revision_persistence
+   cadrumo.application.modelo._revision_replay_inputs
+   cadrumo.application.modelo._selectors
+   cadrumo.application.modelo._semantic_role_resolution
+   cadrumo.application.modelo._settlement_grade_advisory
+   cadrumo.application.modelo._taxation_comparison
+   cadrumo.application.modelo._transaction_catalogue_cache
+   cadrumo.application.modelo._verification_actions
+   cadrumo.application.modelo._verification_cross_period
+   cadrumo.application.modelo._verification_predicates
+   cadrumo.application.modelo._work_addressing
+   cadrumo.application.modelo._work_create_policy
+   cadrumo.application.modelo._work_lifecycle
+   cadrumo.application.modelo._work_plazo
+   cadrumo.application.modelo._workflow_gate

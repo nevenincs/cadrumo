@@ -1,0 +1,220 @@
+[legal."orden-hap-2118-2015:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2118-2015.html#a1"
+document_id = "BOE-A-2015-11074"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a1"
+published_at = 2015-10-15
+effective_from = 2016-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HAP/2118/2015 articulo 1: aprueba el Modelo 280 y los disenos de registro para la declaracion informativa anual de Planes de Ahorro a Largo Plazo."
+required_text = [
+    "Articulo 1. Aprobacion del modelo 280",
+    "Se aprueba el modelo 280",
+    "Planes de Ahorro a Largo Plazo",
+    "disenos de registro",
+]
+
+[legal."orden-hap-2118-2015:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2118-2015.html#a2"
+document_id = "BOE-A-2015-11074"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a2"
+published_at = 2015-10-15
+effective_from = 2016-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HAP/2118/2015 articulo 2: identifica como obligadas a las entidades aseguradoras o de credito que comercialicen Planes de Ahorro a Largo Plazo."
+required_text = [
+    "Articulo 2. Obligados a presentar el modelo 280",
+    "entidades aseguradoras o de credito",
+    "Planes de Ahorro a Largo Plazo",
+]
+
+[legal."orden-hap-2118-2015:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2118-2015.html#a4"
+document_id = "BOE-A-2015-11074"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a4"
+published_at = 2015-10-15
+effective_from = 2016-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HAP/2118/2015 articulo 4: fija el plazo anual del Modelo 280 durante el mes de febrero respecto del ano natural inmediato anterior."
+required_text = [
+    "Articulo 4. Plazo de presentacion",
+    "durante el mes de febrero de cada ano",
+    "ano natural inmediato anterior",
+]
+
+[legal."orden-hap-2118-2015:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2118-2015.html#a5"
+document_id = "BOE-A-2015-11074"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074#a5"
+published_at = 2015-10-15
+effective_from = 2016-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2015-11074 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden HAP/2118/2015 articulo 5: remite la presentacion del Modelo 280 a las condiciones generales de presentacion electronica de declaraciones informativas."
+required_text = [
+    "Articulo 5. Formas de presentacion del modelo 280",
+    "La presentacion del modelo 280",
+    "Orden HAP/2194/2013",
+]
+
+[legal."orden-hfp-1822-2016:art-sexto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1822-2016.html#a6"
+document_id = "BOE-A-2016-11251"
+article = "sexto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11251#a6"
+published_at = 2016-11-29
+effective_from = 2016-11-30
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2016-11251 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1822/2016 articulo sexto: modifica los disenos fisicos y logicos del Modelo 280 para consignar importes cuantitativos en euros."
+required_text = [
+    "Articulo sexto. Modificacion de la Orden HAP/2118/2015",
+    "modelo 280",
+    "Los importes deben consignarse en euros",
+    "APORTACIONES EFECTUADAS EN EL EJERCICIO",
+]
+
+[legal."orden-hac-1276-2019:art-quinto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1276-2019.html#a5"
+document_id = "BOE-A-2019-18752"
+article = "quinto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752#a5"
+published_at = 2019-12-31
+effective_from = 2019-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2019-18752 HTML from BOE on 2026-07-01"
+notes = "Orden HAC/1276/2019 articulo quinto: modifica el Modelo 280 para sustituir el sistema de multienvios por TGVI Online desde el ejercicio 2019."
+required_text = [
+    "Articulo quinto. Modificacion de la Orden HAP/2118/2015",
+    "modelo 280",
+    "NUMERO IDENTIFICATIVO DE LA DECLARACION",
+    "El número identificativo que habrá de figurar en el modelo 280",
+]
+
+[legal."orden-hfp-1192-2022:art-cuarto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1192-2022.html#a4"
+document_id = "BOE-A-2022-20274"
+article = "cuarto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20274#a4"
+published_at = 2022-12-03
+effective_from = 2022-12-04
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2022-20274 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1192/2022 articulo cuarto: modifica el campo de extincion del Plan de Ahorro a Largo Plazo del Modelo 280 para incluir el supuesto de fallecimiento del tomador."
+required_text = [
+    "Articulo cuarto. Modificacion de la Orden HAP/2118/2015",
+    "EXTINCION DEL PLAN DE AHORRO A LARGO PLAZO",
+    "posicion 137",
+    "fallecimiento del tomador",
+]
+
+[sources."aeat-modelo-280-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_280/files/modelo-280-procedure.html"
+sha256 = "4ae2eddbb9440bf69ce616e24f711b4d0d0c2394a5e2e8c5b1bc71cd6bae9447"
+bytes = 42028
+retrieved_at = 2026-07-01
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI39.shtml"
+review_status = "reviewed"
+
+[sources."aeat-dr-280-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_280/files/DR_280_2022.pdf"
+sha256 = "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701"
+bytes = 235352
+retrieved_at = 2026-07-01
+published_at = 2022-12-03
+applies_from = 2022-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_280_2022.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-280-base-order"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2118-2015.html"
+sha256 = "cb6e69e1146fab93b1ec4e5897219812d6c445d3dcc913ddd6ab6a04313e792d"
+bytes = 79921
+retrieved_at = 2026-07-01
+published_at = 2015-10-15
+applies_from = 2016-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074"
+review_status = "reviewed"
+
+[sources."boe-modelo-280-2016-amendment-hfp-1822"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1822-2016.html"
+sha256 = "fd4818ecd03bad0729c2dc37b9ebb4f3db657f39a7f2d5a913b0e1f4e491f374"
+bytes = 111321
+retrieved_at = 2026-07-01
+published_at = 2016-11-29
+applies_from = 2016-11-30
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11251"
+review_status = "reviewed"
+
+[sources."boe-modelo-280-2019-amendment-hac-1276"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1276-2019.html"
+sha256 = "11f4d8f2eea585986539b529d5ef51c74ee05aa7d10a4fbdbcf7e254f0764a31"
+bytes = 164219
+retrieved_at = 2026-07-01
+published_at = 2019-12-31
+applies_from = 2019-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2019-18752"
+review_status = "reviewed"
+
+[sources."boe-modelo-280-2022-amendment-hfp-1192"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1192-2022.html"
+sha256 = "7c947204878a5261a6461e8ee1e708da90a0d3aa09bc8a851ccf723b3be26d7d"
+bytes = 119242
+retrieved_at = 2026-07-01
+published_at = 2022-12-03
+applies_from = 2022-12-04
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-20274"
+review_status = "reviewed"

@@ -1,0 +1,15 @@
+[[revisions."2023".formulas]]
+id = "renta-2023-ganancia-no-exenta-base-general"
+target_casilla_id = "1645"
+expression = { op = "sum", args = [
+    { casilla_id = "1640" },
+    { op = "negate", args = [{ casilla_id = "1642" }] },
+    { op = "negate", args = [{ casilla_id = "1644" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "exentas"]

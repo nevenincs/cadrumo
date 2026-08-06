@@ -1,0 +1,795 @@
+"""Locale file management: loading, scaffolding, and structural health checks.
+
+:class:`LocaleManager` owns codebase translation-key discovery and locale YAML
+updates. :class:`StrictUniqueKeyLoader` enforces parse-time duplicate-key
+rejection, while :data:`LocaleNode` documents the recursive locale-tree shape
+shared by the manager and parity tests.
+"""
+
+import json
+import re
+from collections.abc import Hashable, Iterator
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, override
+
+import yaml
+
+from ..core import normalise_product_identity_references
+from ..core.atomic_write import atomic_write_text
+from ..core.errors import CadrumoError
+from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
+from ..core.i18n import extract_placeholders
+from ..core.logging import get_logger
+from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
+
+# YAML locale values are either leaf strings or nested dicts of the same shape.
+type LocaleNode = str | dict[str, "LocaleNode"] | None
+
+_log = get_logger(__name__)
+_YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
+_INTENTIONAL_IDENTICAL_FILENAME = "_intentional_identical.json"
+_MISSING_LOCALE_LEAF = object()
+
+
+def _load_intentional_identical(path: Path) -> dict[str, dict[str, object]]:
+    """Load the translation-honesty allowlist, tolerating its absence."""
+    if not path.is_file():
+        return {}
+    try:
+        loaded = json.loads(path.read_text(encoding=UTF_8_ENCODING))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LocaleError(f"Cannot read {path.name}: {exc}") from exc
+    if not isinstance(loaded, dict):
+        raise LocaleError(f"{path.name} must contain a JSON object")
+    return {locale: dict(entries) for locale, entries in loaded.items() if isinstance(entries, dict)}
+
+
+class LocaleError(CadrumoError):
+    """Raised on locale management and parsing errors."""
+
+
+@dataclass(frozen=True)
+class LocaleScalarViolation:
+    """One locale key whose YAML leaf is not a string."""
+
+    locale_file: str
+    key: str
+    value_type: str
+
+
+@dataclass(frozen=True)
+class LocalePlaceholderVariant:
+    """The placeholder set used by one locale for a shared key."""
+
+    locale_file: str
+    placeholders: frozenset[str]
+
+
+@dataclass(frozen=True)
+class LocalePlaceholderMismatch:
+    """All differing placeholder variants for one shared locale key."""
+
+    key: str
+    variants: tuple[LocalePlaceholderVariant, ...]
+
+
+@dataclass(frozen=True)
+class LocaleFileAudit:
+    """Structured audit findings owned by one locale catalogue."""
+
+    locale_file: str
+    codebase_missing: tuple[str, ...]
+    codebase_extra: tuple[str, ...]
+    inter_locale_missing: tuple[str, ...]
+    scalar_violations: tuple[LocaleScalarViolation, ...]
+
+    @property
+    def ok(self) -> bool:
+        """Return whether this catalogue has no file-local findings."""
+        return not (self.codebase_missing or self.codebase_extra or self.inter_locale_missing or self.scalar_violations)
+
+
+@dataclass(frozen=True)
+class LocaleAuditResult:
+    """Complete production locale audit across every configured catalogue."""
+
+    files: tuple[LocaleFileAudit, ...]
+    placeholder_mismatches: tuple[LocalePlaceholderMismatch, ...]
+
+    @property
+    def ok(self) -> bool:
+        """Return whether every scalar, key, and placeholder contract passes."""
+        return all(file.ok for file in self.files) and not self.placeholder_mismatches
+
+
+class StrictUniqueKeyLoader(yaml.SafeLoader):
+    """YAML loader that raises an error on duplicate keys."""
+
+    @override
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Hashable, Any]:
+        """Construct a mapping node, raising ``LocaleError`` on duplicate keys.
+
+        Args:
+            node: The YAML mapping node to construct.
+            deep: Whether to construct values recursively before returning.
+
+        Returns:
+            A plain ``dict`` of the mapping's key-value pairs.
+
+        Raises:
+            LocaleError: When a duplicate key is found in the mapping node.
+        """
+        mapping = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in mapping:
+                raise LocaleError(f"Duplicate key '{key}' found at line {key_node.start_mark.line + 1}")
+            value = self.construct_object(value_node, deep=deep)
+            mapping[key] = value
+        return mapping
+
+
+class LocaleManager:
+    """API for managing locale files, scaffolding, and structural health."""
+
+    def __init__(self, src_dir: Path, locales_dir: Path):
+        """Initialise the manager with the source tree and locale file directory.
+
+        Args:
+            src_dir: Root directory of the Python source tree to scan for translation keys.
+            locales_dir: Directory containing ``*.yml`` locale files.
+        """
+        self.src_dir = src_dir
+        self.locales_dir = locales_dir
+        self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\'](\w+(?:\.\w+)+)["\']', re.UNICODE)
+
+    def get_codebase_keys(self) -> set[str]:
+        """Extract all concrete dotted translation keys from the codebase.
+
+        Only production modules are scanned: test files are excluded so a
+        fixture payload or assertion literal can never inject a phantom
+        required key that no production code requests.
+
+        Combines four discovery paths:
+
+        1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
+        2. AST scanner — programmatic emissions such as
+           ``WizardValidationError("wizard.errors.select_unknown")``,
+           ``message_key=`` kwargs, and ``build_entry`` portal keys.
+        3. F-string registry — bounded f-string patterns whose value sets
+           are fully known at import time (e.g. wizard choice labels
+           keyed by enum values). See :mod:`locales._fstring_registry`.
+        4. Registry scanner — keys declared as data by a committed registry
+           rather than by a Python call site: named literally by the category
+           profile registry, and derived from declared structure by the
+           user-profile schema. The first three paths read Python source
+           only, so these were invisible to every parity check and sat
+           unresolved in all four catalogues. See
+           :mod:`locales._registry_scanner`.
+
+        Dynamic namespaces (open-ended f-string and concatenation forms)
+        are returned by :meth:`get_codebase_namespaces` and checked
+        through a separate parity assertion that verifies at least one
+        concrete locale key exists under each declared prefix.
+        """
+        from ._ast_scanner import scan_source_tree
+        from ._fstring_registry import get_registered_keys
+
+        keys: set[str] = set()
+        for py_file in self.src_dir.rglob("*.py"):
+            if py_file.name == "test_parity.py" or py_file.name == "manager.py":
+                continue
+            if _is_test_module(py_file):
+                continue
+            try:
+                content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
+            except OSError as exc:
+                _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
+                continue
+            for match in self.pattern.finditer(content):
+                keys.add(match.group(1))
+        keys.update(scan_source_tree(self.src_dir))
+        keys.update(get_registered_keys())
+        keys.update(scan_registry_keys())
+        keys.update(scan_profile_schema_keys())
+        keys.update(scan_modelo_schema_keys())
+        return keys
+
+    def get_codebase_namespaces(self) -> set[str]:
+        """Extract dynamic-namespace markers (``<prefix>.*``) from the codebase.
+
+        Returns every prefix discovered through f-string or string
+        concatenation patterns whose tail is computed at runtime.
+        Each marker passes the parity check when at least one
+        concrete locale key starts with its prefix.
+        """
+        from ._ast_scanner import scan_namespace_markers
+
+        return scan_namespace_markers(self.src_dir)
+
+    def audit(self) -> LocaleAuditResult:
+        """Audit scalar, key-set, placeholder, and codebase parity.
+
+        Inter-locale key parity is computed from the union of every catalogue,
+        so no language is privileged as a canonical reference. Placeholder
+        parity is evaluated only for keys shared by all catalogues.
+
+        Returns:
+            Immutable structured findings for CLI rendering and quality gates.
+        """
+        locale_leaves = self._load_audit_leaves()
+        key_sets = {name: set(leaves) for name, leaves in locale_leaves.items()}
+        all_locale_keys = set().union(*key_sets.values()) if key_sets else set()
+        codebase_keys = self.get_codebase_keys()
+        namespace_prefixes = self._audit_namespace_prefixes()
+
+        file_results = tuple(
+            _audit_locale_file(
+                locale_file,
+                leaves,
+                key_sets[locale_file],
+                codebase_keys=codebase_keys,
+                all_locale_keys=all_locale_keys,
+                namespace_prefixes=namespace_prefixes,
+            )
+            for locale_file, leaves in locale_leaves.items()
+        )
+        placeholder_mismatches = _audit_placeholder_mismatches(key_sets, locale_leaves)
+        return LocaleAuditResult(file_results, placeholder_mismatches)
+
+    def _load_audit_leaves(self) -> dict[str, dict[str, object]]:
+        """Flatten every catalogue's raw leaves keyed by locale file name."""
+        locale_paths = tuple(sorted(self.locales_dir.glob("*.yml")))
+        return {path.name: _flatten_raw_locale_leaves(self.load_locale(path)) for path in locale_paths}
+
+    def _audit_namespace_prefixes(self) -> tuple[str, ...]:
+        """Return dynamic-namespace prefixes used to exempt codebase-extra keys."""
+        return tuple(
+            marker.rstrip("*").rstrip(".")
+            for marker in self.get_codebase_namespaces()
+            if marker.rstrip("*").rstrip(".")
+        )
+
+    def get_yaml_keys(self, d: dict[str, LocaleNode], current_path: str = "") -> set[str]:
+        """Recursively extract all dot-notated keys from a nested dictionary."""
+        keys = set()
+        if isinstance(d, dict):
+            for k, v in d.items():
+                path = f"{current_path}.{k}" if current_path else k
+                if isinstance(v, dict):
+                    keys.update(self.get_yaml_keys(v, path))
+                else:
+                    keys.add(path)
+        return keys
+
+    def load_locale(self, path: Path) -> dict[str, LocaleNode]:
+        """Load a locale YAML file strictly, failing on duplicates."""
+        with open(path, encoding=UTF_8_ENCODING) as f:
+            loader = StrictUniqueKeyLoader(f)
+            try:
+                data = loader.get_single_data()
+            finally:
+                loader.dispose()
+            return data if data is not None else {}
+
+    def _build_nested_dict(
+        self,
+        keys: set[str],
+        existing_data: dict[str, LocaleNode],
+        namespace_prefixes: tuple[str, ...] = (),
+    ) -> dict[str, LocaleNode]:
+        """Build a sorted, nested dictionary strictly conforming to the required keys."""
+        existing_flat = _collect_required_leaves(keys, existing_data)
+        for key, value in _flatten_leaf_values(existing_data).items():
+            if key in existing_flat or not _covered_by_namespace(key, namespace_prefixes):
+                continue
+            existing_flat[key] = value
+
+        new_data: dict[str, LocaleNode] = {}
+        for key in sorted(keys):
+            if key in existing_flat:
+                _set_nested_leaf(new_data, key, existing_flat[key])
+        for key in sorted(existing_flat):
+            if key in keys:
+                continue
+            _set_nested_leaf(new_data, key, existing_flat[key])
+        return new_data
+
+    def scaffold(self) -> None:
+        """Parse codebase, generate locale files, auto-sort, and prune extra keys."""
+        codebase_keys = self.get_codebase_keys()
+        namespace_prefixes = tuple(
+            marker.rstrip("*").rstrip(".")
+            for marker in self.get_codebase_namespaces()
+            if marker.rstrip("*").rstrip(".")
+        )
+
+        for f in self.locales_dir.glob("*.yml"):
+            try:
+                data = self.load_locale(f)
+            except (OSError, yaml.YAMLError, LocaleError) as exc:
+                _log.warning(
+                    "locale scaffold: failed to parse %s; starting from empty mapping (%s)",
+                    f,
+                    exc,
+                )
+                data = {}
+
+            new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
+
+            with open(f, "w", encoding=UTF_8_ENCODING, newline="\n") as f_obj:
+                yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
+
+    def canonicalize_product_identity_references(
+        self,
+        *,
+        locale: OutputLanguage | None = None,
+    ) -> tuple[Path, ...]:
+        """Normalize product identity in one selected or every catalogue.
+
+        Args:
+            locale: One supported output language to update. When omitted, update
+                every catalogue as the pre-selector command did.
+
+        Returns:
+            Paths whose parsed locale content changed.
+        """
+        locale_paths = (
+            (self._locale_path(locale.value),) if locale is not None else tuple(sorted(self.locales_dir.glob("*.yml")))
+        )
+        updated_paths: list[Path] = []
+        for locale_path in locale_paths:
+            data = self.load_locale(locale_path)
+            normalized = _normalise_product_identity_mapping(data)
+            if normalized == data:
+                continue
+            _rewrite_locale_mapping(locale_path, normalized)
+            updated_paths.append(locale_path)
+        return tuple(updated_paths)
+
+    def _locale_path(self, locale: str) -> Path:
+        """Resolve a locale code to a contained locale file path."""
+        if locale != Path(locale).name or Path(locale).suffix:
+            raise LocaleError(f"Invalid locale code: {locale!r}")
+        allowed_locales = {path.stem for path in self.locales_dir.glob("*.yml")}
+        if locale not in allowed_locales:
+            raise LocaleError(f"Locale file not found: {locale!r}")
+
+        locale_path = (self.locales_dir / f"{locale}.yml").resolve()
+        locales_root = self.locales_dir.resolve()
+        try:
+            locale_path.relative_to(locales_root)
+        except ValueError as exc:
+            raise LocaleError(f"Locale path escapes locale root: {locale!r}") from exc
+        if not locale_path.is_file():
+            raise LocaleError(f"Locale file not found: {locale_path}")
+        return locale_path
+
+    def set_locale_value(self, locale: str, dotted_key: str, value: str) -> Path:
+        """Set one locale leaf while preserving the YAML layout.
+
+        A blank value is refused: an empty or whitespace-only leaf reads
+        as authored prose to nothing and as a silent gap to the operator,
+        so it must never enter a catalogue through the CLI.
+        """
+        if not value.strip():
+            raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
+        locale_path = self._locale_path(locale)
+        value = normalise_product_identity_references(value)
+        parts = dotted_key.split(".")
+        if not dotted_key or any(not part for part in parts):
+            raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+
+        data = self.load_locale(locale_path)
+        cursor = _resolve_leaf_parent(data, parts, dotted_key=dotted_key)
+        leaf_exists = parts[-1] in cursor
+
+        if leaf_exists:
+            # The mapping was strictly parsed and the leaf resolved above.
+            # Rewriting that mapping is safe across multiline scalars; a
+            # line-oriented replacement can mistake a scalar continuation for
+            # a nested YAML key and corrupt the catalogue.
+            cursor[parts[-1]] = value
+            _rewrite_locale_mapping(locale_path, data)
+        else:
+            _append_yaml_leaf(locale_path, parts, value)
+        return locale_path
+
+    def set_locale_values(self, locale: str, values: dict[str, str | None]) -> Path:
+        """Set a validated batch of leaves with one atomic catalogue rewrite.
+
+        ``None`` is reserved for an explicitly absent optional Modelo-schema
+        translation.  It keeps inter-locale key parity without fabricating text;
+        the Modelo resolver then applies its Spanish-source fallback policy.
+        """
+        locale_path = self._locale_path(locale)
+        data = self.load_locale(locale_path)
+        for dotted_key, raw_value in sorted(values.items()):
+            parts = dotted_key.split(".")
+            if not dotted_key or any(not part for part in parts):
+                raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+            if raw_value is None:
+                if not dotted_key.startswith("modelo.schema."):
+                    raise LocaleError(f"Only Modelo schema keys may carry an absent locale value: {dotted_key!r}")
+                value: LocaleNode = None
+            else:
+                if not raw_value.strip():
+                    raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
+                value = normalise_product_identity_references(raw_value)
+            _set_nested_leaf(data, dotted_key, value)
+        _rewrite_locale_mapping(locale_path, data)
+        return locale_path
+
+    def allow_identical(self, locale: str, dotted_key: str, reason: str) -> Path:
+        """Record one key as deliberately identical to its source, with a reason.
+
+        The allowlist exempts a string from the translation-honesty ratchet.
+        It is for strings that are legitimately the same in both languages —
+        a brand name, a bare modelo code — never a mute button for a string
+        nobody has translated yet, so the reason is mandatory.
+
+        Args:
+            locale: Locale code owning the exemption.
+            dotted_key: Dotted locale key to exempt.
+            reason: Why this string is legitimately identical to its source.
+
+        Returns:
+            The allowlist path that was rewritten.
+
+        Raises:
+            LocaleError: When the reason is blank, the key is metadata, or
+                the key is absent from the locale's catalogue.
+        """
+        if not reason.strip():
+            raise LocaleError(f"Cannot allow {dotted_key!r}: a non-empty reason is required")
+        parts = dotted_key.split(".")
+        if not dotted_key or any(not part for part in parts):
+            raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+        if parts[0].startswith("_"):
+            raise LocaleError(f"Cannot allow {dotted_key!r}: keys prefixed with '_' are allowlist metadata")
+
+        locale_path = self._locale_path(locale)
+        if dotted_key not in self.get_yaml_keys(self.load_locale(locale_path)):
+            raise LocaleError(f"Locale key not found in {locale_path.name}: {dotted_key!r}; run locale scaffold first")
+
+        allowlist_path = self.locales_dir / _INTENTIONAL_IDENTICAL_FILENAME
+        allowlist = _load_intentional_identical(allowlist_path)
+        allowlist.setdefault(locale, {})[dotted_key] = reason.strip()
+        atomic_write_text(
+            allowlist_path,
+            json.dumps(allowlist, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding=UTF_8_ENCODING,
+        )
+        return allowlist_path
+
+    def remove_locale_value(self, locale: str, dotted_key: str) -> Path:
+        """Remove one existing locale leaf while preserving the YAML layout."""
+        locale_path = self._locale_path(locale)
+        parts = dotted_key.split(".")
+        if not dotted_key or any(not part for part in parts):
+            raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+
+        cursor: LocaleNode = self.load_locale(locale_path)
+        for part in parts:
+            if not isinstance(cursor, dict) or part not in cursor:
+                raise LocaleError(f"Locale key not found: {dotted_key!r}")
+            cursor = cursor[part]
+        if isinstance(cursor, dict):
+            raise LocaleError(f"Cannot remove {dotted_key!r}: it resolves to a namespace")
+
+        _remove_existing_yaml_leaf(locale_path, parts, allow_empty_leaf=cursor is None)
+        return locale_path
+
+
+def _audit_locale_file(
+    locale_file: str,
+    leaves: dict[str, object],
+    keys: set[str],
+    *,
+    codebase_keys: set[str],
+    all_locale_keys: set[str],
+    namespace_prefixes: tuple[str, ...],
+) -> LocaleFileAudit:
+    """Compute one catalogue's key-set and scalar findings."""
+    violations = tuple(
+        LocaleScalarViolation(locale_file, key, type(value).__name__)
+        for key, value in sorted(leaves.items())
+        if not isinstance(value, str) and not (value is None and key.startswith("modelo.schema."))
+    )
+    return LocaleFileAudit(
+        locale_file=locale_file,
+        codebase_missing=tuple(sorted(codebase_keys - keys)),
+        codebase_extra=tuple(
+            sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
+        ),
+        inter_locale_missing=tuple(sorted(all_locale_keys - keys)),
+        scalar_violations=violations,
+    )
+
+
+def _audit_placeholder_mismatches(
+    key_sets: dict[str, set[str]],
+    locale_leaves: dict[str, dict[str, object]],
+) -> tuple[LocalePlaceholderMismatch, ...]:
+    """Return placeholder-parity mismatches across keys shared by every catalogue."""
+    shared_keys = set.intersection(*key_sets.values()) if key_sets else set()
+    mismatches: list[LocalePlaceholderMismatch] = []
+    for key in sorted(shared_keys):
+        values = {name: leaves[key] for name, leaves in locale_leaves.items()}
+        if not all(isinstance(value, str) for value in values.values()):
+            continue
+        variants = tuple(
+            LocalePlaceholderVariant(name, extract_placeholders(value))
+            for name, value in sorted(values.items())
+            if isinstance(value, str)
+        )
+        if len({variant.placeholders for variant in variants}) > 1:
+            mismatches.append(LocalePlaceholderMismatch(key, variants))
+    return tuple(mismatches)
+
+
+def _collect_required_leaves(
+    keys: set[str],
+    existing_data: dict[str, LocaleNode],
+) -> dict[str, LocaleNode]:
+    """Resolve each dotted ``key`` against ``existing_data`` to its leaf value.
+
+    Returns a flat ``{dotted_key: value}`` map. A key that resolves to a
+    non-dict leaf carries its existing translation; a key that is
+    missing or whose path bottoms out at a dict (i.e. an interior node,
+    not a leaf) carries its own dotted path as a placeholder — the
+    scaffold convention for "no translation yet".
+    """
+    resolved: dict[str, LocaleNode] = {}
+    for key in keys:
+        leaf = _resolve_leaf(existing_data, key.split("."))
+        resolved[key] = key if leaf is _MISSING_LOCALE_LEAF else leaf
+    return resolved
+
+
+def _resolve_leaf(existing_data: dict[str, LocaleNode], parts: list[str]) -> LocaleNode | object:
+    """Walk ``parts`` and distinguish an authored null from a missing leaf."""
+    curr: LocaleNode = existing_data
+    for part in parts:
+        if not isinstance(curr, dict) or part not in curr:
+            return _MISSING_LOCALE_LEAF
+        curr = curr[part]
+    return _MISSING_LOCALE_LEAF if isinstance(curr, dict) else curr
+
+
+def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
+    """Write ``value`` at ``dotted_key`` inside ``root``, creating sub-dicts as needed."""
+    parts = dotted_key.split(".")
+    curr: dict[str, LocaleNode] = root
+    for part in parts[:-1]:
+        if part not in curr or not isinstance(curr[part], dict):
+            curr[part] = {}
+        child = curr[part]
+        assert isinstance(child, dict)  # narrowed by the line above
+        curr = child
+    curr[parts[-1]] = value
+
+
+def _yaml_quoted_scalar(value: str) -> str:
+    """Render a scalar as a single-physical-line YAML quoted string.
+
+    Single-quoted style cannot carry a literal line break on one physical
+    line (the parser folds raw breaks into spaces), so values containing
+    control characters are rendered double-quoted with escape sequences.
+    Either form occupies exactly one line, which the line-based leaf
+    writers (:func:`_replace_existing_yaml_leaf`, :func:`_append_yaml_leaf`)
+    rely on.
+    """
+    if any(ch in value for ch in ("\n", "\r", "\t")):
+        escaped = (
+            value.replace("\\", "\\\\")
+            .replace('"', '\\"')
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\t", "\\t")
+        )
+        return '"' + escaped + '"'
+    escaped = value.replace("'", "''")
+    return "'" + escaped + "'"
+
+
+def _resolve_leaf_parent(
+    data: dict[str, LocaleNode],
+    parts: list[str],
+    *,
+    dotted_key: str,
+) -> dict[str, LocaleNode]:
+    """Walk to the mapping that owns ``parts[-1]``, refusing every wrong shape.
+
+    Each refusal names what the path actually resolved to, so an operator
+    who addressed a namespace, a leaf's child, or a key the catalogue has
+    not scaffolded yet is told which of those happened.
+    """
+    cursor: LocaleNode = data
+    for part in parts[:-1]:
+        if not isinstance(cursor, dict) or part not in cursor:
+            raise LocaleError(f"Locale key not found: {dotted_key!r}; run locale scaffold first")
+        cursor = cursor[part]
+    if not isinstance(cursor, dict):
+        raise LocaleError(f"Cannot set {dotted_key!r}: parent path resolves to a leaf")
+    if isinstance(cursor.get(parts[-1]), dict):
+        raise LocaleError(f"Cannot set {dotted_key!r}: it resolves to a namespace")
+    return cursor
+
+
+def _normalise_product_identity_node(value: LocaleNode) -> LocaleNode:
+    """Recursively normalize stale human-command references."""
+    if isinstance(value, dict):
+        return _normalise_product_identity_mapping(value)
+    if isinstance(value, str):
+        return normalise_product_identity_references(value)
+    return value
+
+
+def _normalise_product_identity_mapping(value: dict[str, LocaleNode]) -> dict[str, LocaleNode]:
+    """Normalize a locale mapping while preserving its mapping type."""
+    return {key: _normalise_product_identity_node(child) for key, child in value.items()}
+
+
+def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
+    """Return the slice end for a scalar leaf and its indented continuation."""
+    end = start + 1
+    while end < len(lines):
+        match = _YAML_KEY_PATTERN.match(lines[end])
+        if match is not None and len(match.group("indent")) <= indent:
+            break
+        end += 1
+    return end
+
+
+def _iter_yaml_key_matches(lines: list[str]) -> Iterator[tuple[int, re.Match[str], int, str, str, list[str]]]:
+    """Yield YAML key lines with their active dotted path parts."""
+    stack: list[tuple[int, str]] = []
+
+    for index, line in enumerate(lines):
+        match = _YAML_KEY_PATTERN.match(line)
+        if match is None:
+            continue
+
+        indent = len(match.group("indent"))
+        key = match.group("key")
+        rest = match.group("rest")
+        while stack and stack[-1][0] >= indent:
+            stack.pop()
+
+        yield index, match, indent, key, rest, [item for _, item in stack] + [key]
+
+        if not rest.strip():
+            stack.append((indent, key))
+
+
+def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
+    """Replace a single existing leaf line without rebuilding the whole YAML file."""
+    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
+
+    for index, match, indent, key, _rest, current_parts in _iter_yaml_key_matches(lines):
+        if current_parts == parts:
+            line = lines[index]
+            newline = "\r\n" if line.endswith("\r\n") else "\n"
+            replacement = match.group("indent") + key + ": " + _yaml_quoted_scalar(value) + newline
+            lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
+            return
+
+    raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
+
+
+def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
+    """Append a missing leaf below an existing mapping parent."""
+    if len(parts) < 2:
+        raise LocaleError(f"Cannot append top-level locale leaf: {'.'.join(parts)!r}")
+
+    parent_parts = parts[:-1]
+    leaf = parts[-1]
+    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
+
+    for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
+        if current_parts == parent_parts:
+            if rest.strip():
+                raise LocaleError(f"Cannot append {'.'.join(parts)!r}: parent resolves to a leaf")
+            insertion_index = _yaml_leaf_end(lines, index, indent)
+            newline = _preferred_newline(lines, index)
+            lines.insert(
+                insertion_index,
+                " " * (indent + 2) + leaf + ": " + _yaml_quoted_scalar(value) + newline,
+            )
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
+            return
+
+    raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
+
+
+def _rewrite_locale_mapping(path: Path, data: dict[str, LocaleNode]) -> None:
+    """Atomically replace a locale mapping after strict parsing.
+
+    The locale CLI may be interrupted by an operator or orchestration timeout.
+    Writing directly to the catalogue would expose a truncated YAML file between
+    ``open(..., "w")`` and the final flush, so serialize in memory and persist
+    through :func:`~cadrumo.core.atomic_write.atomic_write_text` (standard
+    tier), which also adds a parent-directory fsync this dialect previously
+    lacked.
+    """
+    serialised = yaml.dump(data, allow_unicode=True, sort_keys=True, default_flow_style=False)
+    atomic_write_text(path, serialised, encoding=UTF_8_ENCODING)
+
+
+def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf: bool = False) -> None:
+    """Remove a single existing leaf line without rebuilding the whole YAML file."""
+    lines = path.read_text(encoding=UTF_8_ENCODING).splitlines(keepends=True)
+
+    for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
+        if current_parts == parts:
+            if not rest.strip() and not allow_empty_leaf:
+                raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
+            del lines[index : _yaml_leaf_end(lines, index, indent)]
+            _prune_empty_yaml_namespaces(lines, parts[:-1])
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
+            return
+
+    raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
+
+
+def _prune_empty_yaml_namespaces(lines: list[str], parts: list[str]) -> None:
+    """Delete now-empty namespace rows after removing a locale leaf."""
+    for depth in range(len(parts), 0, -1):
+        current_path = parts[:depth]
+        for index, _match, indent, _key, rest, current_parts in _iter_yaml_key_matches(lines):
+            if current_parts != current_path:
+                continue
+            if rest.strip():
+                break
+            if _yaml_leaf_end(lines, index, indent) == index + 1:
+                del lines[index : index + 1]
+            break
+
+
+def _preferred_newline(lines: list[str], fallback_index: int) -> str:
+    """Return the newline style used near ``fallback_index``."""
+    if lines:
+        sample = lines[min(fallback_index, len(lines) - 1)]
+        if sample.endswith("\r\n"):
+            return "\r\n"
+    return "\n"
+
+
+def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str | None]:
+    """Return leaf locale values keyed by dotted path."""
+    flattened: dict[str, str | None] = {}
+    for key, value in mapping.items():
+        path = f"{prefix}.{key}" if prefix else str(key)
+        if isinstance(value, dict):
+            flattened.update(_flatten_leaf_values(value, path))
+        else:
+            flattened[path] = value
+    return flattened
+
+
+def _flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, object]:
+    """Flatten parsed YAML without coercing invalid scalar types to strings."""
+    if isinstance(value, dict):
+        flattened: dict[str, object] = {}
+        for key, child in value.items():
+            path = f"{prefix}.{key}" if prefix else str(key)
+            flattened.update(_flatten_raw_locale_leaves(child, path))
+        return flattened
+    return {prefix or "<root>": value}
+
+
+def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
+    """Return whether a dotted locale key belongs to a dynamic namespace."""
+    return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
+
+
+def _is_test_module(path: Path) -> bool:
+    """Return whether ``path`` is a test module rather than production code.
+
+    Mirrors the AST scanner's exclusion so both key-discovery paths agree
+    on what counts as a production call site.
+    """
+    return path.name.startswith(("test_", "_test_")) or "tests" in path.parts

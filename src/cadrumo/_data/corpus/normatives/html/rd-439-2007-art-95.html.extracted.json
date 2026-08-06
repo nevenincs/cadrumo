@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-95.html",
+  "source_sha256": "d509b7e8c4dfc7c6fc21180ff37df4b38b94760c77fa76888527e92db2ef2e93",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Cuando los rendimientos sean contraprestación de una actividad profesional, se aplicará el tipo de retención del 15 por ciento sobre los ingresos íntegros satisfechos.\nNo obstante lo dispuesto en el párrafo anterior, en el caso de contribuyentes que inicien el ejercicio de actividades profesionales, el tipo de retención será del 7 por ciento en el período impositivo de inicio de actividades y en los dos siguientes, siempre y cuando no hubieran ejercido actividad profesional alguna en el año anterior a la fecha de inicio de las actividades.\nPara la aplicación del tipo de retención previsto en el párrafo anterior, los contribuyentes deberán comunicar al pagador de los rendimientos la concurrencia de dicha circunstancia, quedando obligado el pagador a conservar la comunicación debidamente firmada.\nEl tipo de retención será del 7 por ciento en el caso de rendimientos satisfechos a:\na) Recaudadores municipales.\nb) Mediadores de seguros que utilicen los servicios de auxiliares externos.\nc) Delegados comerciales de la Sociedad Estatal Loterías y Apuestas del Estado.\nd) Contribuyentes que desarrollen actividades incluidas en los grupos 851, 852, 853, 861, 862, 864 y 869 de la sección segunda y en las agrupaciones 01, 02, 03 y 05 de la sección tercera, de las Tarifas del Impuesto sobre Actividades Económicas, aprobadas junto con la Instrucción para su aplicación por el Real Decreto Legislativo 1175/1990, de 28 de septiembre, o cuando la contraprestación de dicha actividad profesional derive de una prestación de servicios que por su naturaleza, si se realizase por cuenta ajena, quedaría incluida en el ámbito de aplicación de la relación laboral especial de las personas artistas que desarrollan su actividad en las artes escénicas, audiovisuales y musicales, así como de las personas que realizan actividades técnicas o auxiliares necesarias para el desarrollo de dicha actividad, siempre que, en cualquiera de los supuestos previstos en esta letra, el volumen de rendimientos íntegros del conjunto de tales actividades correspondiente al ejercicio inmediato anterior sea inferior a 15.000 euros y represente más del 75 por ciento de la suma de los rendimientos íntegros de actividades económicas y del trabajo obtenidos por el contribuyente en dicho ejercicio. Para la aplicación de este tipo de retención, los contribuyentes deberán comunicar al pagador de los rendimientos la concurrencia de dichas circunstancias, quedando obligado el pagador a conservar la comunicación debidamente firmada.\nEstos porcentajes se reducirán en un 60 por ciento cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de la Ley del Impuesto.",
+      "title": "Artículo 95. Importe de las retenciones sobre rendimientos de actividades económicas.",
+      "section": "Artículo 95. Importe de las retenciones sobre rendimientos de actividades económicas.",
+      "anchor": "#a95"
+    }
+  ]
+}

@@ -1,0 +1,353 @@
+# Modelo 100 2025 estimacion objetiva agraria (Anexo I, Orden HAC/1347/2024)
+# Fase 1a: rendimiento neto previo por producto.
+#
+# AEAT's own Diseño de Registros (aeat-dr-100-2025-dictionary) captures one
+# "Ingresos íntegros" / "Índice" / "Rendimiento base producto" triplet per
+# producto código of the Anexo I table (Manual práctico de Renta 2025,
+# Parte 1, Capítulo 9). Every triplet shares the identical Fase 1a mechanism
+# (instrucción 2.1 of the same Anexo I): rendimiento base producto = ingresos
+# íntegros x índice de rendimiento neto. The índice itself stays an
+# operator-declared decimal (the taxpayer/preparer reads it off the Anexo I
+# código table for the declared activity — this engine does not transcribe a
+# per-código coefficient table, unlike the M131 no-agrícola módulos engine,
+# because the índice is a single per-activity scalar the AEAT form itself
+# asks the filer to enter, not a units x coefficient product needing a
+# keyed-bracket lookup).
+#
+# Grounded in ley-35-2006:art-31 (estimación objetiva) and
+# orden-hac-1347-2024:anexo-i-instruccion-2-1 (Fase 1: Rendimiento neto
+# previo), cross-checked against the AEAT Manual práctico de Renta 2025,
+# Parte 1, Capítulo 9 worked example: Doña M.J.I., ingresos 18.030,00 euros x
+# índice 0,37 (código 12, raíces/tubérculos/frutos no cítricos) = rendimiento
+# neto previo 6.671,10 euros. See
+# test_modelo_100_eo_agraria_rendimiento_base.py.
+#
+# Rendimiento neto previo (casilla 1537) sums every producto's rendimiento
+# base — the Fase 1a aggregate across the codigo-producto catalogue.
+#
+# Fase 2a: rendimiento neto minorado (casilla 1539, instrucción 2.2 of the
+# same Anexo I). The instrucción deducts, elemento por elemento, the
+# amortización del inmovilizado material e intangible afecto a la actividad
+# (excluidas las actividades forestales) per the Anexo I amortization table
+# (coeficiente lineal máximo / período máximo per grupo patrimonial). This
+# engine does not model a per-element libro registro de bienes de inversión
+# (acquisition value, coefficient, elapsed period per asset) — the same
+# honest-scalar approach the M131 estimación-objetiva módulos engine uses for
+# its own minoración por incentivos a la inversión
+# (orden-hac-1347-2024:instruccion-2-2-b, modelo 131 Fase 2ª,
+# test_modelo_131_modulos_engine.py). Casilla 1538 ("Amortización del
+# inmovilizado material e intangible") is the operator-declared euro amount
+# already published by AEAT's own Diseño de Registros; a blank amortización
+# never over-states the reduction (it simply omits a legitimate additional
+# reduction the operator may or may not be claiming), and it never fabricates
+# a per-asset depreciation figure the engine has no register to derive.
+#
+# Fase 3a: índices correctores y rendimiento neto de módulos (casilla 1548,
+# instrucción 2.3 of the same Anexo I). Each índice casilla (1540-1547, one
+# per letra a) to h) of the instrucción) is an operator/preparer-declared
+# rate (AEAT Diseño de Registros field type P012, fields E5AI1-E5AI8) — the
+# taxpayer reads the applicable índice off the Anexo I table and enters it
+# directly, exactly like the Fase 1a per-producto índice de rendimiento neto
+# above. The instrucción states each índice applies "sobre el rendimiento
+# neto minorado o, en su caso, sobre el rectificado por aplicación de los
+# [índices] anteriores" — a sequential cascade in the Anexo's own letra
+# order, not a single-índice pick nor a simultaneous product. A blank índice
+# casilla is never fabricated into a reduction (the cascade step is skipped);
+# a non-positive rendimiento neto minorado never receives índices correctores
+# (the general estimación objetiva principle). Índice 9 (mejillón en batea,
+# letra i) is out of scope for this dispatcher — it applies to the separate
+# mejillón producto (casilla 0160), not to this 1539→1548 cascade. See
+# _evaluate_m100_resolve_eo_agraria_indices_correctores and
+# orden-hac-1347-2024:anexo-i-instruccion-2-3.
+#
+# Fase 4a (reduccion general 5% + reduccion agricultores jovenes 25%,
+# casillas 1549/1551, plus the rendimiento neto reducido total in casilla
+# 1555) is computed by renta-2025-eo-agraria-reduccion-general,
+# renta-2025-eo-agraria-reduccion-jovenes, and
+# renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad in
+# 0294-renta-2025-eo-agraria-reducciones-fase-4a.toml. Fase 4a apartado 3
+# (gastos extraordinarios, casilla 1552) and Fase 5a (art. 32 irregularidad,
+# casilla 1554) remain the manual operator-entered casillas already declared
+# on this revision — bounded by the incremental engine-authoring
+# discipline this table follows.
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-mejillon-batea"
+target_casilla_id = "0159"
+expression = { op = "multiply", args = [{ casilla_id = "0157" }, { casilla_id = "0158" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-porcino-carne"
+target_casilla_id = "1490"
+expression = { op = "multiply", args = [{ casilla_id = "1488" }, { casilla_id = "1489" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-remolacha"
+target_casilla_id = "1493"
+expression = { op = "multiply", args = [{ casilla_id = "1491" }, { casilla_id = "1492" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-bovino-carne-avicultura"
+target_casilla_id = "1496"
+expression = { op = "multiply", args = [{ casilla_id = "1494" }, { casilla_id = "1495" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-forestal-corta-larga"
+target_casilla_id = "1499"
+expression = { op = "multiply", args = [{ casilla_id = "1497" }, { casilla_id = "1498" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-bovino-leche"
+target_casilla_id = "1502"
+expression = { op = "multiply", args = [{ casilla_id = "1500" }, { casilla_id = "1501" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-cereales-citricos-horticultura"
+target_casilla_id = "1505"
+expression = { op = "multiply", args = [{ casilla_id = "1503" }, { casilla_id = "1504" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-porcino-cria-ovino-leche-apicultura"
+target_casilla_id = "1508"
+expression = { op = "multiply", args = [{ casilla_id = "1506" }, { casilla_id = "1507" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-forestal-corta-corta"
+target_casilla_id = "1511"
+expression = { op = "multiply", args = [{ casilla_id = "1509" }, { casilla_id = "1510" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-arroz-oleaginosas-flores"
+target_casilla_id = "1514"
+expression = { op = "multiply", args = [{ casilla_id = "1512" }, { casilla_id = "1513" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-otras-especies-ganaderas"
+target_casilla_id = "1517"
+expression = { op = "multiply", args = [{ casilla_id = "1515" }, { casilla_id = "1516" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-forestal-resina"
+target_casilla_id = "1520"
+expression = { op = "multiply", args = [{ casilla_id = "1518" }, { casilla_id = "1519" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+# Grounded directly in the manual's own worked example (código 12: raíces,
+# tubérculos, forrajes, algodón, frutos no cítricos...): ingresos 18.030,00
+# euros x índice 0,37 = rendimiento neto previo 6.671,10 euros. See
+# test_modelo_100_eo_agraria_rendimiento_base.py.
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-raices-tuberculos-forrajes"
+target_casilla_id = "1523"
+expression = { op = "multiply", args = [{ casilla_id = "1521" }, { casilla_id = "1522" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Ejemplo: Determinación del rendimiento neto previo de la", "El índice de rendimiento neto aplicable sobre los citados ingresos es el 0,37"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-plantas-textiles"
+target_casilla_id = "1526"
+expression = { op = "multiply", args = [{ casilla_id = "1524" }, { casilla_id = "1525" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-actividades-accesorias"
+target_casilla_id = "1529"
+expression = { op = "multiply", args = [{ casilla_id = "1527" }, { casilla_id = "1528" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-otros-trabajos-accesorios"
+target_casilla_id = "1532"
+expression = { op = "multiply", args = [{ casilla_id = "1530" }, { casilla_id = "1531" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-base-cria-guarda-engorde-ganado"
+target_casilla_id = "1535"
+expression = { op = "multiply", args = [{ casilla_id = "1533" }, { casilla_id = "1534" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Determinación del rendimiento neto"]
+
+# Fase 1a aggregate: rendimiento neto previo (casilla 1537) sums every
+# producto's rendimiento base producto across the codigo-producto catalogue.
+# Each producto slot is independent: a taxpayer with a mixed
+# agrícola-ganadera explotación may legitimately populate several products
+# simultaneously. The AEAT Manual práctico de Renta 2025, Parte 1,
+# Capítulo 9 full worked example (Don L.H.I.) itself declares ingresos
+# computables for three simultaneous productos — maíz, corderos (ganado
+# ovino de carne), and productos hortícolas — within the single actividad
+# he files (see test_modelo_100_eo_agraria_reducciones_fase_4a.py). An
+# unselected product's ingresos/índice simply stay blank (zero), so the sum
+# never fabricates a rendimiento for a product the taxpayer did not declare.
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-neto-previo"
+target_casilla_id = "1537"
+expression = { op = "sum", args = [
+    { casilla_id = "0159" },
+    { casilla_id = "1490" },
+    { casilla_id = "1493" },
+    { casilla_id = "1496" },
+    { casilla_id = "1499" },
+    { casilla_id = "1502" },
+    { casilla_id = "1505" },
+    { casilla_id = "1508" },
+    { casilla_id = "1511" },
+    { casilla_id = "1514" },
+    { casilla_id = "1517" },
+    { casilla_id = "1520" },
+    { casilla_id = "1523" },
+    { casilla_id = "1526" },
+    { casilla_id = "1529" },
+    { casilla_id = "1532" },
+    { casilla_id = "1535" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["El rendimiento neto es el resultante de la suma de los rendimientos netos que correspondan"]
+
+# Fase 2a: rendimiento neto minorado (casilla 1539) = rendimiento neto previo
+# (casilla 1537) minus the operator-declared amortización del inmovilizado
+# material e intangible (casilla 1538, instrucción 2.2 of the same Anexo I).
+# A blank amortización subtracts zero, never fabricating a depreciation
+# figure the engine has no per-element asset register to derive.
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-neto-minorado"
+target_casilla_id = "1539"
+expression = { op = "subtract", args = [
+    { casilla_id = "1537" },
+    { casilla_id = "1538" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-2"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Fase 2ª: Determinación del rendimiento neto minorado"]
+
+# Fase 3a: rendimiento neto de módulos (casilla 1548) = rendimiento neto
+# minorado (casilla 1539) with the índices correctores 1540-1547 (letras a a
+# h of instrucción 2.3, in that exact order) applied in sequence, per the
+# AEAT's own field order (E5AI1-E5AI8). See
+# _evaluate_m100_resolve_eo_agraria_indices_correctores.
+# Cross-checked against the AEAT Manual práctico de Renta 2025, Parte 1,
+# Capítulo 9 full worked example (Don L.H.I.): rendimiento neto minorado
+# 14.704,42 euros x índice corrector por personal asalariado 0,90 (único
+# índice aplicable en ese ejemplo) = rendimiento neto de módulos 13.233,98
+# euros. See test_modelo_100_eo_agraria_indices_correctores.py.
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-neto-modulos"
+target_casilla_id = "1548"
+expression = { op = "m100_resolve_eo_agraria_indices_correctores", args = [
+    { casilla_id = "1539" },
+    { casilla_id = "1540" },
+    { casilla_id = "1541" },
+    { casilla_id = "1542" },
+    { casilla_id = "1543" },
+    { casilla_id = "1544" },
+    { casilla_id = "1545" },
+    { casilla_id = "1546" },
+    { casilla_id = "1547" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:anexo-i-instruccion-2-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["3ª Fase: Índices correctores y determinación del rendimiento neto de módulos"]

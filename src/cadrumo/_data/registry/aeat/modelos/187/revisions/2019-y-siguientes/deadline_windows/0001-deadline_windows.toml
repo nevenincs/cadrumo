@@ -1,0 +1,10 @@
+[[revisions."2019-y-siguientes".deadline_windows]]
+id = "modelo-187-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+legal_refs = ["orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-187-procedure", "boe-modelo-187-form-layout"]
+

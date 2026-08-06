@@ -1,0 +1,21 @@
+# Modelo 714 cuota íntegra (casilla 29) = escala estatal aplicada a la base
+# liquidable (Ley 19/1991 art. 30). Mirrors the IRPF escala pattern: the
+# `lookup_bracket` op applies the progressive bracket_table parameter to the
+# base-liquidable casilla, yielding fixed_addition + (base - lower_bound) *
+# marginal_rate for the matched bracket. The escala is the STATE default
+# (subsidiaria a la escala autonómica); Phase-B implements the state baseline.
+
+[[revisions."2021-y-siguientes".formulas]]
+id = "patrimonio-cuota-integra-escala-estatal"
+target_casilla_id = "patrimonio.cuota-integra"
+expression = { op = "lookup_bracket", args = [
+    { casilla_id = "patrimonio.base-liquidable" },
+    { parameter = "patrimonio-escala-estatal" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-19-1991:art-30"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
+
+[[revisions."2021-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-714-procedure"
+required_text = ["patrimonio neto"]

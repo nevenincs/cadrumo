@@ -1,0 +1,29 @@
+[[revisions."2026".constructs]]
+id = "modelo-136-calculation-construct"
+legal_refs = [
+    "ley-35-2006:da-33",
+    "orden-hac-763-2018:art-tercero",
+    "orden-hap-70-2013:art-7",
+    "orden-hap-70-2013:art-10",
+    "orden-hap-70-2013:art-11",
+    "orden-hap-70-2013:art-12",
+]
+source_refs = [
+    "boe-lirpf-lottery-prize-special-levy",
+    "boe-modelo-136-current-form",
+    "boe-modelo-136-current-form-text",
+    "boe-modelo-136-base-order",
+    "aeat-modelo-136-procedure",
+    "aeat-modelo-136-procedure-record",
+]
+formulas = ["modelo-136-base-imponible", "modelo-136-cuota-gravamen-especial", "modelo-136-resultado-ingresar"]
+application_links = [
+    "modelo-136-calculation",
+    "modelo-136-deadline",
+    "modelo-136-filing",
+    "modelo-136-2026-verification",
+    "modelo-136-review",
+    "modelo-136-approval",
+    "modelo-136-reconciliation",
+    "modelo-136-workflow",
+]

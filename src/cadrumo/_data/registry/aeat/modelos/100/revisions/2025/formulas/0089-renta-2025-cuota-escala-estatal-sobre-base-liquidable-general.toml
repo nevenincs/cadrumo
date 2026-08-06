@@ -1,0 +1,45 @@
+# LIRPF art. 64 (estatal) anualidades por alimentos a favor de los hijos —
+# régimen de escala separada (see the 2024 revision for the full derivation).
+# escala(0527) + escala(0505 - 0527) when the régimen gate holds; the ordinary
+# escala(0505) branch is byte-identical for every non-anualidades filer.
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-escala-estatal-sobre-base-liquidable-general"
+target_casilla_id = "0528"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "0527" }, { literal = "0" }] },
+    { op = "if_then_else", args = [
+        { op = "less_than", args = [{ casilla_id = "0527" }, { casilla_id = "0505" }] },
+        { op = "if_then_else", args = [
+            { binding = "renta-2025-profile-anualidades-sin-minimo-descendientes" },
+            { op = "add", args = [
+                { op = "lookup_bracket", args = [
+                    { casilla_id = "0527" },
+                    { parameter = "renta-2025-escala-estatal-base-general" },
+                ] },
+                { op = "lookup_bracket", args = [
+                    { op = "subtract", args = [{ casilla_id = "0505" }, { casilla_id = "0527" }] },
+                    { parameter = "renta-2025-escala-estatal-base-general" },
+                ] },
+            ] },
+            { op = "lookup_bracket", args = [
+                { casilla_id = "0505" },
+                { parameter = "renta-2025-escala-estatal-base-general" },
+            ] },
+        ] },
+        { op = "lookup_bracket", args = [
+            { casilla_id = "0505" },
+            { parameter = "renta-2025-escala-estatal-base-general" },
+        ] },
+    ] },
+    { op = "lookup_bracket", args = [
+        { casilla_id = "0505" },
+        { parameter = "renta-2025-escala-estatal-base-general" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["escala general", "base liquidable general"]

@@ -1,0 +1,552 @@
+"""Typed ``--json`` payload schemas for overview CLI commands.
+
+Each class declared here is a strict
+:class:`OutputSchema` subclass and is decorated with :func:`register_schema` so
+the JSON-contract test suite can enumerate every overview-command surface this
+module covers.
+
+Field sets match the production payload dicts constructed in
+:mod:`_overview` at their emit sites. All sequence fields use ``list`` rather
+than ``tuple`` because ``model_dump(mode='json')`` serialises pydantic tuples as
+JSON arrays, and the strict :class:`OutputSchema` base does not coerce lists to
+tuples on re-validation.
+
+The nested calendar payloads mirror the JSON form of
+:class:`OverviewCalendar`, :class:`OverviewCalendarEntry`,
+:class:`OverviewCalendarEvent`, and
+:class:`OverviewCalendarFilingEvidence`. Registered result schemas then wrap
+those fragments, plus read models returned by
+:func:`build_overview_status_report`, :func:`build_overview_agenda`,
+:func:`build_overview_backlog`, and :func:`build_overview_explain`, for the
+:class:`SchemaEnvelope` surface through :func:`_emit_envelope`. The application
+overview package remains the source of business semantics; this module only
+documents and validates the transport shape emitted by :mod:`_overview`.
+"""
+
+from __future__ import annotations
+
+from typing import Literal, Self
+
+from pydantic import Field, model_validator
+
+from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
+from ...core.parsing import require_iso8601_date
+from ._decimal_wire import NonNegativeDecimalWireText
+from ._ledger_payloads import LedgerStatusResult
+from ._schemas import OutputSchema, register_schema
+
+# ---------------------------------------------------------------------------
+# Shared sub-models (not registered — used as nested types)
+# ---------------------------------------------------------------------------
+
+
+class OverviewDraftPayload(OutputSchema):
+    """One draft row nested in a period-scoped overview status result.
+
+    Nested in
+    :class:`OverviewStatusResult`. The full-status branch forwards
+    :class:`OverviewStatusReport` counters, while the period branch expands the
+    selected :class:`ModeloDraft` records into these small JSON rows.
+    """
+
+    draft_id: str
+    modelo: str
+    status: str
+
+
+class OverviewRecargoBandPayload(OutputSchema):
+    """JSON projection of the resolved :class:`RecargoBand`.
+
+    Mirrors the canonical band field for field, including the ``legal_ref``
+    that grounds the surcharge in Ley 58/2003 art-27. ``surcharge_pct`` rides
+    as a canonical decimal string so the percentage cannot lose precision to a
+    JSON float on the way to the operator.
+    """
+
+    id: str = Field(min_length=1, max_length=64)
+    min_completed_months: int = Field(ge=0)
+    max_completed_months: int | None = None
+    surcharge_pct: NonNegativeDecimalWireText
+    interest_applies: bool = False
+    legal_ref: str = Field(min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> Self:
+        """Reject an inverted completed-months window, as the canonical band does."""
+        if self.max_completed_months is not None and self.max_completed_months < self.min_completed_months:
+            raise ValueError(
+                f"recargo band {self.id}: max_completed_months ({self.max_completed_months}) "
+                f"is below min_completed_months ({self.min_completed_months})",
+            )
+        return self
+
+
+class OverviewRecoveryPayload(OutputSchema):
+    """JSON projection of the canonical :class:`Recovery` payload.
+
+    An OVERDUE entry's recovery carries legal obligations -- the resolved
+    recargo band with its legal reference, and the next command the operator
+    must run. Exposing it as a bare ``dict[str, object]`` let an empty mapping
+    serialize as a valid recovery, so an overdue row could reach the operator
+    with its legal grounding and its remedial action silently absent.
+    """
+
+    still_filable: bool = True
+    recargo_band: OverviewRecargoBandPayload
+    next_command: str = Field(min_length=1, max_length=256)
+
+
+class OverviewCalendarEntryPayload(OutputSchema):
+    """One :class:`OverviewCalendarEntry` row.
+
+    The nested :class:`OverviewCalendarFilingEvidencePayload` keeps filing
+    evidence beside the legal deadline row rather than flattening it into the
+    command result. Deadline fields remain the legal schedule from
+    :class:`ModeloDeadline`; local and observed filing state are carried
+    separately on the evidence payload.
+    """
+
+    modelo: str
+    period: str
+    opens_on: str
+    closes_on: str
+    adjusted_closes_on: str
+    shift_reason: str | None = None
+    holiday_refs: list[str] = []
+    jurisdictions: list[str] = []
+    payment_cutoff_on: str | None = None
+    status: str
+    user_state: Literal["due", "late", "filed", "unknown"]
+    recovery: OverviewRecoveryPayload | None = None
+    filing_year: int | None = None
+    censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
+    filing_evidence: OverviewCalendarFilingEvidencePayload
+    source: str = "registry_deadline"
+    local_work_unit_id: str | None = None
+    local_work_unit_name: str | None = None
+    local_work_unit_revision_id: str | None = None
+
+
+class OverviewCalendarFilingEvidencePayload(OutputSchema):
+    """Filing evidence nested in an overview calendar entry payload.
+
+    Nested in :class:`OverviewCalendarEntryPayload`. Mirrors
+    :class:`OverviewCalendarFilingEvidence` and keeps local filing state,
+    observed AEAT submission state, and justificante verification as separate
+    JSON fields. That distinction preserves the application rule that a local
+    filed record is not an AEAT submission and an observed submission is not a
+    verified justificante until CSV evidence proves the match.
+    """
+
+    modelo: str | None = None
+    filing_year: int | None = None
+    period: str | None = None
+    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
+    local_filing_record_id: str | None = None
+    local_calculation_revision_id: str | None = None
+    local_filed_at: str | None = None
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
+    aeat_submitted_at: str | None = None
+    aeat_reference_id: str | None = None
+    aeat_snapshot_id: str | None = None
+    aeat_evidence_kind: str | None = None
+    aeat_evidence_conflict_reference_ids: list[str] = []
+    verified_justificante_csv: str | None = None
+    justificante_required: bool
+    justificante_verified: bool
+    evidence_source: str | None = None
+
+    @model_validator(mode="after")
+    def _require_csv_for_verified_justificante(self) -> OverviewCalendarFilingEvidencePayload:
+        verified_state = self.aeat_submission_state == "justificante_verified"
+        if self.justificante_verified != verified_state:
+            raise ValueError("justificante_verified must agree with aeat_submission_state")
+        if verified_state != (self.verified_justificante_csv is not None):
+            raise ValueError("verified_justificante_csv must be present exactly for verified justificantes")
+        return self
+
+
+class OverviewCalendarEventPayload(OutputSchema):
+    """One :class:`OverviewCalendarEvent` row.
+
+    Events are additive observations beside the legal calendar, such as filed
+    declarations or notifications loaded from persisted live snapshots. Optional
+    filing fields mirror the application event model without upgrading the
+    corresponding :class:`OverviewCalendarEntryPayload` evidence row by
+    themselves.
+    """
+
+    event_type: Literal["filing", "message"]
+    post_filing_kind: str | None = None
+    event_date: str
+    source: str
+    summary: str
+    reference_id: str
+    snapshot_id: str | None = None
+    modelo: str | None = None
+    filing_year: int | None = None
+    period: str | None = None
+    status: str | None = None
+    source_url: str | None = None
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None = (
+        None
+    )
+    aeat_submitted_at: str | None = None
+    justificante_verified: bool | None = None
+    verified_justificante_csv: str | None = None
+
+    @model_validator(mode="after")
+    def _require_event_csv_for_verified_justificante(self) -> OverviewCalendarEventPayload:
+        verified_state = self.aeat_submission_state == "justificante_verified"
+        if self.justificante_verified is True and not verified_state:
+            raise ValueError("justificante_verified requires a verified AEAT submission state")
+        if verified_state and (self.justificante_verified is not True or self.verified_justificante_csv is None):
+            raise ValueError("verified AEAT submission requires justificante CSV evidence")
+        if not verified_state and self.verified_justificante_csv is not None:
+            raise ValueError("justificante CSV evidence requires a verified AEAT submission state")
+        return self
+
+
+class OverviewCalendarWarningPayload(OutputSchema):
+    """One :class:`CalendarWarning` row.
+
+    Warnings identify profile keys whose missing values forced the calendar
+    builder to use deadline-engine defaults. ``affected_modelos`` mirrors the
+    application row so consumers can show which obligations may depend on the
+    suggested ``fix_command``.
+    """
+
+    code: str
+    message: str
+    fix_command: str
+    affected_modelos: list[str] = []
+
+
+class OverviewCalendarRangePayload(OutputSchema):
+    """JSON form of :class:`OverviewCalendarRange`.
+
+    The application range is inclusive; the CLI schema keeps the same
+    ``from_date`` / ``to_date`` keys as ISO strings inside calendar and backlog
+    payloads.
+    """
+
+    from_date: str
+    to_date: str
+
+    @model_validator(mode="after")
+    def _enforce_inclusive_date_order(self) -> OverviewCalendarRangePayload:
+        try:
+            from_date = require_iso8601_date(self.from_date)
+            to_date = require_iso8601_date(self.to_date)
+        except ValueError as exc:
+            raise ValueError("calendar range dates must be ISO-8601 dates") from exc
+        if from_date > to_date:
+            raise ValueError("calendar range from_date cannot be after to_date")
+        return self
+
+
+class OverviewCalendarCompletenessPayload(OutputSchema):
+    """JSON form of :class:`CalendarCompleteness`.
+
+    The tuple fields from the application DTO become JSON arrays so the
+    envelope can report which profile keys were explicit, which defaulted, and
+    which modelos were still computable.
+    """
+
+    explicitly_set_keys: list[str] = []
+    defaulted_keys: list[str] = []
+    computable_modelos: list[str] = []
+    defaulted_modelos: list[str] = []
+
+
+class OverviewSuppressedCalendarEntryPayload(OutputSchema):
+    """JSON form of :class:`SuppressedCalendarEntry`.
+
+    These rows exist only when the calendar command asks to retain
+    non-applicable obligations; they preserve the applicability verdict and
+    reason without reintroducing the row into ``entries``.
+    """
+
+    modelo: str
+    period: str
+    verdict: str
+    reason: str
+
+
+class OverviewAdvisedObligationPayload(OutputSchema):
+    """One obligation the calendar could not positively scope."""
+
+    modelo: str
+    reason: Literal[
+        "applicable_window_missing",
+        "applicability_undetermined",
+        "registry_unmodeled",
+    ]
+
+
+class OverviewObligationCoveragePayload(OutputSchema):
+    """JSON projection of the canonical total obligation-coverage partition.
+
+    Each modelo must occur in exactly one disposition.  The application service
+    establishes completeness against its authoritative obligation universe;
+    this transport contract preserves the non-overlap invariant so malformed
+    JSON cannot make an obligation appear both surfaced and advised.
+    """
+
+    surfaced: list[str] = []
+    confidently_excluded: list[str] = []
+    advised: list[OverviewAdvisedObligationPayload] = []
+    out_of_scope: list[str] = []
+
+    @model_validator(mode="after")
+    def _require_disjoint_dispositions(self) -> Self:
+        bucket_modelos = (
+            self.surfaced,
+            self.confidently_excluded,
+            [item.modelo for item in self.advised],
+            self.out_of_scope,
+        )
+        total_items = sum(len(modelos) for modelos in bucket_modelos)
+        distinct_modelos = {modelo for modelos in bucket_modelos for modelo in modelos}
+        if total_items != len(distinct_modelos):
+            raise ValueError("obligation coverage dispositions must form a disjoint partition")
+        return self
+
+
+class OverviewCalendarPayload(OutputSchema):
+    """Typed :class:`OverviewCalendar` JSON fragment.
+
+    Used by ``overview calendar --all-profiles`` profile blocks and by typed
+    conformance checks. The payload keeps legal entries, additive events,
+    completeness, warnings, and suppressed rows in the same compartments as the
+    application read model.
+    """
+
+    range: OverviewCalendarRangePayload
+    entries: list[OverviewCalendarEntryPayload] = []
+    generated_at: str
+    warnings: list[OverviewCalendarWarningPayload] = []
+    completeness: OverviewCalendarCompletenessPayload
+    taxpayer_model_declared: bool
+    incomplete_reason: str | None = None
+    suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
+    events: list[OverviewCalendarEventPayload] = []
+    coverage: OverviewObligationCoveragePayload
+
+
+class OverviewCalendarProfilePayload(OutputSchema):
+    """One profile's calendar SUMMARY in ``overview calendar --all-profiles`` mode.
+
+    Counts and the next obligation due, not the profile's whole calendar: the
+    survey answers which profile needs attention, and the detail is one
+    per-profile call away. The text surface still prints every row.
+
+    ``next_due_*`` is the earliest obligation closing at or after the queried
+    window's start, absent when the profile has none in range.
+    """
+
+    profile_id: str
+    label: str
+    entry_count: int
+    event_count: int
+    warning_count: int
+    suppressed_entry_count: int
+    next_due_modelo: str | None = None
+    next_due_period: str | None = None
+    next_due_closes_on: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Registered schemas
+# ---------------------------------------------------------------------------
+
+
+@register_schema("overview.status")
+class OverviewStatusResult(OutputSchema):
+    """JSON envelope result for ``aeat app overview status``.
+
+    The full-status branch accepts the JSON form of
+    :class:`OverviewStatusReport`; the period branch uses
+    :class:`OverviewDraftPayload` rows derived from matching
+    :class:`ModeloDraft` records for the scoped draft list. The application
+    report is derived from :class:`OperatorStateProjection`; this schema only
+    bounds the CLI envelope branch and permits future report fields through
+    ``extra='allow'``.
+    """
+
+    # Period-scoped branch fields
+    period: str | None = None
+    # The period-scoped branch emits a list of draft payloads; the
+    # full-status passthrough branch emits an ``int`` count derived from
+    # ``OverviewStatusReport.drafts``. Both shapes share the JSON key.
+    drafts: int | list[OverviewDraftPayload] | None = None
+    verbose: bool | None = None
+
+    # Full status-report passthrough (model_dump of OverviewStatusReport).
+    # The status report is an application-layer pydantic model; the full
+    # shape is forwarded as-is. We accept extra fields so any new keys
+    # the application model adds don't break the conformance gate.
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("overview.calendar")
+class OverviewCalendarResult(OutputSchema):
+    """JSON envelope for ``aeat app overview calendar``.
+
+    Covers both the single-profile mode (``entries``/``warnings``/
+    ``suppressed_entries`` populated) and the ``--all-profiles`` mode
+    (``profiles`` populated, single-profile fields empty). The same
+    envelope key serves the leaf so the JSON-contract registry holds
+    exactly one schema per CLI leaf; the populated field set tells the
+    consumer which branch produced the payload. Both branches still mirror the
+    same :class:`OverviewCalendar` compartments.
+    """
+
+    from_date: str | None = None
+    to_date: str | None = None
+    range: OverviewCalendarRangePayload | None = None
+    entries: list[OverviewCalendarEntryPayload] = []
+    events: list[OverviewCalendarEventPayload] = []
+    warnings: list[OverviewCalendarWarningPayload] = []
+    suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
+    profiles: list[OverviewCalendarProfilePayload] = []
+    coverage: OverviewObligationCoveragePayload | None = None
+
+    @model_validator(mode="after")
+    def _require_single_profile_coverage(self) -> Self:
+        if self.range is not None and self.coverage is None:
+            raise ValueError("single-profile calendar results must include obligation coverage")
+        return self
+
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("overview.agenda")
+class OverviewAgendaResult(OutputSchema):
+    """JSON envelope result for ``aeat app overview agenda``.
+
+    Accepts the JSON form of :class:`OverviewAgenda` so the application read
+    model remains the payload authority. That model reuses
+    :class:`OverviewCalendarEntry`, :class:`CalendarWarning`, and
+    :class:`CalendarCompleteness` rows from the calendar build.
+    """
+
+    as_of: str | None = None
+    horizon_days: int | None = None
+    coverage: OverviewObligationCoveragePayload
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("overview.backlog")
+class OverviewBacklogResult(OutputSchema):
+    """JSON envelope result for ``aeat app overview backlog``.
+
+    Accepts the JSON form of :class:`OverviewBacklog` while the CLI controls
+    only envelope registration and rendering. The backlog read model is a
+    filtered :class:`OverviewCalendar` projection, so its items remain calendar
+    entry rows rather than command-local DTOs.
+    """
+
+    coverage: OverviewObligationCoveragePayload
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+@register_schema("overview.explain")
+class OverviewExplainResult(OutputSchema):
+    """JSON envelope result for ``aeat app overview explain``.
+
+    Accepts the JSON form of :class:`OverviewExplain`, including the
+    applicability verdict, legal references, and profile facts. The verdict is
+    the registry-grounded :class:`ApplicabilityVerdict`, not a deadline-window
+    guess made by the CLI.
+    """
+
+    modelo: str | None = None
+    year: int | None = None
+    applicable: bool | None = None
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
+    # pydantic v2 model_config class-variable assignment triggers mypy
+    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
+    model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+
+class OverviewPrepareStepPayload(OutputSchema):
+    """One ordered row in the ``aeat app overview prepare`` checklist.
+
+    Mirrors :class:`~cadrumo.application.overview.DataPrepStep`: a closed step
+    identifier, its current readiness state, a human-readable progress
+    summary, and the exact next ``cadrumo`` command to run.
+    """
+
+    step_id: DataPrepStepId
+    state: DataPrepStepState
+    summary: str
+    next_command: str
+
+
+@register_schema("overview.prepare")
+class OverviewPrepareResult(OutputSchema):
+    """JSON envelope result for ``aeat app overview prepare``.
+
+    Wraps :class:`~cadrumo.application.overview.DataPrepWalkthrough`: the ordered
+    data-prep checklist for one ``(modelo, filing_year, period)`` scope,
+    read-only over the active profile bucket's ledger, invoice, evidence, and
+    modelo work-unit state. Never contacts AEAT and persists nothing.
+    """
+
+    modelo: str
+    filing_year: int
+    period: str
+    steps: list[OverviewPrepareStepPayload] = []
+    ready_for_calculation: bool = False
+
+
+class OverviewPipelineModeloPayload(OutputSchema):
+    """One modelo readiness row nested in a pipeline health result.
+
+    Mirrors :class:`~cadrumo.application.overview.ModeloHealthRow`: the modelo's
+    current readiness state against the requested period, its outstanding
+    blocking/warning finding counts, and the exact next command to run.
+    """
+
+    modelo: str
+    work_unit_id: str | None = None
+    state: ModeloReadinessState
+    blocking_finding_count: int = Field(default=0, ge=0)
+    warning_finding_count: int = Field(default=0, ge=0)
+    summary: str
+    next_command: str
+
+
+@register_schema("overview.pipeline")
+class OverviewPipelineResult(OutputSchema):
+    """JSON envelope result for ``aeat app overview pipeline``.
+
+    Wraps :class:`~cadrumo.application.overview.PipelineHealthReport`: the
+    cross-domain pipeline health dashboard for one ``(filing_year, period)``
+    scope, composing the reused ledger status report, one modelo readiness
+    row per work unit found for the period, and aggregate finding counts.
+    Read-only over the active profile bucket's ledger, modelo work-unit,
+    calculation-revision, and verification-report state. Never contacts
+    AEAT and persists nothing.
+    """
+
+    filing_year: int
+    period: str
+    ledger: LedgerStatusResult
+    modelos: list[OverviewPipelineModeloPayload] = []
+    total_blocking_findings: int = 0
+    total_warning_findings: int = 0
+    ready: bool = False

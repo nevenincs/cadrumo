@@ -1,0 +1,104 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "193",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 7,
+  "artefacts": [
+    {
+      "modelo": "193",
+      "title": "193 - Orden EHA/3377/2011 (actualizado por Orden HAC/1430/2025, de 3 de diciembre) (357 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2025.pdf",
+      "stored_path": "files/01-193-orden-eha-3377-2011-actualizado-por-orden-hac-1430-2025-de-3-de-diciembre-357-kb-pdf.pdf",
+      "original_filename": "DR_Modelo_193_2025.pdf",
+      "content_type": "application/pdf",
+      "bytes": 365226,
+      "sha256": "25ab19076ecc1116c660f8d4b0c47523e6cd271d89869895699c91843f562489",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "193",
+      "title": "193 - Orden EHA/3377/2011 (actualizado por Orden HAC/1504/2024, de 26 de diciembre) (352 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf",
+      "stored_path": "files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf",
+      "original_filename": "DR_Modelo_193_2024.pdf",
+      "content_type": "application/pdf",
+      "bytes": 359614,
+      "sha256": "36184283123fec6827bf830a0b7d1b3e84a45937d7d85d9504d807f334caff8e",
+      "retrieved_at": "2026-05-05"
+    },
+    {
+      "modelo": "193",
+      "title": "193 - Orden HAC/56/2024 (Ejercicios 2024 y siguientes) (556 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR_Mod_193.pdf",
+      "stored_path": "files/03-193-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-pdf.pdf",
+      "original_filename": "DR_Mod_193.pdf",
+      "content_type": "application/pdf",
+      "bytes": 566209,
+      "sha256": "1eae714c75eb6be7d412e48141ced46d3dc7e6701473a54b21f81027c211461b",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "193",
+      "title": "193 - Diseño de registro Modelo 193 - 2023 (866 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_193_2023.pdf",
+      "stored_path": "files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf",
+      "original_filename": "DR_193_2023.pdf",
+      "content_type": "application/pdf",
+      "bytes": 886562,
+      "sha256": "f0faf5a627e4601f6d7277ae13a969e11945fcabada9947fb4b98abf66d74cf1",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "193",
+      "title": "193 - Orden EHA/3377/2011 (actualizado por Orden HAC/1276/2019) (406 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR193_2017.pdf",
+      "stored_path": "files/05-193-orden-eha-3377-2011-actualizado-por-orden-hac-1276-2019-406-kb-pdf.pdf",
+      "original_filename": "DR193_2017.pdf",
+      "content_type": "application/pdf",
+      "bytes": 415415,
+      "sha256": "bd38312bbe1583f8196f2fcf967ae8e93f10356edd71f93bf4c82d2a3059de69",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "193",
+      "title": "193 - Orden EHA/3377/2011 (actualizado por Orden HFP/1822/2016) (185 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR193_2016.pdf",
+      "stored_path": "files/06-193-orden-eha-3377-2011-actualizado-por-orden-hfp-1822-2016-185-kb-pdf.pdf",
+      "original_filename": "DR193_2016.pdf",
+      "content_type": "application/pdf",
+      "bytes": 189508,
+      "sha256": "ce8b26f2e42a31a6242639ecc86afc44801c326253452505d5608148ce0504e2",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "193",
+      "title": "193 - Orden EHA/3377/2011, de 1 de diciembre (512 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/Disenyos_registro_193.pdf",
+      "stored_path": "files/07-193-orden-eha-3377-2011-de-1-de-diciembre-512-kb-pdf.pdf",
+      "original_filename": "Disenyos_registro_193.pdf",
+      "content_type": "application/pdf",
+      "bytes": 520718,
+      "sha256": "8eb07b68c5942fa49ccd941442344198f0784fb4075c80f598ad6f587a11d415",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

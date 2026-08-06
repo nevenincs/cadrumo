@@ -1,0 +1,72 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "ratios",
+        "set",
+        "telefonia_movil",
+        "0.5"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "ratios",
+        "list"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "bucket\t<profile-id>\ncount\t1\ntelefonia_movil\t0.5\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "ratios",
+        "validate"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.ratios.validate",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "eligible_count": 15,
+          "findings": [],
+          "missing_overrides": [],
+          "overrides_count": 1,
+          "profile_present": true
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "classify-ratios-manage"
+}

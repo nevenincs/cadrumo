@@ -1,0 +1,13 @@
+[[revisions."2018-y-siguientes".bindings]]
+id = "modelo-232-2018.page_02.3068-3072.paraiso-valor-12-porcentaje-participacion"
+source = "manual_input"
+selector = { record = "page_02", field = "paraiso-valor-12-porcentaje-participacion", offset = 3068, length = 5, data_type = "decimal" }
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2018"]
+
+# -----------------------------------------------------------------------------
+# Aggregated related-party operation row-producer bindings (Orden HFP/816/2017
+# Anexo I record-design tipo 2). These complement the per-position
+# manual_input bindings by aggregating the operator's transactions ledger
+# into one row per (counterparty, operation kind, transfer pricing method).
+# -----------------------------------------------------------------------------

@@ -1,0 +1,60 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "auth",
+        "configure",
+        "--provider",
+        "certificate"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "provider\tcertificate\nfile\t\nstatus\tincomplete\nactive_profile\t<profile-id>\nincomplete_reason\tThe certificate provider requires a certificate file. Run `aeat config auth configure --provider certificate --file PATH` with the path to your PKCS#12 (.p12/.pfx) bundle.\nnext_action\taeat config auth configure --provider certificate --file PATH\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "auth",
+        "reset",
+        "--provider",
+        "certificate",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.reset",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "cleared_locks": 0,
+          "cleared_provider_configuration": true,
+          "providers": [
+            "certificate"
+          ],
+          "removed_certificate_secrets": 0,
+          "removed_certificate_sources": 0,
+          "removed_sessions": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-reset-provider"
+}

@@ -1,0 +1,5 @@
+@step Elect the year's general deduction percentage.
+@result aeat --format json app ledger prorrata elect-general --ejercicio 2026 --percentage 80
+@expect result.entry.regime == "general"
+@expect result.entry.provisional_percentage == "80"
+@expect exit_code == 0

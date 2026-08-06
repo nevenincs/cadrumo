@@ -1,0 +1,1007 @@
+[[revisions."2010-y-siguientes".export_layouts]]
+id = "modelo-390-fichero-boe"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-161", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Envelope header/footer mirrors the M130/M303/M115 <AUX> wrapper pattern
+# verbatim (Pag. 0 of the Diseno de Registros): open marker, modelo "390",
+# page discriminant "0", ejercicio, periodo "0A" (Modelo 390 is annual, no
+# quarter token), the fixed "0000>" + "<AUX>...</AUX>" administration block,
+# then the file-content slot the page records below occupy.
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-page"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-period"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-program-version"
+offset = 93
+length = 4
+kind = "header"
+header_key = "program_version"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-presenter-nif"
+offset = 101
+length = 9
+kind = "header"
+header_key = "presenter_nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Pag. 1: identidad del sujeto pasivo. Minimal required identity fields
+# only (NIF, apellidos/razon social, nombre, ejercicio); the Pag. 1
+# statistical/representative slots are not part of the manifest closure
+# and are out of scope of this fichero-BOE slice.
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "01000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-tax-id"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-surnames"
+offset = 23
+length = 60
+kind = "header"
+header_key = "surnames"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-name"
+offset = 83
+length = 20
+kind = "header"
+header_key = "name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-year"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-01-close"
+offset = 1176
+length = 12
+kind = "literal"
+literal = "</T39001000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Pag. 2: operaciones regimen general - IVA devengado (repercutido). Boxes
+# [02]/[04]/[06] cuota tipo super-reducido/reducido/general, [28] cuota IVA
+# devengado por inversion del sujeto pasivo (adquisiciones intracomunitarias).
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-02"
+record_type = "page_02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "02000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-super-reducido"
+offset = 98
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.super-reducido"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-reducido"
+offset = 200
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.reducido"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-general"
+offset = 234
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.general"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-autorepercutido-intracomunitaria"
+offset = 1492
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.autorepercutido.intracomunitaria"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-casilla-total-cuota-devengada"
+offset = 1628
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.cuota-devengada-total"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02-close"
+offset = 1795
+length = 12
+kind = "literal"
+literal = "</T39002000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Pag. 2 bis: recargo de equivalencia devengado. Box [36] cuota tipo 0,5%
+# (super-reducido), box [600] cuota tipo 1,4% (reducido), box [602] cuota
+# tipo 5,2% (general) -- mirrors the M303 casillas 158/21/24 tier split
+# (LIVA art. 161).
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-02b"
+record_type = "page_02b"
+order = 3
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "02B00"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-super-reducido"
+offset = 98
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.super-reducido"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-reducido"
+offset = 200
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.reducido"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-casilla-recargo-general"
+offset = 234
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.repercutido.recargo.general"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-02b-close"
+offset = 520
+length = 12
+kind = "literal"
+literal = "</T39002B00>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Pag. 3: IVA deducible - operaciones interiores corrientes. Box [49] total
+# cuota deducible operaciones interiores corrientes de bienes y servicios,
+# box [53] total cuota deducible importacion de bienes corrientes -- the
+# two tiers modelo-390-iva-soportado-interiores-cuota /
+# modelo-390-iva-soportado-importaciones-cuota sum onto.
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-03"
+record_type = "page_03"
+order = 4
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-03-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-03-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-03-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "03000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-03-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-soportado-interiores"
+offset = 234
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.soportado.interiores"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-03-casilla-soportado-importaciones"
+offset = 1186
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.soportado.importaciones"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-03-close"
+offset = 1829
+length = 12
+kind = "literal"
+literal = "</T39003000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Pag. 4: IVA deducible - regularizacion de inversiones, regularizacion
+# prorrata, suma de deducciones y resultado del regimen general. Box [63] is
+# "Regularizacion de inversiones", box [522] is the annual regularizacion por
+# aplicacion porcentaje definitivo de prorrata, box [64] "Suma de deducciones"
+# is the total cuota deducible anual (modelo-390-iva-anual-cuota-deducible-total),
+# box [65] "Resultado regimen general" is the annual net result
+# (modelo-390-iva-anual-resultado-regimen-general).
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-04"
+record_type = "page_04"
+order = 5
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "04000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-63"
+offset = 625
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.regularizacion-bienes-inversion"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-522"
+offset = 642
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.regularizacion-prorrata-definitiva"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-total-cuota-deducible"
+offset = 659
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.cuota-deducible-total"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-casilla-resultado-regimen-general"
+offset = 676
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.resultado-regimen-general"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-04-close"
+offset = 843
+length = 12
+kind = "literal"
+literal = "</T39004000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+# Pag. 6: resultado del regimen simplificado y de las liquidaciones. Box
+# [79] total cuota resultante regimen simplificado (annual carry from the
+# 4T Modelo 303), box [97] resultado ultimo periodo a compensar, box [662]
+# cuotas pendientes de compensacion generadas en el ejercicio distintas de
+# la 97 (LIVA art. 99/115/116).
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-page-06"
+record_type = "page_06"
+order = 6
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "390"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-number"
+offset = 6
+length = 5
+kind = "literal"
+literal = "06000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-end"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-simplificado-total"
+offset = 1118
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-97"
+offset = 276
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.compensacion-ultimo-periodo-97"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-casilla-662"
+offset = 310
+length = 17
+kind = "casilla"
+casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-page-06-close"
+offset = 817
+length = 12
+kind = "literal"
+literal = "</T39006000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]
+
+[[revisions."2010-y-siguientes".export_layouts.records]]
+id = "modelo-390-envelope-footer"
+record_type = "envelope_footer"
+order = 7
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2010-y-siguientes".export_layouts.records.fields]]
+id = "modelo-390-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-dr-390-2025"]

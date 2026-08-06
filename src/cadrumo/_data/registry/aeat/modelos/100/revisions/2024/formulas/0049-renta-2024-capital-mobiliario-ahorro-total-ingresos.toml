@@ -1,0 +1,21 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-ahorro-total-ingresos"
+target_casilla_id = "0036"
+expression = { op = "sum", args = [
+        { casilla_id = "0027" },
+        { casilla_id = "0028" },
+        { casilla_id = "0029" },
+        { casilla_id = "0030" },
+        { casilla_id = "0031" },
+        { casilla_id = "0032" },
+        { casilla_id = "0033" },
+        { casilla_id = "0034" },
+        { casilla_id = "0035" },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital mobiliario", "rendimiento"]

@@ -1,0 +1,26 @@
+[revisions."2024-y-siguientes"]
+# Modelo 220 declaración anual del Impuesto sobre Sociedades del grupo fiscal en
+# régimen de consolidación fiscal. The IS declaration models for períodos
+# impositivos iniciados en 2024 are approved by Orden HAC/657/2025
+# (BOE-A-2025-12818); the bundled excerpt's art 3 names "Modelos 200 y 220"
+# verbatim, evidencing that Modelo 220 is one of the approved models. The filing
+# plazo is the general IS declaration plazo of art. 124.1 LIS (25 días naturales
+# tras los 6 meses posteriores a la conclusión del período impositivo). This is a
+# scheduling/applicability-grade revision carrying declaration-header casillas
+# only; the money-closure casillas of the group declaration are deferred until an
+# authoritative Modelo 220 diseño de registro is bundled, so no casilla number is
+# fabricated.
+valid_from = 2024-01-01
+period_selector = { year_from = 2024, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hac-657-2025:art-3"]
+legal_refs = [
+    "orden-hac-657-2025:art-3",
+    "ley-27-2014:art-124",
+]
+source_refs = [
+    "aeat-dr-220-2024",
+    "aeat-dr-220-2025",
+    "aeat-modelo-200-manual-2024",
+    "aeat-modelo-200-manual-2025",
+    "boe-modelo-200-2025-form",
+]

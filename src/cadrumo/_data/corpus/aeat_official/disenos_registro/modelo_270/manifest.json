@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "270",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "270",
+      "title": "270 - Diseño de registro actualizado en 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/270_HAP_2368_2013.pdf",
+      "stored_path": "files/01-270-diseno-de-registro-actualizado-en-2023.pdf",
+      "original_filename": "270_HAP_2368_2013.pdf",
+      "content_type": "application/pdf",
+      "bytes": 111633,
+      "sha256": "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

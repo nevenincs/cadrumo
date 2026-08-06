@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "122",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "122",
+      "title": "122 - Ejercicio 2016 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_18/dr122e18v13.xlsx",
+      "stored_path": "files/01-122-ejercicio-2016-y-siguientes.xlsx",
+      "original_filename": "dr122e18v13.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 79199,
+      "sha256": "2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

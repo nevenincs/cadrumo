@@ -1,0 +1,68 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "115",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 4,
+  "artefacts": [
+    {
+      "modelo": "115",
+      "title": "115 - Orden EHA/3435/2007 (Ejercicios 2019 y siguientes, actualizado Febrero 2019) (172 KB - xls )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR115e15v13.xls",
+      "stored_path": "files/01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xls",
+      "original_filename": "DR115e15v13.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 176640,
+      "sha256": "d0b4c2cb344fe2d4b91a082bc85cc7906e383be792134504ddaedd0dc8bb2694",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "115",
+      "title": "115 - 01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/DR115e15v13.xls",
+      "stored_path": "files/01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx",
+      "original_filename": "01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 40607,
+      "sha256": "b2c9f24fe77967ec460d355efb0a21158a4c41b53745524c70ae37a2634839a0",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "115",
+      "title": "115 - Orden EHA/3435/2007 (Ejercicios 2014 y anteriores) (30 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/115_2008.pdf",
+      "stored_path": "files/02-115-orden-eha-3435-2007-ejercicios-2014-y-anteriores-30-kb-pdf.pdf",
+      "original_filename": "115_2008.pdf",
+      "content_type": "application/pdf",
+      "bytes": 37297,
+      "sha256": "8f16874b9dc55a6ab9c558a8f574384a81b1c5128bf9d7f8a053bdb3b9b1cd2d",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "115",
+      "title": "115 - Orden EHA/3435/2007 (Ejercicios 2015 hasta 2018) (168 KB - xls )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR115e15v12.xls",
+      "stored_path": "files/03-115-orden-eha-3435-2007-ejercicios-2015-hasta-2018-168-kb-xls.xls",
+      "original_filename": "DR115e15v12.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 171008,
+      "sha256": "7da90a84b7002756c1259cffa87d9eed67ff48018706d8b0bd40d53486fe32ec",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+[modelo]
+id = "604"
+tax_domain = "itf"
+cadence = "monthly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hac-510-2021:art-1",
+    "orden-hac-510-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-604-procedure",
+    "enrolled-modelo-604-layout",
+]

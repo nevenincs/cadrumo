@@ -1,0 +1,12 @@
+[[revisions."2024".casillas]]
+id = "DPNIF_D"
+number = "*01"
+section = ["datos_identificativos", "declarante"]
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+required = true
+input_kind = "bound"
+binding = "renta-2024-profile-tax-id"
+legal_refs = ["orden-hac-1347-2024:art-4"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form"]
+

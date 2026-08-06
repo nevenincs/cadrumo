@@ -1,0 +1,762 @@
+# TRLIRNR (Impuesto sobre la Renta de no Residentes) legal-catalogue
+# entries supporting the current M210 IRNR engine.
+#
+# Authoring scope: TRLIRNR Arts 2, 10, 13.1, 13.1.h, 24, 25.1.a, 25.1.b, 25.1.f under
+# the consolidated text approved by Real Decreto Legislativo
+# 5/2004 (BOE-A-2004-4527). Required_text patterns are populated
+# from the bundled corpus so the M210 base, rate, treaty, and tariff rows
+# are checked against the provisions that bind them.
+#
+# TRLIRNR Art 10 is the representante-fiscal authority for M210.
+
+[legal."orden-eha-3290-2008:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3290-2008-art-6.html#a6"
+document_id = "BOE-A-2008-18497"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497#a6"
+published_at = 2008-11-17
+effective_from = 2008-11-18
+review_status = "reviewed"
+reviewed_at = 2026-07-27
+reviewed_by = "agent-authored from BOE-A-2008-18497#a6 downloaded from boe.es; operator to re-stamp"
+notes = "Orden EHA/3290/2008 articulo 6: aprueba el modelo 296. Articulo 1 of the same orden approves modelo 216 and is bundled separately; the pre-existing excerpt covers only that article, which is why 296 read as ungrounded."
+required_text = [
+    "Aprobación del modelo 296",
+    "Se aprueba el modelo 296",
+]
+
+[legal."trlirnr-rdleg-5-2004:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a2"
+document_id = "BOE-A-2004-4527"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a2"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "TRLIRNR art 2: ambito de aplicacion territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+required_text = ["Este impuesto se aplicara en todo el territorio espanol", "regimenes tributarios forales"]
+
+[legal."trlirnr-rdleg-5-2004:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a10"
+document_id = "BOE-A-2004-4527"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a10"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
+required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
+
+[legal."trlirnr-rdleg-5-2004:art-13.1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a13"
+document_id = "BOE-A-2004-4527"
+article = "13.1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a13"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "agent-review"
+notes = "TRLIRNR art 13.1: the statutory source-scope gateway. It defines the enumerated rentas obtained in Spanish territory, which the M210 ledger classifier uses before admitting an explicitly classified income observation to the IRNR gross-income target. Article 25 only determines the rate after this territorial classification."
+required_text = ["Se consideran rentas obtenidas en territorio espanol las siguientes"]
+
+[legal."trlirnr-rdleg-5-2004:art-13.1.h"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a13-1-h"
+document_id = "BOE-A-2004-4527"
+article = "13.1.h"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a13"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "agent-review"
+notes = "TRLIRNR art 13.1.h: classifies imputed income of individual non-resident holders of Spanish urban real estate not used in economic activities as income obtained in Spanish territory. This entry grounds the live M210 imputed-real-estate base branch; the 2025 calculation routes tipo_renta=inmobiliaria through LIRPF art 85 coefficients and then applies the TRLIRNR art 25.1.a baseline rate."
+required_text = ["rentas imputadas a los contribuyentes personas fisicas", "bienes inmuebles urbanos situados en territorio espanol", "no afectos a actividades economicas"]
+
+[legal."trlirnr-rdleg-5-2004:art-24"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a24"
+document_id = "BOE-A-2004-4527"
+article = "24"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a24"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de establecimiento permanente. Apartado 1 fija la regla general (importe integro segun LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades economicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
+required_text = ["importe integro", "sin que sean de aplicacion los porcentajes multiplicadores ni las reducciones", "vinculo economico directo e indisociable"]
+
+[legal."trlirnr-rdleg-5-2004:art-25.1.a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-a"
+document_id = "BOE-A-2004-4527"
+article = "25.1.a"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a25"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin mediacion de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE con efectivo intercambio de informacion tributaria, lo que motiva la fila tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg 5/2004 original."
+required_text = ["Con caracter general, el 24 por ciento", "el tipo de gravamen sera el 19 por ciento", "residentes en otro Estado miembro de la Union Europea o del Espacio Economico Europeo"]
+
+[legal."trlirnr-rdleg-5-2004:art-25.1.b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-b"
+document_id = "BOE-A-2004-4527"
+article = "25.1.b"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a25"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "agent-review"
+notes = "TRLIRNR art 25.1.b: escala especial para pensiones y prestaciones similares percibidas por personas fisicas no residentes. This entry grounds the live M210 pension tariff branch, represented as a bracket_table with 8 percent up to 12,000 euros, 960 euros plus 30 percent over 12,000 up to 18,700, and 2,970 euros plus 40 percent above 18,700."
+required_text = ["pensiones y demas prestaciones similares", "Importe anual pension hasta 12.000 euros", "tipo aplicable 30 por ciento", "tipo aplicable 40 por ciento"]
+
+[legal."trlirnr-rdleg-5-2004:art-25.1.f"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-f"
+document_id = "BOE-A-2004-4527"
+article = "25.1.f"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a25"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmision de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025."
+required_text = ["El 19 por ciento cuando se trate de", "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad", "Intereses y otros rendimientos obtenidos por la cesion a terceros de capitales propios", "Ganancias patrimoniales que se pongan de manifiesto con ocasion de transmisiones de elementos patrimoniales"]
+
+[legal."convenio-es-gb-2013:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-gb-2013-art-6.html#art-6"
+document_id = "BOE-A-2014-5171"
+article = "6"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-5171"
+published_at = 2014-05-15
+effective_from = 2014-06-12
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "agent-review"
+notes = "Spain-United Kingdom double-taxation treaty art 6: immovable-property income may be taxed in the state where the immovable property is situated. Row-level authority for the GB/general M210 convenio allocation seed; the 24 percent figure remains grounded by TRLIRNR art 25.1.a."
+required_text = ["Rentas inmobiliarias", "pueden someterse a imposicion en ese otro Estado", "arrendamiento"]
+
+[legal."convenio-es-ma-1978:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-ma-1978-art-11.html#art-11"
+document_id = "BOE-A-1985-9280"
+article = "11"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1985-9280"
+published_at = 1985-05-22
+effective_from = 1985-05-16
+review_status = "reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "agent-review"
+notes = "Spain-Morocco double-taxation treaty art 11: interest may be taxed in the source state but the tax cannot exceed 10 percent of the gross amount. Corrects the previous BOE-A-1985-13340 / art 14 drift in M210 treaty-rate data."
+required_text = ["Intereses", "no puede exceder del 10 por 100", "importe bruto de los intereses"]
+
+[legal."convenio-es-ar-1992:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-ar-1992-art-19.html#art-19"
+document_id = "BOE-A-1994-20084"
+article = "19"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1994-20084"
+published_at = 1994-09-09
+effective_from = 1994-07-28
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "agent-review"
+notes = "Spain-Argentina double-taxation treaty art 19: public-function pensions paid by one contracting state for services rendered to that state may be taxed only in that state, unless the recipient is resident and national of the other state. Row-level allocation authority for the AR/pension M210 convenio seed; DOMESTIC_TARIFF delegates the Spain-side amount to the TRLIRNR art 25.1.b pension bracket table."
+required_text = ["Las pensiones pagadas por un Estado Contratante", "solo pueden someterse a imposicion en este Estado", "residente y nacional de este Estado"]
+
+[legal."convenio-es-de-2011:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-de-2011-art-10.html#art-10"
+document_id = "BOE-A-2012-10212"
+article = "10"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2012-10212"
+published_at = 2012-07-30
+effective_from = 2012-10-18
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 10 from BOE consolidated BOE-A-2012-10212; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Germany double-taxation treaty (CDI firmado 03-02-2011, en vigor 18-10-2012) art 10.2.b dividendos: the source-state tax may not exceed 15 percent of the gross dividends in all other cases. Row-level authority for the DE/dividend M210 treaty override (kind=ceiling, rate 0.15). The 5 percent rate of art 10.2.a (qualified participation >= 10%) is not modelled."
+required_text = ["Dividendos", "15 por ciento del importe bruto de los dividendos", "en todos los demás casos"]
+
+[legal."convenio-es-de-2011:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-de-2011-art-11.html#art-11"
+document_id = "BOE-A-2012-10212"
+article = "11"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2012-10212"
+published_at = 2012-07-30
+effective_from = 2012-10-18
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "agent-review"
+notes = "Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 11: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the DE/interest M210 treaty override (kind=exempt). Agent-prepared grounding cross-checked against the BOE consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp. Corrects the _CONVENIO_BY_COUNTRY drift that cited BOE-A-2012-3669 (a Banco de Espana exchange-rate notice)."
+required_text = ["Los intereses procedentes de un Estado contratante", "solo pueden someterse a imposicion en ese otro Estado"]
+
+[legal."convenio-es-de-2011:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-de-2011-art-12.html#art-12"
+document_id = "BOE-A-2012-10212"
+article = "12"
+permalink = "https://www.boe.es/eli/es/ai/2011/02/03/(1)/con"
+published_at = 2012-07-30
+effective_from = 2012-10-18
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 12 from BOE consolidated BOE-A-2012-10212; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Germany double-taxation treaty (CDI 2011, en vigor 2012-10-18) art 12 cánones: royalties whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the DE/cánones M210 treaty override (kind=exempt). Agent-prepared grounding cross-checked against the BOE consolidated text BOE-A-2012-10212 (ELI 2011-02-03); pending operator re-stamp."
+required_text = ["Cánones", "sólo pueden someterse a imposición en ese otro Estado"]
+
+[legal."convenio-es-fr-1995:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-fr-1995-art-10.html#art-10"
+document_id = "BOE-A-1997-12729"
+article = "10"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+published_at = 1997-06-12
+effective_from = 1997-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 10 from BOE consolidated BOE-A-1997-12729; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor 01-07-1997) art 10.2.a dividendos: the source-state tax may not exceed 15 percent of the gross dividends. Row-level authority for the FR/dividend M210 treaty override (kind=ceiling, rate 0.15). The art 10.2.b qualified-participation exemption is not modelled."
+required_text = ["Dividendos", "no podrá exceder del 15 por 100", "importe bruto de los dividendos"]
+
+[legal."convenio-es-fr-1995:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-fr-1995-art-11.html#art-11"
+document_id = "BOE-A-1997-12729"
+article = "11"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+published_at = 1997-06-12
+effective_from = 1997-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 11 from BOE consolidated BOE-A-1997-12729; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor 01-07-1997) art 11.2 intereses: the source-state tax may not exceed 10 percent of the gross interest. Row-level authority for the FR/interest M210 treaty override (kind=ceiling, rate 0.10)."
+required_text = ["Intereses", "no puede exceder del 10 por 100", "importe bruto de los intereses"]
+
+[legal."convenio-es-fr-1995:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-fr-1995-art-12.html#art-12"
+document_id = "BOE-A-1997-12729"
+article = "12"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+published_at = 1997-06-12
+effective_from = 1997-07-01
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 12 from BOE consolidated BOE-A-1997-12729; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor 01-07-1997) art 12.2.a cánones: if the beneficial owner is a resident of the other state, the source-state tax may not exceed 5 percent of the gross royalties. Row-level authority for the FR/cánones M210 treaty override (kind=ceiling, rate 0.05). The art 12.2.b copyright (obra literaria/artística) residence-only exemption tier is not modelled."
+required_text = ["Cánones", "no puede exceder del 5 por 100", "importe bruto de los cánones"]
+
+[legal."convenio-es-pt-1993:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-pt-1993-art-10.html#art-10"
+document_id = "BOE-A-1995-24001"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1995-24001"
+effective_from = 1995-06-28
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 10 from BOE consolidated BOE-A-1995-24001; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Portugal double-taxation treaty (CDI firmado 26-10-1993, en vigor 28-06-1995) art 10.2.b dividendos: the source-state tax may not exceed 15 percent of the gross dividends in all other cases. Row-level authority for the PT/dividend M210 treaty override (kind=ceiling, rate 0.15). The 10 percent rate of art 10.2.a (participation >= 25%) is not modelled."
+required_text = ["Dividendos", "15 por 100 del importe bruto de los dividendos", "en los demás casos"]
+
+[legal."convenio-es-pt-1993:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-pt-1993-art-11.html#art-11"
+document_id = "BOE-A-1995-24001"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1995-24001"
+effective_from = 1995-06-28
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 11 from BOE consolidated BOE-A-1995-24001; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Portugal double-taxation treaty (CDI firmado 26-10-1993, en vigor 28-06-1995) art 11.2 intereses: the source-state tax may not exceed 15 percent of the gross interest. Row-level authority for the PT/interest M210 treaty override (kind=ceiling, rate 0.15)."
+required_text = ["Intereses", "no podrá exceder del 15 por 100", "importe bruto de los intereses"]
+
+[legal."convenio-es-pt-1993:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-pt-1993-art-12.html#art-12"
+document_id = "BOE-A-1995-24001"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1995-24001"
+effective_from = 1995-06-28
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 12 from BOE consolidated BOE-A-1995-24001; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Portugal double-taxation treaty (CDI firmado 26-10-1993, en vigor 28-06-1995) art 12.2 cánones: the source-state tax may not exceed 5 percent of the gross royalties. Row-level authority for the PT/cánones M210 treaty override (kind=ceiling, rate 0.05)."
+required_text = ["Cánones", "no podrá exceder del 5 por 100", "importe bruto de los cánones"]
+
+[legal."convenio-es-be-1995:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-be-1995-art-10.html#art-10"
+document_id = "BOE-A-2003-13375"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+effective_from = 2003-06-25
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 10 from BOE consolidated BOE-A-2003-13375; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Belgium double-taxation treaty (CDI hecho en Bruselas el 14-06-1995, en vigor 25-06-2003) art 10.2.a dividendos: the source-state tax may not exceed 15 percent of the gross dividends. Row-level authority for the BE/dividend M210 treaty override (kind=ceiling, rate 0.15). The art 10.2.b exemption (participation >= 25%) is not modelled."
+required_text = ["Dividendos", "no podrá exceder del 15 por 100", "importe bruto de los dividendos"]
+
+[legal."convenio-es-be-1995:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-be-1995-art-11.html#art-11"
+document_id = "BOE-A-2003-13375"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+effective_from = 2003-06-25
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 11 from BOE consolidated BOE-A-2003-13375; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Belgium double-taxation treaty (CDI hecho en Bruselas el 14-06-1995, en vigor 25-06-2003) art 11.2 intereses: the source-state tax may not exceed 10 percent of the gross interest. Row-level authority for the BE/interest M210 treaty override (kind=ceiling, rate 0.10). The art 11.3 exemptions (commercial credits, etc.) are not modelled."
+required_text = ["Intereses", "no podrá exceder del 10 por 100", "importe bruto de los intereses"]
+
+[legal."convenio-es-be-1995:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-be-1995-art-12.html#art-12"
+document_id = "BOE-A-2003-13375"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+effective_from = 2003-06-25
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 12 from BOE consolidated BOE-A-2003-13375; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Belgium double-taxation treaty (CDI hecho en Bruselas el 14-06-1995, en vigor 25-06-2003) art 12.2 cánones: the source-state tax may not exceed 5 percent of the gross royalties. Row-level authority for the BE/cánones M210 treaty override (kind=ceiling, rate 0.05)."
+required_text = ["Cánones", "no podrá exceder del 5 por 100", "importe bruto de los cánones"]
+
+[legal."convenio-es-us-1990:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-us-1990-art-10.html#art-10"
+document_id = "BOE-A-1990-30940"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
+effective_from = 2019-11-27
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim from the bundled BOE consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-United States double-taxation treaty (CDI 22-02-1990, redacción vigente tras el Protocolo de 2013 en vigor 27-11-2019) art 10.2.b dividendos: the source-state tax may not exceed 15 percent of the gross dividends in all other cases. Row-level authority for the US/dividend M210 treaty override (kind=ceiling, rate 0.15). The 5 percent (>=10% voting) and 0 percent (>=80% voting) tiers are not modelled."
+required_text = ["Dividendos", "15 por ciento del importe bruto de los dividendos", "en los demás casos"]
+
+[legal."convenio-es-us-1990:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-us-1990-art-11.html#art-11"
+document_id = "BOE-A-1990-30940"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
+effective_from = 2019-11-27
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim from the bundled BOE consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-United States double-taxation treaty (CDI 22-02-1990, redacción vigente tras el Protocolo de 2013 en vigor 27-11-2019) art 11.1 intereses: interest whose beneficial owner is a resident of the other state may be taxed only in that other state (source-state exemption). Row-level authority for the US/interest M210 treaty override (kind=exempt). The art 11.2 exceptions (contingent interest limited to 10%, REMIC) are not modelled."
+required_text = ["Intereses", "sólo pueden someterse a imposición en ese otro Estado", "beneficiario efectivo"]
+
+[legal."convenio-es-us-1990:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-us-1990-art-12.html#art-12"
+document_id = "BOE-A-1990-30940"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
+effective_from = 2019-11-27
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim from the bundled BOE consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-United States double-taxation treaty (CDI 22-02-1990) art 12 cánones EN SU REDACCIÓN VIGENTE tras el Protocolo de 2013 (Artículo VI, BOE-A-2019-15166, en vigor 27-11-2019), que sustituyó por completo el art 12 original de tipos escalonados 5/8/10%: los cánones cuyo beneficiario efectivo sea residente del otro Estado sólo pueden someterse a imposición en ese otro Estado (exención en la fuente, tipo 0%). Row-level authority for the US/cánones M210 treaty override (kind=exempt)."
+required_text = ["Cánones", "sólo pueden someterse a imposición en ese otro Estado"]
+
+[legal."convenio-es-nl-1971:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-nl-1971-art-10.html#art-10"
+document_id = "BOE-A-1972-1469"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1972-1469"
+effective_from = 1972-09-20
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 10 from BOE consolidated BOE-A-1972-1469; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Netherlands double-taxation treaty (CDI 16-06-1971, en vigor 20-09-1972) art 10.2 dividendos: the source-state tax may not exceed 15 percent of the gross dividends. Row-level authority for the NL/dividend M210 treaty override (kind=ceiling, rate 0.15). The reduced rates of art 10.3 (qualified participation) are not modelled."
+required_text = ["Dividendos", "no puede exceder del 15 por 100", "importe bruto de los dividendos"]
+
+[legal."convenio-es-nl-1971:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-nl-1971-art-11.html#art-11"
+document_id = "BOE-A-1972-1469"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1972-1469"
+effective_from = 1972-09-20
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 11 from BOE consolidated BOE-A-1972-1469; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Netherlands double-taxation treaty (CDI 16-06-1971, en vigor 20-09-1972) art 11.2 intereses: the source-state tax may not exceed 10 percent of the interest. Row-level authority for the NL/interest M210 treaty override (kind=ceiling, rate 0.10)."
+required_text = ["Intereses", "no puede exceder del 10 por 100", "importe de los intereses"]
+
+[legal."convenio-es-nl-1971:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_internacional"
+corpus_ref = "corpus/normatives/html/convenio-es-nl-1971-art-12.html#art-12"
+document_id = "BOE-A-1972-1469"
+article = "12"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-1972-1469"
+effective_from = 1972-09-20
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "fetched verbatim art 12 permanent ceiling from BOE consolidated BOE-A-1972-1469; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Spain-Netherlands double-taxation treaty (CDI 16-06-1971, en vigor 20-09-1972) art 12.2 cánones: the PERMANENT source-state ceiling is 6 percent of the gross royalties. Protocol clause XIV's 5 percent was a transitional rate for royalty contracts formalized within five years of entry into force (1972-1977) and has long expired; it is not encoded. Row-level authority for the NL/cánones M210 treaty override (kind=ceiling, rate 0.06)."
+required_text = ["Cánones", "no puede exceder del 6 por 100", "importe bruto de los cánones"]
+
+[legal."orden-eha-3316-2010:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3316-2010.html#a1"
+document_id = "BOE-A-2010-19707"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a1"
+published_at = 2010-12-23
+effective_from = 2011-01-03
+consolidated_as_of = 2026-06-23
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "downloaded consolidated BOE-A-2010-19707 from BOE on 2026-06-29; operator to re-stamp"
+notes = "Orden EHA/3316/2010 art 1, consolidated as of 2026-06-23: approves Modelo 210 for IRNR taxpayers obtaining Spanish-source income without permanent establishment and its ingreso/devolucion document. This is the formal approval-order anchor for the open M210 2025-y-siguientes revision; later HAC/56/2024 and HAC/623/2026 source refs carry layout/deadline amendments."
+required_text = [
+    "Artículo 1",
+    "Se aprueba el modelo 210",
+    "No residentes sin establecimiento permanente",
+    "rentas en España sin mediación de establecimiento permanente",
+]
+
+# Orden HAC/56/2024 art 4.1 substituted the current Art 2 grouping text.
+# The consolidated Art 2 applies annual grouped lease/sublease rentas from
+# devengos 2024, requires compatible code/payer/rate/property-right facts,
+# reserves code 35 for the multiple-payer rental exception, and prohibits
+# offsets between grouped components.
+[legal."orden-eha-3316-2010:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3316-2010.html#a2"
+document_id = "BOE-A-2010-19707"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a2"
+published_at = 2010-12-23
+effective_from = 2024-02-01
+consolidated_as_of = 2026-06-23
+review_status = "reviewed"
+reviewed_at = 2026-07-10
+reviewed_by = "read bundled consolidated BOE-A-2010-19707 art 2 and bundled Orden HAC/56/2024 entry-into-force text on 2026-07-10"
+notes = "Orden EHA/3316/2010 art 2, consolidated as of 2026-06-23. Orden HAC/56/2024 art 4.1 supplies the current grouping rule, in force from 2024-02-01 and applicable to annual rental/subrental grouping for devengos 2024. Grouped rentas share one official type code, payer, tax rate and, where applicable, property/right; code 35 is the explicit multiple-payer exception for non-withheld rental/subrental income; grouped rentas never offset each other."
+required_text = [
+    "Artículo 2. Contenido del modelo 210.",
+    "mismo código de tipo de renta",
+    "mismo pagador",
+    "mismo tipo de gravamen",
+    "mismo bien o derecho",
+    "código específico de tipo de renta, el 35",
+    "En ningún caso las rentas agrupadas pueden compensarse entre sí.",
+    "El período de agrupación será anual en el caso de rentas derivadas del arrendamiento o subarrendamiento de inmuebles.",
+]
+
+# Orden EHA/3316/2010 art 5: plazo de presentación del modelo 210, consolidated
+# in vigor 24/06/2026 (modified by Orden HAC/56/2024 art 4.2 / BOE-A-2024-1772 and
+# Orden HAC/623/2026 art 1.2 / BOE-A-2026-13573). Binding deadline provision. Only
+# the "resto de rentas con resultado a ingresar" GENERAL trimestral plazo (20 primeros
+# días de abril, julio, octubre y enero por el trimestre natural anterior) is
+# period-keyable and grounds the M210 trimestral a-ingresar deadline windows. The
+# arrendamiento-a-ingresar (abril del año siguiente), cuota-cero (1-20 enero),
+# a-devolver (desde 1 febrero, 4 años), transmisiones (art 14.4 Reglamento) and
+# rentas-imputadas (presentación todo el año natural siguiente, 1 enero-31 diciembre;
+# la domiciliación es 1 abril-23 diciembre) plazos are RESULTADO/TIPO-dependent, not
+# expressible as a single annual period token, and are deferred to a resultado/tipo
+# keyed deadline-modelling decision.
+[legal."orden-eha-3316-2010:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3316-2010.html#a5"
+document_id = "BOE-A-2010-19707"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707#a5"
+published_at = 2010-12-23
+effective_from = 2011-01-03
+consolidated_as_of = 2026-06-23
+review_status = "reviewed"
+reviewed_at = 2026-07-09
+reviewed_by = "read verbatim from the bundled consolidated text; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Orden EHA/3316/2010 art 5, plazo de presentación del modelo 210 (IRNR sin establecimiento permanente), consolidated in vigor 24/06/2026. Resto de rentas con resultado a ingresar (general): la presentación e ingreso se efectúa en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior. This grounds the M210 trimestral a-ingresar deadline windows. Texto consolidado según las modificaciones de la Orden HAC/56/2024 art 4.2 (BOE-A-2024-1772) y la Orden HAC/623/2026 art 1.2 (BOE-A-2026-13573). The resultado/tipo-dependent annual plazos (arrendamiento a-ingresar abril; cuota cero 1-20 enero; a devolver desde 1 febrero, cuatro años; transmisiones; imputadas presentación todo el año natural siguiente, 1 enero-31 diciembre — la domiciliación es 1 abril-23 diciembre) are deferred to the resultado/tipo-keyed deadline-modelling decision."
+required_text = [
+    "Plazo de presentación de las autoliquidaciones del Impuesto por las rentas obtenidas en España sin mediación de establecimiento permanente",
+    "veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las rentas cuya fecha de devengo esté comprendida en el trimestre natural anterior",
+]
+
+# Orden EHA/3290/2008 (BOE-A-2008-18497): approves the Modelo 216 IRNR retención
+# autoliquidación and fixes its filing plazo. Art 1 is the approval anchor; art 4
+# is the binding deadline provision (trimestral: first 20 natural days of April,
+# July, October, January; monthly for grandes empresas). The later Orden HAC/56/2024
+# (BOE-A-2024-1772) carries the current form layout; the EHA/3290/2008 plazo persists.
+[legal."orden-eha-3290-2008:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3290-2008.html#a1"
+document_id = "BOE-A-2008-18497"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497#a1"
+published_at = 2008-11-17
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "fetched verbatim art 1 + art 4 from BOE consolidated BOE-A-2008-18497; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Orden EHA/3290/2008 art 1: aprobacion del modelo 216, Impuesto sobre la Renta de no Residentes, rentas obtenidas sin mediacion de establecimiento permanente, retenciones e ingresos a cuenta, declaracion-documento de ingreso. Approval-order anchor for the Modelo 216 quarterly IRNR retencion return."
+required_text = [
+    "Se aprueba el modelo 216",
+    "Retenciones e ingresos a cuenta",
+    "Declaracion-documento de ingreso",
+]
+
+[legal."orden-eha-3290-2008:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3290-2008.html#a4"
+document_id = "BOE-A-2008-18497"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-18497#a4"
+published_at = 2008-11-17
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "fetched verbatim art 4 from BOE consolidated BOE-A-2008-18497; agent-prepared, corpus-grounded, pending operator re-stamp"
+notes = "Orden EHA/3290/2008 art 4: plazo de presentacion del modelo 216. Con caracter general (trimestral), la presentacion e ingreso se efectua en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero por el trimestre natural inmediato anterior. Para grandes empresas, mensual, en los veinte primeros dias naturales de cada mes. Binding deadline provision grounding the M216 trimestral deadline windows."
+required_text = [
+    "Plazo de presentacion del modelo 216",
+    "veinte primeros días naturales de los meses de abril, julio, octubre y enero",
+    "grandes empresas",
+]
+
+[sources."boe-modelo-210-base-order"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3316-2010.html"
+sha256 = "c40939b99cd2091b924a78e0690977a0f7c1f82c734fb0275f1085234c91a21d"
+bytes = 249282
+retrieved_at = 2026-06-29
+published_at = 2010-12-23
+applies_from = 2011-01-03
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-19707"
+review_status = "reviewed"
+
+[sources."aeat-modelo-210-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_210/files/modelo-210-instrucciones.html"
+sha256 = "c9c7c606ec1324238451d3163d8a2b61eef9e29a455a538260bdfbbdb98914c6"
+bytes = 116695
+retrieved_at = 2026-07-01
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-210-irnr______a-no-residentes-permanente_/instrucciones.html"
+review_status = "reviewed"
+
+[sources."aeat-irnr-renta-imputada-inmueble-urbano"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_210/files/renta-imputada-inmueble-urbano-uso-propio.html"
+sha256 = "a954f18028c83634641e2197b7ca67fc540686f0117bcae69fc96c51bc15ed83"
+bytes = 17458
+retrieved_at = 2026-06-28
+source_url = "https://sede.agenciatributaria.gob.es/Sede/no-residentes/irnr-sin-establecimiento-permanente/cuestiones-especificas-sobre-tributacion-inmuebles/renta-imputada-inmueble-urbano-uso-propio.html"
+review_status = "reviewed"
+
+[sources."boe-modelo-210-2024-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
+bytes = 141184
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+applies_to = 2026-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+[sources."boe-modelo-210-2026-deadline-update"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hac-623-2026.html"
+sha256 = "b901936072eb6bd8213dd84e9bd493a65d10b652b3b62dbe42228e1094f38074"
+bytes = 64566
+retrieved_at = 2026-06-28
+published_at = 2026-06-23
+applies_from = 2026-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
+review_status = "reviewed"
+
+[sources."boe-modelo-210-2026-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-623-2026.html"
+sha256 = "b901936072eb6bd8213dd84e9bd493a65d10b652b3b62dbe42228e1094f38074"
+bytes = 64566
+retrieved_at = 2026-06-28
+published_at = 2026-06-23
+applies_from = 2027-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-13573"
+review_status = "reviewed"
+
+# Modelo 210 diseño de registro (record layout authority). The official AEAT
+# Sede "Diseño de registro - Modelo 210" specimen (record identifier T21001),
+# version 1.1, 15/02/2012. Page 2 enumerates the numbered liquidación casillas
+# [4]-[31] (Determinación de la base imponible 210 I/R/H/G + Liquidación), which
+# ground the complete casilla schema authored on the 2025 revision. Bundled as
+# a PDF corpus artefact under corpus/aeat_official/disenos_registro/modelo_210/.
+[sources."boe-modelo-210-diseno-registro-2011"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_210/dr210_2011.pdf"
+sha256 = "41875d015c809fc303a399581d6a437255f3235f8727515fe7e47606772a45e3"
+bytes = 48190
+retrieved_at = 2026-07-10
+published_at = 2012-02-15
+applies_from = 2011-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/dr210_2011.pdf"
+review_status = "reviewed"
+
+# Modelo 216 sources — the governing Orden HAC/56/2024 (BOE-A-2024-1772) is the
+# same bundled corpus the Modelo 210 sources cite; it approves and governs the
+# Modelo 216/296 IRNR retención forms (arts. 1 y ss.). Reuses the reviewed corpus
+# file and its hash; no new corpus fetch required.
+[sources."aeat-modelo-216-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_216/files/modelo-216-instrucciones-2024-y-siguientes.html"
+sha256 = "53e6a871f2932822d560129d7610d3796e1fa226c259b6cbdc9a015d2e6703ec"
+bytes = 20731
+retrieved_at = 2026-07-01
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-renta-no-residentes/modelo-216-irnr______sos-cuenta-declaracion-ingreso_/instrucciones-modelo-216-presentacion-ejercicio-siguientes.html"
+review_status = "reviewed"
+
+[sources."boe-modelo-216-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
+bytes = 141184
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"
+
+# Modelo 296 sources - annual resumen (informativa) companion to Modelo 216,
+# governed by the same bundled Orden HAC/56/2024 (BOE-A-2024-1772).
+[sources."aeat-modelo-296-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_296/files/modelo-296-procedure.html"
+sha256 = "1acee493b408c9aa4d6300847c7561268fc41bdc704d36349468f67678012c54"
+bytes = 54093
+retrieved_at = 2026-07-01
+applies_from = 2024-02-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI22.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-296-form-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "ca8190a56f4f6ae3bc8501e4f0a2fa8decd0a9fca1ccc7600e7e7732b0cc3184"
+bytes = 141184
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"

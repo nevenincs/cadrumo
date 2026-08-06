@@ -1,0 +1,72 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-reduccion-prevision-social-total"
+target_casilla_id = "0468"
+# Art. 52.1 LIRPF tiered joint limit. Two independent pools, each bounded by
+# 30% of net yields (0432) as the overall global cap:
+#   - aportaciones/contribuciones pool (0463+0465 individual, plus
+#     0426+0427+0438 employer-linked, plus 0499 autónomo/empresario-individual):
+#     capped at the general EUR 1.500 sub-limit (art. 52.1.b) PLUS an EUR 8.500
+#     increment split into two art. 52.1 sub-tiers that are NOT
+#     interchangeable — 1.º grants up to EUR 8.500 but only "siempre que tal
+#     incremento provenga de contribuciones empresariales, o de aportaciones
+#     del trabajador al mismo instrumento de previsión social" (0426+0427+0438);
+#     2.º grants up to EUR 4.250 for "aportaciones... realizadas por
+#     trabajadores por cuenta propia o autónomos" / "empresario individual...
+#     partícipe" (0499). Both sub-tiers are additive but jointly re-capped at
+#     EUR 8.500 ("en todo caso, la cuantía máxima de reducción por aplicación
+#     de los incrementos previstos en los números 1.º y 2.º anteriores será de
+#     8.500 euros anuales"), so a purely-0499 filer is correctly bound at
+#     EUR 4.250 (not the full EUR 8.500 a uniform employer-linked pool would
+#     silently grant), and a purely-individual filer (no 0426/0427/0438/0499)
+#     stays bound at EUR 1.500.
+#   - dependencia pool (0464+0466): a separate EUR 5.000 ceiling (art. 52.1,
+#     final paragraph), additive to the first pool per the AEAT Renta manual
+#     worked example ("10.000 euros por aportaciones y contribuciones +
+#     5.000 euros por seguros colectivos de dependencia").
+expression = { op = "min", args = [
+    { op = "percent", args = [{ casilla_id = "0432" }, { literal = "30" }] },
+    { op = "add", args = [
+        { op = "min", args = [
+            { op = "add", args = [
+                { op = "sum", args = [{ casilla_id = "0463" }, { casilla_id = "0465" }] },
+                { op = "sum", args = [
+                    { casilla_id = "0426" },
+                    { casilla_id = "0427" },
+                    { casilla_id = "0438" },
+                    { casilla_id = "0499" },
+                ] },
+            ] },
+            { op = "add", args = [
+                { literal = "1500" },
+                { op = "min", args = [
+                    { op = "add", args = [
+                        { op = "min", args = [
+                            { op = "sum", args = [
+                                { casilla_id = "0426" },
+                                { casilla_id = "0427" },
+                                { casilla_id = "0438" },
+                            ] },
+                            { literal = "8500" },
+                        ] },
+                        { op = "min", args = [
+                            { casilla_id = "0499" },
+                            { literal = "4250" },
+                        ] },
+                    ] },
+                    { literal = "8500" },
+                ] },
+            ] },
+        ] },
+        { op = "min", args = [
+            { op = "sum", args = [{ casilla_id = "0464" }, { casilla_id = "0466" }] },
+            { literal = "5000" },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-52"]
+source_refs = ["aeat-dr-100-2024-dictionary", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["planes de pensiones", "reducción", "límite"]

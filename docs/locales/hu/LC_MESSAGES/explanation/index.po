@@ -1,0 +1,282 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../explanation/index.md:1
+msgid "How Cadrumo turns your records into a tax file"
+msgstr "Hogyan alakítja a Cadrumo a nyilvántartásait adófájllá"
+
+#: ../../explanation/index.md:3
+msgid ""
+"This cluster explains how Cadrumo, the `aeat` tool, moves your data from "
+"your bank records to a finished tax file, and why each step exists. It's "
+"written for the everyday taxpayer in Spain: anyone with a NIF, CIF, DNI, "
+"or NIE who prepares their own filings. AEAT is the *Agencia Estatal de "
+"Administración Tributaria*, Spain's tax agency."
+msgstr ""
+"Ez a csoport azt magyarázza el, hogyan mozgatja a Cadrumo, az `aeat` "
+"eszköz, az adatait a banki nyilvántartásaitól egy kész adófájlig, és "
+"miért létezik minden lépés. A mindennapi spanyolországi adózónak íródott:"
+" bárkinek, akinek van NIF-je, CIF-je, DNI-je vagy NIE-je, és maga készíti"
+" a bevallásait. Az AEAT az *Agencia Estatal de Administración "
+"Tributaria*, Spanyolország adóhivatala."
+
+#: ../../explanation/index.md:5
+msgid ""
+"Read this to understand how the pieces fit together. To actually perform "
+"a task, start from the [Getting started page](../how-to/index.md), the "
+"step-by-step [Quickstart](../how-to/quickstart.md), or the modelo run-"
+"throughs of [the income-tax year](../how-to/irpf-lifecycle.md) and [the "
+"IVA year](../how-to/iva-lifecycle.md)."
+msgstr ""
+"Olvassa el ezt, hogy megértse, hogyan illeszkednek össze a részek. Egy "
+"feladat tényleges elvégzéséhez induljon a [Kezdő lépések oldalról"
+"](../how-to/index.md), a lépésről lépésre [Gyorsindítóból](../how-"
+"to/quickstart.md), vagy a modelo-végigjárásokból: [a jövedelemadó-év"
+"](../how-to/irpf-lifecycle.md) és [az IVA-év](../how-to/iva-"
+"lifecycle.md)."
+
+#: ../../explanation/index.md:9
+msgid "The one promise"
+msgstr "Az egyetlen ígéret"
+
+#: ../../explanation/index.md:11
+msgid ""
+"The tool runs entirely on your own computer. It prepares your filing for "
+"you, but it never sends anything to the agency. When the file is ready, "
+"you upload it yourself through the agency's portal. [Recording a filing, "
+"and why the tool never files for you](recording-a-filing-and-the-"
+"boundary.md) covers this boundary in full."
+msgstr ""
+"Az eszköz teljes egészében az Ön saját gépén fut. Előkészíti Önnek a "
+"bevallását, de sosem küld semmit a hivatalnak. Amikor a fájl elkészült, "
+"Ön maga tölti fel a hivatal portálján keresztül. A [Bevallás rögzítése, "
+"és miért nem nyújt be sosem az eszköz Ön helyett](recording-a-filing-and-"
+"the-boundary.md) oldal teljes egészében kifejti ezt a határvonalat."
+
+#: ../../explanation/index.md:15
+msgid "The journey at a glance"
+msgstr "Az út egy pillantásra"
+
+#: ../../explanation/index.md:17
+msgid ""
+"Your data moves one way through the tool. Bank movements come in, get "
+"sorted and made tax-ready, pass a readiness check, become the numbered "
+"boxes of a form, get edited and double-checked, turn into a file you can "
+"upload, and finally get recorded once you've filed it yourself."
+msgstr ""
+"Az adatai egy irányba mozognak az eszközön keresztül. A banki mozgások "
+"beérkeznek, besorolódnak és adókésszé válnak, átmennek egy készültségi "
+"ellenőrzésen, egy űrlap számozott rovataivá válnak, szerkesztődnek és "
+"kétszer ellenőrződnek, feltölthető fájllá alakulnak, és végül rögzülnek, "
+"miután Ön maga nyújtotta be."
+
+#: ../../explanation/index.md:29
+msgid ""
+"Each stop on this journey is owned in depth by one member of this "
+"cluster. The five sections that follow introduce them in order."
+msgstr ""
+"Ezen út minden állomását mélységében egy tag birtokolja ebben a "
+"csoportban. Az őt követő öt szakasz sorrendben mutatja be őket."
+
+#: ../../explanation/index.md:33
+msgid "From your records to the figures on the form"
+msgstr "A nyilvántartásaitól az űrlapon szereplő számokig"
+
+#: ../../explanation/index.md:35
+msgid ""
+"Your bank movements start as plain amounts and dates with no tax meaning."
+" Before the tool can fill in a form, each movement is sorted into a tax "
+"category and, where a cost is partly personal, adjusted to the business "
+"share. A readiness check then confirms the records are complete for the "
+"period. From there the tool fills in each numbered box of the form, "
+"following the rules the agency publishes, and saves the result as a "
+"draft. See [How your records become tax figures](from-records-to-"
+"figures.md)."
+msgstr ""
+"A banki mozgásai egyszerű összegekként és dátumokként indulnak, adóügyi "
+"jelentés nélkül. Mielőtt az eszköz kitölthetne egy űrlapot, minden mozgás"
+" egy adókategóriába sorolódik, és ahol egy költség részben magánjellegű, "
+"az üzleti hányadhoz igazodik. Egy készültségi ellenőrzés ezután "
+"megerősíti, hogy a nyilvántartások teljesek az időszakra. Onnan az eszköz"
+" kitölti az űrlap minden számozott rovatát, követve a hivatal által "
+"közzétett szabályokat, és piszkozatként menti az eredményt. Lásd [Hogyan "
+"válnak a nyilvántartásai adóadatokká](from-records-to-figures.md)."
+
+#: ../../explanation/index.md:39
+msgid "Editing and double-checking a calculation"
+msgstr "Egy számítás szerkesztése és kétszeri ellenőrzése"
+
+#: ../../explanation/index.md:41
+msgid ""
+"A first draft is rarely the last word. You can adjust figures, re-run the"
+" calculation, and keep a saved version of each pass without losing the "
+"earlier ones. When you're ready, a completeness check looks over the "
+"whole form for missing inputs and inconsistent figures. See [Editing and "
+"verifying a calculation](editing-and-verifying.md)."
+msgstr ""
+"Egy első piszkozat ritkán a végső szó. Módosíthatja az adatokat, "
+"újrafuttathatja a számítást, és minden menetből megtarthat egy elmentett "
+"változatot a korábbiak elvesztése nélkül. Amikor készen áll, egy "
+"teljességi ellenőrzés áttekinti az egész űrlapot a hiányzó bemenetek és a"
+" következetlen adatok után. Lásd [Egy számítás szerkesztése és "
+"ellenőrzése](editing-and-verifying.md)."
+
+#: ../../explanation/index.md:45
+msgid "When a form builds on earlier ones"
+msgstr "Amikor egy űrlap a korábbiakra épül"
+
+#: ../../explanation/index.md:47
+msgid ""
+"Some forms depend on figures you already filed - an annual summary that "
+"draws on the quarters, for example. The tool carries those earlier "
+"numbers forward so a later form stays consistent with what came before, "
+"and it tells you when an earlier filing isn't ready yet. See [How filings"
+" build on earlier ones](building-on-earlier-filings.md)."
+msgstr ""
+"Néhány űrlap függ olyan adatoktól, amelyeket már bevallott: például egy "
+"éves összesítő, amely a negyedévekre épít. Az eszköz továbbviszi ezeket a"
+" korábbi számokat, hogy egy későbbi űrlap következetes maradjon azzal, "
+"ami korábban volt, és jelzi, ha egy korábbi bevallás még nem áll készen. "
+"Lásd [Hogyan épülnek a bevallások a korábbiakra](building-on-earlier-"
+"filings.md)."
+
+#: ../../explanation/index.md:49
+msgid ""
+"For the annual Renta declaration specifically - the largest form and the "
+"one that gathers the whole year - a dedicated deep dive walks through "
+"where every value comes from and how to trace it, commands included: "
+"[Deep dive: how the Renta declaration is assembled](how-renta-is-"
+"assembled.md)."
+msgstr ""
+"Kifejezetten az éves Renta-bevalláshoz (a legnagyobb űrlaphoz, amely az "
+"egész évet összegyűjti) egy külön elmélyülés járja végig, honnan "
+"származik minden érték, és hogyan vezethető vissza, parancsokkal együtt: "
+"[Elmélyülés: hogyan áll össze a Renta-bevallás](how-renta-is-"
+"assembled.md)."
+
+#: ../../explanation/index.md:53
+msgid "Reviewing your numbers and producing the upload file"
+msgstr "Számai áttekintése és a feltöltési fájl előállítása"
+
+#: ../../explanation/index.md:55
+msgid ""
+"Before you commit to a form, you can review every figure and trace it "
+"back to the input that produced it. Once you're satisfied, the tool "
+"produces the official upload file - the exact layout the agency's portal "
+"accepts. See [Reviewing your numbers and producing the upload file"
+"](reviewing-and-exporting.md)."
+msgstr ""
+"Mielőtt elkötelezné magát egy űrlap mellett, áttekinthet minden adatot, "
+"és visszavezetheti azt az őt előállító bemenethez. Amint elégedett, az "
+"eszköz előállítja a hivatalos feltöltési fájlt: a pontos elrendezést, "
+"amelyet a hivatal portálja elfogad. Lásd [Számai áttekintése és a "
+"feltöltési fájl előállítása](reviewing-and-exporting.md)."
+
+#: ../../explanation/index.md:59
+msgid "Recording a filing, after you upload it yourself"
+msgstr "Egy bevallás rögzítése, miután Ön maga töltötte fel"
+
+#: ../../explanation/index.md:61
+#, python-brace-format
+msgid ""
+"The tool stops at the file. You upload it through the agency's portal, "
+"and the agency hands you a {term}`justificante`. Back in the tool, you "
+"record that the filing is done, so your own history stays accurate. See "
+"[Recording a filing, and why the tool never files for you](recording-a"
+"-filing-and-the-boundary.md)."
+msgstr ""
+"Az eszköz a fájlnál megáll. Ön a hivatal portálján keresztül tölti fel, "
+"és a hivatal átadja Önnek a {term}`justificantét <justificante>`. Az "
+"eszközbe visszatérve rögzíti, hogy a bevallás megtörtént, így a saját "
+"előzménye pontos marad. Lásd [Bevallás rögzítése, és miért nem nyújt be "
+"sosem az eszköz Ön helyett](recording-a-filing-and-the-boundary.md)."
+
+#: ../../explanation/index.md:65
+msgid "What \"verify\" and \"file\" mean here"
+msgstr "Mit jelent itt a „verifikálás” és a „benyújtás”"
+
+#: ../../explanation/index.md:67
+msgid "Two everyday words have narrow, local meanings in this tool:"
+msgstr "Két hétköznapi szónak szűk, helyi jelentése van ebben az eszközben:"
+
+#: ../../explanation/index.md:69
+msgid ""
+"**Verify** is a completeness and consistency check that runs on your own "
+"computer. It confirms the form holds together and nothing required is "
+"missing. It does not test the form against the agency's portal, and it's "
+"not a promise the agency will accept it."
+msgstr ""
+"A **verifikálás** teljességi és következetességi ellenőrzés, amely az Ön "
+"saját gépén fut. Megerősíti, hogy az űrlap összeáll, és semmi kötelező "
+"nem hiányzik. Nem teszteli az űrlapot a hivatal portáljával szemben, és "
+"nem ígéret arra, hogy a hivatal elfogadja."
+
+#: ../../explanation/index.md:70
+msgid ""
+"**File** is a local \"final\" note in your own records. It marks a form "
+"as done so you don't change it by accident. It is not a submission - the "
+"tool never sends anything to the agency."
+msgstr ""
+"A **benyújtás** egy helyi „végleges” feljegyzés az Ön saját "
+"nyilvántartásában. Késznek jelöl egy űrlapot, hogy ne változtassa meg "
+"véletlenül. Nem beküldés: az eszköz sosem küld semmit a hivatalnak."
+
+#: ../../explanation/index.md:72
+msgid ""
+"These two ideas are covered in depth in [Editing and verifying a "
+"calculation](editing-and-verifying.md) and [Recording a filing, and why "
+"the tool never files for you](recording-a-filing-and-the-boundary.md)."
+msgstr ""
+"Ezt a két gondolatot mélységében a [Egy számítás szerkesztése és "
+"ellenőrzése](editing-and-verifying.md) és a [Bevallás rögzítése, és miért"
+" nem nyújt be sosem az eszköz Ön helyett](recording-a-filing-and-the-"
+"boundary.md) fejti ki."
+
+#: ../../explanation/index.md:76
+msgid "How to use this cluster"
+msgstr "Hogyan használja ezt a csoportot"
+
+#: ../../explanation/index.md:78
+#, python-brace-format
+msgid ""
+"Read straight through for the whole picture, or jump to the stage you're "
+"working on. Every member links to the how-to guide that performs its task"
+" and back to the {doc}`glossary </_generated/glossary>` for any word "
+"you're unsure of."
+msgstr ""
+"Olvassa végig a teljes képért, vagy ugorjon arra a szakaszra, amelyen "
+"éppen dolgozik. Minden tag hivatkozik arra a how-to útmutatóra, amely "
+"elvégzi a feladatát, és vissza a {doc}`szójegyzékre "
+"</_generated/glossary>` bármely szóhoz, amelyben bizonytalan."
+
+#: ../../explanation/index.md:80
+msgid ""
+"When something goes wrong, see [Troubleshooting](../how-"
+"to/troubleshooting.md). For a step-by-step run-through of a full filing "
+"year, follow [the income-tax year](../how-to/irpf-lifecycle.md) or [the "
+"IVA year](../how-to/iva-lifecycle.md); for the shortest single-filing "
+"path, the [Quickstart](../how-to/quickstart.md)."
+msgstr ""
+"Amikor valami elromlik, lásd [Hibaelhárítás](../how-"
+"to/troubleshooting.md). Egy teljes bevallási év lépésről lépésre "
+"végigjárásához kövesse [a jövedelemadó-évet](../how-to/irpf-lifecycle.md)"
+" vagy [az IVA-évet](../how-to/iva-lifecycle.md); a legrövidebb egyetlen "
+"bevallásos úthoz a [Gyorsindítót](../how-to/quickstart.md)."
+

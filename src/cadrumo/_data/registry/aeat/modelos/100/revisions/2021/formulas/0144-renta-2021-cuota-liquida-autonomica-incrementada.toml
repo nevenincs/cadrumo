@@ -1,0 +1,17 @@
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-liquida-autonomica-incrementada"
+target_casilla_id = "0586"
+expression = { op = "sum", args = [
+    { casilla_id = "0571" },
+    { casilla_id = "0577" },
+    { casilla_id = "0578" },
+    { casilla_id = "0579" },
+    { casilla_id = "0581" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["incremento", "cuota líquida"]

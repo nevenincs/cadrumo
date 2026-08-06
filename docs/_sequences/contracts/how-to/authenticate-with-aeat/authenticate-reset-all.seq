@@ -1,0 +1,6 @@
+@setup aeat config auth configure --provider certificate
+@step Remove local authentication state for every configured provider.
+@result aeat --format json config auth reset --all --yes
+@expect result.removed_sessions == 0
+@expect result.cleared_provider_configuration == true
+@expect exit_code == 0

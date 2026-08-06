@@ -1,0 +1,18 @@
+{
+  "modelo": "100",
+  "filing_year": 2024,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m100-2024-cuotas-integras-escala-aragon",
+  "raw_evidence_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L48602-L48643",
+  "notes": "AEAT Manual practico de Renta 2024, Parte 1, Capitulo 15 (Calculo del impuesto: determinacion de las cuotas integras), 'Ejemplo practico: calculo de las cuotas integras estatal y autonomica' de don A.B.C., residente en la Comunidad Autonoma de Aragon. Givens quoted verbatim (L48604-48607): base liquidable general 23.900, base liquidable del ahorro 2.800, minimo personal y familiar 5.550. The manual states each solucion subtotal verbatim: 'Cuota 1 resultante (2.112,75 + 555) = 2.667,75' (L48614, escala estatal sobre la base liquidable general -> casilla 0528), 'Cuota 2 resultante = 2.218,39 + 403,5 = 2.621,89' (L48624, escala autonomica de Aragon sobre la base liquidable general -> casilla 0529), 'Cuota integra general estatal (Cuota 1 - Cuota 3): 2.667,75 - 527,25 = 2.140,50' (L48637 -> casilla 0532), 'Cuota integra general autonomica (Cuota 2 - Cuota 4): 2.621,89 - 527,25 = 2.094,64' (L48638 -> casilla 0533), 'Cuota integra estatal (2.140,50 + 266) = 2.406,50' (L48642 -> casilla 0545) and 'Cuota integra autonomica (2.094,64 + 266) = 2.360,64' (L48643 -> casilla 0546). The minimo personal y familiar 5.550 the manual states as a given (L48607) is the LIRPF art. 57 base minimo del contribuyente, which the registry computes independently for a single filer under 65 into casillas 0519/0520. Every figure is reproduced by the registry's own escala/minimo/cuota-integra formula chain (0166->0511, 0072->0519, 0073->0520, 0148->0528, 0150->0529, 0152->0532, 0153->0533, 0154->0545, 0155->0546) driven by the Aragon autonomic tariff parameter and the state tariff parameter; see test_m100_2024_cuotas_integras_escala_aragon_manual_worked_example.py.",
+  "expected_by_casilla_id": {
+    "0519": "5550.00",
+    "0520": "5550.00",
+    "0528": "2667.75",
+    "0529": "2621.89",
+    "0532": "2140.50",
+    "0533": "2094.64",
+    "0545": "2406.50",
+    "0546": "2360.64"
+  }
+}

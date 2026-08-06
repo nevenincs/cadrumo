@@ -1,0 +1,18 @@
+[revisions."esquema-importacion"]
+valid_from = 2021-07-01
+period_selector = { year_from = 2021, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+orden_aplicabilidad = ["orden-hac-610-2021:art-1"]
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]

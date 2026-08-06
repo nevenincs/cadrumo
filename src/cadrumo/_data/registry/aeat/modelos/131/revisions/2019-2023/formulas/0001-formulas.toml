@@ -1,0 +1,66 @@
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-pago-fraccionado-sin-datos-base"
+target_casilla_id = "04"
+expression = { op = "percent", args = [{ casilla_id = "03" }, { parameter = "irpf.objective_no_base_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 04", "2 por 100", "casilla 03"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-pago-fraccionado-agrario"
+target_casilla_id = "06"
+expression = { op = "percent", args = [{ casilla_id = "05" }, { parameter = "irpf.objective_agriculture_fractional_payment_rate" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 06", "2 por 100", "casilla 05"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-suma-pagos-previos"
+target_casilla_id = "07"
+expression = { op = "add", args = [{ casilla_id = "02" }, { casilla_id = "04" }, { casilla_id = "06" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 07", "sumar", "casillas 02, 04 y 06"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-diferencia"
+target_casilla_id = "10"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla_id = "07" }, { casilla_id = "08" }] },
+    { casilla_id = "09" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 10", "Casilla 07", "Casilla 08", "Casilla 09"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-total"
+target_casilla_id = "13"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla_id = "10" }, { casilla_id = "11" }] },
+    { casilla_id = "12" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 13", "casilla 10", "casillas 11 y 12"]
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-resultado"
+target_casilla_id = "15"
+expression = { op = "subtract", args = [{ casilla_id = "13" }, { casilla_id = "14" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Casilla 15", "casilla 13", "casilla 14"]

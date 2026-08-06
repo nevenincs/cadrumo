@@ -1,0 +1,18 @@
+[[revisions."2023".formulas]]
+id = "renta-2023-doble-imposicion-50-porciento"
+target_casilla_id = "0672"
+expression = { op = "percent", args = [
+    { op = "sum", args = [
+        { casilla_id = "0588" },
+        { casilla_id = "0589" },
+        { casilla_id = "0590" },
+    ] },
+    { literal = "50" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["doble imposición", "Comunidad Autónoma"]

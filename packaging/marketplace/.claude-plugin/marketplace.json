@@ -1,0 +1,13 @@
+{
+  "name": "neve",
+  "description": "English: Neve plugin marketplace - Claude plugins including the Cadrumo Spanish-tax assistant: read-only toward AEAT, it never files (the taxpayer files outside the app), every state change needs human confirmation, financial data stays on-host in encrypted storage, and only the conversation reaches the model provider.\nEspa\u00f1ol: Marketplace de plugins de Neve - plugins de Claude, incluido el asistente de impuestos espa\u00f1oles Cadrumo: de solo lectura frente a la AEAT, nunca presenta declaraciones (el contribuyente presenta fuera de la aplicaci\u00f3n), cada cambio de estado requiere confirmaci\u00f3n humana, los datos financieros permanecen en el equipo en almacenamiento cifrado y solo la conversaci\u00f3n llega al proveedor del modelo.",
+  "owner": {
+    "name": "CADRUMO tax assistant project"
+  },
+  "plugins": [
+    {
+      "name": "cadrumo",
+      "source": "./plugins/cadrumo"
+    }
+  ]
+}

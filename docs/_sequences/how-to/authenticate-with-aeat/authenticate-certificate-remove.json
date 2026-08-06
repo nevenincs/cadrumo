@@ -1,0 +1,38 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "auth",
+        "certificate",
+        "remove",
+        "--name",
+        "personal"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.auth.certificate.remove",
+        "notices": [],
+        "result": {
+          "active": false,
+          "certificate_path": "",
+          "name": "personal",
+          "removed": false
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "authenticate-certificate-remove"
+}

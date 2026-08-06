@@ -1,0 +1,13 @@
+[[revisions."2025".constructs]]
+id = "renta-2025-mini-model-deduccion-madrid-nacimiento-adopcion"
+legal_refs = [
+    "ley-35-2006:art-77",
+    "madrid-dl-1-2010:art-4",
+    "madrid-dl-1-2010:art-18",
+]
+source_refs = [
+    "aeat-renta-2025-manual-deducciones-autonomicas",
+    "boe-modelo-100-2025-form",
+    "aeat-dr-100-2025-dictionary",
+]
+formulas = ["renta-2025-deduccion-madrid-nacimiento-adopcion"]

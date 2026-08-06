@@ -1,0 +1,7 @@
+[[revisions."2007-y-siguientes".constructs]]
+id = "modelo-576-autoliquidacion"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-576-procedure", "enrolled-modelo-576-layout"]
+casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
+application_links = ["modelo-576-filing", "modelo-576-verification"]
+workbook_parity_refs = ["modelo-576-orden-static-layout"]

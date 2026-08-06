@@ -1,0 +1,2 @@
+@step Record the taxpayer as a Madrid autónomo under direct estimation with general IVA.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --irpf-income-categories actividad_economica --irpf-estimation-regime directa_simplificada --iva-regime GENERAL --tax-residence-ccaa madrid --activity-start-date 2026-01-01

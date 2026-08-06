@@ -1,0 +1,4 @@
+@step Remove a registered certificate you no longer need.
+@result aeat --format json config auth certificate remove --name personal
+@expect result.name == "personal"
+@expect exit_code == 0

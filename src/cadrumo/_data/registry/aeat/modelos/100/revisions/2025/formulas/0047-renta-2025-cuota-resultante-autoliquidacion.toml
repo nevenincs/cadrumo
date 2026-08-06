@@ -1,0 +1,18 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-resultante-autoliquidacion"
+target_casilla_id = "0595"
+expression = { op = "sum", args = [
+    { casilla_id = "0587" },
+    { op = "negate", args = [{ casilla_id = "0588" }] },
+    { op = "negate", args = [{ casilla_id = "0414" }] },
+    { op = "negate", args = [{ casilla_id = "0589" }] },
+    { op = "negate", args = [{ casilla_id = "0590" }] },
+    { op = "negate", args = [{ casilla_id = "0591" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuota resultante", "cuota diferencial"]

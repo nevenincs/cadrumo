@@ -1,0 +1,13 @@
+[
+  {
+    "chapter_id": "cap1",
+    "title": "Introducción y Régimen General",
+    "summary": "Introducción a los conceptos generales del IVA y el régimen de tributación general.",
+    "sections": [
+      {
+        "section_id": "sec1",
+        "relative_path": "structure/sections/cap1/sec1.json"
+      }
+    ]
+  }
+]

@@ -1,0 +1,29 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-reduccion-art-84-conjunta"
+target_casilla_id = "0461"
+# Art. 84 LIRPF: reducción por tributación conjunta.
+# Tipo 1 (matrimonio, Art. 82.1.1°): declaration_type = 2 AND minor_children_in_unit = 0 → €3.400
+# Tipo 2 (monoparental, Art. 82.1.2°): declaration_type = 2 AND minor_children_in_unit = 1 → €2.150
+# Individual (declaration_type = 1): → €0
+expression = { op = "if_then_else", args = [
+    { op = "equal", args = [
+        { binding = "renta-2025-profile-declaration-type" },
+        { literal = "2" },
+    ] },
+    { op = "if_then_else", args = [
+        { op = "equal", args = [
+            { binding = "renta-2025-profile-family-minor-children-in-unit" },
+            { literal = "0" },
+        ] },
+        { literal = "3400" },
+        { literal = "2150" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "ley-35-2006:art-84"]
+source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Reducción por tributación conjunta"]

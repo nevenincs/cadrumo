@@ -1,0 +1,32 @@
+[[revisions."2022".formulas]]
+id = "renta-2022-unidad-familiar-cuota-liquida-ue-formula"
+target_casilla_id = "0728"
+expression = { op = "sum", args = [
+    { casilla_id = "0545" },
+    { casilla_id = "0546" },
+    { casilla_id = "0548" },
+    { casilla_id = "0549" },
+    { casilla_id = "0550" },
+    { casilla_id = "0551" },
+    { casilla_id = "0552" },
+    { casilla_id = "0553" },
+    { casilla_id = "0554" },
+    { casilla_id = "0555" },
+    { casilla_id = "0556" },
+    { casilla_id = "0557" },
+    { casilla_id = "0558" },
+    { casilla_id = "0559" },
+    { casilla_id = "0560" },
+    { casilla_id = "0561" },
+    { casilla_id = "0562" },
+    { casilla_id = "0563" },
+    { casilla_id = "0564" },
+    { op = "negate", args = [{ casilla_id = "0547" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]

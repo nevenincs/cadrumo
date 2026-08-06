@@ -1,0 +1,56 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "349",
+  "retrieved_at": "2026-05-03",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99_.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
+  ],
+  "artefact_count": 3,
+  "artefacts": [
+    {
+      "modelo": "349",
+      "title": "349 - Orden HAC/174/2020, de 4 de febrero (Ejercicio 2020 y siguientes) (894 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_20/DR_Anexo_349.pdf",
+      "stored_path": "files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf",
+      "original_filename": "DR_Anexo_349.pdf",
+      "content_type": "application/pdf",
+      "bytes": 915219,
+      "sha256": "874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "349",
+      "title": "349 - Orden EHA/769/2010 (modificada por Orden EHA/1721/2011) (43,9 KB - docx )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/NREG-349-2016.docx",
+      "stored_path": "files/02-349-orden-eha-769-2010-modificada-por-orden-eha-1721-2011-43-9-kb-docx.docx",
+      "original_filename": "NREG-349-2016.docx",
+      "content_type": "",
+      "bytes": 45003,
+      "sha256": "b9e11a19b2434f6aca133d25bf63aad4ba810e9a96fecc7dd25e33cadb7d122e",
+      "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "349",
+      "title": "349 - Orden HAC/360/2002 (28 KB - pdf )",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/TIPOS34905.pdf",
+      "stored_path": "files/03-349-orden-hac-360-2002-28-kb-pdf.pdf",
+      "original_filename": "TIPOS34905.pdf",
+      "content_type": "application/pdf",
+      "bytes": 1023320,
+      "sha256": "2aec34746d7f91b89b4f59b127a4fc00658b49d091137a8777dee68ae50d7ea2",
+      "retrieved_at": "2026-05-03"
+    }
+  ]
+}

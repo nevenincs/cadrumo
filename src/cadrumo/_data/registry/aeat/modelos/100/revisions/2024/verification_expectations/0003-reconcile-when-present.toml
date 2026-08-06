@@ -1,0 +1,254 @@
+# Exhaustive reconcile-when-present verification for Modelo 100
+# revision 2024: every computed casilla not enrolled in the
+# coverage-gated contract is value-reconciled against the engine WHEN
+# the filing prints it (a filed-vs-computed divergence surfaces a
+# discrepancy), but is EXCLUDED from the coverage denominator, so
+# enrolling a situational casilla never lowers coverage or flips a
+# legitimate filing's verdict (min_coverage = 0). Grounded in the
+# revision's AEAT DR / framework-law refs (reused from modelo-100-2024-cuota-chain-verification).
+[[revisions."2024".verification_expectations]]
+id = "modelo-100-2024-reconcile-when-present"
+computed_casilla_ids = []
+# Casillas whose engine value is independently checked against an
+# AEAT-authoritative oracle, not only the app's own engine: 0226
+# ("Rendimiento neto reducido") reproduces 58.100,00, the figure the AEAT
+# Manual practico de Renta 2024 (Parte 1, Cap. 7) states three times over in
+# its own caso practico table for a medico radiologo actividad profesional in
+# estimacion directa simplificada (see
+# corpus/manual_oracles/modelo-100-2024-estimacion-directa-simplificada.json
+# and test_m100_2024_estimacion_directa_manual_worked_example.py). 0180
+# ("Total ingresos computables") reproduces 138.400,00 from that same caso
+# practico, the "Total ingresos" row of its own valores-fiscales column; it is
+# the first published total downstream of casilla 0171 ("Ingresos de
+# explotacion"), which is bound to the ledger-income aggregation, so grounding
+# it makes the aggregation and its binding resolver independently checked
+# rather than only the formula chain above them (see
+# test_ledger_income_chain_aeat_exempt_worked_example.py). 0012
+# ("Total ingresos integros computables"), 0017 ("Rendimiento neto previo"),
+# 0022 ("Rendimiento neto") and 0025 ("Rendimiento neto reducido") of the
+# rendimientos-del-trabajo chain reproduce 17.240,00 / 13.640,00 / 8.140,00 /
+# 838,00 respectively, the four subtotals the same manual (Parte 1, Cap. 3)
+# states verbatim in its own caso practico solution for a despido
+# improcedente of a trabajador con discapacidad (see
+# corpus/manual_oracles/modelo-100-2024-rendimientos-trabajo-despido-improcedente.json
+# and test_m100_2024_rendimientos_trabajo_despido_manual_worked_example.py).
+# 0149 ("Rendimiento neto"), 0150 ("Reduccion por arrendamiento de vivienda,
+# art. 23.2") and 0154 ("Rendimiento neto reducido del capital inmobiliario")
+# reproduce 3.287,09 / 2.958,38 / 328,71 respectively, the three subtotals the
+# same manual (Parte 1, Cap. 4) states verbatim in its own caso practico
+# solution for a vivienda arrendada en zona de mercado residencial tensionado
+# (see
+# corpus/manual_oracles/modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json
+# and test_m100_2024_capital_inmobiliario_arrendamiento_vivienda_manual_worked_example.py).
+# 1826 ("Valor de transmision"), 1830 ("Valor de adquisicion"), 1836
+# ("Ganancia no exenta") and 1840 ("Ganancia patrimonial reducida no exenta")
+# reproduce 148.100 / 96.380 / 51.720 / 49.562,95 respectively, the four
+# subtotals the same manual (Parte 1, Cap. 11) states verbatim in its own caso
+# practico solution for don J.P.C.'s transmision de un piso with DT 9.a
+# coeficientes de abatimiento (see
+# corpus/manual_oracles/modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json
+# and test_m100_2024_ganancias_patrimoniales_transmision_inmueble_manual_worked_example.py).
+# 0519/0520 ("Minimo personal y familiar" estatal/autonomica), 0528/0529
+# ("Cuota escala estatal/autonomica sobre base liquidable general"), 0532/0533
+# ("Cuota base liquidable general estatal/autonomica") and 0545/0546 ("Cuota
+# integra estatal/autonomica") reproduce 5.550,00 / 5.550,00 / 2.667,75 /
+# 2.621,89 / 2.140,50 / 2.094,64 / 2.406,50 / 2.360,64 respectively, the
+# subtotals the same manual (Parte 1, Cap. 15) states verbatim in its own
+# "Ejemplo practico: calculo de las cuotas integras estatal y autonomica" for
+# don A.B.C. residente en Aragon (see
+# corpus/manual_oracles/modelo-100-2024-cuotas-integras-escala-aragon.json and
+# test_m100_2024_cuotas_integras_escala_aragon_manual_worked_example.py).
+# 0418/0419 ("Ganancias/Perdidas patrimoniales base general (suma)"), 0421
+# ("Saldo neto negativo base general"), 0422/0423 ("Ganancias/Perdidas
+# patrimoniales base del ahorro (suma)") and 0424 ("Saldo neto positivo base del
+# ahorro") reproduce 4.500 / 9.600 / 5.100 / 5.600 / 1.600 / 4.000
+# respectively, the current-year gains/losses integration-and-compensation
+# subtotals the same manual (Parte 1, Cap. 12) states verbatim in its own "Caso
+# practico" de don A.P.G. (see
+# corpus/manual_oracles/modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json
+# and test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py).
+# The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
+# both declarations symmetrically against the bundled corpus.
+externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0180", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0513", "0514", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
+reconcile_when_present_casilla_ids = [
+    "0007",
+    "0012",
+    "0017",
+    "0018",
+    "0019",
+    "0022",
+    "0025",
+    "0036",
+    "0038",
+    "0040",
+    "0041",
+    "0052",
+    "0054",
+    "0056",
+    "0060",
+    "0089",
+    "0149",
+    "0150",
+    "0154",
+    "0155",
+    "0156",
+    "0180",
+    "0218",
+    "0220",
+    "0221",
+    "0222",
+    "0223",
+    "0224",
+    "0226",
+    "0231",
+    "0235",
+    "0245",
+    "0246",
+    "0247",
+    "0265",
+    "0270",
+    "0280",
+    "0286",
+    "0288",
+    "0289",
+    "0290",
+    "0296",
+    "0297",
+    "0306",
+    "0307",
+    "0320",
+    "0324",
+    "0325",
+    "0336",
+    "0339",
+    "0340",
+    "0351",
+    "0354",
+    "0355",
+    "0385",
+    "0386",
+    "0387",
+    "0390",
+    "0393",
+    "0396",
+    "0400",
+    "0411",
+    "0412",
+    "0418",
+    "0419",
+    "0420",
+    "0421",
+    "0422",
+    "0423",
+    "0424",
+    "0425",
+    "0433",
+    "0436",
+    "0446",
+    "0461",
+    "0467",
+    "0468",
+    "0505",
+    "0511",
+    "0512",
+    "0513",
+    "0514",
+    "0519",
+    "0520",
+    "0527",
+    "0528",
+    "0529",
+    "0530",
+    "0531",
+    "0532",
+    "0533",
+    "0534",
+    "0535",
+    "0536",
+    "0537",
+    "0538",
+    "0539",
+    "0540",
+    "0541",
+    "0542",
+    "0543",
+    "0545",
+    "0546",
+    "0547",
+    "0548",
+    "0550",
+    "0551",
+    "0552",
+    "0553",
+    "0560",
+    "0561",
+    "0562",
+    "0563",
+    "0567",
+    "0587",
+    "0595",
+    "0598",
+    "0604",
+    "0609",
+    "0610",
+    "0613",
+    "0670",
+    "0671",
+    "0672",
+    "0675",
+    "0695",
+    "0728",
+    "0731",
+    "0845",
+    "0879",
+    "1128",
+    "1224",
+    "1257",
+    "1270",
+    "1283",
+    "1482",
+    "1484",
+    "1550",
+    "1558",
+    "1560",
+    "1568",
+    "1575",
+    "1583",
+    "1594",
+    "1601",
+    "1602",
+    "1603",
+    "1604",
+    "1605",
+    "1606",
+    "1607",
+    "1608",
+    "1609",
+    "1638",
+    "1640",
+    "1645",
+    "1649",
+    "1653",
+    "1807",
+    "1809",
+    "1811",
+    "1812",
+    "1813",
+    "1814",
+    "1826",
+    "1830",
+    "1831",
+    "1833",
+    "1836",
+    "1840",
+    "1844",
+    "1845",
+    "1846",
+    "1919",
+]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-68", "ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76", "ley-35-2006:art-77"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]

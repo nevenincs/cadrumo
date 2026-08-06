@@ -1,0 +1,10 @@
+[[revisions."2024".bindings]]
+id = "modelo-131-2024-resultados-negativos-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "131", source_casilla_id = "saldo-negativo-fin-periodo", source_period_offset_from_target = -1, max_year_delta = 0 }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]

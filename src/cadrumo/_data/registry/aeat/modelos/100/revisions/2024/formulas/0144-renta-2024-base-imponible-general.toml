@@ -1,0 +1,14 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-base-imponible-general"
+target_casilla_id = "0435"
+expression = { op = "subtract", args = [
+    { casilla_id = "0432" },
+    { casilla_id = "0433" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible general", "ganancias"]

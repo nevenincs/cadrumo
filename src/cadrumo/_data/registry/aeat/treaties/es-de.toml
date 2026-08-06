@@ -1,0 +1,42 @@
+# Convenio doble imposición España — Alemania (CDI 2011, en vigor 2012).
+#
+# Cross-cutting treaty-override authoring surface consumed by the IRNR
+# tipo-de-gravamen resolution op via the ConvenioAuthority snapshot projection.
+# New treaty added under the convenio framework. Grounded against the BOE
+# consolidated text BOE-A-2012-10212 (the correct document id; the retired
+# _CONVENIO_BY_COUNTRY literal cited BOE-A-2012-3669, a Banco de España exchange-
+# rate notice — that drift is corrected here). Art 11 assigns interest taxation
+# exclusively to the residence state, so the source-state (Spain) rate is exempt.
+# Art 10 dividendos caps the source-state rate at 15 por ciento en el caso general
+# (apartado 2.b); the 5 por ciento substantial-holding rate (apartado 2.a,
+# participación directa >= 10%) is not modelled.
+
+[treaty]
+country_code = "DE"
+document_id = "BOE-A-2012-10212"
+notes = "Convenio España-Alemania. Art 11 intereses: los intereses cuyo beneficiario efectivo sea residente del otro Estado sólo pueden someterse a imposición en ese otro Estado (exención en la fuente). Art 10 dividendos: el impuesto en fuente no podrá exceder del 15 por ciento en todos los demás casos (apartado 2.b). Art 12 cánones: los cánones cuyo beneficiario efectivo sea residente del otro Estado sólo pueden someterse a imposición en ese otro Estado (exención en la fuente)."
+
+[[treaty.overrides]]
+tipo_renta = "dividend"
+kind = "ceiling"
+rate = "0.15"
+legal_ref_anchor = "convenio-es-de-2011:art-10"
+legal_refs = ["convenio-es-de-2011:art-10"]
+notes = "Art 10.2.b: el impuesto exigido en el Estado de la fuente no podrá exceder del 15 por ciento del importe bruto de los dividendos en todos los demás casos. Ceiling frente al 19% doméstico (TRLIRNR art 25.1.f); min(0.19, 0.15) = 0.15. El 5 por ciento del art 10.2.a (participación cualificada >= 10%) no se modela."
+valid_from = 2025-01-01
+
+[[treaty.overrides]]
+tipo_renta = "interest"
+kind = "exempt"
+legal_ref_anchor = "convenio-es-de-2011:art-11"
+legal_refs = ["convenio-es-de-2011:art-11"]
+notes = "Art 11.1: los intereses procedentes de un Estado contratante cuyo beneficiario efectivo sea residente del otro Estado sólo pueden someterse a imposición en ese otro Estado — exención de tributación en la fuente (España). Frente al 19% doméstico TRLIRNR art 25.1.f, el CDI reduce el tipo en fuente a 0%."
+valid_from = 2025-01-01
+
+[[treaty.overrides]]
+tipo_renta = "canones"
+kind = "exempt"
+legal_ref_anchor = "convenio-es-de-2011:art-12"
+legal_refs = ["convenio-es-de-2011:art-12"]
+notes = "Art 12: los cánones procedentes de un Estado contratante cuyo beneficiario efectivo sea residente del otro Estado sólo pueden someterse a imposición en ese otro Estado — exención de tributación en la fuente (España). Frente al 24% doméstico general (TRLIRNR art 25.1.a; cánones sin letra específica), el CDI reduce el tipo en fuente a 0%."
+valid_from = 2025-01-01

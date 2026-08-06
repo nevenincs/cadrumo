@@ -1,0 +1,38 @@
+# LIRPF art. 64 (estatal): under the anualidades separate-escala régimen the
+# total cuota is minorada by escala(mínimo personal y familiar + 1.980). The
+# else-branch escala(0521) is byte-identical to the ordinary chain.
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-escala-estatal-sobre-minimo-personal-familiar"
+target_casilla_id = "0530"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "0527" }, { literal = "0" }] },
+    { op = "if_then_else", args = [
+        { op = "less_than", args = [{ casilla_id = "0527" }, { casilla_id = "0505" }] },
+        { op = "if_then_else", args = [
+            { binding = "renta-2025-profile-anualidades-sin-minimo-descendientes" },
+            { op = "lookup_bracket", args = [
+                { op = "add", args = [{ casilla_id = "0521" }, { literal = "1980" }] },
+                { parameter = "renta-2025-escala-estatal-base-general" },
+            ] },
+            { op = "lookup_bracket", args = [
+                { casilla_id = "0521" },
+                { parameter = "renta-2025-escala-estatal-base-general" },
+            ] },
+        ] },
+        { op = "lookup_bracket", args = [
+            { casilla_id = "0521" },
+            { parameter = "renta-2025-escala-estatal-base-general" },
+        ] },
+    ] },
+    { op = "lookup_bracket", args = [
+        { casilla_id = "0521" },
+        { parameter = "renta-2025-escala-estatal-base-general" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["escala general", "mínimo personal"]

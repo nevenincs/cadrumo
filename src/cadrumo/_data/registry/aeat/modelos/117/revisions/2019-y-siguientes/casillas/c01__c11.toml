@@ -1,0 +1,124 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+section = ["liquidacion", "iic_transmisiones_reembolsos"]
+data_type = "integer"
+semantic_role = "iic_transmision_perceptores"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+section = ["liquidacion", "iic_transmisiones_reembolsos"]
+data_type = "money"
+semantic_role = "iic_transmision_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+section = ["liquidacion", "iic_transmisiones_reembolsos"]
+data_type = "money"
+semantic_role = "iic_transmision_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+section = ["liquidacion", "derechos_suscripcion"]
+data_type = "integer"
+semantic_role = "derechos_suscripcion_perceptores"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+section = ["liquidacion", "derechos_suscripcion"]
+data_type = "money"
+semantic_role = "derechos_suscripcion_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "06"
+number = "06"
+section = ["liquidacion", "derechos_suscripcion"]
+data_type = "money"
+semantic_role = "derechos_suscripcion_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "07"
+number = "07"
+section = ["liquidacion", "pago_a_cuenta"]
+data_type = "money"
+semantic_role = "pago_a_cuenta_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "08"
+number = "08"
+section = ["liquidacion", "pago_a_cuenta"]
+data_type = "money"
+semantic_role = "pago_a_cuenta_importe"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "09"
+number = "09"
+section = ["liquidacion", "total_liquidacion"]
+data_type = "money"
+semantic_role = "total_liquidacion"
+required = false
+input_kind = "computed"
+formula = "modelo-117-total-liquidacion"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "10"
+number = "10"
+section = ["liquidacion", "complementaria"]
+data_type = "money"
+semantic_role = "anteriores_declaraciones_resultado_ingresar"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "11"
+number = "11"
+section = ["liquidacion", "resultado"]
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"], source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"] }
+required = false
+input_kind = "computed"
+formula = "modelo-117-resultado-ingresar"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+

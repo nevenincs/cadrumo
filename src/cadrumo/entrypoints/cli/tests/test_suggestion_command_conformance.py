@@ -1,0 +1,803 @@
+"""Suggestion-string command-citation conformance gate.
+
+The CLI's instructive surface is wider than ``--help`` and the how-to docs:
+error-registry ``default_suggestion`` fields, the curated operator help
+documents, ``next_action`` builder strings, the runtime write-policy, and the
+four locale catalogues all cite ``aeat app ...`` / ``aeat config ...``
+invocations that an operator is told to run next. The pull/--file standard
+rule (``cadrumo-pull-and-file-standard``) records that NONE of these strings
+were covered by a conformance gate: ``test_documented_command_conformance``
+scans only the how-to docs, and ``test_json_schema_conformance`` only the
+envelope ``command=`` identifiers, so "a verb rename MUST be swept by hand"
+through every suggestion surface. A rename that misses one leaves a dead
+operator instruction — the error path tells the operator to run a command
+that no longer exists, which is a silent failure of the first instructive
+surface.
+
+This gate converts that hand-sweep obligation into CI enforcement. It walks
+the REAL Click tree (``typer.main.get_command`` over the live Cadrumo app —
+no mocks, no fixture trees) and resolves every cited command path from:
+
+- every registered :class:`ErrorCode` ``default_suggestion``;
+- the curated operator help documents (root / config / app surfaces);
+- every string literal in production modules under ``cadrumo.adapters``,
+  ``cadrumo.application``, ``cadrumo.core.errors``, and ``cadrumo.entrypoints``
+  (AST-extracted, so comments cannot false-positive and ``next_action`` /
+  write-policy / envelope-builder / adapter-refusal strings are all swept).
+
+The four locale catalogues (``en``/``es``/``ca``/``hu``) carry the same class
+of citations inside translated suggestion text and are the natural fourth
+sweep. This was tracked as a follow-up when the gate first landed (the
+catalogues carried three locale-divergent dead citations at that time); it is
+now closed by :func:`test_locale_catalogues_cite_live_commands`, which walks
+every string leaf of every catalogue through the same live-tree resolver.
+Landing that sweep caught three real dead citations shipped across the
+catalogues: all four locales cited a never-existing ``aeat config profile
+health`` for the Google OAuth profile-repair suggestion (corrected to the
+real ``aeat config profile status``); the Hungarian catalogue alone cited a
+retired ``aeat config doctor`` path where the sibling locales already cited
+the real ``aeat config repair`` (corrected to match); and the Spanish and
+Catalan catalogues each hardcoded a stale ``aeat config first-run`` inside
+the no-active-profile landing message, duplicating — and diverging from —
+the ``%{command}`` interpolation the message template already appends
+(:func:`application.operator_surface.build_root_landing_report` supplies that
+command as ``aeat config profile create NAME``; the English and Hungarian
+catalogues never hardcoded a command there, and es/ca were corrected to
+match that bare-message shape).
+Locale edits route through ``python -m cadrumo.locales set`` per the
+locale-CLI workflow, never a hand-edit of the YAML.
+
+Citation grammar: ``aeat`` followed by a root family (``app`` / ``config``)
+and a run of lowercase kebab-case tokens. Resolution walks group-by-group and
+accepts trailing tokens once a leaf command is reached (they are arguments);
+uppercase placeholders (``NAME``), options (``--file``), and ``<id>`` forms
+terminate the token run by construction. Each suite asserts a minimum
+citation count so a regression in the extractor cannot silently scan nothing,
+and the scanner itself is proven against a synthetic dead citation.
+"""
+
+from __future__ import annotations
+
+import ast
+import re
+from collections.abc import Iterator
+from functools import cache
+from pathlib import Path
+from typing import cast
+
+import click
+import pytest
+
+from ....application.operator_surface import HelpSurface, build_help_document
+from ....core.errors import ERROR_REGISTRY
+from ....locales.manager import LocaleManager, LocaleNode
+from ....tests.cli_runner import cadrumo_click_command
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_PACKAGE_ROOT = Path(__file__).resolve().parents[3]
+_LOCALES_DIR = _PACKAGE_ROOT / "locales"
+_AST_SCAN_ROOTS = (
+    _PACKAGE_ROOT / "adapters",
+    _PACKAGE_ROOT / "application",
+    _PACKAGE_ROOT / "core" / "errors",
+    _PACKAGE_ROOT / "entrypoints",
+)
+
+# ``aeat`` + a root family + a run of kebab-case tokens. A token is lowercase
+# kebab-case OR a bare modelo code (three digits, e.g. ``100``/``303``), the
+# only digit-leading command segments in the live tree (``aeat app live
+# borrador 100 list``). Uppercase placeholders, ``--option`` forms, and
+# ``<value>`` forms end the run, so only verb-path candidates (plus possibly
+# lowercase argument VALUES, which the resolver tolerates past a leaf) are
+# captured. Admitting the modelo code keeps a runnable ``... borrador 100 list``
+# citation from terminating prematurely on the ``borrador`` group.
+# ``an aeat app`` is ordinary prose about an AEAT web application, not an
+# operator invocation, so the article boundary is excluded explicitly.
+_CITATION_PATTERN = re.compile(r"(?<!an )\baeat (app|config)((?: (?:[a-z][a-z0-9-]*|\d{3}))*)")
+
+
+@cache
+def _root_command() -> click.Command:
+    """Build the live Click tree once for the whole module."""
+    return cadrumo_click_command()
+
+
+def _is_group(command: click.Command) -> bool:
+    """Return whether ``command`` is a structural group (not a runnable leaf).
+
+    ``list_commands`` is the structural group marker; the vendored TyperGroup
+    is not a guaranteed upstream ``click.Group`` subclass, so narrow by
+    interface rather than isinstance — an isinstance check silently treats
+    every group as a leaf (caught by ``test_scanner_flags_a_group_citation``).
+    """
+    return hasattr(command, "list_commands")
+
+
+def _resolve_citation(tokens: tuple[str, ...]) -> tuple[str | None, bool]:
+    """Walk ``tokens`` through the live tree.
+
+    Returns ``(dead_token, terminates_on_group)``:
+
+    - ``dead_token`` is the first token that does not resolve, or ``None`` when
+      every token resolves. Tokens beyond a leaf command are positional
+      argument values and are accepted.
+    - ``terminates_on_group`` is ``True`` when the citation resolves cleanly but
+      the final resolved command is a group (e.g. ``config repair integrity``),
+      which is NOT runnable verbatim — the operator must pick a child or be
+      pointed at ``... --help``.
+    """
+    command: click.Command = _root_command()
+    context = click.Context(command, info_name="aeat")
+    for token in tokens:
+        if not _is_group(command):
+            # Already at a leaf; remaining tokens are argument values.
+            return None, False
+        group = cast("click.Group", command)
+        subcommand = group.get_command(context, token)
+        if subcommand is None:
+            return token, False
+        context = click.Context(subcommand, info_name=token, parent=context)
+        command = subcommand
+    return None, _is_group(command)
+
+
+@cache
+def _root_option_names() -> frozenset[str]:
+    """Long/short option strings declared on the root callback.
+
+    Root-global options (``--language`` / ``--format`` / ``--profile`` /
+    ``--help`` / etc.) are accepted on any leaf, so the option-validity check
+    unions them with the resolved command's own params. Mirrors
+    :func:`test_documented_command_conformance._root_option_names`.
+    """
+    names: set[str] = set()
+    for param in _root_command().params:
+        if getattr(param, "param_type_name", None) == "option":
+            names.update(param.opts)
+            names.update(param.secondary_opts)
+    return frozenset(names)
+
+
+def _command_option_names(command: click.Command) -> frozenset[str]:
+    """Long/short option strings declared on ``command``.
+
+    Mirrors :func:`test_documented_command_conformance._command_option_names`
+    so the suggestion surface validates cited ``--option`` tokens against the
+    same authoritative live-parameter set the how-to docs are checked against.
+    """
+    names: set[str] = set()
+    for param in command.params:
+        if getattr(param, "param_type_name", None) == "option":
+            names.update(param.opts)
+            names.update(param.secondary_opts)
+    return frozenset(names)
+
+
+# An ``--option`` / ``-o`` token in suggestion text. ``--help`` is always valid
+# (it is a root global), so it never reaches the option-validity check; the
+# pattern still captures it so the citation's trailing-help recovery works.
+# A trailing ``=`` form (``--format=json``) is split to the bare option name.
+_OPTION_TOKEN_PATTERN = re.compile(r"(?<![\w-])(--[a-z][a-z0-9-]*|-[a-zA-Z])(?=[\s=.,;)\]'\"]|$)")
+
+
+def _resolve_leaf_command(tokens: tuple[str, ...]) -> click.Command | None:
+    """Return the deepest live command the verb tokens resolve to, or ``None``.
+
+    Walks group-by-group exactly like :func:`_resolve_citation` but returns the
+    resolved command object (the leaf, or the deepest group) so its parameter
+    set can be introspected. Returns ``None`` when any token fails to resolve —
+    the dead-token check already reports that as a failure, so option validity
+    is only evaluated on a citation whose verb path is sound.
+    """
+    command: click.Command = _root_command()
+    context = click.Context(command, info_name="aeat")
+    for token in tokens:
+        if not _is_group(command):
+            return command
+        group = cast("click.Group", command)
+        subcommand = group.get_command(context, token)
+        if subcommand is None:
+            return None
+        context = click.Context(subcommand, info_name=token, parent=context)
+        command = subcommand
+    return command
+
+
+def _cited_options_after(text: str, start: int) -> list[str]:
+    """Extract ``--option`` tokens that belong to the citation ending at ``start``.
+
+    Scans forward from the end of the matched verb path until the next ``aeat``
+    citation begins or the text ends, so options trailing one suggested command
+    are not mis-attributed to a later one. ``--help`` is dropped (a universal
+    root global that is always runnable). ``--opt=value`` is reduced to the bare
+    option name.
+    """
+    next_match = _CITATION_PATTERN.search(text, start)
+    end = next_match.start() if next_match is not None else len(text)
+    window = text[start:end]
+    options: list[str] = []
+    for match in _OPTION_TOKEN_PATTERN.finditer(window):
+        name = match.group(1)
+        if name == "--help":
+            continue
+        options.append(name)
+    return options
+
+
+def _iter_citations(text: str) -> Iterator[tuple[str, tuple[str, ...], bool, tuple[str, ...]]]:
+    """Yield ``(cited_text, verb_tokens, has_trailing_help, cited_options)`` per citation.
+
+    ``has_trailing_help`` records whether ``--help`` immediately follows the
+    cited verb path in the source text. The citation regex stops at the first
+    ``--option`` form, so a runnable ``aeat config repair integrity --help``
+    citation parses as the bare-group token run; this flag recovers the
+    operator-runnable distinction the regex drops.
+
+    ``cited_options`` are the ``--option`` / ``-o`` tokens the regex drops,
+    recovered from the text following the verb path (up to the next citation),
+    so a suggestion can be validated against the resolved command's parameter
+    set — catching a dead option (e.g. ``... split <id> --dry-run`` where
+    ``split`` has no ``--dry-run``) the verb-only check could never see.
+    """
+    for match in _CITATION_PATTERN.finditer(text):
+        remainder = text[match.end() :]
+        has_trailing_help = bool(re.match(r"\s+--help\b", remainder))
+        cited_options = tuple(_cited_options_after(text, match.end()))
+        yield (
+            match.group(0),
+            (match.group(1), *match.group(2).split()),
+            has_trailing_help,
+            cited_options,
+        )
+
+
+def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = False) -> list[str]:
+    """Return instructive failure rows for every non-runnable citation in ``text``.
+
+    A citation is dead when one of its tokens does not resolve in the live tree
+    — always a failure.
+
+    When ``require_runnable_leaf`` is set (the operator-suggestion surfaces:
+    error-registry ``default_suggestion`` and curated help ``command`` fields,
+    where the cited string IS the command the operator is told to run), a
+    citation that resolves cleanly to a command GROUP with no trailing
+    ``--help`` is ALSO a failure: a group is not executable verbatim
+    (``Missing command``), so the operator is sent to a non-runnable line.
+    ``<group> --help`` IS runnable and is accepted. The flag is OFF for the
+    broad production-string-literal scan, where a bare ``aeat config google``
+    is overwhelmingly a prose/docstring reference to a command *family*, not a
+    runnable suggestion, and group-termination is legitimate there.
+
+    The flag ALSO gates option validity: under ``require_runnable_leaf`` every
+    cited ``--option`` must be a real parameter of the resolved command (or a
+    root-global option), so a suggestion citing an option the target verb does
+    not declare (e.g. ``... split <id> --dry-run`` where ``split`` carries only
+    ``--yes``) is flagged. Option validity is scoped to the runnable-suggestion
+    surfaces because reference prose can legitimately mention an option in the
+    abstract; a runnable suggestion is the line the operator pastes verbatim.
+    """
+    failures: list[str] = []
+    for cited, tokens, has_trailing_help, cited_options in _iter_citations(text):
+        dead_token, terminates_on_group = _resolve_citation(tokens)
+        if dead_token is not None:
+            failures.append(f"{origin}: cites {cited!r} but {dead_token!r} does not resolve in the live CLI tree")
+            continue
+        if require_runnable_leaf and terminates_on_group and not has_trailing_help:
+            failures.append(
+                f"{origin}: cites {cited!r} which resolves to a command GROUP, not a runnable leaf; "
+                "append a child command or cite '... --help' so the suggestion runs verbatim"
+            )
+        if require_runnable_leaf and cited_options:
+            command = _resolve_leaf_command(tokens)
+            if command is not None and not _is_group(command):
+                valid_options = _command_option_names(command) | _root_option_names()
+                for option in cited_options:
+                    if option not in valid_options:
+                        failures.append(
+                            f"{origin}: cites {cited!r} with option {option!r}, which is not a parameter of "
+                            f"'aeat {' '.join(tokens)}' (nor a root-global option)"
+                        )
+    return failures
+
+
+def _count_citations(text: str) -> int:
+    return sum(1 for _ in _iter_citations(text))
+
+
+def _option_validity_failures(text: str, *, origin: str) -> list[str]:
+    """Return only the option-validity failures for ``text`` under strict mode.
+
+    A thin focused wrapper used by the anti-tautology proof so it asserts the
+    option check in isolation from the verb-path and group-termination checks.
+    """
+    return [
+        failure
+        for failure in _dead_citations_in(text, origin=origin, require_runnable_leaf=True)
+        if "with option" in failure
+    ]
+
+
+def _iter_production_modules() -> Iterator[Path]:
+    for scan_root in _AST_SCAN_ROOTS:
+        for module_path in sorted(scan_root.rglob("*.py")):
+            if "tests" in module_path.parts:
+                continue
+            yield module_path
+
+
+def test_error_registry_suggestions_cite_live_commands() -> None:
+    """Every registered ``default_suggestion`` names commands the tree mounts."""
+    failures: list[str] = []
+    citation_count = 0
+    assert ERROR_REGISTRY, "error registry is empty — registration imports regressed"
+    for code, entry in ERROR_REGISTRY.items():
+        suggestion = entry.default_suggestion
+        if not suggestion:
+            continue
+        citation_count += _count_citations(suggestion)
+        failures.extend(_dead_citations_in(suggestion, origin=f"error code {code}", require_runnable_leaf=True))
+    assert not failures, "\n".join(failures)
+    assert citation_count >= 150, (
+        f"only {citation_count} command citations found across error-registry suggestions; "
+        "the extractor appears blind — the registry carried 175+ when this gate landed"
+    )
+
+
+def test_operator_help_documents_cite_live_commands() -> None:
+    """Every curated help row's ``command`` resolves in the live tree."""
+    failures: list[str] = []
+    citation_count = 0
+    for surface in HelpSurface:
+        rendered = build_help_document(surface).model_dump_json()
+        citation_count += _count_citations(rendered)
+        failures.extend(_dead_citations_in(rendered, origin=f"operator help surface {surface.value}"))
+    assert not failures, "\n".join(failures)
+    assert citation_count >= 60, (
+        f"only {citation_count} command citations found across operator help documents; "
+        "the extractor appears blind — the curated surface carried 100+ when this gate landed"
+    )
+
+
+# The runnable-suggestion fields: a string assigned to one of these — as a
+# keyword argument (``suggestion=...``) or a dict value (``{"recovery": ...}``)
+# — is a command the operator is told to run, so it MUST resolve to a runnable
+# leaf, never a bare command group. Other literals (docstrings, ``cli_path=``
+# path-root declarations, help-document heading/paragraph prose) name a command
+# *family* in reference and legitimately terminate on a group; they stay under
+# the dead-token check only.
+_RUNNABLE_SUGGESTION_KEYS = frozenset({"suggestion", "recovery", "default_suggestion", "next_action"})
+
+
+def _runnable_suggestion_node_ids(tree: ast.AST) -> set[int]:
+    """Collect ``id()`` of every string ``Constant`` used as a runnable-suggestion value.
+
+    Matches both ``suggestion="aeat ..."`` keyword arguments and
+    ``{"recovery": "aeat ..."}`` / ``{"next_action": "aeat ..."}`` dict
+    entries, where the operator is directed to run the cited command verbatim.
+    """
+    suggestion_ids: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.keyword) and node.arg in _RUNNABLE_SUGGESTION_KEYS:
+            if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                suggestion_ids.add(id(node.value))
+        elif isinstance(node, ast.Dict):
+            for key, value in zip(node.keys, node.values, strict=True):
+                if (
+                    isinstance(key, ast.Constant)
+                    and key.value in _RUNNABLE_SUGGESTION_KEYS
+                    and isinstance(value, ast.Constant)
+                    and isinstance(value.value, str)
+                ):
+                    suggestion_ids.add(id(value))
+    return suggestion_ids
+
+
+def test_production_string_literals_cite_live_commands() -> None:
+    """Every ``aeat app/config`` literal in production modules stays live.
+
+    AST extraction covers exactly the surfaces the pull/--file rule names as
+    ungated: write-policy allowlists, ``next_action`` builders, envelope
+    builders, and any future suggestion string a feature module grows.
+    Comments cannot false-positive (they are not AST constants).
+
+    Two checks per literal: every citation's tokens must resolve (dead-token
+    check, all literals), and a literal assigned to a runnable-suggestion field
+    (``suggestion=`` / ``recovery`` / ``default_suggestion`` / ``next_action``)
+    must additionally resolve to a runnable LEAF — a bare command group with no
+    trailing ``--help`` is not executable verbatim and fails. Reference prose
+    (docstrings, ``cli_path=`` path roots, help headings) names a command
+    family and legitimately terminates on a group, so the runnable-leaf check
+    is scoped to the suggestion fields only.
+    """
+    failures: list[str] = []
+    citation_count = 0
+    for module_path in _iter_production_modules():
+        tree = ast.parse(module_path.read_text(encoding="utf-8"))
+        relative = module_path.relative_to(_PACKAGE_ROOT.parent).as_posix()
+        suggestion_ids = _runnable_suggestion_node_ids(tree)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                citation_count += _count_citations(node.value)
+                failures.extend(
+                    _dead_citations_in(
+                        node.value,
+                        origin=f"{relative}:{node.lineno}",
+                        require_runnable_leaf=id(node) in suggestion_ids,
+                    )
+                )
+    assert not failures, "\n".join(failures)
+    assert citation_count >= 550, (
+        f"only {citation_count} command citations found across production string literals; "
+        "the extractor appears blind — the scan roots carried 760+ when adapters/ enrolled"
+    )
+
+
+def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[str, str]]:
+    """Yield ``(dotted_key, value)`` for every string leaf in a parsed locale tree.
+
+    Mirrors :meth:`LocaleManager.get_yaml_keys`'s recursive walk but also
+    returns the leaf value, which the key-only helper drops.
+    """
+    if isinstance(node, dict):
+        for key, child in node.items():
+            child_prefix = f"{prefix}.{key}" if prefix else str(key)
+            yield from _iter_locale_leaves(child, child_prefix)
+    elif node is not None:
+        # A null leaf is an absent translation, not a string leaf; the callers
+        # below all treat what they receive as citable text.
+        yield prefix, node
+
+
+def test_locale_catalogues_cite_live_commands() -> None:
+    """Every ``aeat app/config`` citation inside the four locale catalogues stays live.
+
+    The four shipped locale catalogues (``en``/``es``/``ca``/``hu``) carry the
+    same class of operator-facing citations as the error-registry suggestions
+    and curated help documents, inside translated suggestion and error text.
+    This module's own docstring named the catalogues as the one remaining
+    ungated surface; this test closes that gap.
+
+    ``require_runnable_leaf`` is intentionally OFF here, matching
+    :func:`test_production_string_literals_cite_live_commands` rather than
+    :func:`test_error_registry_suggestions_cite_live_commands`: a locale leaf
+    is a mix of runnable suggestions and reference prose (e.g. a legitimately
+    bare ``aeat config repair`` citation, a command GROUP that is genuinely
+    runnable because its Typer callback executes with no subcommand), so
+    scoping the check to the dead-token class only (a token that resolves to
+    nothing in the live tree) avoids false-flagging a live bare-group
+    citation while still catching a renamed or invented verb.
+    """
+    manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
+    locale_paths = sorted(_LOCALES_DIR.glob("*.yml"))
+    assert locale_paths, f"no locale catalogues found under {_LOCALES_DIR}"
+    failures: list[str] = []
+    citation_count = 0
+    for path in locale_paths:
+        data = manager.load_locale(path)
+        for key, value in _iter_locale_leaves(data):
+            if not isinstance(value, str):
+                continue
+            citation_count += _count_citations(value)
+            failures.extend(_dead_citations_in(value, origin=f"{path.name}:{key}"))
+    assert not failures, "\n".join(failures)
+    assert citation_count >= 700, (
+        f"only {citation_count} command citations found across the locale catalogues; "
+        "the extractor appears blind — the four catalogues carried 880+ when this gate landed"
+    )
+
+
+def test_scanner_flags_the_locale_defects_this_gate_closed() -> None:
+    """Anti-tautology proof: the scanner catches the two real defects this gate found.
+
+    Reproduces, as inline synthetic text (not a disk read — the live
+    catalogues are already fixed), the exact dead citations that shipped in
+    all four locale catalogues (``aeat config profile health``, a command
+    that never existed) and in the Hungarian catalogue alone (``aeat config
+    doctor``, a retired command path — the sibling locales already cited the
+    real ``aeat config repair``). If this test ever fails, the extractor
+    would have shipped both defects undetected.
+    """
+    dead_health = _dead_citations_in(
+        "Run `aeat config profile health` and repair or switch the active profile before retrying the Google command.",
+        origin="synthetic",
+    )
+    assert len(dead_health) == 1, dead_health
+    assert "'health'" in dead_health[0]
+
+    dead_doctor = _dead_citations_in(
+        "Diagnosztikához és helyreállításhoz futtasd aeat config doctor.",
+        origin="synthetic",
+    )
+    assert len(dead_doctor) == 1, dead_doctor
+    assert "'doctor'" in dead_doctor[0]
+
+    # The live corrected forms now shipped in the catalogues pass cleanly.
+    assert not _dead_citations_in(
+        "Run `aeat config profile status` and repair or switch the active profile.",
+        origin="synthetic",
+    )
+    assert not _dead_citations_in(
+        "Diagnosztikához és helyreállításhoz futtasd aeat config repair.",
+        origin="synthetic",
+    )
+
+
+def test_scanner_flags_a_dead_citation() -> None:
+    """Anti-tautology proof: the scanner reports a dead verb and passes a live one.
+
+    If this test ever fails, every green result above is meaningless — the
+    resolver would be accepting everything (or seeing nothing).
+    """
+    dead = _dead_citations_in(
+        "Run aeat app modelo capture to refresh the state.",
+        origin="synthetic",
+    )
+    assert len(dead) == 1
+    assert "'capture'" in dead[0]
+
+    # A retired multiplex-flag era verb on a live group is also caught.
+    dead_leaf = _dead_citations_in("Use aeat app ledger refresh next.", origin="synthetic")
+    assert len(dead_leaf) == 1
+    assert "'refresh'" in dead_leaf[0]
+
+    # The live canonical forms pass, and argument values past a leaf are tolerated.
+    assert not _dead_citations_in("Run aeat app ledger import --file STATEMENT.csv.", origin="synthetic")
+    assert not _dead_citations_in("Run aeat app modelo work calculate yourworkunit.", origin="synthetic")
+    assert _count_citations("Open an aeat app through the external selector.") == 0
+
+
+def test_scanner_flags_a_group_citation() -> None:
+    """Anti-tautology proof for the group-termination rule.
+
+    A citation that resolves to a command GROUP with no trailing ``--help`` is
+    NOT runnable verbatim ('Missing command'); the scanner must flag it under
+    ``require_runnable_leaf``. The same path with ``--help`` IS runnable and
+    must pass. ``config repair integrity`` is a real group (children:
+    ``objects``, ``registry``). A trailing ``.`` terminates the token run so
+    the citation resolves exactly to the group.
+    """
+    group_cited = _dead_citations_in("aeat config repair integrity.", origin="synthetic", require_runnable_leaf=True)
+    assert len(group_cited) == 1
+    assert "GROUP" in group_cited[0]
+
+    # The runnable help form on the same group is accepted even when strict.
+    assert not _dead_citations_in(
+        "aeat config repair integrity --help.", origin="synthetic", require_runnable_leaf=True
+    )
+
+    # A real runnable leaf under that group is accepted.
+    assert not _dead_citations_in(
+        "aeat config repair integrity objects.", origin="synthetic", require_runnable_leaf=True
+    )
+
+    # Without the strict flag, a bare group citation is tolerated (prose-family
+    # references in docstrings legitimately terminate on a group).
+    assert not _dead_citations_in("aeat config repair integrity.", origin="synthetic")
+
+
+def test_scanner_flags_a_dead_option_citation() -> None:
+    """Anti-tautology proof for the option-validity rule.
+
+    A runnable suggestion that cites an ``--option`` the resolved leaf does NOT
+    declare is flagged; the same leaf's REAL option passes. ``aeat app ledger
+    split`` is a real leaf carrying ``--yes`` (the destructive-confirm flag) but
+    NOT ``--dry-run`` (only ``remove`` / ``reset`` have a dry-run preview), so a
+    suggestion steering the operator to ``... split <id> --dry-run`` sends them
+    to a flag the command does not accept. This is the dead-option class the
+    verb-only check could never see.
+    """
+    dead_option = _option_validity_failures(
+        "Re-run aeat app ledger split TX123 --dry-run to preview.", origin="synthetic"
+    )
+    assert len(dead_option) == 1, dead_option
+    assert "--dry-run" in dead_option[0]
+    assert "split" in dead_option[0]
+
+    # The real ``--yes`` flag on the same leaf passes.
+    assert not _option_validity_failures("Re-run aeat app ledger split TX123 --yes to confirm.", origin="synthetic")
+
+    # A leaf that genuinely has ``--dry-run`` (``remove``) accepts it.
+    assert not _option_validity_failures(
+        "Re-run aeat app ledger remove TX123 --dry-run to preview.", origin="synthetic"
+    )
+
+    # Root-global options (``--format`` / ``--language``) are valid on any leaf.
+    assert not _option_validity_failures("Run aeat app ledger split TX123 --format json --yes.", origin="synthetic")
+
+    # Option validity is OFF for reference prose (no strict flag), so an abstract
+    # mention of an option does not false-positive.
+    assert not _dead_citations_in("The aeat app ledger split verb has no --dry-run preview.", origin="synthetic")
+
+
+# ── suggestions must survive the redaction funnel ──────────────────
+#
+# The citation checks above prove a suggested command EXISTS. They cannot
+# prove it is USABLE, and those are different failures: a suggestion rides
+# the notices channel, so it is redacted with the rest of the envelope
+# before the operator ever sees it. A verb that resolves is worthless if its
+# arguments arrive hashed.
+#
+# The evidence-extract hint embedded the extracted supplier NIF and reached
+# the operator as ``--counterparty-nif sha256:1c9f9632``. It broke for
+# natural-person suppliers -- most freelance invoices -- and kept working for
+# companies, so the common path was broken and the uncommon one hid it.
+#
+# The literal scanner above could never have caught it. The extracted
+# ``ast.Constant`` was ``"...catalogue create --kind received "``; the NIF
+# arrived in a separate ``FormattedValue`` of the same f-string, invisible to
+# a check that only reads constants. That is why this scans INTERPOLATIONS.
+
+#: Rule name -> the identifier-name tokens that carry a value that rule redacts.
+#:
+#: This is the one hand-written half, and it is hand-written because the two
+#: vocabularies genuinely differ: the funnel matches VALUE SHAPES, while this
+#: gate can only see the NAME of an interpolated expression. The defect that
+#: prompted the gate is the proof -- its identifier was ``supplier_tax_id``,
+#: which contains no rule name, so deriving tokens from ``default_rules()``
+#: alone would have missed the very case this exists to prevent.
+#:
+#: The coupling is therefore made LOUD rather than left implicit:
+#: :func:`test_every_redaction_rule_declares_its_identifier_vocabulary` fails
+#: when a rule ships without an entry here, naming it. The funnel gained three
+#: arms in one day (NIF/NIE, CIF, then IBAN); a quietly hand-maintained set
+#: would have rotted on the first of them.
+_REDACTABLE_IDENTIFIER_TOKENS: dict[str, frozenset[str]] = {
+    "nif-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
+    "cif-hash": frozenset({"cif"}),
+    "iban-hash": frozenset({"iban"}),
+    "url-host-only": frozenset({"url", "endpoint", "href"}),
+    # Bare ``token`` is deliberately absent. It is ordinary computing
+    # vocabulary here -- a period token (``1T``), a registry token, a parse
+    # token -- and including it flagged ``registry_token`` on the
+    # calculation-preparation hint, which carries a filing period and nothing
+    # redactable. The names that actually carry a credential are qualified, so
+    # the vocabulary is qualified too. The stated cost: a variable named
+    # exactly ``token`` carrying a real bearer value would not be seen. That
+    # is a narrower hole than a gate whose false positives get it disabled.
+    "token-fingerprint": frozenset({"secret", "credential", "api_key"}),
+    "bearer-token-fingerprint": frozenset({"bearer", "access_token", "refresh_token"}),
+}
+
+
+def _redactable_identifier_tokens() -> frozenset[str]:
+    """Return every identifier token that marks an interpolation as redactable."""
+    return frozenset().union(*_REDACTABLE_IDENTIFIER_TOKENS.values())
+
+
+def _interpolated_names(node: ast.AST) -> Iterator[str]:
+    """Yield the identifier name behind each value interpolated into ``node``.
+
+    Recurses through the expression forms a suggestion actually uses. The
+    ``or`` fallback shape is not hypothetical -- the original defect was
+    ``{draft.supplier_tax_id or '<nif>'}``, an :class:`ast.BoolOp` whose
+    redactable operand sits one level down, so a check reading only the
+    outermost expression would have passed it.
+    """
+    for child in ast.walk(node):
+        if isinstance(child, ast.FormattedValue):
+            for expression in ast.walk(child.value):
+                name = (
+                    expression.attr
+                    if isinstance(expression, ast.Attribute)
+                    else expression.id
+                    if isinstance(expression, ast.Name)
+                    else None
+                )
+                # A SCREAMING_CASE name is a declared module constant, never a
+                # taxpayer's value: the redactable shapes all arrive at runtime.
+                # Skipping them is a rule about what a constant IS rather than an
+                # exemption for a site, which matters because the alternative was
+                # allowlisting ``_NIF_IVA_AUTH_LOCKED_DESCRIPTOR`` -- a label
+                # naming AEAT's NIF-IVA service, carrying no identity at all.
+                if name is None or name.isupper():
+                    continue
+                yield name
+
+
+def _redactable_interpolations_in(tree: ast.AST, *, origin: str) -> list[str]:
+    """Report every suggestion in ``tree`` that interpolates a redactable name."""
+    tokens = _redactable_identifier_tokens()
+    failures: list[str] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.keyword) and node.arg in _RUNNABLE_SUGGESTION_KEYS):
+            continue
+        for name in _interpolated_names(node.value):
+            lowered = name.lower()
+            matched = sorted(token for token in tokens if token in lowered)
+            if matched:
+                failures.append(f"{origin}:{node.value.lineno} interpolates {name!r} (matches {', '.join(matched)})")
+    return failures
+
+
+def test_every_redaction_rule_declares_its_identifier_vocabulary() -> None:
+    """A new redaction arm must state which identifier names carry its values.
+
+    This is the loud half of the coupling. The gate below can only match
+    NAMES, while the funnel matches VALUE SHAPES, so the bridge between them
+    cannot be derived -- but it can be forced to stay complete. A fourth arm
+    landing without an entry fails HERE, naming the rule, instead of silently
+    narrowing what the gate can see.
+    """
+    from ....core.redaction import default_rules
+
+    declared = frozenset(_REDACTABLE_IDENTIFIER_TOKENS)
+    shipped = frozenset(default_rules())
+
+    assert shipped - declared == frozenset(), (
+        f"redaction rules ship without an identifier vocabulary: {sorted(shipped - declared)}. "
+        "Add the identifier-name tokens that carry a value this rule redacts, so the "
+        "suggestion gate can see them."
+    )
+    assert declared - shipped == frozenset(), (
+        f"identifier vocabulary names rules that no longer ship: {sorted(declared - shipped)}. "
+        "Remove the stale entry rather than leaving the gate matching a retired arm."
+    )
+
+
+def test_no_suggestion_interpolates_a_redactable_identifier() -> None:
+    """No runnable suggestion may embed a value the funnel would hash.
+
+    This is REGRESSION PREVENTION, not defect discovery: the tree was swept
+    when this landed and the evidence hint was the only instance, so a green
+    run here is the expected result rather than evidence the scan works.
+    :func:`test_the_gate_flags_a_reconstructed_evidence_defect` is what proves
+    it can fail.
+    """
+    scanned = 0
+    failures: list[str] = []
+    for module_path in _iter_production_modules():
+        tree = ast.parse(module_path.read_text(encoding="utf-8"))
+        scanned += 1
+        failures.extend(_redactable_interpolations_in(tree, origin=str(module_path)))
+
+    assert scanned > 0, "the module scan matched nothing, so a green result here would be vacuous"
+    assert not failures, (
+        "a runnable suggestion embeds a value the redaction funnel hashes, so the operator "
+        "cannot run it as printed:\n" + "\n".join(failures)
+    )
+
+
+def test_the_gate_flags_a_reconstructed_evidence_defect() -> None:
+    """The scanner must fail on the shape that prompted it.
+
+    Reconstructs the retired evidence hint verbatim, including the ``or``
+    fallback that puts the redactable operand one level below the
+    interpolation. Without this the gate above passes for any tree with no
+    suggestions at all, and would keep passing if the extractor broke.
+    """
+    source = "\n".join(
+        (
+            "Notice(",
+            "    suggestion=(",
+            '        "aeat app ledger invoice catalogue create --kind received "',
+            "        f\"--counterparty-nif {draft.supplier_tax_id or '<nif>'} \"",
+            '        f"--invoice-number {draft.invoice_number}"',
+            "    ),",
+            ")",
+        ),
+    )
+
+    failures = _redactable_interpolations_in(ast.parse(source), origin="synthetic")
+
+    assert len(failures) == 1, failures
+    assert "supplier_tax_id" in failures[0]
+    assert "tax_id" in failures[0]
+
+
+def test_the_gate_does_not_flag_an_ordinary_interpolated_id() -> None:
+    """The control: a reference that survives the funnel must pass.
+
+    Work-unit, transaction and invoice ids are content-addressed digests the
+    funnel leaves alone by design, and every shipped suggestion embeds one of
+    those. A gate that flagged them would be refused on its first run and
+    rewritten into an allowlist, which is how this class of check dies.
+    """
+    source = "\n".join(
+        (
+            'Notice(suggestion=f"aeat app modelo work calculate {unit.work_unit_id}")',
+            'Notice(suggestion=f"aeat app ledger link <tx> --invoice-id {invoice.invoice_id}")',
+        ),
+    )
+
+    assert _redactable_interpolations_in(ast.parse(source), origin="synthetic") == []

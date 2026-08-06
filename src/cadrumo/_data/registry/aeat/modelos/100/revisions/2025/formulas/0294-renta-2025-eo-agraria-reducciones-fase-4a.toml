@@ -1,0 +1,108 @@
+# Modelo 100 2025 estimacion objetiva agraria (Anexo I, Orden HAC/1347/2024)
+# Fase 4a: determinacion del rendimiento neto de la actividad.
+#
+# The manual (Manual practico de Renta 2025, Parte 1, Capitulo 9) states the
+# sequence explicitly: "para determinar el rendimiento neto de la actividad
+# podran practicarse las siguientes reducciones: 1. Reduccion general: 5 por
+# 100 ... 2. Reduccion agricultores jovenes: 25 por 100 ... 3. Gastos
+# extraordinarios por circunstancias excepcionales". Cross-checked against the
+# manual's own full worked example (Don L.H.I.): rendimiento neto de modulos
+# 13.233,98 euros; "Reduccion de caracter general: 5% s/13.233,98 = 661,70
+# euros"; "Al no existir gastos extraordinarios ... ni derecho a la reduccion
+# por agricultores jovenes, el rendimiento neto de la actividad es el
+# siguiente: 13.233,98 - 661,70 = 12.572,28 euros". See
+# test_modelo_100_eo_agraria_reducciones_fase_4a.py.
+#
+# Casilla 1549 (reduccion de caracter general) applies universally to every
+# EO-agraria filer at the fixed 2025 rate (Orden HAC/1347/2024, DA-1: "podran
+# reducir el rendimiento neto de modulos obtenido en 2025 en un 5 por
+# ciento"), gated only on the label's own "solo si el importe de la casilla
+# [1548] es > 0" condition. Casilla 1550 already computes the difference
+# (1548 - 1549), landed prior to this Fase 4a slice.
+#
+# Casilla 1551 (reduccion agricultores jovenes) is conditional on taxpayer
+# eligibility (agricultor joven de 18 a 40 anos, o asalariado agrario,
+# durante los cinco anos siguientes a su primera instalacion como titular de
+# una explotacion prioritaria con plan de mejora acreditado — LIRPF DA-6,
+# instruccion 3 del Anexo I) — a fact not derivable from any other casilla.
+# The AEAT Diseno de Registros declares this eligibility as its own toma-de-
+# datos field ("AJ", campo S_N, sin numero de casilla impreso — ver la casilla
+# AJ *98 de este mismo Modelo 100). AJ en blanco/No nunca fabrica una
+# reduccion; solo cuando AJ = Si se aplica el 25 por 100 sobre el resultado ya
+# reducido por la reduccion general (casilla 1550), tal como exige el texto:
+# "podran reducir el rendimiento neto de modulos, que resulte despues de
+# aplicar la reduccion de caracter general, en un 25 por 100".
+#
+# Neither reduccion is fabricated when the underlying rendimiento neto de
+# modulos (casilla 1548) is non-positive: the general reduccion's own
+# if_then_else gate on 1548 > 0 already covers this, and the jovenes
+# reduccion (applied to 1550, itself never larger than 1548) inherits the
+# same non-fabrication guarantee.
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-reduccion-general"
+target_casilla_id = "1549"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "1548" }, { literal = "0" }] },
+    { op = "percent", args = [
+        { casilla_id = "1548" },
+        { parameter = "renta-2025-estimacion-objetiva-reduccion-general-rate" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "orden-hac-1347-2024:da-1"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Reducción de carácter general: 5 por 100"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-reduccion-jovenes"
+target_casilla_id = "1551"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "AJ" }, { literal = "0" }] },
+    { op = "percent", args = [
+        { casilla_id = "1550" },
+        { parameter = "renta-2025-eo-agraria-reduccion-jovenes-rate" },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:da-6", "orden-hac-1347-2024:anexo-i-instruccion-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Reducción agricultores jóvenes: 25 por 100"]
+
+# Rendimiento neto reducido (casilla 1555): rendimiento neto de modulos
+# (1548) menos la reduccion de caracter general (1549, ya restada en la
+# casilla 1550), menos la reduccion agricultores jovenes (1551), menos
+# gastos extraordinarios (1552, Fase 4a apartado 3, permanece manual — un
+# importe declarado por el operador cuando concurren circunstancias
+# excepcionales comunicadas a la AEAT), menos la reduccion por irregularidad
+# del articulo 32.1 (1554, Fase 5a — ver
+# 0295-renta-2025-eo-agraria-reduccion-irregularidad.toml, computada a
+# partir de la base declarada por el operador
+# [eo-agraria-reduccion-irregularidad-base]). Sigue el mismo patron de
+# resta anidada sin suelo en cero que el resto de la cadena de estimacion
+# objetiva (ver renta-2025-estimacion-directa-rendimiento-neto-reducido-total
+# y renta-2025-estimacion-objetiva-no-agricola-rendimiento-neto-reducido-total).
+[[revisions."2025".formulas]]
+id = "renta-2025-eo-agraria-rendimiento-neto-reducido-por-actividad"
+target_casilla_id = "1555"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [
+        { op = "subtract", args = [
+            { casilla_id = "1550" },
+            { casilla_id = "1551" },
+        ] },
+        { casilla_id = "1552" },
+    ] },
+    { casilla_id = "1554" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-1347-2024:da-1", "ley-35-2006:da-6", "orden-hac-1347-2024:anexo-i-instruccion-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["4ª Fase: Determinación del rendimiento neto de la actividad"]

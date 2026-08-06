@@ -1,0 +1,93 @@
+# Modelo 151 (régimen impatriados) — escalas de la cuota íntegra, ejercicios
+# 2025 y siguientes.
+#
+# (1) Escala general plana (art. 93.2.e.1º): 24 % hasta 600.000 € y 47 % sobre el
+#     exceso. Estable desde Ley 26/2014. fixed_addition del segundo tramo =
+#     600.000 × 0,24 = 144.000. Grounded en ley-35-2006-art-93.html
+#     (legal ley-35-2006:art-93).
+#
+# (2) Escala del ahorro (art. 93.2.e.2º): a la parte de la base liquidable del
+#     ahorro (rentas art. 25.1.f TRLIRNR) se le aplica la escala progresiva del
+#     ahorro. Redacción vigente con efectos 1-1-2025 (disp. final 7.3 Ley 7/2024,
+#     BOE-A-2024-26694): 19 % hasta 6.000 €, 21 % hasta 50.000 €, 23 % hasta
+#     200.000 €, 27 % hasta 300.000 € y 30 % en adelante. Las cuotas íntegras
+#     acumuladas de la tabla oficial (columna "Cuota íntegra – Euros") son
+#     0 / 1.140 / 10.380 / 44.880 / 71.880 en los límites inferiores de cada
+#     tramo. Extraída verbatim del texto consolidado ley-35-2006.html#a93
+#     (legal ley-35-2006:art-93 + ley-35-2006:art-93-ahorro). NO es la escala del
+#     ahorro general del IRPF (art. 66/76): el régimen de impatriados aplica su
+#     propia escala única del art. 93.2.e).2.º — una sola tabla estatal sin tramo
+#     autonómico. La distinción es la base legal y la estructura de tabla única,
+#     no el tipo marginal: para 2025 ambos tramos superiores coinciden en el 30 %
+#     (tras la Ley 7/2024, que elevó también la escala general del 28 % al 30 %).
+
+[[revisions."2025-y-siguientes".parameters]]
+id = "modelo-151.escala-cuota-integra-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2025-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]
+
+[[revisions."2025-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "600000"
+fixed_addition = "0"
+marginal_rate = "0.24"
+valid_from = 2015-01-01
+
+[[revisions."2025-y-siguientes".parameters.brackets]]
+lower_bound = "600000"
+fixed_addition = "144000"
+marginal_rate = "0.47"
+valid_from = 2015-01-01
+
+[[revisions."2025-y-siguientes".parameters]]
+id = "modelo-151.escala-cuota-integra-ahorro"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-93", "ley-35-2006:art-93-ahorro"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2025-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]
+
+[[revisions."2025-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "6000"
+fixed_addition = "0"
+marginal_rate = "0.19"
+valid_from = 2025-01-01
+
+[[revisions."2025-y-siguientes".parameters.brackets]]
+lower_bound = "6000"
+upper_bound = "50000"
+fixed_addition = "1140"
+marginal_rate = "0.21"
+valid_from = 2025-01-01
+
+[[revisions."2025-y-siguientes".parameters.brackets]]
+lower_bound = "50000"
+upper_bound = "200000"
+fixed_addition = "10380"
+marginal_rate = "0.23"
+valid_from = 2025-01-01
+
+[[revisions."2025-y-siguientes".parameters.brackets]]
+lower_bound = "200000"
+upper_bound = "300000"
+fixed_addition = "44880"
+marginal_rate = "0.27"
+valid_from = 2025-01-01
+
+[[revisions."2025-y-siguientes".parameters.brackets]]
+lower_bound = "300000"
+fixed_addition = "71880"
+marginal_rate = "0.30"
+valid_from = 2025-01-01

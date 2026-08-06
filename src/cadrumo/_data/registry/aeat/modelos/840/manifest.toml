@@ -1,0 +1,20 @@
+[modelo]
+id = "840"
+tax_domain = "iae"
+cadence = "ad_hoc"
+jurisdiction = "ES-AEAT"
+calculation_class = "informative"
+output_sensitivity = "identity"
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-82",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+    "orden-hac-2572-2003:apartado-6",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+    "boe-modelo-840-2003-form",
+]
+

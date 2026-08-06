@@ -1,0 +1,45 @@
+{#-
+  Header language switcher: a compact native <details>/<summary> dropdown. The
+  closed state shows only the current language code (a small fixed footprint that
+  cannot overflow the header at any viewport width); opening reveals every
+  language with the current one marked, in an absolutely-positioned panel that
+  overlays content instead of stretching the header. Dependency-free and
+  licence-clean: native HTML disclosure, no required script, no external asset;
+  styling lives with the header family in _static/cadrumo-docs.css using Furo's
+  CSS variables so light and dark both render (cadrumo-docs.js adds optional
+  outside-click / Escape dismissal as progressive enhancement). The per-page
+  hrefs are the same relative computation as before (page path to its language
+  root); the language set, current language, and default flag come from
+  docs/conf.py html_context.
+-#}
+{%- if cadrumo_docs_languages -%}
+{#- Relative path from this page to its current language root (e.g. '../' or ''). -#}
+{%- set _root = pathto(master_doc) -%}
+{%- if '/' in _root -%}{%- set _root_uri = _root.rsplit('/', 1)[0] ~ '/' -%}{%- else -%}{%- set _root_uri = '' -%}{%- endif -%}
+{#- The shared base holding every language root: the current root for the default
+    (en, served at the base) build, one level up for a localized subdir build. -#}
+{%- set _docs_base = _root_uri if cadrumo_docs_language_is_default else _root_uri ~ '../' -%}
+{%- set _current = (cadrumo_docs_languages | selectattr('code', 'equalto', cadrumo_docs_language) | list | first) -%}
+<details class="cadrumo-header-lang" data-cadrumo-lang>
+  <summary class="cadrumo-header-lang-summary" aria-label="Language: {{ _current.label if _current else cadrumo_docs_language }}">
+    <span class="cadrumo-header-lang-code" lang="{{ cadrumo_docs_language }}">{{ cadrumo_docs_language | upper }}</span>
+    <svg class="cadrumo-header-lang-caret" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M3.2 5.5a.75.75 0 0 1 1.06 0L8 9.24l3.74-3.74a.75.75 0 1 1 1.06 1.06l-4.27 4.27a.75.75 0 0 1-1.06 0L3.2 6.56a.75.75 0 0 1 0-1.06Z"/></svg>
+  </summary>
+  <ul class="cadrumo-header-lang-menu">
+    {%- for _lang in cadrumo_docs_languages -%}
+    {%- if _lang.code == cadrumo_docs_default_language -%}
+    {%- set _href = _docs_base ~ pagename ~ '.html' -%}
+    {%- else -%}
+    {%- set _href = _docs_base ~ _lang.code ~ '/' ~ pagename ~ '.html' -%}
+    {%- endif -%}
+    <li>
+    {%- if _lang.code == cadrumo_docs_language -%}
+    <span class="cadrumo-header-lang-item is-current" aria-current="true" lang="{{ _lang.code }}">{{ _lang.label }}</span>
+    {%- else -%}
+    <a class="cadrumo-header-lang-item" href="{{ _href }}" lang="{{ _lang.code }}" hreflang="{{ _lang.code }}">{{ _lang.label }}</a>
+    {%- endif -%}
+    </li>
+    {%- endfor -%}
+  </ul>
+</details>
+{%- endif -%}

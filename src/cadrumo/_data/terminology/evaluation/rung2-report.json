@@ -1,0 +1,91 @@
+{
+  "acceptance_evidence_supplied": false,
+  "approved": false,
+  "artifact": {
+    "bridge_schema_version": 2,
+    "bridge_serialized_bytes": 26108,
+    "bridge_sha256": "1023110e0a94bac12fd7c04c6e91549f7cff2297b6a05dbdc416ce884170f8e6",
+    "bundle_schema_version": 3,
+    "bundle_serialized_bytes": 2132846,
+    "bundle_sha256": "f220aa7876b2d77dade0d7710b6b6456204ba4717148f73c66aeb6aac7f6be19",
+    "manifest_record_count": 8497,
+    "manifest_schema_version": 2,
+    "manifest_serialized_bytes": 1851898,
+    "manifest_sha256": "5d707d3d4ee31b4fd21533057717403bf635db67866c7bf2d2848f989c5cc275",
+    "matrix_schema_version": 4,
+    "matrix_serialized_bytes": 254318,
+    "matrix_sha256": "1d76856656aba06546dc9d07d39fcaff3d06b6bc5a0d59f46f474dd09ecef58b",
+    "model_dimension": 256,
+    "model_license": "MIT",
+    "model_repository": "minishlab/potion-multilingual-128M",
+    "model_revision": "e7421cd79c75fc506b88bb75723ae0a234994720",
+    "model_snapshot_sha256": "869266e7140deabcaa3e5e0e69c7e017af5507d07006114690fb05d3ab06c9d6",
+    "provider_package": "model2vec",
+    "provider_source_sha256": "581adaf84f2b25e40a2b930852c5ac65223166b02cc31126ca8267450d20dcef",
+    "provider_version": "0.8.2",
+    "query_token_count": 152,
+    "query_token_sha256": "648c9f517ea964d3ea642ccda0b013d94bdc5ee231e79d82c60e52fd168b877d",
+    "source_relpath": "src/cadrumo/_data/terminology/relevance/relevance.json",
+    "source_sha256": "4e686b6b4dda2c525358e5b02213f9664683c032dfc9c809da54b5f844377226",
+    "tokenizer_configuration_sha256": "ca3339ad4370f46cf5189c54a3cbac46e13f0639e66cf173a2ebe07f2ce86ede",
+    "tokenizer_vocabulary_sha256": "16d9434a6dba49dffd2a831ceb73bcbab2662b32d7bd3d0c4a2544e3b4c22d3b",
+    "vocabulary_count": 112,
+    "vocabulary_sha256": "db710caf5915a2692999b76a4ff66e60e4785f50803f133b6a62b138070e8216"
+  },
+  "baseline": {
+    "case_count": 32,
+    "hit_count": 26,
+    "miss_count": 6,
+    "miss_rate": 0.1875
+  },
+  "browser_config_enabled": false,
+  "coverage": {
+    "aggregate_coverage_ratio": 0.7479674796747967,
+    "below_minimum_coverage_query_count": 10,
+    "fully_covered_query_count": 20,
+    "query_count": 32,
+    "total_covered_token_count": 92,
+    "total_query_token_count": 123,
+    "zero_covered_query_count": 0
+  },
+  "decision": "rejected",
+  "ladder": {
+    "case_count": 32,
+    "hit_count": 15,
+    "miss_count": 17,
+    "miss_rate": 0.53125
+  },
+  "maximum_quantization_drift": 0.002234607622454972,
+  "measured_quantization_drift": 0.002234607622454972,
+  "miss_rate_threshold": 0.1,
+  "no_locale_or_kind_regression": false,
+  "policy": {
+    "cosine_floor": 0.75,
+    "minimum_coverage_ratio": 0.8,
+    "result_limit": 5,
+    "runner_up_margin": 0.05
+  },
+  "quantization_accepted": true,
+  "query_set_version": 1,
+  "rejection_reasons": [
+    "semantic held-out miss rate is 0.4375, above the ratified 0.10 threshold",
+    "full-ladder held-out miss rate is 0.53125, above the ratified 0.10 threshold",
+    "aggregate query-token coverage is 0.7479674796747967, below the policy minimum 0.8",
+    "browser acceptance evidence was not supplied for this diagnostic report",
+    "browser acceptance was not approved",
+    "locale and record-kind parity for the Rung-2 artifact was not proven on all four roots"
+  ],
+  "schema_version": "cadrumo.docs-search.rung2-standing-report.v1",
+  "semantic": {
+    "case_count": 32,
+    "hit_count": 18,
+    "miss_count": 14,
+    "miss_rate": 0.4375
+  },
+  "top_five_loss": {
+    "case_count": 32,
+    "query_count_with_loss": 0,
+    "query_loss_rate": 0.0,
+    "total_lost_record_count": 0
+  }
+}

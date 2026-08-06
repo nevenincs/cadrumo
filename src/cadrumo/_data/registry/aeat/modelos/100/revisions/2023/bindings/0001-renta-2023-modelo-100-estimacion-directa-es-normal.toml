@@ -1,0 +1,12 @@
+[[revisions."2023".bindings]]
+id = "renta-2023-modelo-100-estimacion-directa-es-normal"
+source = "manual_input"
+selector = { casilla_id = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
+aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2023-dictionary", "lirpf-cuota-chain-authority"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["estimación directa", "rendimiento neto"]

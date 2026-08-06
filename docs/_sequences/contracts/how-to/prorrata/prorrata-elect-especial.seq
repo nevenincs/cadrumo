@@ -1,0 +1,4 @@
+@step Elect especial prorrata for the year.
+@result aeat --format json app ledger prorrata elect-especial --ejercicio 2026 --percentage 80
+@expect result.entry.regime == "especial"
+@expect exit_code == 0

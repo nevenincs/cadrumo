@@ -1,0 +1,27 @@
+---
+tags:
+  - '#exec'
+  - '#declaracion-extraction-architecture'
+date: '2026-05-21'
+modified: '2026-07-17'
+body_hash: 'sha256:80992f2bf7c5e271a001b2083070421889e47260da4e6d398e2c2024ade1b744'
+step_id: S85
+related:
+  - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-adr]]'
+---
+
+# W04.P14.S85 - M349 dead-stub replacement
+
+## Outcome: Already correct — no action needed
+
+`modelo-349-declaracion-pdf` was already authored as a functional
+`named_label` profile in `revisions."2020-y-siguientes"`. The profile
+targets:
+
+- `decl.numero-operadores` — `named_label`, `value_kind=amount`
+- `decl.importe-operaciones` — `named_label`, `value_kind=amount`
+- `decl.numero-rectificaciones` — `named_label`, `value_kind=amount`
+- `decl.importe-rectificaciones` — `named_label`, `value_kind=amount`
+
+No dead `decl.*` slug stubs exist. No action needed.

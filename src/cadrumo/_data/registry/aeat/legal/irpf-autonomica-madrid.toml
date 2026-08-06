@@ -1,0 +1,78 @@
+# Comunidad de Madrid autonomic-deducción legal authorities.
+#
+# Texto Refundido de las disposiciones legales de la Comunidad de Madrid en
+# materia de tributos cedidos por el Estado, aprobado por Decreto Legislativo
+# 1/2010, de 21 de octubre. Grounds the "Por nacimiento o adopción de hijos"
+# deducción autonómica (Modelo 100 casilla 1039) alongside the LIRPF framework
+# article ley-35-2006:art-77 (cuota líquida autonómica).
+#
+# The corpus cross-check resolves against the bundled authoritative AEAT Renta
+# 2025 manual (parte 2, deducciones autonómicas), which reproduces the DL 1/2010
+# text and the current figures verbatim. The document_id / permalink identify
+# the consolidated Madrid text and are agent-prepared pending operator
+# re-stamp; the load-bearing grounding is the required_text cross-check against
+# the bundled manual.
+
+[legal."madrid-dl-1-2010:art-2"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part1/source.pdf.extracted.md#madrid-minimo-descendientes"
+document_id = "BOCM-m-2010-90050"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90050"
+published_at = 2010-10-21
+effective_from = 2020-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-03
+reviewed_by = "agent-authored from the bundled AEAT Renta manual; operator to re-stamp and confirm the BOCM/BOE consolidated id"
+notes = "DL 1/2010 art. 2 (Comunidad de Madrid): importes propios del mínimo por descendientes para el cálculo del gravamen autonómico (Ley 22/2009 art. 46.1.a). Para 2020-2021 solo divergen el tercer descendiente (4.400 €) y el cuarto y siguientes (4.950 €); el primero, segundo y el suplemento por descendiente menor de tres años coinciden con los importes generales del art. 58 LIRPF. Desde 2022 (Ley 8/2022, con efectos 1-1-2022) Madrid regula también el primero, segundo y el suplemento menor-de-tres-años con cuantías propias, que se han revisado en ejercicios posteriores (Ley 13/2023, con efectos 1-1-2023)."
+required_text = [
+    "Comunidad de Madrid",
+    "mínimo por descendientes",
+    "4.400 euros anuales por el tercero",
+    "4.950 euros anuales por el cuarto y siguientes",
+]
+
+[legal."madrid-dl-1-2010:art-4"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.extracted.md#madrid-nacimiento-adopcion"
+document_id = "BOCM-m-2010-90050"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90050"
+published_at = 2010-10-21
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "agent-authored from the bundled AEAT Renta manual; operator to re-stamp and confirm the BOCM/BOE consolidated id"
+notes = "DL 1/2010 art. 4 (Comunidad de Madrid): deducción por nacimiento o adopción de hijos. Cuantía 721,70 euros por cada hijo nacido o adoptado en la regulación vigente desde el 1 de enero de 2023 (600 euros para nacimientos/adopciones anteriores a esa fecha). La deducción se aplica en el período de nacimiento/adopción y en cada uno de los dos períodos siguientes; sólo para padres que convivan con los hijos; se prorratea por partes iguales cuando el hijo convive con ambos padres y estos tributan de forma individual."
+required_text = [
+    "Por nacimiento o adopción de hijos",
+    "Decreto Legislativo 1/2010, de 21 octubre",
+    "721,70 euros por cada hijo nacido o adoptado",
+    "los padres que convivan con los hijos",
+    "en cada uno de los dos períodos impositivos",
+]
+
+[legal."madrid-dl-1-2010:art-18"]
+evidence_tier = "legal_authority"
+authority = "autonomous_community"
+kind = "real_decreto_legislativo"
+corpus_ref = "corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.extracted.md#madrid-nacimiento-adopcion-limites"
+document_id = "BOCM-m-2010-90050"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOCM-m-2010-90050"
+published_at = 2010-10-21
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "agent-authored from the bundled AEAT Renta manual; operator to re-stamp and confirm the BOCM/BOE consolidated id"
+notes = "DL 1/2010 art. 18.1 (Comunidad de Madrid): doble límite de la suma de las bases imponibles general y del ahorro (casillas 0435 + 0460) para aplicar las deducciones autonómicas. Límite del contribuyente: 30.930 euros en tributación individual, 37.322,20 euros en tributación conjunta. Límite de la unidad familiar: 61.860 euros (agregado de las bases imponibles de todos los miembros de la unidad familiar)."
+required_text = [
+    "30.930 euros en tributación individual",
+    "37.322,20 euros en tributación conjunta",
+    "61.860 euros",
+    "suma de las casillas [0435] y [0460]",
+]

@@ -1,0 +1,29 @@
+# Régimen simplificado silent-under-declaration ADVISORY, part of the
+# modulos_iva_aggregation engine. Casillas 47-58 (the régimen simplificado apartado, LIVA arts.
+# 122-124) are ALL input_kind = "manual" with no binding or formula — the
+# per-activity módulos computation (número de unidades de cada módulo x
+# importe del módulo, índices correctores, cuota mínima) is performed on the
+# AEAT off-form worksheet and only the totals reach the form. An
+# estimación-objetiva filer under the régimen simplificado who declares the
+# 1T-3T "ingresos a cuenta" (casilla 47, LIVA art. 123.Cuatro pagos a cuenta
+# trimestrales) but leaves the 4T "cuota derivada del régimen simplificado"
+# (casilla 48, LIVA art. 123.Dos.1 cuota devengada por operaciones corrientes)
+# at zero would file a zero-cuota régimen-simplificado result with no gate —
+# the exact no-silent-under-declaration shape this predicate closes.
+#
+# ADVISORY (non-blocking): casilla 48 is filed only in the 4T autoliquidación
+# (régimen simplificado settles annually), so a 1T-3T filing legitimately
+# carries a positive casilla 47 (pago a cuenta) with casilla 48 still at zero
+# — the predicate must not refuse that quarter. Fires only when BOTH 47 and 48
+# are populated for the same filing and 48 resolves to zero, prompting the
+# operator to complete the off-form módulos worksheet before filing 4T.
+#
+# This 2009-y-siguientes revision mirrors the identical predicate authored on
+# the sibling 2023-y-siguientes revision (registry-revision-content-inline-or-
+# fragmented rule: both revisions carry the same casillas 47/48 authored
+# manual, so both need the guard).
+[[revisions.2009-y-siguientes.verification_predicates]]
+predicate_id = "modelo-303-2009-regimen-simplificado-cuota-determinada-cuando-ingresos"
+expression = 'implies_nonzero(["47", "48"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]

@@ -1,0 +1,22 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#auth-protocol'
+date: '2026-08-05'
+modified: '2026-08-05'
+body_schema: 'body-v1'
+body_hash: 'sha256:ae12e915b809f2dc049e5cf19b46fef06e5c1acc053f1705365c22285a5cd8cb'
+related:
+  - '[[2026-04-18-auth-protocol-adr]]'
+---
+
+# `auth-protocol` feature index
+
+Auto-generated index of all documents tagged with `#auth-protocol`.
+
+## Documents
+
+### adr
+
+- `2026-04-18-auth-protocol-adr` - `auth-protocol` adr: `issue-281 auth-provider protocol and session-shape split` | (**status:** `accepted`)

@@ -1,0 +1,525 @@
+[[revisions."2019-y-siguientes".export_layouts]]
+id = "modelo-115-fichero-boe"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-115-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "115"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-page"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-period"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-program-version"
+offset = 93
+length = 4
+kind = "header"
+header_key = "program_version"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-presenter-tax-id"
+offset = 101
+length = 9
+kind = "header"
+header_key = "presenter_tax_id"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-115-page-1"
+record_type = "page"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-page-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-page-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "115"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-page-number"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-page-marker"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-complementaria-page-reserved"
+offset = 12
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-declaration-type"
+offset = 13
+length = 1
+kind = "header"
+header_key = "declaration_type"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-tax-id"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-legal-name"
+offset = 23
+length = 60
+kind = "header"
+header_key = "legal_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-first-name"
+offset = 83
+length = 20
+kind = "header"
+header_key = "first_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-year"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-period"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-casilla-01"
+offset = 109
+length = 15
+kind = "casilla"
+casilla_id = "01"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-casilla-02"
+offset = 124
+length = 17
+kind = "casilla"
+casilla_id = "02"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-casilla-03"
+offset = 141
+length = 17
+kind = "casilla"
+casilla_id = "03"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-casilla-04"
+offset = 158
+length = 17
+kind = "casilla"
+casilla_id = "04"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-casilla-05"
+offset = 175
+length = 17
+kind = "casilla"
+casilla_id = "05"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-complementaria-flag"
+offset = 192
+length = 1
+kind = "header"
+header_key = "complementaria"
+data_type = "boolean"
+required = false
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-previous-receipt"
+offset = 193
+length = 13
+kind = "header"
+header_key = "previous_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-iban"
+offset = 206
+length = 34
+kind = "header"
+header_key = "iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-reserved-aeat"
+offset = 240
+length = 236
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-seal"
+offset = 476
+length = 13
+kind = "header"
+header_key = "aeat_seal"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-page-close"
+offset = 489
+length = 12
+kind = "literal"
+literal = "</T11501000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-115-envelope-footer"
+record_type = "envelope_footer"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+

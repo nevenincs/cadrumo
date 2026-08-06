@@ -1,0 +1,3 @@
+@step Show the import command's help, including the accepted providers.
+@result aeat app ledger import --help
+@expect exit_code == 0

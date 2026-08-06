@@ -1,0 +1,17 @@
+[[revisions."2000-y-siguientes".constructs]]
+id = "modelo-341-autoliquidacion"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure", "enrolled-modelo-341-layout"]
+casilla_ids = ["decl.ejercicio", "decl.periodo"]
+application_links = ["modelo-341-filing", "modelo-341-verification", "modelo-341-deadline"]
+workbook_parity_refs = ["modelo-341-orden-static-layout"]
+deadline_windows = [
+    "modelo-341-2025-1t",
+    "modelo-341-2025-2t",
+    "modelo-341-2025-3t",
+    "modelo-341-2025-4t",
+    "modelo-341-2026-1t",
+    "modelo-341-2026-2t",
+    "modelo-341-2026-3t",
+    "modelo-341-2026-4t",
+]

@@ -1,0 +1,86 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "390",
+        "--year",
+        "2026",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "390",
+          "name": "390-2026-0A",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "0A",
+            "filing_year": 2026
+          },
+          "revision_id": "2010-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "0db6eb606501",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "afda9ac0ad45a4132949d6cdd7975c638d93b601a537b0dd224f0db6eb606501"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "iva-lifecycle-annual"
+}

@@ -1,0 +1,125 @@
+[legal."orden-hfp-1415-2023:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1415-2023.html#a1"
+document_id = "BOE-A-2023-26739"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739#a1"
+published_at = 2023-12-30
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1415/2023 articulo 1: aprueba el Modelo 379, Declaracion informativa sobre pagos transfronterizos, de formato electronico y contenido anexo."
+required_text = [
+    "Articulo 1. Aprobacion del modelo 379",
+    "Se aprueba el modelo 379",
+    "envio de ficheros informaticos",
+]
+
+[legal."orden-hfp-1415-2023:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1415-2023.html#a2"
+document_id = "BOE-A-2023-26739"
+article = "2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739#a2"
+published_at = 2023-12-30
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1415/2023 articulo 2: obliga a presentar el Modelo 379 a los proveedores de servicios de pago referidos en el articulo 166.quater de la Ley del IVA."
+required_text = [
+    "Articulo 2. Obligados a presentar el modelo 379",
+    "Estan obligados a presentar el modelo 379",
+    "proveedores de servicios de pagos",
+]
+
+[legal."orden-hfp-1415-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1415-2023.html#a3"
+document_id = "BOE-A-2023-26739"
+article = "3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739#a3"
+published_at = 2023-12-30
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1415/2023 articulo 3: el Modelo 379 declara los registros que deben mantener los proveedores de servicios de pago."
+required_text = [
+    "Articulo 3. Objeto de la informacion del modelo 379",
+    "registros que deben mantener los proveedores de servicios de pago",
+    "articulo 62.ter del Reglamento del Impuesto sobre el Valor Anadido",
+]
+
+[legal."orden-hfp-1415-2023:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1415-2023.html#a4"
+document_id = "BOE-A-2023-26739"
+article = "4"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739#a4"
+published_at = 2023-12-30
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1415/2023 articulo 4: fija la periodicidad trimestral del Modelo 379 y remite el plazo al articulo 81 bis del Reglamento del IVA."
+required_text = [
+    "Articulo 4. Plazo de presentacion del modelo 379",
+    "periodicidad trimestral",
+    "pagos transfronterizos realizados en cada trimestre natural",
+]
+
+[legal."orden-hfp-1415-2023:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1415-2023.html#a5"
+document_id = "BOE-A-2023-26739"
+article = "5"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739#a5"
+published_at = 2023-12-30
+effective_from = 2024-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-26739 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1415/2023 articulo 5: establece la presentacion electronica del Modelo 379 por Internet y el ajuste del fichero al anexo/formato de la Sede electronica."
+required_text = [
+    "Articulo 5. Forma de presentacion",
+    "se efectuara por via telematica",
+    "código seguro de verificación de 16 caracteres",
+]
+
+[sources."aeat-modelo-379-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_379/files/modelo-379-procedure.html"
+sha256 = "39c56cb7a1e13db5a04c7c05d7362ca1b890dc6ff4bfa4bf272f055c76a3df3f"
+bytes = 36771
+retrieved_at = 2026-07-01
+published_at = 2023-12-30
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI51.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-379-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1415-2023.html"
+sha256 = "39b1656dbfcb9088f0be36b8aed7e0e7c6a9fa8cb32258eda37701f5e59bd08f"
+bytes = 47657
+retrieved_at = 2026-07-01
+published_at = 2023-12-30
+applies_from = 2024-01-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-26739"
+review_status = "reviewed"

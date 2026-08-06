@@ -1,0 +1,16 @@
+[[revisions."2025".parameters]]
+id = "renta-2025-estimacion-objetiva-reduccion-general-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["orden-hac-1347-2024:art-4", "ley-35-2006:art-31"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["estimación objetiva", "reducción general"]
+
+[[revisions."2025".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

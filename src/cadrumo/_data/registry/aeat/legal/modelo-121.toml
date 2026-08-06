@@ -1,0 +1,62 @@
+[legal."orden-hfp-105-2017:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-105-2017.html#a1"
+document_id = "BOE-A-2017-1334"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334#a1"
+published_at = 2017-02-10
+effective_from = 2017-02-11
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2017-1334 art 1; pending operator re-verification)"
+notes = "Orden HFP/105/2017 art 1: aprueba el modelo 121, comunicación de la cesión del derecho a la deducción por familia numerosa o por personas con discapacidad a cargo (IRPF), por contribuyentes no obligados a presentar declaración."
+required_text = [
+    "Se aprueba el modelo 121",
+    "familia numerosa o por personas con discapacidad a cargo",
+]
+
+[legal."orden-hfp-105-2017:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-105-2017.html#a3"
+document_id = "BOE-A-2017-1334"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334#a3"
+published_at = 2017-02-10
+effective_from = 2017-02-11
+review_status = "reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the fetched BOE-A-2017-1334 art 3; pending operator re-verification)"
+notes = "Orden HFP/105/2017 art 3: plazo de presentación del modelo 121. Se presenta en el plazo establecido en cada ejercicio para la presentación de la declaración del IRPF — plazo remitido a la campaña de Renta, sin fecha fija propia en la orden."
+required_text = [
+    "plazo establecido en cada ejercicio para la presentación de la declaración del Impuesto",
+]
+
+[sources."enrolled-modelo-121-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-105-2017.html"
+sha256 = "4bb8274dcbbb6f28de58dd2c48bbcb8ddaa6f72da276dfe50d9fbc45be475ab5"
+bytes = 2101
+retrieved_at = 2026-07-04
+published_at = 2017-02-10
+applies_from = 2017-02-11
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334"
+review_status = "reviewed"
+
+[sources."enrolled-modelo-121-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-105-2017.html"
+sha256 = "4bb8274dcbbb6f28de58dd2c48bbcb8ddaa6f72da276dfe50d9fbc45be475ab5"
+bytes = 2101
+retrieved_at = 2026-07-04
+published_at = 2017-02-10
+applies_from = 2017-02-11
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-1334"
+review_status = "reviewed"

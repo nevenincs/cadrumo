@@ -1,0 +1,44 @@
+rules:
+  - id: no-duplicate-concept-models
+    message: |
+      Pydantic-model name collisions across packages signal duplicate-concept
+      drift. When a new model class shares a name with an existing canonical
+      model in a different package, consolidate onto the canonical shape or
+      rename to disambiguate (e.g., `VerificationFinding` was disambiguated
+      to `ModeloVerificationFinding` and `EvidenceBundleCheckResult`).
+    severity: WARNING
+    languages:
+      - python
+    paths:
+      include:
+        - "src/cadrumo/**"
+      exclude:
+        - "src/cadrumo/**/tests/**"
+        - "src/cadrumo/**/test_*.py"
+        - "src/cadrumo/**/_test_*.py"
+        - "src/cadrumo/domain/contribuyente/_ccaa.py"
+        - "src/cadrumo/application/filing/runtime.py"
+    pattern-either:
+      - patterns:
+          - pattern: |
+              class CCAA(...):
+                  ...
+          - pattern-not-inside: |
+              # canonical-owner-allowed
+              ...
+      - patterns:
+          - pattern: |
+              class RentaCCAA(...):
+                  ...
+      - patterns:
+          - pattern: |
+              class CasillaSchema(BaseModel):
+                  ...
+      - patterns:
+          - pattern: |
+              class RegistryCasillaSchema(BaseModel):
+                  ...
+      - patterns:
+          - pattern: |
+              class VerificationFinding(...):
+                  ...

@@ -1,0 +1,26 @@
+# Modelo 763 declaration-header casillas (scheduling/applicability-grade). Only
+# the declaration header is declared, grounded in orden-eha-1881-2011 art 1. No
+# numbered form casilla is invented — no authoritative Modelo 763 diseño de
+# registro is bundled.
+
+[[revisions."2011-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2011-y-siguientes".casillas]]
+id = "decl.periodo"
+number = "periodo"
+section = ["declarante"]
+data_type = "period_code"
+semantic_role = "filing_period"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]

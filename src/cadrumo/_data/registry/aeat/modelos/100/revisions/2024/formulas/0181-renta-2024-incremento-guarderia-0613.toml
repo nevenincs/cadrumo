@@ -1,0 +1,44 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-incremento-guarderia-0613"
+target_casilla_id = "0613"
+# Art. 81.2 LIRPF: incremento deducción maternidad por gastos de guardería.
+#
+# Cap = min(incremento_prorrateado_por_hijo, cotizaciones_SS_madre_2024).
+#
+# The first term replaces what used to be two: the household spend total and a
+# flat "hijos × 1.000". That pair carried no month rule at all, so a child in
+# the guardería for two months earned the same ceiling as one there all year —
+# a measured 833,33 € over-grant on the manual's own worked case, whose stated
+# answer is 166,67.
+#
+# Art. 81.3 third paragraph prorates the increase "proporcionalmente al número
+# de meses en que se cumplan de forma simultánea los requisitos exigidos en el
+# artículo 81.1 y 2" and caps it at the spend incurred "en relación con ese
+# hijo" — per child, by its own words. Neither the proration nor the per-child
+# bound is expressible here: this schema has no per-descendant fold, and an
+# aggregate min over the household also lets one child's unused ceiling absorb
+# another child's excess spend. So the fold happens where the descendant
+# records live and the registry consumes one resolved value, exactly as the
+# mínimo por descendientes aggregate does.
+#
+# The cotizaciones term stays a term. It is a separate ceiling of the same
+# article and is under its own review; folding it into the resolved value would
+# decide that question here by accident.
+expression = { op = "min", args = [
+    { binding = "renta-2024-profile-incremento-guarderia" },
+    { binding = "renta-2024-profile-cotizaciones-ss-madre" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = [
+    "incremento",
+    "guarder",
+    "cotizaciones",
+    # The proration this formula now defers to, pinned so a source that stopped
+    # stating it reds the load rather than leaving the claim unbacked.
+    "se calculará proporcionalmente al número de meses",
+]

@@ -1,0 +1,60 @@
+[[revisions."esquema-union".constructs]]
+id = "modelo-369-esquema-union"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-unvicies",
+    "ley-37-1992:art-163-duovicies",
+    "ley-37-1992:art-163-tervicies",
+    "ley-37-1992:art-163-quatervicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "iva.union.de.services-cuota",
+    "iva.union.fr.services-cuota",
+    "iva.union.de.goods-distance-cuota",
+    "iva.union.cuota-total",
+]
+formulas = ["modelo-369-union-cuota-total"]
+bindings = [
+    "modelo-369-union-de-services-21pct",
+    "modelo-369-union-fr-services-21pct",
+    "modelo-369-union-de-goods-distance-21pct",
+]
+workbook_parity_refs = ["modelo-369-union-dr-2021"]
+live_cross_references = [
+    "modelo-369-union-static-documentation",
+    "modelo-369-union-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-union-portal",
+    "modelo-369-union-filing",
+    "modelo-369-union-extractor",
+    "modelo-369-union-verification",
+    "modelo-369-union-deadline",
+    "modelo-369-union-calculation",
+    "modelo-369-union-review",
+    "modelo-369-union-approval",
+    "modelo-369-union-reconciliation",
+    "modelo-369-union-workflow",
+]
+filing_schedules = ["modelo-369-union-trimestral"]
+extraction_profiles = ["modelo-369-union-declaracion-pdf"]
+deadline_windows = [
+    "modelo-369-union-2025-1t",
+    "modelo-369-union-2025-2t",
+    "modelo-369-union-2025-3t",
+    "modelo-369-union-2025-4t",
+    "modelo-369-union-2026-1t",
+]
+
+# -----------------------------------------------------------------------------
+# Esquema Importacion (IOSS) — monthly per HAC/610/2021 art 2(c) and (d), LIVA 163 quinvicies
+# -----------------------------------------------------------------------------

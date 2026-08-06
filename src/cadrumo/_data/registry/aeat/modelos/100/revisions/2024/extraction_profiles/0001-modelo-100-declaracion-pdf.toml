@@ -1,0 +1,125 @@
+[[revisions."2024".extraction_profiles]]
+id = "modelo-100-2024-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    # Cuota-chain closure casillas — first chunk.
+    # No real ejercicio-2024 declaración PDF specimen is bundled (the corpus
+    # under tests/fixtures/justificantes/100/ covers 2021-2023 only). Every
+    # label_pattern below is grounded against the bundled AEAT-published
+    # Diseño de Registro field dictionary for ejercicio 2024
+    # (corpus/aeat_official/disenos_registro/modelo_100/files/08-100-...-2024-...properties),
+    # cross-checked verbatim against its bracketed casilla-number entries.
+    # Round-tripped against a DR-faithful synthetic fixture, not a real PDF —
+    # see test_parser_boundary_m100_current_year.py::test_parser_extracts_modelo_100_current_year_profile_targets_from_synthetic_fixture.
+    #
+    # 0545 — Cuota íntegra estatal: Parte estatal (ley-35-2006:art-63)
+    # DR ejercicio 2024, field CINTEST: "Cuota íntegra estatal: Parte estatal"
+    {casilla_id = "0545", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+[íi]ntegra\s+estatal\s*:'},
+    # 0546 — Cuota íntegra autonómica: Parte autonómica (ley-35-2006:art-74)
+    # DR ejercicio 2024, field CINTAUT: "Cuota íntegra autonómica: Parte autonómica"
+    {casilla_id = "0546", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+[íi]ntegra\s+auton[oó]mica\s*:'},
+    # 0505 — Base liquidable general sometida a gravamen (ley-35-2006:art-50)
+    # DR ejercicio 2024, field BLGGRAV: "Base liquidable general sometida a gravamen"
+    {casilla_id = "0505", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+liquidable\s+general\s+sometida\s+a\s+gravamen'},
+    # 0585 — Cuota líquida estatal incrementada (ley-35-2006:art-67)
+    # DR ejercicio 2024, field CLEIN: "Cuota líquida estatal incrementada ( [0585] = ... ): Parte estatal"
+    {casilla_id = "0585", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+estatal\s+incrementada'},
+    # 0586 — Cuota líquida autonómica incrementada (ley-35-2006:art-77)
+    # DR ejercicio 2024, field CLAIN: "Cuota líquida autonómica incrementada ([0586] = ... ): Parte autonómica"
+    {casilla_id = "0586", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+auton[oó]mica\s+incrementada'},
+    # 0587 — Cuota líquida incrementada total = 0585 + 0586 (ley-35-2006:art-50)
+    # DR ejercicio 2024, field CLIQT: "Cuota líquida incrementada total ( [0585] + [0586] )"
+    {casilla_id = "0587", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+incrementada\s+total'},
+    # 0595 — Cuota resultante de la autoliquidación (ley-35-2006:art-79)
+    # DR ejercicio 2024, field CAUTLIQ: "Cuota resultante de la autoliquidación ( [0587] - ... )"
+    {casilla_id = "0595", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+resultante\s+de\s+la\s+autoliquidaci[oó]n'},
+    # 0604 — Pagos fraccionados ingresados (actividades económicas) (ley-35-2006:art-99)
+    # DR ejercicio 2024, field RET9: "Pagos fraccionados ingresados (actividades económicas)"
+    {casilla_id = "0604", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Pagos\s+fraccionados\s+ingresados\s*\(actividades\s+econ[oó]micas\)'},
+    # 0610 — Cuota diferencial (ley-35-2006:art-79)
+    # DR ejercicio 2024, field CDIF: "Cuota diferencial" (bare label; anchored to
+    # line start with a negative lookahead so it cannot match a longer sibling
+    # label that merely starts with the same words elsewhere on the form).
+    {casilla_id = "0610", match_strategy = "named_label", value_kind = "amount", label_pattern = '^Cuota\s+diferencial\b(?!\s+de)'},
+    # 0670 — Resultado de la declaración (ley-35-2006:art-103)
+    # DR ejercicio 2024, field RESULTADO: "Resultado de la declaración ( [0610] - ... )"
+    {casilla_id = "0670", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+de\s+la\s+declaraci[oó]n'},
+    # Apartado-summary casillas (second chunk) and actividades-económicas ED detail (third chunk).
+    # All label_patterns grounded against the same ejercicio-2024 DR field dictionary.
+    #
+    # 0180 — Total ingresos computables (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
+    # DR ejercicio 2024, field E1INGRESO: "Total ingresos computables ( Suma [0171] a [0179] )"
+    {casilla_id = "0180", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+ingresos\s+computables'},
+    # 0218 — Suma de gastos fiscalmente deducibles (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
+    # DR ejercicio 2024, field E1SUMA: "Suma ( [0181] a [0195] + ... )" — anchored on the
+    # opening "[0181]" bracket, the stable leaf-casilla reference across revisions.
+    {casilla_id = "0218", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s*\(\s*\[0181\]'},
+    # 0223 — Total gastos deducibles, modalidad simplificada (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
+    # DR ejercicio 2024, field E1SGD: "Total gastos deducibles ( [0218] + [0222] )"
+    {casilla_id = "0223", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+gastos\s+deducibles\s*\(\s*\[0218\]'},
+    # 0224 — Rendimiento neto (ley-35-2006:art-27, art-28, art-30, art-32)
+    # DR ejercicio 2024, field E1RN: "Rendimiento neto ( [0180] - [0220] o [0180] - [0223] )".
+    # Pattern anchors on the opening "Rendimiento neto (" to exclude the "Rendimiento
+    # neto reducido" line (0226).
+    {casilla_id = "0224", match_strategy = "named_label", value_kind = "amount", label_pattern = '^Rendimiento\s+neto\s*\('},
+    # 0226 — Rendimiento neto reducido (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
+    # DR ejercicio 2024, field E1RNR: "Rendimiento neto reducido ( [0224] - [0225] - [0236] )"
+    {casilla_id = "0226", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Rendimiento\s+neto\s+reducido\s*\('},
+    # 0231 — Suma de rendimientos netos reducidos (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
+    # DR ejercicio 2024, field E1TRNR: "Suma de rendimientos netos reducidos de las
+    # actividades económicas en estimación directa (suma de las casillas [0226])".
+    # Distinct from 0235 "Rendimiento neto reducido total de las actividades".
+    {casilla_id = "0231", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+rendimientos\s+netos\s+reducidos'},
+    # 0235 — Rendimiento neto reducido total actividades económicas (ley-35-2006:art-27, art-28, art-30, art-31, art-32)
+    # DR ejercicio 2024, field E1TOTAL: "Rendimiento neto reducido total de las
+    # actividades económicas en estimación directa ( [0231] - [0232] - [0233] - [0234] )"
+    {casilla_id = "0235", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Rendimiento\s+neto\s+reducido\s+total\s+de\s+las\s+actividades'},
+    # 0432 — Saldo neto rendimientos a integrar en base imponible general (ley-35-2006:art-48)
+    # DR ejercicio 2024, field SUMARDTO: "Saldo neto de los rendimientos a integrar en
+    # la base imponible general y de las imputaciones de renta"
+    {casilla_id = "0432", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Saldo\s+neto\s+de\s+los\s+rendimientos\s+a\s+integrar'},
+    # 0500 — Base liquidable general (ley-35-2006:art-50)
+    # DR ejercicio 2024, field BLGRAL: "Base liquidable general" (bare label; anchored
+    # to line start with a negative lookahead so it cannot match the "Base liquidable
+    # general sometida a gravamen" (0505) prefix collision).
+    {casilla_id = "0500", match_strategy = "named_label", value_kind = "amount", label_pattern = '^Base\s+liquidable\s+general\b(?!\s+sometida)'},
+    # 0510 — Base liquidable del ahorro (ley-35-2006:art-50)
+    # DR ejercicio 2024, field BLAHOJ: "Base liquidable del ahorro"
+    {casilla_id = "0510", match_strategy = "named_label", value_kind = "amount", label_pattern = '^Base\s+liquidable\s+del\s+ahorro\b'},
+    # Leaf input for the actividades-económicas ED formula chain.
+    # Only 0171 (ingresos de explotación) is individually printed in the declaracion_pdf
+    # summary; casillas 0172-0179 are absent — only their total (0180) is shown.
+    #
+    # 0171 — Ingresos de explotación (ley-35-2006:art-27, art-28, art-30, art-31, art-32; leaf input for 0180)
+    # DR ejercicio 2024, field E1II1: "Ingresos de explotación"
+    {casilla_id = "0171", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ingresos\s+de\s+explotaci[oó]n'},
+]
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-48",
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-67",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-77",
+    "ley-35-2006:art-79",
+    "ley-35-2006:art-99",
+    "ley-35-2006:art-103",
+    # Carried by target casilla 0604 (pagos fraccionados ingresados por
+    # actividades economicas) and omitted here, unlike the 2021-2023 siblings.
+    "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
+]
+source_refs = ["aeat-dr-100-2024-dictionary", "boe-modelo-100-2024-form", "aeat-modelo-100-procedure"]

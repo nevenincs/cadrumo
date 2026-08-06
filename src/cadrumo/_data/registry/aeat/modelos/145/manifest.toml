@@ -1,0 +1,19 @@
+[modelo]
+id = "145"
+tax_domain = "irpf"
+cadence = "ad_hoc"
+jurisdiction = "ES-AEAT"
+calculation_class = "informative"
+output_sensitivity = "identity"
+legal_refs = [
+    "rd-439-2007:art-88",
+    "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
+    "resolucion-dgt-2013-12-17-modelo-145:amendment",
+    "resolucion-dgt-2014-12-18-modelo-145:amendment",
+]
+source_refs = [
+    "aeat-modelo-145-procedure",
+    "aeat-modelo-145-obligaciones-retenedor",
+    "aeat-modelo-145-form",
+    "aeat-dr-145-v20",
+]

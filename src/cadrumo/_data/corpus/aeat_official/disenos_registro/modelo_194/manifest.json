@@ -1,0 +1,36 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "194",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html"
+  ],
+  "artefact_count": 2,
+  "artefacts": [
+    {
+      "modelo": "194",
+      "title": "194 - Diseño de registro actualizado en 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_194_2024.pdf",
+      "stored_path": "files/01-194-diseno-de-registro-actualizado-en-2024.pdf",
+      "original_filename": "DR_Modelo_194_2024.pdf",
+      "content_type": "application/pdf",
+      "bytes": 183268,
+      "sha256": "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "194",
+      "title": "194 - Diseño de registro actualizado en 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR_Mod_194-2023.pdf",
+      "stored_path": "files/02-194-diseno-de-registro-actualizado-en-2023.pdf",
+      "original_filename": "DR_Mod_194-2023.pdf",
+      "content_type": "application/pdf",
+      "bytes": 148101,
+      "sha256": "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

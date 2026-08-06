@@ -1,0 +1,10 @@
+[[revisions."2010-y-siguientes".workbook_parity_refs]]
+id = "modelo-360-dr-2010"
+workbook_source = "aeat-dr-360-2010"
+fixture_id = "modelo-360-2010-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
+source_refs = ["aeat-dr-360-2010"]
+

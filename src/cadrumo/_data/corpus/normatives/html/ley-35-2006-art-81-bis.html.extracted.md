@@ -1,0 +1,7 @@
+# Artículo 81 bis. Deducciones por familia numerosa o personas con discapacidad a cargo.
+
+1. Los contribuyentes que realicen una actividad por cuenta propia o ajena por la cual estén dados de alta en el régimen correspondiente de la Seguridad Social o mutualidad podrán minorar la cuota diferencial del impuesto en las siguientes deducciones:
+a) Por cada descendiente con discapacidad con derecho a la aplicación del mínimo por descendientes previsto en el artículo 58 de esta Ley, hasta 1.200 euros anuales.
+b) Por cada ascendiente con discapacidad con derecho a la aplicación del mínimo por ascendientes previsto en el artículo 59 de esta Ley, hasta 1.200 euros anuales.
+c) Por ser un ascendiente, o un hermano huérfano de padre y madre que forme parte de una familia numerosa conforme a la Ley 40/2003, de 18 de noviembre, de Protección a las Familias Numerosas, o por ser un ascendiente separado legalmente, o sin vínculo matrimonial, con dos hijos sin derecho a percibir anualidades por alimentos y por los que tenga derecho a la totalidad del mínimo previsto en el artículo 58 de esta Ley, hasta 1.200 euros anuales.
+d) Por el cónyuge no separado legalmente con discapacidad, siempre que no tenga rentas anuales, excluidas las exentas, superiores a 8.000 euros ni genere el derecho a las deducciones previstas en las letras a) y b) anteriores, hasta 1.200 euros anuales.

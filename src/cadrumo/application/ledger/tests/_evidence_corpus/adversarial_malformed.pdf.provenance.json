@@ -1,0 +1,8 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "adversarial_malformed_pdf",
+  "source": "aeat-test-generator",
+  "notes": "PDF header + non-PDF body; extraction/rasterise must raise, never crash",
+  "sha256": "51d65e78039e2b28f102a10699efc198756ab16cbeb8c3cf3c3ab74c499fde09",
+  "bytes": 263
+}

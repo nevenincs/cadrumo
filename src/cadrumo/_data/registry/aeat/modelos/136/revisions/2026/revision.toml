@@ -1,0 +1,31 @@
+[revisions."2026"]
+valid_from = 2026-01-01
+period_selector = { years = [2026], periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = [
+    "ley-35-2006:da-33",
+    "orden-hap-70-2013:art-5",
+    "orden-hap-70-2013:art-6",
+    "orden-hap-70-2013:art-7",
+    "orden-hac-763-2018:art-tercero",
+    "orden-hac-763-2018:df-unica",
+]
+legal_refs = [
+    "ley-35-2006:da-33",
+    "orden-hap-70-2013:art-5",
+    "orden-hap-70-2013:art-6",
+    "orden-hap-70-2013:art-7",
+    "orden-hap-70-2013:art-10",
+    "orden-hap-70-2013:art-11",
+    "orden-hap-70-2013:art-12",
+    "orden-hac-763-2018:art-tercero",
+    "orden-hac-763-2018:df-unica",
+]
+source_refs = [
+    "aeat-modelo-136-procedure",
+    "aeat-modelo-136-procedure-record",
+    "boe-lirpf-lottery-prize-special-levy",
+    "boe-modelo-136-base-order",
+    "boe-modelo-136-2018-amendment-hac-763",
+    "boe-modelo-136-current-form-text",
+    "boe-modelo-136-current-form",
+]

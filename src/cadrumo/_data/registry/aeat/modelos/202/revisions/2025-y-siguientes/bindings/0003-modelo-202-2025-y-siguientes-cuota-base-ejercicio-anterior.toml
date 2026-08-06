@@ -1,0 +1,31 @@
+# Modelo 202 modalidad art. 40.2 LIS — base del pago fraccionado from the
+# prior period's cuota líquida.
+#
+# Under LIS art. 40.2 the instalment base (casilla 01) is the cuota
+# íntegra/líquida of the last período impositivo whose declaration deadline
+# had elapsed on the first day of the instalment's payment month, minored by
+# the deductions and withholdings of that same período. This binding copies
+# the prior Modelo 200 cuota líquida (DP200014B:00592, semantic_role
+# is_cuota_liquida) into casilla 01. The committed registry currently declares
+# the resolvable 2P/3P relation only: those periods bind one year back after
+# the prior-year Modelo 200 July deadline has elapsed. The 1P rule legally
+# binds two years back, but remains operator-entered until the registry carries
+# Modelo 200 source coverage before 2024. The binding declares only WHICH
+# source casilla to copy when a relation is available.
+#
+# The binding inherits the existing INCN modality gate
+# (derive_modelo_202_modality, driven by
+# modelo-202-2025-y-siguientes-incn-prior-12-months): for an INCN > EUR 6M
+# entity, modalidad 40.2 is not offered (only 40.3 clave 32), so casilla 01 is
+# not populated for a 40.3-mandatory filer.
+[[revisions.2025-y-siguientes.bindings]]
+id = "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"
+source = "relation_prefill"
+selector = { source_modelo = "200", source_casilla_id = "DP200014B:00592" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions.2025-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["modalidad", "40.2"]

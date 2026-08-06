@@ -1,0 +1,4 @@
+# Artículo 11. Intereses.
+
+1. Los intereses procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante sólo pueden someterse a imposición en ese otro Estado.
+2. No obstante lo dispuesto en el apartado 1 de este artículo: (a) los intereses procedentes de los Estados Unidos que sean intereses contingentes que no puedan considerarse intereses de cartera conforme a la normativa interna de los Estados Unidos, pueden someterse a imposición en los Estados Unidos pero, si su beneficiario efectivo es un residente de España, la imposición sobre dichos intereses estará limitada al 10 por ciento de su importe bruto; y (b) los intereses que constituyan un interés excedente correspondiente a una participación residual en un canal de inversión en valores respaldados por hipotecas sobre bienes inmuebles («REMIC») pueden someterse a imposición en los Estados Unidos conforme a su normativa interna.

@@ -1,0 +1,29 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-resultado-declaracion"
+target_casilla_id = "0670"
+expression = { op = "sum", args = [
+    { casilla_id = "0610" },
+    { op = "negate", args = [{ casilla_id = "0611" }] },
+    { casilla_id = "0612" },
+    { op = "negate", args = [{ casilla_id = "0613" }] },
+    { op = "negate", args = [{ casilla_id = "0623" }] },
+    { casilla_id = "0624" },
+    { op = "negate", args = [{ casilla_id = "0636" }] },
+    { casilla_id = "0637" },
+    { op = "negate", args = [{ casilla_id = "0248" }] },
+    { casilla_id = "0249" },
+    { op = "negate", args = [{ casilla_id = "0660" }] },
+    { casilla_id = "0661" },
+    { op = "negate", args = [{ casilla_id = "0662" }] },
+    { casilla_id = "0663" },
+    { casilla_id = "0664" },
+    { casilla_id = "0666" },
+    { casilla_id = "0669" },
+] }
+rounding = "money-2"
+legal_refs = ["orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["resultado de la declaracion", "cuota diferencial"]

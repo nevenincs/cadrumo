@@ -1,0 +1,8 @@
+# Artículo 2. Obligados a presentar el modelo 184.
+
+Uno. Están obligadas a presentar el modelo 184 las entidades en régimen de atribución de rentas a que se refiere la Sección 2.ª del título X de la Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Físicas y el Capítulo V del Texto Refundido de la Ley del Impuesto sobre la Renta de No Residentes, aprobado por Real Decreto Legislativo 5/2004, de 5 de marzo.
+Dos. No obstante lo anterior, no estarán obligadas a presentar la citada declaración anual:
+a) las entidades en régimen de atribución de rentas mediante las que no se ejerzan actividades económicas y cuyas rentas no excedan de 3.000 euros anuales.
+b) las entidades en régimen de atribución de rentas constituidas en el extranjero que obtengan rentas en territorio español sin desarrollar en el mismo una actividad económica, a que se refiere el artículo 39 del Texto Refundido de la Ley del Impuesto sobre la Renta de No Residentes, aprobado por Real Decreto Legislativo 5/2004, de 5 de marzo.
+Tres. En el caso de entidades en régimen de atribución de rentas constituidas en España, la obligación de suministro de información deberá ser cumplida por quien tenga la consideración de representante de la entidad en régimen de atribución de rentas, de acuerdo con lo previsto en el artículo 45.3 de la Ley 58/2003, de 17 de diciembre, General Tributaria.
+Cuatro. En el caso de entidades en régimen de atribución de rentas constituidas en el extranjero, la citada obligación deberá ser efectuada por cualquiera de los miembros de la entidad contribuyentes del Impuesto sobre la Renta de las Personas Físicas o del Impuesto sobre Sociedades.

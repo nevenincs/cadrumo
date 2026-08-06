@@ -1,0 +1,14 @@
+[[revisions."2025".workbook_parity_refs]]
+id = "modelo-189-current-static-layout"
+workbook_source = "boe-modelo-189-2023-amendment-hfp-1284"
+fixture_id = "modelo-189-2025-static-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+]
+

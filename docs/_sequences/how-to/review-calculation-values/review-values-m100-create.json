@@ -1,0 +1,85 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--entity-type",
+        "natural_person"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2025,
+          "modelo": "100",
+          "name": "100-2025-0A",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "0A",
+            "filing_year": 2025
+          },
+          "revision_id": "2025",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "28667392b7ba",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "23dd9f2506c3295a8ba8eb6f0c5c3f2eaa1fead98c53d24196e728667392b7ba"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "review-values-m100-create"
+}

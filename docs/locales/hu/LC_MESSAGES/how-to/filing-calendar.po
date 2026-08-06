@@ -1,0 +1,447 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/filing-calendar.md:1
+msgid "Plan your filing calendar"
+msgstr "Tervezze meg a benyújtási naptárát"
+
+#: ../../how-to/filing-calendar.md:3
+msgid ""
+"This page covers the filing calendar: how to see what may be due, what is"
+" overdue, and what to prepare next for the [active profile](profile-"
+"setup.md#what-the-active-profile-means), and which `--year` and "
+"`--period` tokens address each filing window. A modelo is a Spanish tax "
+"form."
+msgstr ""
+"Ez az oldal a benyújtási naptárt tárgyalja: hogyan láthatja, mi lehet "
+"esedékes, mi van lejárva, és mit kell legközelebb előkészíteni az [aktív "
+"profil](profile-setup.md#what-the-active-profile-means) számára, valamint "
+"hogy mely `--year` és `--period` tokenek szólítanak meg egy-egy "
+"benyújtási időablakot. A modelo egy spanyol adónyomtatvány."
+
+#: ../../how-to/filing-calendar.md:9
+msgid ""
+"These commands are local unless a command is under `aeat app live`. Local"
+" calendar commands read the [active profile](profile-setup.md#what-the-"
+"active-profile-means) and local registry data. They do not file, submit, "
+"or contact the Agencia Estatal de Administración Tributaria (AEAT)."
+msgstr ""
+"Ezek a parancsok helyiek, hacsak egy parancs nem az `aeat app live` alatt "
+"van. A helyi naptárparancsok az [aktív profilt](profile-setup.md#what-the-"
+"active-profile-means) és a helyi nyilvántartási adatokat olvassák. Nem "
+"nyújtanak be, nem küldenek be, és nem lépnek kapcsolatba az Agencia "
+"Estatal de Administración Tributariával (AEAT)."
+
+#: ../../how-to/filing-calendar.md:14
+msgid "Before you start"
+msgstr "Mielőtt hozzákezd"
+
+#: ../../how-to/filing-calendar.md:16
+msgid ""
+"You need an [active taxpayer profile](profile-setup.md#what-the-active-"
+"profile-means), and Cadrumo needs your master-key passphrase (it prompts "
+"for it). If you do not have a profile, create it with [Set up your "
+"taxpayer profile](profile-setup.md)."
+msgstr ""
+"Szüksége van egy [aktív adózói profilra](profile-setup.md#what-the-active-"
+"profile-means), és a Cadrumónak szüksége van a "
+"mesterkulcs-jelmondatára (bekéri). Ha nincs profilja, hozza létre [Az "
+"adózói profil beállítása](profile-setup.md) útmutatóval."
+
+#: ../../how-to/filing-calendar.md:21
+msgid ""
+"The profile must declare at least one obligation, or these commands "
+"refuse with \"El perfil activo no declara este modelo fiscal\". A profile"
+" created without taxpayer type, estimation regime, or IVA regime declares"
+" no modelo and shows nothing. Declare those facts first with [Set up your"
+" taxpayer profile](profile-setup.md)."
+msgstr ""
+"A profilnak legalább egy kötelezettséget közölnie kell, különben ezek a "
+"parancsok az „El perfil activo no declara este modelo fiscal” üzenettel "
+"elutasítják a műveletet. Egy adózói típus, becslési rendszer vagy "
+"IVA-rendszer nélkül létrehozott profil egyetlen modelót sem közöl, és "
+"semmit sem mutat. Először közölje ezeket az adatokat [Az adózói profil "
+"beállítása](profile-setup.md) útmutatóval."
+
+#: ../../how-to/filing-calendar.md:27
+msgid ""
+"Calendar results depend on profile facts: taxpayer type, activity start "
+"date, IVA regime, IRPF/Renta facts, withholding obligations, and other "
+"enrollment details. You maintain those facts manually in the profile - "
+"see [Maintain Modelo 036 census facts in your profile](censo-update.md)."
+msgstr ""
+"A naptár eredményei a profiladatoktól függenek: adózói típus, tevékenység "
+"kezdő dátuma, IVA-rendszer, IRPF/Renta-adatok, forrásadó-kötelezettségek "
+"és egyéb nyilvántartásba vételi részletek. Ezeket az adatokat kézzel "
+"tartja karban a profilban - lásd [A Modelo 036 censo-adatok karbantartása "
+"a profiljában](censo-update.md)."
+
+#: ../../how-to/filing-calendar.md:32
+msgid ""
+"If a profile is still incomplete, a command may stop and name the missing"
+" facts. Fix the profile first. To see partial results before the profile "
+"is complete, add `--allow-incomplete` where the command accepts it "
+"(`agenda`, `backlog`, and `calendar`). The CLI emits help, results, and "
+"refusals in Spanish."
+msgstr ""
+"Ha egy profil még hiányos, egy parancs megállhat, és megnevezheti a "
+"hiányzó adatokat. Először javítsa a profilt. Ahhoz, hogy a profil "
+"befejezése előtt részleges eredményeket lásson, adja hozzá az "
+"`--allow-incomplete` kapcsolót ott, ahol a parancs elfogadja (`agenda`, "
+"`backlog` és `calendar`). A CLI a súgót, az eredményeket és az "
+"elutasításokat spanyolul jeleníti meg."
+
+#: ../../how-to/filing-calendar.md:37
+msgid "What are my filing obligations?"
+msgstr "Mik a benyújtási kötelezettségeim?"
+
+#: ../../how-to/filing-calendar.md:39
+msgid ""
+"Start with the agenda. It ranks obligations around a reference date, "
+"showing what is due today, what is coming up in the next two weeks, and "
+"what is already overdue. Pass `--allow-incomplete` on a profile whose "
+"census facts are not yet fully filled in, change the reference date with "
+"`--date`, and widen the upcoming window with `--horizon` (the default is "
+"14 days):"
+msgstr ""
+"Kezdje az agendával. Egy referenciadátum köré rangsorolja a "
+"kötelezettségeket, megmutatva, mi esedékes ma, mi jön a következő két "
+"hétben, és mi van már lejárva. Adja meg az `--allow-incomplete` kapcsolót "
+"egy olyan profilnál, amelynek censo-adatai még nincsenek teljesen "
+"kitöltve, módosítsa a referenciadátumot a `--date` kapcsolóval, és "
+"szélesítse a közelgő időablakot a `--horizon` kapcsolóval (az "
+"alapértelmezés 14 nap):"
+
+#: ../../how-to/filing-calendar.md:49
+msgid "To understand why one modelo appears or does not appear, use:"
+msgstr "Annak megértéséhez, miért jelenik meg vagy nem jelenik meg egy modelo, használja:"
+
+#: ../../how-to/filing-calendar.md:55
+msgid ""
+"`explain` reports whether that modelo applies, the registry reason, and "
+"the profile facts used for the decision."
+msgstr ""
+"Az `explain` jelenti, hogy az a modelo alkalmazandó-e, a nyilvántartási "
+"okot, és a döntéshez felhasznált profiladatokat."
+
+#: ../../how-to/filing-calendar.md:58
+msgid "What messages have I received?"
+msgstr "Milyen üzeneteket kaptam?"
+
+#: ../../how-to/filing-calendar.md:60
+msgid ""
+"Calendar commands do not read AEAT mailboxes. For DEHu notification "
+"snapshots, use the live notification workflow:"
+msgstr ""
+"A naptárparancsok nem olvassák az AEAT postafiókjait. A DEHu-értesítések "
+"pillanatképeihez használja az élő értesítési munkafolyamatot:"
+
+#: ../../how-to/filing-calendar.md:66
+msgid ""
+"If you have not captured notifications yet, use [Check AEAT notifications"
+"](check-aeat-notifications.md). Live notification capture requires AEAT "
+"authentication and is read-only."
+msgstr ""
+"Ha még nem rögzített értesítéseket, használja az [AEAT-értesítések "
+"ellenőrzése](check-aeat-notifications.md) útmutatót. Az élő "
+"értesítésrögzítés AEAT-hitelesítést igényel, és csak olvasható."
+
+#: ../../how-to/filing-calendar.md:70
+msgid "What missed modelos did I forget to file?"
+msgstr "Mely elmulasztott modelókat felejtettem el benyújtani?"
+
+#: ../../how-to/filing-calendar.md:72
+msgid ""
+"Use backlog for past-due obligations that are not locally marked as "
+"presented. The default window starts 365 days before today and ends "
+"today; narrow it with `--from` and `--to` when you are checking a "
+"specific period:"
+msgstr ""
+"Használja a backlogot azokhoz a lejárt kötelezettségekhez, amelyek "
+"helyileg nincsenek benyújtottként megjelölve. Az alapértelmezett időablak "
+"a maitól 365 nappal korábban kezdődik, és ma ér véget; szűkítse a "
+"`--from` és a `--to` kapcsolóval, amikor egy adott időszakot ellenőriz:"
+
+#: ../../how-to/filing-calendar.md:80
+msgid ""
+"Backlog is a local planning tool. It does not prove what AEAT has or has "
+"not received. It depends on the [active profile](profile-setup.md#what-"
+"the-active-profile-means), local filing markers, and local registry "
+"rules. For the local filing lifecycle, see [The filing workflow](filing-"
+"spine.md)."
+msgstr ""
+"A backlog egy helyi tervezőeszköz. Nem bizonyítja, hogy az AEAT mit "
+"kapott meg vagy nem kapott meg. Az [aktív profiltól](profile-setup.md#what-"
+"the-active-profile-means), a helyi benyújtási jelölőktől és a helyi "
+"nyilvántartási szabályoktól függ. A helyi benyújtási életciklushoz lásd "
+"[A benyújtási munkafolyamat](filing-spine.md)."
+
+#: ../../how-to/filing-calendar.md:85
+msgid "What upcoming modelos will I have to file?"
+msgstr "Mely közelgő modelókat kell majd benyújtanom?"
+
+#: ../../how-to/filing-calendar.md:87
+msgid "Generate a calendar window:"
+msgstr "Hozzon létre egy naptár-időablakot:"
+
+#: ../../how-to/filing-calendar.md:92
+msgid ""
+"Both dates are required in `YYYY-MM-DD` format. The calendar applies "
+"national public holidays and business-day shifts before printing "
+"deadlines."
+msgstr ""
+"Mindkét dátum kötelező `YYYY-MM-DD` formátumban. A naptár a nemzeti "
+"munkaszüneti napokat és a munkanapokra való eltolásokat alkalmazza a "
+"határidők kinyomtatása előtt."
+
+#: ../../how-to/filing-calendar.md:95
+msgid ""
+"The calendar is stricter than `agenda` and `backlog`: it also refuses "
+"while a profile check is unresolved, such as "
+"`censo.enrolment_unverified`. That check reports that your census-backed "
+"enrollment facts are operator-declared, not AEAT-verified; AEAT publishes"
+" no read-only census view the tool could confirm them against. Review the"
+" profile facts (see [Maintain Modelo 036 census facts in your profile"
+"](censo-update.md)) and add `--allow-incomplete` to print a provisional "
+"calendar. Provisional entries are marked `censo_enrolment=unverified`. "
+"Add `--all-profiles` to include every registered profile instead of only "
+"the [active profile](profile-setup.md#what-the-active-profile-means), or "
+"`--show-suppressed` to inspect obligations Cadrumo normally filters out:"
+msgstr ""
+"A naptár szigorúbb, mint az `agenda` és a `backlog`: akkor is elutasítja "
+"a műveletet, amikor egy profilellenőrzés feloldatlan, például a "
+"`censo.enrolment_unverified`. Ez az ellenőrzés jelzi, hogy a censo-alapú "
+"nyilvántartásba vételi adatai a felhasználó által közöltek, nem AEAT "
+"által ellenőrzöttek; az AEAT nem tesz közzé csak olvasható censo-nézetet, "
+"amellyel az eszköz megerősíthetné őket. Tekintse át a profiladatokat "
+"(lásd [A Modelo 036 censo-adatok karbantartása a profiljában](censo-"
+"update.md)), és adja hozzá az `--allow-incomplete` kapcsolót egy "
+"ideiglenes naptár kinyomtatásához. Az ideiglenes bejegyzéseket a "
+"`censo_enrolment=unverified` jelöli. Adja hozzá az `--all-profiles` "
+"kapcsolót, hogy csak az [aktív profil](profile-setup.md#what-the-active-"
+"profile-means) helyett minden regisztrált profilt bevegyen, vagy a "
+"`--show-suppressed` kapcsolót azon kötelezettségek megvizsgálásához, "
+"amelyeket a Cadrumo normál esetben kiszűr:"
+
+#: ../../how-to/filing-calendar.md:111
+msgid ""
+"Suppressed entries include obligations that do not apply given your "
+"profile facts, or that are incomplete. Each entry shows why it was "
+"suppressed."
+msgstr ""
+"Az elnyomott bejegyzések közé tartoznak azok a kötelezettségek, amelyek a "
+"profiladatai alapján nem alkalmazandók, vagy amelyek hiányosak. Minden "
+"bejegyzés megmutatja, miért lett elnyomva."
+
+#: ../../how-to/filing-calendar.md:114
+msgid "Period tokens and dates"
+msgstr "Időszak-tokenek és dátumok"
+
+#: ../../how-to/filing-calendar.md:116
+msgid ""
+"Calendar commands use real inclusive dates in `YYYY-MM-DD` format, as "
+"shown above. Modelo work commands instead separate the filing year from "
+"the registry period:"
+msgstr ""
+"A naptárparancsok valódi, zárt intervallumú dátumokat használnak "
+"`YYYY-MM-DD` formátumban, ahogyan fent látható. A modelo munkaparancsok "
+"ezzel szemben elkülönítik a benyújtási évet a nyilvántartási időszaktól:"
+
+#: ../../how-to/filing-calendar.md:124
+msgid "The period tokens are:"
+msgstr "Az időszak-tokenek:"
+
+#: ../../how-to/filing-calendar.md:126
+msgid "`1T`: first quarter, January 1 through March 31"
+msgstr "`1T`: első negyedév, január 1-től március 31-ig"
+
+#: ../../how-to/filing-calendar.md:127
+msgid "`2T`: second quarter, April 1 through June 30"
+msgstr "`2T`: második negyedév, április 1-től június 30-ig"
+
+#: ../../how-to/filing-calendar.md:128
+msgid "`3T`: third quarter, July 1 through September 30"
+msgstr "`3T`: harmadik negyedév, július 1-től szeptember 30-ig"
+
+#: ../../how-to/filing-calendar.md:129
+msgid "`4T`: fourth quarter, October 1 through December 31"
+msgstr "`4T`: negyedik negyedév, október 1-től december 31-ig"
+
+#: ../../how-to/filing-calendar.md:130
+msgid "`0A`: annual period, January 1 through December 31"
+msgstr "`0A`: éves időszak, január 1-től december 31-ig"
+
+#: ../../how-to/filing-calendar.md:131
+msgid "`01` through `12`: monthly periods"
+msgstr "`01`-től `12`-ig: havi időszakok"
+
+#: ../../how-to/filing-calendar.md:133
+msgid ""
+"Which tokens a modelo accepts is modelo-specific, not universal. A "
+"quarterly modelo such as 130 accepts only `1T` through `4T`; an annual "
+"modelo such as 390 accepts only `0A`; Modelo 303 accepts `1T` through "
+"`4T` and `01` through `12`, but not `0A`. A token the modelo does not "
+"accept is refused (for example, 303 with `0A` reports \"no revision for "
+"... period='0A'\"). To see the tokens one modelo accepts, run `aeat app "
+"modelo describe 303` and read its `Períodos` line."
+msgstr ""
+"Az, hogy egy modelo mely tokeneket fogadja el, modelóspecifikus, nem "
+"egyetemes. Egy negyedéves modelo, például a 130, csak `1T`-től `4T`-ig "
+"fogad el; egy éves modelo, például a 390, csak `0A`-t fogad el; a Modelo "
+"303 elfogad `1T`-től `4T`-ig és `01`-től `12`-ig, de `0A`-t nem. Egy "
+"olyan tokent, amelyet a modelo nem fogad el, elutasít (például a 303 "
+"`0A`-val „no revision for ... period='0A'” üzenetet jelent). Az egy "
+"modelo által elfogadott tokenek megtekintéséhez futtassa az `aeat app "
+"modelo describe 303` parancsot, és olvassa el a `Períodos` sorát."
+
+#: ../../how-to/filing-calendar.md:141
+msgid ""
+"Every command takes the year separately with `--year` and the period as "
+"one of these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026`"
+" are not accepted; pass `--year 2026 --period 1T` instead."
+msgstr ""
+"Minden parancs az évet külön, a `--year` kapcsolóval veszi át, az "
+"időszakot pedig e AEAT-tokenek egyikeként. A naptárformák, például a "
+"`2026Q1` vagy a puszta `2026`, nem elfogadottak; helyettük adja meg a "
+"`--year 2026 --period 1T`-t."
+
+#: ../../how-to/filing-calendar.md:145
+msgid ""
+"The `ledger list` and `ledger review` commands filter by period through "
+"`--filter` clauses. The period token and the year travel as two separate "
+"clauses, using the same AEAT tokens:"
+msgstr ""
+"A `ledger list` és a `ledger review` parancsok időszak szerint szűrnek "
+"`--filter` záradékokon keresztül. Az időszak-token és az év két külön "
+"záradékként utazik, ugyanazokat az AEAT-tokeneket használva:"
+
+#: ../../how-to/filing-calendar.md:153
+msgid ""
+"Pass the bare token to `period=` and the year to `year=`. The two clauses"
+" go together: `--filter period=1T` without `--filter year=2026` is "
+"refused. Combined forms such as `period=2026-1T` or `period=2026Q1` are "
+"not accepted."
+msgstr ""
+"Adja át a puszta tokent a `period=`-nek, az évet pedig a `year=`-nek. A "
+"két záradék együtt jár: a `--filter period=1T` a `--filter year=2026` "
+"nélkül elutasításra kerül. A kombinált formák, például a `period=2026-1T` "
+"vagy a `period=2026Q1`, nem elfogadottak."
+
+#: ../../how-to/filing-calendar.md:157
+msgid ""
+"For local planning, year-end is December 31 of the filing year. Annual "
+"period `0A` covers the full calendar year. The fourth quarter `4T` also "
+"ends on December 31, but it is still a quarterly period, not an annual "
+"return. The calendar commands above show deadlines after holiday and "
+"business-day adjustments."
+msgstr ""
+"A helyi tervezéshez az év vége a benyújtási év december 31-e. A `0A` éves "
+"időszak a teljes naptári évet lefedi. A `4T` negyedik negyedév szintén "
+"december 31-én ér véget, de ez továbbra is negyedéves időszak, nem éves "
+"bevallás. A fenti naptárparancsok a határidőket a munkaszüneti napok és a "
+"munkanapokra való igazítások után mutatják."
+
+#: ../../how-to/filing-calendar.md:163
+msgid "What should I do with one modelo?"
+msgstr "Mit tegyek egy modelóval?"
+
+#: ../../how-to/filing-calendar.md:165
+msgid ""
+"List the modelo catalogue, then describe one modelo before creating "
+"filing work:"
+msgstr ""
+"Listázza a modelo-katalógust, majd írjon le egy modelót, mielőtt "
+"benyújtási munkát hozna létre:"
+
+#: ../../how-to/filing-calendar.md:171
+msgid "Then follow the filing workflow for the target modelo, year, and period:"
+msgstr ""
+"Ezután kövesse a benyújtási munkafolyamatot a cél-modelóhoz, -évhez és "
+"-időszakhoz:"
+
+#: ../../how-to/filing-calendar.md:173 ../../how-to/filing-calendar.md:196
+msgid "[Quickstart: produce a modelo file](quickstart.md)"
+msgstr "[Gyorsindító: állítson elő egy modelo-fájlt](quickstart.md)"
+
+#: ../../how-to/filing-calendar.md:174
+msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
+msgstr "[Hogyan készítsen elő egy Modelo 303 negyedéves benyújtást](modelo-303.md)"
+
+#: ../../how-to/filing-calendar.md:175
+msgid "[How to prepare the annual Modelo 390 summary](modelo-390.md)"
+msgstr "[Hogyan készítse elő az éves Modelo 390 összesítőt](modelo-390.md)"
+
+#: ../../how-to/filing-calendar.md:176
+msgid "[The filing workflow](filing-spine.md)"
+msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
+
+#: ../../how-to/filing-calendar.md:178
+msgid "If results look wrong"
+msgstr "Ha az eredmények helytelennek tűnnek"
+
+#: ../../how-to/filing-calendar.md:180
+msgid ""
+"If a command reports missing profile facts, update the profile with [Set "
+"up your taxpayer profile](profile-setup.md). If census facts may be stale"
+" or missing, re-check them against your Modelo 036 copy with [Maintain "
+"Modelo 036 census facts in your profile](censo-update.md)."
+msgstr ""
+"Ha egy parancs hiányzó profiladatokat jelez, frissítse a profilt [Az "
+"adózói profil beállítása](profile-setup.md) útmutatóval. Ha a "
+"censo-adatok elavultak vagy hiányosak lehetnek, vesse össze őket újra a "
+"Modelo 036 másolatával [A Modelo 036 censo-adatok karbantartása a "
+"profiljában](censo-update.md) útmutatóval."
+
+#: ../../how-to/filing-calendar.md:185
+msgid ""
+"If a command reports an invalid date, inactive profile, or readiness "
+"problem, use [Diagnose and repair your local setup](troubleshooting.md)."
+msgstr ""
+"Ha egy parancs érvénytelen dátumot, inaktív profilt vagy felkészültségi "
+"problémát jelez, használja [A helyi beállítás diagnosztizálása és "
+"javítása](troubleshooting.md) útmutatót."
+
+#: ../../how-to/filing-calendar.md:188
+msgid ""
+"For exact command flags and output fields, use the [CLI "
+"reference](../cli/index.rst)."
+msgstr ""
+"A pontos parancskapcsolókhoz és kimeneti mezőkhöz használja a "
+"[CLI-referenciát](../cli/index.rst)."
+
+#: ../../how-to/filing-calendar.md:191
+msgid "Next steps"
+msgstr "Következő lépések"
+
+#: ../../how-to/filing-calendar.md:193
+msgid "[Set up your taxpayer profile](profile-setup.md)"
+msgstr "[Az adózói profil beállítása](profile-setup.md)"
+
+#: ../../how-to/filing-calendar.md:194
+msgid "[Check AEAT notifications](check-aeat-notifications.md)"
+msgstr "[AEAT-értesítések ellenőrzése](check-aeat-notifications.md)"
+
+#: ../../how-to/filing-calendar.md:195
+msgid "[Import and manage transactions](import-bank-statements.md)"
+msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
+
+#: ../../how-to/filing-calendar.md:197
+msgid "[CLI reference](../cli/index.rst)"
+msgstr "[CLI-referencia](../cli/index.rst)"

@@ -1,0 +1,9 @@
+[[revisions."2022".dependency_classifications]]
+id = "renta-2022-dep-131"
+source_modelo = "131"
+treatment = "direct_annual_settlement"
+conditional_on_economic_activity = true
+target_constructs = ["renta-2022-dependent-modelos"]
+relation_refs = ["renta-2022-rel-131-pagos-fraccionados"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
+source_refs = ["aeat-renta-2022-manual-parte1", "boe-modelo-100-2022-form"]

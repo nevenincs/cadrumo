@@ -1,0 +1,14 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-resto-a-ingresar-positivo"
+target_casilla_id = "0695"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "subtract", args = [{ casilla_id = "0670" }, { casilla_id = "0693" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-99"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "cuota líquida"]

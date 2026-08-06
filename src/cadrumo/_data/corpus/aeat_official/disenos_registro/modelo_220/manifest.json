@@ -1,0 +1,60 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "220",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html"
+  ],
+  "artefact_count": 4,
+  "artefacts": [
+    {
+      "modelo": "220",
+      "title": "220 - Ejercicio 2025",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR220e25.xlsx",
+      "stored_path": "files/01-220-ejercicio-2025.xlsx",
+      "original_filename": "DR220e25.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 1662928,
+      "sha256": "69c3a234e96eb4485a31c65209348bbcede0a49a8c143223c952000784f3f2df",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "220",
+      "title": "220 - Ejercicio 2022",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR220e22.xlsm",
+      "stored_path": "files/02-220-ejercicio-2022.xlsm",
+      "original_filename": "DR220e22.xlsm",
+      "content_type": "application/octet-stream",
+      "bytes": 1282290,
+      "sha256": "251fffc3cf06ef8a16c14a5143b87e44abb5a97f23d0c949d468fe76ddfc02ee",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "220",
+      "title": "220 - Ejercicio 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR220e23.xlsm",
+      "stored_path": "files/03-220-ejercicio-2023.xlsm",
+      "original_filename": "DR220e23.xlsm",
+      "content_type": "application/octet-stream",
+      "bytes": 1353283,
+      "sha256": "ad3ed2e041789c820cb92e6a9be392a0fa5327ada9f71ac18c70f65cc9da17ca",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "220",
+      "title": "220 - Ejercicio 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR220e24.xlsx",
+      "stored_path": "files/04-220-ejercicio-2024.xlsx",
+      "original_filename": "DR220e24.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 1559124,
+      "sha256": "a8f398dd42db0b1142d5f2e98bf3a60d79069e31d63af32001373f459fee4f2e",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

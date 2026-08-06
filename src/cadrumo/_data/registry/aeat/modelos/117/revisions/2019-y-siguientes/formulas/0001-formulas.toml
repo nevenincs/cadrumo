@@ -1,0 +1,24 @@
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-117-total-liquidacion"
+target_casilla_id = "09"
+expression = { op = "add", args = [{ casilla_id = "03" }, { casilla_id = "06" }, { casilla_id = "08" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-117-form-text"
+required_text = ["Suma de retenciones, ingresos a cuenta, pagos a cuenta y regularizacion, en su caso ([03] + [06] + [08])"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-117-resultado-ingresar"
+target_casilla_id = "11"
+expression = { op = "subtract", args = [{ casilla_id = "09" }, { casilla_id = "10" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-i"]
+source_refs = ["boe-modelo-117-form-text", "boe-modelo-117-form-layout"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-117-form-text"
+required_text = ["Resultado a ingresar ([09] - [10])"]
+

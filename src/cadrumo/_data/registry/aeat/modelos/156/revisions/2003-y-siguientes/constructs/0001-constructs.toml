@@ -1,0 +1,12 @@
+[[revisions."2003-y-siguientes".constructs]]
+id = "modelo-156-informative"
+legal_refs = ["orden-hac-3580-2003:art-1", "orden-hac-3580-2003:art-4", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-156-procedure", "enrolled-modelo-156-layout"]
+casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
+application_links = ["modelo-156-filing", "modelo-156-verification", "modelo-156-deadline"]
+workbook_parity_refs = ["modelo-156-orden-static-layout"]
+deadline_windows = [
+    "modelo-156-2024-0a",
+    "modelo-156-2025-0a",
+    "modelo-156-2026-0a",
+]

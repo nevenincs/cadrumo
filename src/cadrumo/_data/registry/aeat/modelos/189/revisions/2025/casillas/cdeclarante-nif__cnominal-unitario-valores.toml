@@ -1,0 +1,111 @@
+[[revisions."2025".casillas]]
+id = "declarante-nif"
+number = "tipo1.nif-declarante"
+section = ["identificacion_declaracion"]
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order"]
+
+[[revisions."2025".casillas]]
+id = "ejercicio-declaracion"
+number = "tipo1.ejercicio"
+section = ["identificacion_declaracion"]
+data_type = "year"
+semantic_role = "filing_year"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5"]
+source_refs = ["boe-modelo-189-base-order", "aeat-modelo-189-procedure"]
+
+[[revisions."2025".casillas]]
+id = "declarado-nif"
+number = "tipo2.nif-declarado"
+section = ["declarado"]
+data_type = "nif"
+semantic_role = "m189_declarado_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order"]
+
+[[revisions."2025".casillas]]
+id = "declarado-nombre"
+number = "tipo2.nombre-declarado"
+section = ["declarado"]
+data_type = "name"
+semantic_role = "m189_declarado_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+source_refs = ["boe-modelo-189-base-order"]
+
+[[revisions."2025".casillas]]
+id = "codigo-pais"
+number = "tipo2.78-79"
+section = ["declarado", "localizacion"]
+data_type = "country_code"
+semantic_role = "m189_codigo_pais"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1284-2023:art-11"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1284"]
+
+[[revisions."2025".casillas]]
+id = "clave-valor"
+number = "tipo2.81"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_valor"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1180-2023:art-primero"]
+source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180"]
+
+[[revisions."2025".casillas]]
+id = "valoracion"
+number = "tipo2.108-123"
+section = ["valores_seguros_rentas", "valoracion"]
+data_type = "money"
+semantic_role = "m189_valoracion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1180-2023:art-primero", "orden-hac-132-2026:art-unico"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "boe-modelo-189-2025-values",
+]
+
+[[revisions."2025".casillas]]
+id = "numero-valores"
+number = "tipo2.130-146"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "decimal"
+semantic_role = "m189_numero_valores"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "boe-modelo-189-2025-values",
+]
+
+[[revisions."2025".casillas]]
+id = "nominal-unitario-valores"
+number = "tipo2.147-164"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "money"
+semantic_role = "m189_nominal_unitario_valores"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1284-2023:art-11", "orden-hac-132-2026:art-unico"]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "boe-modelo-189-2025-values",
+]
+

@@ -1,0 +1,89 @@
+### CRITICAL orphans (14)
+
+| # | Key | Description | Task |
+|---|-----|-------------|------|
+| 1 | eva-CRITICAL-foreign-dtax | Art. 80 LIRPF casillas 0588-0594. Proposed: source-country-rendimiento-axis. | → Task #513 |
+| 2 | lourdes-CRITICAL-actividad-sign | Casilla 0006 treated as loss; negative base imponible. Proposed: m100-actividad-economica-routing-fix. | → Task #514 |
+| 3 | lourdes-CRITICAL-prorrata-custodia | Prorrata 50/50 minimo descendientes Art. 59. Proposed: m100-custodia-compartida-prorrata-axis. | → Task #515 |
+| 4 | khalid-CRITICAL-eo-motor | EO M131 motor zero (#168 no exec). Proposed: m131-eo-modulos-table-driven-engine. | → Task #516 |
+| 5 | khalid-CRITICAL-m303-simplificado | M303 regimen simplificado absent (#169 no exec). Proposed: m303-regimen-simplificado-binding-set. | → Task #517 |
+| 6 | khalid-CRITICAL-m100-m131 | M100 binding for M131 pagos fraccionados absent (#170 no exec). Proposed: renta-2024-modelo-131-pagos-fraccionados. | → Task #518 |
+| 7 | mateo-CRITICAL-M650 | M650 ISD absent; no Path-B stub. Proposed: stub-only-m650-isd-path-b. | → Task #519 |
+| 8 | mateo-CRITICAL-M660 | M660 informativa caudal absent. Proposed: stub-only-m660-caudal-path-b. | → Task #520 |
+| 9 | olivia-CRITICAL-brexit | Brexit EU/non-EU tipo branching absent (19% vs 24%). Proposed: irnr-eu-noneeu-tipo-branching. | → Task #521 |
+| 10 | ramon-CRITICAL-iva-isp | Inversion sujeto pasivo Art. 84.2 LISIVA absent. Proposed: m303-isp-base-binding. | → Task #522 |
+| 11 | maria-CRITICAL-m182 | M182 Ley 49/2002 donantes absent; no Path-B stub. Proposed: stub-only-m182-donantes-path-b. | → Task #523 |
+| 12 | maria-CRITICAL-tipo10 | DP200014 tipo 10% not applied; 23% overcalculates. Proposed: m200-regimen-especial-tipo-formula-fix. | → Task #524 |
+| 13 | mikel-CRITICAL-244 | Profile create bricked (#244 filed; no exec). Proposed: profile-create-bucket-manifest-lifecycle-fix. | → Task #525 |
+| 14 | felipe-CRITICAL-art13h | Art. 13.1.h TRLIRNR vivienda vacia non-resident. Proposed: irnr-vivienda-vacia-imputacion-axis. | → Task #526 |
+
+### HIGH orphans (30 total)
+
+| Key | Description | Task |
+|-----|-------------|------|
+| david-HIGH-source-scope | Spanish vs worldwide income axis for impatriados. | → Task #527 |
+| david-HIGH-6yr-window | Beckham 6-year window expiry untracked. | → Task #528 |
+| david-HIGH-output-lang | Output-language flag coverage gaps across subcommands. | → Task #529 |
+| david-HIGH-wizard-spanish | Profile wizard hardcoded Spanish. | → Task #530 |
+| khalid-HIGH-m390-simplificado | M390 regimen simplificado cuota devengada missing. | → Task #531 |
+| lourdes-HIGH-alimentos | Pension/anualidades alimentos Art. 64/65 LIRPF absent. | → Task #532 |
+| lourdes-HIGH-extemporaneidad | Extemporaneidad + recargo Art. 27 LGT (R9; recurrent 8+ rounds). | → Task #533 |
+| nuria-HIGH-m184-m100 | M184 -> M100 attribution binding missing. | → Task #534 |
+| olivia-HIGH-representante | Representante fiscal Art. 47 LGT not modelled. | → Task #535 |
+| olivia-HIGH-m100-nonresident | M100 silently accepted for non-resident profile. | → Task #536 |
+| olivia-HIGH-convenio | Convenio doble imposicion not modelled (#198 no exec). | → Task #537 |
+| sergio-HIGH-reservas-lis | Reservas Art. 25/105 LIS not modelled in M200. | → Task #538 |
+| sergio-HIGH-m111-director | M111 director vs empleado labels + statutory rate absent. | → Task #539 |
+| sergio-HIGH-director-m100 | Director retencion Art. 101.3 LIRPF missing from M100. | → Task #540 |
+| pedro-HIGH-intracom | ledger invoice missing intracom fields. | → Task #541 |
+| pedro-HIGH-eu-nif | EU NIF format validation per country regex absent. | → Task #542 |
+| carla-HIGH-pagadores | Multiple pagadores Art. 96.3 LIRPF obligation absent. | → Task #543 |
+| carla-HIGH-pension-channel | Pension rescate guided classification absent. | → Task #544 |
+| aitor-HIGH-plan-empleo | Plan de empleo Art. 52 LIRPF reduccion casilla 0430 unwired. | → Task #545 |
+| aitor-HIGH-admin-labels | Administrator retencion Art. 101.3 labels and verification absent. | → Task #546 |
+| marcos-HIGH-conjunta | No conjunta vs individual comparison surface. | → Task #547 |
+| diego-HIGH-art110 | Art. 110.3.b RIRPF 70% exemption rule (#219 no exec). | → Task #548 |
+| diego-HIGH-art101-6 | Art. 101.6 LIRPF sport/art axis. | → Task #549 |
+| ines-HIGH-madrid-adopcion | Madrid autonomic adopcion deduccion 600 EUR trigger absent. | → Task #550 |
+| maria-HIGH-ley49 | Ley 49/2002 opt-in date axis absent from profile. | → Task #551 |
+| maria-HIGH-art67 | Art. 6/7 LISyD rentas exentas classification guidance absent. | → Task #552 |
+| mikel-HIGH-art11 | Art. 11.2 LIRPF marinero exencion 50% navegado fuera aguas. | → Task #553 |
+| mikel-HIGH-da24 | DA 24a LIRPF pesqueria fuera archipielago canario. | → Task #554 |
+| ramon-HIGH-m303-ledger | M303 calculate without ledger; no doc or override path. | → Task #555 |
+| ramon-HIGH-m200-bindings | M200 hidden bindings not shown in bindings list. | → Task #556 |
+
+### MEDIUM orphans (16 total)
+
+| Key | Description | Task |
+|-----|-------------|------|
+| eva-MEDIUM-1812 | Casilla 1812 manual auto-propagation gap. | → Task #559 |
+| eva-MEDIUM-nft | NFT classification guidance absent. | → Task #560 |
+| khalid-MEDIUM-revision | Revision discovery requires failed attempt. | → Task #561 |
+| lourdes-MEDIUM-silent-madrid | Silent Madrid CCAA default with no notification. | → Task #562 |
+| lourdes-MEDIUM-decimal-bool | Decimal-encoded boolean binding opaque error message. | → Task #563 |
+| lourdes-MEDIUM-verify-opaque | verify DRAFT_HAS_ERRORS without enumerating (recurrent). | → Task #564 |
+| mateo-MEDIUM-enum-decimal | Enum-decimal binding channel opaque (recurrent). | → Task #565 |
+| pedro-MEDIUM-intracom-seg | M303 intracom bienes vs servicios not separated. | → Task #566 |
+| pedro-MEDIUM-m303-m349 | M303 <-> M349 cross-reference absent. | → Task #567 |
+| carla-MEDIUM-gastos | 2000 gastos deducibles Art. 19.2.f not auto-applied. | → Task #568 |
+| aitor-MEDIUM-m123-bug | M123 casilla 06 arithmetic bug (nperceptores summed into base). | → Task #569 |
+| aitor-MEDIUM-m190-clave | M190 no per-clave breakdown in output. | → Task #570 |
+| marcos-MEDIUM-vivienda-post2013 | Vivienda habitual post-2013 silently accepts deduccion inputs. | → Task #571 |
+| marcos-MEDIUM-m600 | M600 error generic without ITP-AJD autonomic redirect. | → Task #572 |
+| sergio-MEDIUM-bin | BIN pending compensation absent from M200 profile. | → Task #573 |
+| sergio-MEDIUM-plan-pensiones | Aportaciones plan pensiones Art. 51/52 not modelled in M100. | → Task #574 |
+
+### LOW / POLISH orphans (10 total)
+
+| Key | Description | Task |
+|-----|-------------|------|
+| eva-LOW-m720 | M720 bindings without semantic abstraction. | → Task #575 |
+| eva-LOW-extemporaneidad | Extemporaneidad warning absent (R9 cluster). | → Task #576 |
+| khalid-LOW-windows | Windows PowerShell POSIX env PermissionError raw traceback. | → Task #577 |
+| lourdes-LOW-quiet | --quiet not available on modelo work create. | → Task #578 |
+| lourdes-POLISH-casilla | No CLI verb for casilla semantic description. | → Task #579 |
+| mateo-LOW-nie | NIE non-resident heredero coverage unverified. | → Task #580 |
+| mateo-POLISH-domain | modelo list lacks domain filter. | → Task #581 |
+| pedro-LOW-m369 | M369 OSS B2B/B2C disambiguation note absent. | → Task #582 |
+| khadija-LOW-locales | French + Arabic locales absent. | → Task #583 |
+| mikel-LOW-inss-maritima | INSS-Maritima regimen especial SS axis absent. | → Task #584 |

@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "181",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "181",
+      "title": "181 - Diseño de registro actualizado en 2022",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_22/DR_181_2022.pdf",
+      "stored_path": "files/01-181-diseno-de-registro-actualizado-en-2022.pdf",
+      "original_filename": "DR_181_2022.pdf",
+      "content_type": "application/pdf",
+      "bytes": 316409,
+      "sha256": "4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

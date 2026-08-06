@@ -1,0 +1,20 @@
+[[revisions.2025-y-siguientes.formulas]]
+id = "modelo-202-modalidad-40-3-resultado"
+target_casilla_id = "32"
+# AEAT instructions: "Clave [32] = ( [clave [18] (o clave [26]) - clave [27]
+# - clave [28] ] x clave [29]/100 ) - clave [30] - clave [31]". Casillas 18
+# (B1 caso general, unico tipo) and 26 (B2 casos especificos, varios tipos)
+# are alternative, mutually exclusive computations of the same "resultado
+# previo": a filer completes exactly one lane's manual inputs (16/17/47/48/
+# 40/49 for B1, or 19-25/42/50-52/61-66 for B2) and leaves the other lane's
+# inputs empty, so the unused casilla resolves to zero. Adding both
+# reproduces the "18 (o 26)" selection without inventing a lane-discriminator
+# binding the registry does not model.
+expression = { op = "subtract", args = [{ op = "subtract", args = [{ op = "percent", args = [{ op = "subtract", args = [{ op = "subtract", args = [{ op = "add", args = [{ casilla_id = "18" }, { casilla_id = "26" }] }, { casilla_id = "27" }] }, { casilla_id = "28" }] }, { casilla_id = "29" }] }, { casilla_id = "30" }] }, { casilla_id = "31" }] }
+rounding = "money-2"
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
+
+[[revisions.2025-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["clave [32]", "es un importe calculado", "(o clave [26])"]

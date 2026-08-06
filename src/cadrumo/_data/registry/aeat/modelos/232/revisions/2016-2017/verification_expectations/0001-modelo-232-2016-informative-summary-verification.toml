@@ -1,0 +1,9 @@
+[[revisions."2016-2017".verification_expectations]]
+id = "modelo-232-2016-informative-summary-verification"
+computed_casilla_ids = ["decl.ejercicio", "decl.tipo-ejercicio", "decl.cnae"]
+tolerance = "0.00"
+rounding = "none"
+min_coverage = "1.0"
+discrepancy_causes = ["extraction_unreliable"]
+legal_refs = ["orden-hfp-816-2017:art-1", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016", "aeat-modelo-232-procedure"]

@@ -1,0 +1,6 @@
+@step Seed the opening balance for a true first Modelo 303 period.
+aeat --format json app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+@step Show the IVA compensation wallet balance for the year.
+@result aeat --format json app modelo iva-wallet balance --as-of-year 2026
+@expect result.total_balance == "0"
+@expect exit_code == 0

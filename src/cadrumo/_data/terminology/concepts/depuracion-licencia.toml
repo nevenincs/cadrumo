@@ -1,0 +1,44 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "depuracion-licencia"
+domain = "concepto"
+lifecycle = "deprecated"
+broader = ["manual-terminologia"]
+related = ["mapa-relevancia"]
+created_at = 2026-06-12
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "La frontera que permite shippear solo identificadores y rankings limpios de datos de embedding."
+definition = "Regla de transformacion que elimina de los artefactos de busqueda cualquier dato model-derived no permitido, como vectores, pesos sparse, scores crudos, rutas o snippets, y conserva solo identificadores, destinos, superficies y pesos normalizados. Bajo la restriccion de licencias de las fuentes, esta depuracion mantiene limpio el backend shipped aunque el oraculo dev use recuperacion hibrida."
+scope_note = "No cambia la fuente legal de un resultado; solo define que informacion derivada puede cruzar al artefacto shipped."
+
+[[language.es.term]]
+label = "depuracion de licencia"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "laundering"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The boundary that ships only clean identifiers and rankings, never embedding internals."
+
+[[language.en.term]]
+label = "licence laundering"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "La frontera que envia nomes identificadors i rankings nets, mai dades internes d'embedding."
+
+[language.hu]
+short_description = "A határ, amely csak tiszta azonosítókat és rangsorokat szállít, embedding-belső adatokat nem."

@@ -1,0 +1,54 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "expediente"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-99"]
+created_at = 2026-06-11
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "Un expediente o caso administrativo de la AEAT."
+definition = "Conjunto ordenado de actuaciones y documentos de un procedimiento tributario ante la AEAT. La aplicacion puede leer expedientes cuando hay autenticacion configurada en modo solo lectura; nunca escribe en ellos."
+
+[language.es.source]
+citation = "Ley 39/2015 del Procedimiento Administrativo Comun y Sede Electronica de la AEAT."
+authority = "aeat"
+
+[[language.es.term]]
+label = "expediente"
+term_status = "preferred"
+
+[language.en]
+short_description = "An AEAT case file."
+definition = "An ordered set of actions and documents of a tax procedure before the AEAT. The application can read case files when read-only authentication is configured; it never writes to them."
+
+[language.en.source]
+citation = "Ley 39/2015 del Procedimiento Administrativo Comun and the AEAT Sede Electronica."
+authority = "aeat"
+
+[[language.en.term]]
+label = "case file"
+term_status = "preferred"
+
+[language.ca]
+short_description = "Un expedient o cas administratiu de l'AEAT."
+definition = "Conjunt ordenat d'actuacions i documents d'un procediment tributari davant l'AEAT. L'aplicació pot llegir expedients quan hi ha autenticació configurada en mode només lectura; mai hi escriu."
+
+[language.ca.source]
+citation = "Ley 39/2015 del Procedimiento Administrativo Comun y Sede Electronica de la AEAT."
+authority = "aeat"
+
+[language.hu]
+short_description = "Egy AEAT-ügyirat."
+definition = "Egy AEAT előtti adóügyi eljárás rendezett cselekmény- és dokumentumgyűjteménye. Az alkalmazás akkor olvashat ügyiratokat, ha csak olvasható módban van hitelesítés beállítva; azokba soha nem ír."
+
+[language.hu.source]
+citation = "A 39/2015. törvény az általános közigazgatási eljárásról, és az AEAT Elektronikus Ügyfélkapuja."
+authority = "aeat"

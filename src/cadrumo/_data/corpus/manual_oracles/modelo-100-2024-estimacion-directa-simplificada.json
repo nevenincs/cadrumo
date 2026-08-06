@@ -1,0 +1,12 @@
+{
+  "modelo": "100",
+  "filing_year": 2024,
+  "source_kind": "aeat_manual_worked_example",
+  "scenario_id": "m100-2024-medico-radiologo-simplificada",
+  "raw_evidence_locator": "corpus/manuals/renta/2024/part1/source.pdf.extracted.md#L19807-L19965",
+  "notes": "AEAT Manual practico de Renta 2024, Parte 1, Capitulo 7 (Rendimientos de actividades economicas. Metodo de estimacion directa), caso practico de determinacion del rendimiento neto derivado de actividad profesional en estimacion directa, modalidad simplificada. Table rows 'Rendimiento neto' (58.300 registrado / 58.100 fiscal, L19912), 'Rendimiento neto reducido' (58.100, L19913) and 'Rendimiento neto reducido total' (58.100, L19914) all agree on 58.100; the value is independently re-derivable bottom-up from every raw ingreso/gasto line item quoted in the manual via the registry's own 0180/0218/0221/0222/0223/0224 formula chain (see test_m100_2024_estimacion_directa_manual_worked_example.py). Casilla 0180 ('Total ingresos computables') carries the same caso practico's own 'Total ingresos' row in the valores fiscales column, 138.400 (L19883), quoted verbatim rather than summed here; the manual states it on its own account beside the line items it aggregates (Honorarios 124.000 L19824, Conferencias 10.800 L19825, Autoconsumo 600 nota 1 L19916, Variacion de existencias 3.000 nota 3 L19920). Grounding 0180 as well as 0226 means a compensating pair of errors on the ingresos side - one line over, another under, rendimiento neto unchanged - can no longer pass, and it is the figure the ledger-income chain has to reach: casilla 0171 ('Ingresos de explotacion') is input_kind=bound to renta-2024-ledger-income-0171 (ledger_renta_income_aggregation), so 0180 is the first PUBLISHED total downstream of the binding. test_ledger_income_chain_aeat_exempt_worked_example.py drives the two printed invoiced ingresos lines through the real aggregation and the real binding resolver into 0171 and asserts 0180 reaches 138.400 and 0226 reaches 58.100, where test_m100_2024_estimacion_directa_manual_worked_example.py supplies 0171 as a hand-typed casilla input and therefore grounds only the formula chain above the binding. The same caso practico is this corpus's exempt-services example on the manual's own statement: nota (7), L19946-19947, reads 'Se deduce como gasto el IVA soportado por tratarse de una actividad exenta de este impuesto que no da derecho a deducir las cuotas soportadas'.",
+  "expected_by_casilla_id": {
+    "0180": "138400.00",
+    "0226": "58100.00"
+  }
+}

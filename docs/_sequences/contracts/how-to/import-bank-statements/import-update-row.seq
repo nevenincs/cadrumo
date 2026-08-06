@@ -1,0 +1,14 @@
+@step Record a transaction to update.
+@setup aeat --format json app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING --description "Office supplies" --idempotency-key import-update
+@capture transaction_id result.transaction_id
+@step Correct the description, capturing the new id the update rotates to.
+aeat --format json app ledger update {transaction_id} --description "Corrected description"
+@capture after_description result.transaction_id
+@step Record the IVA breakdown against the current id.
+aeat --format json app ledger update {after_description} --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+@capture after_iva result.transaction_id
+@step Add an operator note against the current id.
+aeat app ledger update {after_iva} --notes "Receipt checked against supplier PDF"
+@step The original id still resolves for reads; confirm the correction landed.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.taxable_base == "100"

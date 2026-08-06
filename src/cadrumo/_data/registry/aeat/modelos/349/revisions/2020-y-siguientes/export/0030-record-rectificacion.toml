@@ -1,0 +1,256 @@
+[[revisions."2020-y-siguientes".export_layouts]]
+id = "modelo-349-fichero-2020"
+
+[[revisions."2020-y-siguientes".export_layouts.records]]
+id = "modelo-349-rectificacion"
+record_type = "rectificacion"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+required = false
+repeat = "binding_rows"
+binding_record = "rectificacion"
+discriminator = { offset = 147, length = 32, requires = "non_blank" }
+
+[revisions."2020-y-siguientes".export_layouts.records.row_field_casilla_ids]
+country_code = "op.codigo-pais"
+party_tax_id = "op.nif-comunitario"
+party_legal_name = "op.apellidos-razon-social"
+clave = "op.clave-operacion"
+rectified_year = "rect.ejercicio-rectificado"
+rectified_period = "rect.periodo-rectificado"
+base_imponible = "rect.base-rectificada"
+rectified_base_previous = "rect.base-anterior"
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-record-type"
+offset = 1
+length = 1
+kind = "literal"
+literal = "2"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-modelo"
+offset = 2
+length = 3
+kind = "literal"
+literal = "349"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-year"
+offset = 5
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-declarante-nif"
+offset = 9
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-blancos-18"
+offset = 18
+length = 58
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-codigo-pais"
+offset = 76
+length = 2
+kind = "binding"
+binding = "iva-349-rectificacion-row-codigo-pais"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-nif-comunitario"
+offset = 78
+length = 15
+kind = "binding"
+binding = "iva-349-rectificacion-row-nif"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-apellidos"
+offset = 93
+length = 40
+kind = "binding"
+binding = "iva-349-rectificacion-row-apellidos"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-clave"
+offset = 133
+length = 1
+kind = "binding"
+binding = "iva-349-rectificacion-row-clave"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-blancos-134"
+offset = 134
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-ejercicio"
+offset = 147
+length = 4
+kind = "binding"
+binding = "iva-349-rectificacion-row-ejercicio"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-periodo"
+offset = 151
+length = 2
+kind = "binding"
+binding = "iva-349-rectificacion-row-periodo"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-base-rectificada"
+offset = 153
+length = 13
+kind = "binding"
+binding = "iva-349-rectificacion-row-base-rectificada"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-base-anterior"
+offset = 166
+length = 13
+kind = "binding"
+binding = "iva-349-rectificacion-row-base-anterior"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-sustituto-nif-filler"
+offset = 179
+length = 17
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-sustituto-apellidos-filler"
+offset = 196
+length = 40
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]
+
+[[revisions."2020-y-siguientes".export_layouts.records.fields]]
+id = "modelo-349-rect-blancos-236"
+offset = 236
+length = 265
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current"]

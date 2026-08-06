@@ -1,0 +1,14 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-matrimonio-vigente-todo-anio"
+target_casilla_id = "0245"
+# Casilla 0245: Si el matrimonio ha estado vigente durante todo el año 2025.
+# 1 when marriage_date predates 2025 (marriage_full_year = 1); 0 otherwise.
+# When no marriage_date is recorded the binding is absent and the engine
+# emits 0 via the default-missing path.
+expression = { binding = "renta-2025-profile-marriage-full-year" }
+legal_refs = ["ley-35-2006:art-82"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["matrimonio", "vigente"]

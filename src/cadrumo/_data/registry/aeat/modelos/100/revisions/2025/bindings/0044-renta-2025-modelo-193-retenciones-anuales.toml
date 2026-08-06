@@ -1,0 +1,11 @@
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-193-retenciones-anuales"
+source = "relation_prefill"
+selector = { source_modelo = "193", source_casilla_id = "decl.retenciones-total" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-193-296-note-2025"
+required_text = ["modelo 193, declaración informativa resumen anual", "se comunican las retenciones practicadas"]

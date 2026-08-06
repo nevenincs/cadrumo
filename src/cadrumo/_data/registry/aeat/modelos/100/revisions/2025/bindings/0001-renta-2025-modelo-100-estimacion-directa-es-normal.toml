@@ -1,0 +1,12 @@
+[[revisions."2025".bindings]]
+id = "renta-2025-modelo-100-estimacion-directa-es-normal"
+source = "manual_input"
+selector = { casilla_id = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
+aggregation = { op = "copy" }
+typed_enum = "EstimacionDirectaModalidad"
+legal_refs = ["ley-35-2006:art-30"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Concepto y ambito de aplicacion del metodo de estimacion directa", "Fase 1ª. Determinacion del rendimiento neto", "Fase 2ª. Determinacion del rendimiento neto reducido"]

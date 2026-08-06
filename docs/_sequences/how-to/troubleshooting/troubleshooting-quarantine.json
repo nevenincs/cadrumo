@@ -1,0 +1,71 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "repair",
+        "quarantine",
+        "--dry-run"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "dry_run\ttrue\nwould_quarantine\t0\nwould_retain\t3\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "repair",
+        "quarantine",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.repair.quarantine",
+        "notices": [],
+        "result": {
+          "dry_run": false,
+          "namespaces": [
+            {
+              "namespace": "cadrumo.application.user_profile.value",
+              "readable": 1,
+              "unreadable": 0
+            },
+            {
+              "namespace": "cadrumo.domain.buckets.event_history",
+              "readable": 1,
+              "unreadable": 0
+            },
+            {
+              "namespace": "cadrumo.workflow",
+              "readable": 1,
+              "unreadable": 0
+            }
+          ],
+          "quarantined": null,
+          "readable_total": 3,
+          "reason": null,
+          "retained": null,
+          "unreadable_total": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-quarantine"
+}

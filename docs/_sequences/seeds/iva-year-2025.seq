@@ -1,0 +1,49 @@
+@step Record when the activity started so every 2025 quarter is a valid obligation.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2025-01-01
+@step Record a first-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-02-10 --amount 2420 --direction INCOMING --description "Servicio de consultoria primer trimestre" --classification BUSINESS --taxable-base 2000 --iva-rate 0.21 --iva-amount 420 --iva-category domestic_general_21 --idempotency-key venta-1t-2025
+@step Record a second-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-05-12 --amount 1815 --direction INCOMING --description "Servicio de consultoria segundo trimestre" --classification BUSINESS --taxable-base 1500 --iva-rate 0.21 --iva-amount 315 --iva-category domestic_general_21 --idempotency-key venta-2t-2025
+@step Record a third-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-08-15 --amount 1210 --direction INCOMING --description "Servicio de consultoria tercer trimestre" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --iva-category domestic_general_21 --idempotency-key venta-3t-2025
+@step Record a fourth-quarter sale with output VAT.
+@setup aeat app ledger add --date 2025-11-20 --amount 3025 --direction INCOMING --description "Servicio de consultoria cuarto trimestre" --classification BUSINESS --taxable-base 2500 --iva-rate 0.21 --iva-amount 525 --iva-category domestic_general_21 --idempotency-key venta-4t-2025
+@step Record a first-quarter purchase with deductible input VAT.
+@setup aeat --format json app ledger add --date 2025-03-05 --amount 605 --direction OUTGOING --description "Compra de material de oficina" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --iva-category domestic_general_21 --idempotency-key compra-1t-2025
+@capture gasto_txn result.transaction_id
+@step Register the supplier's purchase invoice as encrypted evidence bytes.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2025-0087 --invoice-date 2025-03-05 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@step Attach the evidence to the deductible expense so the first quarter can be filed.
+@setup aeat app ledger attach {gasto_txn} --purchase-invoice-evidence-id {evidence_id}
+@step Open the first-quarter Modelo 303 work unit.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 1T
+@capture wu1 result.work_unit_id
+@step Calculate the first quarter.
+@setup aeat --format json app modelo work calculate {wu1}
+@capture cr1 result.calculation_revision_id
+@step Verify the first quarter before filing it.
+@setup aeat --format json app modelo work verify {cr1}
+@step File the first quarter locally so the annual summary can fold it in.
+@setup aeat --format json app modelo work file {cr1}
+@step Open, calculate, verify and file the second quarter.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 2T
+@capture wu2 result.work_unit_id
+@setup aeat --format json app modelo work calculate {wu2}
+@capture cr2 result.calculation_revision_id
+@setup aeat --format json app modelo work verify {cr2}
+@setup aeat --format json app modelo work file {cr2}
+@step Open, calculate, verify and file the third quarter.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 3T
+@capture wu3 result.work_unit_id
+@setup aeat --format json app modelo work calculate {wu3}
+@capture cr3 result.calculation_revision_id
+@setup aeat --format json app modelo work verify {cr3}
+@setup aeat --format json app modelo work file {cr3}
+@step Open, calculate, verify and file the fourth quarter.
+@setup aeat --format json app modelo work create --modelo 303 --year 2025 --period 4T
+@capture wu4 result.work_unit_id
+@setup aeat --format json app modelo work calculate {wu4}
+@capture cr4 result.calculation_revision_id
+@setup aeat --format json app modelo work verify {cr4}
+@setup aeat --format json app modelo work file {cr4}

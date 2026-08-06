@@ -1,0 +1,456 @@
+[[rates]]
+member_state = "es"
+kind = "general"
+pct = "21"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+legal_refs = ["ley-37-1992:art-90"]
+
+[[rates]]
+member_state = "es"
+kind = "reduced"
+pct = "10"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+legal_refs = ["ley-37-1992:art-91"]
+
+[[rates]]
+member_state = "es"
+kind = "super_reduced"
+pct = "4"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+legal_refs = ["ley-37-1992:art-91"]
+
+[[rates]]
+member_state = "es"
+kind = "zero"
+pct = "0"
+effective_from = 2024-01-01
+effective_until = 2024-12-31
+legal_refs = ["ley-37-1992:art-24", "ley-37-1992:art-25"]
+
+[[rates]]
+member_state = "es"
+kind = "general"
+pct = "21"
+effective_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-90"]
+
+[[rates]]
+member_state = "es"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-91"]
+
+[[rates]]
+member_state = "es"
+kind = "super_reduced"
+pct = "4"
+effective_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-91"]
+
+[[rates]]
+member_state = "es"
+kind = "zero"
+pct = "0"
+effective_from = 2025-01-01
+legal_refs = ["ley-37-1992:art-24", "ley-37-1992:art-25"]
+
+[[rates]]
+member_state = "de"
+kind = "general"
+pct = "19"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "de"
+kind = "reduced"
+pct = "7"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "fr"
+kind = "general"
+pct = "20"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "fr"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "fr"
+kind = "super_reduced"
+pct = "2.1"
+effective_from = 2026-07-13
+source_refs = ["eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "it"
+kind = "general"
+pct = "22"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "it"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "it"
+kind = "super_reduced"
+pct = "4"
+effective_from = 2026-07-13
+source_refs = ["eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "nl"
+kind = "general"
+pct = "21"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "nl"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "be"
+kind = "general"
+pct = "21"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "be"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "at"
+kind = "general"
+pct = "20"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "at"
+kind = "reduced"
+pct = "10"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "pt"
+kind = "general"
+pct = "23"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "pt"
+kind = "reduced"
+pct = "13"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "ie"
+kind = "general"
+pct = "23"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "ie"
+kind = "reduced"
+pct = "13.5"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "pl"
+kind = "general"
+pct = "23"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "pl"
+kind = "reduced"
+pct = "8"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "se"
+kind = "general"
+pct = "25"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "se"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "dk"
+kind = "general"
+pct = "25"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "fi"
+kind = "general"
+pct = "25.5"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "fi"
+kind = "reduced"
+pct = "14"
+effective_from = 2025-01-01
+effective_until = 2025-12-31
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "fi-vero-vat-rate-change-2026"]
+
+[[rates]]
+member_state = "fi"
+kind = "reduced"
+pct = "13.5"
+effective_from = 2026-01-01
+source_refs = ["fi-vero-vat-rate-change-2026", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "hu"
+kind = "general"
+pct = "27"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "hu"
+kind = "reduced"
+pct = "18"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "gr"
+kind = "general"
+pct = "24"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "gr"
+kind = "reduced"
+pct = "13"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "cz"
+kind = "general"
+pct = "21"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "cz"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "sk"
+kind = "general"
+pct = "23"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "sk"
+kind = "reduced"
+pct = "5"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "lu"
+kind = "general"
+pct = "17"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "lu"
+kind = "reduced"
+pct = "8"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "bg"
+kind = "general"
+pct = "20"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "hr"
+kind = "general"
+pct = "25"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "hr"
+kind = "reduced"
+pct = "13"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "cy"
+kind = "general"
+pct = "19"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "cy"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "ee"
+kind = "general"
+pct = "22"
+effective_from = 2025-01-01
+effective_until = 2025-06-30
+source_refs = ["ee-emta-vat-rate-change-2025"]
+
+[[rates]]
+member_state = "ee"
+kind = "general"
+pct = "24"
+effective_from = 2025-07-01
+source_refs = ["ee-emta-vat-rate-change-2025", "eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "lv"
+kind = "general"
+pct = "21"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "lv"
+kind = "reduced"
+pct = "12"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "lt"
+kind = "general"
+pct = "21"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "lt"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-01-01
+effective_until = 2025-12-31
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "lt-vmi-vat-rate-change-2026"]
+
+[[rates]]
+member_state = "lt"
+kind = "reduced"
+pct = "12"
+effective_from = 2026-01-01
+source_refs = ["lt-vmi-vat-rate-change-2026", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "mt"
+kind = "general"
+pct = "18"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "mt"
+kind = "reduced"
+pct = "7"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "ro"
+kind = "general"
+pct = "19"
+effective_from = 2025-01-01
+effective_until = 2025-07-31
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "ro-anaf-vat-rate-change-2025"]
+
+[[rates]]
+member_state = "ro"
+kind = "general"
+pct = "21"
+effective_from = 2025-08-01
+source_refs = ["ro-anaf-vat-rate-change-2025", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "ro"
+kind = "reduced"
+pct = "9"
+effective_from = 2025-01-01
+effective_until = 2025-07-31
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "ro-anaf-vat-rate-change-2025"]
+
+[[rates]]
+member_state = "ro"
+kind = "reduced"
+pct = "11"
+effective_from = 2025-08-01
+source_refs = ["ro-anaf-vat-rate-change-2025", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "si"
+kind = "general"
+pct = "22"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]
+
+[[rates]]
+member_state = "si"
+kind = "reduced"
+pct = "9.5"
+effective_from = 2025-07-01
+source_refs = ["eu-eprs-vat-rates-2025-07-01", "eu-your-europe-vat-rates-2026-07-13"]

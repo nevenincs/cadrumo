@@ -1,0 +1,14 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-ahorro-rendimiento-neto-reducido"
+target_casilla_id = "0040"
+expression = { op = "subtract", args = [
+    { casilla_id = "0038" },
+    { casilla_id = "0039" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimiento neto reducido", "rendimientos del capital mobiliario"]

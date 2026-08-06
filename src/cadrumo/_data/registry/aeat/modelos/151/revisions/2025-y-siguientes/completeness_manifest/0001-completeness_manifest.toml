@@ -1,0 +1,36 @@
+# Calculation-completeness manifest, ejercicios 2025 y siguientes. The
+# test_record_design gate requires this to match the calculation closure EXACTLY
+# (no manifest-only / closure-only drift). The 2025 closure is the two-track
+# cuota chain: base liquidable general (ledger-bound Spanish-source) feeding the
+# escala general (24/47) -> cuota integra general; base liquidable del ahorro
+# (art. 25.1.f TRLIRNR) feeding the escala del ahorro (19/21/23/27/30) -> cuota
+# integra del ahorro; retenciones (manual pago a cuenta); and cuota diferencial
+# (computed = general + ahorro - retenciones).
+[revisions."2025-y-siguientes".completeness_manifest]
+source_ref = "aeat-modelo-151-procedure"
+legal_refs = ["ley-35-2006:art-93"]
+source_refs = ["aeat-modelo-151-procedure"]
+
+[[revisions."2025-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.base-liquidable-general"
+number = "impatriado.base-liquidable-general"
+
+[[revisions."2025-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.base-liquidable-ahorro"
+number = "impatriado.base-liquidable-ahorro"
+
+[[revisions."2025-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.cuota-integra-general"
+number = "impatriado.cuota-integra-general"
+
+[[revisions."2025-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.cuota-integra-ahorro"
+number = "impatriado.cuota-integra-ahorro"
+
+[[revisions."2025-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.retenciones"
+number = "impatriado.retenciones"
+
+[[revisions."2025-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "impatriado.cuota-diferencial"
+number = "impatriado.cuota-diferencial"

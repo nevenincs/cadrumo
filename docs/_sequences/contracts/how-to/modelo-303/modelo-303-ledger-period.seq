@@ -1,0 +1,7 @@
+:seed: autonomo-irpf-2026
+@step Preflight the quarter's ledger for tax-readiness.
+aeat --format json app ledger preflight --year 2026 --period 1T
+@step Show the quarter's ledger status.
+@result aeat --format json app ledger status --year 2026 --period 1T
+@expect result.active_count == 2
+@expect exit_code == 0

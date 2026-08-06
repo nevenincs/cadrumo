@@ -1,0 +1,13 @@
+[
+  {
+    "chapter_id": "cap1",
+    "title": "Deducciones autonómicas comunes",
+    "summary": "Deducciones aplicables por los contribuyentes residentes en las distintas Comunidades Autónomas.",
+    "sections": [
+      {
+        "section_id": "sec1",
+        "relative_path": "structure/sections/cap1/sec1.json"
+      }
+    ]
+  }
+]

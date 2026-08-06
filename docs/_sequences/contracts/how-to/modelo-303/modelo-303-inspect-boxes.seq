@@ -1,0 +1,9 @@
+:seed: autonomo-irpf-2026
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@step List which casillas are still missing a bound value.
+aeat --format json app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+@step List the casillas the modelo requires.
+@result aeat --format json app modelo casillas 303 --period 1T --required
+@expect result.casilla_count == 2
+@expect exit_code == 0

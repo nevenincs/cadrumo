@@ -1,0 +1,600 @@
+"""Shared primitives for the CLI's strict ``--json`` output contract.
+
+Defines the strict pydantic v2 bases (:class:`OutputSchema`,
+:class:`OutputRootSchema`), the canonical success envelope
+(:class:`SchemaEnvelope`), the typed diagnostic channel
+(:class:`Notice`), the schema registry (:data:`SCHEMA_REGISTRY`), and
+the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
+used by every registered machine-output path.  CLI payload modules import
+these primitives through :mod:`entrypoints.cli._schemas`, register
+result models with :func:`register_schema`, and route JSON mode through
+:func:`entrypoints.cli._common._emit_envelope`.
+
+:func:`emit_json_success` derives :class:`EnvelopeStatus` from supplied
+:class:`Notice` values via :func:`derive_status` and applies
+:func:`core.redaction.redact_structured_for_cli_output` to the
+entire envelope before writing stdout.  Text output remains owned by
+:func:`core.output_rendering.render_command_output`, so redaction
+and the ``reveal_cli_identifiers_opt_in`` switch stay consistent across
+text and JSON surfaces.
+
+Living in :mod:`core` keeps domain and adapter packages free of any
+dependency on :mod:`entrypoints.cli`: a wrapped command emits its
+strict-validated payload through :func:`emit_json_success` without
+having to know how the CLI itself wires Click options.
+
+This module owns the stdout success contract and schema registry. The
+stderr failure document is rendered by :mod:`core.errors` using the
+same :data:`ENVELOPE_SCHEMA_VERSION`, and text-mode layout remains owned
+by :mod:`core.output_rendering`.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from collections.abc import Callable, Mapping, Sequence
+from enum import StrEnum
+from typing import IO, Any, Protocol, cast, runtime_checkable
+
+from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter, ValidationError
+
+from .errors import CadrumoError, ErrorEnvelope
+from .logging import get_logger
+from .output_rendering import jsonable_output_payload
+from .redaction import redact_structured_for_cli_output
+
+_log = get_logger(__name__)
+
+_STRICT_FROZEN_CONFIG = ConfigDict(
+    extra="forbid",
+    frozen=True,
+    strict=True,
+    validate_assignment=True,
+)
+_STRICT_ROOT_CONFIG = ConfigDict(
+    frozen=True,
+    strict=True,
+    validate_assignment=True,
+)
+
+#: Envelope contract version shared by the success :class:`SchemaEnvelope`
+#: and the stderr error envelope. Both documents carry the same outer
+#: spine (``schema_version``, ``command``, ``status``, ``notices``), so the
+#: version is pinned once here and bumped only on a backwards-incompatible
+#: change to that spine.
+ENVELOPE_SCHEMA_VERSION = "2"
+
+
+class EnvelopeStatus(StrEnum):
+    """Outcome discriminator carried on every CLI return document.
+
+    ``success`` and ``warning`` ride on the stdout :class:`SchemaEnvelope`
+    (``warning`` when the command attached at least one warning-severity
+    :class:`Notice`); ``error`` rides on the stderr error envelope. A
+    machine consumer reads this single field to learn the outcome instead
+    of branching on stdout-vs-stderr, and :func:`derive_status` is the
+    success-envelope authority for computing it.
+
+    :func:`emit_json_success` never emits :attr:`ERROR`; blocking
+    failures route through the shared :class:`~core.errors.CadrumoError`
+    boundary instead of being smuggled into stdout notices.
+    """
+
+    SUCCESS = "success"
+    WARNING = "warning"
+    ERROR = "error"
+
+
+class NoticeSeverity(StrEnum):
+    """Severity of a single operator-facing :class:`Notice`.
+
+    ``info`` is a non-fatal next-step hint or informational advisory;
+    ``warning`` is a non-blocking advisory the operator should act on. A
+    command that attaches any ``warning`` notice resolves to
+    :attr:`EnvelopeStatus.WARNING` through :func:`derive_status`.
+    """
+
+    INFO = "info"
+    WARNING = "warning"
+
+
+class Notice(BaseModel):
+    """One typed, non-blocking diagnostic on the envelope ``notices`` channel.
+
+    The single uniform surface for operator-facing warnings, advisories,
+    and next-step hints across every command. Domain diagnostics (e.g.
+    ``ModeloFinding``, source-resolution advisories) are projected into
+    this shape rather than re-modelled as bespoke per-command payload
+    fields.  CLI helpers such as
+    :func:`entrypoints.cli._common._emit_envelope` pass these values
+    to :func:`emit_json_success`, while text renderers fold equivalent
+    prose into their line output.
+
+    Attributes:
+        severity: ``info`` or ``warning``; drives the envelope ``status``.
+        code: Stable machine-readable notice identifier (e.g.
+            ``"modelo.calculate.unconsumed_iva"``).
+        message: Operator-facing rendered text for the notice.
+        suggestion: Optional copy-paste command or next-step action,
+            mirroring the error envelope's ``suggestion`` field.
+        context: Optional structured provenance for the notice (e.g. the
+            source-resolution ``reason`` / ``source_kind``), mirroring the
+            error envelope's ``context`` so a migrated advisory keeps its
+            machine-queryable sub-fields without a bespoke payload model.
+
+    Blocking failures are not notices; they raise an
+    :class:`~core.errors.CadrumoError` and emit on stderr. Command payload
+    schemas should also avoid reintroducing bespoke advisory, hint, or
+    warning fields inside ``result`` when a :class:`Notice` can carry the
+    same non-blocking diagnostic.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    severity: NoticeSeverity
+    code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
+    suggestion: str | None = None
+    context: dict[str, str] | None = None
+
+
+def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
+    """Return :attr:`EnvelopeStatus.WARNING` if any notice is warning-severity.
+
+    Success documents never carry :attr:`EnvelopeStatus.ERROR`; that
+    status is reserved for the stderr error envelope. The returned
+    :class:`EnvelopeStatus` is the stdout :class:`SchemaEnvelope` status
+    used by :func:`emit_json_success`.
+    """
+    for notice in notices:
+        if notice.severity is NoticeSeverity.WARNING:
+            return EnvelopeStatus.WARNING
+    return EnvelopeStatus.SUCCESS
+
+
+class OutputSchemaError(CadrumoError):
+    """Raised when the CLI output-schema registry is misconfigured.
+
+    Triggered by :func:`register_schema` when a non-schema class is
+    decorated, when a command path is registered twice with different
+    schemas, or when the command path is blank.  It deliberately inherits
+    :class:`core.errors.CadrumoError` so registry defects route through
+    the shared CLI error boundary instead of bypassing structured output.
+    """
+
+
+class OutputSchema(BaseModel):
+    """Strict, frozen base class for every command-specific ``--json`` payload.
+
+    Subclasses inherit ``extra="forbid"``, ``frozen=True``, ``strict=True``,
+    and ``validate_assignment=True`` so accidental field drift between
+    contract and implementation surfaces as a validation error rather
+    than a silently-extended payload.  Each concrete result model should
+    be decorated with :func:`register_schema` so the CLI conformance gate
+    can match command leaves against :data:`SCHEMA_REGISTRY`.
+
+    The class describes the inner ``result`` payload only; the outer
+    :class:`SchemaEnvelope` is applied later by :func:`emit_json_success`.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+
+class OutputRootSchema[RootT](RootModel[RootT]):
+    """Strict root/list base class for ``--json`` payloads with a non-mapping root.
+
+    Use this for commands whose top-level JSON value is a list or scalar
+    rather than an object. Carries the same strict / frozen / validate-on-
+    assignment configuration as :class:`OutputSchema`, and participates in
+    the same :func:`register_schema` registry contract.
+    """
+
+    model_config = _STRICT_ROOT_CONFIG
+
+
+def strict_round_trip[ModelT: BaseModel](cls: type[ModelT], obj: BaseModel) -> ModelT:
+    """Project *obj* into *cls* through a genuine JSON-text round trip.
+
+    ``cls.model_validate(obj.model_dump(mode="json"))`` reads as a round trip
+    but is not one under strict pydantic v2 validation: ``model_dump(mode="json")``
+    projects a ``StrEnum`` to its bare string, a ``datetime`` to its isoformat
+    string, and a ``tuple`` to a JSON array, and ``model_validate`` on the
+    resulting plain ``dict`` does not coerce any of those back to their native
+    type -- only ``model_validate_json``'s genuine JSON-text parse gets that
+    leniency. A model that gains one of those field types after its call sites
+    were written breaks silently at the two-step dict form with no local signal
+    at the call site itself.
+
+    Use this helper (or call ``cls.model_validate_json(obj.model_dump_json())``
+    directly) at every typed cross-model projection boundary. It is the
+    migration target the ``model_dump(mode="json")``-into-``model_validate``
+    inventory gate enforces, not a substitute for the gate: the codebase already
+    had ``model_dump_json``/``model_validate_json`` one method-name swap away
+    and around forty call sites independently reached for the unsafe two-step
+    form anyway, so a convenience helper alone would only add a second
+    available idiom rather than retiring the first.
+    """
+    return cls.model_validate_json(obj.model_dump_json())
+
+
+class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
+    """Stable outer envelope wrapping a successful command's payload.
+
+    Every successful ``--json`` response is rendered through this
+    envelope so consumers can rely on the same outer keys regardless of
+    the inner payload shape. The outer spine (``schema_version``,
+    ``command``, ``status``, ``notices``) is shared with the stderr error
+    envelope so one shape describes success, warning, and error outcomes.
+    :func:`emit_json_success` constructs the runtime mapping and the
+    JSON-contract conformance gate specialises this generic envelope over
+    every schema in :data:`SCHEMA_REGISTRY`.
+
+    The envelope is a wire contract, not the command dispatcher. It does
+    not discover Click/Typer leaves, choose text output, or own command
+    authorization; those layers supply a strict ``result`` and stable
+    command path before entering this contract.
+
+    Attributes:
+        schema_version: Envelope version; bumped only on
+            backwards-incompatible changes to the shared spine.
+        command: Stable command path string (e.g. ``"workflow list"``).
+        active_profile: Human-readable label of the active taxpayer
+            profile (the operator-chosen display name), or ``None`` before
+            any profile exists and for non-profile-bound commands. The
+            identity anchor a caller reconciles against; it is the label,
+            never the redacted profile/bucket UUID. Resolved and injected
+            at the CLI transport boundary (the ``core`` layer never scans
+            profile manifests), so it stays ``None`` for any emitter that
+            does not supply it.
+        status: Outcome discriminator (``success`` or ``warning`` here).
+        result: The strict-validated command result.
+        notices: Typed non-blocking diagnostics (warnings, advisories,
+            next-step hints) surfaced to the caller. Replaces the former
+            free-form ``warnings`` string list.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    schema_version: str = Field(default=ENVELOPE_SCHEMA_VERSION, min_length=1)
+    command: str = Field(min_length=1)
+    active_profile: str | None = Field(
+        default=None,
+        description=(
+            "Human label of the active taxpayer profile, or null before a "
+            "profile exists / for non-profile-bound commands; never the "
+            "redacted profile or bucket UUID."
+        ),
+    )
+    status: EnvelopeStatus
+    result: ResultT
+    notices: list[Notice] = Field(default_factory=list)
+
+
+type RegisteredSchema = type[OutputSchema] | type[OutputRootSchema[Any]]
+
+
+SCHEMA_REGISTRY: dict[str, RegisteredSchema] = {}
+"""Process-global registry mapping command-path strings to their result schema.
+
+Populated by the :func:`register_schema` decorator at import time.
+Consumers (notably the doc generator and the JSON-contract conformance
+tests) iterate over this mapping to enumerate every contract a release
+exposes."""
+
+
+@runtime_checkable
+class _ReconfigurableStream(Protocol):
+    """Structural type for text streams that support runtime reconfiguration.
+
+    Matches :class:`io.TextIOWrapper` so :func:`emit_json_document` can
+    pin stdout to UTF-8 without a hard isinstance check on the concrete
+    class — useful for tests that pass in a :class:`io.StringIO`.
+    """
+
+    def reconfigure(self, *, encoding: str, errors: str) -> None:
+        """Reset the stream's encoding and error-handling mode."""
+        ...
+
+    def write(self, s: str, /) -> int:
+        """Write ``s`` to the stream and return the number of characters written."""
+        ...
+
+    def flush(self) -> None:
+        """Flush the write buffers."""
+        ...
+
+
+def emit_json_document(
+    payload: object,
+    *,
+    indent: int | None = 2,
+    sort_keys: bool = False,
+    stream: IO[str] | None = None,
+) -> None:
+    r"""Serialise ``payload`` and write a single UTF-8 JSON document followed by ``\\n``.
+
+    When ``stream`` exposes ``_ReconfigurableStream.reconfigure``,
+    the helper pins it to ``encoding="utf-8", errors="strict"`` first so
+    downstream cp1252 consoles can not silently corrupt non-ASCII
+    characters in the rendered output. This is the low-level writer used
+    by :func:`emit_json_success`; it does not itself apply the envelope or
+    redaction policy.
+
+    Use this for already-shaped JSON documents. Registered CLI success
+    payloads should normally enter through :func:`emit_json_success` so
+    the envelope, status derivation, and redaction pass remain uniform.
+
+    Args:
+        payload: Any object reachable by :func:`jsonable_output_payload`
+            (typically a :class:`pydantic.BaseModel`, a mapping, or a
+            collection thereof).
+        indent: Indent width passed to :func:`json.dumps`; ``None``
+            produces a single-line document.
+        sort_keys: Whether to render mapping keys in lexicographic order.
+        stream: Target text stream; defaults to :data:`sys.stdout`.
+    """
+    target = sys.stdout if stream is None else stream
+    if isinstance(target, _ReconfigurableStream):
+        try:
+            target.reconfigure(encoding="utf-8", errors="strict")
+        except (OSError, ValueError, AttributeError) as exc:
+            _log.debug(
+                "json_contract: stdout reconfigure to UTF-8 failed; emitting with current encoding (%s)",
+                exc,
+            )
+    document = json.dumps(
+        jsonable_output_payload(payload),
+        ensure_ascii=False,
+        indent=indent,
+        sort_keys=sort_keys,
+        default=str,
+    )
+    target.write(f"{document}\n")
+    target.flush()
+
+
+def emit_json_success(
+    command: str,
+    result: object,
+    *,
+    notices: Sequence[Notice] | None = None,
+    active_profile: str | None = None,
+    indent: int | None = 2,
+    sort_keys: bool = False,
+    stream: IO[str] | None = None,
+) -> None:
+    """Wrap ``result`` in the success spine and emit it via :func:`emit_json_document`.
+
+    The envelope's ``schema_version`` is pinned to
+    :data:`ENVELOPE_SCHEMA_VERSION`; bumping it is a contract-breaking
+    change handled by the JSON-contract test suite, not a casual edit.
+    The ``status`` is derived from the supplied notices
+    (:func:`derive_status`) so the JSON outcome and the shell exit code
+    never disagree. The assembled envelope is redacted through
+    :func:`core.redaction.redact_structured_for_cli_output` before
+    :func:`emit_json_document` writes it.
+
+    This helper is stdout-only. Any raised :class:`~core.errors.CadrumoError`
+    is handled by the CLI error boundary, which renders the sibling stderr
+    envelope instead of returning a success document with an error-shaped
+    ``result``.
+
+    Args:
+        command: Stable command path string (e.g. ``"workflow list"``).
+        result: The strict-validated command payload to surface as
+            ``envelope.result``.
+        notices: Optional typed :class:`Notice` diagnostics (warnings,
+            advisories, next-step hints); defaults to an empty list.
+        active_profile: Optional human label of the active taxpayer
+            profile placed on the shared spine (the identity anchor).
+            The ``core`` layer never scans profile manifests, so the CLI
+            transport resolves the label and passes it here; ``None`` for
+            non-profile-bound emitters. It rides through the same
+            redaction pass as the rest of the envelope, but it is the
+            non-secret display name, not the redacted profile/bucket UUID.
+        indent: Indent width forwarded to :func:`emit_json_document`.
+        sort_keys: Sort-keys flag forwarded to :func:`emit_json_document`.
+        stream: Target text stream; defaults to :data:`sys.stdout`.
+    """
+    from .output_rendering import reveal_cli_identifiers_opt_in
+
+    resolved_notices = [] if notices is None else list(notices)
+    envelope_payload = redact_structured_for_cli_output(
+        {
+            "schema_version": ENVELOPE_SCHEMA_VERSION,
+            "command": command,
+            "active_profile": active_profile,
+            "status": derive_status(resolved_notices).value,
+            "result": jsonable_output_payload(result),
+            "notices": [jsonable_output_payload(notice) for notice in resolved_notices],
+        },
+        reveal_identifiers=reveal_cli_identifiers_opt_in(),
+    )
+    _record_captured_envelope(envelope_payload)
+    emit_json_document(
+        envelope_payload,
+        indent=indent,
+        sort_keys=sort_keys,
+        stream=stream,
+    )
+
+
+def _record_captured_envelope(envelope_payload: object) -> None:
+    """Feed the emitted envelope to the observability capture sink, best-effort.
+
+    The deterministic-output substrate captures the verbatim emitted
+    envelope so a recorded run can be replayed and asserted byte-identical
+    after masking. Capture is off by default: when no
+    :func:`core.observability.capture_envelopes` scope is active the
+    recorder is a single ``ContextVar.get`` returning ``None``. The call
+    is fully best-effort — a capture failure must never disturb the emit
+    contract. The import is lazy so :mod:`core.json_contract` keeps
+    no module-load dependency on the observability layer.
+    """
+    if not isinstance(envelope_payload, Mapping):
+        return
+    try:
+        from .observability import record_emitted_envelope
+
+        # CAST-RATIONALE-ENVELOPE-CAPTURE-MAPPING: the isinstance check above
+        # confirms only the erased runtime `Mapping` shape, not the `str, object`
+        # type parameters; the cast narrows to the capture helper's declared
+        # parameter type.
+        record_emitted_envelope(cast("Mapping[str, object]", envelope_payload))
+    except Exception:  # capture must never break emit
+        _log.debug("json_contract: envelope capture failed; continuing", exc_info=True)
+
+
+def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
+    command_path: str,
+) -> Callable[[type[RegisteredSchemaT]], type[RegisteredSchemaT]]:
+    """Decorator that binds a strict schema to a stable ``command_path``.
+
+    Usage::
+
+        @register_schema("workflow list")
+        class WorkflowListResult(OutputSchema):
+            ...
+
+    The same schema may register the same path more than once
+    (idempotent re-import); registering a *different* schema under an
+    existing path raises :class:`OutputSchemaError`.  Registered paths are
+    the authoritative command strings emitted as
+    :attr:`SchemaEnvelope.command` and compared against the Typer command
+    tree by the JSON-schema conformance tests.
+
+    Register concrete command leaves only. Aliases, helper functions, and
+    text-only utilities do not belong in :data:`SCHEMA_REGISTRY` unless a
+    real CLI path emits their strict payload through the envelope.
+
+    Args:
+        command_path: Stable command-path string used both as the
+            registry key and as the value emitted under
+            :attr:`SchemaEnvelope.command`.
+
+    Returns:
+        The decorator, returning the schema class unchanged.
+
+    Raises:
+        OutputSchemaError: When ``command_path`` is blank, when the
+            decorated class is not a strict schema subclass, or when the
+            path is already bound to a different schema.
+    """
+    normalized_path = command_path.strip()
+    if not normalized_path:
+        raise OutputSchemaError("command_path must not be blank")
+
+    def _decorator(schema: type[RegisteredSchemaT]) -> type[RegisteredSchemaT]:
+        try:
+            is_output_schema = issubclass(schema, (OutputSchema, OutputRootSchema))
+        except TypeError as error:
+            raise OutputSchemaError(
+                f"registered schema for {normalized_path!r} must be an OutputSchema or OutputRootSchema subclass",
+            ) from error
+        if not is_output_schema:
+            raise OutputSchemaError(
+                f"registered schema for {normalized_path!r} must inherit from OutputSchema or OutputRootSchema",
+            )
+        existing = SCHEMA_REGISTRY.get(normalized_path)
+        if existing is not None and existing is not schema:
+            raise OutputSchemaError(
+                f"duplicate schema registration for {normalized_path!r}: {existing.__module__}.{existing.__name__}",
+            )
+        SCHEMA_REGISTRY[normalized_path] = schema
+        return schema
+
+    return _decorator
+
+
+def validate_registered_result(command: str, result: object) -> OutputSchema | OutputRootSchema[Any]:
+    """Validate one operator result against the schema registered for ``command``.
+
+    The low-level JSON emitter intentionally remains a transport primitive for
+    metadata and diagnostic surfaces. Operator command output must enter
+    through this check so an envelope cannot claim a registered command while
+    carrying an arbitrary result shape.
+    """
+    schema = SCHEMA_REGISTRY.get(command)
+    if schema is None:
+        raise OutputSchemaError(f"operator JSON command {command!r} has no registered output schema")
+    payload = result.model_dump(mode="python") if isinstance(result, BaseModel) else result
+    try:
+        return schema.model_validate(payload)
+    except ValidationError as error:
+        raise OutputSchemaError(
+            f"operator JSON result does not conform to the registered schema for {command!r}",
+        ) from error
+
+
+def validate_registered_envelope_document(document: object) -> dict[str, object]:
+    """Strictly validate one emitted CLI success or error JSON document."""
+    if not isinstance(document, dict):
+        raise OutputSchemaError("operator JSON envelope must be an object")
+    if not all(isinstance(key, str) for key in document):
+        raise OutputSchemaError("operator JSON envelope keys must be strings")
+    typed_document: dict[str, object] = {key: value for key, value in document.items() if isinstance(key, str)}
+    status = typed_document.get("status")
+    if status == EnvelopeStatus.ERROR.value:
+        required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
+        if set(typed_document) != required_keys:
+            raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
+        if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
+            raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
+        command = typed_document.get("command")
+        active_profile = typed_document.get("active_profile")
+        if command is not None and (not isinstance(command, str) or not command):
+            raise OutputSchemaError("operator JSON error envelope has an invalid command")
+        if active_profile is not None and not isinstance(active_profile, str):
+            raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
+        try:
+            ErrorEnvelope.model_validate(typed_document["error"])
+            TypeAdapter(list[Notice]).validate_python(typed_document["notices"])
+        except ValidationError as error:
+            raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
+        return typed_document
+
+    command = typed_document.get("command")
+    if not isinstance(command, str) or not command:
+        raise OutputSchemaError("operator JSON envelope has no usable command")
+    required_keys = {"schema_version", "command", "active_profile", "status", "result", "notices"}
+    if set(typed_document) != required_keys:
+        raise OutputSchemaError("operator JSON success envelope has an invalid outer shape")
+    if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
+        raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
+    schema = SCHEMA_REGISTRY.get(command)
+    if schema is None:
+        raise OutputSchemaError(f"operator JSON command {command!r} has no registered output schema")
+    # CAST-RATIONALE-ENVELOPE-GENERIC: __class_getitem__ returns a bare `type`
+    # at runtime; `schema` was just looked up from SCHEMA_REGISTRY, which
+    # only stores OutputSchema subclasses, so the parameterized generic is
+    # exactly SchemaEnvelope[OutputSchema].
+    envelope_model = cast("type[SchemaEnvelope[OutputSchema]]", SchemaEnvelope.__class_getitem__(schema))
+    try:
+        validated = envelope_model.model_validate_json(json.dumps(typed_document))
+    except ValidationError as error:
+        raise OutputSchemaError("operator JSON success envelope failed strict validation") from error
+    # CAST-RATIONALE-ENVELOPE-DUMP: model_dump(mode="json") is typed
+    # dict[str, Any] by pydantic; the envelope's own strict schema already
+    # constrains every value to JSON-safe scalars/containers.
+    return cast(dict[str, object], validated.model_dump(mode="json"))
+
+
+__all__ = [
+    "ENVELOPE_SCHEMA_VERSION",
+    "SCHEMA_REGISTRY",
+    "EnvelopeStatus",
+    "Notice",
+    "NoticeSeverity",
+    "OutputRootSchema",
+    "OutputSchema",
+    "OutputSchemaError",
+    "SchemaEnvelope",
+    "derive_status",
+    "emit_json_document",
+    "emit_json_success",
+    "register_schema",
+    "strict_round_trip",
+    "validate_registered_envelope_document",
+    "validate_registered_result",
+]

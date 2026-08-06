@@ -1,0 +1,36 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "222",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html"
+  ],
+  "artefact_count": 2,
+  "artefacts": [
+    {
+      "modelo": "222",
+      "title": "222 - Ejercicio 2025 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR222e25.xlsx",
+      "stored_path": "files/01-222-ejercicio-2025-y-siguientes.xlsx",
+      "original_filename": "DR222e25.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 139242,
+      "sha256": "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "222",
+      "title": "222 - Ejercicios 2023 y 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR222e23.xlsx",
+      "stored_path": "files/02-222-ejercicios-2023-y-2024.xlsx",
+      "original_filename": "DR222e23.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 137820,
+      "sha256": "1c7482aba6d81d56d0e6106674690eaf4718dae8c9a8f97d799a034bc4fc8505",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

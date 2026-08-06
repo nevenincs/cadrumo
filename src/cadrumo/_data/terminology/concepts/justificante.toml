@@ -1,0 +1,58 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "justificante"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-58-2003:art-99"]
+created_at = 2026-06-11
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "El resguardo que la AEAT emite tras presentar una declaracion."
+definition = "Documento acreditativo (habitualmente un PDF) que la AEAT emite tras la presentacion de una declaracion, con el codigo seguro de verificacion y las cifras presentadas, como prueba de la presentacion."
+
+[language.es.source]
+citation = "Manuales de la Sede Electronica de la AEAT sobre presentacion de declaraciones."
+authority = "aeat"
+
+[[language.es.term]]
+label = "justificante"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "justificante de presentacion"
+term_status = "admitted"
+
+[language.en]
+short_description = "The filing receipt the AEAT issues after you file."
+definition = "Proof document (usually a PDF) that the AEAT issues after a return is filed, carrying the secure verification code and the figures filed, as evidence of the filing."
+
+[language.en.source]
+citation = "AEAT Sede Electronica manuals on filing returns."
+authority = "aeat"
+
+[[language.en.term]]
+label = "filing receipt"
+term_status = "preferred"
+
+[language.ca]
+short_description = "El justificant que l'AEAT emet després de presentar una declaració."
+definition = "Document acreditatiu (habitualment un PDF) que l'AEAT emet després de la presentació d'una declaració, amb el codi segur de verificació i les xifres presentades, com a prova de la presentació."
+
+[language.ca.source]
+citation = "Manuales de la Sede Electronica de la AEAT sobre presentacion de declaraciones."
+authority = "aeat"
+
+[language.hu]
+short_description = "A benyújtás után az AEAT által kiadott bizonylat."
+definition = "Igazoló dokumentum (jellemzően PDF), amelyet az AEAT egy bevallás benyújtása után ad ki, a biztonságos ellenőrzési kóddal és a benyújtott adatokkal, a benyújtás bizonyítékaként."
+
+[language.hu.source]
+citation = "Az AEAT Elektronikus Ügyfélkapujának kézikönyvei a bevallások benyújtásáról."
+authority = "aeat"

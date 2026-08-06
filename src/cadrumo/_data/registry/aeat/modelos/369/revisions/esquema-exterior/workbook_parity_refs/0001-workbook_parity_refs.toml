@@ -1,0 +1,9 @@
+[[revisions."esquema-exterior".workbook_parity_refs]]
+id = "modelo-369-exterior-dr-2021"
+workbook_source = "aeat-dr-369-2021"
+fixture_id = "modelo-369-exterior-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]

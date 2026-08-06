@@ -1,0 +1,87 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "integer"
+semantic_role = "capital_seguros_perceptores_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 128 declara un bloque de retenciones ordinario (casillas 01-02) y un bloque adicional (casillas 04-05, orden EHA/3435/2007 anexo V); el rol del bloque ordinario aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_seguros_base_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 128 declara un bloque de retenciones ordinario (casillas 01-02) y un bloque adicional (casillas 04-05, orden EHA/3435/2007 anexo V); el rol del bloque ordinario aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_seguros_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "integer"
+semantic_role = "capital_seguros_perceptores_2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 128 declara un bloque de retenciones ordinario (casillas 01-02) y un bloque adicional (casillas 04-05, orden EHA/3435/2007 anexo V); el rol del bloque adicional aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_seguros_base_2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 128 declara un bloque de retenciones ordinario (casillas 01-02) y un bloque adicional (casillas 04-05, orden EHA/3435/2007 anexo V); el rol del bloque adicional aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "06"
+number = "06"
+section = ["liquidacion", "complementaria"]
+data_type = "money"
+semantic_role = "anteriores_declaraciones_resultado_ingresar"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "07"
+number = "07"
+section = ["liquidacion", "resultado"]
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"], source_refs = ["boe-modelo-128-form-text", "boe-modelo-128-form-layout"] }
+required = false
+input_kind = "computed"
+formula = "modelo-128-resultado-ingresar"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-v"]
+source_refs = ["boe-modelo-128-form-text", "boe-modelo-128-form-layout"]
+

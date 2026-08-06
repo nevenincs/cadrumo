@@ -1,0 +1,4 @@
+@step Record who you represent and the scopes that match the grant at AEAT.
+@result aeat --format json config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
+@expect result.catalogue_version == "2026.05.bootstrap"
+@expect exit_code == 0

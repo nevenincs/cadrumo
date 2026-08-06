@@ -1,0 +1,42 @@
+# LIRPF art. 64 (estatal): under the anualidades por alimentos separate-escala
+# régimen the total cuota is minorada by the escala del art. 63 applied to the
+# mínimo personal y familiar INCREMENTADO EN 1.980 euros anuales. The regime
+# gate is identical to casilla 0528 (anualidades > 0, anualidades < base
+# liquidable general, and the profile eligibility flag); nested so the flag is
+# only read when both casilla conditions hold. The else-branch escala(0521) is
+# byte-identical to the ordinary chain.
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-escala-estatal-sobre-minimo-personal-familiar"
+target_casilla_id = "0530"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla_id = "0527" }, { literal = "0" }] },
+    { op = "if_then_else", args = [
+        { op = "less_than", args = [{ casilla_id = "0527" }, { casilla_id = "0505" }] },
+        { op = "if_then_else", args = [
+            { binding = "renta-2023-profile-anualidades-sin-minimo-descendientes" },
+            { op = "lookup_bracket", args = [
+                { op = "add", args = [{ casilla_id = "0521" }, { literal = "1980" }] },
+                { parameter = "renta-2023-escala-estatal-base-general" },
+            ] },
+            { op = "lookup_bracket", args = [
+                { casilla_id = "0521" },
+                { parameter = "renta-2023-escala-estatal-base-general" },
+            ] },
+        ] },
+        { op = "lookup_bracket", args = [
+            { casilla_id = "0521" },
+            { parameter = "renta-2023-escala-estatal-base-general" },
+        ] },
+    ] },
+    { op = "lookup_bracket", args = [
+        { casilla_id = "0521" },
+        { parameter = "renta-2023-escala-estatal-base-general" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["escala general", "mínimo personal", "incrementado en 1.980"]

@@ -1,0 +1,48 @@
+[[revisions."esquema-importacion".constructs]]
+id = "modelo-369-esquema-importacion"
+legal_refs = [
+    "orden-hac-610-2021:art-1",
+    "orden-hac-610-2021:art-2",
+    "orden-hac-610-2021:art-3",
+    "ley-37-1992:art-163-quinvicies",
+    "ley-37-1992:art-163-sexvicies",
+    "ley-37-1992:art-163-septvicies",
+    "ley-37-1992:art-163-octovicies",
+]
+source_refs = [
+    "aeat-dr-369-2021",
+    "aeat-modelo-369-procedure",
+    "boe-modelo-369-2021-form",
+]
+casilla_ids = [
+    "decl.ejercicio",
+    "decl.periodo",
+    "iva.importacion.de.low-value-cuota",
+    "iva.importacion.cuota-total",
+]
+formulas = ["modelo-369-importacion-cuota-total"]
+bindings = ["modelo-369-importacion-de-low-value-21pct"]
+workbook_parity_refs = ["modelo-369-importacion-dr-2021"]
+live_cross_references = [
+    "modelo-369-importacion-static-documentation",
+    "modelo-369-importacion-filed-declarations-read",
+]
+application_links = [
+    "modelo-369-importacion-portal",
+    "modelo-369-importacion-filing",
+    "modelo-369-importacion-extractor",
+    "modelo-369-importacion-verification",
+    "modelo-369-importacion-deadline",
+    "modelo-369-importacion-calculation",
+    "modelo-369-importacion-review",
+    "modelo-369-importacion-approval",
+    "modelo-369-importacion-reconciliation",
+    "modelo-369-importacion-workflow",
+]
+filing_schedules = ["modelo-369-importacion-mensual"]
+deadline_windows = [
+    "modelo-369-importacion-2025-01",
+    "modelo-369-importacion-2025-06",
+    "modelo-369-importacion-2025-12",
+    "modelo-369-importacion-2026-01",
+]

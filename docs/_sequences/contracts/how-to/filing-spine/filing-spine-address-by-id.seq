@@ -1,0 +1,12 @@
+:seed: filing-spine-303-ledger
+@step Create the work unit so its reference number exists.
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Show the work unit status by its reference number.
+aeat --format json app modelo work status {work_unit_id}
+@step Calculate by the same reference number.
+aeat --format json app modelo work calculate {work_unit_id}
+@step List the saved revisions by the same reference number.
+@result aeat --format json app modelo work revisions {work_unit_id}
+@expect result.revision_count == 1
+@expect exit_code == 0

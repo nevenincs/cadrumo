@@ -1,0 +1,116 @@
+"""Tests for the committed Modelo 151 (IRPF régimen impatriados / Beckham) registry foundation."""
+
+from __future__ import annotations
+
+import pytest
+
+from .....core.resources import bundled_path
+from .._legal import verify_legal_catalogue
+from .._schema import ModeloDefinition, RegistryCatalogues
+from .._validate import RegistryValidator
+from ._registry_schema_support import _committed_modelo
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_M151_FORM_ORDER_REF = "orden-eha-2887-2008:modelo-151"
+
+
+def _load_modelo_151() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    return _committed_modelo("151")
+
+
+def test_modelo_151_validator_accepts_committed_definition() -> None:
+    modelo, catalogues = _load_modelo_151()
+    assert modelo.id == "151"
+    assert modelo.revisions, "151 must declare at least one revision"
+    assert any(rev.formulas for rev in modelo.revisions.values()), "151 must declare formulas"
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
+def test_modelo_151_revision_2015_declares_constructs() -> None:
+    modelo, _ = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+    assert revision.constructs, "151 2015-y-siguientes revision must declare constructs"
+    construct_ids = {c.id for c in revision.constructs}
+    assert "m151-impatriado-calculation" in construct_ids
+
+
+def test_modelo_151_revision_2015_formula_targets_resolve() -> None:
+    modelo, _ = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+    impatriado = next(c for c in revision.constructs if c.id == "m151-impatriado-calculation")
+    formula_ids = {f.id for f in revision.formulas}
+    for declared_formula in impatriado.formulas:
+        assert declared_formula in formula_ids, (
+            f"construct lists formula {declared_formula!r} but the revision does not declare it"
+        )
+
+
+def test_modelo_151_legal_authority_is_ley_35_2006_art_93() -> None:
+    """M151 is the Beckham regime (Ley 35/2006 art. 93 LIRPF)."""
+    modelo, catalogues = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+    impatriado = next(c for c in revision.constructs if c.id == "m151-impatriado-calculation")
+    assert "ley-35-2006:art-93" in impatriado.legal_refs
+    assert "ley-35-2006:art-93" in catalogues.legal
+
+
+def test_modelo_151_form_order_is_boe_corpus_backed() -> None:
+    modelo, catalogues = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+    legal = {_M151_FORM_ORDER_REF: catalogues.legal[_M151_FORM_ORDER_REF]}
+
+    verify_legal_catalogue(legal, source_root=bundled_path())
+
+    assert _M151_FORM_ORDER_REF in modelo.legal_refs
+    assert _M151_FORM_ORDER_REF in revision.legal_refs
+    assert revision.orden_aplicabilidad == (_M151_FORM_ORDER_REF,)
+    reference = legal[_M151_FORM_ORDER_REF]
+    assert reference.document_id == "BOE-A-2008-16237"
+    assert reference.kind == "orden"
+    assert reference.article == "modelo 151"
+
+
+def test_modelo_151_workbook_parity_uses_layout_authority_source() -> None:
+    modelo, catalogues = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+    workbook = revision.workbook_parity_refs[0]
+
+    assert "boe-modelo-151-form" not in catalogues.sources
+    assert catalogues.sources["aeat-modelo-151-procedure"].evidence_tier == "official_source_guidance"
+    assert workbook.id == "modelo-151-cuota-escala"
+    assert workbook.formula_coverage == "static_layout"
+    assert workbook.workbook_source == "boe-modelo-151-layout"
+    assert workbook.source_refs == ("boe-modelo-151-layout",)
+
+    source = catalogues.sources[workbook.workbook_source]
+    assert source.evidence_tier == "layout_authority"
+    assert source.kind == "form_spec"
+
+
+def test_modelo_151_carries_base_liquidable_under_declaration_advisory() -> None:
+    """M151 guards the base-liquidable -> cuota-integra handoff (no-silent-under-declaration).
+
+    ``impatriado.cuota-integra-general`` is formula-derived from
+    ``impatriado.base-liquidable-general`` via ``lookup_bracket`` against the
+    art. 93.2.e.1º escala, so a positive base resolving to a zero cuota would
+    only be reachable through a registry regression -- but the verify gate
+    must still surface it as an operator-facing ADVISORY rather than silently
+    granting VERIFICADO_COMPLETO, mirroring the M131 01->02 and M200
+    00501->DP200014:00552 worked-pattern guards.
+    """
+    modelo, _ = _load_modelo_151()
+    revision = modelo.revisions["2015-y-siguientes"]
+
+    predicates = {p.predicate_id: p for p in revision.verification_predicates}
+    predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
+    assert predicate_id in predicates, "M151 2015-y-siguientes must declare the base-liquidable advisory"
+
+    guard = predicates[predicate_id]
+    assert guard.expression == (
+        'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'
+    )
+    assert guard.finding_kind == "ADVISORY", (
+        "the guard must stay non-blocking: a legitimately zero cuota must not refuse the draft"
+    )
+    assert "ley-35-2006:art-93" in tuple(str(r) for r in guard.legal_refs)

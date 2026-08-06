@@ -1,0 +1,9 @@
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-184"
+source_modelo = "184"
+treatment = "direct_annual_settlement"
+taxpayer_files_source = false
+target_constructs = ["renta-dependent-modelos", "renta-economic-activities"]
+relation_refs = ["renta-2025-rel-184-atribucion-actividades-economicas"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]

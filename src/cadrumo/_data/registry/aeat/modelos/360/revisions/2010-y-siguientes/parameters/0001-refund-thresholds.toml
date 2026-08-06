@@ -1,0 +1,36 @@
+# IVA refund eligibility thresholds per Orden EHA/789/2010 art. 4:
+# refund requests below €400 per quarter (€50 per annual final-period
+# filing) are not accepted by the AEAT processing surface. Encoded
+# as two static parameters for downstream eligibility-gating.
+[[revisions."2010-y-siguientes".parameters]]
+id = "modelo-360-quarterly-refund-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["orden-eha-789-2010:art-4"]
+source_refs = ["aeat-modelo-360-procedure"]
+
+[[revisions."2010-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-360-procedure"
+required_text = ["devolución del Impuesto sobre el Valor Añadido"]
+
+[[revisions."2010-y-siguientes".parameters.values]]
+value = "400.00"
+date_axis = "filing_period"
+valid_from = 2010-01-01
+
+[[revisions."2010-y-siguientes".parameters]]
+id = "modelo-360-annual-refund-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["orden-eha-789-2010:art-4"]
+source_refs = ["aeat-modelo-360-procedure"]
+
+[[revisions."2010-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-360-procedure"
+required_text = ["devolución del Impuesto sobre el Valor Añadido"]
+
+[[revisions."2010-y-siguientes".parameters.values]]
+value = "50.00"
+date_axis = "filing_period"
+valid_from = 2010-01-01
+

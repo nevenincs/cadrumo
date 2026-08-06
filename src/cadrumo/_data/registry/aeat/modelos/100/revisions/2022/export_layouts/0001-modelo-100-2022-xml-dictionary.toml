@@ -1,0 +1,41 @@
+[[revisions."2022".export_layouts]]
+id = "modelo-100-2022-xml-dictionary"
+format = "xml_dictionary"
+dictionary_source_ref = "aeat-dr-100-2022-dictionary"
+# AEAT declares the Aux block mandatory and first in every Modelo 100 XSD while no
+# bundled dictionary describes its rows, so its values are declared here. VERSION
+# is deliberately absent: no bundled source carries a genuine one, and a plausible
+# token would validate while asserting something unverified.
+aux_idioma = "E"
+legal_refs = [
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-32",
+]
+source_refs = [
+    "aeat-dr-100-2022-dictionary",
+    "aeat-dr-100-2022-xsd",
+]
+
+# AEAT's own dictionary and its own XSD disagree about PH18, and the XSD is right.
+# The dictionary declares /DatosIdentificativos/Hijos/PH18 as an element; every
+# published Modelo 100 XSD declares <xs:attribute name="PH18"/>, positioned AFTER
+# </xs:sequence> inside the complexType -- a place an element may not legally
+# appear -- so it is a deliberate block-level flag on Hijos, not a typo.
+#
+# The attribute declaration is AEAT's, not ours: it is byte-identical at every
+# commit the schema has ever had, across all three of its historical paths, and
+# the two schemas needing no regex repair at all (2022, 2023) declare it exactly
+# as the four repaired ones do. Validation confirms it: rendered as an element
+# AEAT's schema reports "Element 'PH18': This element is not expected", and as an
+# attribute that error is gone while all six unrelated errors stay identical.
+#
+# It is the sole element-vs-attribute disagreement in 12,210 dictionary rows
+# across all six revisions, so it is corrected here as one declared exception
+# rather than by a rule granting the XSD blanket authority over the dictionary.
+[[revisions."2022".export_layouts.dictionary_path_overrides]]
+field_id = "PH18"
+path = "/DatosIdentificativos/Hijos/@PH18"
+reason = "AEAT's dictionary declares PH18 an element; every Modelo 100 XSD declares it an attribute on Hijos, placed after the sequence where an element cannot appear. Confirmed AEAT-original by byte-identity across the schema's whole history and by the unrepaired 2022/2023 schemas agreeing, and confirmed by validation: the element form is rejected and the attribute form accepted with every unrelated error unchanged."

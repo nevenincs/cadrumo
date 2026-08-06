@@ -1,0 +1,246 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "categories"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.categories",
+        "notices": [],
+        "result": {
+          "category_ids": [
+            "cuotas_colegiales",
+            "cuotas_autonomos_ss",
+            "mutualidad_alternativa",
+            "arrendamiento_local",
+            "arrendamiento_vivienda_afecto",
+            "ibi_local_afecto",
+            "suministros_home_office_luz",
+            "suministros_home_office_agua",
+            "suministros_home_office_gas",
+            "suministros_home_office_internet",
+            "amortizacion_vivienda_afecto",
+            "ibi_vivienda_afecto",
+            "comunidad_vivienda_afecto",
+            "telefonia_movil",
+            "telefonia_fija",
+            "material_oficina",
+            "software_suscripcion",
+            "hardware_amortizable",
+            "mobiliario_amortizable",
+            "reparaciones_conservacion",
+            "vehiculo_combustible",
+            "vehiculo_mantenimiento",
+            "vehiculo_seguro",
+            "vehiculo_peaje",
+            "vehiculo_parking",
+            "manutencion_dietas_nacional",
+            "manutencion_dietas_extranjero",
+            "asesoria_fiscal",
+            "asesoria_juridica",
+            "asesoria_contable",
+            "publicidad_marketing",
+            "formacion_profesional",
+            "viajes_transporte",
+            "viajes_alojamiento",
+            "seguros_responsabilidad_civil",
+            "seguros_salud_autonomo",
+            "gastos_bancarios",
+            "gastos_financieros",
+            "suministros_cliente_directos",
+            "subcontratacion",
+            "tributos_fiscalmente_deducibles"
+          ],
+          "families": [
+            {
+              "category_ids": [
+                "cuotas_colegiales",
+                "cuotas_autonomos_ss",
+                "mutualidad_alternativa"
+              ],
+              "family": "social_security"
+            },
+            {
+              "category_ids": [
+                "arrendamiento_local",
+                "arrendamiento_vivienda_afecto",
+                "ibi_local_afecto"
+              ],
+              "family": "premises"
+            },
+            {
+              "category_ids": [
+                "suministros_home_office_luz",
+                "suministros_home_office_agua",
+                "suministros_home_office_gas",
+                "suministros_home_office_internet"
+              ],
+              "family": "home_office_suministros"
+            },
+            {
+              "category_ids": [
+                "amortizacion_vivienda_afecto",
+                "ibi_vivienda_afecto",
+                "comunidad_vivienda_afecto"
+              ],
+              "family": "home_office_ownership"
+            },
+            {
+              "category_ids": [
+                "telefonia_movil",
+                "telefonia_fija"
+              ],
+              "family": "telecoms"
+            },
+            {
+              "category_ids": [
+                "material_oficina",
+                "software_suscripcion",
+                "hardware_amortizable",
+                "mobiliario_amortizable",
+                "reparaciones_conservacion",
+                "publicidad_marketing",
+                "formacion_profesional"
+              ],
+              "family": "office"
+            },
+            {
+              "category_ids": [
+                "vehiculo_combustible",
+                "vehiculo_mantenimiento",
+                "vehiculo_seguro",
+                "vehiculo_peaje",
+                "vehiculo_parking"
+              ],
+              "family": "vehicle"
+            },
+            {
+              "category_ids": [
+                "manutencion_dietas_nacional",
+                "manutencion_dietas_extranjero"
+              ],
+              "family": "meals"
+            },
+            {
+              "category_ids": [
+                "asesoria_fiscal",
+                "asesoria_juridica",
+                "asesoria_contable"
+              ],
+              "family": "professional_services"
+            },
+            {
+              "category_ids": [
+                "viajes_transporte",
+                "viajes_alojamiento"
+              ],
+              "family": "travel"
+            },
+            {
+              "category_ids": [
+                "seguros_responsabilidad_civil",
+                "seguros_salud_autonomo"
+              ],
+              "family": "insurance"
+            },
+            {
+              "category_ids": [
+                "gastos_bancarios",
+                "gastos_financieros"
+              ],
+              "family": "financial"
+            },
+            {
+              "category_ids": [
+                "suministros_cliente_directos",
+                "subcontratacion"
+              ],
+              "family": "direct_costs"
+            },
+            {
+              "category_ids": [
+                "tributos_fiscalmente_deducibles"
+              ],
+              "family": "taxes"
+            }
+          ],
+          "income_requires_category": false,
+          "irpf_categories": [
+            {
+              "directions": [
+                "INCOMING",
+                "OUTGOING"
+              ],
+              "id": "actividad_economica",
+              "net_paid_invoice": true,
+              "purpose": "activity_income_withholding",
+              "related_category_ids": [
+                "asesoria_contable",
+                "asesoria_fiscal",
+                "asesoria_juridica"
+              ]
+            },
+            {
+              "directions": [
+                "OUTGOING"
+              ],
+              "id": "arrendamiento_local",
+              "net_paid_invoice": true,
+              "purpose": "rent_expense_withholding",
+              "related_category_ids": [
+                "arrendamiento_local"
+              ]
+            },
+            {
+              "directions": [
+                "OUTGOING"
+              ],
+              "id": "arrendamiento_vivienda_afecto",
+              "net_paid_invoice": true,
+              "purpose": "rent_expense_withholding",
+              "related_category_ids": [
+                "arrendamiento_vivienda_afecto"
+              ]
+            },
+            {
+              "directions": [
+                "INCOMING"
+              ],
+              "id": "trabajo",
+              "net_paid_invoice": false,
+              "purpose": "employment_income",
+              "related_category_ids": []
+            }
+          ],
+          "irpf_category_ids": [
+            "actividad_economica",
+            "arrendamiento_local",
+            "arrendamiento_vivienda_afecto",
+            "trabajo"
+          ],
+          "net_paid_withholding_irpf_category_ids": [
+            "actividad_economica",
+            "arrendamiento_local",
+            "arrendamiento_vivienda_afecto"
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "ledger-category-list"
+}

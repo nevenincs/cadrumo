@@ -1,0 +1,31 @@
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-contribuyente-autonomica"
+target_casilla_id = "0512"
+expression = { op = "lookup_parameter_by_entity_type", args = [
+    { literal = "0" },
+    { binding = "renta-2025-profile-tax-residence-ccaa" },
+    { dispatch_table_entries = [
+        { key = "andalucia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "aragon", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "asturias", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "baleares", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "canarias", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "cantabria", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "castilla_la_mancha", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "castilla_y_leon", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "cataluna", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "comunidad_valenciana", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "extremadura", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "galicia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "la_rioja", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "madrid", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+        { key = "murcia", parameter = "renta-2025-minimo-contribuyente-base-2025" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-73", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["Mínimo del contribuyente"]

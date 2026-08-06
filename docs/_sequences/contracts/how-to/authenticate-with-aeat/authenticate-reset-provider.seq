@@ -1,0 +1,6 @@
+@setup aeat config auth configure --provider certificate
+@step Remove the certificate provider's local configuration and custody state.
+@result aeat --format json config auth reset --provider certificate --yes
+@expect result.removed_sessions == 0
+@expect result.cleared_provider_configuration == true
+@expect exit_code == 0

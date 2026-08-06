@@ -1,0 +1,2018 @@
+[legal."orden-eha-789-2010:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-789-2010-art-1.html#a1"
+document_id = "BOE-A-2010-5210"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a1"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 1 de la Orden EHA/789/2010: aprobacion del formulario 360 de solicitud de devolucion del IVA soportado por empresarios o profesionales establecidos en el TAI por operaciones efectuadas en otros Estados miembros (procedimiento Octava Directiva 2008/9/CE)."
+required_text = [
+    "Aprobación del formulario 360",
+    "solicitud de devolución",
+    "territorio de aplicación del Impuesto",
+]
+
+[legal."orden-eha-789-2010:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-789-2010-art-4.html#a4"
+document_id = "BOE-A-2010-5210"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210#a4"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentacion del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolucion y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
+required_text = [
+    "Plazo de presentación del formulario 360",
+    "30 de septiembre",
+    "año natural",
+]
+
+[sources."aeat-dr-360-2010"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_360/files/01-360-orden-eha-789-2010.pdf"
+sha256 = "1361d004c0156d99555e0257b269ae379cbae420a454cdb90b9c37e0abc28950"
+bytes = 47415
+retrieved_at = 2026-05-06
+applies_from = 2010-04-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/DR360.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-360-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_360/files/modelo-360-procedure.html"
+sha256 = "4afe7e5fda67d582722bc623a6998cccfd14de4b92fb3204e97f4661ae1df98e"
+bytes = 24585
+retrieved_at = 2026-05-06
+applies_from = 2010-04-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GZ09.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-360-2010-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
+sha256 = "fcdf59303556fed6edfed2798c8db2ecc16345cf101a66d289947b22fec0b61d"
+bytes = 104451
+retrieved_at = 2026-05-06
+published_at = 2010-03-31
+applies_from = 2010-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210"
+review_status = "reviewed"
+
+[legal."orden-hac-3625-2003:apartado-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-3625-2003-art-1.html#a1"
+document_id = "BOE-A-2003-23809"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809"
+published_at = 2003-12-30
+effective_from = 2003-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Apartado primero de la Orden HAC/3625/2003: aprobacion del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligacion ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, regimen agricola/ganadero/pesquero, recargo de equivalencia)."
+required_text = [
+    "Aprobación del modelo 309",
+    "Declaración-liquidación no periódica",
+    "Impuesto sobre el Valor Añadido",
+]
+
+[legal."orden-hac-3625-2003:apartado-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-3625-2003-art-3.html#tercero"
+document_id = "BOE-A-2003-23809"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809"
+published_at = 2003-12-30
+effective_from = 2003-12-31
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentacion del Modelo 309. Veinte primeros dias naturales de abril, julio y octubre; ultimo periodo en los treinta primeros dias naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 dias desde la transmision; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
+required_text = [
+    "Plazo de presentación del modelo 309",
+    "veinte primeros días naturales",
+    "treinta primeros días naturales del mes de enero",
+]
+
+[sources."aeat-dr-309-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_309/files/01-309-ejercicios-2023-y-siguientes.xls"
+sha256 = "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5"
+bytes = 192000
+retrieved_at = 2026-05-06
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr309e23.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-309-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_309/files/modelo-309-procedure.html"
+sha256 = "bf5aae1504a91c25698a92b69514c8b32b4d18f3d3b1534a3b534e86c4d6e8d5"
+bytes = 23970
+retrieved_at = 2026-05-06
+applies_from = 2003-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G404.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-309-2003-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-3625-2003.html"
+sha256 = "1f455ee5531caece0aaa227e1f4b9a8b407ab9723f9a810dfbaff9ce33d045b4"
+bytes = 84051
+retrieved_at = 2026-05-06
+published_at = 2003-12-30
+applies_from = 2003-12-31
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23809"
+review_status = "reviewed"
+
+[legal."orden-eha-3434-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3434-2007-art-1.html#a1"
+document_id = "BOE-A-2007-20484"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a1"
+published_at = 2007-11-29
+effective_from = 2007-11-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 1 de la Orden EHA/3434/2007: aprobacion del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidacion mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
+required_text = [
+    "Aprobación del modelo 322",
+    "Grupo de entidades",
+    "Modelo individual",
+]
+
+[legal."orden-eha-3434-2007:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3434-2007-art-2.html#a2"
+document_id = "BOE-A-2007-20484"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a2"
+published_at = 2007-11-29
+effective_from = 2007-11-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 2 de la Orden EHA/3434/2007: aprobacion del modelo 353 'Grupo de entidades. Modelo agregado. Autoliquidacion mensual' del IVA. Lo presenta la entidad dominante del grupo."
+required_text = [
+    "Aprobación del modelo 353",
+    "Modelo agregado",
+    "Autoliquidación mensual",
+]
+
+[sources."aeat-dr-353-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/01-353-ejercicio-2026-y-siguientes-actualizado-03-02-26.xlsx"
+sha256 = "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380"
+bytes = 130282
+retrieved_at = 2026-05-06
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR353e26v12.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-353-2021-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/02-353-ejercicios-2021-a-2025-198-kb-xls.xls"
+sha256 = "37f39224edc2d8aa49403f2a6408ed1b69ae06c2db9d33f59b2a6a54ab82839d"
+bytes = 202240
+retrieved_at = 2026-07-21
+applies_from = 2021-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/DR353e21v21.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-353-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_353/files/modelo-353-procedure.html"
+sha256 = "2535cd4d07c73ea0cb6692905370f433f45c039a638a2d2f83375b9f8fafe374"
+bytes = 24211
+retrieved_at = 2026-05-06
+applies_from = 2007-11-30
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G408.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-353-2007-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3434-2007.html"
+sha256 = "210fbb70546bcc8b71154c5836e9f8fb6f28979f2317fbe709d30938993fe2d7"
+bytes = 169822
+retrieved_at = 2026-05-06
+published_at = 2007-11-29
+applies_from = 2007-11-30
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484"
+review_status = "reviewed"
+
+[legal."orden-eha-3434-2007:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3434-2007-art-8.html#a8"
+document_id = "BOE-A-2007-20484"
+article = "8"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484#a8"
+published_at = 2007-11-29
+effective_from = 2007-11-30
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentacion de los modelos 322 y 353. Treinta dias naturales del mes siguiente al periodo de liquidacion mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
+required_text = [
+    "Plazo de presentación de los modelos 322 y 353",
+    "treinta días naturales del mes siguiente",
+    "último día del mes de febrero",
+]
+
+[sources."aeat-dr-322-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx"
+sha256 = "f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76"
+bytes = 774672
+retrieved_at = 2026-05-06
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR322e26v11.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-322-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls"
+sha256 = "540805f09ca397511b9c2704533dcbcffc96a781602fd7d427d11fe9264e11f0"
+bytes = 960512
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR322e23.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-322-2024-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls"
+sha256 = "a70f3a2ca7dd409b6b39964b261d22b8732a767a71e3e6ef2e652e179678188b"
+bytes = 970752
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR322e24.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-322-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_322/files/modelo-322-procedure.html"
+sha256 = "4482db95c5b2b74630f32a6504775e7afd1169c425fb1dc099e4f57be723ff88"
+bytes = 24721
+retrieved_at = 2026-05-06
+applies_from = 2007-11-30
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G407.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-322-2007-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3434-2007.html"
+sha256 = "210fbb70546bcc8b71154c5836e9f8fb6f28979f2317fbe709d30938993fe2d7"
+bytes = 169822
+retrieved_at = 2026-05-06
+published_at = 2007-11-29
+applies_from = 2007-11-30
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-20484"
+review_status = "reviewed"
+
+[legal."orden-eha-3786-2008:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-1.html#a1"
+document_id = "BOE-A-2008-20953"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a1"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 1 de la Orden EHA/3786/2008: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion. Ingreso del Impuesto sobre el Valor Anadido a la importacion liquidado por la Aduana'."
+required_text = [
+    "Aprobación del modelo 303",
+    "Impuesto sobre el Valor Añadido",
+    "Autoliquidación",
+]
+
+[legal."orden-eha-3786-2008:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-7.html#a7"
+document_id = "BOE-A-2008-20953"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a7"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 7 de la Orden EHA/3786/2008: plazo de presentacion del Modelo 303. Periodos mensuales y trimestrales: primeros 20 dias naturales del mes siguiente al final del periodo. El ultimo periodo del ano se presenta durante los primeros 30 dias naturales del mes de enero siguiente."
+required_text = [
+    "Plazo de presentación del modelo 303",
+    "veinte primeros días naturales",
+    "treinta primeros días naturales del mes de enero",
+]
+
+[legal."orden-eha-3786-2008:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-2.html#a2"
+document_id = "BOE-A-2008-20953"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a2"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 2 de la Orden EHA/3786/2008: aprobacion del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolucion: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
+required_text = [
+    "Aprobación del modelo 308",
+    "solicitud de devolución",
+    "sujetos pasivos ocasionales",
+]
+
+[legal."orden-eha-3786-2008:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3786-2008-art-11.html#a11"
+document_id = "BOE-A-2008-20953"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953#a11"
+published_at = 2008-12-30
+effective_from = 2009-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 11 de la Orden EHA/3786/2008: plazos de presentacion del Modelo 308. Sujetos pasivos ocasionales (medios de transporte nuevos): 30 dias naturales desde la entrega. Regimen simplificado actividad de transporte: primeros 20 dias naturales del mes siguiente a la adquisicion."
+required_text = [
+    "Plazos de presentación del modelo 308",
+    "treinta días naturales",
+    "20 días naturales del mes siguiente",
+]
+
+[sources."aeat-dr-308-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_308/files/01-308-ejercicios-2019-y-siguientes-v13.xls"
+sha256 = "85eb926a84d309684db271e42a85dc3375e8265b6026d918400e647c76f15981"
+bytes = 182784
+retrieved_at = 2026-05-06
+applies_from = 2019-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr308e16v13.xls"
+review_status = "reviewed"
+
+[sources."aeat-modelo-308-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_308/files/modelo-308-procedure.html"
+sha256 = "adea44c97c4f6a63d7422ee8d9e8d9719f88e8e933866cd9d2cbb4289331147f"
+bytes = 23429
+retrieved_at = 2026-05-06
+applies_from = 2009-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G403.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-308-2008-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
+sha256 = "98e3f84291807aac97bbfa6c65fae9c80f0ef78611c3c1121bd531764a688b44"
+bytes = 180738
+retrieved_at = 2026-05-06
+published_at = 2008-12-30
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953"
+review_status = "reviewed"
+
+[legal."orden-eha-3111-2009:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3111-2009-art-1.html#a1"
+document_id = "BOE-A-2009-18472"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472#a1"
+published_at = 2009-11-20
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 1 de la Orden EHA/3111/2009: aprobacion del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Anadido'."
+required_text = [
+    "Aprobación del modelo 390",
+    "Declaración-resumen anual",
+    "Impuesto sobre el Valor Añadido",
+]
+
+[legal."orden-eha-3111-2009:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3111-2009-art-8.html#a8"
+document_id = "BOE-A-2009-18472"
+article = "8"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472#a8"
+published_at = 2009-11-20
+effective_from = 2010-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 8 de la Orden EHA/3111/2009: plazo de presentacion del Modelo 390. La declaracion-resumen anual del IVA se presenta en los treinta primeros dias naturales del mes de enero siguiente al ejercicio."
+required_text = [
+    "Plazo de presentación del modelo 390",
+    "treinta primeros días naturales",
+    "mes de enero siguiente",
+]
+
+[sources."aeat-dr-390-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx"
+sha256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
+bytes = 556062
+retrieved_at = 2026-05-06
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-390-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx"
+sha256 = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
+bytes = 501060
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr390e2023v100.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-390-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx"
+sha256 = "8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0"
+bytes = 556712
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/dr390e2024.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-390-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_390/files/modelo-390-procedure.html"
+sha256 = "d441d3465926f40485bb70e37c6bd6625aca7a6de99d78dd428bd3a88fa90450"
+bytes = 25574
+retrieved_at = 2026-05-06
+applies_from = 2010-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G412.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-390-2009-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3111-2009.html"
+sha256 = "5a36f3665039cdaab4122e3758fc0844880a5d8239eecf52954d0e6d176d2c13"
+bytes = 165012
+retrieved_at = 2026-05-06
+published_at = 2009-11-20
+applies_from = 2010-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18472"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/06-303-ejercicio-2025-actualizado-04-12-2025-380-kb-xlsx.xlsx"
+sha256 = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6"
+bytes = 386694
+retrieved_at = 2026-05-06
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx"
+sha256 = "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4"
+bytes = 385533
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR303e23.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2024-early"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/05-303-ejercicio-2024-hasta-periodos-08-y-2t-actualizado-01-04-24-376-kb-xlsx.xlsx"
+sha256 = "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9"
+bytes = 385739
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-08-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR303e24.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2024-late"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-xls.xlsx"
+sha256 = "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8"
+bytes = 389379
+retrieved_at = 2026-05-03
+applies_from = 2024-07-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR303e24v200.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2026"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
+bytes = 386926
+retrieved_at = 2026-05-06
+applies_from = 2026-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR303e26v101.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-303-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_303/files/modelo-303-procedure.html"
+sha256 = "6fa9e069c86485ac3ff2e55bb3ca603ba280c3f3b18a781013fbbf6a65b4e8c5"
+bytes = 24562
+retrieved_at = 2026-05-06
+applies_from = 2009-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-303-2008-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3786-2008.html"
+sha256 = "98e3f84291807aac97bbfa6c65fae9c80f0ef78611c3c1121bd531764a688b44"
+bytes = 180738
+retrieved_at = 2026-05-06
+published_at = 2008-12-30
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-20953"
+review_status = "reviewed"
+
+[legal."orden-eha-769-2010:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-769-2010.html#articulo-1"
+document_id = "BOE-A-2010-5098"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Aprobacion del modelo 349 de declaracion recapitulativa de operaciones intracomunitarias y de sus disenos fisicos y logicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
+required_text = [
+    "se aprueba el modelo 349",
+    "declaración recapitulativa de operaciones intracomunitarias",
+    "diseños lógicos que figuran en el anexo de esta orden",
+    "requisitos técnicos que consten en el momento de la presentación",
+]
+
+[legal."orden-eha-769-2010:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-769-2010.html#articulo-2"
+document_id = "BOE-A-2010-5098"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098#a2"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Obligados a presentar la declaracion recapitulativa de operaciones intracomunitarias y reglas de periodicidad mensual/trimestral en funcion del umbral de 50.000 euros del Reglamento del IVA."
+required_text = [
+    "Obligados a presentar la declaración recapitulativa",
+    "acuerdos de ventas de bienes en consigna",
+]
+
+[legal."orden-eha-769-2010:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-769-2010.html#a1-2"
+document_id = "BOE-A-2010-5098"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098#a10"
+published_at = 2010-03-31
+effective_from = 2010-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Plazo de presentacion del modelo 349: veinte primeros dias naturales del mes inmediato siguiente al periodo, salvo julio (hasta el 20 de septiembre) y diciembre/cuarto trimestre (treinta primeros dias naturales de enero)."
+required_text = [
+    "Plazo de presentación del modelo 349",
+    "veinte primeros días naturales",
+    "treinta primeros días naturales del mes de enero",
+]
+
+[legal."orden-hac-174-2020:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-174-2020.html#articulo-unico"
+document_id = "BOE-A-2020-2898"
+article = "unico"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-2898"
+published_at = 2020-02-29
+effective_from = 2020-03-01
+review_status = "reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Modificacion de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentacion anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
+required_text = [
+    "Artículo único. Modificación de la Orden EHA/769/2010",
+    "modelo 349",
+    "operaciones intracomunitarias",
+    "Se modifica el artículo 1 de la Orden EHA/769/2010",
+]
+
+[sources."aeat-dr-349-2020-current"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_349/files/01-349-orden-hac-174-2020-de-4-de-febrero-ejercicio-2020-y-siguientes-894-kb-pdf.pdf"
+sha256 = "874db49c9aff4d9c024bdee52f869123a9815c09272a0066cf81421ace1a8335"
+bytes = 915219
+retrieved_at = 2026-05-03
+published_at = 2020-02-29
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_20/DR_Anexo_349.pdf"
+review_status = "reviewed"
+
+[sources."boe-modelo-349-form-2010"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-769-2010.html"
+sha256 = "d57d707f8fe68b1d5d6ecd0f08997325e8e00a93ba57b8200e9d08b00d71fac0"
+bytes = 217318
+retrieved_at = 2026-05-05
+published_at = 2010-03-31
+applies_from = 2010-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098"
+review_status = "reviewed"
+
+[sources."aeat-modelo-349-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_349/files/modelo-349-procedure.html"
+sha256 = "ad3bc47a0ca9846bec8789cdaea867b504d3774205e3993cea52a39040f8811e"
+bytes = 46458
+retrieved_at = 2026-05-05
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI28.shtml"
+review_status = "reviewed"
+
+[sources."aeat-modelo-349-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.txt"
+sha256 = "735dc0b1be1bed8997bd77a97fb0cb54e54d77a083082f5b72cf6aa236717adf"
+bytes = 69284
+retrieved_at = 2026-05-26
+applies_from = 2021-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI28/instr_mod_349.pdf"
+review_status = "reviewed"
+
+[sources."aeat-vies-gestiones-procedure"]
+evidence_tier = "executable_parity_evidence"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/groi/aeat-vies-gestiones.html"
+sha256 = "5b439bae92467f2766eea7c6e40c0c16d786e57647298ebe72f8a97b64ea5205"
+bytes = 11499
+retrieved_at = 2026-05-08
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/iva/iva-operaciones-comercio-exterior/identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
+review_status = "reviewed"
+
+[sources."aeat-modelo-036-roi-enrollment-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_036/aeat-modelo-036-procedure.html"
+sha256 = "fd5264e1a8c371eb2bad45347a0defa5cc79882051cd6e90d9980a70722f53bd"
+bytes = 36079
+retrieved_at = 2026-05-08
+applies_from = 2008-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
+review_status = "reviewed"
+
+[legal."orden-hac-610-2021:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-1.html#a1"
+document_id = "BOE-A-2021-10161"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a1"
+published_at = 2021-06-18
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 1 de la Orden HAC/610/2021: aprobacion del modelo 369, autoliquidacion de los regimenes especiales OSS/IOSS del IVA."
+required_text = [
+    "Aprobación del modelo 369",
+    "Impuesto sobre el Valor Añadido",
+    "Autoliquidación de los regímenes especiales",
+]
+
+[legal."orden-hac-610-2021:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-2.html#a2"
+document_id = "BOE-A-2021-10161"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a2"
+published_at = 2021-06-18
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 2 de la Orden HAC/610/2021: obligados a presentar Modelo 369. Esquemas Exterior y Union presentan por trimestre natural; el regimen de importacion presenta por mes natural."
+required_text = [
+    "por cada trimestre natural",
+    "por cada mes natural",
+    "Estado miembro de identificación sea España",
+]
+
+[legal."orden-hac-610-2021:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-610-2021-art-3.html#a3"
+document_id = "BOE-A-2021-10161"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161#a3"
+published_at = 2021-06-18
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Articulo 3 de la Orden HAC/610/2021: el Modelo 369 se presenta dentro del mes natural siguiente al final del periodo de autoliquidacion."
+required_text = [
+    "Plazo de presentación del modelo 369",
+    "dentro del mes natural siguiente",
+    "período al que se refiera la autoliquidación",
+]
+
+[legal."ley-37-1992:art-163-octiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-octiesdecies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163 octiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163octiesdecies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Ley 37/1992, articulo 163 octiesdecies: ambito del regimen exterior para empresarios o profesionales no establecidos en la Comunidad."
+required_text = [
+    "Artículo 163 octiesdecies",
+    "empresarios o profesionales no establecidos en la Comunidad",
+    "régimen especial previsto en esta sección",
+]
+
+[legal."ley-37-1992:art-163-noniesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163noniesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163 noniesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163noniesdecies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "operator"
+notes = "Ley 37/1992, articulo 163 noniesdecies: obligaciones formales del regimen exterior OSS cuando Espana es Estado miembro de identificacion."
+required_text = [
+    "Artículo 163 noniesdecies. Obligaciones formales.",
+    "En caso de que el Reino de España sea el Estado miembro de identificación elegido",
+    "Presentar por vía electrónica una declaración-liquidación",
+    "por cada trimestre natural",
+    "Mantener un registro de las operaciones incluidas en este régimen especial",
+]
+
+[legal."ley-37-1992:art-163-unvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-unvicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163 unvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163unvicies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Ley 37/1992, articulo 163 unvicies: ambito del regimen de la Union para servicios, ventas intracomunitarias a distancia y determinadas entregas interiores."
+required_text = [
+    "Artículo 163 unvicies",
+    "ventas a distancia intracomunitarias de bienes",
+    "régimen especial previsto en esta sección",
+]
+
+[legal."ley-37-1992:art-163-quinvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-quinvicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163 quinvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quinvicies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Ley 37/1992, articulo 163 quinvicies: ambito del regimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
+required_text = [
+    "Artículo 163 quinvicies",
+    "ventas a distancia de bienes importados",
+    "valor intrínseco no exceda de 150 euros",
+]
+
+[sources."aeat-dr-369-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_369/files/01-369-regimenes-especiales-aplicables-a-los-servicios-prestados-a-personas-que-no-tengan-la-co.xlsx"
+sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
+bytes = 958950
+retrieved_at = 2026-05-03
+published_at = 2021-09-17
+applies_from = 2021-07-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR369e21.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-369-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_369/files/modelo-369-procedure.html"
+sha256 = "5c776cc0640147af7a937963fe7cf88a53fb67e3b465924f742f7ba9273be1b6"
+bytes = 20824
+retrieved_at = 2026-05-06
+applies_from = 2021-07-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G420.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-369-2021-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-610-2021.html"
+sha256 = "69423013b661ae0b5c302b97d9d6ba244ae5f11e345dd3ffca04f6f6dd36bdcf"
+bytes = 64856
+retrieved_at = 2026-05-06
+published_at = 2021-06-18
+applies_from = 2021-07-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161"
+review_status = "reviewed"
+
+[legal."ley-37-1992:art-99"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-99.html#a99"
+document_id = "BOE-A-1992-28740"
+article = "99"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a99"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 99 LIVA: ejercicio del derecho a la deduccion. Regula la deduccion de cuotas soportadas, el periodo en que se ejerce el derecho, la compensacion del exceso de cuotas a deducir cuando sobrepasa el de las devengadas en periodos sucesivos hasta cuatro anos, y la caducidad del derecho."
+required_text = [
+    "Uno. En las declaraciones-liquidaciones correspondientes a cada uno de los períodos de liquidación, los sujetos pasivos ",
+    "Dos. Las deducciones deberán efectuarse en función del destino previsible de los bienes y servicios adquiridos, sin perj",
+    "No obstante, en los supuestos de destrucción o pérdida de los bienes adquiridos o importados, por causa no imputable al ",
+]
+
+[legal."ley-37-1992:art-97"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a97"
+document_id = "BOE-A-1992-28740"
+article = "97"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a97"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "agent-review"
+notes = "LIVA art 97: formal requirements for exercising the deduction right. Grounds missing-evidence advisories that ask the operator to attach invoice or equivalent documentary support before relying on deductible input VAT."
+required_text = [
+    "Requisitos formales de la deducción",
+    "documento justificativo de su derecho",
+    "La factura original expedida",
+]
+
+[legal."rd-1619-2012:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012-art-2.html#a2-2"
+document_id = "BOE-A-2012-14696"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#a2-2"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "agent-review"
+notes = "RD 1619/2012 Reglamento de facturación art 2: obligation to issue invoices, including operations whose recipient is an entrepreneur or professional. Grounds missing-evidence advisories alongside LIVA art 97."
+required_text = [
+    "Obligación de expedir factura",
+    "los empresarios o profesionales están obligados a expedir factura",
+    "destinatario sea un empresario o profesional que actúe como tal",
+]
+
+[legal."ley-37-1992:art-115"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a115"
+document_id = "BOE-A-1992-28740"
+article = "115"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a115"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "agent-review"
+notes = "Articulo 115 LIVA: supuestos generales de devolucion. Conecta el saldo a favor no hecho efectivo por compensacion del articulo 99 con la solicitud de devolucion al cierre del ultimo periodo de liquidacion del ano natural."
+required_text = [
+    "Supuestos generales de devolución",
+    "Los sujetos pasivos que no hayan podido hacer efectivas las deducciones originadas en un período de liquidación por el procedimiento previsto en el artículo 99",
+    "solicitar la devolución del saldo a su favor existente a 31 de diciembre de cada año",
+]
+
+[legal."ley-37-1992:art-116"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a116"
+document_id = "BOE-A-1992-28740"
+article = "116"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a116"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-19
+reviewed_by = "agent-review"
+notes = "Articulo 116 LIVA: solicitud de devoluciones al fin de cada periodo de liquidacion. Base legal de la devolucion periodica para sujetos pasivos que optan por el procedimiento reglamentario."
+required_text = [
+    "Solicitud de devoluciones al fin de cada período de liquidación",
+    "podrán optar por solicitar la devolución del saldo a su favor existente al término de cada período de liquidación",
+    "El período de liquidación de los sujetos pasivos que opten por este procedimiento coincidirá con el mes natural",
+]
+
+[legal."ley-37-1992:art-102"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-102.html#a102"
+document_id = "BOE-A-1992-28740"
+article = "102"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a102"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 102 LIVA: regla de prorrata. Define cuando sera de aplicacion la regla de prorrata - cuando el sujeto pasivo realice conjuntamente entregas de bienes o prestaciones de servicios que originen el derecho a la deduccion y otras operaciones de analoga naturaleza que no habiliten para el ejercicio del citado derecho."
+required_text = [
+    "Uno. La regla de prorrata será de aplicación cuando el sujeto pasivo, en el ejercicio de su actividad empresarial o prof",
+    "Dos. No obstante lo dispuesto en el apartado anterior, los sujetos pasivos podrán deducir íntegramente las cuotas soport",
+]
+
+[legal."ley-37-1992:art-104"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-104.html#a104"
+document_id = "BOE-A-1992-28740"
+article = "104"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-07
+reviewed_by = "agent-authored verbatim from the bundled corpus text; operator to re-stamp"
+notes = "Articulo 104 LIVA: la prorrata general. Define el calculo del porcentaje de deduccion como cociente entre el importe total de las operaciones que originan el derecho a la deduccion (numerador) y el importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por exceso a la unidad superior. El apartado Tres enumera las seis operaciones excluidas de ambos terminos de la relacion (art 104.Tres reglas 1a a 6a): (1) operaciones desde establecimientos permanentes fuera del TAI; (2) las cuotas de IVA que gravaron directamente esas operaciones; (3) entregas y exportaciones de bienes de inversion utilizados en la actividad; (4) operaciones inmobiliarias o financieras que no constituyan actividad habitual (arrendamiento siempre habitual; operaciones financieras del art 20.Uno.18); (5) operaciones no sujetas del art 7; (6) operaciones del art 9, numero 1.o, letra d) (autoconsumo del promotor). Las subvenciones no vinculadas al precio NO son una exclusion del art 104.Tres: fueron suprimidas del denominador de la prorrata por la Ley 3/2006 (BOE-A-2006-5691), por lo que no se computan en absoluto en lugar de excluirse de un volumen computado."
+required_text = [
+    "La prorrata de deducción resultante de la aplicación de los criterios anteriores se redondeará en la unidad superior.",
+    "Tres. Para la determinación del porcentaje de deducción no se computarán en ninguno de los términos de la relación:",
+    "Las operaciones realizadas desde establecimientos permanentes situados fuera del territorio de aplicación del Impuesto.",
+    "Las cuotas del Impuesto sobre el Valor Añadido que hayan gravado directamente las operaciones a que se refiere el apartado anterior.",
+    "El importe de las entregas y exportaciones de los bienes de inversión que el sujeto pasivo haya utilizado en su actividad empresarial o profesional.",
+    "El importe de las operaciones inmobiliarias o financieras que no constituyan actividad empresarial o profesional habitual del sujeto pasivo.",
+    "En todo caso se reputará actividad empresarial o profesional habitual del sujeto pasivo la de arrendamiento.",
+    "Tendrán la consideración de operaciones financieras a estos efectos las descritas en el artículo 20, apartado uno, número 18.º de esta Ley, incluidas las que no gocen de exención.",
+    "Las operaciones no sujetas al impuesto según lo dispuesto en el artículo 7 de esta Ley.",
+    "Las operaciones a que se refiere el artículo 9, número 1.º, letra d) de esta Ley.",
+]
+
+[legal."ley-37-1992:art-105"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a105"
+document_id = "BOE-A-1992-28740"
+article = "105"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a105"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-07
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a105 arts. 105.Uno/.Cuatro/.Cinco procedimiento de la prorrata general; operator to re-stamp"
+notes = "Articulo 105 LIVA: procedimiento de la prorrata general. Apartado Uno: el porcentaje de deduccion provisionalmente aplicable cada ano natural sera el fijado como definitivo para el ano precedente. Apartado Cuatro: en la ultima declaracion-liquidacion de cada ano natural el sujeto pasivo calcula la prorrata definitiva en funcion de las operaciones del ano y practica la consiguiente regularizacion de las deducciones provisionales - la cuota de esa regularizacion se consigna en la casilla 44 del Modelo 303 y en el campo de regularizacion anual del Modelo 390. Base legal de la regularizacion prorrata por porcentaje definitivo. Apartado Cinco: en los supuestos de interrupcion durante uno o mas anos naturales de la actividad (o de un sector diferenciado), el porcentaje definitivamente aplicable durante cada uno de esos anos es el que globalmente corresponda al conjunto de los tres ULTIMOS anos naturales en que se hubiesen realizado operaciones (porcentaje global sobre los volumenes agregados de los tres anos activos, saltando la interrupcion; no la media de los tres porcentajes ni los tres anos de calendario). Base legal de la siembra del ejercicio que reanuda tras una interrupcion."
+required_text = [
+    "el porcentaje de deducción provisionalmente aplicable cada año natural será el fijado como definitivo para el año precedente",
+    "En la última declaración-liquidación del impuesto correspondiente a cada año natural el sujeto pasivo calculará la prorrata de deducción definitiva",
+    "practicará la consiguiente regularización de las deducciones provisionales",
+    "En los supuestos de interrupción durante uno o más años naturales de la actividad empresarial o profesional",
+    "el que globalmente corresponda al conjunto de los tres últimos años naturales en que se hubiesen realizado operaciones",
+]
+
+[legal."ley-37-1992:art-103"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a103"
+document_id = "BOE-A-1992-28740"
+article = "103"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a103"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-28
+reviewed_by = "agent-authored from the bundled corpus text, amendment history cross-checked against the live BOE consolidated text; operator to re-stamp"
+notes = "Articulo 103 LIVA: clases de prorrata y criterios de aplicacion. Apartado Uno: la regla de prorrata tiene dos modalidades, general y especial; la general se aplica cuando no concurren las circunstancias del apartado siguiente. Apartado Dos: la prorrata especial es aplicable (1) cuando el sujeto pasivo opta por ella en plazo y forma reglamentarios, o (2) cuando el montante total de las cuotas deducibles del ano natural por la regla general excede del que resultaria por la regla especial en el margen legal del ejercicio (obligacion de especial). ATENCION - el apartado Dos numero 2 NO es invariante en la ventana de ejercicios que la aplicacion sirve: la redaccion original de la Ley 37/1992 (en vigor 01-01-1993 a 31-12-2014) exigia que excediera 'en un 20 por 100', sin 'o mas', mientras que el art. 1.26 de la Ley 28/2014 (BOE-A-2014-12329, en vigor desde 01-01-2015) lo sustituyo por 'en un 10 por ciento o mas'. La modificacion rebajo el margen Y lo hizo inclusivo: el preambulo de la Ley 28/2014 lo describe como 'disminuir del 20 al 10 por ciento la diferencia admisible'. Base legal del aviso de prorrata especial obligatoria, cuyo margen se resuelve por ejercicio (PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_FROM_2015, PRORRATA_ESPECIAL_MANDATORY_MULTIPLE_UNTIL_2014, PRORRATA_ESPECIAL_MANDATORY_LEY_28_2014_FIRST_YEAR)."
+required_text = [
+    "La regla de prorrata tendrá dos modalidades de aplicación: general y especial.",
+    "La regla de prorrata especial será aplicable en los siguientes supuestos:",
+    "Cuando el montante total de las cuotas deducibles en un año natural por aplicación de la regla de prorrata general exceda en un 10 por ciento o más del que resultaría por aplicación de la regla de prorrata especial.",
+    "Se modifica el apartado 2.2º por el art. 1.26 de la Ley 28/2014, de 27 de noviembre.",
+]
+
+[legal."ley-37-1992:art-106"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a106"
+document_id = "BOE-A-1992-28740"
+article = "106"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a106"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-07
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a106 la prorrata especial; operator to re-stamp"
+notes = "Articulo 106 LIVA: la prorrata especial. Apartado Uno, tres reglas de deduccion por uso del input: 1a las cuotas soportadas en bienes/servicios utilizados EXCLUSIVAMENTE en operaciones con derecho a deduccion se deducen INTEGRAMENTE (100%); 2a las utilizadas EXCLUSIVAMENTE en operaciones sin derecho NO son deducibles (0%); 3a las utilizadas SOLO EN PARTE en operaciones con derecho se deducen en la proporcion del porcentaje general del art 104.Dos y siguientes, con el procedimiento del art 105. Base legal del enrutado por InputClassification (exclusively_deductible/exclusively_non_deductible/common)."
+required_text = [
+    "El ejercicio del derecho a deducir en la prorrata especial se ajustará a las siguientes reglas:",
+    "utilizados exclusivamente en la realización de operaciones que originen el derecho a la deducción podrán deducirse íntegramente.",
+    "utilizados exclusivamente en la realización de operaciones que no originen el derecho a deducir no podrán ser objeto de deducción.",
+    "utilizados sólo en parte en la realización de operaciones que originen el derecho a la deducción podrán ser deducidas en la proporción resultante de aplicar al importe global de las mismas el porcentaje a que se refiere el artículo 104, apartados Dos y siguientes.",
+]
+
+[legal."ley-37-1992:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a101"
+document_id = "BOE-A-1992-28740"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a101"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-08
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a101 regimen de deducciones en sectores diferenciados; art 101.Dos comun deferred; operator to re-stamp"
+notes = "Articulo 101 LIVA: regimen de deducciones en sectores diferenciados de la actividad. Apartado Uno: el sujeto pasivo que realiza actividades economicas en sectores diferenciados (art 9.1.c) debe aplicar SEPARADAMENTE el regimen de deducciones respecto de cada uno; la prorrata especial puede aplicarse independientemente por sector (letras a', c', d'); los sectores de la letra b' se rigen por sus regimenes especiales. Las adquisiciones para uso EN COMUN en varios sectores se deducen por el porcentaje del art 104.Dos y siguientes (porcentaje comun). Base legal del enrutado por sector: cada input a la deduccion de SU sector; el input de uso comun al porcentaje comun del art 104.Dos. Apartado Dos (DIFERIDO en esta fase): la Administracion puede autorizar un regimen de deduccion COMUN a los sectores de la letra a', autorizacion que NO surte efectos en el ano en que el total de cuotas deducibles por el regimen comun exceda en un 20 por 100 al que resultaria aplicando con independencia el regimen de cada sector - se registra como caso de autorizacion (register authorisation_reference) y su +20% void test se difiere, con el esquema del register ya preparado para admitirlo."
+required_text = [
+    "Los sujetos pasivos que realicen actividades económicas en sectores diferenciados de la actividad empresarial o profesional deberán aplicar separadamente el régimen de deducciones respecto de cada uno de ellos.",
+    "La aplicación de la regla de prorrata especial podrá efectuarse independientemente respecto de cada uno de los sectores diferenciados",
+    "para su utilización en común en varios sectores diferenciados de actividad, será de aplicación lo establecido en el artículo 104, apartados dos y siguientes de esta Ley",
+    "La Administración podrá autorizar la aplicación de un régimen de deducción común a los sectores diferenciados",
+    "exceda en un 20 por 100 al que resultaría de aplicar con independencia el régimen de deducciones respecto de cada sector diferenciado",
+]
+
+[legal."ley-37-1992:art-9-1-c"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9"
+document_id = "BOE-A-1992-28740"
+article = "9.1.c"
+section = "sectores-diferenciados"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-08
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a9 definicion de sectores diferenciados letra c; operator to re-stamp"
+notes = "Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIADOS de la actividad (base del art 101). Letra a': actividades economicas con grupos DISTINTOS en la Clasificacion Nacional de Actividades Economicas (CNAE) cuyos regimenes de deduccion difieran; los regimenes se consideran distintos cuando los porcentajes de deduccion del art 104 difieran en mas de 50 PUNTOS PORCENTUALES respecto de la actividad principal (base del test PRORRATA_SECTORAL_SEPARATION_SPREAD_PP = 50). Letra b': actividades acogidas a los regimenes especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si divergen >50pp, si hay regimen especial) - operator-declared, nunca inferido del ledger."
+required_text = [
+    "se considerarán sectores diferenciados de la actividad empresarial o profesional los siguientes",
+    "Se considerarán actividades económicas distintas aquellas que tengan asignados grupos diferentes en la Clasificación Nacional de Actividades Económicas.",
+    "difirieran en más de 50 puntos porcentuales del correspondiente a la citada actividad principal",
+    "Las actividades acogidas a los regímenes especiales simplificado, de la agricultura, ganadería y pesca, de las operaciones con oro de inversión o del recargo de equivalencia.",
+]
+
+[legal."ley-37-1992:art-107"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-107.html#a107"
+document_id = "BOE-A-1992-28740"
+article = "107"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a107"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 107 LIVA: regularizacion de deducciones por bienes de inversion. Las cuotas deducibles por la adquisicion o importacion de bienes de inversion se regularizan durante los cuatro anos naturales siguientes a aquel en que los sujetos pasivos inicien su utilizacion (o nueve anos si son terrenos o edificaciones)."
+required_text = [
+    "Uno. Las cuotas deducibles por la adquisición o importación de bienes de inversión deberán regularizarse durante los cua",
+    "No obstante, cuando la utilización efectiva o entrada en funcionamiento de los bienes se inicien con posterioridad a su ",
+    "Las regularizaciones indicadas en este apartado sólo se practicarán cuando, entre el porcentaje de deducción definitivo ",
+]
+
+[legal."ley-37-1992:art-108"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-108.html#a108"
+document_id = "BOE-A-1992-28740"
+article = "108"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a108"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 108 LIVA: concepto de bienes de inversion. Son bienes de inversion los bienes corporales, muebles, semovientes o inmuebles que, por su naturaleza y funcion, esten normalmente destinados a ser utilizados por un periodo de tiempo superior a un ano como instrumentos de trabajo o medios de explotacion, con umbrales de exclusion para bienes de escaso valor."
+required_text = [
+    "Dos. No tendrán la consideración de bienes de inversión:",
+    "2.º Las ejecuciones de obra para la reparación de otros bienes de inversión.",
+    "3.º Los envases y embalajes, aunque sean susceptibles de reutilización.",
+]
+
+[legal."ley-37-1992:art-109"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-109.html#a109"
+document_id = "BOE-A-1992-28740"
+article = "109"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a109"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 109 LIVA: procedimiento para practicar la regularizacion de deducciones por bienes de inversion. Establece la formula de regularizacion comparando el porcentaje de deduccion del ano de adquisicion con el del ano de la regularizacion, dividiendo la diferencia entre cinco (o diez para terrenos y edificaciones)."
+required_text = [
+    "La regularización de las deducciones a que se refiere el artículo 107 de esta Ley se realizará del siguiente modo:",
+    "2.º Dicho importe se restará del de la deducción efectuada en el año en que tuvo lugar la repercusión.",
+]
+
+[legal."ley-37-1992:art-110"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-110.html#a110"
+document_id = "BOE-A-1992-28740"
+article = "110"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a110"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 110 LIVA: entregas de bienes de inversion durante el periodo de regularizacion. Si los bienes de inversion se entregan antes de la finalizacion del periodo de regularizacion, se efectuara una regularizacion unica por el tiempo que reste, considerando si la entrega esta sujeta y no exenta o exenta/no sujeta."
+required_text = [
+    "A tal efecto, se aplicarán las siguientes reglas:",
+    "Uno. En los casos de entregas de bienes de inversión durante el período de regularización se efectuará una regularizació",
+]
+
+[legal."ley-37-1992:art-163-duovicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-duovicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163-duovicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163duovicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 163 duovicies LIVA: regimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electronica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regimenes especiales del titulo IX, capitulo XI."
+required_text = [
+    "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno.2.º de esta Ley.",
+    "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
+]
+
+[legal."ley-37-1992:art-163-sexvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-sexvicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163-sexvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163sexvicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 163 sexvicies LIVA: regimen especial aplicable a las ventas a distancia de bienes importados procedentes de paises terceros (Import One Stop Shop / IOSS). Establecido como ventanilla unica para envios de valor intrinseco no superior a 150 euros."
+required_text = [
+    "En las entregas de bienes acogidas a este régimen especial el devengo del impuesto se producirá en el momento de la entrega, que s",
+]
+
+[legal."ley-37-1992:art-163-septvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-septvicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163-septvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163septvicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 163 septvicies LIVA: definiciones aplicables al regimen especial IOSS - empresario o profesional no establecido, Estado miembro de identificacion, Estado miembro de consumo, intermediario."
+required_text = [
+    "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno. 2.º de esta Ley.",
+    "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
+]
+
+[legal."ley-37-1992:art-163-octovicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-octovicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163-octovicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163octovicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 163 octovicies LIVA: obligaciones formales del regimen especial IOSS - declaracion de inicio, modificacion y cese, presentacion de declaraciones por trimestre natural, pagos, llevanza de un registro, conservacion de la documentacion durante diez anos."
+required_text = [
+    "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
+    "No obstante lo anterior, los empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de las c",
+    "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119.,Dos.2.º",
+]
+
+[legal."ley-37-1992:art-163-tervicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-tervicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163-tervicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163tervicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 163 tervicies LIVA: regimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaracion unica de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificacion."
+required_text = [
+    "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
+    "No obstante lo anterior, los empresarios o profesionales que se acojan a este régimen especial tendrán derecho a la devolución de ",
+    "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119.Dos.2.º ",
+]
+
+[legal."ley-37-1992:art-163-quatervicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quatervicies"
+document_id = "BOE-A-1992-28740"
+article = "163 quatervicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quatervicies"
+published_at = 1992-12-29
+effective_from = 2021-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "operator"
+notes = "Ley 37/1992, articulo 163 quatervicies: exclusion del regimen de la Union para prestaciones realizadas en el territorio de aplicacion del impuesto por establecidos en el mismo."
+required_text = [
+    "Artículo 163 quatervicies. Prestaciones de servicios realizadas en el territorio de aplicación del impuesto por empresarios o profesionales establecidos en el mismo.",
+    "El régimen especial previsto en esta sección no resultará aplicable",
+    "prestaciones de servicios realizadas en el territorio de aplicación del impuesto",
+    "régimen general del impuesto",
+]
+
+[legal."ley-37-1992:art-163-septiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-septiesdecies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163-septiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163septiesdecies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 163 septiesdecies LIVA: ambito objetivo del regimen especial aplicable a los servicios prestados por via electronica, de telecomunicaciones, de radiodifusion y de television (MOSS exterior). Define las prestaciones acogibles y los servicios excluidos del regimen."
+required_text = [
+    "Uno. A efectos del presente capítulo, serán de aplicación las siguientes definiciones:",
+    "b) “Estado miembro de consumo”: el definido como tal para cada uno de los regímenes especiales.",
+    "c) “Estado miembro de identificación”: el definido como tal para cada uno de los regímenes especiales.",
+]
+
+[legal."ley-37-1992:art-163-vicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-vicies.html#a163"
+document_id = "BOE-A-1992-28740"
+article = "163-vicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163vicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Articulo 163 vicies LIVA: obligaciones formales del regimen especial MOSS exterior - declaracion de inicio/cese, presentacion de declaraciones trimestrales, ingreso por el total, llevanza del registro, conservacion durante diez anos, e idioma de las declaraciones."
+required_text = [
+    "Uno. Los empresarios o profesionales no establecidos en la Comunidad que se acojan a este régimen especial no podrán deducir en la",
+    "No obstante lo anterior, dichos empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de la",
+    "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119. Dos.2.º",
+]
+
+[legal."ley-12-2002:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-12-2002.html#art-29"
+document_id = "BOE-A-2002-9969"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-9969#a29"
+published_at = 2002-05-24
+effective_from = 2002-05-24
+review_status = "reviewed"
+reviewed_at = 2026-06-01
+reviewed_by = "operator"
+notes = "Articulo 29 de la Ley 12/2002 (Concierto Económico con la Comunidad Autónoma del País Vasco): distribución territorial de la recaudación del Impuesto sobre el Valor Añadido entre el Estado y la Administración de la Comunidad Autónoma del País Vasco proporcional al volumen de operaciones en cada territorio, con liquidación provisional anual y regularización en la declaración anual de IVA."
+required_text = [
+    "distribución territorial de la recaudación del Impuesto sobre el Valor Añadido",
+    "proporciones que resulten de las operaciones",
+    "regularización correspondiente en la declaración anual de IVA",
+]
+
+[legal."ley-37-1992:art-94"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-94.html#a94"
+document_id = "BOE-A-1992-28740"
+article = "94"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a94"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "operator"
+notes = "Articulo 94 LIVA: operaciones que originan el derecho a deducir. Los sujetos pasivos podran deducir las cuotas del IVA soportadas en los supuestos en que las referidas operaciones hayan sido realizadas en el ejercicio de su actividad empresarial o profesional."
+required_text = [
+    "operaciones cuya realización origina el derecho a la deducción",
+]
+
+[legal."ley-37-1992:art-95"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-95.html#a95"
+document_id = "BOE-A-1992-28740"
+article = "95"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a95"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "operator"
+notes = "Articulo 95 LIVA: limitaciones del derecho a deducir. Los empresarios o profesionales no podran deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten a su actividad empresarial o profesional."
+required_text = [
+    "limitaciones del derecho a deducir",
+]
+
+[legal."ley-37-1992:art-122"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-122.html#a122"
+document_id = "BOE-A-1992-28740"
+article = "122"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a122"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "operator"
+notes = "Articulo 122 LIVA: regimen simplificado del IVA. Seran de aplicacion a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
+required_text = [
+    "régimen simplificado",
+    "volumen de operaciones",
+]
+
+[legal."ley-37-1992:art-123"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-123.html#a123"
+document_id = "BOE-A-1992-28740"
+article = "123"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a123"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "operator"
+notes = "Articulo 123 LIVA: contenido del regimen simplificado. Determinacion de las cuotas tributarias para las actividades acogidas al regimen simplificado mediante el metodo de indices, modulos o signos."
+required_text = [
+    "cuotas tributarias",
+    "módulos",
+]
+
+[legal."orden-hac-819-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-819-2024-art-1.html#a1"
+document_id = "BOE-A-2024-6840"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-6840#a1"
+published_at = 2024-04-09
+effective_from = 2024-04-10
+review_status = "reviewed"
+reviewed_at = 2026-05-30
+reviewed_by = "operator"
+notes = "Articulo 1 de la Orden HAC/819/2024: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion' para los ejercicios 2023 y siguientes. Modifica la Orden EHA/3786/2008 introduciendo las casillas del nuevo formulario: [64] suma de resultados ([46]+[58]+[76]), [65] porcentaje atribuible Administracion del Estado, [66] importe atribuible Administracion del Estado ([64]x[65]/100), [69] resultado autoliquidacion ([66]+[77]+[68]-[78]), [71] resultado final ([69]-[70]+[109])."
+required_text = [
+    "Aprobación del modelo 303",
+    "Impuesto sobre el Valor Añadido",
+    "Autoliquidación",
+]
+
+[legal."ley-37-1992:art-124"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-124.html#a124"
+document_id = "BOE-A-1992-28740"
+article = "124"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a124"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "operator"
+notes = "Articulo 124 LIVA: obligaciones formales del regimen simplificado. Los sujetos pasivos acogidos al regimen simplificado estaran obligados a llevar un libro registro de facturas recibidas y un libro registro especifico del regimen simplificado."
+required_text = [
+    "régimen simplificado",
+    "libro registro",
+]
+
+[legal."rd-596-2016"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-596-2016.html#articulo-primero"
+document_id = "BOE-A-2016-11575"
+article = "primero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-11575"
+published_at = 2016-12-06
+effective_from = 2017-07-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "agent-review"
+notes = "Real Decreto 596/2016: moderniza la gestion del IVA e introduce la llevanza de libros registro a traves de la Sede electronica de la AEAT mediante el suministro electronico de registros de facturacion."
+required_text = [
+    "Sede electrónica de la Agencia Estatal de la Administración Tributaria",
+    "suministro electrónico de los registros de facturación",
+]
+
+[legal."rd-1007-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1007-2023.html#a3"
+document_id = "BOE-A-2023-24840"
+article = "3"
+section = "Ámbito subjetivo"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840#a3"
+published_at = 2023-12-06
+effective_from = 2023-12-07
+consolidated_as_of = 2025-12-03
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "agent-review"
+notes = "RD 1007/2023 Art. 3 delimita los obligados tributarios que usan sistemas informaticos de facturacion: IS, IRPF con actividades economicas, IRNR con establecimiento permanente y entidades en atribucion de rentas con actividades economicas; excluye a quienes llevan libros registro por RIVA Art. 62.6 y aplica tambien a productores/comercializadores en su actividad."
+required_text = [
+    "El presente Reglamento se aplicará a los obligados tributarios que se indican a continuación, que utilicen sistemas informáticos de facturación",
+    "Los contribuyentes del Impuesto sobre Sociedades",
+    "Los contribuyentes del Impuesto sobre la Renta de las Personas Físicas que desarrollen actividades económicas",
+    "Los contribuyentes del Impuesto sobre la Renta de no Residentes que obtengan rentas mediante establecimiento permanente",
+    "Las entidades en régimen de atribución de rentas que desarrollen actividades económicas",
+    "productores y comercializadores de los sistemas informáticos",
+    "no se aplicará a los contribuyentes que lleven los libros registros en los términos establecidos en el apartado 6",
+]
+
+[legal."rd-1007-2023:df-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1007-2023.html#df-4"
+document_id = "BOE-A-2023-24840"
+article = "disposicion final cuarta"
+section = "Entrada en vigor y efectos"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840#df-4"
+published_at = 2023-12-06
+effective_from = 2025-12-04
+consolidated_as_of = 2025-12-03
+review_status = "reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "agent-review"
+notes = "La disposicion final cuarta, modificada por el Real Decreto-ley 15/2025, fija los hitos actuales de adaptacion: antes del 1 de enero de 2027 para los obligados del art. 3.1.a y antes del 1 de julio de 2027 para el resto de obligados del art. 3.1."
+required_text = [
+    "antes del 1 de enero de 2027",
+    "antes del 1 de julio de 2027",
+    "Los obligados tributarios del artículo 3.2",
+    "Se modifica por la disposición final 1 del Real Decreto-ley 15/2025",
+]
+
+# Modelo 303 regimen simplificado de IVA: modulos-based cuota devengada
+# engine. The Orden HAC/1347/2024 Anexo I "Instrucciones para la aplicacion de los
+# indices y modulos en el Impuesto sobre el Valor Anadido" fixes the LIVA
+# art. 123 mechanism: cuota devengada por operaciones corrientes = suma de
+# unidades de cada modulo x cuota devengada anual por unidad; cuota derivada
+# del regimen simplificado = mayor de (cuota devengada - cuotas soportadas
+# - 1% de dificil justificacion; cuota minima = porcentaje de la actividad x
+# cuota devengada). Cross-checked byte-identical against the bundled Orden
+# HTML (corpus/normatives/html/orden-hac-1347-2024.html) for the first-slice
+# activities (721.2, 722, 972.1).
+[legal."orden-hac-1347-2024:anexo-i-iva-instrucciones"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-instrucciones-iva"
+document_id = "BOE-A-2024-24949"
+section = "Anexo I. Instrucciones para la aplicación de los índices y módulos en el Impuesto sobre el Valor Añadido"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
+notes = "Mecanismo del regimen simplificado de IVA para 2025 (LIVA art. 123): cuota devengada por operaciones corrientes = suma de las cuantias de los modulos (cantidad asignada x numero de unidades); cuota derivada del regimen simplificado = la mayor de (cuota devengada - cuotas soportadas por operaciones corrientes - 1% de dificil justificacion) o la cuota minima (Anexo II, aplicada sobre la cuota devengada). Cuotas trimestrales 1T-3T: ingreso a cuenta = porcentaje de la actividad (Anexo II) x cuota devengada del trimestre."
+required_text = [
+    "La cuota devengada por operaciones corrientes será la suma de las cuantías correspondientes a los módulos previstos para la actividad",
+    "La cuota derivada del régimen simplificado será la mayor de las dos cantidades siguientes",
+    "será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación",
+]
+
+[legal."orden-hac-1347-2024:anexo-i-iva-autotaxis-721-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-iva-721-2"
+document_id = "BOE-A-2024-24949"
+article = "721.2"
+section = "Anexo I. Transporte por autotaxis (IVA)"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
+notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 721.2 Transporte por autotaxis: modulo 1 personal empleado 903,46 euros/persona; modulo 2 distancia recorrida 8,78 euros/1.000 km. Cuota minima por operaciones corrientes: 10 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
+required_text = [
+    "Cuota mínima por operaciones corrientes: 10 % de la cuota devengada por operaciones corrientes.",
+]
+
+[legal."orden-hac-1347-2024:anexo-i-iva-mercancias-722"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-iva-722"
+document_id = "BOE-A-2024-24949"
+article = "722"
+section = "Anexo I. Transporte de mercancías por carretera, excepto residuos (IVA)"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
+notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 722 Transporte de mercancias por carretera, excepto residuos: modulo 1 personal empleado 4.149,99 euros/persona; modulo 2 carga vehiculos 388,55 euros/tonelada. Cuota minima por operaciones corrientes: 10 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
+required_text = [
+    "Cuota mínima por operaciones corrientes: 10 % de la cuota devengada por operaciones corrientes.",
+]
+
+[legal."orden-hac-1347-2024:anexo-i-iva-peluqueria-972-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#anexo-i-iva-972-1"
+document_id = "BOE-A-2024-24949"
+article = "972.1"
+section = "Anexo I. Servicios de peluquería de señora y caballero (IVA)"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+published_at = 2024-11-30
+effective_from = 2025-01-01
+effective_to = 2025-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-02
+reviewed_by = "agent-authored from bundled orden-hac-1347-2024.html; operator to re-stamp"
+notes = "Cuota devengada anual por unidad de modulo (IVA) para epigrafe 972.1 Servicios de peluqueria de senora y caballero: modulo 1 personal empleado 2.562,75 euros/persona; modulo 2 superficie del local 41,33 euros/m2; modulo 3 consumo de energia electrica 17,48 euros/100 kWh. Cuota minima por operaciones corrientes: 13 por ciento de la cuota devengada. Ingreso a cuenta trimestral (1T-3T): 5 por ciento de la cuota devengada del trimestre."
+required_text = [
+    "Cuota mínima por operaciones corrientes: 13 % de la cuota devengada por operaciones corrientes.",
+]
+
+[sources."boe-orden-hac-1347-2024-iva-authority"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/orden-hac-1347-2024.html"
+sha256 = "9c8bfa02d05288e78311ceacf58832ec707f645a60bc752b88c6d0f97f70eeb4"
+bytes = 483374
+retrieved_at = 2026-07-02
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
+review_status = "reviewed"
+
+[legal."ley-37-1992:art-75"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a75"
+document_id = "BOE-A-1992-28740"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a75"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "agent-review"
+notes = "Articulo 75 LIVA: regla general de devengo del impuesto para entregas de bienes y prestaciones de servicios. Es la proyeccion informativa que Modelo 303 casillas 62/63 declaran para operaciones afectadas por el criterio de caja."
+required_text = [
+    "Artículo 75. Devengo del impuesto.",
+    "Se devengará el Impuesto",
+]
+
+[legal."ley-37-1992:art-163-decies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163decies"
+document_id = "BOE-A-1992-28740"
+article = "163-decies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163decies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "agent-review"
+notes = "Articulo 163 decies LIVA: requisitos subjetivos para aplicar el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 decies. Requisitos subjetivos de aplicación.",
+    "régimen especial del criterio de caja",
+]
+
+[legal."ley-37-1992:art-163-undecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163undecies"
+document_id = "BOE-A-1992-28740"
+article = "163-undecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163undecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "agent-review"
+notes = "Articulo 163 undecies LIVA: opcion y condiciones para aplicar el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 undecies. Condiciones para la aplicación del régimen especial del criterio de caja.",
+    "opten por su aplicación",
+]
+
+[legal."ley-37-1992:art-163-duodecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163duodecies"
+document_id = "BOE-A-1992-28740"
+article = "163-duodecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163duodecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "agent-review"
+notes = "Articulo 163 duodecies LIVA: ambito objetivo y operaciones excluidas del regimen especial del criterio de caja, incluidas exportaciones, entregas intracomunitarias, adquisiciones intracomunitarias, inversion del sujeto pasivo e importaciones."
+required_text = [
+    "Artículo 163 duodecies. Requisitos objetivos de aplicación.",
+    "Quedan excluidas del régimen especial del criterio de caja",
+]
+
+[legal."ley-37-1992:art-163-terdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163terdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-terdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163terdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "agent-review"
+notes = "Articulo 163 terdecies LIVA: devengo por cobro total o parcial, fallback de 31 de diciembre del ano siguiente, acreditacion del cobro, y nacimiento del derecho a deducir por pago para sujetos acogidos."
+required_text = [
+    "Artículo 163 terdecies. Contenido del régimen especial del criterio de caja.",
+    "momento del cobro total o parcial",
+    "31 de diciembre del año inmediato posterior",
+]
+
+[legal."ley-37-1992:art-163-quaterdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quaterdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-quaterdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quaterdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "agent-review"
+notes = "Articulo 163 quaterdecies LIVA: efectos de renuncia o exclusion del regimen especial del criterio de caja sobre operaciones efectuadas durante su vigencia."
+required_text = [
+    "Artículo 163 quaterdecies. Efectos de la renuncia o exclusión del régimen especial del criterio de caja.",
+    "operaciones efectuadas durante su vigencia",
+]
+
+[legal."ley-37-1992:art-163-quinquiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quinquiesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-quinquiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quinquiesdecies"
+published_at = 1992-12-29
+effective_from = 2014-01-01
+review_status = "reviewed"
+reviewed_at = 2026-07-06
+reviewed_by = "agent-review"
+notes = "Articulo 163 quinquiesdecies LIVA: nacimiento del derecho a la deduccion por pago total o parcial para destinatarios no acogidos que reciben operaciones afectadas por el regimen especial del criterio de caja."
+required_text = [
+    "Artículo 163 quinquiesdecies. Operaciones afectadas por el régimen especial del criterio de caja.",
+    "momento del pago total o parcial",
+]
+
+[legal."ley-37-1992:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a4"
+document_id = "BOE-A-1992-28740"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a4"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-01
+reviewed_by = "operator"
+required_text = [
+    "Artículo 4. Hecho imponible.",
+    "Estarán sujetas al impuesto las entregas de bienes y prestaciones de servicios",
+]
+
+[legal."ley-37-1992:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#articulo-18-concepto-de-importacion-de-bienes"
+document_id = "BOE-A-1992-28740"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a18"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-01
+reviewed_by = "operator"
+required_text = [
+    "Artículo 18. Concepto de importación de bienes.",
+    "Tendrá la consideración de importación de bienes",
+]
+
+[legal."ley-37-1992:art-24"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a24"
+document_id = "BOE-A-1992-28740"
+article = "24"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a24"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-01
+reviewed_by = "operator"
+required_text = [
+    "Artículo 24. Exenciones relativas a regímenes aduaneros y fiscales.",
+    "Estarán exentas del Impuesto",
+]
+
+[legal."ley-37-1992:art-68"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a68"
+document_id = "BOE-A-1992-28740"
+article = "68"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a68"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-01
+reviewed_by = "operator"
+notes = """LIVA art 68: lugar de realizacion de las entregas de bienes. Together with \
+arts. 69 and 70 (prestaciones de servicios, reglas generales y especiales) this is the \
+place-of-supply rule set that decides WHICH IVA category a cross-border operation \
+belongs to. That selection is a declared judgement made by the operator, never derived \
+by the system from the counterparty's country: two invoices with identical counterparty \
+countries can fall in different categories depending on where the entrega or the \
+prestacion is localised under these articles. \
+Bundled text checked against the live BOE consolidated text on 2026-08-05: the anchored \
+#a68 unit of the bundled ley-37-1992.html is character-identical to the current \
+redaction BOE-A-2022-22128 (in force 2023-01-01), apart from the BOE amendment-history \
+footnotes the consolidated page appends after the article body. Note that \
+effective_from below records 1993-01-01, the article's original entry into force, not \
+the redaction date of the text actually bundled."""
+required_text = [
+    "Artículo 68. Lugar de realización de las entregas de bienes.",
+    "El lugar de realización de las entregas de bienes",
+]
+
+[legal."ley-37-1992:art-89"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a89"
+document_id = "BOE-A-1992-28740"
+article = "89"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a89"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-01
+reviewed_by = "operator"
+required_text = [
+    "Artículo 89. Rectificación de las cuotas impositivas repercutidas.",
+    "deberán efectuar la rectificación de las cuotas impositivas repercutidas",
+]
+
+[legal."ley-37-1992:art-154"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a154"
+document_id = "BOE-A-1992-28740"
+article = "154"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a154"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-01
+reviewed_by = "operator"
+required_text = [
+    "Artículo 154. Contenido del régimen especial del recargo de equivalencia.",
+    "no estarán obligados a efectuar la liquidación ni el pago del Impuesto",
+]

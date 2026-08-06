@@ -1,0 +1,28 @@
+# Modelo 151 (régimen impatriados — Ley Beckham) construct, ejercicios 2025 y
+# siguientes.
+#
+# Groups the cuota chain formulas (general escala 24/47, escala del ahorro
+# 19/21/23/27/30, and the cuota diferencial that sums both cuotas íntegras and
+# subtracts retenciones) so the formula-modelo registry parity gate accepts M151
+# as a graduated modelo. Names all workflow surfaces so
+# test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces
+# accepts the wiring.
+
+[[revisions."2025-y-siguientes".constructs]]
+id = "m151-impatriado-calculation"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+formulas = [
+    "modelo-151-cuota-integra-general",
+    "modelo-151-cuota-integra-ahorro",
+    "modelo-151-cuota-diferencial",
+]
+application_links = [
+    "modelo-151-calculation",
+    "modelo-151-filing",
+    "modelo-151-verification",
+    "modelo-151-review",
+    "modelo-151-approval",
+    "modelo-151-reconciliation",
+    "modelo-151-workflow",
+]

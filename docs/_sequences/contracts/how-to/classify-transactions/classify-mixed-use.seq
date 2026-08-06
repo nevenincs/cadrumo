@@ -1,0 +1,13 @@
+@step Record a phone bill you use partly for business.
+@setup aeat --format json app ledger add --date 2026-03-15 --amount 60.50 --direction OUTGOING --description "Factura movil" --idempotency-key classify-mixed
+@capture transaction_id result.transaction_id
+@step Check which categories accept a ratio.
+aeat app ledger ratios eligible
+@step Save the ratio for the category, as a percentage from 0 to 1.
+aeat app ledger ratios set telefonia_movil 0.5
+@step Allocate the share on the row, naming the same category for both flags.
+aeat app ledger allocate {transaction_id} --business-pct 0.5 --usage-ratio-id telefonia_movil --category-id telefonia_movil
+@step Confirm the row is now mixed with the allocated share.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.business_classification == "MIXED"
+@expect result.transaction.business_pct == "0.5"

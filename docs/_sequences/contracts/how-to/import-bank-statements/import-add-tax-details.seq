@@ -1,0 +1,7 @@
+@step Record a purchase with its full IVA breakdown in one step.
+aeat --format json app ledger add --date 2026-03-21 --amount 121.00 --direction OUTGOING --description "Office supplies" --counterparty "Papeleria SL" --category-id material_oficina --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00 --notes "Receipt filed" --idempotency-key import-tax-details
+@capture transaction_id result.transaction_id
+@step Confirm the taxable base and IVA were stored.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.taxable_base == "100"
+@expect result.transaction.iva_amount == "21"

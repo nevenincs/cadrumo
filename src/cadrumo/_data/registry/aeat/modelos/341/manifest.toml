@@ -1,0 +1,15 @@
+[modelo]
+id = "341"
+tax_domain = "iva"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-min-2000-12-15-m341:art-1",
+    "orden-min-2000-12-15-m341:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-341-procedure",
+    "enrolled-modelo-341-layout",
+]

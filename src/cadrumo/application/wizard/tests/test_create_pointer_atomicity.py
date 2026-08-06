@@ -1,0 +1,171 @@
+"""A failed wizard ``profile create`` must not strand the active-profile pointer.
+
+The wizard ``create`` path delegates the whole cross-store create —
+bucket directory, manifest, encrypted record, AND the active-profile
+pointer — to ``ProfileRepository.create`` as one unit of work. The
+pointer write is part of that unit; a failure rolls it back to its
+pre-create state. There is no early caller-side pointer write to
+strand, so the ``missing_profile_record`` torn state (pointer aimed at
+a profile whose record was never persisted) is unreachable.
+
+These tests force a *real* failure inside the create: the wizard
+``create`` targets a display label that already belongs to a live
+profile, so the repository's duplicate-label guard raises. No mock, no
+patched failure — the rejection is the genuine guard. The contract
+under test: a refused ``create`` leaves the active-profile pointer
+exactly as it was found.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from ....adapters.persistence.storage import (
+    BUCKET_MANIFEST_FILENAME,
+    BUCKETS_DIRNAME,
+    KEYSTORE_DIRNAME,
+)
+from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....core import read_pointer
+from ....core.config import load_settings
+from ....domain.user_profile import new_profile_id
+from ....tests.secure_sql import isolated_profile_storage_root
+from ...user_profile import ProfileAlreadyRegisteredError, fact_value, profile_storage_session
+from ...workflow import workflow_state_repository
+from .._catalogue import SETUP_FLOW
+from .._commands import _run_full_flow
+from .._errors import WizardMissingFlagError
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+@pytest.fixture
+def _backend(tmp_path: Path) -> Iterator[Path]:
+    """Per-bucket storage root with file-backed custody."""
+
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
+
+
+_QUIET_CREATE_FLAGS = {
+    "entity-type": "natural_person",
+    "tax-id": "00000000T",
+    "name": "Test",
+    "surnames": "Operator",
+    "activity": "Servicios",
+}
+
+
+def _bucket_directories_without_manifest(storage_root: Path) -> tuple[Path, ...]:
+    buckets_root = storage_root / BUCKETS_DIRNAME
+    if not buckets_root.is_dir():
+        return ()
+    return tuple(
+        entry for entry in buckets_root.iterdir() if entry.is_dir() and not (entry / BUCKET_MANIFEST_FILENAME).is_file()
+    )
+
+
+def _quiet_create(profile_name: str) -> None:
+    """Drive a non-interactive ``profile create`` through the wizard helper."""
+
+    _run_full_flow(
+        SETUP_FLOW,
+        dict(_QUIET_CREATE_FLAGS),
+        quiet=True,
+        accept_defaults=False,
+        profile_name=profile_name,
+        profile_id=new_profile_id(),
+        mode="create",
+    )
+
+
+def test_first_run_create_succeeds_and_points_at_the_new_profile(_backend: Path) -> None:
+    """Anti-tautology baseline: a clean first-run create lands a live pointer.
+
+    Pins the positive contract so the failure test's "pointer unchanged"
+    assertion is proven non-vacuous — the pointer genuinely moves on a
+    successful create and genuinely does not on a failed one.
+    """
+
+    _quiet_create("Primero")
+
+    pointer = read_pointer(load_settings().cadrumo_local_storage_root)
+    assert pointer is not None
+    first_id = pointer.bucket_id
+
+    # The pointer resolves to a real, registered profile bucket.
+    from ...workflow import read_profile_bucket_by_id
+
+    assert read_profile_bucket_by_id(first_id) is not None
+
+
+def test_failed_create_restores_the_prior_active_profile_pointer(_backend: Path) -> None:
+    """A create that fails inside register must not move the pointer.
+
+    The first create succeeds and the pointer aims at it. The second
+    create targets the SAME display label; ``register_active_profile``'s
+    duplicate-label guard raises after the wizard has already written
+    the early load-order pointer. The failure path must restore the
+    pointer to the first profile — never strand it at the second
+    create's freshly minted UUID, whose record was never persisted.
+    """
+
+    _quiet_create("Clash")
+    root = load_settings().cadrumo_local_storage_root
+    before = read_pointer(root)
+    assert before is not None
+    surviving_id = before.bucket_id
+
+    dispose_engine()
+    with pytest.raises(ProfileAlreadyRegisteredError):
+        _quiet_create("Clash")
+
+    after = read_pointer(root)
+    assert after is not None, "the failed create cleared the prior active-profile pointer"
+    assert after.bucket_id == surviving_id, "the failed create stranded the pointer at the never-persisted profile"
+    assert _bucket_directories_without_manifest(_backend) == ()
+    assert sorted(entry.name for entry in (_backend / KEYSTORE_DIRNAME).iterdir()) == [surviving_id]
+
+    # The surviving pointer still resolves to a registered, readable
+    # profile — no `missing_profile_record` torn state.
+    from ...workflow import read_profile_bucket_by_id
+
+    assert read_profile_bucket_by_id(surviving_id) is not None
+
+
+def test_full_flow_edit_refuses_branch_change_without_legal_name(_backend: Path) -> None:
+    """A full-flow edit must not persist a legal entity without legal name."""
+
+    _quiet_create("Editable")
+    pointer = read_pointer(load_settings().cadrumo_local_storage_root)
+    assert pointer is not None
+
+    with pytest.raises(WizardMissingFlagError) as excinfo:
+        _run_full_flow(
+            SETUP_FLOW,
+            {
+                "entity-type": "legal_entity",
+                "legal-entity-form": "sl",
+                "tax-id": "00000000T",
+                "activity": "Servicios",
+            },
+            quiet=False,
+            accept_defaults=True,
+            profile_name="Editable",
+            profile_id=pointer.bucket_id,
+            mode="edit",
+            explicit_question_ids=frozenset({"entity-type", "legal-entity-form"}),
+        )
+
+    assert excinfo.value.translated_message == "application.wizard.errors.edit_missing_filing_baseline"
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["missing_flags"] == "--legal-name"
+
+    with profile_storage_session(pointer.bucket_id):
+        record = workflow_state_repository().load().active_profile_record()
+    assert record is not None
+    assert fact_value(record, "taxpayer_type.entity_type") == "natural_person"
+    assert fact_value(record, "identity.name") == "Test"

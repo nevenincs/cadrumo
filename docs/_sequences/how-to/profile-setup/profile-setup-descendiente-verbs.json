@@ -1,0 +1,96 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "descendiente",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.descendiente.list",
+        "notices": [],
+        "result": {
+          "descendientes": [],
+          "profile": "docs-sequence-sandbox",
+          "total": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "descendiente",
+        "add",
+        "--descendiente",
+        "NACIMIENTO=2018-04-01,DISCAPACIDAD=0,CONVIVENCIA=true"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.descendiente.add",
+        "notices": [],
+        "result": {
+          "added": 1,
+          "profile": "docs-sequence-sandbox",
+          "total": 1
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "descendiente",
+        "remove",
+        "0"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.descendiente.remove",
+        "notices": [],
+        "result": {
+          "profile": "docs-sequence-sandbox",
+          "removed_index": 0,
+          "total": 0
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "profile-setup-descendiente-verbs"
+}

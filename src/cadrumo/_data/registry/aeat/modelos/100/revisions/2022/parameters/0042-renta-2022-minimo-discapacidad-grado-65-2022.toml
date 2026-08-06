@@ -1,0 +1,16 @@
+[[revisions."2022".parameters]]
+id = "renta-2022-minimo-discapacidad-grado-65-2022"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-60"]
+source_refs = ["aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[[revisions."2022".parameters.values]]
+value = "9000"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31

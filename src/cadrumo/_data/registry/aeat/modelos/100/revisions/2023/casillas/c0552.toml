@@ -1,0 +1,9 @@
+[[revisions."2023".casillas]]
+id = "0552"
+number = "0552"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_donativos_estatal"
+input_kind = "computed"
+formula = "renta-2023-deduccion-donativos-estatal-50-porciento"
+legal_refs = ["ley-35-2006:art-68.3"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]

@@ -1,0 +1,38 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "filing-record",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.filing_record.list",
+        "notices": [],
+        "result": {
+          "bucket_id_filter": null,
+          "include_superseded": false,
+          "modelo_filter": null,
+          "operation": "modelo.filing_record.list",
+          "record_count": 0,
+          "records": []
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-390-records-audit"
+}

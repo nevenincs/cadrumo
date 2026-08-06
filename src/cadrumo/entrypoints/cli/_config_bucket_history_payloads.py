@@ -1,0 +1,79 @@
+"""Typed ``--json`` payload schemas for ``aeat config profile history``.
+
+Split out of the cohesive sibling :mod:`_config_payloads` so the append-only
+event history can carry the canonical bucket-event contract without growing that
+module.
+
+The nested event row previously crossed the envelope as a bare
+``dict[str, object]``, so an empty row, a bogus event type, or an unparseable
+timestamp reached the operator unchallenged even though the encrypted
+:class:`~cadrumo.domain.buckets.BucketEventHistoryCatalogue` that produced it
+refuses all three. :class:`BucketHistoryEventPayload` re-uses the canonical
+identity aliases and closed enums from :mod:`cadrumo.domain.buckets` rather than
+re-declaring their shape, following the projection pattern
+:class:`~cadrumo.entrypoints.cli._modelo_aux_payloads.WorkUnitHistoryEventPayload`
+already established for the work-unit history surface.
+
+The content-addressed ``event_id`` derivation is deliberately *not* re-run here:
+this is a read-only presentation projection of an event the catalogue already
+validated, and the wire row carries no signature of its own.
+
+Both :class:`BucketHistoryEventPayload` and :class:`BucketHistoryResult` are
+strict :class:`OutputSchema` transport shapes registered for the CLI's
+``--json`` contract.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from pydantic import Field
+
+from ...domain.buckets import (
+    BucketActorLabel,
+    BucketEventId,
+    BucketEventObjectType,
+    BucketEventType,
+)
+from ._schemas import OutputSchema, register_schema
+
+
+class BucketHistoryEventPayload(OutputSchema):
+    """One append-only bucket event row in the profile-history envelope.
+
+    Mirrors :class:`~cadrumo.domain.buckets.BucketEvent`'s operator-facing
+    projection. Enum members and ``datetime`` values render to the same JSON the
+    former hand-built mapping emitted, so the wire form is unchanged.
+    ``payload_version`` is the discriminator a consumer needs to interpret the
+    free-form ``payload`` mapping; the adjacent
+    :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerHistoryEventPayload`
+    projection already carries it, so this row now stays at parity.
+    """
+
+    event_id: BucketEventId
+    event_type: BucketEventType
+    occurred_at: datetime
+    actor: BucketActorLabel
+    object_type: BucketEventObjectType
+    object_id: str = Field(min_length=1, max_length=128)
+    payload_version: int = Field(ge=1)
+    payload: dict[str, str] = {}
+
+
+@register_schema("config.bucket.history")
+class BucketHistoryResult(OutputSchema):
+    """JSON envelope for ``aeat config profile history``.
+
+    The envelope token ``config.bucket.history`` is a stable machine API and
+    is intentionally retained after the operator-facing verb moved from
+    ``config bucket history`` to ``config profile history`` (D1 family).
+    """
+
+    operation: str
+    bucket_id: str = Field(min_length=1)
+    event_types: list[BucketEventType] | None = None
+    since: datetime | None = None
+    until: datetime | None = None
+    object_id: str | None = Field(default=None, min_length=1, max_length=128)
+    actor: BucketActorLabel | None = None
+    events: list[BucketHistoryEventPayload]

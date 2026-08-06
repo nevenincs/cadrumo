@@ -1,0 +1,14 @@
+[[revisions.2025-y-siguientes.relations]]
+id = "modelo-202-2025-y-siguientes-rel-self-pagos-2p"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_casilla_id = "34"
+target_binding = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+period_alignment = { mode = "prior_pagos_cumulative" }
+source_periods = ["1P"]
+target_periods = ["2P"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]

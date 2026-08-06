@@ -1,0 +1,40 @@
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-minoracion-rendimientos-netos"
+target_casilla_id = "13"
+expression = { op = "if_then_else", args = [
+    { op = "less_equal", args = [
+        { binding = "irpf.previous_year_economic_activity_net_income" },
+        { literal = "9000" },
+    ] },
+    { literal = "100" },
+    { op = "if_then_else", args = [
+        { op = "less_equal", args = [
+            { binding = "irpf.previous_year_economic_activity_net_income" },
+            { literal = "10000" },
+        ] },
+        { literal = "75" },
+        { op = "if_then_else", args = [
+            { op = "less_equal", args = [
+                { binding = "irpf.previous_year_economic_activity_net_income" },
+                { literal = "11000" },
+            ] },
+            { literal = "50" },
+            { op = "if_then_else", args = [
+                { op = "less_equal", args = [
+                    { binding = "irpf.previous_year_economic_activity_net_income" },
+                    { literal = "12000" },
+                ] },
+                { literal = "25" },
+                { literal = "0" },
+            ] },
+        ] },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 13.", "igual o inferior a 12.000 euros", "Importe de la minoración"]
+

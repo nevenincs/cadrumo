@@ -1,0 +1,42 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "list",
+        "--filter",
+        "period=1T",
+        "--filter",
+        "year=2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.list",
+        "notices": [],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "limit": null,
+          "offset": 0,
+          "rows": [],
+          "shown": 0,
+          "total": 0,
+          "truncated": false
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "filing-calendar-ledger-filter"
+}

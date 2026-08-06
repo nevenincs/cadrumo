@@ -1,0 +1,16 @@
+{
+  "provenance": "aeat_published_facsimile",
+  "role": "casilla_value_oracle",
+  "modelo": "390",
+  "filing_year": 2024,
+  "raw_evidence_locator": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/IVA_2024/Imagenes/Cap_9_390_es_es.pdf",
+  "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/IVA_2024/Imagenes/Cap_9_390_es_es.pdf",
+  "derived_from": null,
+  "source_sha256": "5deea54097e0c287576f9894dfdec50e2affb5d768858826371d19d7062e15c3",
+  "output_sha256": "5deea54097e0c287576f9894dfdec50e2affb5d768858826371d19d7062e15c3",
+  "output_size_bytes": 270743,
+  "producer": "Adobe Acrobat Pro (64-bit) 23.8.20470",
+  "creator": "Adobe Acrobat Pro (64-bit) 23.8.20470",
+  "page_count": 7,
+  "notes": "AEAT Manual practico IVA 2024, Capitulo 9 'La declaracion-resumen anual. Modelo 390', ANEXO: the official form filled with AEAT own worked-example figures for the supuesto practico del senor X (resumen anual, sin recortar). Authored and rendered by AEAT publication toolchain (Adobe InDesign / PDF/X-4), not by the sede declaracion generator and not by this project fixture generator, and carrying no taxpayer identity at all - no NIF, no CSV, no presentador. It is therefore neither a sanitised real filing (real_corpus) nor generator output (synthetic_generated), and is declared aeat_published_facsimile. Its worth is the printed per-casilla figures, an independent AEAT authority for grading the engine; it cannot anchor the justificante parser, because parsing it as a declaracion fails at the NIF step by construction. The bundled Manual_IVA_2024.pdf does NOT contain these annex pages - they are a separate published asset of the manual HTML edition - so this is evidence the repository did not otherwise hold. These specimens exposed a defect the generated corpus cannot express: _generate.py prints an explicit 0,00 into every box and prints no box numbers, so a BLANK box - whose line ends on its own printed box number - is unreachable from the synthetic corpus by construction. A fully green fixture suite could never have found it."
+}

@@ -1,0 +1,222 @@
+# AEAT test suite
+
+Operator reference for the pytest topology, hexagonal marker taxonomy,
+live-read opt-in, pytest-only posture, and plugin roster.
+
+## Test topology
+
+Every Python test module under `src/cadrumo` lives inside a directory named
+`tests`, at the narrowest owning package or architectural boundary.
+
+Examples:
+
+```text
+src/cadrumo/domain/modelos/tests/test_work_unit.py
+src/cadrumo/application/modelo/tests/test_work_addressing.py
+src/cadrumo/entrypoints/cli/tests/test_modelo_work_ux.py
+src/cadrumo/tests/test_marker_integrity.py
+```
+
+Test module filenames must start with `test_`. `_test_*.py` and
+`*_test.py` modules are invalid. A single small test file still gets a
+local `tests` directory; naked colocated tests beside production modules
+are not allowed.
+
+## Marker taxonomy
+
+Every test module declares module-level markers via a single
+`pytestmark = [...]` assignment placed immediately after the module
+docstring and imports:
+
+```python
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+```
+
+Per-function execution or hexagonal layer markers are forbidden. Mixed
+execution-scope modules must be split into separate files.
+
+### Execution Scope
+
+| Marker | Semantics | Selection example |
+| --- | --- | --- |
+| `unit` | Deterministic offline tests for one layer or narrow behavior. | `uv run pytest -m unit` |
+| `integration` | Deterministic offline tests that compose project layers. | `uv run pytest -m integration` |
+| `aeat_live` | Opt-in read-only tests against a real external service. | `uv run pytest -m aeat_live` |
+
+Automated AEAT write-shaped tests remain forbidden. There is no
+selectable write-test marker or write-test lane.
+
+### Hexagonal Layer
+
+Each module carries exactly one layer marker:
+
+| Marker | Covers |
+| --- | --- |
+| `hex_domain` | `domain.*` business model and calculation rules. |
+| `hex_application` | `application.*` use cases and orchestration. |
+| `hex_inbound_adapter` | `adapters.inbound.*` parsing/import boundaries. |
+| `hex_outbound_adapter` | `adapters.outbound.*` service/export/browser boundaries. |
+| `hex_persistence_adapter` | `adapters.persistence.*` storage boundaries. |
+| `hex_entrypoint` | `entrypoints.*` command and presentation surfaces. |
+| `hex_core` | `core.*` foundational cross-cutting utilities and central test harnesses. |
+
+### Supplementary labels
+
+A supplementary label rides *alongside* an execution marker; it never
+replaces one. Unlike the two tiers above it may be declared per class or
+per function, so a module can hold both labelled and unlabelled cases.
+
+| Label | Marks | Enrol with |
+| --- | --- | --- |
+| `docs` | Documentation build, stubs, and docstring structure. | `-m docs` |
+| `serial` | Isolation-sensitive tests that mutate process-global state; they flake under `-n auto`. | `just test-integration-serial` |
+| `perf` | Performance acceptance gates. | the dispatch-only ci-full lane |
+| `external_tool` | Tests needing a binary the dependency set does not install (LibreOffice). | `just test-workbook-parity` |
+| `os_keychain` | Tests whose assertion subject is the OS credential store itself. | `just test-os-keychain` |
+
+Every lane excludes `external_tool` and `os_keychain`, so the label -
+not a path `--ignore` - is what holds those tests out.
+
+Read `os_keychain` as a capability of the **logon session**, not of the
+dependency set. A headless continuous-integration runner, and an agent
+reaching the host over SSH, each hold a network logon that carries no
+credentials: a real credential backend is selected and then refuses
+every call, so no session key can be custodied there at all. Run these
+tests from an interactive desktop session. Selected on a host that
+cannot custody one, they fail at an explicit precondition naming the
+missing capability - a true report of the host, never a defect.
+
+Label only what is irreducibly capability-bound. A case provable
+*without* the capability must stay unlabelled, or it silently leaves
+every automated lane.
+
+#### `os_keychain` is a standing coverage hole
+
+Say it plainly, because no lane will: **the six `os_keychain` cases have
+never been observed green.** CI cannot run them, no agent host can run
+them, and they were excluded from every lane precisely because a host
+that cannot custody a session key can never pass them. Nothing in the
+automated suite covers profile-session custody today.
+
+This was the right trade against the alternative - a test-support
+credential backend would be a production-shaped fake, and writing both
+halves of the split-knowledge pair to disk would make the assertion
+vacuous - but a trade is not a fix. The cases guard a security-critical
+fail-closed path, so treat the hole as live risk rather than as settled.
+
+Closing it takes one run of `just test-os-keychain` from an interactive
+desktop session. Read that as a **recurring** obligation, not a one-time
+sign-off: every change to login, logout, session resume, or session-key
+custody re-opens the hole, and only a desktop run closes it again. A
+green run once does not vouch for the code as it stands now.
+
+The pinned membership set in `test_marker_integrity.py` keeps the hole
+from growing quietly - a test cannot take the label without being
+enrolled there - but it cannot make an unrun test pass. It bounds the
+hole; it does not fill it.
+
+## Enforcement
+
+`src/cadrumo/tests/test_marker_integrity.py` walks `test_*.py` modules under
+`src/cadrumo` via `ast` and fails if any module violates placement,
+filename, module-level marker, execution-scope, hex-layer, or retired
+marker rules.
+
+The collection hook in `aeat.tests._marker_hook`, invoked from both the
+repo-root `conftest.py` and `src/cadrumo/tests/conftest.py`, also raises
+`pytest.UsageError` during collection when a test item lacks exactly one
+execution marker or exactly one accepted `hex_*` marker.
+
+## Live Read Opt-In
+
+`aeat_live` tests are excluded from the default test selection. When selected
+explicitly, each live test fails at the shared prerequisite gate unless
+`CADRUMO_LIVE_TESTS_ENABLED=1` is configured. The canonical setting name is
+`CADRUMO_LIVE_TESTS_ENABLED`.
+
+The opt-in is enforced at two layers:
+
+1. `pyproject.toml` sets `addopts = "... -m 'unit' ..."` so plain local
+   test runs select only unit tests.
+2. `src/cadrumo/tests/live_gate.py` fails explicitly selected `aeat_live`
+   tests when the required opt-in is absent; it never converts them into
+   skipped tests.
+
+Google Workspace live tests additionally require
+`AEAT_LIVE_TESTS_GOOGLE=1` and project-owned fixtures provisioned via
+the Google fixture workflow.
+
+## Banned Imports
+
+The project uses pytest exclusively. The standard library `unittest`,
+`unittest.mock`, and the third-party `mock` library are banned by ruff
+rule `TID251`.
+
+Files containing `aeat_live` tests are also AST-scanned at collection
+time for these banned test-control libraries:
+
+- `pytest_mock`
+- `responses`
+- `httpx_mock`, `pytest_httpx`
+- `vcr`, `vcrpy`
+- `freezegun`, `time_machine`
+
+Live tests must observe real external state. Snapshot/record, interception,
+retry, and clock-control libraries are not part of the accepted test-control
+surface.
+
+## Plugin Roster
+
+| plugin | scope | role | pitfalls |
+| --- | --- | --- | --- |
+| `pytest-asyncio` | unit + integration + live | async test collection (`asyncio_mode = "strict"`) | plain `async def` tests need an explicit async marker |
+| `pytest-playwright` | live fixtures only | browser fixtures (`page`, `browser`, `context`); deterministic adapter-unit tests may launch the production Playwright session against local `data:` pages without these fixtures | needs `playwright install` for browser binaries |
+| `pytest-xdist` | offline only | parallel deterministic suite | not safe for live tests |
+| `pytest-cov` | unit only | coverage measurement and fail-under | live tests are excluded from the coverage lane |
+
+## Coverage Gate
+
+Starting threshold is 60% against `src/cadrumo`, enforced by the coverage
+lane. Branch coverage is enabled. Test modules are omitted from
+coverage through the `tests` topology and `test_*.py` file pattern.
+
+Ratchet policy: the threshold only moves up. Lowering it requires a
+documented rationale.
+
+## Recipes
+
+- `just test-unit` - unit suite (`-m 'unit'` via pyproject `addopts`).
+- `uv run pytest -m integration` - deterministic cross-layer tests.
+- `uv run pytest -m aeat_live` - live read-only tests; requires
+  `CADRUMO_LIVE_TESTS_ENABLED=1`.
+- `uv run pytest -m "unit and hex_domain"` - unit tests for the domain layer.
+- `uv run pytest -m "integration and hex_entrypoint"` - CLI integration tests.
+- `just test-coverage` - unit suite with coverage.
+- `uv run pytest -n auto -m unit` - unit suite under xdist. Never use for live tests.
+- `just check-style` - ruff, including the banned-import rule.
+- `just check-pre-commit` - full pre-commit sweep.
+
+## Writing A New Test
+
+Checklist:
+
+1. Place the test in the owning package's `tests` child directory.
+2. Name the module `test_<topic>.py`.
+3. Declare exactly one execution marker and at least one hex layer marker
+   at module level.
+4. Use `unit` for deterministic narrow tests, `integration` for
+   deterministic cross-layer tests, and `aeat_live` only for read-only
+   external-service tests.
+5. Never import `unittest`, `unittest.mock`, or `mock`.
+6. Do not use HTTP interception, snapshot/record, retry, or clock-control
+   libraries as substitutes for real behaviour.
+7. Run the relevant focused pytest lane before closing a change.
+
+## Cross-References
+
+- `src/cadrumo/tests/_marker_hook.py` - shared collection hook body.
+- `src/cadrumo/tests/test_marker_integrity.py` - AST-backed drift detector.
+- `pyproject.toml` - pytest discovery, marker registry, and coverage
+  omit settings.

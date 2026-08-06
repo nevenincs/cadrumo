@@ -1,0 +1,35 @@
+[[revisions."2024".formulas]]
+id = "renta-2024-minimo-contribuyente-estatal"
+target_casilla_id = "0511"
+# Art. 57.1.b LIRPF: mínimo del contribuyente = base + incremento por edad al final
+# del período impositivo (31 de diciembre del ejercicio).
+# Edad 65–74: +1.150 €  (Art. 57.1.b primer tramo)
+# Edad ≥ 75:  +1.150 € + 1.400 €  (Art. 57.1.b segundo tramo)
+expression = { op = "sum", args = [
+    { parameter = "renta-2024-minimo-contribuyente-base-2024" },
+    { op = "if_then_else", args = [
+        { op = "greater_equal", args = [
+            { op = "age_at_year_end", args = [{ date_binding = "renta-2024-profile-taxpayer-birth-date" }] },
+            { literal = "65" }
+        ] },
+        { op = "if_then_else", args = [
+            { op = "greater_equal", args = [
+                { op = "age_at_year_end", args = [{ date_binding = "renta-2024-profile-taxpayer-birth-date" }] },
+                { literal = "75" }
+            ] },
+            { op = "sum", args = [
+                { parameter = "renta-2024-minimo-contribuyente-edad-65-74-2024" },
+                { parameter = "renta-2024-minimo-contribuyente-edad-75-2024" }
+            ] },
+            { parameter = "renta-2024-minimo-contribuyente-edad-65-74-2024" }
+        ] },
+        { literal = "0" }
+    ] }
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo del contribuyente"]

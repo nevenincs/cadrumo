@@ -1,0 +1,23 @@
+[revisions."2017-y-siguientes"]
+# Modelo 122 regularización del derecho a la deducción por familia numerosa /
+# personas con discapacidad a cargo (IRPF), approved by orden-hfp-105-2017 art 5
+# with its plazo grounded verbatim in orden-hfp-105-2017 art 7. Scheduling/
+# applicability-grade: declaration-header casillas only; no bundled diseño de
+# registro, so no numbered form casilla is fabricated.
+# Deadline-shape note: art 7 sets an event-anchored plazo — from the date the
+# advance payments were unduly received until the close of the annual IRPF
+# campaign — not a fixed calendar window. This revision therefore carries NO
+# calendar deadline_windows and no deadline application link; a fixed date is not
+# fabricated. The approval and plazo articles are grounded verbatim.
+valid_from = 2017-01-01
+period_selector = { year_from = 2017, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hfp-105-2017:art-5"]
+legal_refs = [
+    "orden-hfp-105-2017:art-5",
+    "orden-hfp-105-2017:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-122-procedure",
+    "enrolled-modelo-122-layout",
+]

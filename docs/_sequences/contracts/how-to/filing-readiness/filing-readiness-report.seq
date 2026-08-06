@@ -1,0 +1,7 @@
+@step Describe the modelo to read its resolved revision id.
+aeat --format json app modelo describe 303 --year 2026 --period 1T
+@capture revision_id result.revision
+@step Report whether the active profile is ready for that revision.
+@result aeat --format json app modelo readiness --modelo 303 --year 2026 --period 1T --revision-id {revision_id}
+@expect result.modelo == "303"
+@expect exit_code == 0

@@ -1,0 +1,15 @@
+@step Start the reset.
+@static aeat config reset start --yes
+@blocked nondeterministic-output Emits a fresh 64-hex operation_id per run, which GOLDEN_MASK_FIELDS does not mask.
+@step Check the latest reset operation.
+@static aeat config reset status
+@blocked nondeterministic-output Emits a fresh 64-hex operation_id per run, which GOLDEN_MASK_FIELDS does not mask.
+@step Check an exact reset operation.
+@static aeat config reset status --operation-id 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+@blocked nondeterministic-output A real id must be captured from reset start, and that fresh 64-hex id lands unmasked in the golden argv, captures, and envelope.
+@step Resume the incomplete reset.
+@static aeat config reset resume --yes
+@blocked nondeterministic-output Needs an incomplete operation to resume, and every successful resume emits the fresh 64-hex operation_id the golden carries unmasked.
+@step Resume an exact paused operation after reviewing legal duties.
+@static aeat config reset resume --operation-id 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef --yes --override-retention --reason "Legal retention duties reviewed"
+@blocked nondeterministic-output Measured over two runs with a captured real id: exit 0 both times, operation ids differed and the resume output was not identical.

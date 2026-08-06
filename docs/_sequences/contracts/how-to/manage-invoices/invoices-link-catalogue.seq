@@ -1,0 +1,12 @@
+@step Record the bank transaction that collected the invoice.
+@setup aeat --format json app ledger add --date 2026-02-12 --amount 2000 --direction INCOMING --description "Cobro cliente DE" --idempotency-key invoices-link
+@capture transaction_id result.transaction_id
+@step Catalogue the issued invoice.
+@setup aeat --format json app ledger invoice catalogue create --kind issued --counterparty-nif DE345678901 --counterparty-name "Kunde GmbH" --invoice-number EU-CAT-050 --invoice-date 2026-02-10 --taxable-base 2000 --iva-rate 0 --country-code DE --operation-type E
+@capture invoice_id result.invoice_id
+@step Link the catalogue invoice to the transaction that collected it.
+aeat app ledger link {transaction_id} --invoice-id {invoice_id}
+@step Confirm the catalogue invoice now records the linked transaction.
+@result aeat --format json app ledger invoice catalogue view {invoice_id}
+@expect result.operation_type == "E"
+@expect exit_code == 0

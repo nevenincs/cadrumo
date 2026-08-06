@@ -1,0 +1,2321 @@
+/* Cadrumo docs design system — the Figma-derived marketing brand applied
+ * as a theme layer over the Furo skeleton. Palette, type, and accents track
+ * the Cadrumo marketing frontend (warm paper neutrals, rust accent,
+ * Instrument Serif display / Hanken Grotesk text / JetBrains Mono code).
+ *
+ * Sections:
+ *   1. Fonts                 6. Sidebar + page toc
+ *   2. Design tokens         7. Content typography
+ *   3. Base + motion         8. Code surfaces
+ *   4. Site header           9. Components (admonitions, cards, tabs, tables)
+ *   5. Broadcast strip      10. Footer, palette, responsive
+ *                          11. CLI sequence player
+ */
+
+/* ── 1. Fonts (self-hosted, SIL OFL 1.1 — no third-party font CDN) ────── */
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("hanken-grotesk-var-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("hanken-grotesk-var-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("instrument-serif-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("instrument-serif-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("instrument-serif-400-italic-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("instrument-serif-400-italic-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("jetbrains-mono-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("jetbrains-mono-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ── 2. Design tokens ─────────────────────────────────────────────────── */
+
+:root {
+  --cadrumo-header-h: 3.5rem;
+  --cadrumo-broadcast-h: 2.375rem;
+  --cadrumo-radius-s: 6px;
+  --cadrumo-radius-m: 10px;
+  --cadrumo-radius-l: 14px;
+  --cadrumo-page-max: 100rem;
+  --cadrumo-accent-warning: light-dark(#a16a1b, #d9a441);
+  --cadrumo-accent-success: light-dark(#55876b, #8fbf9f);
+  --cadrumo-accent-danger: light-dark(#b3362a, #e08376);
+  --cadrumo-shadow-pop:
+    0 0 0 1px light-dark(rgb(0 0 0 / 5%), rgb(255 255 255 / 6%)),
+    0 16px 48px -12px rgb(0 0 0 / 30%);
+
+  /* sphinx-design token bridge */
+  --sd-color-primary: var(--color-brand-content, #0068d6);
+  --sd-color-primary-highlight: var(--color-link--hover, #0054ad);
+  --sd-color-primary-text: #ffffff;
+  --sd-color-secondary: var(--color-foreground-secondary, #52525b);
+  --sd-color-secondary-highlight: var(--color-foreground-primary, #18181b);
+  --sd-color-secondary-text: #ffffff;
+  --sd-color-shadow: transparent;
+  --sd-color-card-border: var(--color-card-border);
+  --sd-color-card-border-hover: var(--color-foreground-border);
+  --sd-color-card-background: var(--color-card-background);
+  --sd-color-card-text: inherit;
+  --sd-color-card-header: transparent;
+  --sd-color-card-footer: transparent;
+  --sd-color-tabs-label-active: var(--color-brand-content);
+  --sd-color-tabs-label-hover: var(--color-brand-content);
+  --sd-color-tabs-label-inactive: var(--color-foreground-secondary);
+  --sd-color-tabs-underline-active: var(--color-brand-content);
+  --sd-color-tabs-underline-hover: var(--color-link-underline--hover);
+  --sd-color-tabs-underline-inactive: transparent;
+  --sd-color-tabs-overline: var(--color-background-border);
+  --sd-color-tabs-underline: var(--color-background-border);
+}
+
+body[data-theme="light"] {
+  color-scheme: light;
+}
+
+body[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+body[data-theme="auto"] {
+  color-scheme: light dark;
+}
+
+/* ── 3. Base + motion ─────────────────────────────────────────────────── */
+
+@view-transition {
+  navigation: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--cadrumo-header-h) + 1.25rem);
+  text-rendering: optimizeLegibility;
+}
+
+/* Furo pins body to the viewport height, which truncates the sticky
+ * containing block for the site header after one screen of scroll. */
+body {
+  height: auto;
+  min-height: 100%;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-brand-content) 22%, transparent);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+.sd-card:focus-within {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+kbd:not(.compound) {
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  box-shadow: none;
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.72em;
+  padding: 0.12em 0.42em;
+}
+
+/* Furo's stock mobile chrome is replaced by the Cadrumo header. */
+.mobile-header {
+  display: none !important;
+}
+
+.back-to-top {
+  border: 1px solid var(--color-background-border);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px -8px rgb(0 0 0 / 25%);
+  top: calc(var(--cadrumo-header-h) + 0.75rem);
+}
+
+/* ── 4. Site header ───────────────────────────────────────────────────── */
+
+.announcement {
+  background: transparent;
+  border-bottom: none;
+  color: var(--color-foreground-primary);
+  display: block;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 0;
+  position: sticky;
+  top: calc(-1 * var(--cadrumo-broadcast-h));
+  z-index: 70;
+}
+
+html.cadrumo-broadcast-dismissed .announcement {
+  top: 0;
+}
+
+.announcement + .page {
+  min-height: 100%;
+}
+
+.announcement-content {
+  color: inherit;
+  display: block;
+  max-width: none;
+  min-width: 0;
+  overflow: visible;
+  padding: 0;
+  text-align: inherit;
+  white-space: normal;
+  width: 100%;
+}
+
+.cadrumo-header {
+  -webkit-backdrop-filter: blur(12px) saturate(1.6);
+  backdrop-filter: blur(12px) saturate(1.6);
+  background: color-mix(in srgb, var(--color-background-primary) 78%, transparent);
+  border-bottom: 1px solid var(--color-background-border);
+  height: var(--cadrumo-header-h);
+}
+
+.cadrumo-header-inner {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  gap: 1rem;
+  height: 100%;
+  margin: 0 auto;
+  max-width: var(--cadrumo-page-max);
+  padding: 0 1.25rem;
+}
+
+.cadrumo-header-burger,
+.cadrumo-header-toc {
+  align-items: center;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: none;
+  height: 2.1rem;
+  justify-content: center;
+  width: 2.1rem;
+}
+
+.cadrumo-header-burger:hover,
+.cadrumo-header-toc:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-burger svg,
+.cadrumo-header-toc svg {
+  height: 1.2rem;
+  width: 1.2rem;
+}
+
+.cadrumo-header-brand:any-link,
+.cadrumo-header-brand:visited {
+  align-items: center;
+  color: var(--color-foreground-primary);
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.55rem;
+  text-decoration: none;
+}
+
+.cadrumo-header-mark {
+  border-radius: 7px;
+  display: block;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+body[data-theme="dark"] .cadrumo-header-mark {
+  box-shadow: 0 0 0 1px var(--color-background-border);
+}
+
+.cadrumo-header-wordmark {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.cadrumo-header-wordmark-suffix {
+  color: var(--color-foreground-muted);
+  font-weight: 400;
+}
+
+.cadrumo-header-nav {
+  align-items: center;
+  display: flex;
+  gap: 0.15rem;
+  margin-left: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cadrumo-header-nav-link:any-link {
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 0.38rem 0.65rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cadrumo-header-nav-link:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-nav-link.is-active:any-link {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-header-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+.cadrumo-header-search,
+.cadrumo-header-icon:any-link {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  height: 2.1rem;
+  justify-content: center;
+  padding: 0;
+  width: 2.1rem;
+}
+
+.cadrumo-header-search:hover,
+.cadrumo-header-icon:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-search svg,
+.cadrumo-header-icon svg {
+  height: 1.05rem;
+  width: 1.05rem;
+}
+
+.cadrumo-header-toggle .theme-toggle {
+  align-items: center;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  display: flex;
+  height: 2.1rem;
+  justify-content: center;
+  padding: 0;
+  width: 2.1rem;
+}
+
+.cadrumo-header-toggle .theme-toggle:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-toggle .theme-toggle svg {
+  height: 1.1rem;
+  width: 1.1rem;
+}
+
+/* The header owns the theme toggle; drop the duplicate above the article. */
+.theme-toggle-container.theme-toggle-content {
+  display: none;
+}
+
+/* Language switcher: native details/summary dropdown. Closed state is a
+   fixed-footprint button (current language code only) so the header never
+   overflows; the open panel overlays content above the mobile drawers. */
+.cadrumo-header-lang {
+  position: relative;
+}
+
+.cadrumo-header-lang-summary {
+  align-items: center;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  gap: 0.25rem;
+  height: 2.1rem;
+  list-style: none;
+  padding: 0 0.5rem;
+  user-select: none;
+}
+
+.cadrumo-header-lang-summary::-webkit-details-marker {
+  display: none;
+}
+
+.cadrumo-header-lang-summary:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-lang-code {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.cadrumo-header-lang-caret {
+  flex: none;
+  height: 0.7rem;
+  transition: transform 0.15s ease;
+  width: 0.7rem;
+}
+
+.cadrumo-header-lang[open] .cadrumo-header-lang-caret {
+  transform: rotate(180deg);
+}
+
+.cadrumo-header-lang-menu {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  list-style: none;
+  margin: 0;
+  min-width: 8.5rem;
+  padding: 0.25rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 95;
+}
+
+.cadrumo-header-lang-menu li {
+  display: block;
+  margin: 0;
+}
+
+.cadrumo-header-lang-item,
+.cadrumo-header-lang-item:any-link {
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  display: block;
+  font-size: 0.84rem;
+  padding: 0.4rem 0.7rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cadrumo-header-lang-item:any-link:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-lang-item.is-current {
+  color: var(--color-brand-content);
+  font-weight: 500;
+}
+
+/* ── 5. Broadcast strip ───────────────────────────────────────────────── */
+
+.cadrumo-broadcast {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border-bottom: 1px solid var(--color-background-border);
+  box-sizing: border-box;
+  display: flex;
+  font-size: 0.78rem;
+  height: var(--cadrumo-broadcast-h);
+  justify-content: center;
+  margin: 0;
+  max-width: none;
+  padding: 0 2.6rem 0 1rem;
+  position: relative;
+}
+
+html.cadrumo-broadcast-dismissed .cadrumo-broadcast {
+  display: none;
+}
+
+.cadrumo-broadcast-item {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+  line-height: 1.3;
+  min-height: 0;
+  min-width: 0;
+  text-align: left;
+}
+
+.cadrumo-broadcast-label {
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--cadrumo-accent-warning) 38%, transparent);
+  border-radius: 999px;
+  color: var(--cadrumo-accent-warning);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.62rem;
+  font-weight: 400;
+  gap: 0.32rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  padding: 0.26rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.cadrumo-broadcast-label::before {
+  background: var(--cadrumo-accent-warning);
+  border-radius: 999px;
+  content: "";
+  height: 0.36rem;
+  width: 0.36rem;
+}
+
+.cadrumo-broadcast-message {
+  color: var(--color-foreground-secondary);
+  font-weight: 480;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cadrumo-broadcast-links {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 0.85rem;
+}
+
+.cadrumo-broadcast-link:any-link {
+  color: var(--color-link);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cadrumo-broadcast-link:hover,
+.cadrumo-broadcast-link:visited:hover {
+  color: var(--color-link--hover);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.cadrumo-broadcast-dismiss {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  display: flex;
+  height: 1.6rem;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0.7rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.6rem;
+}
+
+.cadrumo-broadcast-dismiss:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-broadcast-dismiss svg {
+  height: 0.85rem;
+  width: 0.85rem;
+}
+
+/* ── 6. Layout, sidebar, page toc ─────────────────────────────────────── */
+
+@media (min-width: 67em) {
+  .page {
+    margin: 0 auto;
+    max-width: var(--cadrumo-page-max);
+  }
+
+  .sidebar-drawer {
+    background: transparent;
+    border-right: none;
+    justify-content: flex-start;
+    min-width: 0;
+    width: clamp(15rem, 18vw, 17.5rem);
+  }
+
+  .main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .content {
+    box-sizing: border-box;
+    margin: 0 auto;
+    max-width: 53rem;
+    padding: 0 clamp(1.5rem, 3.5vw, 3.25rem);
+    width: 100%;
+  }
+
+  .toc-drawer {
+    width: clamp(13rem, 16vw, 16rem);
+  }
+}
+
+.sidebar-sticky {
+  height: calc(100vh - var(--cadrumo-header-h));
+  top: var(--cadrumo-header-h);
+}
+
+.sidebar-container {
+  width: 100%;
+}
+
+.sidebar-scroll {
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+}
+
+.cadrumo-sidebar-search {
+  padding: 1.15rem 0.95rem 0.4rem;
+}
+
+.cadrumo-search-trigger {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  display: flex;
+  font-family: inherit;
+  font-size: 0.82rem;
+  gap: 0.5rem;
+  padding: 0.48rem 0.65rem;
+  transition: border-color 140ms ease, color 140ms ease;
+  width: 100%;
+}
+
+.cadrumo-search-trigger:hover {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-search-trigger svg {
+  flex: 0 0 auto;
+  height: 0.85rem;
+  width: 0.85rem;
+}
+
+.cadrumo-search-trigger-label {
+  flex: 1;
+  text-align: left;
+}
+
+.cadrumo-search-trigger-kbd {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0.22rem 0.4rem;
+  white-space: nowrap;
+}
+
+.sidebar-tree {
+  font-size: 0.84rem;
+}
+
+.sidebar-tree p.caption {
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  margin: 1.5rem 0 0.4rem;
+  padding-left: 0.95rem;
+  text-transform: uppercase;
+}
+
+.sidebar-tree .reference {
+  border-radius: var(--cadrumo-radius-s);
+  line-height: 1.45;
+  margin: 0.14rem 0.45rem;
+  padding: 0.34rem 0.55rem;
+}
+
+.sidebar-tree .reference:hover {
+  background: var(--color-sidebar-item-background--hover);
+  color: var(--color-foreground-primary);
+}
+
+.sidebar-tree .current-page > .reference {
+  background: var(--color-sidebar-item-background--current);
+  color: var(--color-brand-content);
+  font-weight: 550;
+}
+
+.sidebar-tree label {
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-muted);
+}
+
+.sidebar-tree .current > .reference {
+  color: var(--color-foreground-primary);
+}
+
+.muted-link:visited,
+.sidebar-container a:visited,
+.toc-drawer a:visited,
+.table-of-contents a:visited {
+  color: var(--color-sidebar-link-text);
+}
+
+.toc-sticky {
+  height: calc(100vh - var(--cadrumo-header-h));
+  padding-top: 1.15rem;
+  top: var(--cadrumo-header-h);
+}
+
+.toc-scroll {
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+}
+
+.toc-title {
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.toc-tree {
+  border-left: 1px solid var(--color-background-border);
+  font-size: 0.8rem;
+  padding-left: 0;
+}
+
+.toc-tree li.scroll-current > .reference {
+  color: var(--color-toc-item-text--active);
+  font-weight: 550;
+  position: relative;
+}
+
+.toc-tree li.scroll-current > .reference::before {
+  background: var(--color-toc-item-text--active);
+  border-radius: 999px;
+  bottom: 0.2em;
+  content: "";
+  left: -1.05rem;
+  position: absolute;
+  top: 0.2em;
+  width: 2px;
+}
+
+/* ── 7. Content typography ────────────────────────────────────────────── */
+
+.content {
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1;
+  line-height: 1.7;
+}
+
+.cadrumo-breadcrumbs {
+  align-items: center;
+  color: var(--color-foreground-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 0.45rem;
+  margin: 0 0 1.1rem;
+}
+
+.cadrumo-breadcrumbs a:any-link {
+  color: var(--color-foreground-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.cadrumo-breadcrumbs a:hover {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-breadcrumbs-sep {
+  color: var(--color-background-border);
+  user-select: none;
+}
+
+.cadrumo-breadcrumbs-current {
+  color: var(--color-foreground-secondary);
+  font-weight: 500;
+}
+
+/* Editorial display headings: Instrument Serif ships one weight (400), so
+ * h1/h2 lean on size and air instead of boldness, mirroring the marketing
+ * hero and section titles. Smaller headings stay on the grotesk text stack. */
+.content h1 {
+  font-size: clamp(2.25rem, 1.6rem + 2.2vw, 3.25rem);
+  font-weight: 400;
+  letter-spacing: -0.0425rem;
+  line-height: 1.16;
+  margin-bottom: 1.25rem;
+}
+
+.content h2 {
+  font-size: clamp(1.65rem, 1.35rem + 1vw, 2.1rem);
+  font-weight: 400;
+  letter-spacing: -0.026rem;
+  line-height: 1.18;
+  margin-top: 3rem;
+}
+
+.content h3 {
+  font-family: var(--font-stack);
+  font-size: 1.13rem;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  margin-top: 2.1rem;
+}
+
+.content h4,
+.content h5,
+.content h6 {
+  font-family: var(--font-stack);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.content p,
+.content li {
+  max-width: 72ch;
+}
+
+.content a {
+  font-weight: 500;
+  text-decoration-thickness: 0.07em;
+  text-underline-offset: 0.2em;
+}
+
+.content a:hover,
+.content a:visited:hover {
+  color: var(--color-link--hover);
+  text-decoration-color: var(--color-link-underline--hover);
+}
+
+/* ── 8. Code surfaces ─────────────────────────────────────────────────── */
+
+.content code,
+.content kbd,
+.content samp,
+.content pre,
+.content .docutils.literal,
+.content .pre {
+  font-family: var(--font-stack--monospace);
+  font-feature-settings:
+    "liga" 0,
+    "clig" 0,
+    "calt" 0,
+    "dlig" 0,
+    "kern" 0;
+  font-kerning: none;
+  font-variant-ligatures: no-common-ligatures no-discretionary-ligatures no-contextual;
+  letter-spacing: 0;
+  text-rendering: geometricPrecision;
+}
+
+/* Inline code rides the text line: tint only, no chip border. */
+.content code.docutils.literal,
+.content .docutils.literal {
+  background: var(--color-inline-code-background);
+  border: none;
+  border-radius: 5px;
+  box-decoration-break: clone;
+  color: var(--color-foreground-primary);
+  display: inline;
+  font-size: 0.86em;
+  font-weight: 500;
+  padding: 0.14em 0.34em;
+  -webkit-box-decoration-break: clone;
+}
+
+.content .docutils.literal .pre,
+body .docutils.literal span.pre {
+  box-decoration-break: clone;
+  display: inline;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  unicode-bidi: isolate;
+  white-space: normal;
+  -webkit-box-decoration-break: clone;
+}
+
+.content a .docutils.literal {
+  color: inherit;
+}
+
+/* Definition lists (CLI flags / option references) keep crisp chips. */
+.content dl.simple {
+  margin: 1.1rem 0 1.45rem;
+}
+
+.content dl.simple > dt {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  line-height: 1.45;
+  margin-top: 0.95rem;
+  max-width: 72ch;
+}
+
+.content dl.simple > dt:first-child {
+  margin-top: 0;
+}
+
+.content dl.simple > dt code.docutils.literal,
+.content dl.simple > dt .docutils.literal {
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: normal;
+  padding: 0.12rem 0.46rem;
+  white-space: nowrap;
+}
+
+.content dl.simple > dt .docutils.literal .pre,
+.content dl.simple > dt .docutils.literal span.pre {
+  display: inline-block;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.content dl.simple > dd {
+  border-left: 2px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  line-height: 1.6;
+  margin: 0.4rem 0 0.95rem;
+  max-width: 72ch;
+  padding-left: 0.9rem;
+}
+
+.content .highlight {
+  background: var(--color-inline-code-background);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  margin: 1.1rem 0 1.4rem;
+  overflow: hidden;
+}
+
+/* The generated pygments dark stylesheet ships its own
+ * `body[data-theme="dark"] .highlight { background: #0d1117 }` rule, which
+ * out-specifies the warm surface above and turns dark-mode code blocks a
+ * cold navy. Re-assert the brand surface at matching specificity for the
+ * explicit dark state and the auto state's dark branch. */
+body[data-theme="dark"] .content .highlight {
+  background: var(--color-inline-code-background);
+}
+
+@media (prefers-color-scheme: dark) {
+  body[data-theme="auto"] .content .highlight {
+    background: var(--color-inline-code-background);
+  }
+}
+
+.content .highlight pre {
+  background: transparent;
+  color: var(--color-code-foreground);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  margin: 0;
+  overflow-x: auto;
+  padding: 1rem 1.15rem;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.content .highlight .gp {
+  color: var(--color-brand-content);
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Client-side ``aeat`` command decoration (cadrumo-docs.js): the command head
+ * and flags, which Pygments leaves as plain text in shell transcripts. */
+.content .highlight .cadrumo-tok-cmd {
+  color: var(--color-brand-content);
+  font-weight: 550;
+}
+
+.content .highlight .cadrumo-tok-flag {
+  color: light-dark(#55876b, #9dc2ac);
+}
+
+.content .highlight .go {
+  color: var(--color-foreground-secondary);
+}
+
+.content .highlight .w {
+  display: inline;
+  padding-inline-end: 0;
+  white-space: pre;
+}
+
+.highlight button.copybtn {
+  background: color-mix(in srgb, var(--color-background-primary) 80%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  transition: opacity 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.highlight button.copybtn:hover {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.highlight button.copybtn.success {
+  color: var(--cadrumo-accent-success);
+}
+
+/* Mermaid diagrams */
+.content pre.mermaid,
+.content .mermaid {
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  margin: 1.4rem 0 1.6rem;
+}
+
+/* ── 9. Components ────────────────────────────────────────────────────── */
+
+.content .admonition,
+.content .topic {
+  --cadrumo-adm-accent: var(--color-foreground-secondary);
+  background: color-mix(in srgb, var(--cadrumo-adm-accent) 6%, var(--color-background-primary));
+  border: 1px solid color-mix(in srgb, var(--cadrumo-adm-accent) 28%, transparent);
+  border-radius: var(--cadrumo-radius-m);
+  box-shadow: none;
+  font-size: 0.92rem;
+  padding: 0.45rem 1.1rem 0.7rem;
+}
+
+.content .admonition.note,
+.content .admonition.important,
+.content .admonition.seealso {
+  --cadrumo-adm-accent: var(--color-brand-content);
+}
+
+.content .admonition.warning,
+.content .admonition.caution,
+.content .admonition.attention {
+  --cadrumo-adm-accent: var(--cadrumo-accent-warning);
+}
+
+.content .admonition.tip,
+.content .admonition.hint {
+  --cadrumo-adm-accent: var(--cadrumo-accent-success);
+}
+
+.content .admonition.danger,
+.content .admonition.error {
+  --cadrumo-adm-accent: var(--cadrumo-accent-danger);
+}
+
+.content .admonition .admonition-title,
+.content .topic .topic-title {
+  background: transparent !important;
+  color: var(--cadrumo-adm-accent) !important;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0 -1.1rem 0.35rem;
+  padding-bottom: 0;
+  padding-top: 0.65rem;
+}
+
+.content .admonition .admonition-title::before {
+  background-color: var(--cadrumo-adm-accent) !important;
+}
+
+.content .admonition > :last-child {
+  margin-bottom: 0.35rem;
+}
+
+.sd-card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.sd-card a:any-link,
+a.sd-card:any-link,
+.content .sd-card a:visited {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sd-card-title {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-route-grid {
+  margin-top: 1rem;
+}
+
+.sd-card.cadrumo-route-card,
+.sd-card.cadrumo-status-card {
+  background: var(--color-card-background);
+  border: 1px solid var(--color-card-border);
+}
+
+.sd-card.cadrumo-route-card {
+  min-height: 0;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    translate 160ms ease;
+}
+
+.sd-card.cadrumo-route-card:hover {
+  background: var(--color-background-secondary);
+  border-color: color-mix(in srgb, var(--color-brand-content) 45%, var(--color-card-border));
+  box-shadow: 0 10px 32px -16px rgb(0 0 0 / 28%);
+  translate: 0 -2px;
+}
+
+.sd-card.cadrumo-route-card .sd-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.sd-card.cadrumo-route-card .sd-card-text {
+  color: var(--color-foreground-secondary);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.sd-card.cadrumo-route-card .sd-card-footer {
+  background: transparent;
+  border-top: 0;
+  padding-top: 0;
+}
+
+.sd-badge {
+  background: transparent !important;
+  border-color: var(--color-background-border) !important;
+  border-radius: 999px;
+  color: var(--color-foreground-secondary) !important;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.sd-tab-set {
+  border-radius: 0;
+}
+
+.sd-tab-content {
+  background: transparent;
+  border-color: var(--color-background-border);
+  border-radius: 0 0 var(--cadrumo-radius-m) var(--cadrumo-radius-m);
+}
+
+.sd-tab-label {
+  font-size: 0.86rem;
+  font-weight: 550;
+  letter-spacing: 0;
+}
+
+.content table.docutils {
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  overflow: hidden;
+}
+
+.content table.docutils th {
+  background: var(--color-background-secondary);
+  border-bottom: 1px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+  text-align: left;
+}
+
+.content table.docutils td {
+  border-bottom: 1px solid var(--color-background-border);
+  border-left: none;
+  border-right: none;
+  padding: 0.55rem 0.9rem;
+}
+
+.content table.docutils tr:last-child td {
+  border-bottom: none;
+}
+
+.content table.docutils tbody tr:hover td {
+  background: var(--color-background-hover);
+}
+
+/* Prev / next page navigation as cards. */
+.related-pages {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  margin-top: 2.5rem;
+}
+
+.related-pages a.next-page,
+.related-pages a.prev-page {
+  border: 1px solid var(--color-background-border);
+  border-radius: 12px;
+  margin: 0;
+  max-width: none;
+  padding: 0.85rem 1.05rem;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.related-pages a.prev-page {
+  grid-row: 1;
+}
+
+.related-pages a.next-page {
+  grid-column: -2;
+  grid-row: 1;
+}
+
+.related-pages a.next-page:hover,
+.related-pages a.prev-page:hover {
+  background: var(--color-background-secondary);
+  border-color: color-mix(in srgb, var(--color-brand-content) 45%, var(--color-background-border));
+}
+
+.related-pages .page-info .context {
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.related-pages .page-info .title {
+  color: var(--color-foreground-primary);
+  font-size: 0.92rem;
+  font-weight: 550;
+}
+
+/* ── 10. Footer, palette, responsive ──────────────────────────────────── */
+
+.bottom-of-page {
+  border-top: 1px solid var(--color-background-border);
+  color: var(--color-foreground-muted);
+  font-size: 0.78rem;
+}
+
+.cadrumo-site-footer {
+  border-top: 1px solid var(--color-background-border);
+  margin: 2.8rem 0 0;
+  padding: 1.9rem 0 0.6rem;
+}
+
+.cadrumo-site-footer-intro {
+  margin-bottom: 1.5rem;
+}
+
+.cadrumo-site-footer-kicker,
+.cadrumo-site-footer-title {
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.cadrumo-site-footer-note {
+  color: var(--color-foreground-secondary);
+  font-size: 0.86rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 70ch;
+}
+
+.cadrumo-site-footer-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.cadrumo-site-footer-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cadrumo-site-footer-group li + li {
+  margin-top: 0.45rem;
+}
+
+.cadrumo-site-footer-group a:any-link {
+  color: var(--color-foreground-secondary);
+  font-size: 0.84rem;
+  font-weight: 450;
+  text-decoration: none;
+}
+
+.cadrumo-site-footer-group a:hover,
+.cadrumo-site-footer-group a:visited:hover {
+  color: var(--color-foreground-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Command palette */
+
+.cadrumo-palette {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-l);
+  box-shadow: var(--cadrumo-shadow-pop);
+  color: var(--color-foreground-primary);
+  margin: min(14vh, 9rem) auto auto;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+  width: 37.5rem;
+}
+
+.cadrumo-palette::backdrop {
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  background: rgb(0 0 0 / 32%);
+}
+
+.cadrumo-palette-head {
+  align-items: center;
+  border-bottom: 1px solid var(--color-background-border);
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.85rem 1.05rem;
+}
+
+.cadrumo-palette-head svg {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
+
+.cadrumo-palette-input {
+  background: transparent;
+  border: none;
+  color: var(--color-foreground-primary);
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.98rem;
+  outline: none;
+  padding: 0;
+}
+
+.cadrumo-palette-input::placeholder {
+  color: var(--color-foreground-muted);
+}
+
+/* In-flight search signal. Pagefind resolves async and the list deliberately
+ * keeps the previous results painted meanwhile, so the head carries the "a
+ * newer answer is coming" signal instead. The spinner keeps its slot at all
+ * times and only fades in, so appearing never shifts the esc key beside it. */
+.cadrumo-palette-spin {
+  animation: cadrumo-palette-spin 0.7s linear infinite;
+  border: 2px solid var(--color-background-border);
+  border-radius: 50%;
+  border-top-color: var(--color-brand-content);
+  flex: 0 0 auto;
+  height: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.12s ease-in;
+  width: 0.85rem;
+}
+
+.cadrumo-palette.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+/* The stale rows the list is still showing are dimmed while a newer query is
+ * in flight: they are a real answer, just not the one being typed. */
+.cadrumo-palette.is-busy .cadrumo-palette-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@keyframes cadrumo-palette-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-palette-spin {
+    animation: none;
+    /* A frozen ring reads as a broken spinner, so drop the moving part and let
+     * the ring stand as a static "busy" mark; the polite live region carries
+     * the same state in words. */
+    border-color: var(--color-brand-content);
+    transition: none;
+  }
+
+  .cadrumo-palette.is-busy .cadrumo-palette-list {
+    transition: none;
+  }
+}
+
+/* Announced to assistive tech, never shown: the visible signal is the spinner
+ * plus the dimmed list. */
+.cadrumo-palette-status {
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.cadrumo-palette-esc {
+  flex: 0 0 auto;
+}
+
+.cadrumo-palette-list {
+  list-style: none;
+  margin: 0;
+  max-height: min(50vh, 22rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.45rem;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+}
+
+.cadrumo-palette-item a:any-link {
+  align-items: flex-start;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.5rem 0.7rem;
+  text-decoration: none;
+}
+
+/* Per-class result icon (ADR 2026-07-15 D7): a fixed leading column carrying the
+ * hand-authored inline SVG selected by the shipped `display_class`. The text
+ * column (`--body`) flexes beside it; `min-width: 0` lets the excerpt ellipsis
+ * clip inside the flex row. Rows with no shipped class render no icon and the
+ * body simply takes the full width. */
+.cadrumo-palette-item-icon {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  line-height: 0;
+  margin-top: 0.12rem;
+}
+
+.cadrumo-palette-item-icon svg {
+  display: block;
+  height: 0.95rem;
+  width: 0.95rem;
+}
+
+.cadrumo-palette-item-icon--doc,
+.cadrumo-palette-item-icon--modelo {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-palette-item-icon--casilla {
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-palette-item-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cadrumo-palette-item-title {
+  color: var(--color-foreground-primary);
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.cadrumo-palette-item-crumb {
+  color: var(--color-foreground-muted);
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.06rem;
+}
+
+.cadrumo-palette-item.is-selected a {
+  background: var(--color-background-hover);
+}
+
+.cadrumo-palette-item.is-selected .cadrumo-palette-item-title {
+  color: var(--color-brand-content);
+}
+
+/* Pagefind term-card tiers: a one-line excerpt of the matched description. The
+ * surface is distinguished by the leading per-class icon (D7) rather than the
+ * former crumb dot the icon supersedes. */
+.cadrumo-palette-item-excerpt {
+  color: var(--color-foreground-muted);
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cadrumo-palette-empty {
+  color: var(--color-foreground-muted);
+  font-size: 0.85rem;
+  padding: 1.1rem 0.95rem;
+}
+
+.cadrumo-palette-foot {
+  border-top: 1px solid var(--color-background-border);
+  color: var(--color-foreground-muted);
+  display: flex;
+  font-size: 0.68rem;
+  gap: 1rem;
+  padding: 0.5rem 1.05rem;
+}
+
+/* Search page (inline host) ─────────────────────────────────────────────
+ * The shipped search.html mounts the same controller that drives the Ctrl-K
+ * modal (ADR 2026-07-15 D5). It reuses the `.cadrumo-palette-item*` result
+ * styling verbatim (those rules are unscoped) so cards look identical across
+ * the two hosts; only the frame differs — a bordered search box and a list
+ * that flows with the page instead of the modal's clamped scroll area. */
+.cadrumo-search-page {
+  margin-top: 1rem;
+  max-width: 42rem;
+}
+
+.cadrumo-search-page-head {
+  align-items: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-l);
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+}
+
+.cadrumo-search-page-head svg {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
+
+.cadrumo-search-page-input {
+  font-size: 1.05rem;
+}
+
+.cadrumo-search-page-list {
+  margin-top: 0.6rem;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+/* The busy signal reuses the shared spinner and dimmed-list treatment, keyed
+ * on the mount's own `is-busy` class (the controller toggles it on `root`). */
+.cadrumo-search-page.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+.cadrumo-search-page.is-busy .cadrumo-search-page-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-search-page.is-busy .cadrumo-search-page-list {
+    transition: none;
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 67em) {
+  /* Slide-in drawers float above the sticky header on a solid surface. */
+  .sidebar-drawer {
+    background: var(--color-background-primary);
+    border-right: 1px solid var(--color-background-border);
+    z-index: 90;
+  }
+
+  .toc-drawer {
+    background: var(--color-background-primary);
+    border-left: 1px solid var(--color-background-border);
+    z-index: 90;
+  }
+
+  .sidebar-overlay,
+  .toc-overlay {
+    z-index: 80;
+  }
+
+  .sidebar-sticky,
+  .toc-sticky {
+    height: 100vh;
+    top: 0;
+  }
+
+  .cadrumo-header-burger,
+  .cadrumo-header-toc {
+    display: flex;
+  }
+
+  .cadrumo-header-toc.no-toc {
+    display: none;
+  }
+
+  .cadrumo-header-nav {
+    display: none;
+  }
+
+  .cadrumo-header-inner {
+    gap: 0.6rem;
+    padding: 0 0.85rem;
+  }
+
+  .cadrumo-broadcast {
+    padding-left: 0.85rem;
+  }
+
+  .cadrumo-broadcast-links {
+    display: none;
+  }
+
+  .content .highlight pre {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    word-break: normal;
+  }
+}
+
+@media (max-width: 40em) {
+  .cadrumo-broadcast-message {
+    font-size: 0.74rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .sd-card.cadrumo-route-card,
+  .related-pages a.next-page,
+  .related-pages a.prev-page,
+  .cadrumo-search-trigger,
+  .highlight button.copybtn {
+    transition: none;
+  }
+
+  .sd-card.cadrumo-route-card:hover {
+    translate: none;
+  }
+}
+
+@media print {
+  .announcement,
+  .cadrumo-header,
+  .cadrumo-broadcast {
+    display: none;
+  }
+}
+
+/* ── 11. CLI sequence playhead ─────────────────────────────────────────
+ * The server-rendered `cli-sequence` transcript (ADR D5; presentation revised
+ * per operator review): a minimal command rundown that cadrumo-docs.js
+ * enhances into a playhead. Every command stays visible at all times; the
+ * active command is highlighted with its output shown beneath, commands after
+ * the playhead are dimmed with highlighting and output suppressed. No frame is
+ * hidden by CSS alone and no highlighting is stripped server-side — the dim and
+ * output-collapse states are keyed on JS-applied classes over the same DOM, so
+ * a no-JS reader sees the complete, fully highlighted transcript. Code bodies
+ * track the docs code styling (JetBrains Mono via --font-stack--monospace,
+ * 0.85rem / 1.7 line height). */
+
+/* The block is a light group: a slim top bar, one CARD per step, and the
+ * stepper row. Each step is a single self-contained pill — header, command,
+ * and output live inside one bounded element that clips its own content. */
+.cadrumo-sequence {
+  background: transparent;
+  color: var(--color-code-foreground);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  margin: 1.5rem 0;
+  min-width: 0;
+  tab-size: 2;
+}
+
+.cadrumo-frame {
+  background: var(--color-code-background);
+  border: 1.5px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  margin: 0.65rem 0;
+  min-width: 0;
+  overflow: hidden; /* nothing may escape the step card's edge */
+  padding: 0.55rem 0.9rem 0.6rem;
+  position: relative; /* anchor the absolute copy control */
+}
+
+/* Per-step header: the "do this" instruction line above each command — a step
+ * number badge plus an imperative description, in the text (not mono) type so it
+ * reads as prose guidance rather than terminal output. */
+.cadrumo-frame-header {
+  align-items: baseline;
+  display: flex;
+  font-family: var(--font-stack);
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.cadrumo-frame-step {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border-radius: 999px;
+  color: var(--color-foreground-muted);
+  display: inline-flex;
+  flex: none;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  height: 1.25rem;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  align-self: center;
+}
+
+.cadrumo-frame-desc {
+  color: var(--color-foreground-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Command line: a bold JetBrains Mono row led by a prompt affordance, so the
+ * command reads instantly as the instruction (distinct from its output). The
+ * playhead highlight now lives on the step card itself. */
+.cadrumo-frame-command {
+  min-width: 0;
+  padding: 0.1rem 0;
+}
+
+.cadrumo-frame-command pre {
+  background: transparent;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+  white-space: pre;
+}
+
+.cadrumo-frame-command pre code {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 0;
+}
+
+.cadrumo-frame-command pre code::before {
+  color: var(--color-brand-content);
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Shell prompt affordance, keyed by the variant's shell: bash "$ ", pwsh "> ". */
+.cadrumo-cmd-variant[data-shell="bash"] pre code::before {
+  content: "$ ";
+}
+
+.cadrumo-cmd-variant[data-shell="pwsh"] pre code::before {
+  content: "> ";
+}
+
+/* Shell variants: one command variant per declared shell. Only the variant
+ * matching the sequence root's data-cadrumo-shell shows; the directive sets that
+ * attribute to the default shell at build time, so the correct variant renders
+ * without JavaScript, and the widget switcher only updates it. */
+.cadrumo-cmd-variant {
+  display: none;
+  min-width: 0;
+}
+
+.cadrumo-sequence[data-cadrumo-shell="bash"] .cadrumo-cmd-variant[data-shell="bash"],
+.cadrumo-sequence[data-cadrumo-shell="pwsh"] .cadrumo-cmd-variant[data-shell="pwsh"] {
+  display: block;
+}
+
+/* The line-continuation marker (bash \, pwsh `): muted and unselectable, so a
+ * manual text selection never picks it up (copy uses the authored single line). */
+.cadrumo-sequence .cli-continuation {
+  color: var(--color-foreground-muted);
+  user-select: none;
+}
+
+/* Output region: the command's return values inside the same step card —
+ * terminal output at a smaller size than the command core, soft-wrapped so
+ * lines never run past the card's edge, height-capped with its own scroll.
+ * The Pygments token classes are coloured by the panel's OWN palette below
+ * (never the docs' `.highlight` code-block chrome, whose box rules would
+ * override this panel's layout). */
+.cadrumo-frame-output,
+.cadrumo-frame-stderr {
+  background: color-mix(in srgb, var(--color-background-secondary) 65%, transparent);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 0.5rem 0 0.35rem;
+  max-height: 24rem;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  padding: 0.6rem 0.8rem;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+  white-space: pre-wrap;
+}
+
+.cadrumo-frame-stderr {
+  background: color-mix(in srgb, var(--cadrumo-accent-danger) 7%, transparent);
+  color: var(--cadrumo-accent-danger);
+}
+
+/* JSON token palette for the output panel — self-owned, theme-aware. */
+.cadrumo-frame-output .nt {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-frame-output .s1,
+.cadrumo-frame-output .s2 {
+  color: var(--cadrumo-accent-success);
+}
+
+.cadrumo-frame-output .mi,
+.cadrumo-frame-output .mf {
+  color: var(--cadrumo-accent-warning);
+}
+
+.cadrumo-frame-output .kc {
+  color: var(--color-foreground-primary);
+  font-style: italic;
+}
+
+.cadrumo-frame-output .p {
+  color: var(--color-foreground-muted);
+}
+
+/* Token kinds — the server-rendered, correct-by-construction highlighting
+ * (Python-side against the live Click tree). Shown for the active and past
+ * commands; the future-command override below dims it. */
+.cadrumo-sequence .cli-tok-executable,
+.cadrumo-sequence .cli-tok-leaf {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-sequence .cli-tok-group {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-sequence .cli-tok-option {
+  color: light-dark(#55876b, #9dc2ac);
+}
+
+.cadrumo-sequence .cli-tok-option_value,
+.cadrumo-sequence .cli-tok-argument {
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-sequence .cli-tok-placeholder {
+  color: var(--cadrumo-accent-warning);
+  font-style: italic;
+}
+
+/* A verb token carrying live help invites a hover; mark it discoverable. */
+.cadrumo-sequence .cli-tok[data-command-path] {
+  cursor: help;
+  text-decoration: underline dotted color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 3px;
+}
+
+.cadrumo-sequence .cli-tok[data-command-path]:hover,
+.cadrumo-sequence .cli-tok[data-command-path]:focus-visible {
+  text-decoration-color: currentColor;
+}
+
+.cadrumo-sequence .cli-tok[data-command-path]:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+/* ── Playhead states (JS-applied; enhancement only) ──────────────────────
+ * Without the `--enhanced` class every frame renders fully highlighted with
+ * its output — the no-JS transcript. */
+
+/* Active step: the playhead is the CARD — an unmistakable brand border hugs
+ * the whole current step (header, command, and output as one element). */
+.cadrumo-sequence--enhanced .cadrumo-frame.is-active {
+  background: color-mix(in srgb, var(--color-brand-content) 4%, var(--color-code-background));
+  border-color: var(--color-brand-content);
+}
+
+/* Output disclosure: only the output/stderr blocks collapse — the command,
+ * the verification caption, and its checks always render. Disclosure is
+ * entirely reader-driven (stepping never opens or closes it). Without JS no
+ * frame carries the enhanced class, so everything renders. */
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-frame-output,
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-frame-stderr {
+  display: none;
+}
+
+/* The disclosure control: a real labelled button — chevron icon + "Show
+ * output"/"Hide output" text. The chevron rotates when open. JS-created only. */
+.cadrumo-output-toggle {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-stack);
+  font-size: 0.78rem;
+  gap: 0.4rem;
+  line-height: 1;
+  margin: 0.3rem 0 0.1rem;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.6rem 0.2rem 0;
+}
+
+.cadrumo-output-toggle svg {
+  flex: none;
+  transition: transform 0.12s ease;
+}
+
+.cadrumo-frame.is-output-open .cadrumo-output-toggle svg {
+  transform: rotate(90deg);
+}
+
+.cadrumo-output-toggle:hover {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-output-toggle:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
+}
+
+/* Future commands: dimmed to a tertiary tone with highlighting dropped — a
+ * uniform muted colour over the same highlighted spans (no server-side rewrite),
+ * signalling "not yet run". */
+.cadrumo-sequence--enhanced .cadrumo-frame.is-future .cadrumo-frame-command pre code,
+.cadrumo-sequence--enhanced .cadrumo-frame.is-future .cadrumo-frame-command pre code::before {
+  color: var(--color-foreground-muted);
+  font-weight: 400;
+}
+
+.cadrumo-sequence--enhanced .cadrumo-frame.is-future .cli-tok {
+  color: var(--color-foreground-muted);
+  font-style: normal;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+/* Setup frames are ordinary visible steppable frames — context, not the lesson,
+ * so their command is very slightly muted against the command/result frames. */
+.cadrumo-frame[data-frame-kind="setup"] .cadrumo-frame-command pre code {
+  color: var(--color-foreground-secondary);
+  font-weight: 500;
+}
+
+/* The active result frame's verification caption and its imperative checks. */
+.cadrumo-verify {
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack);
+  font-weight: 600;
+  margin: 0.6rem 0 0;
+}
+
+.cadrumo-expects {
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack);
+  font-size: 0.82rem;
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+}
+
+.cadrumo-expects > li {
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.cadrumo-expects > li::before {
+  color: var(--cadrumo-accent-success);
+  content: "\2713";
+  left: 0.2rem;
+  position: absolute;
+}
+
+/* Playhead controls (created by cadrumo-docs.js; absent without JS). Prev/next
+ * plus a position indicator — no autonomous playback. */
+.cadrumo-sequence-controls {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem 0.1rem;
+}
+
+.cadrumo-sequence-btn {
+  align-items: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  height: 1.8rem;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  width: 1.9rem;
+}
+
+.cadrumo-sequence-btn:hover:not(:disabled) {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-sequence-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+.cadrumo-sequence-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.cadrumo-sequence-position {
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0.35rem;
+}
+
+/* Shell switcher (cadrumo-docs.js): a segmented control in a slim block header
+ * bar at the top of the sequence, right-aligned; toggles the visible command
+ * variant. */
+.cadrumo-sequence-bar {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.1rem 0.1rem 0.15rem;
+}
+
+.cadrumo-shell-switcher {
+  display: inline-flex;
+}
+
+.cadrumo-shell-btn {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.72rem;
+  height: 1.8rem;
+  line-height: 1;
+  padding: 0 0.6rem;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.cadrumo-shell-btn + .cadrumo-shell-btn {
+  border-left: none;
+}
+
+.cadrumo-shell-btn:first-child {
+  border-radius: var(--cadrumo-radius-s) 0 0 var(--cadrumo-radius-s);
+}
+
+.cadrumo-shell-btn:last-child {
+  border-radius: 0 var(--cadrumo-radius-s) var(--cadrumo-radius-s) 0;
+}
+
+.cadrumo-shell-btn[aria-pressed="true"] {
+  background: var(--color-brand-content);
+  border-color: var(--color-brand-content);
+  color: var(--color-background-primary);
+}
+
+.cadrumo-shell-btn:hover:not([aria-pressed="true"]) {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-shell-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+  position: relative;
+}
+
+/* Copy control (cadrumo-docs.js): an icon-button pinned to each command/result
+ * frame's top-right that copies the authored single-line command, flashing a
+ * brief "Copied" label. Enhancement only — JS-created, absent without JS. */
+.cadrumo-copy-btn {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-code-background) 88%, transparent);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0.35rem;
+  line-height: 1;
+  padding: 0.25rem 0.4rem;
+  position: absolute;
+  right: 0.6rem;
+  top: 0.5rem;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.cadrumo-copy-btn svg {
+  flex: none;
+}
+
+.cadrumo-copy-btn:hover {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-copy-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
+}
+
+.cadrumo-copy-btn.is-copied {
+  border-color: color-mix(in srgb, var(--cadrumo-accent-success) 50%, var(--color-background-border));
+  color: var(--cadrumo-accent-success);
+}
+
+.cadrumo-copy-label:not(:empty) {
+  font-family: var(--font-stack);
+  font-size: 0.72rem;
+}
+
+/* CLI hover-help popover (cadrumo-docs.js). */
+.cadrumo-cli-popover {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  box-shadow: var(--cadrumo-shadow-pop);
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-height: min(60vh, 26rem);
+  max-width: min(24rem, calc(100vw - 2rem));
+  overflow: auto;
+  padding: 0.7rem 1.6rem 0.7rem 0.85rem;
+  position: absolute;
+  z-index: 60;
+}
+
+/* The pinned popup's explicit close control. */
+.cadrumo-cli-popover-close {
+  background: none;
+  border: none;
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+  position: absolute;
+  right: 0.25rem;
+  top: 0.3rem;
+}
+
+.cadrumo-cli-popover-close:hover {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-cli-popover-close:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
+}
+
+.cadrumo-cli-popover[hidden] {
+  display: none;
+}
+
+.cadrumo-cli-popover-path {
+  color: var(--color-brand-content);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cadrumo-cli-popover-usage {
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  margin: 0.35rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cadrumo-cli-popover-help {
+  margin: 0.45rem 0 0;
+}
+
+.cadrumo-cli-popover-params {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.cadrumo-cli-popover-params > li {
+  margin-top: 0.35rem;
+}
+
+.cadrumo-cli-popover-param-name {
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.cadrumo-cli-popover-param-req {
+  color: var(--cadrumo-accent-warning);
+  font-size: 0.7rem;
+  margin-left: 0.3rem;
+  text-transform: uppercase;
+}
+
+.cadrumo-cli-popover-param-help {
+  color: var(--color-foreground-secondary);
+  display: block;
+}
+
+/* prefers-reduced-motion: the control hover transition is the only motion;
+ * remove it. Playback carries no animation and no timed advance. */
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-sequence-btn,
+  .cadrumo-shell-btn,
+  .cadrumo-copy-btn {
+    transition: none;
+  }
+}

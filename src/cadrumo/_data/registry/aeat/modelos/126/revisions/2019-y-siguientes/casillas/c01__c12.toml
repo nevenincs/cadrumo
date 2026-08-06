@@ -1,0 +1,147 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "01"
+number = "01"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_cuentas_base"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "02"
+number = "02"
+section = ["liquidacion", "retenciones_ingresos_cuenta"]
+data_type = "money"
+semantic_role = "capital_cuentas_retenciones"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "03"
+number = "03"
+section = ["liquidacion", "periodificacion"]
+data_type = "money"
+semantic_role = "capital_cuentas_periodificacion_base_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque ordinario aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "04"
+number = "04"
+section = ["liquidacion", "periodificacion"]
+data_type = "money"
+semantic_role = "capital_cuentas_periodificacion_retenciones_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque ordinario aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "05"
+number = "05"
+section = ["liquidacion", "periodificacion"]
+data_type = "money"
+semantic_role = "capital_cuentas_ingresos_ejercicios_anteriores_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque ordinario aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "06"
+number = "06"
+section = ["liquidacion", "regularizacion"]
+data_type = "money"
+semantic_role = "capital_cuentas_regularizacion"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "07"
+number = "07"
+section = ["liquidacion", "periodificacion"]
+data_type = "money"
+semantic_role = "capital_cuentas_periodificacion_base_2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque adicional aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "08"
+number = "08"
+section = ["liquidacion", "periodificacion"]
+data_type = "money"
+semantic_role = "capital_cuentas_periodificacion_retenciones_2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque adicional aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "09"
+number = "09"
+section = ["liquidacion", "periodificacion"]
+data_type = "money"
+semantic_role = "capital_cuentas_ingresos_ejercicios_anteriores_2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 126 declara un bloque de periodificacion ordinario (casillas 03-05) y un bloque adicional (casillas 07-09, orden EHA/3435/2007 anexo IV); el rol del bloque adicional aparece legitimamente en una sola casilla."
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "10"
+number = "10"
+section = ["liquidacion", "total_liquidacion"]
+data_type = "money"
+semantic_role = "total_liquidacion"
+required = false
+input_kind = "computed"
+formula = "modelo-126-total-liquidacion"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-text", "boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "11"
+number = "11"
+section = ["liquidacion", "complementaria"]
+data_type = "money"
+semantic_role = "anteriores_declaraciones_resultado_ingresar"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-layout"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "12"
+number = "12"
+section = ["liquidacion", "resultado"]
+data_type = "money"
+semantic_role = "cuota_a_ingresar"
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"], source_refs = ["boe-modelo-126-form-text", "boe-modelo-126-form-layout"] }
+required = false
+input_kind = "computed"
+formula = "modelo-126-resultado-ingresar"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-108", "orden-eha-3435-2007:anexo-iv"]
+source_refs = ["boe-modelo-126-form-text", "boe-modelo-126-form-layout"]
+
