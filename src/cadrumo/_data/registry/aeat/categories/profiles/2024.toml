@@ -299,23 +299,31 @@ category = "telefonia_fija"
 display_label = "categories.registry.telefonia_fija.label"
 iva_hint = "general"
 
+# Regrounded on the same suministros rule as its statutory sibling
+# suministros_home_office_internet: LIRPF art. 30.2.5.b names "agua, gas,
+# electricidad, telefonía e Internet" together as the one enumerated
+# suministros list, so a fixed telephone line at the taxpayer's partially
+# affected vivienda habitual carries the SAME 30 % statutory_multiplier on
+# top of the home-area ratio -- never art. 28.1 alone, which is the general
+# deductibility article and does not itself establish the 30 % carve-out.
 [profiles.proportionality]
 kind = "usage_ratio_home_area"
 default_ratio = "0.30"
+statutory_multiplier = "0.30"
 notes = "categories.registry.telefonia_fija.notes"
-
-[[profiles.proportionality.citations]]
-source = "manual_renta"
-reference = "Manual práctico Renta 2024"
-locator = "Rendimientos de actividades económicas, gastos fiscalmente deducibles"
-url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024/ManualRenta2024Parte1_es_es.pdf"
-quote = "categories.registry.telefonia_fija.citations.0.quote"
 
 [[profiles.proportionality.citations]]
 source = "ley_irpf"
 reference = "Ley 35/2006"
-locator = "art. 28.1"
+locator = "art. 30.2.5.b"
 url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+quote = "categories.registry.telefonia_fija.citations.0.quote"
+
+[[profiles.proportionality.citations]]
+source = "manual_renta"
+reference = "Manual práctico Renta 2024"
+locator = "Vivienda parcialmente afecta"
+url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024/ManualRenta2024Parte1_es_es.pdf"
 quote = "categories.registry.telefonia_fija.citations.1.quote"
 
 [[profiles]]

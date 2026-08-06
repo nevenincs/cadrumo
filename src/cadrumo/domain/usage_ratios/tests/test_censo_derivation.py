@@ -80,6 +80,25 @@ def test_suministros_luz_concrete_value_at_20_percent_afectacion() -> None:
     assert profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] == Decimal("0.060")
 
 
+def test_telefonia_fija_concrete_value_at_20_percent_afectacion() -> None:
+    """Anti-tautology pin: 20% afectación, telefonia_fija must be exactly 0.06.
+
+    LIRPF art. 30.2.5.b enumerates "agua, gas, electricidad, telefonía e
+    Internet" together as the one suministros list, so a fixed telephone line
+    at the taxpayer's partially affected vivienda habitual must derive
+    identically to its four statutory siblings, never at the raw 0.20 ratio a
+    missing ``statutory_multiplier`` would have produced.
+    """
+
+    profile = derive_home_office_ratios_from_censo(Decimal("0.20"), year=2025)
+
+    assert profile.ratios[SpendingCategory.TELEFONIA_FIJA] == Decimal("0.060")
+    assert (
+        profile.ratios[SpendingCategory.TELEFONIA_FIJA]
+        == profile.ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET]
+    )
+
+
 def test_zero_ratio_is_accepted() -> None:
     profile = derive_home_office_ratios_from_censo(Decimal("0"), year=2025)
 

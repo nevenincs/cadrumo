@@ -120,16 +120,20 @@ CATEGORY_FAMILY_MEMBERS: dict[SpendingCategoryFamily, tuple[SpendingCategory, ..
         SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_GAS,
         SpendingCategory.SUMINISTROS_HOME_OFFICE_INTERNET,
+        # LIRPF art. 30.2.5.b enumerates "agua, gas, electricidad, telefonía e
+        # Internet" together as the one suministros list, so a fixed line at
+        # the taxpayer's partially affected vivienda habitual carries the same
+        # statutory 0.30 multiplier and the same censo invariant as its four
+        # siblings above. A mobile line is not a fixed household suministro,
+        # so TELEFONIA_MOVIL is not moved here.
+        SpendingCategory.TELEFONIA_FIJA,
     ),
     SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP: (
         SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO,
         SpendingCategory.IBI_VIVIENDA_AFECTO,
         SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
     ),
-    SpendingCategoryFamily.TELECOMS: (
-        SpendingCategory.TELEFONIA_MOVIL,
-        SpendingCategory.TELEFONIA_FIJA,
-    ),
+    SpendingCategoryFamily.TELECOMS: (SpendingCategory.TELEFONIA_MOVIL,),
     SpendingCategoryFamily.OFFICE: (
         SpendingCategory.MATERIAL_OFICINA,
         SpendingCategory.SOFTWARE_SUSCRIPCION,

@@ -1888,7 +1888,8 @@ categories:
     telefonia_fija:
       label: Despesa de telefonia fixa
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (Ley 35/2006 art. 28.1).
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     telefonia_movil:
       label: Despesa de telefonia mòbil
       notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.

@@ -1898,7 +1898,8 @@ categories:
     telefonia_fija:
       label: Telefonía fija
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (Ley 35/2006 art. 28.1).
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     telefonia_movil:
       label: Telefonía móvil
       notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento

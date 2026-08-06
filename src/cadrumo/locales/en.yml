@@ -1752,8 +1752,9 @@ categories:
         as it covers only a home partly used for the activity.'
     telefonia_fija:
       label: Landline phone expense
-      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
-        art. 28.1).
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
     telefonia_movil:
       label: Mobile phone expense
       notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,

@@ -1820,7 +1820,8 @@ categories:
     telefonia_fija:
       label: Vezetékes telefon-költség
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (Ley 35/2006 art. 28.1).
+        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
+        art. 30.2.5.b szabály 4.ª).
     telefonia_movil:
       label: Mobiltelefon-költség
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
