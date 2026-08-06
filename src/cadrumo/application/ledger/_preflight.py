@@ -294,9 +294,37 @@ def _is_home_office_usage_ratio_id(value: str | None) -> bool:
     return family_for(category) in _HOME_OFFICE_FAMILIES
 
 
+def _transaction_takes_home_office_ratio(transaction: Transaction) -> bool:
+    """Return whether a home-office usage ratio would actually apply to this row.
+
+    Screens the row's CATEGORY, because that is the field the expense
+    aggregation keys the override on -- ``usage_ratios.get(fact.category, ...)``
+    in the Renta first-slice resolver. ``usage_ratio_id`` does not select the
+    ratio at all.
+
+    Screening the id alone let a real over-claim through. The operator may
+    persist a censo-divergent ratio deliberately (the write is advisory by
+    design, to model a planned change of afectación), and the refusal that is
+    meant to catch it at filing time sat on the wrong field: classify utility
+    bills into a home-office category, leave ``--usage-ratio-id`` unset -- the
+    CLI default -- and the aggregation still applies the override while this
+    screen sees nothing. LIRPF art. 30.2.5.b caps the suministros deduction at
+    30% of the afectación proportion; the divergent override deducted the full
+    amount, unrefused at every step.
+
+    The id remains part of the test rather than being replaced by it. A row
+    naming a home-office ratio is an operator declaration of intent, and the
+    screen gates only a non-blocking advisory, so a superset that occasionally
+    speaks up where nothing applies is the safe direction to be wrong in.
+    """
+    if _is_home_office_usage_ratio_id(transaction.usage_ratio_id):
+        return True
+    return _is_home_office_usage_ratio_id(transaction.category_id)
+
+
 def _catalogue_uses_home_office_usage_ratio(*, period: Period, transactions: TransactionCatalogue) -> bool:
     return any(
-        _is_home_office_usage_ratio_id(transaction.usage_ratio_id)
+        _transaction_takes_home_office_ratio(transaction)
         for transaction in _period_transactions(period=period, transactions=transactions)
     )
 
@@ -415,7 +443,10 @@ def _issues_for_transaction(
                 ),
             ),
         )
-    if censo_ratio_mismatch_detail is not None and _is_home_office_usage_ratio_id(transaction.usage_ratio_id):
+    # Same screen as the catalogue-level gate above: the detail is computed
+    # from the category the aggregation keys on, so it must attach on the same
+    # test or it would be raised for the period and land on no row.
+    if censo_ratio_mismatch_detail is not None and _transaction_takes_home_office_ratio(transaction):
         issues.append(
             LedgerPreflightIssue(
                 **common,
