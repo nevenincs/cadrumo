@@ -72,6 +72,48 @@ class PaymentStatus(StrEnum):
     CANCELLED = "CANCELLED"
 
 
+class InvoiceClass(StrEnum):
+    """RD 1619/2012 art. 6.1.a invoice class, closed by the reglamento's own taxonomy.
+
+    ``ORDINARIA`` is the factura completa the reglamento describes by default.
+    ``RECTIFICATIVA`` is the class art. 6.1.a.2.º forces into a specific series
+    and LIVA art. 89 requires to name what it corrects. ``SIMPLIFICADA`` is the
+    class art. 7 (not yet bundled) relieves of most art. 6.1 content, including
+    -- outside the three art. 6.1.d cases -- the counterparty's tax id.
+
+    Attributes:
+        ORDINARIA: The default factura completa.
+        SIMPLIFICADA: A ticket-style invoice under the simplified regime.
+        RECTIFICATIVA: An invoice correcting a previously issued one.
+    """
+
+    ORDINARIA = "ORDINARIA"
+    SIMPLIFICADA = "SIMPLIFICADA"
+    RECTIFICATIVA = "RECTIFICATIVA"
+
+
+class InvoiceOperationDateRole(StrEnum):
+    """Why :attr:`~cadrumo.domain.invoices.Invoice.operation_date` was recorded.
+
+    RD 1619/2012 art. 6.1.i treats both cases as ONE datum in one clause: "la
+    fecha en que se hayan efectuado las operaciones ... o en la que, en su
+    caso, se haya recibido el pago anticipado, siempre que se trate de una
+    fecha distinta a la de expedición de la factura." The role does not change
+    how the date is READ for devengo purposes -- both cases are the LIVA
+    art. 75 devengo date -- it records which of the two clauses the operator
+    is stating, which is otherwise lost the moment the date is read back.
+
+    Attributes:
+        OPERATION_PERFORMED: The date the operation (entrega/prestación) took
+            place, art. 75.Uno.
+        ADVANCE_PAYMENT_RECEIVED: The date a pago anticipado was collected
+            before the operation, art. 75.Dos.
+    """
+
+    OPERATION_PERFORMED = "OPERATION_PERFORMED"
+    ADVANCE_PAYMENT_RECEIVED = "ADVANCE_PAYMENT_RECEIVED"
+
+
 _IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
     IvaRate.RATE_0: IvaRateKind.ZERO,
     IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
@@ -149,6 +191,8 @@ def numeric_iva_rate_percentages() -> frozenset[Decimal]:
 
 
 __all__ = [
+    "InvoiceClass",
+    "InvoiceOperationDateRole",
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",

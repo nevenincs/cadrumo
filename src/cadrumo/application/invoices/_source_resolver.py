@@ -270,6 +270,11 @@ def _is_unconverted_foreign_invoice(invoice: Invoice) -> bool:
 def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
     if _is_unconverted_foreign_invoice(invoice):
         return None
+    if invoice.counterparty_tax_id is None:
+        # M347/M349 both declare a third party by their tax id; a factura
+        # simplificada legitimately carries none (RD 1619/2012 art. 6.1.d), so
+        # it has nothing these informativas can declare rather than a defect.
+        return None
     if context.modelo == Modelo.M347.value:
         return _m347_invoice_observation(invoice)
     clave = _intracommunity_clave(invoice)

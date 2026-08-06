@@ -30,7 +30,7 @@ from ...core.money import round_to_cents
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from .. import canonical_decimal_string
 from ..iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
-from ._enums import IvaRate, PaymentStatus, iva_rate_percentage
+from ._enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
 from ._ids import InvoiceId
 
@@ -59,13 +59,34 @@ where the issuer rounded. One cent is the same slack
 for the same reason.
 """
 
+_SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES: Final[frozenset[IvaCategory]] = frozenset(
+    {
+        # RD 1619/2012 art. 6.1.d, 1.º: entrega intracomunitaria exenta (LIVA art. 25).
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        # RD 1619/2012 art. 6.1.d, 2.º: the destinatario is the sujeto pasivo.
+        IvaCategory.DOMESTIC_REVERSE_CHARGE,
+    },
+)
+"""Categories where a factura simplificada's counterparty tax id stays mandatory.
+
+Case 3.º of art. 6.1.d (a domestic operation where the issuer is established
+in the territorio de aplicación del impuesto) is deliberately absent: this
+record carries no field naming where its issuer is established, so that case
+cannot be read from an :class:`Invoice` and is not modelled here.
+"""
+
+_COLLECTED_PAYMENT_STATUSES: Final[frozenset[PaymentStatus]] = frozenset(
+    {PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID},
+)
+"""Payment states consistent with LIVA art. 75.Dos's "cobro total o parcial"."""
+
 
 def derive_invoice_id(
     *,
     kind: InvoiceKind,
     invoice_number: str,
     issued_at: date,
-    counterparty_tax_id: str,
+    counterparty_tax_id: str | None,
     currency: str,
     grand_total: Decimal,
 ) -> str:
@@ -81,7 +102,9 @@ def derive_invoice_id(
             document.
         issued_at: ISO calendar date printed on the invoice.
         counterparty_tax_id: Counterparty NIF / NIE / CIF / IVA number
-            already validated and uppercased.
+            already validated and uppercased, or ``None`` for a factura
+            simplificada issued outside the RD 1619/2012 art. 6.1.d cases
+            that make the counterparty's tax id mandatory.
         currency: ISO-4217 currency code already uppercased.
         grand_total: Invoice grand total.
 
@@ -90,7 +113,7 @@ def derive_invoice_id(
     """
     return content_hash_hex(
         {
-            "counterparty_tax_id": counterparty_tax_id,
+            "counterparty_tax_id": counterparty_tax_id or "",
             "currency": currency,
             "grand_total": canonical_decimal_string(grand_total),
             "invoice_number": invoice_number,
@@ -129,6 +152,20 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
             payload["payment_status"] = PaymentStatus(payload["payment_status"])
         except ValueError as exc:
             raise InvoiceValidationError("payment_status must be a PaymentStatus") from exc
+    if "invoice_class" in payload and isinstance(payload["invoice_class"], str):
+        try:
+            payload["invoice_class"] = InvoiceClass(payload["invoice_class"])
+        except ValueError as exc:
+            raise InvoiceValidationError("invoice_class must be an InvoiceClass") from exc
+    if "operation_date_role" in payload and isinstance(payload["operation_date_role"], str):
+        stripped = payload["operation_date_role"].strip()
+        if stripped:
+            try:
+                payload["operation_date_role"] = InvoiceOperationDateRole(stripped)
+            except ValueError as exc:
+                raise InvoiceValidationError("operation_date_role must be an InvoiceOperationDateRole") from exc
+        else:
+            payload["operation_date_role"] = None
     if "iva_category" in payload and isinstance(payload["iva_category"], str):
         stripped = payload["iva_category"].strip()
         if stripped:
@@ -178,6 +215,12 @@ def _normalise_invoice_string_fields(payload: dict[str, object]) -> dict[str, ob
         payload["counterparty_name"] = payload["counterparty_name"].strip()
     if "notes" in payload and isinstance(payload["notes"], str):
         payload["notes"] = payload["notes"].strip()
+    if "series" in payload and isinstance(payload["series"], str):
+        stripped = payload["series"].strip()
+        payload["series"] = stripped or None
+    if "rectifies_invoice_number" in payload and isinstance(payload["rectifies_invoice_number"], str):
+        stripped = payload["rectifies_invoice_number"].strip().upper()
+        payload["rectifies_invoice_number"] = stripped or None
     return payload
 
 
@@ -186,6 +229,8 @@ def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
         payload["issued_at"] = _coerce_date(payload["issued_at"])
     if payload.get("fx_rate_date") is not None:
         payload["fx_rate_date"] = _coerce_date(payload["fx_rate_date"])
+    if payload.get("operation_date") is not None:
+        payload["operation_date"] = _coerce_date(payload["operation_date"])
     return payload
 
 
@@ -239,7 +284,7 @@ def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, 
     for key in ("grand_total", "base_total", "iva_total"):
         if key in payload:
             payload[key] = coerce_decimal(payload[key])
-    for key in ("retention_rate", "retention_amount", "fx_rate"):
+    for key in ("retention_rate", "retention_amount", "recargo_amount", "suplido_amount", "fx_rate"):
         if key in payload and payload[key] is not None:
             # These three are `Decimal | None`, and that optionality is what makes
             # a silent failure possible here where the loop above is safe. The
@@ -275,6 +320,12 @@ _INVOICE_ID_REQUIRED_FIELDS = frozenset(
 
 
 def _derive_invoice_id_when_complete(payload: dict[str, object]) -> dict[str, object]:
+    # counterparty_tax_id is the one identity-bearing field with a declared
+    # default (None, for a factura simplificada outside the RD 1619/2012
+    # art. 6.1.d mandatory cases): omitting the key entirely is now a legal
+    # way to state "no tax id", not an incomplete payload, so it defaults here
+    # before the completeness check rather than short-circuiting derivation.
+    payload.setdefault("counterparty_tax_id", None)
     if not _INVOICE_ID_REQUIRED_FIELDS.issubset(payload):
         return payload
     kind = payload["kind"]
@@ -289,8 +340,8 @@ def _derive_invoice_id_when_complete(payload: dict[str, object]) -> dict[str, ob
         raise InvoiceValidationError("invoice_number must be a string")
     if not isinstance(issued_at, date):
         raise InvoiceValidationError("issued_at must be a date")
-    if not isinstance(counterparty_tax_id, str):
-        raise InvoiceValidationError("counterparty_tax_id must be a string")
+    if counterparty_tax_id is not None and not isinstance(counterparty_tax_id, str):
+        raise InvoiceValidationError("counterparty_tax_id must be a string or None")
     if not isinstance(currency, str):
         raise InvoiceValidationError("currency must be a string")
     if not isinstance(grand_total, Decimal):
@@ -422,10 +473,14 @@ class Invoice(BaseModel):
     invoice_id: InvoiceId
     bucket_id: BucketId | None = Field(default=None)
     kind: InvoiceKind
+    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA
+    series: str | None = Field(default=None, min_length=1)
     invoice_number: str = Field(min_length=1)
     issued_at: date
+    operation_date: date | None = None
+    operation_date_role: InvoiceOperationDateRole | None = None
     counterparty_name: str = Field(min_length=1)
-    counterparty_tax_id: str = Field(min_length=1)
+    counterparty_tax_id: str | None = Field(default=None, min_length=1)
     counterparty_country: str = Field(min_length=2, max_length=2)
     base_total: Decimal
     iva_total: Decimal
@@ -442,6 +497,8 @@ class Invoice(BaseModel):
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None
     recargo_amount: Decimal | None = None
+    suplido_amount: Decimal | None = None
+    rectifies_invoice_number: str | None = Field(default=None, min_length=1)
     payment_id: str | None = None
     fx_rate: Decimal | None = None
     fx_rate_date: date | None = None
@@ -489,6 +546,18 @@ class Invoice(BaseModel):
         if self.recargo_amount is None:
             return None
         return self._in_eur(self.recargo_amount)
+
+    @property
+    def suplido_amount_eur(self) -> Decimal | None:
+        """The suplido (LIVA art. 78.Tres.3.º) in euro, or ``None`` when there is none to convert.
+
+        Same shape as :attr:`recargo_amount_eur` and :attr:`retention_amount_eur`:
+        ``None`` covers both "no suplido was declared" and "the invoice is
+        unconverted".
+        """
+        if self.suplido_amount is None:
+            return None
+        return self._in_eur(self.suplido_amount)
 
     def _in_eur(self, amount: Decimal) -> Decimal | None:
         """Convert *amount* to euro using the stored rate.
@@ -565,8 +634,11 @@ class Invoice(BaseModel):
         if self.iva_total != line_iva_sum:
             raise InvoiceValidationError("iva_total must equal the exact sum of line iva amounts")
         recargo = self.recargo_amount or Decimal("0")
-        if self.grand_total != self.base_total + self.iva_total + recargo:
-            raise InvoiceValidationError("grand_total must equal base_total + iva_total + recargo_amount exactly")
+        suplido = self.suplido_amount or Decimal("0")
+        if self.grand_total != self.base_total + self.iva_total + recargo + suplido:
+            raise InvoiceValidationError(
+                "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
+            )
         all_non_numeric = all(iva_rate_percentage(line.iva_rate) is None for line in self.lines)
         if all_non_numeric:
             if self.iva_total != Decimal("0"):
@@ -575,14 +647,17 @@ class Invoice(BaseModel):
             # told which component is impossible, rather than being handed a
             # totals mismatch they would have to decompose themselves. The
             # recargo rides on the cuota of a taxable supply (LIVA art. 161),
-            # so a supply bearing no cuota by law bears no recargo either.
+            # so a supply bearing no cuota by law bears no recargo either. A
+            # suplido is unrelated to whether the underlying supply is taxable
+            # -- it is a disbursement made in the client's name (LIVA
+            # art. 78.Tres.3.º) -- so it stays permitted here.
             if recargo != Decimal("0"):
                 raise InvoiceValidationError(
                     "recargo_amount must be zero when every line is EXEMPT or NOT_SUBJECT",
                 )
-            if self.grand_total != self.base_total:
+            if self.grand_total != self.base_total + suplido:
                 raise InvoiceValidationError(
-                    "grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT",
+                    "grand_total must equal base_total + suplido_amount when every line is EXEMPT or NOT_SUBJECT",
                 )
         return self
 
@@ -592,8 +667,8 @@ class Invoice(BaseModel):
 
         Retención is an IRPF settlement-side deduction, not a price component.
         The canonical per-invoice identity is
-        ``total (contraprestación) = base_total + iva_total + recargo_amount``
-        and, separately, ``cash = total - retención``: the withholding changes
+        ``total (contraprestación) = base_total + iva_total + recargo_amount
+        + suplido_amount`` and, separately, ``cash = total - retención``: the withholding changes
         what the payer *transfers*, never what the operation *costs*. So
         :attr:`grand_total` stays retención-inclusive, and an issuer who nets
         the withholding out of the grand total is refused by
@@ -686,6 +761,113 @@ class Invoice(BaseModel):
                 "recargo_amount must not exceed iva_total; every recargo tier is a smaller "
                 "percentage than the IVA rate it accompanies (LIVA art. 161)",
             )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_suplido_consistency(self) -> Self:
+        """Enforce the suplido invariant, holding it inside the total alongside recargo.
+
+        A suplido (LIVA art. 78.Tres.3.º) is a sum paid by the issuer in the
+        client's name and on their behalf under an explicit mandate --
+        typically a third-party fee or disbursement passed through unchanged.
+        It is excluded from the base imponible by law, so it cannot join
+        :attr:`base_total` or :attr:`iva_total`; it is nonetheless something
+        the client owes the issuer, so -- like recargo -- it joins
+        :attr:`grand_total` and, through it, ``cash``. It takes a third
+        position on the identity rather than becoming a second recargo: unlike
+        recargo it carries no statutory rate and so no upper bound tied to
+        another figure on the invoice, and unlike recargo it is not restricted
+        to a taxable supply -- a suplido may accompany an exempt operation.
+
+        ``None`` and ``Decimal("0")`` are both accepted and mean different
+        things, for the same reason :meth:`_validate_recargo_consistency`
+        keeps the two apart on recargo: ``None`` is "this invoice makes no
+        statement about a suplido"; an explicit zero is "one was considered
+        and none arose".
+        """
+        if self.suplido_amount is None:
+            return self
+        if self.suplido_amount < Decimal("0"):
+            raise InvoiceValidationError("suplido_amount must be non-negative")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_invoice_class_consistency(self) -> Self:
+        """Enforce the RD 1619/2012 art. 6.1 invoice-class axis.
+
+        A rectificativa is coupled to two facts art. 6.1 makes mandatory only
+        for that class: a specific issuing series (art. 6.1.a.2.º) and the
+        invoice it corrects (LIVA art. 89 requires a rectificativa to
+        rectify a named prior invoice). Neither field is meaningful outside
+        that class, so both are refused on any other one -- a stray
+        ``rectifies_invoice_number`` on an ordinaria would silently assert a
+        correction the invoice's own class denies.
+
+        A factura simplificada's counterparty tax id is optional under art. 6
+        UNLESS one of the three art. 6.1.d cases this table can read from the
+        invoice's own data applies: an entrega intracomunitaria exenta (case
+        1.º) or an operation where the destinatario is the sujeto pasivo
+        (case 2.º, ``domestic_reverse_charge``). Case 3.º -- a domestic
+        operation where the issuer is established in the territorio de
+        aplicación del impuesto -- is NOT modelled here: this record carries
+        no field stating where its issuer is established, so it is a declared
+        gap rather than a guessed default. An ordinaria or rectificativa keeps
+        the tax id mandatory unconditionally, unchanged from before this
+        class axis existed.
+        """
+        if self.invoice_class is InvoiceClass.RECTIFICATIVA:
+            if not self.series:
+                raise InvoiceValidationError(
+                    "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
+                )
+            if not self.rectifies_invoice_number:
+                raise InvoiceValidationError(
+                    "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
+                )
+        elif self.rectifies_invoice_number is not None:
+            raise InvoiceValidationError("rectifies_invoice_number only applies to a factura rectificativa")
+        if self.counterparty_tax_id is None:
+            if self.invoice_class is not InvoiceClass.SIMPLIFICADA:
+                raise InvoiceValidationError(
+                    "counterparty_tax_id is required unless invoice_class is SIMPLIFICADA",
+                )
+            if self.iva_category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES:
+                raise InvoiceValidationError(
+                    "counterparty_tax_id is required on a factura simplificada whose iva_category is "
+                    f"{self.iva_category.value!r} (RD 1619/2012 art. 6.1.d)",
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_operation_date_consistency(self) -> Self:
+        """Enforce the LIVA art. 75 devengo-date axis art. 6.1.i lets an invoice state.
+
+        ``operation_date`` and ``operation_date_role`` travel together: a date
+        with no stated role would leave a reader guessing which of art. 6.1.i's
+        two clauses it answers, and a role with no date states nothing.
+
+        A pago anticipado devengo (``ADVANCE_PAYMENT_RECEIVED``, LIVA
+        art. 75.Dos) requires money to have actually been received -- "el
+        cobro total o parcial del precio" -- so it is refused against a
+        ``payment_status`` that states none was. It is also refused outright
+        on ``INTRA_COMMUNITY_SUPPLY``: art. 75.Dos, párrafo segundo, excludes
+        "las entregas de bienes comprendidas en el artículo 25" from the
+        pagos-anticipados rule, so that category always devengues under
+        art. 75.Uno.8.º regardless of any advance received.
+        """
+        if (self.operation_date is None) != (self.operation_date_role is None):
+            raise InvoiceValidationError("operation_date and operation_date_role must be set together")
+        if self.operation_date_role is InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED:
+            if self.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
+                raise InvoiceValidationError(
+                    "a pago anticipado devengo does not apply to an entrega intracomunitaria exenta "
+                    "(LIVA art. 75.Dos, párrafo segundo, excludes art. 25 entregas)",
+                )
+            if self.payment_status not in _COLLECTED_PAYMENT_STATUSES:
+                raise InvoiceValidationError(
+                    "operation_date_role ADVANCE_PAYMENT_RECEIVED requires a collected payment_status "
+                    "(PAID or PARTIALLY_PAID); LIVA art. 75.Dos devengues on actual cobro",
+                )
         return self
 
     @model_validator(mode="after")

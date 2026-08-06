@@ -57,7 +57,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     invoice_number: str = Field(min_length=1)
     issued_at: date
     counterparty_name: str = Field(min_length=1)
-    counterparty_tax_id: str = Field(min_length=1)
+    counterparty_tax_id: str | None = Field(default=None, min_length=1)
     counterparty_country: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
     base_total: Decimal = Field(ge=0)
     iva_total: Decimal = Field(ge=0)
@@ -70,7 +70,15 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
 
     @model_validator(mode="after")
     def _validate_counterparty_identity(self) -> Self:
-        """Reuse the rich invoice identity validators for the wire projection."""
+        """Reuse the rich invoice identity validators for the wire projection.
+
+        ``None`` is skipped rather than validated: a factura simplificada may
+        legitimately carry no counterparty tax id (RD 1619/2012 art. 6.1.d),
+        and the rich :class:`~domain.invoices.Invoice` this payload projects
+        already enforces the cases where one is mandatory.
+        """
+        if self.counterparty_tax_id is None:
+            return self
         country = validate_country_code(self.counterparty_country)
         if country == "ES":
             validate_spanish_tax_id(self.counterparty_tax_id)

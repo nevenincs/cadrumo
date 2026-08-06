@@ -105,6 +105,7 @@ from ._foreign_assets import (
     declarable_asset_classes_720,
     declarable_class,
 )
+from ._invoice_devengo import invoice_devengo_date
 from ._invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjection,
@@ -345,6 +346,7 @@ __all__ = [
     "declarable_for_347",
     "evaluate_ledger_filing_staleness",
     "get_per_modelo_aggregation_contract",
+    "invoice_devengo_date",
     "iva_ledger_missing_fact_reasons",
     "merge_manual_and_routed_retencion_observations",
     "merge_source_resolutions",
