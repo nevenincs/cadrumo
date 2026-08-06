@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:aa2be766e897db458d175df3818e3b7ed8694a470a9d2392d3c9a8777247fc64'
+body_hash: 'sha256:41f174e329b912c40ab83b7bacdb9c8a6ede6824855d54876b38e6b00c8d1ac5'
 related:
   - "[[2026-08-06-llm-package-split-research]]"
   - "[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]"
@@ -81,11 +81,27 @@ decided here is the boundary's shape, not whether inference is worth having.
 - `2026-06-28-product-packaging-adr` fixes an exact-version three-distribution cohort and
   keeps optional integrations as capability extras, whose absence must yield install
   guidance rather than `ModuleNotFoundError`.
-- Nothing outside the ledger uses the cloud subprocess transport; `src/cadrumo/agent/` has
+- The ledger is the only *caller* of the cloud subprocess transport; `src/cadrumo/agent/` has
   zero references. The on-host vision path reuses the shared prompt/parse machinery but
-  does not depend on the cloud path.
+  does not depend on the cloud path. **The deletion is nonetheless not ledger-local**: the
+  orphan symbol set reaches the config-check surface, provisioning, the core capability enum
+  and the domain facade — seven production files, each covered by a Step. An earlier phrasing
+  ("nothing outside the ledger uses it") was true of callers and misleading as a scope
+  statement.
+- **A neighbouring subprocess transport must survive the deletion.**
+  `entrypoints/mcp/_call_runtime.py` shells the deterministic CLI for every MCP tool call. It
+  is a subprocess transport and it is not the cloud LLM transport. The deletion is therefore
+  authorised by symbol name only, never by sweeping for the word `subprocess`.
+- **"Capability" already denotes four unrelated concepts here** — modelo-revision capability in
+  registry conformance, terminal/frontend capability in the flow substrate, operator-selectable
+  service capability in core, and optional-extra capability in provisioning. D6's hardware axis
+  is therefore named for the floor it measures, not for the generic word, so it collides with
+  none of them.
 - The cloud path is nonetheless the only way to classify a text-layer PDF today.
-- No hardware-capability probe exists anywhere in the product.
+- No hardware-capability probe exists anywhere in the product. Established the same way: a
+  semantic sweep for "detect GPU VRAM or device capability before running a model" returned a
+  top score of **0.036** with every hit a different concept, and an anchored search found zero
+  production references to VRAM, NVIDIA, NVML, CUDA, GPU or device capability.
 
 - **Structured XML parsing is measured, and it wins decisively on latency, cost and failure
   mode.** Recomputed from `harness/results/v5-structured-rescore.json`, whose embedded
@@ -154,7 +170,14 @@ decided here is the boundary's shape, not whether inference is worth having.
   (`application/filing/_export_xml_dictionary.py:34`,
   `domain/calculations/registry/_export_parse.py:13`). An exact XML read costs no new
   dependency, no model, no GPU and no extra.
-- **No e-invoice parser exists today**, confirmed at HEAD by targeted search:
+- **No e-invoice parser exists today**, established by a semantic sweep against a healthy index
+  (79,273 code chunks, integrity `consistent`, `degraded_reasons` empty) whose top result for
+  "parse a structured electronic invoice XML document into invoice fields" scored **0.10** with
+  no candidate — its nearest hits are a CSV/XLSX bulk importer, a **JSON** invoice-payload
+  parser, and the regex and vision draft extractors, all adjacent concepts rather than the one
+  claimed absent. A search of 79,273 chunks returning nothing above 0.10 is a stronger negative
+  than a zero-hit grep, because it also rules out the concept living under an unguessed name.
+  Confirmed at HEAD by word-anchored targeted search:
   `zugferd|factur-x|facturae|en16931|ticketbai|CrossIndustryInvoice` returns no production
   match in `src/cadrumo`. `MediaKind` remains `PDF` and `IMAGE`
   (`application/ledger/_evidence.py:108-112`), so the ZUGFeRD corpus fixture - a complete
@@ -870,6 +893,29 @@ the cascade, carried by nothing here.
 leaves open. Building a regression test for a stage boundary the ADR refuses to adopt would
 be building the two-stage shape by the back door. It is named as a **precondition** of any
 future ADR adopting two-stage, alongside the settling measurement.
+
+**A withdrawn out-of-scope item, recorded rather than deleted because the way it nearly shipped
+matters more than the item.** A draft of this record was about to name "the IVA-category enum's
+missing intra-community-services member" as out of scope, warning a future reader not to "fix" an
+unset category because no enum member existed to map services to. **That gap does not exist.**
+`IvaCategory` carries both `INTRA_COMMUNITY_SERVICE_SUPPLY` and
+`INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE`, added by commit `7502ee65ed` on the same
+day this campaign was authored. Verified directly against the enum at HEAD, not taken on report.
+
+The claim entered through a **stale docstring in the tree**: `_source_resolver.py:271-280` still
+states that services *"map to no `IvaCategory` member at all, because the enum names goods,
+acquisitions and triangulation but not services"* — prose asserting a gap that a commit closed
+the same day. It was read in good faith, relayed between two campaigns, and used to ground a
+scope decision, each hop adding apparent confirmation while adding no evidence. Had it landed, an
+accepted record would have carried a warning steering a future reader away from mapping a
+category the tree can express, and toward leaving a field unset that should be populated — the
+warning would itself have been the hazard.
+
+**The operative consequence for D7 is that services ARE mappable and the parsers should map
+them.** The rule stands unchanged — leave the category unset with a visible advisory, never guess
+— but its justification changes: not "no member exists to map to" but "the document did not state
+one." Same behaviour, honest reason. An absent category is now a gap in the **record**, not in
+the **enum**.
 
 **The normalized-document seam and its custody discipline.** The source discovery specifies a
 single typed `NormalizedDocument` record — source shape, structured record or text, page

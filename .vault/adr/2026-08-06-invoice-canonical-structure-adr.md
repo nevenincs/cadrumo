@@ -16,7 +16,7 @@ supersedes:
   - '2026-06-10-ledger-invoice-unification-adr'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:9d842db2e2830c54f5ade0ae687f4e80c5dad1e8f417a8a6995e1e77f6f3a499'
+body_hash: 'sha256:1d6ee4c2bc70b47ed6c624db33742d87f549fb7cfaac56cbd654b9d475969c71'
 ---
 # `invoice-canonical-structure` adr: `One canonical invoice aggregate; delete the slim store` | (**status:** `accepted`)
 
@@ -740,6 +740,38 @@ consumer cannot drop a record invisibly (`:249-266`). So the feared "silent move
 from aggregated to excluded" does not occur on this surface. It is a visible
 capability change, which still blocks the fold for that record class until
 decided.
+
+**A stale justification found while grounding this, on this campaign's own
+surface.** `_m349_incoherent_verdict`'s docstring (`_source_resolver.py:271-280`)
+justifies excluding an absent `iva_category` from the M349 disqualifying set on
+the *measured* ground that intra-community **services** map to no `IvaCategory`
+member, "because the enum names goods, acquisitions and triangulation but not
+services." That is false at HEAD: `INTRA_COMMUNITY_SERVICE_SUPPLY` and
+`INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE` exist
+(`domain/iva/_schema.py`), added by `7502ee65ed` — *"represent intra-community
+services, which no category could express"* — on the same day the docstring still
+asserted they could not be expressed.
+
+The guard may still be correct; its **reason** is not, and a filing-path guard
+resting on a premise the tree refutes is a live hazard rather than a wart. It
+already propagated: a peer campaign read that docstring, treated the enum gap as
+real, and was about to record an out-of-scope warning telling future readers not
+to "fix" a gap that no longer exists. Re-decided by a Step, with both outcomes
+open — correct the reasoning and keep the behaviour, or change the behaviour with
+its filed-output consequence surfaced. Now that services *are* expressible, an
+absent category on a services invoice is a gap in the **record**, not in the
+**enum**, which changes the remedy.
+
+**Also settled here: the evidence path cannot ground at all today.**
+`confirm_invoice_draft_from_evidence` has no `iva_category` parameter, so every
+invoice minted through the evidence path decomposes ungrounded by construction
+and the renta sales-evidence path refuses all of them. This is not a future risk
+from folding; it is the current state, and it is the sharpest instance of D-U's
+point that decomposition depends on a field the upstream surface cannot supply.
+D-L's widening of the override set (which already includes `iva_category`) is
+what closes the receiving half; the producing half — mapping a structured
+document's own tax-category code onto the enum — belongs to the peer lane, which
+owns the parsers.
 
 **What this decision requires.** Decomposition is a capability-inventory row with
 its two consumers and the modelos each serves. The capability-parity proof gains a

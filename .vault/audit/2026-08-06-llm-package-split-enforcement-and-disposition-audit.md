@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:392e50886689d568f07d639d9665eb8120e6011d16e9dd8b156fb1573eb0183b'
+body_hash: 'sha256:5b737a92874a06cabd7075b6620e52f69b8914a207a630b831768d4671c7e462'
 related:
   - "[[2026-08-06-llm-package-split-adr]]"
   - "[[2026-08-06-llm-package-split-plan]]"
@@ -227,6 +227,97 @@ large piece of ingestion territory. Once a record claims a surface it inherits t
 what it is *not* doing there, and no campaign document carried a deliberately-out-of-scope
 section — while the sibling campaign's record did, which made the omission conspicuous. The
 full register is below.
+
+### semantic-sweep-of-the-load-bearing-negatives | low | All four absence claims survive a search by meaning, and the sweep surfaced three adjacent hazards a symbol grep could not
+
+Recorded because an absence claim is only as good as the search that established it, and a
+symbol-name grep cannot find a concept implemented under a name nobody guessed. Four claims this
+campaign rests on — one of them the entire premise of D7, one of them a deletion authorisation —
+were re-established by semantic search and then confirmed by anchored search at HEAD.
+
+**Index conditions, stated because they determine what the sweep is worth.** Run against a
+healthy service: all three index generations `succeeded`, `degraded_reasons` empty, integrity
+verdict `consistent`, **79,273 code chunks across 5,331 files**, queries returning in 0.8–1.3 s
+with no queue wait. An earlier caveat that the index reported itself shrunken had cleared by this
+point; a sweep run under that condition would have been worthless and is not what this records.
+
+| Claim | What it rests on | Semantic sweep | Anchored confirmation | Verdict |
+|---|---|---|---|---|
+| No e-invoice parser exists in production | the premise of D7 and all of `W02` | "parse a structured electronic invoice XML document into invoice fields" — **top score 0.10**, no candidate | 0 hits, word-anchored, production only | **survives** |
+| No hardware-capability probe exists | D6 | "detect GPU VRAM or device capability before running a model" — **top score 0.036**, every hit a different concept | 0 production hits for VRAM, NVIDIA, NVML, CUDA, GPU or device-capability | **survives** |
+| The cloud-subprocess orphan set is complete | the `W05.P11` deletions | "shell out to an external command line tool to classify a document" — **high signal, 0.62/0.57/0.53** | 7 production files, all already covered by a Step | **survives, with a caveat below** |
+| `defusedxml` has exactly two production consumers | placing new parsers against it | "safely parse untrusted XML with entity resolution disabled" | exactly two, as claimed | **survives** |
+
+**The low scores are themselves the evidence** on the first two. A semantic index of 79,273
+chunks returning nothing above 0.10 for "parse a structured electronic invoice" is a stronger
+negative than a grep returning zero, because it also rules out the same concept living under an
+unguessed name.
+
+Three things the sweep surfaced that the greps did not, each actionable:
+
+**A neighbouring subprocess transport that must NOT be deleted.**
+`entrypoints/mcp/_call_runtime.py` shells the deterministic CLI for every MCP tool call. It is a
+subprocess transport, it is not the cloud LLM transport, and an executor sweeping for
+`subprocess` while working `W05.P11` could plausibly over-delete into it. The same applies to a
+duplication-audit helper that shells a Node tool. The deletion Steps name symbols rather than the
+word `subprocess`, and they must stay that way.
+
+**Two builder functions the ADR named only as a family.** `build_codex_classifier` and
+`build_claude_classifier` in `domain/transactions/_llm.py`. Naming them makes the deletion
+scope checkable rather than descriptive.
+
+**"Capability" is overloaded across at least four unrelated concepts** in this tree: modelo
+*revision* capability in the registry conformance surface, *frontend/terminal* capability in the
+flow substrate, operator-selectable *service* capability in core, and *optional-extra* capability
+in provisioning. A new hardware probe named "capability probe" would collide with all four. The
+hardware axis should be named for what it measures — the model runtime's hardware floor — not for
+the generic word. This is naming guidance for `S06`, and it is exactly the class of collision the
+discovery mandate exists to prevent.
+
+One clarification the sweep forced on the ADR's own wording. "Nothing outside the ledger uses the
+cloud subprocess transport" is true of *callers* but loose as a scope statement: the symbol set
+reaches the config-check surface, provisioning, the core capability enum and the domain facade.
+Every one of those is already covered by a Step, so no orphan is unaccounted for — but an
+executor reading the sentence as "this deletion is ledger-local" would under-sweep.
+
+### stale-docstring-propagated-a-false-scope-decision | medium | Prose in the tree asserted a gap a same-day commit had closed, and it travelled two campaigns before anyone checked the enum
+
+The most instructive near-miss of the campaign, recorded because the mechanism will recur and
+because the stale source is **still in the tree** for the next reader to find.
+
+`application/invoices/_source_resolver.py:271-280` states that intra-community services *"map to
+no `IvaCategory` member at all, because the enum names goods, acquisitions and triangulation but
+not services."* **That is false.** `IvaCategory` in `domain/iva/_schema.py` carries
+`INTRA_COMMUNITY_SERVICE_SUPPLY` and `INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE`, added
+by commit `7502ee65ed` — *"represent intra-community services, which no category could express"* —
+dated the same day the docstring's claim was relayed. The prose was accurate when written and
+was not updated when the commit landed.
+
+**The propagation path is the finding, not the docstring.** A peer campaign read the docstring
+and relayed it as grounding. This campaign received it, treated it as verified because it named
+a specific file and line, and wrote it into an out-of-scope section warning future readers not to
+"fix" an unset category. Each hop added apparent confirmation and no new evidence. Had it
+shipped, an accepted decision record would have carried a warning steering a reader away from
+mapping a category the tree can express — **the warning would have been the hazard**, and it
+would have been near-impossible to dislodge, because it was in a decision record and cited a real
+file.
+
+It was caught only because the peer campaign re-verified its own earlier claim against the enum
+rather than restating it, and because this campaign then checked the enum directly rather than
+accepting the correction on report. Both halves were necessary.
+
+**The generalisable rule: a docstring is prose, not a checked artefact.** It carries no gate, and
+nothing fails when it goes stale. A claim about what a closed value set *can express* must be
+verified against the value set, never against prose describing it — and that holds however
+precise the prose's file-and-line citation looks, because precision of citation is not evidence of
+currency.
+
+This is the third instance of one shape in this campaign: a wrong instrument or a stale framing
+producing output plausible enough to ship. The other two were an accuracy metric read from the
+wrong field of the right artefact, and a clock-in-a-derived-id pattern-matched to a rule breach
+without reading what the clock was for. In all three the output was coherent, specific, and
+wrong, and in all three the correction came from **re-measuring rather than re-reasoning**. A
+finding that is more damning than expected is a signal to re-measure, not to write up.
 
 ## Disposition register against the source discovery
 

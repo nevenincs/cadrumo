@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:2b088fbc46f90ca027e83a7892b80b63761e601d40f6fd76b56604d13e6705a8'
+body_hash: 'sha256:6bd520a114c40299acbe9ec525f79bdce1150ad39a64c7cc901e15a3f01a3cfd'
 related:
   - "[[2026-08-06-invoice-canonical-structure-adr]]"
   - "[[2026-08-06-invoice-canonical-structure-plan]]"
@@ -123,6 +123,72 @@ field and the loader re-defaults it - the precise blindness `aeat-roundtrip-disc
 exists to catch, sitting on the aggregate about to absorb a second store's entire capability
 set. Strengthening it to a strict-equality roundtrip with every defaultable field non-default,
 plus the mutation proof, is the actionable item.
+
+## Semantic sweep of the absence claims
+
+This campaign leans on several **negatives** that a receiving team will act on destructively —
+deleting a module, renaming a field, declaring a single authority. A symbol-name search cannot
+establish absence: it cannot find a concept implemented under a name nobody thought to search
+for, and it cannot see a dynamic or string-target reference. So each negative was swept **by
+meaning** and then confirmed with a targeted search at HEAD.
+
+Conditions: the code index was verified healthy first — generation succeeded, integrity
+`consistent`, 79,273 live chunks over 5,331 named files, no degraded reasons. The earlier
+shrunken-index caveat had cleared. Queries returned in 0.95 to 1.51 seconds, so none of this was
+measured through GPU contention.
+
+Four sweeps, phrased as concepts rather than identifiers: *persist an invoice record to the
+catalogue store, construct an invoice from a payload and write it*; *per-line spending or
+deduction category assigned to an invoice line item*; *read or load the business operation
+invoice store for a bucket and source kind*; *import invoices from an external file or payload
+and merge them into storage*.
+
+**Two negatives survived unchanged.**
+
+- **The slim-store consumer set.** The sweep surfaced the same nine production files already
+  inventoried and nothing further — the store, its repository, its shared CRUD service, the
+  source resolver, the CLI and the payload modules. The conservation law's foundation holds.
+- **`InvoiceLine.category_id` has no production consumer, and the preflight homonym is genuinely
+  unrelated.** The sweep independently separated the two concepts: the preflight site
+  (`application/ledger/_preflight.py:332-348`) reads `category_id` as a `SpendingCategory` on
+  **`Transaction`**, a different type entirely. They do not share a serialised key. The rename
+  is safe on that axis.
+
+**Two negatives did NOT survive, and both are corrections rather than confirmations.**
+
+- **The `_importing.py` delete scope was incomplete.** The module exports **four** symbols, not
+  the two originally swept: `import_invoices_from_path`, `merge_invoice_import`,
+  `parse_invoice_payload` and `InvoiceImportResult`. All four are production-consumer-free, so
+  the deletion still stands — but `parse_invoice_payload` carries a test in a **different
+  package** (`src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py:243`) reaching it
+  through the package facade. Deleting the module and its own test directory would leave that
+  file importing a deleted symbol, surfacing as a collection error in an unrelated package.
+- **"Exactly one `Invoice` writer" was literally false.** Five production modules instantiate
+  `InvoiceCatalogueRepository` on a write path. The claim was true only under an unstated
+  reading — *construction* authority — and two production modules that write the catalogue,
+  `_lifecycle.py` and `_linking.py`, appeared in **no campaign document at all**. The gate now
+  reads "exactly one construction authority" and names the legitimate mutation-and-persistence
+  writers so an executor cannot satisfy it by removing the wrong thing.
+
+The classification that resolves it:
+
+| Module | Role | Disposition |
+|---|---|---|
+| `_creation.py` | constructs and persists | canonical construction authority |
+| `_bulk_import.py` | routes through `_creation.py` (`:395`) | not a separate authority |
+| `_importing.py` | own `Invoice.model_validate`, own merge that silently skips a duplicate | second authority, deleted |
+| `_lifecycle.py` | mutates and persists; single-record view and delete (`:98`, `:117`) | legitimate, keep |
+| `_linking.py` | mutates and persists; all-or-nothing link write (`:125`) | legitimate, keep |
+
+`_lifecycle.py` carries a second consequence worth stating: its module docstring justifies itself
+as keeping *"the slim-vs-rich split intact"*, a rationale this campaign removes, and once the bare
+operator noun is repointed its verbs become the only single-record read and delete on the
+canonical store. It is a live CRUD surface, not a leaf.
+
+**Why this section exists.** An absence claim backed by a stated semantic sweep is materially
+stronger than one backed by a symbol grep, and the difference is the difference between "we did
+not find one" and "we looked for one by meaning and here is what we looked for." Two of the four
+negatives here changed on contact with that method.
 
 ## Naming, blast radius, and the canonical verdict
 

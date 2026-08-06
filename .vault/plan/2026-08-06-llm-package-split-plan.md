@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-06'
-body_hash: 'sha256:ddfe61307df5f8d29cc5696fbb4c9eb370073ea9977bb210685f58d14da13db4'
+body_hash: 'sha256:a019c0411f96d968b5b7c65d4d8a23fa63c2bc2593f55325ac6fd205e7d8e83d'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -71,11 +71,27 @@ Do not start either casually.
 **GPU contention is a live confound.** A same-class query on this host swung from 1.58 s to
 126.6 s under fleet load. Anything timed while the fleet is busy measures the fleet.
 
-**The semantic code index reports itself SHRUNKEN - absence in it is NOT evidence.** Use it to
-find things by meaning, then confirm every conclusion, and especially every *negative* claim,
-with a targeted search at HEAD. A related trap that manufactured a false finding during this
-campaign: in ripgrep, `-r` is `--replace`, not `--recursive`, so a `-rn` invocation silently
-rewrites every match and produces plausible nonsense.
+**Check the semantic index's health before trusting a negative from it.** For part of this
+campaign the index reported itself shrunken, which makes an absence result worthless. By the end
+it was healthy - all generations succeeded, `degraded_reasons` empty, integrity `consistent`,
+79,273 chunks over 5,331 files, sub-1.5 s queries - and the campaign's four load-bearing absence
+claims were re-established against it in that state. **Check the status rather than inheriting
+either verdict**; this paragraph is itself the kind of prose that goes stale.
+
+Use the index to find things by meaning, then confirm every conclusion - and especially every
+*negative* - with an anchored search at HEAD. Two traps that each manufactured a false finding
+during this campaign: in ripgrep, `-r` is `--replace`, not `--recursive`, so a `-rn` invocation
+silently rewrites every match and produces plausible nonsense; and an unanchored alternation
+matches substrings, so a search for `ubl` hits "published" and "double-quoted". Use `-w` or
+explicit `-e` terms when the pattern is short.
+
+**Docstrings are prose, not checked artefacts, and one of them is actively wrong on this seam.**
+`application/invoices/_source_resolver.py:271-280` asserts that the IVA-category enum cannot
+express intra-community services. It can - the members were added the same day the docstring's
+claim was relayed. That stale sentence propagated across two campaigns and nearly landed a false
+out-of-scope decision in an accepted record. A claim about what a **closed value set can express**
+must be verified against the value set, never against prose describing it, however precise that
+prose's file-and-line citation looks.
 
 **The defect class this plan exists to prevent - do not reintroduce it.** Three shapes, all of
 which close a checkbox while proving nothing: a **gate enrolled before its target exists** (an
@@ -113,7 +129,7 @@ Closes the fail-open hole in the strictest gate tier before any Step relies on i
 - [ ] `W01.P02.S08` - Add a non-vacuity assertion to the sensitive-surface list so every entry must resolve to at least one non-test module or the gate fails naming the entry, closing the fail-open hole for all eighteen surfaces; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
 - [ ] `W01.P02.S09` - Prove the non-vacuity assertion by pointing one entry at a nonexistent path and observing the gate red, then reverting, red if a nonexistent surface still reports success; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
 - [ ] `W01.P02.S72` - Record per check which of the five secure-storage gates scans by whole-tree rglob, which enumerates a fixed surface list, and which is test-side only, so a coverage claim about any new directory is checkable rather than asserted; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
-- [ ] `W01.P02.S06` - Add a hardware-capability probe reporting the model runtime floor through the existing DependencyStatus shape, red if an under-specified machine reports capable; `src/cadrumo/application/provisioning.py`.
+- [ ] `W01.P02.S06` - Add a hardware-floor probe for the model runtime reporting through the existing DependencyStatus shape, named for the floor it measures rather than the overloaded word capability which already denotes four unrelated concepts in this tree, red if an under-specified machine reports capable; `src/cadrumo/application/provisioning.py`.
 - [ ] `W01.P02.S07` - Surface the hardware probe as a typed refusal naming the shortfall in the config doctor, red if the refusal omits the accepted floor; `src/cadrumo/entrypoints/cli/_check_cli.py`.
 
 ## Wave `W02` - Land exact structured-document reading in the deterministic core
@@ -138,6 +154,7 @@ Adds hardened deterministic parsers for both EN16931 syntaxes and for Facturae, 
 - [ ] `W02.P04.S14` - Add a deterministic EN16931 UBL parser, since a CII-only reader silently returns nothing for half the standard, red if a UBL document yields no record where the CII path yields one; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S15` - Add a deterministic Facturae 3.2.x parser mapping to the same line-carrying draft, red if a Facturae document maps to a shape the CII and UBL parsers do not also produce; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S80` - Map the parsed percentage onto the closed IvaRate slot enum and refuse loudly when no slot matches, never rounding to the nearest member, red if a 5 percent pre-2025 line resolves to any slot rather than refusing; `src/cadrumo/adapters/inbound/einvoice/`.
+- [ ] `W02.P04.S82` - Map the document's own tax-category code onto the IvaCategory enum including the intra-community service members, leaving it unset with a visible advisory only where the document states no category, never guessing, red if a services invoice is left unset when the document does state its category; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S16` - Harden every XML read with entity resolution and external DTD loading disabled and with size and depth bounds, red if an XXE probe document resolves an external entity or a billion-laughs payload is not refused; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S17` - Select the VAT number as the party tax identifier rather than a French SIRET or German Steuernummer, red if a ZUGFeRD fixture carrying both still yields the SIRET; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S56` - Map emisor and destinatario the right way round on received-invoice SII records, red if a received-invoice fixture still reports the taxpayer as the issuer; `src/cadrumo/adapters/inbound/einvoice/`.
@@ -158,6 +175,7 @@ Turns the ZUGFeRD fixture into a real field-level gate, proves the core path rea
 - [ ] `W02.P05.S71` - Assert the keyed guard compares every persisted field so a same-key re-add whose content differs refuses with an instructive conflict, red if a re-add changing one field is reported as an unchanged no-op and the new value is silently dropped; `src/cadrumo/application/ledger/tests/`.
 - [ ] `W02.P05.S70` - Prove the parsers give the sibling campaign's multi-line writer a real per-rate producer by round-tripping a two-rate structured document from parse to a confirmed multi-line invoice, sequenced after that campaign's writer Step lands, red if the confirm boundary is bypassed or the second rate is lost in transit; `src/cadrumo/application/ledger/tests/`.
 - [ ] `W02.P05.S81` - Assert the invoice-level identity holds exactly on a parsed multi-rate document with grand total equal to base plus IVA plus recargo and retencion outside it, red if per-line rounding is allowed to accumulate into the invoice-level total; `src/cadrumo/application/ledger/tests/`.
+- [ ] `W02.P05.S83` - Prove an invoice confirmed from a structured document grounds through the decomposition contract rather than refusing as undeclared, red if the renta sales-evidence path still refuses it with an ungrounded-decomposition verdict; `src/cadrumo/application/ledger/tests/`.
 
 ## Wave `W03` - Define and enforce the core-to-extension interchange contract
 
@@ -239,7 +257,7 @@ Closes the capability gap that the cloud deletion would otherwise open.
 
 Removes the off-host transport and everything it alone kept alive.
 
-- [ ] `W05.P11.S47` - Delete the subprocess classifier family and its provider builders, red if the shared prompt and parse machinery the local classifier reuses is removed with it; `src/cadrumo/domain/transactions/_llm.py`.
+- [ ] `W05.P11.S47` - Delete the subprocess classifier family and its codex and claude provider builders by symbol name, never by sweeping for the word subprocess, red if the MCP call runtime or any other unrelated subprocess transport is caught in the sweep; `src/cadrumo/domain/transactions/_llm.py`.
 - [ ] `W05.P11.S48` - Delete the cloud consent gate and its service capability branch across the evidence input, core capabilities and profile capabilities, red if any capability resolver still returns a cloud-upload branch; `src/cadrumo/application/ledger/_evidence_input.py`.
 - [ ] `W05.P11.S49` - Delete the gestor-mode and cloud-upload settings left orphaned by the consent gate, red if any settings field survives with no reader; `src/cadrumo/core/config.py`.
 - [ ] `W05.P11.S50` - Delete the provider selection flag and the evidence acknowledgement flag from the classify verb, red if either flag still parses; `src/cadrumo/entrypoints/cli/_ledger.py`.
@@ -313,6 +331,68 @@ against rather than discovering later:
    as `W02.P05.S81`.
 4. **A persisted invoice requires at least one line**, a non-empty counterparty name and a
    two-letter counterparty country.
+
+**A fifth constraint, found while checking the fourth, and it is larger than a constraint.**
+That lane flagged that the decomposition contract gates on `iva_category` and that a record
+reaching the renta sales-evidence path without one is refused. Verified at HEAD, and the
+consequence is broader than either lane had assumed: `confirm_invoice_draft_from_evidence`
+carries **no `iva_category` parameter at all**, and the decomposition contract yields
+`IVA_TREATMENT_UNDECLARED` and returns early the moment the category is absent. So **every**
+invoice minted through the evidence path today is ungrounded by construction, and the renta
+sales-evidence path refuses it with `UNGROUNDED_DECOMPOSITION`.
+
+That matters to this campaign specifically, because it bounds the value of D7. Reading a
+structured e-invoice exactly is worth little if the invoice it produces cannot ground - the
+exactness would stop at the catalogue and never reach a calculation. The fix is split across
+both lanes and neither half works alone:
+
+- **Ours:** `W02.P04.S82` maps the document's own tax-category code onto the category enum.
+  This is a capability only the structured readers have - the code is *in the document*, and no
+  regex or vision reader can supply it. Where **the document states no category** the parser
+  **leaves it unset with a visible advisory and does not guess**: an absent category refuses
+  visibly, whereas a wrong one mis-declares silently, and only the first is recoverable.
+- **Theirs:** the confirm-function parameter list is that lane's surface, so `iva_category` has
+  to reach the persisted invoice through it. **Confirmed with that lane: `iva_category` is
+  already in the scope of its `P02.S26`**, named in the Step action and its verification red
+  alongside the retención, recargo, invoice-class, series, rectification and operation-date
+  fields. Nothing to add there; cite `P02.S26`.
+- **The end-to-end red is `W02.P05.S83`**: an invoice confirmed from a structured document must
+  ground through the decomposition contract. That Step fails if either half is missing, which is
+  the point - it is the only Step in this plan whose red condition spans both campaigns.
+
+**A retracted claim, kept visible because a receiving team will meet its source.** An earlier
+draft of this section said the category enum could not express intra-community *services*, and
+therefore that a services invoice could never be mapped. **That is false at HEAD.**
+`IvaCategory` carries `INTRA_COMMUNITY_SERVICE_SUPPLY` and
+`INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE`, added by commit `7502ee65ed`. Services are
+mappable and `S82` should map them.
+
+The claim came from a **stale docstring that is still in the tree**: `_source_resolver.py:271-280`
+asserts the gap, and a commit closed it the same day. Anyone working this seam will read that
+docstring and reach the same wrong conclusion, which is why the retraction is recorded here
+rather than quietly deleted. The other lane is re-deciding the M349 guard that rests on the same
+stale premise, under its `P01.S34`; that guard's *behaviour* may well be correct, but its stated
+reason is refuted, and the two lanes agreed it may not stand unexamined.
+
+The parser rule is unchanged by the retraction - leave unset, never guess - but its reason is
+now **"the document did not state a category"** rather than "no member exists to map to." An
+absent category is a gap in the *record*, not in the *enum*.
+
+**Read the sibling campaign's documents from the working tree, not from HEAD, until someone
+lands the delta.** This section cites five of that campaign's Step ids - `P02.S07`, `P02.S26`,
+`P02.S27`, `P04.S18`, `P01.S34` - and a peer commit swept its ADR and plan into history at an
+older state mid-session. Verified rather than relayed: both documents differ between HEAD and the
+working tree at the time of writing, and that lane reports the committed copy carries a
+whole-plan gate its own later sweep proved false. A receiving team resolving those Step ids
+against HEAD would get stale text for every one of them.
+
+The same caution applies in reverse and is worth stating because it is easy to assume otherwise:
+**this campaign's documents were also swept into a commit mid-session and HEAD is likewise
+behind.** The committed copy is coherent and carries the post-audit remediation - checked
+directly, it holds the corrected latency figures and none of the vacuous pre-remediation Steps -
+but it predates the final cross-lane work: it is short two Steps, and it lacks the semantic-sweep
+record, the retracted enum-gap claim, and the coordination corrections above. **The working tree
+is the authority for both campaigns until the delta lands.**
 
 **Not shared:** this plan does not touch the invoice stores, the canonical writer, the bulk
 import surface, or the M303 and M390 screens. `Invoice.lines` and the per-line aggregation
