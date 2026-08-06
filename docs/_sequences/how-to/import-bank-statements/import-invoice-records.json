@@ -16,13 +16,15 @@
         "--invoice-number",
         "2026-0142",
         "--invoice-date",
-        "2026-03-21"
+        "2026-03-21",
+        "--total-amount",
+        "121.00"
       ],
       "captures": [
         {
           "json_path": "result.invoice_id",
           "name": "invoice_id",
-          "value": "e04440dc7d9a70c1"
+          "value": "246208d6a58defd7"
         }
       ],
       "envelope": {
@@ -31,7 +33,7 @@
         "notices": [],
         "result": {
           "bucket_event_ids": [
-            "ce23f6873b1c1988f4c06d062f9ab0086f298b109977cfd4023aba7db3a24c51"
+            "91f4abb944398b3070f90316659a8f968005fc1caefd35f7d768e02c93b633ab"
           ],
           "bucket_id": "<bucket-id>",
           "counterparty_name": "",
@@ -43,7 +45,7 @@
           "fx_rate": null,
           "fx_rate_date": null,
           "invoice_date": "2026-03-21",
-          "invoice_id": "e04440dc7d9a70c1",
+          "invoice_id": "246208d6a58defd7",
           "invoice_number": "2026-0142",
           "iva_amount": "0",
           "iva_rate": null,
@@ -51,7 +53,7 @@
           "operation_type": null,
           "source_kind": "payable_invoice",
           "taxable_base": "0",
-          "total_amount": "0",
+          "total_amount": "121.00",
           "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",
@@ -90,7 +92,7 @@
         "ledger",
         "invoice",
         "view",
-        "e04440dc7d9a70c1",
+        "246208d6a58defd7",
         "--kind",
         "received"
       ],
@@ -111,7 +113,7 @@
           "fx_rate": null,
           "fx_rate_date": null,
           "invoice_date": "2026-03-21",
-          "invoice_id": "e04440dc7d9a70c1",
+          "invoice_id": "246208d6a58defd7",
           "invoice_number": "2026-0142",
           "iva_amount": "0",
           "iva_rate": null,
@@ -119,7 +121,7 @@
           "operation_type": null,
           "source_kind": "payable_invoice",
           "taxable_base": "0",
-          "total_amount": "0",
+          "total_amount": "121.00",
           "updated_at": "2026-04-01T09:00:00Z"
         },
         "schema_version": "2",

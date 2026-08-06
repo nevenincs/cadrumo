@@ -22,6 +22,7 @@
             "arrendamiento_local",
             "arrendamiento_vivienda_afecto",
             "ibi_local_afecto",
+            "suministros_local_afecto",
             "suministros_home_office_luz",
             "suministros_home_office_agua",
             "suministros_home_office_gas",
@@ -70,8 +71,8 @@
             {
               "category_ids": [
                 "arrendamiento_local",
-                "arrendamiento_vivienda_afecto",
-                "ibi_local_afecto"
+                "ibi_local_afecto",
+                "suministros_local_afecto"
               ],
               "family": "premises"
             },
@@ -80,7 +81,8 @@
                 "suministros_home_office_luz",
                 "suministros_home_office_agua",
                 "suministros_home_office_gas",
-                "suministros_home_office_internet"
+                "suministros_home_office_internet",
+                "telefonia_fija"
               ],
               "family": "home_office_suministros"
             },
@@ -88,14 +90,14 @@
               "category_ids": [
                 "amortizacion_vivienda_afecto",
                 "ibi_vivienda_afecto",
-                "comunidad_vivienda_afecto"
+                "comunidad_vivienda_afecto",
+                "arrendamiento_vivienda_afecto"
               ],
               "family": "home_office_ownership"
             },
             {
               "category_ids": [
-                "telefonia_movil",
-                "telefonia_fija"
+                "telefonia_movil"
               ],
               "family": "telecoms"
             },
