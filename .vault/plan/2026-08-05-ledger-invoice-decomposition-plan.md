@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:0e43769c1a0aab5d78b10e1351ea9c0e5bfde48686b4631e8593ed7e0b687752'
+body_hash: 'sha256:a5de5d956bf6ddd334416929c75d6501297c0b9fa0006d8c0fe0ef9a0315999d'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -79,3 +79,19 @@ Prove the chain against external AEAT authority rather than against itself, anch
 - [x] `P05.S33` - Extract the shared oracle fixture scaffolding while keeping each test body separate, so a scenario change lands once; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `P05.S34` - Bundle the PGC norms cited in the oracle docstrings, or mark them not-yet-bundled so the citation stops asserting grounding it lacks; `src/cadrumo/_data/corpus/normatives/html`.
 - [x] `P05.S35` - Restore the marker integrity the two campaign-owned test modules broke, so the marker gate stops reporting a campaign surface as unclassified; `src/cadrumo/domain/iva/tests/test_component_expectations.py`.
+
+### Phase `P06` - Canonical invoice schema and the wiring it activates
+
+The record has been extended field by field as each defect surfaced, and four findings now share one shape: the law describes a property of a Spanish invoice the record cannot hold. This phase derives the field set from RD 1619/2012 art. 6 rather than from consumer demand, and wires the two contracts earlier phases built but left unreachable. Outcome is expressed as cross-modelo multi-period tests over one accumulative invoice life, plus an adversarial suite of deliberately degraded invoices each asserting its specific refusal.
+
+- [ ] `P06.S40` - Bundle RD 1619/2012 articles 6 and 11 from BOE consolidated text, since only article 2 ships today and article 6 is the authority the schema field set derives from; `src/cadrumo/_data/corpus/normatives/html`.
+- [ ] `P06.S41` - Let the invoice record its fecha de operacion, so the art. 75 devengo date has an authoritative source instead of the issue-date proxy; `src/cadrumo/domain/invoices/_models.py`.
+- [ ] `P06.S42` - Let the invoice carry a suplido, which joins total and cash while joining neither base nor cuota, taking a third position on the identity rather than a second recargo; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/_decomposition.py`.
+- [ ] `P06.S43` - Let a factura rectificativa name what it corrects, so the cuota rectification LIVA article 89 requires becomes representable; `src/cadrumo/domain/invoices/_models.py`.
+- [ ] `P06.S44` - Let a factura simplificada exist without a counterparty tax id, so an ordinary ticket stops being refused by a field the law does not require of it; `src/cadrumo/domain/invoices/_models.py`.
+- [ ] `P06.S45` - Represent pagos anticipados so a prepayment devengues on collection for the amount received, honouring the article 25 exclusion; `src/cadrumo/domain/invoices/_models.py, src/cadrumo/application/aggregation`.
+- [ ] `P06.S46` - Wire the invoice decomposition contract to a consumer so its defect verdicts reach an operator, since it classifies nothing today and the aggregation paths each carry their own inline guard set instead; `src/cadrumo/application/aggregation, src/cadrumo/application/invoices`.
+- [ ] `P06.S47` - Wire route_invoice_retenciones into the invoice lifecycle so a received invoice's retencion reaches Modelo 111, asserting the filed figure moves rather than that the projection returns a value; `src/cadrumo/application/aggregation/_invoice_retencion.py, src/cadrumo/application/invoices`.
+- [ ] `P06.S48` - Thread the operation date into period attribution with a declared rank marker naming which source produced it, surfaced identically on the pull and calculate paths; `src/cadrumo/application/aggregation`.
+- [ ] `P06.S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides; `src/cadrumo/application/aggregation/tests`.
+- [ ] `P06.S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases; `src/cadrumo/domain/invoices/tests`.
