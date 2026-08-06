@@ -144,6 +144,37 @@ expected, which would turn the lane green while documenting a blocked feature as
 it were intended. That is a content decision for the documentation owner, and taking it
 inside a lane-fixing change would hide a real gap behind a green signal.
 
+### ci-full-was-never-observed-past-its-first-gate | high | The lane's later steps hid real debt behind a gate that always failed first
+
+The full-conformance lane had never executed past its lint step in the repository's
+history. Five dispatches existed: one reached a runner and died at lint, four recorded
+no runner and no steps at all, having been cancelled while queued. Every claim about
+this lane's later behaviour was therefore structural rather than observed, including
+claims made inside this campaign's own briefs.
+
+Clearing the gates one at a time moved it forward three steps in a single session, and
+each newly reachable step revealed real, previously invisible debt:
+
+The lint step turned out to be two checks in sequence, so clearing the first only
+exposed the second. Thirty-two unsorted import blocks from a re-export bridge removal,
+then four absolute in-package imports, then a dead suppression directive for a rule
+enabled nowhere, then four more findings that landed from concurrent work between one
+push and the next.
+
+The import-architecture step then broke on four application-to-adapter edges. These
+proved to be sanctioned coupling whose exception entries had not followed code that
+moved, not new architectural debt.
+
+The typecheck step, reached for the first time, reports seventy-five diagnostics across
+more than thirty files, concentrated in one aggregation module. This reproduces
+identically outside CI, so it is long-standing debt that no lane was positioned to
+surface rather than anything introduced tonight.
+
+The finding is not any individual defect. It is that a gate which always fails at its
+first step certifies nothing beyond that step, and the absence of failures downstream
+reads exactly like their absence in the code. Three gates deep, the lane is still
+finding real work.
+
 ## Recommendations
 
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
@@ -202,6 +233,37 @@ Deliberately not silenced. The sequence framework can declare a non-zero exit as
 expected, which would turn the lane green while documenting a blocked feature as though
 it were intended. That is a content decision for the documentation owner, and taking it
 inside a lane-fixing change would hide a real gap behind a green signal.
+
+### ci-full-was-never-observed-past-its-first-gate | high | The lane's later steps hid real debt behind a gate that always failed first
+
+The full-conformance lane had never executed past its lint step in the repository's
+history. Five dispatches existed: one reached a runner and died at lint, four recorded
+no runner and no steps at all, having been cancelled while queued. Every claim about
+this lane's later behaviour was therefore structural rather than observed, including
+claims made inside this campaign's own briefs.
+
+Clearing the gates one at a time moved it forward three steps in a single session, and
+each newly reachable step revealed real, previously invisible debt:
+
+The lint step turned out to be two checks in sequence, so clearing the first only
+exposed the second. Thirty-two unsorted import blocks from a re-export bridge removal,
+then four absolute in-package imports, then a dead suppression directive for a rule
+enabled nowhere, then four more findings that landed from concurrent work between one
+push and the next.
+
+The import-architecture step then broke on four application-to-adapter edges. These
+proved to be sanctioned coupling whose exception entries had not followed code that
+moved, not new architectural debt.
+
+The typecheck step, reached for the first time, reports seventy-five diagnostics across
+more than thirty files, concentrated in one aggregation module. This reproduces
+identically outside CI, so it is long-standing debt that no lane was positioned to
+surface rather than anything introduced tonight.
+
+The finding is not any individual defect. It is that a gate which always fails at its
+first step certifies nothing beyond that step, and the absence of failures downstream
+reads exactly like their absence in the code. Three gates deep, the lane is still
+finding real work.
 
 ## Recommendations
 
