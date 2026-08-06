@@ -9,6 +9,30 @@ import path from "node:path";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const corpus = JSON.parse(await readFile(path.join(here, "vectors.json"), "utf8"));
+const CANONICAL_JSON_CONTRACT = "cadrumo-jcs-utf8-lf-v1";
+
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function validateCorpus(value) {
+  if (!isObject(value)) throw new Error("JCS vector corpus must be a JSON object");
+  if (value.contract !== CANONICAL_JSON_CONTRACT) throw new Error("JCS vector corpus contract mismatch");
+  if (!Array.isArray(value.vectors) || value.vectors.length === 0) {
+    throw new Error("JCS vector corpus must contain vectors");
+  }
+  for (const vector of value.vectors) {
+    if (!isObject(vector)) throw new Error("JCS vector entries must be JSON objects");
+    if (typeof vector.id !== "string") throw new Error("JCS vector entries require a string id");
+    const hasExpected = typeof vector.expected_utf8_hex === "string";
+    const hasError = vector.error === "rejected";
+    if (hasExpected === hasError) {
+      throw new Error(`JCS vector ${vector.id} needs one expected outcome`);
+    }
+  }
+}
+
+validateCorpus(corpus);
 
 function utf8Bytes(value) {
   const bytes = [];

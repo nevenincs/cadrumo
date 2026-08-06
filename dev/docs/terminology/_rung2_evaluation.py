@@ -42,12 +42,18 @@ __all__ = [
     "Rung2EvaluationPolicy",
     "Rung2EvaluationReason",
     "Rung2EvaluationRow",
+    "Rung2LadderObservation",
     "Rung2LexicalObservation",
     "Rung2SemanticCandidate",
     "Rung2SemanticCandidateResult",
+    "Rung2TopFiveLossEvidence",
+    "Rung2TopFiveLossRow",
+    "Rung2TopFiveObservation",
     "aggregate_rung2_coverage",
+    "compare_rung2_top_five",
     "compose_rung2_candidates",
     "evaluate_rung2_held_out",
+    "evaluate_rung2_ladder",
     "rung2_semantic_candidates",
 ]
 
@@ -110,6 +116,7 @@ class Rung2EvaluationReason(StrEnum):
     ZERO_QUERY_VECTOR = Rung2CandidateStatus.ZERO_QUERY_VECTOR.value
     RUNNER_UP_AMBIGUITY = Rung2CandidateStatus.RUNNER_UP_AMBIGUITY.value
     NO_COSINE_MATCH = Rung2CandidateStatus.NO_COSINE_MATCH.value
+    NO_COMPOSED_CANDIDATE = "no-composed-candidate"
 
 
 class Rung2SemanticCandidate(BaseModel):
@@ -146,6 +153,9 @@ class Rung2LexicalObservation(BaseModel):
 
     The caller supplies these observations later from an independent Pagefind
     capture; this model never loads or queries Pagefind and has no defaults.
+    ``is_lexical_card`` records the Pagefind pass origin only.  Direct identity
+    is carried by ``direct_match_strength`` and must not be inferred from that
+    pass marker because descriptions can produce card-pass hits.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -163,6 +173,107 @@ class Rung2LexicalObservation(BaseModel):
         if not math.isfinite(value):
             raise ValueError("lexical tier ranks must be finite")
         return value
+
+
+class Rung2LadderObservation(BaseModel):
+    """One held-out query's independently captured lexical observations.
+
+    Pagefind remains an external authority: callers capture its rows and pass
+    them here in the held-out query-set order.  This model only binds the
+    observation to its query and never opens an index or constructs a result.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    query: str = Field(min_length=1, max_length=160)
+    lexical_candidates: tuple[Rung2LexicalObservation, ...]
+
+
+class Rung2TopFiveObservation(BaseModel):
+    """One independently captured full-precision/quantized top-five pair.
+
+    The caller supplies both ranked record-id tuples from separate
+    measurements.  This model does not run either scorer and therefore cannot
+    turn a supplied pair into artifact or release evidence by itself.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    query: str = Field(min_length=1, max_length=160)
+    float32_record_ids: tuple[_RecordId, ...] = Field(max_length=5)
+    int8_record_ids: tuple[_RecordId, ...] = Field(max_length=5)
+
+    @model_validator(mode="after")
+    def _reject_duplicate_ranked_ids(self) -> Rung2TopFiveObservation:
+        """Keep each independently captured ranking a true ordered list."""
+        if len(set(self.float32_record_ids)) != len(self.float32_record_ids):
+            raise ValueError("float32 top-five observations cannot contain duplicate record ids")
+        if len(set(self.int8_record_ids)) != len(self.int8_record_ids):
+            raise ValueError("int8 top-five observations cannot contain duplicate record ids")
+        return self
+
+
+class Rung2TopFiveLossRow(BaseModel):
+    """One validated membership-loss comparison between two top-five lists."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    query: str = Field(min_length=1, max_length=160)
+    float32_record_ids: tuple[_RecordId, ...] = Field(max_length=5)
+    int8_record_ids: tuple[_RecordId, ...] = Field(max_length=5)
+    lost_record_ids: tuple[_RecordId, ...]
+    lost_count: int = Field(ge=0, le=5)
+
+    @model_validator(mode="after")
+    def _enforce_loss_arithmetic(self) -> Rung2TopFiveLossRow:
+        """Require the reported loss to be derived from the two rankings."""
+        if len(set(self.float32_record_ids)) != len(self.float32_record_ids):
+            raise ValueError("float32 top-five loss rows cannot contain duplicate record ids")
+        if len(set(self.int8_record_ids)) != len(self.int8_record_ids):
+            raise ValueError("int8 top-five loss rows cannot contain duplicate record ids")
+        expected = tuple(record_id for record_id in self.float32_record_ids if record_id not in self.int8_record_ids)
+        if self.lost_record_ids != expected:
+            raise ValueError("top-five lost record ids do not match the float32/int8 rankings")
+        if self.lost_count != len(self.lost_record_ids):
+            raise ValueError("top-five lost count does not match the lost record ids")
+        return self
+
+
+class Rung2TopFiveLossEvidence(BaseModel):
+    """Aggregate membership-loss evidence without adjudicating acceptance."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    query_set_version: int = Field(ge=1)
+    case_count: int = Field(gt=0)
+    query_count_with_loss: int = Field(ge=0)
+    total_lost_record_count: int = Field(ge=0)
+    query_loss_rate: float = Field(ge=0.0, le=1.0)
+    rows: tuple[Rung2TopFiveLossRow, ...] = Field(min_length=1)
+
+    @field_validator("query_loss_rate")
+    @classmethod
+    def _require_finite_loss_rate(cls, value: float) -> float:
+        """Reject a loss rate that cannot be measured deterministically."""
+        if not math.isfinite(value):
+            raise ValueError("top-five loss rate must be finite")
+        return value
+
+    @model_validator(mode="after")
+    def _enforce_loss_invariants(self) -> Rung2TopFiveLossEvidence:
+        """Keep aggregate loss counts bound to the emitted rows."""
+        if self.case_count != len(self.rows):
+            raise ValueError("top-five loss case count does not match its rows")
+        expected_query_count = sum(row.lost_count > 0 for row in self.rows)
+        expected_total = sum(row.lost_count for row in self.rows)
+        if self.query_count_with_loss != expected_query_count:
+            raise ValueError("top-five loss query count does not match its rows")
+        if self.total_lost_record_count != expected_total:
+            raise ValueError("top-five loss record count does not match its rows")
+        expected_rate = expected_query_count / self.case_count
+        if self.query_loss_rate != expected_rate:
+            raise ValueError("top-five loss rate does not match its rows")
+        return self
 
 
 class Rung2CompositionEntry(BaseModel):
@@ -229,7 +340,7 @@ class Rung2EvaluationRow(BaseModel):
 
 
 class Rung2Evaluation(BaseModel):
-    """Held-out semantic measurement, without adjudication or acceptance."""
+    """Held-out semantic or composed-ladder measurement without acceptance."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -542,6 +653,151 @@ def evaluate_rung2_held_out(
     )
 
 
+def evaluate_rung2_ladder(
+    bundle: Rung2SearchBundle,
+    query_set: object,
+    lexical_observations: object,
+    policy: Rung2EvaluationPolicy,
+) -> Rung2Evaluation:
+    """Measure held-out recall over supplied lexical and semantic candidates.
+
+    The lexical observations are independently captured by the caller.  This
+    function only runs the already validated semantic tier, composes the two
+    supplied candidate sources, and evaluates the browser's explicit
+    top-five limit.  It performs no Pagefind access, artifact I/O, or release
+    adjudication.
+    """
+
+    _require_inputs(bundle, policy)
+    if not isinstance(query_set, HeldOutQuerySet):
+        raise Rung2EvaluationError("query_set must be a validated HeldOutQuerySet")
+    if not isinstance(lexical_observations, tuple):
+        raise Rung2EvaluationError(
+            "lexical_observations must be a tuple of validated Rung2LadderObservation values",
+        )
+    observation_values = cast(tuple[object, ...], lexical_observations)
+    if any(not isinstance(observation, Rung2LadderObservation) for observation in observation_values):
+        raise Rung2EvaluationError(
+            "lexical_observations must be a tuple of validated Rung2LadderObservation values",
+        )
+    validated_observations = cast(tuple[Rung2LadderObservation, ...], observation_values)
+    expected_queries = tuple(case.query for case in query_set.cases)
+    observed_queries = tuple(observation.query for observation in validated_observations)
+    if len(set(expected_queries)) != len(expected_queries):
+        raise Rung2EvaluationError("held-out query set contains duplicate queries")
+    if len(set(observed_queries)) != len(observed_queries):
+        raise Rung2EvaluationError("lexical observations contain duplicate queries")
+    if observed_queries != expected_queries:
+        raise Rung2EvaluationError(
+            "lexical observations must contain exactly one query in held-out corpus order",
+        )
+
+    rows: list[Rung2EvaluationRow] = []
+    for case, observation in zip(query_set.cases, validated_observations, strict=True):
+        semantic_result = rung2_semantic_candidates(bundle, case.query, policy)
+        composition = compose_rung2_candidates(observation.lexical_candidates, semantic_result)
+        candidate_ids = tuple(entry.record_id for entry in composition.entries[: policy.result_limit])
+        matched = next((record_id for record_id in case.expected_record_ids if record_id in candidate_ids), None)
+        if matched is not None:
+            reason = Rung2EvaluationReason.HIT
+        elif candidate_ids:
+            reason = Rung2EvaluationReason.TARGET_MISMATCH
+        elif semantic_result.status is Rung2CandidateStatus.CANDIDATES:
+            reason = Rung2EvaluationReason.NO_COMPOSED_CANDIDATE
+        else:
+            reason = Rung2EvaluationReason(semantic_result.status.value)
+        rows.append(
+            Rung2EvaluationRow(
+                query=case.query,
+                concept_id=case.concept_id,
+                expected_record_ids=case.expected_record_ids,
+                candidate_record_ids=candidate_ids,
+                query_token_count=len(semantic_result.query_tokens),
+                covered_token_count=semantic_result.covered_token_count,
+                hit=matched is not None,
+                reason=reason,
+                matched_record_id=matched,
+            ),
+        )
+
+    hits = sum(1 for row in rows if row.hit)
+    misses = len(rows) - hits
+    return Rung2Evaluation(
+        query_set_version=query_set.version,
+        policy=policy,
+        case_count=len(rows),
+        hit_count=hits,
+        miss_count=misses,
+        held_out_miss_rate=misses / len(rows),
+        rows=tuple(rows),
+    )
+
+
+def compare_rung2_top_five(
+    query_set: object,
+    observations: object,
+) -> Rung2TopFiveLossEvidence:
+    """Compare independently captured float32 and int8 top-five membership.
+
+    The caller remains responsible for producing the two rankings from the
+    accepted full-precision and quantized configurations.  This pure seam
+    only validates their held-out alignment and reports membership loss; it
+    performs no model loading, vector scoring, artifact I/O, or acceptance
+    adjudication.
+    """
+
+    if not isinstance(query_set, HeldOutQuerySet):
+        raise Rung2EvaluationError("query_set must be a validated HeldOutQuerySet")
+    if not isinstance(observations, tuple):
+        raise Rung2EvaluationError(
+            "observations must be a tuple of validated Rung2TopFiveObservation values",
+        )
+    observation_values = cast(tuple[object, ...], observations)
+    if any(not isinstance(observation, Rung2TopFiveObservation) for observation in observation_values):
+        raise Rung2EvaluationError(
+            "observations must be a tuple of validated Rung2TopFiveObservation values",
+        )
+    validated_observations = cast(tuple[Rung2TopFiveObservation, ...], observation_values)
+    expected_queries = tuple(case.query for case in query_set.cases)
+    observed_queries = tuple(observation.query for observation in validated_observations)
+    if len(set(expected_queries)) != len(expected_queries):
+        raise Rung2EvaluationError("held-out query set contains duplicate queries")
+    if len(set(observed_queries)) != len(observed_queries):
+        raise Rung2EvaluationError("top-five observations contain duplicate queries")
+    if observed_queries != expected_queries:
+        raise Rung2EvaluationError(
+            "top-five observations must contain exactly one query in held-out corpus order",
+        )
+
+    rows = tuple(
+        Rung2TopFiveLossRow(
+            query=observation.query,
+            float32_record_ids=observation.float32_record_ids,
+            int8_record_ids=observation.int8_record_ids,
+            lost_record_ids=tuple(
+                record_id
+                for record_id in observation.float32_record_ids
+                if record_id not in observation.int8_record_ids
+            ),
+            lost_count=sum(
+                record_id not in observation.int8_record_ids
+                for record_id in observation.float32_record_ids
+            ),
+        )
+        for observation in validated_observations
+    )
+    query_count_with_loss = sum(row.lost_count > 0 for row in rows)
+    total_lost_record_count = sum(row.lost_count for row in rows)
+    return Rung2TopFiveLossEvidence(
+        query_set_version=query_set.version,
+        case_count=len(rows),
+        query_count_with_loss=query_count_with_loss,
+        total_lost_record_count=total_lost_record_count,
+        query_loss_rate=query_count_with_loss / len(rows),
+        rows=rows,
+    )
+
+
 def _composition_entry(
     candidate: Rung2LexicalObservation | Rung2SemanticCandidate,
 ) -> Rung2CompositionEntry:
@@ -578,8 +834,11 @@ def _compare_composition_entries(
     left_is_semantic = left.source == "semantic"
     right_is_semantic = right.source == "semantic"
     if left_is_semantic != right_is_semantic:
-        left_is_direct = left.is_lexical_card or left.direct_match_strength > 0
-        right_is_direct = right.is_lexical_card or right.direct_match_strength > 0
+        # A lexical-card observation identifies Pagefind pass origin, not
+        # identity. Description matches are still card-pass rows, so only the
+        # independently captured direct-match strength can precede semantic.
+        left_is_direct = left.direct_match_strength > 0
+        right_is_direct = right.direct_match_strength > 0
         if left_is_direct != right_is_direct:
             return -1 if left_is_direct else 1
         if left_is_direct and right_is_direct and left.direct_match_strength != right.direct_match_strength:
@@ -589,6 +848,11 @@ def _compare_composition_entries(
         return -1 if left.tier_rank > right.tier_rank else 1
     if left.direct_match_strength != right.direct_match_strength:
         return -1 if left.direct_match_strength > right.direct_match_strength else 1
+    if left_is_semantic != right_is_semantic:
+        # Preserve display-class bands, then use semantic cosine to resolve a
+        # same-band tie instead of letting a non-direct lexical row win by
+        # input order.
+        return -1 if left_is_semantic else 1
     if left_is_semantic and right_is_semantic:
         assert left.semantic_score is not None
         assert right.semantic_score is not None

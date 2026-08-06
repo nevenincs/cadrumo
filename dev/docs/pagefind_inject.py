@@ -143,7 +143,7 @@ def load_relevance_weights(repo_root: Path) -> dict[str, float]:
         return {}
     try:
         result = SweepResult.model_validate_json(path.read_text(encoding=_UTF_8))
-    except (OSError, ValidationError) as exc:
+    except (OSError, UnicodeDecodeError, ValidationError) as exc:
         logger.error("relevance file present but not a valid sweep result: %s (%s)", path, exc)
         raise SearchInjectionError(f"committed relevance file is invalid: {path}") from exc
     weights: dict[str, float] = {}
@@ -232,6 +232,10 @@ def materialise_search_records(repo_root: Path | None = None) -> SearchRecordPro
 
 def _require_complete_projection(materialised: _Materialised) -> None:
     """Reject an incomplete authoritative projection before Pagefind writes."""
+    if materialised.casillas == 0:
+        raise SearchInjectionError(
+            "cannot inject an incomplete search corpus because the casilla projection is empty"
+        )
     if materialised.cli_skipped_reason is not None:
         raise SearchInjectionError(
             "cannot inject an incomplete search corpus because the CLI projection "

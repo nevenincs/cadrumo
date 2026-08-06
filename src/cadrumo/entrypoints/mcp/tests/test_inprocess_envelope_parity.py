@@ -66,6 +66,15 @@ from .._transport import _run_inprocess_tool, _run_subprocess_tool
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _without_titles(schema: object) -> object:
+    """Mirror the descriptor builder's removal of pydantic auto-generated titles."""
+    if isinstance(schema, dict):
+        return {key: _without_titles(value) for key, value in schema.items() if key != "title"}
+    if isinstance(schema, list):
+        return [_without_titles(item) for item in schema]
+    return schema
+
+
 def _descriptor(command_key: str) -> McpToolDescriptor:
     return next(candidate for candidate in build_tool_descriptors() if candidate.command_key == command_key)
 
@@ -429,7 +438,12 @@ def test_response_schema_embeds_the_cli_registered_result_model_for_every_verb()
         grounded += 1
         expected_result = thin_output_schema(key, schema.model_json_schema())
         expected_result.pop("$defs", None)
-        assert success_properties["result"] == expected_result
+        # The descriptor drops pydantic's auto-generated ``title`` keys, so the
+        # comparison strips them from the expectation too. Titles are a pure
+        # function of the key they sit under and nothing reads them; what this
+        # gate exists to pin is that the ADVERTISED result is the registered
+        # model's own shape, which title removal does not alter.
+        assert success_properties["result"] == _without_titles(expected_result)
     # Non-vacuous: a substantial share of verbs carry a real registered result
     # model, so the diff is not trivially the generic-object fallback everywhere.
     assert grounded >= 100

@@ -63,12 +63,19 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert isinstance(calculate_result, dict)
     result_branches = calculate_result["oneOf"]
     assert isinstance(result_branches, list) and len(result_branches) == 2
+    # Thinning declares the property bodies ONCE on the result and puts only the
+    # inline-versus-linked discriminator in the branches, so the shared shape is
+    # read here rather than from a branch.
+    shared_properties = calculate_result["properties"]
+    assert isinstance(shared_properties, dict)
+    assert "calculation_revision_id" in shared_properties
+    assert shared_properties["observations"] == {"type": "array", "maxItems": 0}
     inline_result = result_branches[0]
     assert isinstance(inline_result, dict)
-    inline_properties = inline_result["properties"]
-    assert isinstance(inline_properties, dict)
-    assert "calculation_revision_id" in inline_properties
-    assert inline_properties["observations"] == {"type": "array", "maxItems": 0}
+    # ``False`` as a property schema forbids the key: the inline shape bars the
+    # resource markers, the linked shape bars the array.
+    assert inline_result["properties"]["observations_resource"] is False
+    assert result_branches[1]["properties"]["observations"] is False
 
     remove = by_name["cadrumo_ledger_remove"]
     assert remove.annotations is not None

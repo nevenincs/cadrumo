@@ -575,9 +575,9 @@ def compile_static_embedding_matrix(
         "dimension": metadata.dimension,
         "quantization_algorithm": INT8_QUANTIZATION_ALGORITHM,
         "row_order": ROW_ORDER,
-        "token_inventory": [entry.model_dump(mode="json") for entry in inventory],
-        "rows": [row.model_dump(mode="json") for row in rows],
-        "query_token_rows": [row.model_dump(mode="json") for row in query_rows],
+        "token_inventory": tuple(entry.model_dump() for entry in inventory),
+        "rows": tuple(row.model_dump() for row in rows),
+        "query_token_rows": tuple(row.model_dump() for row in query_rows),
     }
     artifact_sha256 = sha256(canonical_json_bytes(core)).hexdigest()
     payload: dict[str, object] = {**core, "serialized_bytes": 0, "artifact_sha256": artifact_sha256}
@@ -715,4 +715,3 @@ def _fixed_point_serialized_size(payload: dict[str, object]) -> int:
             return size
         size = candidate
     raise MatrixCompilationError("serialized byte count did not converge")
-

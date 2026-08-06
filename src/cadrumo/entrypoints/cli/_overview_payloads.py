@@ -335,17 +335,25 @@ class OverviewCalendarPayload(OutputSchema):
 
 
 class OverviewCalendarProfilePayload(OutputSchema):
-    """One profile block in ``overview calendar --all-profiles`` mode.
+    """One profile's calendar SUMMARY in ``overview calendar --all-profiles`` mode.
 
-    The embedded :class:`OverviewCalendarPayload` is the full calendar result
-    for that profile. :class:`OverviewCalendarResult` then carries these blocks
-    under ``profiles``, keeping all-profile output typed instead of falling back
-    to a raw nested ``dict``.
+    Counts and the next obligation due, not the profile's whole calendar: the
+    survey answers which profile needs attention, and the detail is one
+    per-profile call away. The text surface still prints every row.
+
+    ``next_due_*`` is the earliest obligation closing at or after the queried
+    window's start, absent when the profile has none in range.
     """
 
     profile_id: str
     label: str
-    calendar: OverviewCalendarPayload
+    entry_count: int
+    event_count: int
+    warning_count: int
+    suppressed_entry_count: int
+    next_due_modelo: str | None = None
+    next_due_period: str | None = None
+    next_due_closes_on: str | None = None
 
 
 # ---------------------------------------------------------------------------

@@ -39,6 +39,7 @@ from __future__ import annotations
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
@@ -58,7 +59,7 @@ _GENERATED_RELPATH = Path("_generated") / "glossary.rst"
 #: The legal catalogue tree (id -> permalink) for grounding-link resolution.
 #: The leading segment is the CADRUMO package root; the trailing "aeat" is the
 #: authority taxonomy directory (cadrumo-product-authority-names).
-_LEGAL_CATALOGUE_RELPATH = Path("src") / "cadrumo" / "_data" / "registry" / "aeat" / "legal"
+LEGAL_CATALOGUE_RELPATH = Path("src") / "cadrumo" / "_data" / "registry" / "aeat" / "legal"
 
 
 @dataclass(frozen=True)
@@ -80,23 +81,26 @@ def _legal_permalinks(repo_root: Path) -> dict[str, str]:
     the catalogue keys verbatim, so the map resolves a concept's grounding to
     its published BOE permalink.
     """
-    catalogue = repo_root / _LEGAL_CATALOGUE_RELPATH
+    catalogue = repo_root / LEGAL_CATALOGUE_RELPATH
     permalinks: dict[str, str] = {}
     if not catalogue.is_dir():
         return permalinks
     for fragment in sorted(catalogue.glob("*.toml")):
         try:
-            data = tomllib.loads(fragment.read_text(encoding=_UTF_8))
+            data = cast(dict[str, object], tomllib.loads(fragment.read_text(encoding=_UTF_8)))
         except (OSError, tomllib.TOMLDecodeError):
             continue
         legal = data.get("legal")
         if not isinstance(legal, dict):
             continue
-        for ref_id, body in legal.items():
-            if isinstance(body, dict):
-                permalink = body.get("permalink")
-                if isinstance(permalink, str) and permalink:
-                    permalinks[str(ref_id)] = permalink
+        legal_tables = cast(dict[object, object], legal)
+        for ref_id, body in legal_tables.items():
+            if not isinstance(ref_id, str) or not isinstance(body, dict):
+                continue
+            table = cast(dict[str, object], body)
+            permalink = table.get("permalink")
+            if isinstance(permalink, str) and permalink:
+                permalinks[ref_id] = permalink
     return permalinks
 
 

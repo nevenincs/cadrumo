@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-06'
-body_hash: 'sha256:0e0cc47389e1bc395f0ffa360bd6b8d219051bf945cfbb5f00e38d1c4a9281dc'
+body_hash: 'sha256:2ff862a811001bafa7b9cae2120f744575124953589063f5aff2bb879e935cfa'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -85,6 +85,7 @@ Formal review follow-up is part of that queue: the P06.S22 Pagefind result contr
 - [ ] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
 - [ ] `P06.S27` - Defer a Diseño-specific locator/parser contract until an official revision-aware source locator is available while retaining fail-closed target resolution; `dev/docs/terminology/_resolution.py`.
 - [ ] `P06.S28` - Reconcile the Diseño source-resolution verification gate with the validated individual-locator contract before verification runs; `dev/docs/terminology/tests/test_resolution.py`.
+- [ ] `P06.S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input; `dev/docs/terminology/_sweep.py, dev/docs/terminology/tests/test_sweep.py, src/cadrumo/_data/terminology/relevance/`.
 
 ## Parallelization
 

@@ -17,6 +17,7 @@ from ...application.overview import (
     ModeloReadinessState,
     ObligationCoverageReport,
     OverviewCalendar,
+    OverviewCalendarEntry,
     OverviewCalendarEvent,
     OverviewCalendarRange,
     OverviewStatusReport,
@@ -245,12 +246,33 @@ def overview_calendar_profile_output(
         tagged = notice.model_copy(update={"context": {**(notice.context or {}), "profile": label}})
         notices.append(tagged)
         lines.append(f"post_filing_pending\t{label}\t{len(notice.context or {})}\t{notice.message}")
-    payload = {
+    payload: dict[str, object] = {
         "profile_id": bucket_id,
         "label": label,
-        "calendar": cal.model_dump(mode="json"),
+        "entry_count": len(cal.entries),
+        "event_count": len(cal.events),
+        "warning_count": len(cal.warnings),
+        "suppressed_entry_count": len(cal.suppressed_entries),
     }
+    next_due = _next_due_entry(cal)
+    if next_due is not None:
+        payload["next_due_modelo"] = next_due.modelo
+        payload["next_due_period"] = str(next_due.period)
+        payload["next_due_closes_on"] = next_due.adjusted_closes_on.isoformat()
     return payload, lines, notices
+
+
+def _next_due_entry(cal: OverviewCalendar) -> OverviewCalendarEntry | None:
+    """Return the earliest obligation closing at or after the window start.
+
+    The window start is the query's own as-of anchor, so this is "next due" for
+    the range the operator asked about rather than for the wall clock -- a
+    historical window reports the first obligation inside it, not none.
+    """
+    upcoming = [entry for entry in cal.entries if entry.adjusted_closes_on >= cal.range.from_date]
+    if not upcoming:
+        return None
+    return min(upcoming, key=lambda entry: entry.adjusted_closes_on)
 
 
 def overview_agenda_output(agenda) -> tuple[OverviewAgendaResult, list[str], list[Notice]]:

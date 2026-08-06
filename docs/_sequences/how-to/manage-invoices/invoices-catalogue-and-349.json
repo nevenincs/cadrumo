@@ -285,6 +285,7 @@
           "modality_reason": null,
           "observations": [
             {
+              "absent_by_design": false,
               "casilla_id": "decl.importe-operaciones",
               "formula_id": null,
               "legal_refs": [
@@ -303,6 +304,7 @@
               "value": "2000.00"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.importe-rectificaciones",
               "formula_id": null,
               "legal_refs": [
@@ -321,6 +323,7 @@
               "value": "0"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.numero-operadores",
               "formula_id": null,
               "legal_refs": [
@@ -339,6 +342,7 @@
               "value": "1"
             },
             {
+              "absent_by_design": false,
               "casilla_id": "decl.numero-rectificaciones",
               "formula_id": null,
               "legal_refs": [

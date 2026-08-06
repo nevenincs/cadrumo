@@ -125,8 +125,8 @@ def test_m130_casilla_15_rag_section_resolves_to_one_canonical_target(
     result = resolver.resolve(
         ChunkHit(
             path=_M130_CASILLA_15_SOURCE,
-            line_start=221,
-            line_end=230,
+            line_start=207,
+            line_end=219,
             score=0.97,
         )
     )

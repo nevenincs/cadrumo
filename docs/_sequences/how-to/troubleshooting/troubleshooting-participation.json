@@ -18,6 +18,7 @@
         "result": {
           "participation_count": 0,
           "revision_count": 0,
+          "stale_removed_count": 0,
           "transaction_count": 0
         },
         "schema_version": "2",

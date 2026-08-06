@@ -4,16 +4,19 @@ The resolution map wrangles raw RAG sweep hits (path + line range + score) into
 typed, linkable targets across the five grounding surfaces -- modelo casillas,
 the CLI surface, generated legal-reference pages, the codebase API reference,
 and built docs pages -- and DROPS+REPORTS any hit it cannot resolve (never
-shipped half-mapped). These gates drive real ``src/cadrumo/_data`` paths and
-the real registry/legal authority through the resolver, so each rule is
-exercised against the actual on-disk surfaces, not mocks.
+shipped half-mapped). These gates drive real ``src/cadrumo/_data`` paths, the
+Pagefind record projection, and the real registry/legal authority through the
+resolver, so each rule is exercised against the actual on-disk surfaces, not
+mocks.
 
-No dependency on the live CLI tree walk (transiently peer-broken): the CLI
-grounding surface is reached via the generated ``docs/cli/*.rst`` reference
-page, and the casilla namespace via the (fast, ~1s) registry projection.
+The CLI grounding surface is reached via the generated ``docs/cli/*.rst``
+reference page and the exact Pagefind projection; the casilla namespace is
+reached via the (fast, ~1s) registry projection.
 """
 
 from __future__ import annotations
+
+from pathlib import Path
 
 import pytest
 
@@ -51,13 +54,16 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
     path = (
-        "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-civa.repercutido.general__c22.toml"
+        "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/civa.repercutido.general__c22.toml"
     )
-    out = resolver.resolve(_hit(path))
+    # The first declaration occupies lines 1–13; stopping before the next
+    # header keeps the source evidence unambiguous for this individual casilla.
+    out = resolver.resolve(_hit(path, line_end=13))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CASILLA
     assert out.record.metadata.modelo == "303"
-    assert "303" in out.record.target
+    assert out.record.metadata.casilla_id == "iva.repercutido.general"
+    assert out.record.target == "_generated/casillas/303.html#casilla-iva-repercutido-general"
 
 
 def test_model_only_diseno_source_is_dropped_without_casilla_locator(
@@ -83,16 +89,27 @@ def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: Targ
     resolves it to the legal id carrying the generated page/anchor target and
     BOE permalink provenance.
     """
+    from dev.docs.legal_reference import legal_reference_target
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
     from dev.docs.terminology._search_record import SearchRecordKind
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
+    catalogue = bundled_authority().catalogues.legal
+    legal_id = "ley-37-1992:art-104"
+    entry = catalogue[legal_id]
     path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
     assert out.record.kind is SearchRecordKind.LEGAL
-    assert out.record.target == "_generated/legal/ley-37-1992.html#legal-ley-37-1992-art-104"
+    assert out.record.target == legal_reference_target(
+        entry.document_id,
+        legal_id,
+        article=entry.article,
+        section=entry.section,
+        corpus_ref=entry.corpus_ref,
+        permalink=str(entry.permalink),
+    )
     assert out.record.metadata.legal_permalink.startswith("https://www.boe.es/")
     assert out.record.metadata.legal_refs == ("ley-37-1992:art-104",)
 
@@ -235,18 +252,220 @@ def test_package_init_resolves_to_the_package_stub(resolver: TargetResolver) -> 
     assert out.record.target == "api/cadrumo.domain.calculations.registry.html"
 
 
-def test_cli_reference_page_resolves_to_the_cli_surface(resolver: TargetResolver) -> None:
-    """A generated CLI-reference page resolves to the CLI grounding surface.
+def test_cli_navigation_page_is_dropped_without_an_emitted_record(
+    resolver: TargetResolver,
+) -> None:
+    """A navigation-only CLI family page is dropped without an emitted record.
 
-    Reaches the CLI surface WITHOUT the live CLI tree walk: the reference page
-    ``docs/cli/app.rst`` links to the built ``cli/app.html`` family page.
+    ``docs/cli/app.rst`` is a navigation page, not an individual Pagefind CLI
+    record target. The resolver therefore fails closed instead of fabricating
+    ``cli/app.html``; valid CLI grounding comes from emitted command/option
+    records with exact page-and-anchor targets.
     """
-    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
 
     out = resolver.resolve(_hit("docs/cli/app.rst"))
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
+    assert "no authoritative CLI search record was emitted" in out.detail
+    assert "'cli/app.html'" in out.detail
+
+
+def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
+    resolver: TargetResolver,
+) -> None:
+    """A real emitted CLI option record resolves through its source page.
+
+    The Pagefind projection is the authoritative CLI record set. Select an
+    actual option record from that projection, derive its generated source
+    page through the CLI reference router, and feed that on-disk page to the
+    resolver as a real ``ChunkHit``. The resolver must preserve the emitted
+    record's exact page-and-anchor target and classify it as CLI; it must not
+    widen the hit to a family landing page or invent a record.
+    """
+    from dev.docs.cli_reference import cli_reference_page_for_command
+    from dev.docs.pagefind_inject import materialise_search_records
+    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from dev.docs.terminology._search_record import SearchRecordKind
+
+    projection = materialise_search_records()
+    assert projection.cli_skipped_reason is None
+    emitted = next(
+        (
+            record
+            for record in projection.records
+            if record.kind is SearchRecordKind.CLI
+            and record.metadata.command_path
+            and record.metadata.option_names
+            and "#" in record.target
+        ),
+        None,
+    )
+    assert emitted is not None, "the live CLI projection must emit an option with a page anchor"
+
+    command_path = tuple(emitted.metadata.command_path.split(" "))
+    page_stem = cli_reference_page_for_command(command_path)
+    source_path = Path("docs") / f"{page_stem}.rst"
+    assert source_path.is_file(), f"CLI reference source is missing: {source_path}"
+
+    source_lines = source_path.read_text(encoding="utf-8").splitlines()
+    command_locator_line = next(
+        line_number
+        for line_number, line in enumerate(source_lines, start=1)
+        if line == f"**Command path:** ``{emitted.metadata.command_path}``"
+    )
+    next_command_locator_line = next(
+        (
+            line_number
+            for line_number, line in enumerate(source_lines, start=1)
+            if line_number > command_locator_line and line.startswith("**Command path:** ``")
+        ),
+        len(source_lines) + 1,
+    )
+    option_line = next(
+        line_number
+        for line_number, line in enumerate(source_lines, start=1)
+        if command_locator_line < line_number < next_command_locator_line
+        and line.strip() == ", ".join(f"``{name}``" for name in emitted.metadata.option_names)
+    )
+    out = resolver.resolve(
+        _hit(source_path.as_posix(), line_start=option_line, line_end=option_line + 1),
+    )
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.CLI
-    assert out.record.target == "cli/app.html"
+    assert out.record.kind is SearchRecordKind.CLI
+    assert out.record.target == emitted.target
+    assert out.record.metadata.command_path == emitted.metadata.command_path
+    assert out.record.metadata.option_names == emitted.metadata.option_names
+
+
+def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
+    resolver: TargetResolver,
+) -> None:
+    """A real emitted nested command record resolves from its command locator."""
+    from dev.docs.cli_reference import cli_reference_page_for_command
+    from dev.docs.pagefind_inject import materialise_search_records
+    from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from dev.docs.terminology._search_record import SearchRecordKind
+
+    projection = materialise_search_records()
+    assert projection.cli_skipped_reason is None
+    emitted = next(
+        (
+            record
+            for record in projection.records
+            if record.kind is SearchRecordKind.CLI
+            and record.metadata.command_path
+            and len(record.metadata.command_path.split()) >= 4
+            and not record.metadata.option_names
+            and "#" in record.target
+        ),
+        None,
+    )
+    assert emitted is not None, "the live CLI projection must emit an anchored nested command"
+
+    command_path = tuple(emitted.metadata.command_path.split())
+    page_stem = cli_reference_page_for_command(command_path)
+    source_path = Path("docs") / f"{page_stem}.rst"
+    assert source_path.is_file(), f"CLI reference source is missing: {source_path}"
+    source_lines = source_path.read_text(encoding="utf-8").splitlines()
+    command_locator_line = next(
+        line_number
+        for line_number, line in enumerate(source_lines, start=1)
+        if line == f"**Command path:** ``{emitted.metadata.command_path}``"
+    )
+
+    out = resolver.resolve(
+        _hit(source_path.as_posix(), line_start=command_locator_line, line_end=command_locator_line),
+    )
+    assert isinstance(out, ResolvedTarget)
+    assert out.surface is GroundingSurface.CLI
+    assert out.record.kind is SearchRecordKind.CLI
+    assert out.record.target == emitted.target
+    assert out.record.metadata.command_path == emitted.metadata.command_path
+    assert out.record.metadata.option_names == emitted.metadata.option_names
+
+
+def test_cli_output_schema_prose_is_dropped_without_a_parameter_locator(
+    resolver: TargetResolver,
+) -> None:
+    """Output-schema prose is not a parameter source locator."""
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
+
+    source_path = Path("docs/cli/app/diagnostics.rst")
+    source_lines = source_path.read_text(encoding="utf-8").splitlines()
+    output_schema_line = next(
+        line_number
+        for line_number, line in enumerate(source_lines, start=1)
+        if line.startswith("This command emits a ``SchemaEnvelope``")
+    )
+
+    out = resolver.resolve(
+        _hit(
+            source_path.as_posix(),
+            line_start=output_schema_line,
+            line_end=output_schema_line,
+        ),
+    )
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
+    assert "identify no CLI command or option locator" in out.detail
+
+
+def test_cli_source_range_past_file_end_is_dropped(resolver: TargetResolver) -> None:
+    """A CLI locator range beyond the real source file cannot resolve."""
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
+
+    source_path = Path("docs/cli/config.rst")
+    source_line_count = len(source_path.read_text(encoding="utf-8").splitlines())
+    assert source_line_count >= 172
+
+    out = resolver.resolve(
+        _hit(source_path.as_posix(), line_start=172, line_end=9999),
+    )
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
+    assert f"source length of {source_line_count} lines" in out.detail
+
+
+def test_ambiguous_cli_source_range_is_dropped(resolver: TargetResolver) -> None:
+    """A range spanning two generated parameters cannot pick one CLI record."""
+    from dev.docs.terminology._resolution import DroppedHit, DropReason
+
+    source_path = Path("docs/cli/app/diagnostics.rst")
+    source_lines = source_path.read_text(encoding="utf-8").splitlines()
+    command_locator_line = next(
+        line_number
+        for line_number, line in enumerate(source_lines, start=1)
+        if line == "**Command path:** ``aeat app diagnostics errors``"
+    )
+    next_command_locator_line = next(
+        (
+            line_number
+            for line_number, line in enumerate(source_lines, start=1)
+            if line_number > command_locator_line and line.startswith("**Command path:** ``")
+        ),
+        len(source_lines) + 1,
+    )
+    parameter_lines = [
+        line_number
+        for line_number, line in enumerate(source_lines, start=1)
+        if command_locator_line < line_number < next_command_locator_line
+        and line.strip().startswith("``")
+        and line.strip().endswith("``")
+    ]
+    assert len(parameter_lines) >= 2
+
+    out = resolver.resolve(
+        _hit(
+            source_path.as_posix(),
+            line_start=parameter_lines[0],
+            line_end=parameter_lines[1],
+        ),
+    )
+    assert isinstance(out, DroppedHit)
+    assert out.reason is DropReason.NO_TARGET_ENTITY
+    assert "multiple CLI source locators" in out.detail
 
 
 def test_docs_page_resolves_to_its_built_page(resolver: TargetResolver) -> None:

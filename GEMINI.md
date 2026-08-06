@@ -489,19 +489,27 @@ different modules.
 
 ## Why
 
-The wizard prompter proved the cost. `application/wizard/_prompter.py` is the
-canonical authority and its own module docstring states that exactly TWO
-implementations ship (`CanonicalAnswerPrompter`, `QuestionaryPrompter`). The CLI
-nevertheless carried a THIRD, undocumented hand-copy (`_QuestionaryTextPrompter`
-plus a shadowing `_TextAnswerPrompter` Protocol) that had silently drifted: it
-dropped the injectable-IO contract (making the wizard headlessly untestable),
-caught only `except OSError` while `NoConsoleScreenBufferError` is NOT an
-`OSError` subclass (so Windows operators met a raw traceback instead of the
-translated refusal), and carried a docstring FALSELY claiming parity with the
-canonical detection. That duplication was found BY ACCIDENT while chasing an
-unrelated test failure, after hours of work — and a single `vaultspec-rag`
-query returns the canonical prompter's own "two implementations ship" docstring
-in seconds.
+The wizard prompter proved the cost. The since-retired
+`application/wizard/_prompter.py` was the canonical authority, and its own module
+docstring stated that exactly TWO implementations shipped
+(`CanonicalAnswerPrompter`, `QuestionaryPrompter`). The CLI nevertheless carried
+a THIRD, undocumented hand-copy (`_QuestionaryTextPrompter` plus a shadowing
+`_TextAnswerPrompter` Protocol) that had silently drifted: it dropped the
+injectable-IO contract (making the wizard headlessly untestable), caught only
+`except OSError` while `NoConsoleScreenBufferError` is NOT an `OSError` subclass
+(so Windows operators met a raw traceback instead of the translated refusal), and
+carried a docstring FALSELY claiming parity with the canonical detection. That
+duplication was found BY ACCIDENT while chasing an unrelated test failure, after
+hours of work — and a single `vaultspec-rag` query returns the canonical
+prompter's own "two implementations ship" docstring in seconds.
+
+The one-shot prompter was retired and the flow substrate
+(`application/flows/_line_frontend.py` for line-mode prompting,
+`_capability.py` for the single console-capability probe) is now the sole prompt
+authority. The episode is preserved as an enforced gate rather than as prose:
+`src/cadrumo/tests/test_wizard_prompter_singularity.py` carries this same worked
+example and fails the build if a second prompt surface appears. Read it for the
+detail; what follows is why the search comes first regardless.
 
 The same session found the duplication measurement itself false-green (a
 duplication report that built a SECOND jscpd command — the instrument had
@@ -729,7 +737,7 @@ Cover the eight standard axes. Dispatch one agent per axis: calculation-engine g
 
 Run the seventh axis — semantic functionality-cluster overlap and canonical-definition enrollment — as a parallel multi-agent discovery pass. This axis discovers, by meaning rather than by symbol, every site that implements a given functional concept; classifies the set as a true duplication cluster or a constraint-shape-divergent set; and confirms that consumers import the canonical implementation rather than re-deriving it. Where no canonical home exists but two or more substitutable sites do, it nominates one. Dispatch multiple agents searching by functional concept, then verify exact sites with `rg`; pair every sweep with a targeted `rg` pass for known canonical symbols so a single-site authority is not misread as having no cluster. Apply the substitutability pre-filter below — it is mandatory for this axis.
 
-Run the eighth axis — runtime import-graph coupling — through a grimp pass over the executed import graph, not the static import-time graph the layered-contract linter audits. The layered contracts read the import-TIME graph while the runtime graph is materially denser, because the codebase defers hundreds of function-local imports to break module-load cycles and soften layer edges; a cycle "fixed" by deferring an import is hidden from the static linter, not removed. Build the runtime graph with grimp (`grimp.build_graph("cadrumo", include_external_packages=False)`), then diff its cross-layer and cycle edges against the static picture: a cross-layer edge or module cycle present in the grimp graph but absent from the import-linter graph is a hidden coupling to report. Ground the read against the D7 lazy-import policy gate (`src/cadrumo/tests/test_lazy_import_policy.py`): that gate's allowlist is the declared inventory of unsanctioned function-local first-party edges, so a grimp-discovered runtime edge with no allowlist entry — or a new module cycle the allowlist does not explain — is the actionable finding this axis exists to surface. This axis is breadth-oriented; run it on haiku alongside the other inventory axes.
+Run the eighth axis — runtime import-graph coupling — through a grimp pass over the executed import graph, not the static import-time graph the layered-contract linter audits. The layered contracts read the import-TIME graph while the runtime graph is materially denser, because the codebase defers hundreds of function-local imports to break module-load cycles and soften layer edges; a cycle "fixed" by deferring an import is hidden from the static linter, not removed. Build the runtime graph with grimp (`grimp.build_graph("cadrumo", include_external_packages=False)`), then diff its cross-layer and cycle edges against the static picture: a cross-layer edge or module cycle present in the grimp graph but absent from the import-linter graph is a hidden coupling to report. This axis once ground its read against a D7 lazy-import policy gate whose allowlist was the declared inventory of unsanctioned function-local first-party edges, so a runtime edge with no allowlist entry was the actionable finding. That gate was deleted and NO equivalent inventory replaced it, so there is currently nothing to diff against: the axis must report a runtime-only edge on the grimp-versus-import-linter difference alone, and must state that the finding is unclassified rather than implying an allowlist cleared the rest. Re-establishing such an inventory would restore the sharper read, and until one exists an agent that claims to have checked against one has checked against nothing. This axis is breadth-oriented; run it on haiku alongside the other inventory axes.
 
 Match the model to the axis. Use sonnet for the four axes that need deeper structural analysis: calculation engine, cross-domain handoffs, selector / binding drift, semantic functionality-cluster overlap. Use haiku for the four breadth-oriented axes: persistence identity inventory, export/import fidelity, workflow + CLI surface, runtime import-graph coupling. The cost / latency profile rewards model selection that matches the cognitive shape of each axis.
 
@@ -2874,8 +2882,8 @@ impossible (defence in depth per `composition-service-no-parallel-write-path`).
 - Good: a same-modelo direct carry keeps `source = "previous_filing"` and passes
   `_is_direct_previous_filing_binding`; the M303
   `modelo-303-compensacion-pendiente-anteriores` slot is the named carve-out
-  (`IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS`,
-  `_validate_relation_sources.py`) — owned pre-mesh by the iva-wallet gate.
+  (`IVA_WALLET_OWNED_RELATION_TARGETS`,
+  `_iva_wallet_relation_targets.py`) — owned pre-mesh by the iva-wallet gate.
 - Bad: a relation `target_binding` slot declaring `source = "previous_filing"`
   with a non-direct selector — the registry gate now refuses it instead of letting
   the enrolled resolver silently skip it.

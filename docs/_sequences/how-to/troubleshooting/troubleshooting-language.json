@@ -19,11 +19,21 @@
         "notices": [],
         "result": {
           "binding_count": 28,
+          "bound_casilla_count": 26,
           "cadence": "quarterly",
           "casilla_count": 126,
           "code": "303",
+          "computed_casilla_count": 25,
+          "filing_period": null,
           "filing_year": null,
           "formula_count": 25,
+          "jurisdiction": "ES-AEAT",
+          "legal_refs": [
+            "rd-1624-1992:art-71",
+            "orden-eha-3786-2008:art-1",
+            "orden-eha-3786-2008:art-7"
+          ],
+          "manual_casilla_count": 73,
           "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
           "operation": "modelo.describe",
           "period": null,
@@ -50,8 +60,19 @@
             "2009-y-siguientes",
             "2023-y-siguientes"
           ],
+          "source_refs": [
+            "aeat-dr-303-2023",
+            "aeat-dr-303-2024-early",
+            "aeat-dr-303-2024-late",
+            "aeat-dr-303-2025",
+            "aeat-dr-303-2026",
+            "aeat-modelo-303-procedure",
+            "boe-modelo-303-2008-form"
+          ],
           "tax_domain": "iva",
-          "title": "IVA. Autoliquidación (trimestral)"
+          "title": "IVA. Autoliquidación (trimestral)",
+          "valid_from": "2023-01-01",
+          "valid_to": null
         },
         "schema_version": "2",
         "status": "success"

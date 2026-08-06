@@ -160,7 +160,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Bucket\t<profile-id>\nID\t1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570\nEvent count\t2\n2026-04-01T09:00:00+00:00\tledger.transaction.created\t808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388\n2026-04-01T09:00:00+00:00\tledger.transaction.split\t0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f\n"
+      "text": "Bucket\t<profile-id>\nID\t1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570\nEvent count\t2\n2026-04-01T09:00:00+00:00\tledger.transaction.split\t0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f\n2026-04-01T09:00:00+00:00\tledger.transaction.created\t808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388\n"
     },
     {
       "argv": [
@@ -185,22 +185,6 @@
             {
               "actor": "<profile-id>",
               "bucket_id": "<bucket-id>",
-              "event_id": "808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388",
-              "event_type": "ledger.transaction.created",
-              "object_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
-              "object_type": "ledger_transaction",
-              "occurred_at": "2026-04-01T09:00:00Z",
-              "payload": {
-                "amount": "121.00",
-                "currency": "EUR",
-                "direction": "OUTGOING",
-                "source_command": "aeat app ledger add"
-              },
-              "payload_version": 1
-            },
-            {
-              "actor": "<profile-id>",
-              "bucket_id": "<bucket-id>",
               "event_id": "0dd721341b0758df0aa4baaab3e24ad7dd79c3a2f90f5f2fc17856dfe491a21f",
               "event_type": "ledger.transaction.split",
               "object_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
@@ -212,6 +196,22 @@
                 "reason": "mixed receipt",
                 "source_command": "aeat app ledger split",
                 "split_group_id": "4d2d96d6579ac45716e2561a4bc5e7c73876e0a76843db90f5045ebc6dc7a026"
+              },
+              "payload_version": 1
+            },
+            {
+              "actor": "<profile-id>",
+              "bucket_id": "<bucket-id>",
+              "event_id": "808c7c37fdc6678905928147c14d45cb7e28450f8c87c917c27a3b61f6406388",
+              "event_type": "ledger.transaction.created",
+              "object_id": "1fa07beedceb057f55a3aab56aa756e9dab983c332573ee6bdb1e77bb0e16570",
+              "object_type": "ledger_transaction",
+              "occurred_at": "2026-04-01T09:00:00Z",
+              "payload": {
+                "amount": "121.00",
+                "currency": "EUR",
+                "direction": "OUTGOING",
+                "source_command": "aeat app ledger add"
               },
               "payload_version": 1
             }

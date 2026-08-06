@@ -25,24 +25,39 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
+from dev.docs.pagefind_inject import materialise_search_records
 from dev.docs.terminology._resolution import (
     ChunkHit,
     GroundingSurface,
+    ResolutionResult,
     TargetResolver,
     resolve_chunk_hits,
 )
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import (
     RagSearchClient,
+    SweepQuery,
     SweepResult,
     TermRelevanceMapping,
+    _mapping_from,
+    _match_structured_casilla_query,
     enumerate_query_vocabulary,
     run_sweep,
 )
+from dev.docs.terminology._unified_record import SearchRecord
+from dev.docs.terminology._wrangle import wrangle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 _FIXTURES = Path(__file__).parent / "fixtures"
+
+
+@pytest.fixture(scope="module")
+def _authoritative_search_records() -> tuple[SearchRecord, ...]:
+    """Use the bundled Pagefind/Rung-2 record projection as test authority."""
+    projection = materialise_search_records()
+    assert projection.casillas > 0
+    return projection.records
 
 
 class _RecordedClient:
@@ -254,6 +269,112 @@ def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
         assert [t.record_id for t in mapping.targets] == ["concept:prorrata"]
         assert mapping.targets[0].surface == "concept"
         assert mapping.targets[0].target == "_generated/glossary.html#term-prorrata"
+
+
+def test_structured_casilla_matching_is_canonical_then_unique_display_metadata(
+    _authoritative_search_records: tuple[SearchRecord, ...],
+) -> None:
+    """The production matcher accepts exact addresses and refuses ambiguity."""
+    canonical = _match_structured_casilla_query(
+        "form 00200 field dp200014:00562",
+        _authoritative_search_records,
+    )
+    assert canonical is not None
+    assert canonical.metadata.modelo == "200"
+    assert canonical.metadata.casilla_id == "DP200014:00562"
+
+    fallback = _match_structured_casilla_query(
+        "model 036 box 0110",
+        _authoritative_search_records,
+    )
+    assert fallback is not None
+    assert fallback.metadata.modelo == "036"
+    assert fallback.metadata.number == "110"
+    assert fallback.metadata.segmento is None
+
+    # Modelo 200 reuses this display number across segments, so a bare number
+    # is not an address. A non-existent number is the zero-match refusal.
+    assert _match_structured_casilla_query("modelo 200 box 00562", _authoritative_search_records) is None
+    assert _match_structured_casilla_query("modelo 303 casilla does-not-exist", _authoritative_search_records) is None
+
+
+def test_structured_casilla_target_is_added_once_at_mapping_boundary(
+    _authoritative_search_records: tuple[SearchRecord, ...],
+) -> None:
+    """An exact projection record augments the mapping while concept seeding stays intact."""
+    resolver = TargetResolver()
+    query = SweepQuery(
+        query="FORM 00200 FIELD DP200014:00562",
+        concept_id="casilla",
+        language=OutputLanguage.EN,
+    )
+    mapping = _mapping_from(
+        query,
+        wrangle(ResolutionResult(resolved=())),
+        resolver=resolver,
+        search_records=_authoritative_search_records,
+    )
+
+    casilla_targets = [target for target in mapping.targets if target.kind is SearchRecordKind.CASILLA]
+    assert len(casilla_targets) == 1
+    assert mapping.targets[0].record_id == "concept:casilla"
+    assert casilla_targets[0].target == "_generated/casillas/200.html#casilla-dp200014-00562"
+    assert [target.record_id for target in mapping.targets].count(casilla_targets[0].record_id) == 1
+
+
+def test_unmanifested_resolved_code_target_is_not_shipped(
+    _authoritative_search_records: tuple[SearchRecord, ...],
+) -> None:
+    """The projection gate drops resolver-only ``code:*`` PAGE records."""
+    resolver = TargetResolver()
+    resolution = resolve_chunk_hits(
+        (ChunkHit(path="src/cadrumo/core/_casilla_id.py", line_start=1, line_end=1, score=1.0),),
+        resolver=resolver,
+    )
+    assert len(resolution.resolved) == 1
+    code_record = resolution.resolved[0].record
+    emitted_ids = {record.id for record in _authoritative_search_records}
+    assert code_record.id.startswith("code:")
+    assert code_record.id not in emitted_ids
+
+    mapping = _mapping_from(
+        SweepQuery(query="casilla", concept_id="casilla", language=OutputLanguage.ES),
+        wrangle(resolution),
+        resolver=resolver,
+        search_records=_authoritative_search_records,
+    )
+
+    assert code_record.id not in {target.record_id for target in mapping.targets}
+    assert [target.record_id for target in mapping.targets] == ["concept:casilla"]
+
+
+def test_emitted_legal_and_concept_targets_survive_projection_gate(
+    _authoritative_search_records: tuple[SearchRecord, ...],
+) -> None:
+    """Manifest-emitted legal records and deterministic concept seeding remain shipped."""
+    query, hits = _load_recorded("sweep-regla-de-prorrata.json")
+    resolver = TargetResolver()
+    resolution = resolve_chunk_hits(hits, resolver=resolver)
+    legal_ids = {
+        target.record.id
+        for target in resolution.resolved
+        if target.surface is GroundingSurface.LEGAL
+    }
+    emitted_ids = {record.id for record in _authoritative_search_records}
+    assert legal_ids
+    assert legal_ids <= emitted_ids
+    assert "concept:prorrata" in emitted_ids
+
+    mapping = _mapping_from(
+        SweepQuery(query=query, concept_id="prorrata", language=OutputLanguage.ES),
+        wrangle(resolution, score_floor=0.5),
+        resolver=resolver,
+        search_records=_authoritative_search_records,
+    )
+    shipped_ids = {target.record_id for target in mapping.targets}
+
+    assert legal_ids & shipped_ids
+    assert "concept:prorrata" in shipped_ids
 
 
 # ---------------------------------------------------------------------------

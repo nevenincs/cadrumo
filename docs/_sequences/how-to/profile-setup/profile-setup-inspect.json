@@ -69,7 +69,10 @@
           "filing_year": 2026,
           "missing": [],
           "modelo": "303",
-          "period": "1T",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
           "profile_id": "<profile-id>",
           "ready": true,
           "revision_id": "2023-y-siguientes"

@@ -134,6 +134,344 @@
               "iva.regime"
             ]
           },
+          "coverage": {
+            "advised": [
+              {
+                "modelo": "038",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "111",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "115",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "117",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "121",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "122",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "123",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "126",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "140",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "143",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "156",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "165",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "179",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "180",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "181",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "182",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "185",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "186",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "187",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "188",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "189",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "190",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "193",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "194",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "210",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "216",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "220",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "222",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "231",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "232",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "233",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "234",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "238",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "270",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "280",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "289",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "296",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "308",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "309",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "322",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "341",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "345",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "347",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "349",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "353",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "360",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "361",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "369",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "379",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "380",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "490",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "576",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "592",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "604",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "720",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "721",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "763",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "848",
+                "reason": "applicability_undetermined"
+              }
+            ],
+            "confidently_excluded": [
+              "131",
+              "184",
+              "200",
+              "202"
+            ],
+            "out_of_scope": [
+              "030",
+              "035",
+              "036",
+              "043",
+              "145",
+              "149",
+              "150",
+              "151",
+              "159",
+              "170",
+              "171",
+              "172",
+              "173",
+              "192",
+              "196",
+              "198",
+              "218",
+              "221",
+              "235",
+              "236",
+              "240",
+              "241",
+              "242",
+              "290",
+              "291",
+              "294",
+              "295",
+              "362",
+              "363",
+              "368",
+              "430",
+              "480",
+              "510",
+              "511",
+              "517",
+              "518",
+              "519",
+              "520",
+              "521",
+              "522",
+              "524",
+              "548",
+              "553",
+              "554",
+              "555",
+              "556",
+              "557",
+              "558",
+              "559",
+              "560",
+              "561",
+              "562",
+              "563",
+              "566",
+              "568",
+              "570",
+              "573",
+              "580",
+              "581",
+              "582",
+              "583",
+              "584",
+              "585",
+              "586",
+              "587",
+              "588",
+              "589",
+              "590",
+              "591",
+              "593",
+              "595",
+              "596",
+              "714",
+              "718",
+              "795",
+              "796",
+              "797",
+              "798",
+              "840",
+              "993"
+            ],
+            "surfaced": [
+              "100",
+              "130",
+              "303",
+              "390"
+            ]
+          },
           "entries": [
             {
               "adjusted_closes_on": "2026-01-30",
@@ -169,7 +507,6 @@
               "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
               "recovery": {
-                "legal_ref": "ley-58-2003:art-27.2",
                 "next_command": "aeat app modelo work --help",
                 "recargo_band": {
                   "id": "completed_months_2",
@@ -220,7 +557,6 @@
               "payment_cutoff_on": null,
               "period": "2025 4T",
               "recovery": {
-                "legal_ref": "ley-58-2003:art-27.2",
                 "next_command": "aeat app modelo work --help",
                 "recargo_band": {
                   "id": "completed_months_2",
@@ -271,7 +607,6 @@
               "payment_cutoff_on": null,
               "period": "2025 0A",
               "recovery": {
-                "legal_ref": "ley-58-2003:art-27.2",
                 "next_command": "aeat app modelo work --help",
                 "recargo_band": {
                   "id": "completed_months_2",
@@ -756,559 +1091,24 @@
           }
         ],
         "result": {
+          "coverage": null,
           "entries": [],
           "events": [],
           "from_date": null,
           "profiles": [
             {
-              "calendar": {
-                "completeness": {
-                  "computable_modelos": [
-                    "100",
-                    "130",
-                    "303",
-                    "390"
-                  ],
-                  "defaulted_keys": [
-                    "art109_activity_income_withholding_ge_70pct",
-                    "does_intracomunitario",
-                    "has_employees",
-                    "irpf.estimation_regime",
-                    "pays_capital_income_with_retencion",
-                    "pays_professionals_with_retencion",
-                    "pays_rent_with_retencion",
-                    "third_party_transactions_above_347_threshold"
-                  ],
-                  "defaulted_modelos": [
-                    "130"
-                  ],
-                  "explicitly_set_keys": [
-                    "iva.regime"
-                  ]
-                },
-                "entries": [
-                  {
-                    "adjusted_closes_on": "2026-01-30",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-01-30",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2025,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "130",
-                      "period": "2025 4T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2025,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "130",
-                    "opens_on": "2026-01-01",
-                    "payment_cutoff_on": "2026-01-27",
-                    "period": "2025 4T",
-                    "recovery": {
-                      "legal_ref": "ley-58-2003:art-27.2",
-                      "next_command": "aeat app modelo work --help",
-                      "recargo_band": {
-                        "id": "completed_months_2",
-                        "interest_applies": false,
-                        "legal_ref": "ley-58-2003:art-27.2",
-                        "max_completed_months": 2,
-                        "min_completed_months": 2,
-                        "surcharge_pct": "3.00"
-                      },
-                      "still_filable": true
-                    },
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "OVERDUE",
-                    "user_state": "late"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-01-30",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-01-30",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2025,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "303",
-                      "period": "2025 4T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2025,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "303",
-                    "opens_on": "2026-01-01",
-                    "payment_cutoff_on": null,
-                    "period": "2025 4T",
-                    "recovery": {
-                      "legal_ref": "ley-58-2003:art-27.2",
-                      "next_command": "aeat app modelo work --help",
-                      "recargo_band": {
-                        "id": "completed_months_2",
-                        "interest_applies": false,
-                        "legal_ref": "ley-58-2003:art-27.2",
-                        "max_completed_months": 2,
-                        "min_completed_months": 2,
-                        "surcharge_pct": "3.00"
-                      },
-                      "still_filable": true
-                    },
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "OVERDUE",
-                    "user_state": "late"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-01-30",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-01-30",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2025,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "390",
-                      "period": "2025 0A",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2025,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "390",
-                    "opens_on": "2026-01-01",
-                    "payment_cutoff_on": null,
-                    "period": "2025 0A",
-                    "recovery": {
-                      "legal_ref": "ley-58-2003:art-27.2",
-                      "next_command": "aeat app modelo work --help",
-                      "recargo_band": {
-                        "id": "completed_months_2",
-                        "interest_applies": false,
-                        "legal_ref": "ley-58-2003:art-27.2",
-                        "max_completed_months": 2,
-                        "min_completed_months": 2,
-                        "surcharge_pct": "3.00"
-                      },
-                      "still_filable": true
-                    },
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "OVERDUE",
-                    "user_state": "late"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-04-20",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-04-20",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2026,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "130",
-                      "period": "2026 1T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2026,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "130",
-                    "opens_on": "2026-04-01",
-                    "payment_cutoff_on": "2026-04-15",
-                    "period": "2026 1T",
-                    "recovery": null,
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "UPCOMING",
-                    "user_state": "due"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-04-20",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-04-20",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2026,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "303",
-                      "period": "2026 1T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2026,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "303",
-                    "opens_on": "2026-04-01",
-                    "payment_cutoff_on": null,
-                    "period": "2026 1T",
-                    "recovery": null,
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "UPCOMING",
-                    "user_state": "due"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-06-30",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-06-30",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2025,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "100",
-                      "period": "2025 0A",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2025,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "100",
-                    "opens_on": "2026-04-08",
-                    "payment_cutoff_on": "2026-06-25",
-                    "period": "2025 0A",
-                    "recovery": null,
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "UPCOMING",
-                    "user_state": "due"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-07-20",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-07-20",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2026,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "130",
-                      "period": "2026 2T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2026,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "130",
-                    "opens_on": "2026-07-01",
-                    "payment_cutoff_on": "2026-07-15",
-                    "period": "2026 2T",
-                    "recovery": null,
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "UPCOMING",
-                    "user_state": "due"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-07-20",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-07-20",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2026,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "303",
-                      "period": "2026 2T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2026,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "303",
-                    "opens_on": "2026-07-01",
-                    "payment_cutoff_on": null,
-                    "period": "2026 2T",
-                    "recovery": null,
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "UPCOMING",
-                    "user_state": "due"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-10-20",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-10-20",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2026,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "130",
-                      "period": "2026 3T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2026,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "130",
-                    "opens_on": "2026-10-01",
-                    "payment_cutoff_on": "2026-10-15",
-                    "period": "2026 3T",
-                    "recovery": null,
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "UPCOMING",
-                    "user_state": "due"
-                  },
-                  {
-                    "adjusted_closes_on": "2026-10-20",
-                    "censo_enrolment_state": "unverified",
-                    "closes_on": "2026-10-20",
-                    "filing_evidence": {
-                      "aeat_evidence_conflict_reference_ids": [],
-                      "aeat_evidence_kind": null,
-                      "aeat_reference_id": null,
-                      "aeat_snapshot_id": null,
-                      "aeat_submission_state": "not_observed",
-                      "aeat_submitted_at": null,
-                      "evidence_source": null,
-                      "filing_year": 2026,
-                      "justificante_required": true,
-                      "justificante_verified": false,
-                      "local_calculation_revision_id": null,
-                      "local_filed_at": null,
-                      "local_filing_record_id": null,
-                      "local_filing_state": "not_ready_to_file",
-                      "modelo": "303",
-                      "period": "2026 3T",
-                      "verified_justificante_csv": null
-                    },
-                    "filing_year": 2026,
-                    "holiday_refs": [],
-                    "jurisdictions": [],
-                    "local_work_unit_id": null,
-                    "local_work_unit_name": null,
-                    "local_work_unit_revision_id": null,
-                    "modelo": "303",
-                    "opens_on": "2026-10-01",
-                    "payment_cutoff_on": null,
-                    "period": "2026 3T",
-                    "recovery": null,
-                    "shift_reason": "business_day",
-                    "source": "registry_deadline",
-                    "status": "UPCOMING",
-                    "user_state": "due"
-                  }
-                ],
-                "events": [],
-                "generated_at": "2026-04-01T09:00:00Z",
-                "incomplete_reason": null,
-                "range": {
-                  "from_date": "2026-01-01",
-                  "to_date": "2026-12-31"
-                },
-                "suppressed_entries": [],
-                "taxpayer_model_declared": true,
-                "warnings": [
-                  {
-                    "affected_modelos": [
-                      "130"
-                    ],
-                    "code": "art109_activity_income_withholding_ge_70pct",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "349"
-                    ],
-                    "code": "does_intracomunitario",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.intracomunitario_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "111",
-                      "190"
-                    ],
-                    "code": "has_employees",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.has_employees_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "131"
-                    ],
-                    "code": "irpf.estimation_regime",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.estimacion_objetiva_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "123",
-                      "193"
-                    ],
-                    "code": "pays_capital_income_with_retencion",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.retencion_capital_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "111",
-                      "190"
-                    ],
-                    "code": "pays_professionals_with_retencion",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.retencion_profesionales_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "115",
-                      "180"
-                    ],
-                    "code": "pays_rent_with_retencion",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.retencion_arrendamientos_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "347"
-                    ],
-                    "code": "third_party_transactions_above_347_threshold",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.terceros_threshold_unset"
-                  },
-                  {
-                    "affected_modelos": [
-                      "100",
-                      "130",
-                      "303",
-                      "390"
-                    ],
-                    "code": "censo.enrolment_unverified",
-                    "fix_command": "aeat config profile edit",
-                    "message": "cli.overview.warning.censo_enrolment_unverified"
-                  }
-                ]
-              },
+              "entry_count": 10,
+              "event_count": 0,
               "label": "docs-sequence-sandbox",
-              "profile_id": "<profile-id>"
+              "next_due_closes_on": "2026-01-30",
+              "next_due_modelo": "130",
+              "next_due_period": "2025 4T",
+              "profile_id": "<profile-id>",
+              "suppressed_entry_count": 0,
+              "warning_count": 9
             }
           ],
+          "range": null,
           "suppressed_entries": [],
           "to_date": null,
           "warnings": []
@@ -1436,6 +1236,344 @@
               "iva.regime"
             ]
           },
+          "coverage": {
+            "advised": [
+              {
+                "modelo": "038",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "111",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "115",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "117",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "121",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "122",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "123",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "126",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "128",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "136",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "140",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "143",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "156",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "165",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "179",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "180",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "181",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "182",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "185",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "186",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "187",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "188",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "189",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "190",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "193",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "194",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "210",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "216",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "220",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "222",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "231",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "232",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "233",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "234",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "238",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "270",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "280",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "289",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "296",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "308",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "309",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "322",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "341",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "345",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "347",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "349",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "353",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "360",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "361",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "369",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "379",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "380",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "490",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "576",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "592",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "604",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "720",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "721",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "763",
+                "reason": "applicability_undetermined"
+              },
+              {
+                "modelo": "848",
+                "reason": "applicability_undetermined"
+              }
+            ],
+            "confidently_excluded": [
+              "131",
+              "184",
+              "200",
+              "202"
+            ],
+            "out_of_scope": [
+              "030",
+              "035",
+              "036",
+              "043",
+              "145",
+              "149",
+              "150",
+              "151",
+              "159",
+              "170",
+              "171",
+              "172",
+              "173",
+              "192",
+              "196",
+              "198",
+              "218",
+              "221",
+              "235",
+              "236",
+              "240",
+              "241",
+              "242",
+              "290",
+              "291",
+              "294",
+              "295",
+              "362",
+              "363",
+              "368",
+              "430",
+              "480",
+              "510",
+              "511",
+              "517",
+              "518",
+              "519",
+              "520",
+              "521",
+              "522",
+              "524",
+              "548",
+              "553",
+              "554",
+              "555",
+              "556",
+              "557",
+              "558",
+              "559",
+              "560",
+              "561",
+              "562",
+              "563",
+              "566",
+              "568",
+              "570",
+              "573",
+              "580",
+              "581",
+              "582",
+              "583",
+              "584",
+              "585",
+              "586",
+              "587",
+              "588",
+              "589",
+              "590",
+              "591",
+              "593",
+              "595",
+              "596",
+              "714",
+              "718",
+              "795",
+              "796",
+              "797",
+              "798",
+              "840",
+              "993"
+            ],
+            "surfaced": [
+              "100",
+              "130",
+              "303",
+              "390"
+            ]
+          },
           "entries": [
             {
               "adjusted_closes_on": "2026-01-30",
@@ -1471,7 +1609,6 @@
               "payment_cutoff_on": "2026-01-27",
               "period": "2025 4T",
               "recovery": {
-                "legal_ref": "ley-58-2003:art-27.2",
                 "next_command": "aeat app modelo work --help",
                 "recargo_band": {
                   "id": "completed_months_2",
@@ -1522,7 +1659,6 @@
               "payment_cutoff_on": null,
               "period": "2025 4T",
               "recovery": {
-                "legal_ref": "ley-58-2003:art-27.2",
                 "next_command": "aeat app modelo work --help",
                 "recargo_band": {
                   "id": "completed_months_2",
@@ -1573,7 +1709,6 @@
               "payment_cutoff_on": null,
               "period": "2025 0A",
               "recovery": {
-                "legal_ref": "ley-58-2003:art-27.2",
                 "next_command": "aeat app modelo work --help",
                 "recargo_band": {
                   "id": "completed_months_2",
