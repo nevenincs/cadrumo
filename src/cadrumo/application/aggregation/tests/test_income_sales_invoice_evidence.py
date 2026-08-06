@@ -46,7 +46,7 @@ from ....domain.transactions import (
     link_invoice,
 )
 from .._renta_income_ledger import (
-    RentaIncomeLedgerAggregationIssueReason,
+    SalesInvoiceEvidenceRefusal,
     aggregate_renta_income_ledger,
     aggregate_renta_m100_income_ledger,
 )
@@ -223,8 +223,8 @@ def test_a_credit_matching_the_gross_rather_than_the_net_is_refused() -> None:
 
     aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
 
-    assert aggregation.observations == ()
-    assert aggregation.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.SALES_INVOICE_AMOUNT_MISMATCH
+    assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1210.00")
 
 
 def test_an_invoice_without_retencion_is_matched_on_its_gross() -> None:
@@ -244,7 +244,8 @@ def test_a_received_invoice_is_refused_as_income_evidence() -> None:
 
     aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
 
-    assert aggregation.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_SALES_INVOICE_KIND
+    assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
 
 
 def test_an_invoice_from_another_bucket_is_refused() -> None:
@@ -253,7 +254,8 @@ def test_an_invoice_from_another_bucket_is_refused() -> None:
 
     aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
 
-    assert aggregation.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.SALES_INVOICE_BUCKET_MISMATCH
+    assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.BUCKET_MISMATCH
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
 
 
 def test_a_one_directional_link_is_refused() -> None:
@@ -273,7 +275,8 @@ def test_a_one_directional_link_is_refused() -> None:
         period=_QUARTER,
     )
 
-    assert aggregation.issues[0].reason is RentaIncomeLedgerAggregationIssueReason.SALES_INVOICE_LINK_MISMATCH
+    assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
 
 
 def test_an_invoice_spanning_several_transactions_is_refused() -> None:
@@ -293,21 +296,79 @@ def test_an_invoice_spanning_several_transactions_is_refused() -> None:
         period=_QUARTER,
     )
 
-    assert aggregation.issues[0].reason is (
-        RentaIncomeLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_SALES_INVOICE
+    assert aggregation.observations[0].sales_invoice_refusal is (
+        SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
     )
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
 
 
 def test_each_guard_reports_its_own_reason() -> None:
     """Five distinct repairs must not present as one generic mismatch."""
     reasons = {
         aggregate_renta_income_ledger(*_linked(kind=InvoiceKind.RECEIVED), bucket_id=_BUCKET, period=_QUARTER)
-        .issues[0]
-        .reason,
+        .observations[0]
+        .sales_invoice_refusal,
         aggregate_renta_income_ledger(*_linked(bucket_id=_OTHER_BUCKET), bucket_id=_BUCKET, period=_QUARTER)
-        .issues[0]
-        .reason,
-        aggregate_renta_income_ledger(*_linked(cash="1210.00"), bucket_id=_BUCKET, period=_QUARTER).issues[0].reason,
+        .observations[0]
+        .sales_invoice_refusal,
+        aggregate_renta_income_ledger(*_linked(cash="1210.00"), bucket_id=_BUCKET, period=_QUARTER)
+        .observations[0]
+        .sales_invoice_refusal,
     }
 
     assert len(reasons) == 3, "distinct guards collapsed onto one reason"
+
+
+def test_an_instalment_paid_invoice_still_declares_its_cash() -> None:
+    """The regression that made this path degrade rather than exclude.
+
+    One invoice settled in two instalments is ordinary for professional work.
+    Returning an exclusion for the multi-transaction guard removed BOTH rows
+    from the aggregation, so 1060 of real income declared zero -- a 100 %
+    under-declaration, in the sanction direction, replacing an over-declaration
+    of 60.
+
+    The assertion that matters is the income figure. A test checking only that
+    a refusal was recorded passes just as happily while the money disappears.
+    """
+    first = _transaction(cash="530.00", provider_id="instalment-1")
+    second = _transaction(cash="530.00", provider_id="instalment-2")
+    invoice = _invoice(linked_transaction_ids=(first.transaction_id, second.transaction_id))
+    transactions = TransactionCatalogue.from_transactions((first, second))
+    for transaction in (first, second):
+        transactions = link_invoice(transactions, transaction.transaction_id, invoice.invoice_id)
+
+    aggregation = aggregate_renta_income_ledger(
+        transactions,
+        InvoiceCatalogue.from_invoices((invoice,)),
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+    )
+
+    assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
+    assert len(aggregation.observations) == 2
+    assert aggregation.issues == ()
+    assert all(
+        observation.sales_invoice_refusal is SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
+        for observation in aggregation.observations
+    )
+    assert all(observation.grounding is LedgerIncomeGrounding.CASH_FALLBACK for observation in aggregation.observations)
+
+
+def test_no_evidence_guard_ever_removes_income_from_the_aggregation() -> None:
+    """The contract the issue-reason enum already stated, now enforced.
+
+    An unevidenced ingreso must still be declared -- only an unevidenced gasto
+    may be dropped. Every guard is exercised here so a sixth one added later
+    cannot quietly reintroduce an exclusion.
+    """
+    cases = (
+        _linked(kind=InvoiceKind.RECEIVED),
+        _linked(bucket_id=_OTHER_BUCKET),
+        _linked(cash="1210.00"),
+    )
+    for transactions, invoices in cases:
+        aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
+        assert len(aggregation.observations) == 1, "an evidence guard excluded a declarable income row"
+        assert aggregation.issues == ()
+        assert aggregation.casilla_aggregation.casilla_values["01"] > Decimal("0")

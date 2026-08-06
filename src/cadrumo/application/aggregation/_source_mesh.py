@@ -92,6 +92,11 @@ CalculationSourceDiagnosticReason = Literal[
     # absent). Distinct from "unrouted_observation", which is a row no binding
     # consumes at all.
     "ungrounded_income_substrate",
+    # A row whose LINKED sales invoice could not be trusted, so it declares
+    # bank cash instead of the invoice base. Distinct from
+    # "ungrounded_income_substrate", where no invoice was linked at all: here
+    # the operator did the linking and the link itself is what needs repair.
+    "unusable_sales_invoice_evidence",
     "oss_no_live_source",
     "missing_transaction_evidence",
     "administrador_retencion_rate_mismatch",

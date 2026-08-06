@@ -106,15 +106,6 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     # belong to IRPF rendimientos del trabajo, not actividad económica,
     # and must not feed M130 casillas.
     TRABAJO_INCOME = "trabajo_income"
-    # A linked sales invoice that fails one of the evidence guards. Spelled per
-    # failure rather than as one generic mismatch: which check rejected the link
-    # is exactly what an operator needs to repair it, and a single reason would
-    # make five different repairs look like one problem.
-    SALES_INVOICE_BUCKET_MISMATCH = "sales_invoice_bucket_mismatch"
-    UNSUPPORTED_SALES_INVOICE_KIND = "unsupported_sales_invoice_kind"
-    SALES_INVOICE_LINK_MISMATCH = "sales_invoice_link_mismatch"
-    PARTIAL_OR_MULTI_TRANSACTION_SALES_INVOICE = "partial_or_multi_transaction_sales_invoice"
-    SALES_INVOICE_AMOUNT_MISMATCH = "sales_invoice_amount_mismatch"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -124,6 +115,45 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
 _IssueDetail = elided_prose(512)
+
+
+class SalesInvoiceEvidenceRefusal(StrEnum):
+    """Why a linked sales invoice was not trusted for a row's fiscal figures.
+
+    NOT an exclusion. Every member here leaves the row IN the aggregation,
+    contributing its bank cash under ``CASH_FALLBACK`` grounding, because the
+    taxpayer was paid and that income is declarable whatever state its paperwork
+    is in. What the refusal withholds is the invoice's FIGURES, not the row.
+
+    This is the income side of an asymmetry worth stating, because copying the
+    expense pipeline's control flow here caused a real regression. An
+    unevidenced gasto must NOT be claimed, so that pipeline excludes it. An
+    unevidenced ingreso must STILL be declared, so this one degrades it. Same
+    checks, opposite consequence; only the checks transfer.
+
+    Spelled per failure rather than as one generic mismatch: which check
+    rejected the link is what an operator needs to repair it, and one reason
+    would make five different repairs look like one problem.
+    """
+
+    BUCKET_MISMATCH = "sales_invoice_bucket_mismatch"
+    """The linked invoice belongs to another bucket."""
+
+    UNSUPPORTED_KIND = "unsupported_sales_invoice_kind"
+    """The linked invoice is not ISSUED, so it is not this taxpayer's income."""
+
+    LINK_NOT_RECIPROCAL = "sales_invoice_link_mismatch"
+    """The invoice does not name this transaction back, so the pairing is unconfirmed."""
+
+    PARTIAL_OR_MULTI_TRANSACTION = "partial_or_multi_transaction_sales_invoice"
+    """Several transactions settle this invoice, so no one of them carries its whole base.
+
+    The ordinary instalment case. The rows keep contributing their cash; what
+    cannot be done is attribute the invoice's full base to any single one.
+    """
+
+    AMOUNT_MISMATCH = "sales_invoice_amount_mismatch"
+    """The credit does not match the invoice total net of its declared retención."""
 
 
 class RentaIncomeLedgerAggregationIssue(BaseModel):
@@ -197,6 +227,7 @@ class RentaIncomeObservation(BaseModel):
     source_jurisdiction: str | None = None
     grounding: LedgerIncomeGrounding
     withheld_derivation: LedgerWithholdingDerivation = LedgerWithholdingDerivation.NOT_APPLICABLE
+    sales_invoice_refusal: SalesInvoiceEvidenceRefusal | None = None
 
     @model_validator(mode="after")
     def _grounding_matches_declared_base(self) -> Self:
@@ -572,9 +603,11 @@ def _classify_income_transaction(
 
     # taxable_base carries the IVA-exclusive base imponible when set; it
     # feeds the taxable_base_sum fact path for the rendimiento-neto binding.
-    evidence = _sales_invoice_evidence_payload(invoices=invoices, bucket_id=bucket_id, transaction=transaction)
-    if isinstance(evidence, RentaIncomeLedgerAggregationIssue):
-        return evidence
+    evidence, evidence_refusal = _sales_invoice_evidence_payload(
+        invoices=invoices,
+        bucket_id=bucket_id,
+        transaction=transaction,
+    )
 
     # The linked invoice's own base takes precedence over the transaction's tax
     # substrate, with the transaction field as fallback -- the same ordering the
@@ -597,6 +630,7 @@ def _classify_income_transaction(
         taxable_base_amount=taxable_base_amount,
         withheld_amount=withheld.amount,
         withheld_derivation=withheld.derivation,
+        sales_invoice_refusal=evidence_refusal,
         filing_date=filing_date,
         source_jurisdiction=transaction.source_jurisdiction,
         grounding=(
@@ -612,7 +646,7 @@ def _sales_invoice_evidence_payload(
     invoices: InvoiceCatalogue,
     bucket_id: str,
     transaction: Transaction,
-) -> _SalesInvoiceEvidencePayload | RentaIncomeLedgerAggregationIssue:
+) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
     """Return the figures a linked sales invoice contributes, or why it is refused.
 
     Derive-on-read, mirroring the expense pipeline's
@@ -632,53 +666,33 @@ def _sales_invoice_evidence_payload(
     """
     invoice_id = transaction.invoice_id
     if invoice_id is None:
-        return _SalesInvoiceEvidencePayload()
+        return _SalesInvoiceEvidencePayload(), None
     invoice = invoices.get(invoice_id)
     if invoice is None:
         # Not an error: an unresolvable link is already reported by the ledger
         # surface, and the income pipeline's job here is only to decide whether
         # trustworthy invoice figures exist. Falling through leaves the row on
         # its own substrate and its existing grounding marker.
-        return _SalesInvoiceEvidencePayload()
+        return _SalesInvoiceEvidencePayload(), None
     transaction_id = transaction.transaction_id
     if invoice.bucket_id != bucket_id:
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaIncomeLedgerAggregationIssueReason.SALES_INVOICE_BUCKET_MISMATCH,
-            detail="transaction links a sales invoice outside the active bucket",
-        )
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.BUCKET_MISMATCH
     if invoice.kind is not InvoiceKind.ISSUED:
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_SALES_INVOICE_KIND,
-            detail=f"linked invoice kind {invoice.kind.value!r} is not ISSUED, so it is not this taxpayer's income",
-        )
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
     if transaction_id not in invoice.linked_transaction_ids:
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaIncomeLedgerAggregationIssueReason.SALES_INVOICE_LINK_MISMATCH,
-            detail="transaction and sales invoice links are not reciprocal",
-        )
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
     if len(invoice.linked_transaction_ids) != 1:
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaIncomeLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_SALES_INVOICE,
-            detail="income aggregation only accepts one transaction per sales invoice",
-        )
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
     expected_cash = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
     if abs(transaction.raw.amount) != expected_cash:
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaIncomeLedgerAggregationIssueReason.SALES_INVOICE_AMOUNT_MISMATCH,
-            detail=(
-                "credited amount does not match the sales invoice total net of its declared retención "
-                f"({expected_cash})"
-            ),
-        )
-    return _SalesInvoiceEvidencePayload(
-        taxable_base=invoice.base_total,
-        iva_amount=invoice.iva_total,
-        retencion_amount=invoice.retention_amount,
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
+    return (
+        _SalesInvoiceEvidencePayload(
+            taxable_base=invoice.base_total,
+            iva_amount=invoice.iva_total,
+            retencion_amount=invoice.retention_amount,
+        ),
+        None,
     )
 
 
@@ -821,6 +835,7 @@ __all__ = [
     "RentaIncomeLedgerAggregationIssue",
     "RentaIncomeLedgerAggregationIssueReason",
     "RentaIncomeObservation",
+    "SalesInvoiceEvidenceRefusal",
     "aggregate_renta_income_ledger",
     "aggregate_renta_income_ledger_from_repositories",
     "aggregate_renta_m100_income_ledger",

@@ -27,6 +27,7 @@ source diagnostics rather than silently blanking the filed calculation.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
@@ -86,6 +87,8 @@ from ._iva_ledger import (
 )
 from ._renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from ._renta_income_ledger import (
+    RentaIncomeObservation,
+    SalesInvoiceEvidenceRefusal,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
 )
@@ -466,7 +469,8 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             )
-            + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id),
+            + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
+            + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id),
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="ledger_renta_income_aggregation",
@@ -574,6 +578,55 @@ def _ungrounded_income_diagnostics(
             message=preamble + _fitted_id_list(sampled, budget=_DIAGNOSTIC_MESSAGE_MAX - len(preamble)),
         ),
     )
+
+
+def _unusable_sales_invoice_diagnostics(
+    observations: Sequence[RentaIncomeObservation],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Surface rows whose linked sales invoice could not be trusted.
+
+    These rows are NOT excluded -- they contribute their bank cash, because the
+    taxpayer was paid and that income is declarable whatever state its paperwork
+    is in. What they lost is the invoice's base, cuota and retención, so the
+    figure they contribute is the credited cash rather than the ingresos
+    íntegros the casilla asks for. Without this advisory that downgrade is
+    invisible: the row looks exactly like one that never had an invoice at all.
+
+    One advisory per refusal reason, not per row: the actionable unit is "these
+    links are unusable, and this is what is wrong with them", and a per-row
+    advisory trains operators to ignore the channel. The id sample is fitted to
+    the message budget by the same helper the ungrounded advisory uses, so a
+    long list degrades to a count instead of raising out of the diagnostic and
+    taking the calculation down with it.
+    """
+    by_reason: dict[SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = defaultdict(list)
+    for observation in observations:
+        if observation.sales_invoice_refusal is not None:
+            by_reason[observation.sales_invoice_refusal].append(observation)
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for reason in sorted(by_reason, key=lambda member: member.value):
+        rows = by_reason[reason]
+        total = sum((row.gross_amount for row in rows), Decimal("0"))
+        preamble = (
+            f"{len(rows)} income row(s) totalling {total} EUR link a sales invoice that could not be "
+            f"trusted ({reason.value}), so they declare bank cash instead of the invoice base and their "
+            f"retención credit is lost. Repair the link or record the base directly. Transactions: "
+        )
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="unusable_sales_invoice_evidence",
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=resolver_id,
+                message=preamble
+                + _fitted_id_list(
+                    sorted(row.transaction_id for row in rows),
+                    budget=_DIAGNOSTIC_MESSAGE_MAX - len(preamble),
+                ),
+            ),
+        )
+    return tuple(diagnostics)
 
 
 def _fitted_id_list(identifiers: Sequence[str], *, budget: int) -> str:
