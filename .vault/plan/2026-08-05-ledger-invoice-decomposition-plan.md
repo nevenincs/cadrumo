@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:7c141b3dff28d361bce4b47bc9ee727489cee11aaa64d212d8ffe98e86c83bff'
+body_hash: 'sha256:9b2db473dba44d31a80599aeb66890b3ca314855dd63406d415c7f8e0956a2f6'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -96,3 +96,4 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [x] `P06.S49` - Drive one accumulative invoice life through Modelo 303 and 390 and through Modelo 130 and 100 across several periods, asserting the same operation lands in one period on both the quarterly and annual sides; `src/cadrumo/application/aggregation/tests`.
 - [x] `P06.S50` - Refuse a suite of deliberately degraded invoices, each asserting its own specific refusal rather than that something failed, covering the falsified-total, netted-retencion, contradicted-operation-date, referentless-rectificativa and over-threshold-simplificada cases; `src/cadrumo/domain/invoices/tests`.
 - [x] `P06.S51` - Bundle RD 1619/2012 art. 4 and refuse a factura simplificada for an entrega intracomunitaria exenta (art. 4.4.a), declaring the amount-threshold and sector-list eligibility axis unverified pending an ADR amendment; `src/cadrumo/_data/corpus/normatives/html, src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/tests`.
+- [x] `P06.S52` - Carry recargo de equivalencia inside the ledger transaction totals identity, so the substrate Modelo 303 and 130 actually read stops refusing the truthful row and accepting the falsified one; `src/cadrumo/domain/transactions/_models.py, src/cadrumo/domain/transactions/tests/test_gross_invariant.py`.
