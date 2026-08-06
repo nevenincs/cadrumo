@@ -245,7 +245,7 @@ from .product_identity import (
     ProductIdentity,
     normalise_product_identity_references,
 )
-from .prose_elision import PROSE_ELISION_MARKER, elide_to_cap, elided_prose
+from .prose_elision import PROSE_ELISION_MARKER, ElidedProse, elide_to_cap, elided_prose
 from .secure_object_write import (
     ABSENT_SECURE_OBJECT_REVISION_ID,
     DEFAULT_WRITE_PROVENANCE,
@@ -347,6 +347,7 @@ __all__: list[str] = [
     "DeclaracionIdioma",
     "DescendantRelacion",
     "DocumentShape",
+    "ElidedProse",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",

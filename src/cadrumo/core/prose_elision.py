@@ -34,11 +34,12 @@ assertions still belong on messages whose length scales with taxpayer data.
 
 from __future__ import annotations
 
-from typing import Annotated, Final
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Annotated, Final
 
 from pydantic import BeforeValidator, StringConstraints
 
-__all__ = ["PROSE_ELISION_MARKER", "elide_to_cap", "elided_prose"]
+__all__ = ["PROSE_ELISION_MARKER", "ElidedProse", "elide_to_cap", "elided_prose"]
 
 #: Appended to prose the cap truncated, so the elision is visible to a reader.
 PROSE_ELISION_MARKER: Final[str] = " [...]"
@@ -125,3 +126,52 @@ def elided_prose(
         ),
         BeforeValidator(_elide),
     ]
+
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle only matters to type checkers
+    from pydantic import GetCoreSchemaHandler
+    from pydantic_core import CoreSchema
+
+
+@dataclass(frozen=True, slots=True)
+class ElidedProse:
+    """Annotated metadata declaring an eliding prose cap.
+
+    Carries the same constraint set as :func:`elided_prose` but as *metadata*
+    rather than as a returned annotation, so a field can be written
+    ``Annotated[str, ElidedProse(512)]``. That form is a literal type
+    expression, which a static type checker can follow; assigning the result of
+    a call to a name and using the name as an annotation is not, and leaves the
+    field's type unknown along with every value read from it.
+
+    Args:
+        cap: The field's maximum length, in characters.
+        min_length: Minimum length after elision.
+        strip_whitespace: Whether to strip surrounding whitespace.
+    """
+
+    cap: int
+    min_length: int = 1
+    strip_whitespace: bool = False
+
+    @property
+    def max_length(self) -> int:
+        """Return the cap under the name field-metadata inspectors look for.
+
+        :func:`elided_prose` placed a :class:`~pydantic.StringConstraints` in the
+        field metadata, and callers read ``max_length`` off it to size their own
+        buffers. Exposing the same name here keeps that contract intact: the
+        bound stays discoverable by anything inspecting metadata, which is the
+        property the eliding annotation documents.
+        """
+        return self.cap
+
+    def __get_pydantic_core_schema__(self, source_type: object, handler: GetCoreSchemaHandler) -> CoreSchema:
+        """Return the schema of the equivalent :func:`elided_prose` annotation."""
+        return handler.generate_schema(
+            elided_prose(
+                self.cap,
+                min_length=self.min_length,
+                strip_whitespace=self.strip_whitespace,
+            )
+        )

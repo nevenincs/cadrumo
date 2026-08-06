@@ -21,11 +21,12 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import M210PayerMode, Modelo, Period, elided_prose
+from ...core import ElidedProse, M210PayerMode, Modelo, Period
 from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId, ModeloRevision, validated_casilla_id
 from ...domain.transactions import (
@@ -67,7 +68,7 @@ class IrnrIncomeLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = elided_prose(512)
+_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class IrnrIncomeLedgerAggregationIssue(BaseModel):

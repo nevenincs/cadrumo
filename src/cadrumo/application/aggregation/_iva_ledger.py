@@ -49,7 +49,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_serializer, fiel
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, elided_prose
+from ...core import BindingSourceKind, ElidedProse, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.calculations.registry import (
@@ -139,7 +139,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = elided_prose(512)
+_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class IvaLedgerAggregationIssue(BaseModel):

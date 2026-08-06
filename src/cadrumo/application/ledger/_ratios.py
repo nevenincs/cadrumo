@@ -14,11 +14,12 @@ close the discoverability and pre-calculate readiness gaps:
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Annotated
 
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from ...core import STRICT_FROZEN_CONFIG, elided_prose
+from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.identity import BucketId
 from ...domain.categories import (
     ProportionalityKind,
@@ -66,7 +67,7 @@ class EligibleCategoryRow(BaseModel):
 #: The tightest declared prose cap in the tree, and every builder interpolates
 #: a category label and two ratios into it. Empty is the documented default, so
 #: the lower bound stays open.
-_FindingDetail = elided_prose(300, min_length=0)
+_FindingDetail = Annotated[str, ElidedProse(300, min_length=0)]
 
 
 class RatiosValidationFinding(BaseModel):

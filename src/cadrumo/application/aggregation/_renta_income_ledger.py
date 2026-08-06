@@ -37,14 +37,14 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import NamedTuple, Self
+from typing import Annotated, NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodKind, elided_prose
+from ...core import ElidedProse, Modelo, Period, PeriodKind
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.money import round_to_cents
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
@@ -114,7 +114,7 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = elided_prose(512)
+_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class SalesInvoiceEvidenceRefusal(StrEnum):

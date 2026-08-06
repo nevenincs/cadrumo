@@ -24,12 +24,12 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
+from typing import Annotated, Final, Literal, NamedTuple, Protocol, Self, runtime_checkable
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Period, elided_prose
+from ...core import BindingSourceKind, ElidedProse, M210GrossIncomeSourceMode, Period
 from ...core.decimal import coerce_decimal
 from ...core.errors import CoreValidationError
 from ...core.i18n import tr
@@ -375,9 +375,9 @@ DIAGNOSTIC_MESSAGE_MAX_LENGTH: Final[int] = 512
 #: and the filing stops at exactly the moment the advisory had something to say.
 #: That is strictly worse than the advisory being shortened, so the cap is
 #: enforced by cutting rather than by raising. See
-#: :func:`~core.prose_elision.elided_prose` for why the cap is a property of the
+#: :func:`~core.prose_elision.ElidedProse` for why the cap is a property of the
 #: type rather than of each call site.
-_DiagnosticMessage = elided_prose(DIAGNOSTIC_MESSAGE_MAX_LENGTH)
+_DiagnosticMessage = Annotated[str, ElidedProse(DIAGNOSTIC_MESSAGE_MAX_LENGTH)]
 
 #: Cap on a diagnostic's operator-facing remedy.
 #:

@@ -25,10 +25,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ...core import STRICT_FROZEN_CONFIG, elided_prose
+from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -100,7 +101,7 @@ class VerificationCheck(StrEnum):
 #: reach. Refusing the RESULT over the length of that explanation would lose the
 #: verification outcome as well as its reason. Empty is the documented default
 #: for a check that passed with nothing to add.
-_CheckDetail = elided_prose(500, min_length=0)
+_CheckDetail = Annotated[str, ElidedProse(500, min_length=0)]
 
 
 class EvidenceBundleCheckResult(BaseModel):

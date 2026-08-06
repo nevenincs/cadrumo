@@ -26,7 +26,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, elided_prose
+from ...core import STRICT_FROZEN_CONFIG, ElidedProse
 from ...core.hashing import content_hash_hex
 from ...core.time import validate_utc_aware
 from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
@@ -50,7 +50,7 @@ Strips surrounding whitespace; must be 1–64 characters after stripping.
 Used as ``verified_by`` on :class:`VerificationReport` to record the actor
 label fed into the content-addressed id derivation.
 """
-_FindingMessage = elided_prose(500, strip_whitespace=True)
+_FindingMessage = Annotated[str, ElidedProse(500, strip_whitespace=True)]
 """Operator-facing finding prose, elided at the cap rather than refused.
 
 A verification finding is the artifact that explains why a filing was blocked,

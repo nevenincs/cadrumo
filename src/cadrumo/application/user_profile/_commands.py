@@ -25,7 +25,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period, elided_prose
+from ...core import ElidedProse, Period
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.identity import ProfileId
@@ -183,7 +183,7 @@ class ProfileLifecycleResult(BaseModel):
 #: values, the set of modelos a gap affects — so its length belongs to the
 #: taxpayer's configuration, not to the author. Refusing the issue would fail
 #: the very validation pass that exists to report the problem.
-_IssueMessage = elided_prose(512)
+_IssueMessage = Annotated[str, ElidedProse(512)]
 
 
 class ProfileValidationIssue(BaseModel):

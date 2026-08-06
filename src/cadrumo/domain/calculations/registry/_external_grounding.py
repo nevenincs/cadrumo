@@ -73,7 +73,7 @@ from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, ValidationError
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, ExternalOracleCorpus, elided_prose
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, ElidedProse, ExternalOracleCorpus
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import bundled_path
 from ._errors import RegistryValidationError
@@ -286,7 +286,7 @@ class ExternalOracleEvidence(ExternalGroundingModel):
 #: name — whose combined length is a property of the registry rather than of
 #: the sentence. Refusing one would abort the honesty audit at the point it had
 #: a breach to report, which is the one moment it must not fail.
-_GroundingDetail = elided_prose(512)
+_GroundingDetail = Annotated[str, ElidedProse(512)]
 
 
 class UnattributedOraclePayload(ExternalGroundingModel):

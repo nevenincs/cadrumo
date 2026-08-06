@@ -19,13 +19,14 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
+from typing import Annotated
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import ElidedProse
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
-from ...core import elided_prose
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry import ApplicabilityVerdict
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
@@ -278,7 +279,7 @@ class OverviewCalendarEventType(StrEnum):
 #: Built by interpolating a modelo label and its period into a sentence, so an
 #: unusually long obligation label is enough to cross the cap. Refusing would
 #: fail the whole calendar read over one event's wording.
-_EventSummary = elided_prose(256)
+_EventSummary = Annotated[str, ElidedProse(256)]
 
 
 class OverviewCalendarEvent(BaseModel):
