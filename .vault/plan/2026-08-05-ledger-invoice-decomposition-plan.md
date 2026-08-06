@@ -4,7 +4,7 @@ tags:
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:ea74add7bd9737bd869c3ce0dbb9a5065a9da980f3ec66199150f04b133c9ddf'
+body_hash: 'sha256:7c6a3367f2b2ee7a19a378f0b71bd083a16734f2f700a6e599f0fe126f25449c'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -103,3 +103,4 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [ ] `P06.S55` - Wire simplificada_requires_tax_id_for_domestic_issuer to an operator-facing Notice, since it is exported and tested with zero production callers, and create_catalogue_invoice does not yet accept invoice_class or an optional tax id at all, so the state it evaluates cannot even be created through the CLI create flow today, sequenced after P06.S46 whose consumer wiring likely serves both; `src/cadrumo/application/invoices, src/cadrumo/entrypoints/cli`.
 - [x] `P06.S56` - Join the non-deductible share of a fact's input IVA to the IRPF-deductible cost basis via a new RentaDeductibilityContext.iva_deduction_ratio axis, grounded on the AEAT Manual practico Renta 2024 medico radiologo nota 7 worked example (activity exempt from IVA, no right to deduct), leaving the axis unwired from any production taxpayer-fact source as a named follow-up; `src/cadrumo/domain/renta/_ledger_expenses.py, src/cadrumo/domain/renta/tests/test_ledger_expenses.py`.
 - [x] `P06.S57` - Wire RentaDeductibilityContext.iva_deduction_ratio to a real producer: a wholly EXENTO iva.regime profile fact resolves to zero, otherwise the bucket's ProrrataRegister whole-entity entry contributes its in-force provisional percentage, mirroring the resolution the M303 side already applies; `src/cadrumo/application/aggregation/_renta_ledger.py, src/cadrumo/application/aggregation/tests/test_renta_ledger.py, src/cadrumo/domain/renta/_ledger_expenses.py`.
+- [x] `P06.S58` - Extend the iva_deduction_ratio wiring to the M130 quarterly gasto path: aggregate_renta_gasto_ledger_from_repositories now resolves the same ratio through the shared _resolve_iva_deduction_ratio, for the same ejercicio, so M130 and M100 cannot diverge on it; `src/cadrumo/application/aggregation/_renta_gasto_ledger.py, src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`.
