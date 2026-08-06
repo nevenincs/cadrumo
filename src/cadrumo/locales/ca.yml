@@ -2031,8 +2031,9 @@ cli:
       invoice:
         add_help: Registra una nova factura de negoci
         catalogue:
-          country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (per
-            defecte ES).
+          country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
+            determina l''encaminament de totes dues informatives, per això mai no
+            es dóna per suposat.'
           create_help: Crea una factura de conciliació vinculable al catàleg.
           group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
           import_all_refused: 'importació massiva de factures fallida: totes les files

@@ -1892,8 +1892,8 @@ cli:
       invoice:
         add_help: Register a new business invoice
         catalogue:
-          country_code_help: Counterparty ISO 3166-1 alpha-2 country code (defaults
-            to ES).
+          country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
+            it routes both informativas, so it is never assumed.'
           create_help: Create a linkable reconciliation invoice in the catalogue.
           group_help: Reconciliation catalogue invoices that link to transactions.
           import_all_refused: 'bulk invoice import failed: every row was refused;

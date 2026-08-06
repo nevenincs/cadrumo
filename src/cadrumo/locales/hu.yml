@@ -1967,8 +1967,8 @@ cli:
       invoice:
         add_help: Új üzleti számla regisztrálása.
         catalogue:
-          country_code_help: 'A partner ISO 3166-1 alfa-2 országkódja (alapértelmezés:
-            ES).'
+          country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
+            adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
           create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
           group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
           import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
