@@ -147,7 +147,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-763-2018.html.extracted.md#a3"
+corpus_ref = "corpus/normatives/html/orden-hac-763-2018.html#a3"
 document_id = "BOE-A-2018-10064"
 article = "tercero"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-10064#a3"

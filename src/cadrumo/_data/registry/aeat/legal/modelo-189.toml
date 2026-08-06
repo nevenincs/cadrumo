@@ -41,7 +41,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hfp-1180-2023.html.extracted.md#a1"
+corpus_ref = "corpus/normatives/html/orden-hfp-1180-2023.html#a1"
 document_id = "BOE-A-2023-22221"
 article = "primero"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-22221#a1"
