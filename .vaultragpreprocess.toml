@@ -2,9 +2,10 @@
 # .vault/adr/2026-07-13-docs-terminology-search-adr.md).
 #
 # Routes the bundled AEAT grounding corpus - BOE normatives HTML, Diseños de
-# Registro workbooks, and corpus PDFs - through the project extractors in
+# Registro workbooks, and corpus PDFs - plus the committed Terminology
+# Handbook concept fragments through the project extractors in
 # dev/docs/preprocess via the command-form hook adapter, so the resident
-# vaultspec-rag walker indexes these binary/markup sources first-class.
+# vaultspec-rag walker indexes these non-conventional sources first-class.
 # Validated by `vaultspec-rag preprocess check` (strict repo gate in
 # dev/docs/preprocess/tests/test_hook.py); trial a single file with
 # `vaultspec-rag preprocess run-one <path>`.
@@ -61,3 +62,11 @@ target = "code"
 extractor_version = "1.0"
 on_error = "skip"
 timeout_s = 300
+
+[[rule]]
+pattern = "src/cadrumo/_data/terminology/concepts/*.toml"
+command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+target = "code"
+extractor_version = "1.0"
+on_error = "skip"
+timeout_s = 30

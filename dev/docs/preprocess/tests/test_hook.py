@@ -41,6 +41,7 @@ _HOOK_COMMAND = "python -m dev.docs.preprocess.hook {path}"
 #: declares. Pinned so an upstream migration requirement fails here rather
 #: than silently degrading every index job for this root to zero rules.
 _RULE_SCHEMA_VERSION = 2
+_TERMINOLOGY = _REPO_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "concepts"
 
 
 def _smallest(pattern: str) -> Path:
@@ -55,9 +56,11 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     data = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))
     assert data["version"] == _RULE_SCHEMA_VERSION == 2
     rules = data["rule"]
-    assert len(rules) == 5
+    assert len(rules) == 6
     for rule in rules:
-        assert rule["pattern"].startswith("src/cadrumo/_data/corpus/")
+        assert rule["pattern"].startswith(
+            ("src/cadrumo/_data/corpus/", "src/cadrumo/_data/terminology/concepts/")
+        )
         assert _HOOK_COMMAND in rule["command"]
         assert rule["on_error"] == "skip"
         assert rule["timeout_s"] > 0
@@ -68,6 +71,7 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
         "src/cadrumo/_data/corpus/**/*.xls",
         "src/cadrumo/_data/corpus/**/*.xlsm",
         "src/cadrumo/_data/corpus/**/*.xlsx",
+        "src/cadrumo/_data/terminology/concepts/*.toml",
     }
 
 
@@ -83,6 +87,7 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
     """
     from dev.docs.preprocess._html import HTML_EXTRACTOR_VERSION
     from dev.docs.preprocess._pdf import PDF_EXTRACTOR_VERSION
+    from dev.docs.preprocess._terminology import TERMINOLOGY_EXTRACTOR_VERSION
     from dev.docs.preprocess._workbook import WORKBOOK_EXTRACTOR_VERSION
 
     owning_version = {
@@ -91,6 +96,7 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
         ".xls": WORKBOOK_EXTRACTOR_VERSION,
         ".xlsm": WORKBOOK_EXTRACTOR_VERSION,
         ".xlsx": WORKBOOK_EXTRACTOR_VERSION,
+        ".toml": TERMINOLOGY_EXTRACTOR_VERSION,
     }
     rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
     for rule in rules:
@@ -104,6 +110,22 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
     """A rule over zero files is dead configuration; each must match today."""
     for pattern in ("*.html", "*.pdf", "*.xlsm", "*.xlsx"):
         assert _smallest(pattern).is_file()
+    assert sorted(_TERMINOLOGY.glob("*.toml")), "no Handbook concept TOML matches the terminology rule"
+
+
+def test_terminology_concept_rule_emits_the_source_path_and_kind() -> None:
+    """The explicit route feeds a real Handbook fragment without retargeting it."""
+    from dev.docs.preprocess._terminology import TERMINOLOGY_EXTRACTOR_ID
+
+    source = _TERMINOLOGY / "prorrata-especial.toml"
+    outputs = build_for_source(source, repo_root=_REPO_ROOT)
+    payload = adapt_outputs(outputs, source=source, repo_root=_REPO_ROOT)
+    assert payload["source_path"] == "src/cadrumo/_data/terminology/concepts/prorrata-especial.toml"
+    units = cast(list[dict[str, object]], payload["units"])
+    assert units and "prorrata especial" in str(units[0]["text"])
+    metadata = cast(dict[str, object], payload["metadata"])
+    assert metadata["source_kind"] == "terminology_concept"
+    assert payload["preprocessor_id"] == TERMINOLOGY_EXTRACTOR_ID
 
 
 def test_adapted_output_satisfies_the_pinned_upstream_shape() -> None:

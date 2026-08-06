@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:f98de9a4a16b36d0a963eba0154cccef2dedf7a60b3dcc55fe216472e0728044'
+body_hash: 'sha256:861fb53a52b342daf55a66ff65e72ec13a156e68c82f4ac9575d795ea5362bd6'
 step_id: 'S07'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -65,6 +65,12 @@ The provider-backed temporary bundle parses and the independent float32/int8 top
 
 The Rung-2 browser config remains disabled/fail-closed. P02.S07 stays open pending an accepted config/policy, reproducible full-ladder evidence, locale/kind parity, and the held-out gate.
 
+### 2026-08-06 RAG-grounded acceptance disposition
+
+Fresh resident `vaultspec-rag` searches over the accepted consolidation ADR and the current compiler/evaluator/acceptance seams reconfirmed the binding boundary: R5 permits only bounded term-level semantics over the closed project vocabulary; R8/R9 require the shared tokenizer contract and measured minimum coverage; R10 requires evidence-derived cosine/margin/coverage thresholds, quantization top-five parity, locale/record-kind parity, and a held-out miss rate at or below 0.10 before browser enablement. The current report's 0.8 coverage floor, 0.75 cosine floor, and 0.05 runner-up margin are explicitly recorded measurement-policy inputs, not release authorization.
+
+The 14 semantic misses are distributed between `no-cosine-match` and `insufficient-coverage`; they are therefore not evidence that the evaluator may admit arbitrary out-of-vocabulary held-out phrases. Adding those phrases to the matrix or lowering the ratified coverage/recall bar would invalidate the held-out measurement and contradict the accepted source contract. No code-side remediation is justified by this replay. P02.S04-P02.S07 remain open and fail-closed pending a reproducible accepted artifact/policy or new authorized evidence; the browser config remains disabled and no deployment is claimed.
+
 ## Notes
 
 - No tests, builds, matrix generation, model downloads, generated reports, live sweeps, runtime probes, RAG reindexing, or deployment were run.
@@ -96,3 +102,13 @@ Targeted Ruff, basedpyright, AST parsing, and diff checks pass. No tests, builds
 A fresh vaultspec-rag review of the new comparison seam found that the aggregate constructor was strict, but a caller could instantiate `Rung2TopFiveLossRow` directly with duplicate ranked ids. The row validator now rejects duplicate float32 or int8 ids as well as the observation wrapper, preserving fail-closed ranking evidence at every model boundary.
 
 Targeted Ruff, basedpyright, and diff checks pass. This remains source-only; no tests, measurements, artifacts, runtime probes, or acceptance were run.
+
+### 2026-08-06 authorized standing report
+
+Fresh vaultspec-rag grounding of the report boundary (CLI request e37945e2b1874e178bafb76e6b3029fe) confirmed that the source evaluator remains measurement-only and that acceptance belongs to the existing fail-closed browser-config contract. The new strict report contract is dev/docs/terminology/_rung2_report.py, with real-behaviour coverage in dev/docs/terminology/tests/test_rung2_report.py; the materialized evidence is src/cadrumo/_data/terminology/evaluation/rung2-report.json.
+
+The current route-refresh bundle and independent replay produced 32 semantic cases with 18 hits / 14 misses (0.4375 miss-rate) and 32 composed full-ladder cases with 15 hits / 17 misses (0.53125 miss-rate), under the explicit policy minimum_coverage_ratio=0.8, cosine_floor=0.75, runner_up_margin=0.05, and result cap 5. Aggregate coverage was 92 of 123 query tokens (0.7479674796747967), with 20 fully covered queries, 0 zero-covered queries, and 10 below the policy minimum. Independent float32/int8 replay lost 0 of 32 top-five memberships; maximum observed cosine drift was 0.002234607622454972.
+
+The report records the pre-Rung-2 baseline beside the current diagnostic measurement: 32 cases / 26 hits / 6 misses / 0.1875 before Rung 2, and an explicit rejected decision with browser configuration disabled. It is not a post-Rung-2 acceptance baseline: both semantic and full-ladder recall miss the ratified 0.10 threshold, coverage is below policy, acceptance evidence was not supplied, and four-root locale/kind parity for the Rung-2 artifact remains unproven. P02.S07 remains open; no acceptance or deployment claim is made.
+
+Focused verification passed: uv run --no-sync pytest -q dev/docs/terminology/tests/test_rung2_report.py dev/docs/terminology/tests/test_rung2_evaluation.py returned 13 passed in 4.31s; scoped Ruff, basedpyright, and git diff --check passed.

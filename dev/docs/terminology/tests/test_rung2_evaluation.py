@@ -84,3 +84,59 @@ def test_direct_lexical_identity_still_precedes_semantic_candidate() -> None:
         "casilla-record:303:001",
         "concept:prorrata",
     )
+
+
+def test_semantic_abstention_does_not_compose_supplied_candidates() -> None:
+    """An abstention status cannot smuggle malformed semantic rows into the ladder."""
+    semantic_result = Rung2SemanticCandidateResult(
+        query_tokens=(),
+        covered_token_count=0,
+        candidates=(
+            Rung2SemanticCandidate(
+                record_id="concept:prorrata",
+                semantic_score=0.99,
+                semantic_ranking_weight=1.0,
+            ),
+        ),
+        status=Rung2CandidateStatus.EMPTY_QUERY,
+    )
+
+    result = compose_rung2_candidates((), semantic_result)
+
+    assert result.semantic_status is Rung2CandidateStatus.EMPTY_QUERY
+    assert result.entries == ()
+
+
+def test_lexical_ties_use_utf8_record_id_fallback() -> None:
+    """Equal lexical rows have stable order independent of caller tuple order."""
+    lexical_candidates = (
+        Rung2LexicalObservation(
+            record_id="legal:β",
+            tier_rank=1.5,
+            direct_match_strength=0,
+            is_lexical_card=True,
+            relevance_rank=0,
+        ),
+        Rung2LexicalObservation(
+            record_id="legal:á",
+            tier_rank=1.5,
+            direct_match_strength=0,
+            is_lexical_card=True,
+            relevance_rank=0,
+        ),
+    )
+
+    result = compose_rung2_candidates(
+        lexical_candidates,
+        Rung2SemanticCandidateResult(
+            query_tokens=(),
+            covered_token_count=0,
+            candidates=(),
+            status=Rung2CandidateStatus.EMPTY_QUERY,
+        ),
+    )
+
+    assert tuple(entry.record_id for entry in result.entries) == (
+        "legal:á",
+        "legal:β",
+    )

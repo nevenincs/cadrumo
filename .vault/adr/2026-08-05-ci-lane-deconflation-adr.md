@@ -11,6 +11,7 @@ related:
   - "[[2026-07-20-ci-speed-redesign-adr]]"
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
+  - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 ---
 # `ci-lane-deconflation` adr: `one consolidated plan, and verdict granularity follows determinism` | (**status:** `accepted`)
 

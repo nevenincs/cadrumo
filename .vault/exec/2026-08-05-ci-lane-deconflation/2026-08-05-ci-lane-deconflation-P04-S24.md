@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:157b88f1355b5c0611b06f583f23c5f46273063518ad59d26206691daebdbeba'
+body_hash: 'sha256:69bf591f6499b5338ea09d3d4f763b62b063b6d4910b46648a07c7cccfa83c06'
 step_id: 'S24'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S24 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Confirm with the localization cascade owner that the result-summary application row is meant to follow the active output language, the repair is stronger than what it replaced but it crosses another campaign's surface and ## Scope
-
-- `src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Confirm with the localization cascade owner that the result-summary application row is meant to follow the active output language, the repair is stronger than what it replaced but it crosses another campaign's surface
 

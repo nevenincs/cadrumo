@@ -584,8 +584,13 @@ def compose_rung2_candidates(
     validated_lexical_candidates = cast(tuple[Rung2LexicalObservation, ...], candidate_values)
     validated_semantic_result = semantic_result
 
+    semantic_candidates = (
+        validated_semantic_result.candidates
+        if validated_semantic_result.status is Rung2CandidateStatus.CANDIDATES
+        else ()
+    )
     entries = tuple(_composition_entry(candidate) for candidate in validated_lexical_candidates) + tuple(
-        _composition_entry(candidate) for candidate in validated_semantic_result.candidates
+        _composition_entry(candidate) for candidate in semantic_candidates
     )
     ordered = sorted(entries, key=cmp_to_key(_compare_composition_entries))
     seen_record_ids: set[str] = set()
@@ -866,6 +871,8 @@ def _compare_composition_entries(
             return -1 if left.record_id.encode(_UTF_8) < right.record_id.encode(_UTF_8) else 1
     if left.relevance_rank != right.relevance_rank:
         return -1 if left.relevance_rank < right.relevance_rank else 1
+    if left.record_id.encode(_UTF_8) != right.record_id.encode(_UTF_8):
+        return -1 if left.record_id.encode(_UTF_8) < right.record_id.encode(_UTF_8) else 1
     return 0
 
 

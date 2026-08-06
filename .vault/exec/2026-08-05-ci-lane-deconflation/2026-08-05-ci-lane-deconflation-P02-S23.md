@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:6017b44686440aaa05d275d03dbe62fa17c8f53da7d263a8c03a3e62c2e3ff8f'
+body_hash: 'sha256:accaeb70e45485c77a89aea47e3dd84989388eb7f6f99db77d9a7a45aa239e17'
 step_id: 'S23'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S23 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it and ## Scope
-
-- `src/cadrumo/entrypoints/mcp` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Fix thin_output_schema growing the schemas it thins, its oneOf inline-or-linked shape duplicates the property body so thinning a shared-defs verb enlarges it
 

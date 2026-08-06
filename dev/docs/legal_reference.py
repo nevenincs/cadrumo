@@ -528,7 +528,7 @@ def _render_entry(record: LegalProvisionRecord) -> tuple[str, str | None, str]:
     if record.notes is not None:
         fields.append(f":Notes: {_rst_escape(record.notes)}")
     if record.required_text:
-        required = "; ".join(f"``{_rst_escape(item)}``" for item in record.required_text)
+        required = "; ".join(f"``{_rst_escape(item.rstrip())}``" for item in record.required_text)
         fields.append(f":Required text: {required}")
     lines.extend(fields)
     lines.append("")
@@ -637,11 +637,20 @@ def render_legal_reference(
     )
 
 
-def generate_legal_reference(docs_root: Path) -> LegalReferenceResult:
-    """Materialise the generated legal pages before Sphinx reads the tree."""
+def generate_legal_reference(
+    docs_root: Path,
+    *,
+    repo_root: Path | None = None,
+) -> LegalReferenceResult:
+    """Materialise legal pages from the authoritative repo into ``docs_root``.
+
+    ``docs_root`` may be an isolated copy used by a localized build, so the
+    source repository must be independently selectable. The default retains
+    the historical adjacent-root behavior for direct callers.
+    """
     docs_root = docs_root.resolve()
-    repo_root = docs_root.parent
-    result = render_legal_reference(repo_root)
+    source_root = (repo_root if repo_root is not None else docs_root.parent).resolve()
+    result = render_legal_reference(source_root)
     out_dir = _validated_output_dir(docs_root)
     output_paths = [out_dir / "index.rst"]
     for page in result.pages:

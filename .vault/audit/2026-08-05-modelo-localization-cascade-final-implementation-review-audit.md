@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#modelo-localization-cascade'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:cf9e760cd6846f8c041e741678ada73d2c8dbf78ddae1282294062253c8acc6e'
+body_hash: 'sha256:60c84485a41021b90f515072198dddb75298c352d48f03a062c1a5744c382c9a'
 related:
   - "[[2026-08-04-modelo-localization-cascade-adr]]"
   - "[[2026-08-04-modelo-localization-cascade-research]]"
@@ -13,25 +13,6 @@ related:
   - "[[2026-08-05-modelo-localization-cascade-execution-closeout-audit]]"
   - "[[2026-08-05-modelo-localization-cascade-implementation-cutover-audit]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace modelo-localization-cascade with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `modelo-localization-cascade` audit: `Final implementation review`
 

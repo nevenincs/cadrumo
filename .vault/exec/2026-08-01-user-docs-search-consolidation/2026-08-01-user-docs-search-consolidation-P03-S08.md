@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:e9fdd2878520deae6772ca909391ae6e983c3a15d93aae2695137fb41c63ab47'
+body_hash: 'sha256:675d00209939e55f8c84cec807f8c8de25f70a49b12aa2480e55034a85b68c5a'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -41,3 +41,14 @@ The remaining requirement is evidence from a newly built artifact and the author
 ### 2026-08-06 authorized multilingual build continuation
 
 Strict user-document builds were attempted for en, es, ca, and hu. Each stopped on the same five known sequence/product divergences before the Pagefind post-build stage: profile-setup history ordering, correct-review history expectation, Modelo 100 export authority absence, the Modelo 303 verification-report localized divergence, and the Renta assembly localized-help divergence. The locale source projection and parity tests are green, but no locale build is represented as green or deployable. The build outputs were not repaired by refreshing goldens or inventing authoritative source data.
+
+### 2026-08-06 authorized built-site locale and per-root Pagefind proof
+
+Fresh vaultspec-rag grounding over the localized legal-reference renderer, locale catalogue gates, and the deployment-parity source contract established the following evidence boundary.
+
+- The production legal projection fix trims only trailing whitespace in the RST presentation of authored `required_text`; registry data is unchanged. Focused legal-renderer tests returned `2 passed`; legal anchor parity returned `3 passed`; Ruff and basedpyright returned clean.
+- The real localized Sphinx user-scope matrix returned `3 passed in 320.96s`, covering es, ca, and hu. The preceding isolated docs-root failure was corrected by passing the authoritative repository root into the legal generator; the generated legal pages then passed docutils warnings-as-errors in every target locale.
+- The bounded real Pagefind/deployment-parity artefact run returned `17 passed in 324.70s`. It built and read en, es, ca, and hu roots through production Pagefind, proved each root's own language index carries the corpus with count parity, exposed every decided record kind, and recalled one real concept and one real casilla by every declared language term through the browser path.
+- The separate translation-completeness gate remains red in all three targets: six failures total (22 incomplete/fuzzy page catalogues and five machine-text dash-policy entries per language). The catalogue-drift checks passed. No catalogue refresh or translation authoring was performed because those failures are outside the search-consolidation renderer/injection change and would require a separate docs-localization tranche.
+
+The built-site multilingual half is now proven. The live-root re-probe and deployment remain unperformed by authorization; P03.S08 stays open pending the deployed-root evidence owned by P04.S12/S13.

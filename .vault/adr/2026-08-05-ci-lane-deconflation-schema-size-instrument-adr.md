@@ -10,6 +10,7 @@ related:
   - "[[2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr]]"
   - "[[2026-07-08-mcp-progressive-discovery-adr]]"
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
+  - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 ---
 # `ci-lane-deconflation` adr: `the gate measures a real target and names the wrong one` | (**status:** `accepted`)
 

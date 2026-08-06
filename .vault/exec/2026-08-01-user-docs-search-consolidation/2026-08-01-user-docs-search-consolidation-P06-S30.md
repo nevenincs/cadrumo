@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:b3997f198bb51bb6a80653df6391b57f339c2adfb7716fe6ab9dac07e5a24811'
+body_hash: 'sha256:ce94b5c04781d232449d942606ce69bd29ade3209eac712f7c17907e979fc469'
 step_id: 'S30'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -59,3 +59,15 @@ The bounded implementation changed only dev/docs/terminology/_sweep.py, dev/docs
 A current full 112-query live rerun timed out at 244.4 seconds, and its marked live-service test failed after 43.19 seconds because the prorrata mapping had no targets. The previous successful 112-query artifact remains the standing relevance evidence. This optimization therefore removes the former focused test_sweep.py timeout boundary but does not prove a fresh complete laundering run or justify closing P06.S30. The committed relevance artifact remains unchanged and Rung 2 remains fail-closed.
 
 The adjacent resolver regression run then returned 24 passed in 130.87s, covering the real registry-backed resolver behavior after the projection-injection seam. The Rung-2 contract suite independently returned 33 passed in 0.87s.
+
+## 2026-08-06 routed Handbook admission and four-locale sweep
+
+Fresh vaultspec-rag grounding over the accepted source contract, deterministic casilla research, P06.S24/P06.S30 audits, and the current sweep/projection code confirmed that Handbook concept fragments are a valid explicit-preprocess source route while deterministic casilla enrollment remains a separate registry/projection contract. The resident code index completed job `f444e105223c47c19f6bb705d5788253`; its post-index state was consistent. Live semantic probes reached `src/cadrumo/_data/terminology/concepts/prorrata-especial.toml` for Spanish at 0.909322, Catalan at 0.986226, English at 0.946320, and Hungarian contextual phrasing at 0.963673. The Hungarian label alone remained below retrieval floor, so the golden query uses the source-grounded contextual phrase rather than asserting unsupported label-only recall.
+
+The fresh live sweep used the completed index without a second reindex:
+
+`uv run --no-sync python -m dev.docs.terminology.sweep --no-reindex --port 8766 --timeout 90 --out C:\\Users\\hello\\AppData\\Local\\Temp\\userdocs-rag-sweep-20260806-current.json`
+
+It produced 112 queries over 49 concepts, 112 targeted mappings, and 0 failed/empty mappings. The raw sweep output hash was `2DBA97F3AA2D97BD253CD0528484C5A8522960133391C85D0CFA1D8AE137710E`. After retaining an explicit completed-index provenance note, the committed relevance input hash is `4E686B6B4DDA2C525358E5B02213F9664683C032DFC9C809DA54B5F844377226`; it contains 188 target rows across 90 unique record ids: 132 concept and 56 legal rows, with no synthetic `code:` or unmanifested PAGE targets.
+
+Real-behaviour verification passed: `test_relevance_data.py` returned 11 passed; the sweep, coverage, and resolver selections returned 43 passed; the resident-service lane returned 12 passed, including Spanish, Catalan, English, and Hungarian terminology probes. The structured M130/casilla-15 authority path remains independently tested and was not widened by this semantic route. P06.S30 now has fresh authoritative sweep, target-resolution, and all-locale RAG evidence; Rung 2 remains fail-closed and deployment remains unperformed.

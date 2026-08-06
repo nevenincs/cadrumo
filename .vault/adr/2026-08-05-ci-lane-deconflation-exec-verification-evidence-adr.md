@@ -9,6 +9,7 @@ body_hash: 'sha256:96eb687d394d193649a4faf508300fec6c97dcf2c2c678721dbbb9e0c6879
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
+  - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
 ---
 # `ci-lane-deconflation` adr: `quote the instrument, do not summarise it` | (**status:** `accepted`)
 

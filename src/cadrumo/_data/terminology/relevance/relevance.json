@@ -27,12 +27,12 @@
           "target": "_generated/glossary.html#term-AEAT",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.989198
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "autoliquidacion",
@@ -40,18 +40,25 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:autoliquidacion",
-          "target": "_generated/glossary.html#term-autoliquidacion",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
           "record_id": "legal:ley-58-2003:art-120",
           "target": "_generated/legal/boe-a-2003-23186.html#legal-ley-58-2003-art-120",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.982968
+        },
+        {
+          "record_id": "concept:modelo-115",
+          "target": "_generated/glossary.html#term-modelo-115",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.975646
+        },
+        {
+          "record_id": "concept:autoliquidacion",
+          "target": "_generated/glossary.html#term-autoliquidacion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.970684
         },
         {
           "record_id": "legal:orden-hac-610-2021:art-2",
@@ -61,7 +68,7 @@
           "ranking_weight": 0.955632
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 16,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -75,12 +82,19 @@
           "target": "_generated/glossary.html#term-autoliquidacion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.950303
+        },
+        {
+          "record_id": "concept:modelo-303",
+          "target": "_generated/glossary.html#term-modelo-303",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.875182
         }
       ],
-      "dropped_count": 13,
+      "dropped_count": 11,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "borrador",
@@ -92,12 +106,12 @@
           "target": "_generated/glossary.html#term-borrador",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.868201
         }
       ],
       "dropped_count": 1,
       "collapsed_count": 10,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "draft",
@@ -126,12 +140,12 @@
           "target": "_generated/glossary.html#term-presentado",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.902542
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "box",
@@ -177,12 +191,12 @@
           "target": "_generated/glossary.html#term-casilla",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.956447
         }
       ],
       "dropped_count": 3,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:casilla-namespace"
     },
     {
       "query": "recuadro",
@@ -194,12 +208,12 @@
           "target": "_generated/glossary.html#term-casilla",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.951512
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:casilla-namespace"
     },
     {
       "query": "rovat",
@@ -228,12 +242,12 @@
           "target": "_generated/glossary.html#term-censo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.828538
         }
       ],
-      "dropped_count": 11,
+      "dropped_count": 10,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "census",
@@ -245,12 +259,12 @@
           "target": "_generated/glossary.html#term-censo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.810303
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "datos censales",
@@ -262,12 +276,12 @@
           "target": "_generated/glossary.html#term-censo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.980559
         }
       ],
-      "dropped_count": 4,
+      "dropped_count": 3,
       "collapsed_count": 10,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "declaracion",
@@ -279,12 +293,12 @@
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.940662
         }
       ],
-      "dropped_count": 12,
+      "dropped_count": 11,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "declaracion tributaria",
@@ -296,7 +310,14 @@
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.978277
+        },
+        {
+          "record_id": "concept:autoliquidacion",
+          "target": "_generated/glossary.html#term-autoliquidacion",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.977797
         },
         {
           "record_id": "legal:ley-58-2003:art-119",
@@ -313,9 +334,9 @@
           "ranking_weight": 0.934738
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 16,
       "collapsed_count": 0,
-      "dominant_cluster": "legal:src/cadrumo"
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "declaration",
@@ -344,12 +365,12 @@
           "target": "_generated/glossary.html#term-declaracion",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.844359
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "case file",
@@ -361,12 +382,12 @@
           "target": "_generated/glossary.html#term-expediente",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.93585
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "expediente",
@@ -395,12 +416,12 @@
           "target": "_generated/glossary.html#term-fichero-BOE",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.989234
         }
       ],
-      "dropped_count": 15,
+      "dropped_count": 14,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "Impuesto sobre la Renta de las Personas Fisicas",
@@ -408,21 +429,21 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:irpf",
-          "target": "_generated/glossary.html#term-IRPF",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
           "record_id": "legal:ley-35-2006:art-1",
           "target": "_generated/legal/boe-a-2006-20764.html#legal-ley-35-2006-art-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.999984
+        },
+        {
+          "record_id": "concept:irpf",
+          "target": "_generated/glossary.html#term-IRPF",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.998127
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -432,16 +453,23 @@
       "language": "es",
       "targets": [
         {
+          "record_id": "concept:renta",
+          "target": "_generated/glossary.html#term-renta",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.9811
+        },
+        {
           "record_id": "concept:irpf",
           "target": "_generated/glossary.html#term-IRPF",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.976915
         }
       ],
-      "dropped_count": 15,
+      "dropped_count": 13,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "personal income tax",
@@ -461,9 +489,16 @@
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.966809
+        },
+        {
+          "record_id": "concept:modelo-100",
+          "target": "_generated/glossary.html#term-modelo-100",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.902511
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -473,18 +508,18 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:iva",
-          "target": "_generated/glossary.html#term-IVA",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
           "record_id": "legal:ley-37-1992:art-1",
           "target": "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.999616
+        },
+        {
+          "record_id": "concept:iva",
+          "target": "_generated/glossary.html#term-IVA",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.997937
         },
         {
           "record_id": "legal:orden-eha-3111-2009:art-8",
@@ -508,7 +543,7 @@
           "ranking_weight": 0.931791
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 15,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -518,18 +553,18 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:iva",
-          "target": "_generated/glossary.html#term-IVA",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
           "record_id": "legal:ley-37-1992:art-1",
           "target": "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.99951
+        },
+        {
+          "record_id": "concept:iva",
+          "target": "_generated/glossary.html#term-IVA",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.996441
         },
         {
           "record_id": "legal:orden-eha-3111-2009:art-8",
@@ -553,7 +588,7 @@
           "ranking_weight": 0.962667
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 15,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -567,12 +602,19 @@
           "target": "_generated/glossary.html#term-IVA",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.939009
+        },
+        {
+          "record_id": "concept:iva-regimen-simplificado",
+          "target": "_generated/glossary.html#term-regimen-simplificado",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.851155
         }
       ],
-      "dropped_count": 17,
-      "collapsed_count": 1,
-      "dominant_cluster": null
+      "dropped_count": 16,
+      "collapsed_count": 0,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "value-added tax",
@@ -580,21 +622,21 @@
       "language": "en",
       "targets": [
         {
-          "record_id": "concept:iva",
-          "target": "_generated/glossary.html#term-IVA",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
           "record_id": "legal:ley-37-1992:art-1",
           "target": "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.997835
+        },
+        {
+          "record_id": "concept:iva",
+          "target": "_generated/glossary.html#term-IVA",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.990941
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -608,12 +650,12 @@
           "target": "_generated/glossary.html#term-inversion-del-sujeto-pasivo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.995936
         }
       ],
-      "dropped_count": 15,
+      "dropped_count": 14,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:regimen"
     },
     {
       "query": "ISP",
@@ -625,12 +667,12 @@
           "target": "_generated/glossary.html#term-inversion-del-sujeto-pasivo",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.956272
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:regimen"
     },
     {
       "query": "RE",
@@ -645,8 +687,8 @@
           "ranking_weight": 1.0
         }
       ],
-      "dropped_count": 16,
-      "collapsed_count": 2,
+      "dropped_count": 14,
+      "collapsed_count": 3,
       "dominant_cluster": null
     },
     {
@@ -655,21 +697,28 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:iva-recargo-equivalencia",
-          "target": "_generated/glossary.html#term-regimen-del-recargo-de-equivalencia",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
           "record_id": "legal:ley-37-1992:art-148",
           "target": "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-148",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.995612
+        },
+        {
+          "record_id": "concept:recargo-equivalencia",
+          "target": "_generated/glossary.html#term-recargo-de-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987976
+        },
+        {
+          "record_id": "concept:iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-regimen-del-recargo-de-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987849
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 15,
       "collapsed_count": 1,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -700,12 +749,12 @@
           "target": "_generated/glossary.html#term-regimen-simplificado",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.987964
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:regimen"
     },
     {
       "query": "filing receipt",
@@ -717,12 +766,12 @@
           "target": "_generated/glossary.html#term-justificante",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.97579
         }
       ],
-      "dropped_count": 10,
+      "dropped_count": 9,
       "collapsed_count": 3,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "justificante",
@@ -751,12 +800,12 @@
           "target": "_generated/glossary.html#term-justificante",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.981749
         }
       ],
       "dropped_count": 11,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "ledger",
@@ -788,7 +837,7 @@
           "ranking_weight": 1.0
         }
       ],
-      "dropped_count": 1,
+      "dropped_count": 0,
       "collapsed_count": 6,
       "dominant_cluster": null
     },
@@ -815,13 +864,6 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-036",
-          "target": "_generated/glossary.html#term-modelo-036",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-eha-1274-2007:art-1",
           "target": "_generated/legal/boe-a-2007-9508.html#legal-orden-eha-1274-2007-art-1",
           "kind": "legal",
@@ -829,14 +871,28 @@
           "ranking_weight": 0.99077
         },
         {
+          "record_id": "concept:modelo-036",
+          "target": "_generated/glossary.html#term-modelo-036",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.989803
+        },
+        {
           "record_id": "legal:orden-eha-1274-2007:art-2",
           "target": "_generated/legal/boe-a-2007-9508.html#legal-orden-eha-1274-2007-art-2",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.983126
+        },
+        {
+          "record_id": "concept:censo",
+          "target": "_generated/glossary.html#term-censo",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.943247
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 16,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -875,11 +931,18 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.9
+        },
+        {
+          "record_id": "concept:renta",
+          "target": "_generated/glossary.html#term-renta",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.94513
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "modelo 100",
@@ -911,6 +974,13 @@
           "ranking_weight": 0.9
         },
         {
+          "record_id": "concept:modelo-190",
+          "target": "_generated/glossary.html#term-modelo-190",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.991453
+        },
+        {
           "record_id": "legal:orden-eha-586-2011:art-1",
           "target": "_generated/legal/boe-a-2011-4948.html#legal-orden-eha-586-2011-art-1",
           "kind": "legal",
@@ -918,9 +988,9 @@
           "ranking_weight": 0.988394
         }
       ],
-      "dropped_count": 9,
+      "dropped_count": 8,
       "collapsed_count": 4,
-      "dominant_cluster": "legal:src/cadrumo"
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "retenciones del trabajo",
@@ -932,12 +1002,19 @@
           "target": "_generated/glossary.html#term-modelo-111",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.987566
+        },
+        {
+          "record_id": "concept:modelo-190",
+          "target": "_generated/glossary.html#term-modelo-190",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.924009
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 115",
@@ -945,11 +1022,18 @@
       "language": "es",
       "targets": [
         {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.990464
+        },
+        {
           "record_id": "concept:modelo-115",
           "target": "_generated/glossary.html#term-modelo-115",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.985427
         },
         {
           "record_id": "legal:orden-2000-11-20:apartado-primero",
@@ -960,8 +1044,8 @@
         }
       ],
       "dropped_count": 9,
-      "collapsed_count": 4,
-      "dominant_cluster": "legal:src/cadrumo"
+      "collapsed_count": 3,
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "retenciones de alquiler",
@@ -973,12 +1057,19 @@
           "target": "_generated/glossary.html#term-modelo-115",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.988778
+        },
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.962981
         }
       ],
-      "dropped_count": 15,
+      "dropped_count": 13,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 123",
@@ -991,18 +1082,11 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 0.9
-        },
-        {
-          "record_id": "legal:orden-hac-56-2024:art-1",
-          "target": "_generated/legal/boe-a-2024-1772.html#legal-orden-hac-56-2024-art-1",
-          "kind": "legal",
-          "surface": "legal",
-          "ranking_weight": 0.870524
         }
       ],
-      "dropped_count": 17,
+      "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": "legal:src/cadrumo"
+      "dominant_cluster": null
     },
     {
       "query": "retenciones sobre intereses y dividendos",
@@ -1014,12 +1098,12 @@
           "target": "_generated/glossary.html#term-modelo-123",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.994015
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 130",
@@ -1082,12 +1166,12 @@
           "target": "_generated/glossary.html#term-modelo-131",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.991315
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 15,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 180",
@@ -1095,22 +1179,22 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-180",
-          "target": "_generated/glossary.html#term-modelo-180",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-hap-1732-2014:art-2",
           "target": "_generated/legal/boe-a-2014-9740.html#legal-orden-hap-1732-2014-art-2",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.995063
+        },
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987369
         }
       ],
       "dropped_count": 17,
-      "collapsed_count": 1,
+      "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
     {
@@ -1123,12 +1207,12 @@
           "target": "_generated/glossary.html#term-modelo-180",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.98748
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "atribucion de rentas",
@@ -1153,21 +1237,21 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-184",
-          "target": "_generated/glossary.html#term-modelo-184",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-hap-2250-2015:art-1",
           "target": "_generated/legal/boe-a-2015-11596.html#legal-orden-hap-2250-2015-art-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.998727
+        },
+        {
+          "record_id": "concept:modelo-184",
+          "target": "_generated/glossary.html#term-modelo-184",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987261
         }
       ],
-      "dropped_count": 12,
+      "dropped_count": 11,
       "collapsed_count": 3,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1177,21 +1261,21 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-190",
-          "target": "_generated/glossary.html#term-modelo-190",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-eha-3127-2009:art-1",
           "target": "_generated/legal/boe-a-2009-18567.html#legal-orden-eha-3127-2009-art-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.988087
+        },
+        {
+          "record_id": "concept:modelo-190",
+          "target": "_generated/glossary.html#term-modelo-190",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.98667
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 15,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1201,18 +1285,25 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-190",
-          "target": "_generated/glossary.html#term-modelo-190",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-eha-3127-2009:art-1",
           "target": "_generated/legal/boe-a-2009-18567.html#legal-orden-eha-3127-2009-art-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.999114
+        },
+        {
+          "record_id": "concept:modelo-190",
+          "target": "_generated/glossary.html#term-modelo-190",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.99044
+        },
+        {
+          "record_id": "concept:modelo-180",
+          "target": "_generated/glossary.html#term-modelo-180",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.987506
         },
         {
           "record_id": "legal:orden-eha-3377-2011:art-1",
@@ -1222,7 +1313,7 @@
           "ranking_weight": 0.981621
         }
       ],
-      "dropped_count": 14,
+      "dropped_count": 12,
       "collapsed_count": 3,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1236,12 +1327,12 @@
           "target": "_generated/glossary.html#term-modelo-193",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.981662
         }
       ],
       "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "resumen anual del capital mobiliario",
@@ -1253,12 +1344,12 @@
           "target": "_generated/glossary.html#term-modelo-193",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.99447
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "impuesto sobre sociedades",
@@ -1270,7 +1361,7 @@
           "target": "_generated/glossary.html#term-modelo-200",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.987062
         },
         {
           "record_id": "legal:orden-hac-941-2018:art-primero-5-anexo-i",
@@ -1285,11 +1376,18 @@
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.983563
+        },
+        {
+          "record_id": "concept:modelo-202",
+          "target": "_generated/glossary.html#term-modelo-202",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.980548
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 16,
       "collapsed_count": 0,
-      "dominant_cluster": "legal:src/cadrumo"
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 200",
@@ -1331,13 +1429,6 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-202",
-          "target": "_generated/glossary.html#term-modelo-202",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-hac-941-2018:art-primero-5-anexo-i",
           "target": "_generated/legal/boe-a-2018-12515.html#legal-orden-hac-941-2018-art-primero-5-anexo-i",
           "kind": "legal",
@@ -1345,11 +1436,11 @@
           "ranking_weight": 0.997957
         },
         {
-          "record_id": "legal:orden-hac-262-2025:art-unico-1-anexo-i",
-          "target": "_generated/legal/boe-a-2025-5407.html#legal-orden-hac-262-2025-art-unico-1-anexo-i",
-          "kind": "legal",
-          "surface": "legal",
-          "ranking_weight": 0.993287
+          "record_id": "concept:modelo-202",
+          "target": "_generated/glossary.html#term-modelo-202",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.995093
         }
       ],
       "dropped_count": 18,
@@ -1362,21 +1453,21 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-210",
-          "target": "_generated/glossary.html#term-modelo-210",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:rd-439-2007:art-113",
           "target": "_generated/legal/boe-a-2007-6820.html#legal-rd-439-2007-art-113",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.98711
+        },
+        {
+          "record_id": "concept:modelo-210",
+          "target": "_generated/glossary.html#term-modelo-210",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.984153
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1390,12 +1481,12 @@
           "target": "_generated/glossary.html#term-modelo-210",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.987801
         }
       ],
-      "dropped_count": 10,
+      "dropped_count": 9,
       "collapsed_count": 2,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 232",
@@ -1407,12 +1498,12 @@
           "target": "_generated/glossary.html#term-modelo-232",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.979484
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "operaciones vinculadas",
@@ -1420,21 +1511,21 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-232",
-          "target": "_generated/glossary.html#term-modelo-232",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-hfp-816-2017:art-3",
           "target": "_generated/legal/boe-a-2017-10042.html#legal-orden-hfp-816-2017-art-3",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.98252
+        },
+        {
+          "record_id": "concept:modelo-232",
+          "target": "_generated/glossary.html#term-modelo-232",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.980249
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1482,25 +1573,18 @@
           "target": "_generated/glossary.html#term-modelo-309",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.988489
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 309",
       "concept_id": "modelo-309",
       "language": "es",
       "targets": [
-        {
-          "record_id": "concept:modelo-309",
-          "target": "_generated/glossary.html#term-modelo-309",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
         {
           "record_id": "legal:orden-hac-3625-2003:apartado-1",
           "target": "_generated/legal/boe-a-2003-23809.html#legal-orden-hac-3625-2003-apartado-1",
@@ -1516,6 +1600,13 @@
           "ranking_weight": 0.99329
         },
         {
+          "record_id": "concept:modelo-309",
+          "target": "_generated/glossary.html#term-modelo-309",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.986911
+        },
+        {
           "record_id": "legal:orden-hac-174-2020:art-1",
           "target": "_generated/legal/boe-a-2020-2898.html#legal-orden-hac-174-2020-art-1",
           "kind": "legal",
@@ -1523,7 +1614,7 @@
           "ranking_weight": 0.966098
         }
       ],
-      "dropped_count": 17,
+      "dropped_count": 16,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1537,12 +1628,12 @@
           "target": "_generated/glossary.html#term-modelo-322",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.995067
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 322",
@@ -1574,13 +1665,6 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-347",
-          "target": "_generated/glossary.html#term-modelo-347",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-hap-1732-2014:art-2",
           "target": "_generated/legal/boe-a-2014-9740.html#legal-orden-hap-1732-2014-art-2",
           "kind": "legal",
@@ -1607,9 +1691,16 @@
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.984735
+        },
+        {
+          "record_id": "concept:modelo-347",
+          "target": "_generated/glossary.html#term-modelo-347",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.973057
         }
       ],
-      "dropped_count": 9,
+      "dropped_count": 8,
       "collapsed_count": 2,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1623,7 +1714,7 @@
           "target": "_generated/glossary.html#term-modelo-347",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.986812
         },
         {
           "record_id": "legal:rd-1065-2007:art-31",
@@ -1654,7 +1745,7 @@
           "ranking_weight": 0.801277
         }
       ],
-      "dropped_count": 12,
+      "dropped_count": 11,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1692,12 +1783,12 @@
           "target": "_generated/glossary.html#term-modelo-349",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.988407
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "IVA de grupo agregado",
@@ -1709,12 +1800,12 @@
           "target": "_generated/glossary.html#term-modelo-353",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.995003
         }
       ],
-      "dropped_count": 17,
+      "dropped_count": 16,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 353",
@@ -1722,21 +1813,21 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-353",
-          "target": "_generated/glossary.html#term-modelo-353",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-eha-3434-2007:art-2",
           "target": "_generated/legal/boe-a-2007-20484.html#legal-orden-eha-3434-2007-art-2",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.995434
+        },
+        {
+          "record_id": "concept:modelo-353",
+          "target": "_generated/glossary.html#term-modelo-353",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.982436
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 0,
       "dominant_cluster": "legal:src/cadrumo"
     },
@@ -1781,12 +1872,12 @@
           "target": "_generated/glossary.html#term-modelo-369",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.96841
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "modelo 390",
@@ -1815,12 +1906,12 @@
           "target": "_generated/glossary.html#term-modelo-390",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 0.9
+          "ranking_weight": 0.993754
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:modelo"
     },
     {
       "query": "bienes en el extranjero",
@@ -1828,18 +1919,18 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-720",
-          "target": "_generated/glossary.html#term-modelo-720",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:ley-7-2012:da-1",
           "target": "_generated/legal/boe-a-2012-13416.html#legal-ley-7-2012-da-1",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.994289
+        },
+        {
+          "record_id": "concept:modelo-720",
+          "target": "_generated/glossary.html#term-modelo-720",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.986471
         },
         {
           "record_id": "legal:orden-hfp-1180-2023:art-primero",
@@ -1880,13 +1971,6 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:modelo-720",
-          "target": "_generated/glossary.html#term-modelo-720",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 0.9
-        },
-        {
           "record_id": "legal:orden-hap-72-2013:art-7",
           "target": "_generated/legal/boe-a-2013-954.html#legal-orden-hap-72-2013-art-7",
           "kind": "legal",
@@ -1899,10 +1983,17 @@
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.984826
+        },
+        {
+          "record_id": "concept:modelo-720",
+          "target": "_generated/glossary.html#term-modelo-720",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.983387
         }
       ],
-      "dropped_count": 11,
-      "collapsed_count": 2,
+      "dropped_count": 7,
+      "collapsed_count": 3,
       "dominant_cluster": "legal:src/cadrumo"
     },
     {
@@ -1932,12 +2023,12 @@
           "target": "_generated/glossary.html#term-NIF",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.961024
         }
       ],
-      "dropped_count": 14,
+      "dropped_count": 13,
       "collapsed_count": 3,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "NIF",
@@ -1949,12 +2040,12 @@
           "target": "_generated/glossary.html#term-NIF",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.982822
         }
       ],
-      "dropped_count": 4,
+      "dropped_count": 3,
       "collapsed_count": 5,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "Numero de Identificacion Fiscal",
@@ -1966,12 +2057,12 @@
           "target": "_generated/glossary.html#term-NIF",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.997315
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "aranyositas",
@@ -2013,16 +2104,23 @@
       "language": "en",
       "targets": [
         {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.973403
+        },
+        {
           "record_id": "concept:prorrata",
           "target": "_generated/glossary.html#term-prorrata",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.931951
         }
       ],
-      "dropped_count": 14,
+      "dropped_count": 12,
       "collapsed_count": 3,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "prorateo",
@@ -2052,11 +2150,18 @@
           "kind": "concept",
           "surface": "concept",
           "ranking_weight": 1.0
+        },
+        {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.981779
         }
       ],
       "dropped_count": 0,
-      "collapsed_count": 13,
-      "dominant_cluster": null
+      "collapsed_count": 12,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "prorrateo",
@@ -2068,12 +2173,12 @@
           "target": "_generated/glossary.html#term-prorrata",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.896351
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "regla de prorrata",
@@ -2081,16 +2186,23 @@
       "language": "es",
       "targets": [
         {
+          "record_id": "concept:prorrata-especial",
+          "target": "_generated/glossary.html#term-prorrata-especial",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.989928
+        },
+        {
           "record_id": "concept:prorrata",
           "target": "_generated/glossary.html#term-prorrata",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.969832
         }
       ],
-      "dropped_count": 9,
+      "dropped_count": 7,
       "collapsed_count": 6,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "különleges arányosítás",
@@ -2119,12 +2231,12 @@
           "target": "_generated/glossary.html#term-prorrata-especial",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.991546
         }
       ],
       "dropped_count": 1,
-      "collapsed_count": 13,
-      "dominant_cluster": null
+      "collapsed_count": 12,
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "special pro rata",
@@ -2136,12 +2248,12 @@
           "target": "_generated/glossary.html#term-prorrata-especial",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.987927
         }
       ],
-      "dropped_count": 17,
+      "dropped_count": 16,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "equivalence surcharge",
@@ -2153,12 +2265,19 @@
           "target": "_generated/glossary.html#term-recargo-de-equivalencia",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.980603
+        },
+        {
+          "record_id": "concept:iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-regimen-del-recargo-de-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.974569
         }
       ],
-      "dropped_count": 17,
+      "dropped_count": 16,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "recargo de equivalencia",
@@ -2166,22 +2285,29 @@
       "language": "es",
       "targets": [
         {
-          "record_id": "concept:recargo-equivalencia",
-          "target": "_generated/glossary.html#term-recargo-de-equivalencia",
-          "kind": "concept",
-          "surface": "concept",
-          "ranking_weight": 1.0
-        },
-        {
           "record_id": "legal:ley-37-1992:art-161",
           "target": "_generated/legal/boe-a-1992-28740.html#legal-ley-37-1992-art-161",
           "kind": "legal",
           "surface": "legal",
           "ranking_weight": 0.996034
+        },
+        {
+          "record_id": "concept:recargo-equivalencia",
+          "target": "_generated/glossary.html#term-recargo-de-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.992005
+        },
+        {
+          "record_id": "concept:iva-recargo-equivalencia",
+          "target": "_generated/glossary.html#term-regimen-del-recargo-de-equivalencia",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.978161
         }
       ],
       "dropped_count": 12,
-      "collapsed_count": 3,
+      "collapsed_count": 1,
       "dominant_cluster": "legal:src/cadrumo"
     },
     {
@@ -2194,12 +2320,12 @@
           "target": "_generated/glossary.html#term-renta",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.932582
         }
       ],
-      "dropped_count": 18,
+      "dropped_count": 17,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "revision",
@@ -2211,12 +2337,12 @@
           "target": "_generated/glossary.html#term-revision",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.920013
         }
       ],
-      "dropped_count": 11,
+      "dropped_count": 10,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "electronic office",
@@ -2228,12 +2354,12 @@
           "target": "_generated/glossary.html#term-sede-electronica",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.950332
         }
       ],
-      "dropped_count": 20,
+      "dropped_count": 19,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "sede",
@@ -2245,12 +2371,12 @@
           "target": "_generated/glossary.html#term-sede-electronica",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.875344
         }
       ],
-      "dropped_count": 15,
+      "dropped_count": 14,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "sede electronica",
@@ -2258,16 +2384,23 @@
       "language": "es",
       "targets": [
         {
+          "record_id": "legal:ley-40-2015:art-38",
+          "target": "_generated/legal/boe-a-2015-10566.html#legal-ley-40-2015-art-38",
+          "kind": "legal",
+          "surface": "legal",
+          "ranking_weight": 0.997378
+        },
+        {
           "record_id": "concept:sede-electronica",
           "target": "_generated/glossary.html#term-sede-electronica",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.990127
         }
       ],
-      "dropped_count": 16,
+      "dropped_count": 14,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "legal:src/cadrumo"
     },
     {
       "query": "VAT Information Exchange System",
@@ -2279,12 +2412,12 @@
           "target": "_generated/glossary.html#term-VIES",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.996071
         }
       ],
-      "dropped_count": 19,
+      "dropped_count": 18,
       "collapsed_count": 0,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     },
     {
       "query": "VIES",
@@ -2296,17 +2429,17 @@
           "target": "_generated/glossary.html#term-VIES",
           "kind": "concept",
           "surface": "concept",
-          "ranking_weight": 1.0
+          "ranking_weight": 0.980708
         }
       ],
-      "dropped_count": 14,
+      "dropped_count": 13,
       "collapsed_count": 1,
-      "dominant_cluster": null
+      "dominant_cluster": "concept:domain:concepto"
     }
   ],
   "query_count": 112,
   "concept_count": 49,
   "failed_query_count": 0,
-  "reindex_note": "reindex queued/accepted: Source code re-index job queued on service: 4eb5196b-8ad8-4db7-8490-2a0f9f9bab05\nCheck progress with: vaultspec-rag server jobs",
+  "reindex_note": "fresh code index completed: f444e105223c47c19f6bb705d5788253; sweep used the completed index",
   "score_floor": 0.5
 }

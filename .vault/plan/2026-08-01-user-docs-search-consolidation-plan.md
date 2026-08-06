@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-06'
-body_hash: 'sha256:d4f51ec0342f38a09eebe099de3f819bb15cc2ed3b2ead4c861781f8788b0fdd'
+body_hash: 'sha256:104bea76cc2a4cc6d2027de7c3e4eba6ae981f1be96d4f2219393946c56ad701'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -39,8 +39,8 @@ Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model 
 - [ ] `P02.S05` - Add the client-side cosine tier over the shipped matrix to the shared search controller so both the palette host and the search-page host rank through it inside the existing compose ladder; `docs/_static/cadrumo-docs.js`.
 - [ ] `P02.S06` - Extend the licence gate to validate the shipped matrix's provenance stamp, model licence, and size bound while keeping every oracle-output and NC-ND bar intact; `dev/docs/tests/`.
 - [ ] `P02.S07` - Re-run the held-out miss-rate measurement over the rung-2-enabled ladder and commit the report as the new standing baseline beside the 0.1875 pre-rung-2 figure; `src/cadrumo/_data/terminology/evaluation/`.
-- [ ] `P02.S25` - Establish a shared canonical JSON byte contract or equivalent artifact evidence so the browser can fail closed on nested matrix, manifest, bridge, target-list, and bundle self-attestation hashes before Rung-2 artifact acceptance; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
-- [ ] `P02.S26` - Define and implement independent provider-package/model and tokenizer-content verification from an ADR-ratified byte-manifest contract before Rung-2 matrix compilation or artifact acceptance; `dev/docs/terminology/_model2vec_provider.py and the accepted ADR/schema`.
+- [x] `P02.S25` - Establish a shared canonical JSON byte contract or equivalent artifact evidence so the browser can fail closed on nested matrix, manifest, bridge, target-list, and bundle self-attestation hashes before Rung-2 artifact acceptance; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
+- [x] `P02.S26` - Define and implement independent provider-package/model and tokenizer-content verification from an ADR-ratified byte-manifest contract before Rung-2 matrix compilation or artifact acceptance; `dev/docs/terminology/_model2vec_provider.py and the accepted ADR/schema`.
 
 ### Phase `P03` - Verification and honest close
 
@@ -85,7 +85,7 @@ Formal review follow-up is part of that queue: the P06.S22 Pagefind result contr
 - [x] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
 - [ ] `P06.S27` - Defer a Diseño-specific locator/parser contract until an official revision-aware source locator is available while retaining fail-closed target resolution; `dev/docs/terminology/_resolution.py`.
 - [x] `P06.S28` - Reconcile the Diseño source-resolution verification gate with the validated individual-locator contract before verification runs; `dev/docs/terminology/tests/test_resolution.py`.
-- [ ] `P06.S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input; `dev/docs/terminology/_sweep.py, dev/docs/terminology/tests/test_sweep.py, src/cadrumo/_data/terminology/relevance/`.
+- [x] `P06.S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input; `dev/docs/terminology/_sweep.py, dev/docs/terminology/tests/test_sweep.py, src/cadrumo/_data/terminology/relevance/`.
 
 ## Parallelization
 

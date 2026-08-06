@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:df8d33763704305924a5fd199cc7d95a8c1771aee10c2438acb9c5fe0c4d56ef'
+body_hash: 'sha256:b572b0e937536c825ada1a4311f9167b9e12d4e4d0244f7646357e971dcd60f7'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -192,3 +192,13 @@ Fresh `vaultspec-rag` semantic grounding over the P02.S04 execution record, stat
 The codebase semantic endpoint still rejects the server's `codebase` alias with `unknown_source_type`; no reindex or bypass was used. The vault semantic results and exact code-file retrieval provide the grounding for this bounded source audit. No additional source defect is justified, so no P02.S04 code correction was made.
 
 Scoped static verification passed: Ruff, basedpyright (0 errors, 0 warnings, 0 notes), Python AST parsing, and focused diff whitespace validation. No tests, builds, model downloads, matrix/provider generation, Pagefind compilation, browser/runtime probes, live sweeps, reindexing, deployment, or generated-artifact release were run. P02.S04 remains open for the pinned provider/package/model/tokenizer evidence, generated artifact, licence/quantization/held-out acceptance, and runtime gates.
+
+### 2026-08-06 authorized provider and compiler evidence
+
+Fresh vaultspec-rag grounding for the standing report contract returned the accepted Rung-2 audit, ADR, source-contract reference, P02.S04/P02.S07 execution records, and the source evaluator/acceptance modules (CLI request e37945e2b1874e178bafb76e6b3029fe). The source boundary remains model-agnostic and fail-closed; the current work supplied the explicitly authorized provider/model/tokenizer evidence and compiled a temporary route-refresh bundle from the current committed relevance input.
+
+The independently verified provider lane used model2vec==0.8.2, minishlab/potion-multilingual-128M at immutable revision e7421cd79c75fc506b88bb75723ae0a234994720, MIT provenance, and dimension 256. The temporary bundle validates as schema v3 and is 2,132,846 canonical bytes, below the 3,000,000-byte envelope. Its bundle SHA-256 is f220aa7876b2d77dade0d7710b6b6456204ba4717148f73c66aeb6aac7f6be19; the matrix is schema v4 / 254,318 bytes / 1d76856656aba06546dc9d07d39fcaff3d06b6bc5a0d59f46f474dd09ecef58b, the bridge is schema v2 / 26,108 bytes / 1023110e0a94bac12fd7c04c6e91549f7cff2297b6a05dbdc416ce884170f8e6, and the manifest is schema v2 / 1,851,898 bytes / 8,497 records. The matrix contains 112 vocabulary rows and 152 query-token rows. Raw provider/model/tokenizer manifest evidence is independently verified and bound into the report.
+
+The report is materialized at src/cadrumo/_data/terminology/evaluation/rung2-report.json, but the temporary bundle is intentionally not promoted or wired into the browser: held-out recall and all-locale artifact acceptance do not pass. P02.S04 therefore remains open for the committed accepted matrix/bundle and dependent P02.S05/P02.S06/runtime closure.
+
+Focused verification passed: uv run --no-sync pytest -q dev/docs/terminology/tests/test_rung2_report.py dev/docs/terminology/tests/test_rung2_evaluation.py returned 13 passed in 4.31s; scoped Ruff, basedpyright, and git diff --check passed. No deployment or browser enablement occurred.

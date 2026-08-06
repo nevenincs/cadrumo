@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c8c0a8ac89f6e6865bc481e28f3478be7c0f8c1ba2a9a8fdc08fa3e4f3a4b8a'
+body_hash: 'sha256:f632008b131e3f94c407cd4f1ff91740ac12c62b02375cdb707178722a10b3f1'
 step_id: 'S25'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -81,3 +81,11 @@ This is architecture approval only. P02.S25 remains open pending independently e
 ### 2026-08-05 JavaScript consumer static recheck
 
 Fresh vaultspec-rag grounding and the exact LUNA source diff confirm that the independent JavaScript vector consumer now validates the `cadrumo-jcs-utf8-lf-v1` corpus contract before consuming vectors: the corpus must be a non-empty object with a non-empty vector list, each entry must have a string id, and each entry must declare exactly one expected-byte outcome or explicit rejection. `node --check dev/docs/terminology/jcs_vectors/verify.mjs` and focused `git diff --check` pass. This is static evidence only; the Python and JavaScript consumers remain unexecuted, so P02.S25 stays open for authorized parity evidence and downstream artifact gates. No tests, builds, vector execution, artifact generation, runtime probes, model downloads, sweeps, reindexing, deployment, or release acceptance were run.
+
+### 2026-08-06 authorized cross-runtime parity evidence
+
+Fresh vaultspec-rag grounding over ADR Update 10, the JCS vector-consumer audit, the P02.S25 record, and the current Python/JavaScript consumers returned request 7f18cafecf3c475399d474a6d9ae6432. The independent consumers were executed against the committed language-neutral corpus and both returned PASS: the production Python canonicalizer accepted every expected vector/rejected every rejection vector, and the independent Node consumer produced the same expected UTF-8 bytes and SHA-256 digests for the same corpus.
+
+The parity corpus validates cadrumo-jcs-utf8-lf-v1 across numeric/safe-integer boundaries, rejection cases, escaping, multilingual/non-BMP text, normalization-sensitive strings, nested values, terminal LF, and representative matrix/manifest/bridge/bundle hash scopes. This closes the independent Python/JavaScript parity evidence gap for P02.S25. The canonicalizer remains a source/artifact contract; it does not accept the Rung-2 bundle, enable the browser, or prove locale/kind recall.
+
+No deployment was performed. Downstream P02.S04-P02.S07 artifact, recall, and locale gates remain open independently.
