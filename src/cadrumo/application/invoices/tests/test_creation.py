@@ -22,6 +22,7 @@ from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
 from ....domain.invoices import (
+    InvoiceClass,
     InvoiceLine,
     InvoiceOperationDateRole,
     InvoiceValidationError,
@@ -706,4 +707,102 @@ def test_omitting_the_line_set_still_synthesises_the_single_line() -> None:
     assert len(invoice.lines) == 1
     assert invoice.lines[0].iva_rate is IvaRate.RATE_21
     assert invoice.iva_total == Decimal("210.00")
+    assert invoice.grand_total == Decimal("1210.00")
+
+
+def test_a_rectificativa_with_series_and_recargo_is_writable_and_persists(tmp_path: Path) -> None:
+    """The four axes the aggregate modelled and no write path could set.
+
+    Before these parameters existed every canonically-written invoice was
+    ORDINARIA with no series and no recargo BY CONSTRUCTION, and a
+    rectificativa could not be represented at all -- the aggregate claimed a
+    vocabulary the writer could not speak. Folding the operator surface onto an
+    aggregate that cannot express a rectificativa would have been a capability
+    loss on its face, which is why the conservation inventory named this a
+    blocking row.
+
+    Persisted and reloaded rather than asserted in memory, because the claim is
+    that all four SURVIVE the encrypted boundary.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        result = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Minorista Recargo SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="R-2026-0001",
+            issued_at=date(2026, 5, 4),
+            taxable_base=Decimal("1000.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            invoice_class=InvoiceClass.RECTIFICATIVA,
+            series="R",
+            rectifies_invoice_number="F-2026-0044",
+            recargo_amount=Decimal("52.00"),
+        )
+        restored = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load().get(result.invoice.invoice_id)
+
+    assert restored is not None
+    assert restored.invoice_class is InvoiceClass.RECTIFICATIVA
+    assert restored.series == "R"
+    assert restored.rectifies_invoice_number == "F-2026-0044"
+    assert restored.recargo_amount == Decimal("52.00")
+    # The recargo is INSIDE the invoice total (LIVA art. 161): 1000 + 210 + 52.
+    assert restored.grand_total == Decimal("1262.00")
+
+
+def test_a_recargo_on_an_exempt_supply_refuses() -> None:
+    """A recargo cannot ride on a supply that bears no cuota (LIVA art. 161).
+
+    The recargo de equivalencia is charged on top of the cuota of a taxable
+    supply, so a supply that is exempt by law bears no recargo either. Passing
+    one through the new writer parameter must therefore refuse rather than be
+    carried into the totals.
+
+    This is the sharper of the two available refusals and the reason the
+    parameter is safe to expose: the writer does not merely add the figure to
+    the grand total, it hands it to invariants that already know when a recargo
+    is legally impossible.
+    """
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="recargo_amount must be zero"):
+        build_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Minorista Recargo SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="R-2026-0002",
+            issued_at=date(2026, 5, 4),
+            taxable_base=Decimal("1000.00"),
+            iva_rate=None,
+            currency="EUR",
+            recargo_amount=Decimal("52.00"),
+        )
+
+
+def test_the_default_invoice_class_is_still_ordinaria() -> None:
+    """Positive control: the additive change leaves the ordinary path alone.
+
+    Every existing caller omits all four axes, so a regression here would break
+    the common case while the rectificativa proof above still passed.
+    """
+    invoice = build_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Cliente Ordinario SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        invoice_number="F-2026-0100",
+        issued_at=date(2026, 5, 4),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+    )
+
+    assert invoice.invoice_class is InvoiceClass.ORDINARIA
+    assert invoice.series is None
+    assert invoice.recargo_amount is None
     assert invoice.grand_total == Decimal("1210.00")

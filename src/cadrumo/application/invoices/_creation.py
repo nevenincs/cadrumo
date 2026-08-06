@@ -44,6 +44,7 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
     InvoiceCatalogueRepositoryProtocol,
+    InvoiceClass,
     InvoiceLine,
     InvoiceOperationDateRole,
     InvoiceValidationError,
@@ -120,6 +121,10 @@ def build_catalogue_invoice(
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
+    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo_amount: Decimal | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: ExchangeRateProvider | None = None,
 ) -> Invoice:
@@ -154,6 +159,18 @@ def build_catalogue_invoice(
     ``_validate_retencion_consistency`` accepts an amount alone, requires an
     amount whenever a rate is supplied, and refuses either that does not
     match the invoice's ``base_total``.
+
+    ``invoice_class``, ``series``, ``rectifies_invoice_number`` and
+    ``recargo_amount`` reach axes the aggregate has always modelled and no
+    write path could set. Until they existed here every canonically-written
+    invoice was ORDINARIA with no series and no recargo **by construction**,
+    and a rectificativa was unrepresentable — so the aggregate claimed a
+    vocabulary the writer could not speak.
+
+    The recargo rides INSIDE ``grand_total`` (LIVA art. 161) while a retención
+    is settled outside it, which is why only the recargo enters the totals
+    identity. The model re-checks that identity exactly, so a stated recargo
+    the lines do not support refuses rather than being balanced silently.
     """
     from ...domain.invoices import iva_rate_percentage
 
@@ -195,7 +212,12 @@ def build_catalogue_invoice(
                 "iva_amount": format(iva_amount, "f"),
             },
         ]
-    grand_total = base_total + iva_total
+    # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
+    # while a retencion is settled outside it, which is why only the recargo
+    # appears here. The model re-checks this identity exactly, so a caller that
+    # states a recargo the lines do not support is refused rather than balanced.
+    recargo = recargo_amount or Decimal("0")
+    grand_total = base_total + iva_total + recargo
     invoice_payload: dict[str, object] = {
         "bucket_id": bucket_id,
         "kind": kind.value,
@@ -211,7 +233,14 @@ def build_catalogue_invoice(
         "payment_status": payment_status.value,
         "lines": payload_lines,
         "notes": notes,
+        "invoice_class": invoice_class.value,
     }
+    if series is not None:
+        invoice_payload["series"] = series
+    if rectifies_invoice_number is not None:
+        invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
+    if recargo_amount is not None:
+        invoice_payload["recargo_amount"] = format(recargo_amount, "f")
     if iva_category is not None:
         invoice_payload["iva_category"] = iva_category.value
     if operation_type is not None:
@@ -283,6 +312,10 @@ def create_catalogue_invoice(
     operation_date: date | None = None,
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
+    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo_amount: Decimal | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
@@ -314,6 +347,10 @@ def create_catalogue_invoice(
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        recargo_amount=recargo_amount,
         lines=lines,
         rate_provider=rate_provider,
     )
