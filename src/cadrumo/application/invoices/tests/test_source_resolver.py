@@ -27,6 +27,7 @@ from ....domain.modelos import Modelo349CountryPrefixContextError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
+from .._source_resolver import _intracommunity_clave
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -663,3 +664,78 @@ def test_unconverted_foreign_invoice_is_withheld_from_projection(
     # No operator counted, and no importe declared from the foreign face value.
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] != Decimal("1000.00")
+
+
+@pytest.mark.unit
+def test_a_service_category_alone_resolves_its_m349_clave() -> None:
+    """A record carrying the service category but NO operation_type still files.
+
+    The operation-type branch short-circuits ahead of the category branches, so
+    an invoice created through the CLI reaches its clave via ``operation_type``
+    and never exercises these lines. A record carrying only the IVA category --
+    which the creation service permits, the two fields being independent --
+    would otherwise resolve to no clave at all and drop out of the
+    recapitulativa silently.
+
+    Asserted on both directions and against the goods claves, because filing a
+    service as E or A would report it as an entrega/adquisición de bienes.
+    """
+    issued = _clave_probe_invoice(InvoiceKind.ISSUED, IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY)
+    received = _clave_probe_invoice(
+        InvoiceKind.RECEIVED,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+    )
+
+    assert issued.operation_type is None
+    assert received.operation_type is None
+    assert _intracommunity_clave(issued) == "S"
+    assert _intracommunity_clave(received) == "I"
+
+
+@pytest.mark.unit
+def test_a_service_category_on_its_impossible_side_resolves_no_clave() -> None:
+    """The directional half of the same branch.
+
+    A supply category on a received invoice, or an acquisition category on an
+    issued one, describes an operation that does not arise. Resolving a clave
+    for it would file a fabricated row, so the branch must decline.
+    """
+    wrong_way_supply = _clave_probe_invoice(
+        InvoiceKind.RECEIVED,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+    )
+    wrong_way_acquisition = _clave_probe_invoice(
+        InvoiceKind.ISSUED,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+    )
+
+    assert _intracommunity_clave(wrong_way_supply) is None
+    assert _intracommunity_clave(wrong_way_acquisition) is None
+
+
+def _clave_probe_invoice(kind: InvoiceKind, category: IvaCategory) -> Invoice:
+    """Build a minimal exempt-shaped invoice carrying a category and no operation_type."""
+    base = Decimal("1000.00")
+    line = InvoiceLine(
+        description="Servicio intracomunitario",
+        quantity=Decimal("1"),
+        unit_price=base,
+        subtotal=base,
+        iva_rate=IvaRate.EXEMPT,
+        iva_amount=Decimal("0.00"),
+    )
+    return Invoice(
+        kind=kind,
+        invoice_number="CLAVE/1",
+        issued_at=date(2026, 2, 1),
+        counterparty_name="Contraparte UE",
+        counterparty_tax_id="FR12345678901",
+        counterparty_country="FR",
+        base_total=base,
+        iva_total=Decimal("0.00"),
+        grand_total=base,
+        currency="EUR",
+        lines=(line,),
+        payment_status=PaymentStatus.PAID,
+        iva_category=category,
+    )

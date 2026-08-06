@@ -408,6 +408,8 @@ _LIVA_EXPORTACION: Final[str] = "ley-37-1992:art-21"
 _LIVA_EXPORTACION_ASIMILADA: Final[str] = "ley-37-1992:art-22"
 _LIVA_ENTREGA_INTRACOM_EXENTA: Final[str] = "ley-37-1992:art-25"
 _LIVA_EXENCION_ADQ_INTRACOM: Final[str] = "ley-37-1992:art-26"
+_LIVA_LUGAR_SERVICIOS_GENERAL: Final[str] = "ley-37-1992:art-69"
+_LIVA_LUGAR_SERVICIOS_ESPECIAL: Final[str] = "ley-37-1992:art-70"
 _LIVA_SUJETO_PASIVO: Final[str] = "ley-37-1992:art-84"
 _LIVA_TIPO_GENERAL: Final[str] = "ley-37-1992:art-90"
 _LIVA_TIPOS_REDUCIDOS: Final[str] = "ley-37-1992:art-91"
@@ -720,6 +722,82 @@ _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
             _LIRPF_PAGOS_A_CUENTA,
             _RIRPF_RETENCION_ACTIVIDADES,
         ),
+    ),
+    # Intra-community SERVICES. Deliberately NOT folded into the goods rows
+    # above: both carry no Spanish cuota on the issued face, but for a
+    # different reason, and the reason is what the filing cites. An entrega de
+    # bienes is located in Spain and EXEMPTED by art. 25; a B2B service is not
+    # located in Spain at all, because art. 69.Uno.1.o places it where the
+    # recipient is established. No sujeta is not exenta, and citing art. 25 on
+    # a service would ground the figure in a provision that does not reach it.
+    # Art. 70 rides alongside art. 69 on both rows because its reglas
+    # especiales OVERRIDE the general rule for several service kinds, so the
+    # localisation a row asserts is only sound once art. 70 has been read.
+    _row(
+        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+        _ISSUED,
+        # The base is real and belongs on the base-only casillas: the operation
+        # is declarable in Spain even though no Spanish cuota arises from it.
+        base=IvaComponentPresence.REQUIRED,
+        cuota=IvaComponentPresence.ZERO_BY_LAW,
+        cuota_settlement=IvaCuotaSettlement.NONE,
+        cuota_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        # Every recargo tipo in art. 161 names an ENTREGA DE BIENES, so a
+        # prestacion de servicios bears none. Inferred from the tipo ladder
+        # rather than stated by a bundled provision, exactly as the domestic
+        # zero-cuota rows infer it.
+        recargo=IvaComponentPresence.ZERO_BY_LAW,
+        recargo_grounding=IvaGroundingConfidence.REASONED,
+        retencion=IvaRetencionExpectation.NOT_EXPECTED,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        retencion_note=_NON_RESIDENT_PAYER_NOTE,
+        legal_refs=(
+            _LIVA_LUGAR_SERVICIOS_GENERAL,
+            _LIVA_LUGAR_SERVICIOS_ESPECIAL,
+            _LIRPF_PAGOS_A_CUENTA,
+            _RIRPF_OBLIGADOS_A_RETENER,
+        ),
+    ),
+    _one_sided(
+        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+        _RECEIVED,
+        "LIVA art. 69.Uno.1.o locates a B2B service where the RECIPIENT is established, so this "
+        "category describes a service the taxpayer SUPPLIES to a business in another Member "
+        "State. The received-side counterpart is "
+        "'intra_community_service_acquisition_reverse_charge', which carries its own row.",
+    ),
+    _row(
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        _RECEIVED,
+        base=IvaComponentPresence.REQUIRED,
+        # Art. 69.Uno.1.o locates the service HERE because the recipient is
+        # established here, and art. 84.Uno.2.o makes that recipient the sujeto
+        # pasivo: the cuota is real and self-assessed, not absent.
+        cuota=IvaComponentPresence.REQUIRED,
+        cuota_settlement=IvaCuotaSettlement.INVERSION_SUJETO_PASIVO,
+        cuota_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        # Diverges from the goods acquisition row, which carries OPTIONAL
+        # recargo: the recargo de equivalencia attaches to entregas de bienes
+        # to a comerciante minorista, and no art. 161 tipo reaches a service.
+        recargo=IvaComponentPresence.ZERO_BY_LAW,
+        recargo_grounding=IvaGroundingConfidence.REASONED,
+        retencion=IvaRetencionExpectation.NOT_EXPECTED,
+        retencion_grounding=IvaGroundingConfidence.BUNDLED_CORPUS,
+        retencion_note=_NON_RESIDENT_SUPPLIER_NOTE,
+        legal_refs=(
+            _LIVA_LUGAR_SERVICIOS_GENERAL,
+            _LIVA_LUGAR_SERVICIOS_ESPECIAL,
+            _LIVA_SUJETO_PASIVO,
+            _LIRPF_PAGOS_A_CUENTA,
+            _RIRPF_OBLIGADOS_A_RETENER,
+        ),
+    ),
+    _one_sided(
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        _ISSUED,
+        "This category describes a service the taxpayer RECEIVES from a supplier in another "
+        "Member State, self-assessing the cuota under LIVA art. 84.Uno.2.o. The issued-side "
+        "counterpart is 'intra_community_service_supply', which carries its own row.",
     ),
     _one_sided(
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,

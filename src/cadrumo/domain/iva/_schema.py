@@ -56,6 +56,28 @@ class IvaCategory(StrEnum):
     INTRA_COMMUNITY_SUPPLY = "intra_community_supply"
     INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE = "intra_community_acquisition_reverse_charge"
     INTRA_COMMUNITY_TRIANGULATION = "intra_community_triangulation"
+    INTRA_COMMUNITY_SERVICE_SUPPLY = "intra_community_service_supply"
+    """A service supplied to a business established in another Member State.
+
+    Kept distinct from :attr:`INTRA_COMMUNITY_SUPPLY` because the two carry no
+    Spanish cuota for different reasons, and the reason is what a filing cites.
+    An entrega intracomunitaria de bienes is EXEMPT under LIVA art. 25 -- the
+    operation is located in Spain and the law relieves it. A B2B service is not
+    located in Spain at all: art. 69.Uno.1.o places it where the recipient is
+    established, so it is NO SUJETA here. Reusing the goods category would put
+    art. 25 on a figure art. 25 does not govern.
+    """
+
+    INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE = "intra_community_service_acquisition_reverse_charge"
+    """A service received from a supplier established in another Member State.
+
+    The mirror of :attr:`INTRA_COMMUNITY_SERVICE_SUPPLY`: art. 69.Uno.1.o
+    locates the service in Spain because the recipient is established here, and
+    art. 84.Uno.2.o makes that recipient the sujeto pasivo, so the cuota is
+    self-assessed. Distinct from
+    :attr:`INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`, which is the goods
+    counterpart resting on arts. 13/15.
+    """
     EXPORT_THIRD_COUNTRY_ZERO_RATED = "export_third_country_zero_rated"
     EXPORT_ASSIMILATED_ZERO_RATED = "export_assimilated_zero_rated"
     IMPORT_THIRD_COUNTRY = "import_third_country"
@@ -149,6 +171,13 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
 # - EXPORT_THIRD_COUNTRY_ZERO_RATED / EXPORT_ASSIMILATED_ZERO_RATED:
 #   exportación u operación asimilada exenta — zero cuota, base only
 #   (Ley 37/1992 arts. 21-22, casilla 60).
+# - INTRA_COMMUNITY_SERVICE_SUPPLY: a B2B service supplied to a business in
+#   another Member State — no Spanish cuota because art. 69.Uno.1.o locates
+#   the operation where the recipient is established, so it is NO SUJETA here
+#   rather than exempt. Its received-side counterpart is deliberately ABSENT
+#   from this set: art. 84.Uno.2.o makes the Spanish recipient the sujeto
+#   pasivo, so that side bears a real self-assessed cuota and must keep firing
+#   the unconsumed-declarable advisory until a binding routes it.
 # - INTRA_COMMUNITY_TRIANGULATION: operación triangular informativa — no
 #   cuota for the Spanish intermediary.
 # - REGIMEN_SIMPLIFICADO: settled under the régimen simplificado modulo
@@ -167,6 +196,7 @@ CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.DOMESTIC_NOT_SUBJECT,
         IvaCategory.OPERACION_NO_SUJETA,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         IvaCategory.INTRA_COMMUNITY_TRIANGULATION,

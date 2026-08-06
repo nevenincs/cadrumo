@@ -446,6 +446,16 @@ def _intracommunity_clave(invoice: Invoice) -> str | None:
         return "T"
     if invoice.kind is InvoiceKind.ISSUED and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
         return "E"
+    # The service claves. Kept separate from E/A rather than folded into them:
+    # Modelo 349 reports goods and services under distinct claves, so a service
+    # declared as E would be filed as an entrega de bienes.
+    if invoice.kind is InvoiceKind.ISSUED and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY:
+        return "S"
+    if (
+        invoice.kind is InvoiceKind.RECEIVED
+        and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE
+    ):
+        return "I"
     if (
         invoice.kind is InvoiceKind.RECEIVED
         and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE

@@ -274,6 +274,18 @@ def test_catalogue_create_stamps_intra_community_category() -> None:
 
 
 def test_catalogue_create_stamps_service_operation_type() -> None:
+    """A service clave now stamps a service category, where it once stamped none.
+
+    This test previously asserted ``iva_category is None`` -- pinning the gap
+    rather than the behaviour. The enum had no member for an intra-community
+    SERVICE, so ``--operation-type S`` produced a record with a clave and no
+    IVA treatment at all, which left it ungrounded to every consumer that reads
+    the category.
+
+    The category is the service one, not the goods one: a B2B service is NO
+    SUJETA in Spain because LIVA art. 69.Uno.1.º locates it where the recipient
+    is established, whereas an entrega de bienes is EXEMPT under art. 25.
+    """
     result = invoke_cached_cli(
         [
             "app", "ledger", "invoice", "catalogue", "create",
@@ -292,4 +304,4 @@ def test_catalogue_create_stamps_service_operation_type() -> None:
     stored = InvoiceCatalogueRepository().load().get(invoice_id)
     assert stored is not None, "catalogue invoice missing after create"
     assert stored.operation_type is IntracomOperationType.S
-    assert stored.iva_category is None
+    assert stored.iva_category is IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY

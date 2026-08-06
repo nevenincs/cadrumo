@@ -126,6 +126,14 @@ _OPERATION_TYPE_TO_IVA_CATEGORY: dict[IntracomOperationType, IvaCategory] = {
     IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
     IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
     IntracomOperationType.T: IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
+    # The service claves. Before these existed the operator could pick S or I
+    # and the record came back with NO category at all, so an ordinary
+    # intracomunitaria de servicios was ungrounded to every consumer that reads
+    # the IVA treatment. They map to the service categories, not to the goods
+    # ones: a service is no sujeta by the art. 69 localisation rule, where an
+    # entrega de bienes is exempt under art. 25.
+    IntracomOperationType.S: IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+    IntracomOperationType.ADQUISICION_SERVICIOS: (IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE),
 }
 
 

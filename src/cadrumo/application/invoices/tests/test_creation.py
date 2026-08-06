@@ -21,7 +21,12 @@ from ....core import IntracomOperationType, Period
 from ....core.aggregation import InvoiceDevengoRank
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import load_modelo_path
-from ....domain.invoices import InvoiceOperationDateRole, InvoiceValidationError, PaymentStatus
+from ....domain.invoices import (
+    InvoiceOperationDateRole,
+    InvoiceValidationError,
+    PaymentStatus,
+    decompose_invoice,
+)
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....domain.modelos import Modelo349OperadorRow
 from ....tests.secure_sql import isolated_runtime_profile
@@ -506,4 +511,80 @@ def test_m349_declares_a_coherent_exempt_supply_with_no_diagnostic(tmp_path: Pat
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
     assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("5000.00")
+    assert resolution.diagnostics == ()
+
+
+def test_intracommunity_services_now_carry_a_category_and_reach_m349(tmp_path: Path) -> None:
+    """An intracomunitaria de servicios is grounded, and files under S and I.
+
+    Before the service categories existed, operation types S and I mapped to no
+    IvaCategory at all, so an ordinary cross-border service was ungrounded to
+    every consumer that reads the IVA treatment -- including the decomposition
+    contract, which had to be narrowed to contradictions only because absence
+    could not be distinguished from an unrepresentable operation.
+
+    The two categories are deliberately not the goods ones. A service is NO
+    SUJETA in Spain by the art. 69.Uno.1.º localisation rule, where an entrega
+    de bienes is EXEMPT under art. 25, and Modelo 349 reports them under
+    distinct claves -- so declaring a service as E would file it as goods.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
+        issued = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.ISSUED,
+            counterparty_name="Service SARL",
+            counterparty_tax_id="FR12345678901",
+            counterparty_country="FR",
+            invoice_number="SERV-OUT-2026-100",
+            issued_at=date(2026, 2, 10),
+            taxable_base=Decimal("4000.00"),
+            iva_rate=Decimal("0"),
+            currency="EUR",
+            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+            operation_type=IntracomOperationType.S,
+            repository=repository,
+        ).invoice
+        received = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            counterparty_name="Servizi SRL",
+            counterparty_tax_id="IT12345678901",
+            counterparty_country="IT",
+            invoice_number="SERV-IN-2026-100",
+            issued_at=date(2026, 3, 5),
+            taxable_base=Decimal("3000.00"),
+            iva_rate=Decimal("0"),
+            currency="EUR",
+            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+            operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
+            repository=repository,
+        ).invoice
+        resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="349",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision=_modelo_349_revision(),
+            ),
+        )
+
+    # Grounded now: the decomposition contract can answer for these records,
+    # which is what the category being absent previously made impossible.
+    for invoice in (issued, received):
+        assert decompose_invoice(invoice).defects == ()
+
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("2")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("7000.00")
+    rows = {
+        (row.codigo_pais, row.clave_operacion): row
+        for row in resolution.detail_rows
+        if isinstance(row, Modelo349OperadorRow)
+    }
+    assert rows[("FR", "S")].importe == Decimal("4000.00")
+    assert rows[("IT", "I")].importe == Decimal("3000.00")
+    # Filed under the service claves, NOT under the goods claves E and A.
+    assert ("FR", "E") not in rows
+    assert ("IT", "A") not in rows
     assert resolution.diagnostics == ()

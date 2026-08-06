@@ -353,3 +353,45 @@ retrieval_date = 2026-04-13
 legal_reference = "ley-37-1992:art-164"
 quoted_text = "iva.catalogue.unknown.citations.1.quoted_text"
 retrieval_date = 2026-04-13
+
+[[regulations]]
+category = "intra_community_service_supply"
+label = "iva.catalogue.intra_community_service_supply.label"
+description = "iva.catalogue.intra_community_service_supply.description"
+triggers_when = "iva.catalogue.intra_community_service_supply.triggers_when"
+iva_treatment = "iva.catalogue.intra_community_service_supply.iva_treatment"
+requires_reverse_charge = false
+requires_supplier_iva_id = true
+manual_references = []
+notes = "Prestacion de servicios B2B a un empresario establecido en otro Estado miembro. No sujeta en el TAI por la regla de localizacion del art. 69.Uno.1.o, no exenta del art. 25: la operacion no se localiza en Espana, de modo que no nace cuota espanola. Las reglas especiales del art. 70 prevalecen sobre la general, por lo que deben leerse antes de asignar esta categoria."
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-69"
+quoted_text = "iva.catalogue.intra_community_service_supply.citations.0.quoted_text"
+retrieval_date = 2026-08-06
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-70"
+quoted_text = "iva.catalogue.intra_community_service_supply.citations.1.quoted_text"
+retrieval_date = 2026-08-06
+
+[[regulations]]
+category = "intra_community_service_acquisition_reverse_charge"
+label = "iva.catalogue.intra_community_service_acquisition_reverse_charge.label"
+description = "iva.catalogue.intra_community_service_acquisition_reverse_charge.description"
+triggers_when = "iva.catalogue.intra_community_service_acquisition_reverse_charge.triggers_when"
+iva_treatment = "iva.catalogue.intra_community_service_acquisition_reverse_charge.iva_treatment"
+requires_reverse_charge = true
+requires_supplier_iva_id = true
+manual_references = []
+notes = "Adquisicion de servicios a un prestador establecido en otro Estado miembro. El art. 69.Uno.1.o localiza la operacion en el TAI por estar el destinatario establecido aqui, y el art. 84.Uno.2.o convierte a ese destinatario en sujeto pasivo: la cuota se autorrepercute. Distinta de la adquisicion intracomunitaria de bienes, que descansa en los arts. 13/15."
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-69"
+quoted_text = "iva.catalogue.intra_community_service_acquisition_reverse_charge.citations.0.quoted_text"
+retrieval_date = 2026-08-06
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-84"
+quoted_text = "iva.catalogue.intra_community_service_acquisition_reverse_charge.citations.1.quoted_text"
+retrieval_date = 2026-08-06
