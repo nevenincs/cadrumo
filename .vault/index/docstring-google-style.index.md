@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#docstring-google-style'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:a2323d99822124bf69d30264f6fdcc6bf2925b9532f0a33e2fa331bcf0a21250'
+body_hash: 'sha256:31b34d14b41f532fb6a0a55134c77e882193b562705fdb47698943139b5f49db'
 related:
   - '[[2026-06-09-docstring-google-style-S01]]'
   - '[[2026-06-09-docstring-google-style-S02]]'
@@ -1006,6 +1006,7 @@ related:
   - '[[2026-06-09-docstring-google-style-plan]]'
   - '[[2026-06-09-docstring-google-style-research]]'
   - '[[2026-07-10-docstring-google-style-audit]]'
+  - '[[2026-08-06-docstring-google-style-exec-record-provenance-audit]]'
 ---
 
 # `docstring-google-style` feature index
@@ -1021,6 +1022,7 @@ Auto-generated index of all documents tagged with `#docstring-google-style`.
 ### audit
 
 - `2026-07-10-docstring-google-style-audit` - `docstring-google-style` audit: `Docstring Google-style execution reconciliation`
+- `2026-08-06-docstring-google-style-exec-record-provenance-audit` - `docstring-google-style` audit: `993 of 994 execution records are empty scaffolds from a single unrelated commit`
 
 ### exec
 

@@ -6,10 +6,12 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:d40b5cafe30c8a860b81255083b6233e35b1006fa2a660d1ba259d6ca113a3bb'
+body_hash: 'sha256:aa03c395bd080b0a55a52da4bf2948eb743e439dcdf2725ea8e6d4f495c25b52'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S04]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S06]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S07]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S08]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S22]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S23]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S11]]'
@@ -18,6 +20,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-P03-S18]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S19]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S15]]'
+  - '[[2026-08-05-ci-lane-deconflation-P04-S17]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S20]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S21]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S24]]'
@@ -67,8 +70,11 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P04-S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in
 - `2026-08-05-ci-lane-deconflation-P04-S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero
 - `2026-08-05-ci-lane-deconflation-P04-S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads
+- `2026-08-05-ci-lane-deconflation-P02-S06` - Close the entrypoints CLI integration failures, measured at 18 across 8 modules with 138 passing, and regenerate the set from two intersected runs rather than one
 - `2026-08-05-ci-lane-deconflation-P02-S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock
+- `2026-08-05-ci-lane-deconflation-P02-S08` - Measure the dev tooling gates at a clean HEAD, the local count of 55 is contaminated because 32 belong to an uncommitted peer legal entry and the true figure is nearer 23
 - `2026-08-05-ci-lane-deconflation-P03-S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator
+- `2026-08-05-ci-lane-deconflation-P04-S17` - Record a finding about the 204 semantic-dedup exec records rather than remediating them, all 204 carry empty Description Outcome and Notes and were bulk-scaffolded in one commit so 0 resolve to an implementing commit, and unchecking would assert work the tree shows was done
 
 ### plan
 
