@@ -121,7 +121,7 @@ def _cash_accounting_transaction(
             "iva_amount": Decimal("210.00"),
             "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
             "cash_accounting_treatment": IvaCashAccountingTreatment.TAXPAYER_REGIME,
-            "cash_accounting_operation_date": operation_date,
+            "operation_date": operation_date,
             "cash_accounting_payment_evidence": (
                 IvaCashAccountingPaymentEvidence(
                     payment_date=payment_date,

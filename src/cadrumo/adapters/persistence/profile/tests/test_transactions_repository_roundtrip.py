@@ -1205,7 +1205,7 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
                 "iva_amount": Decimal("210.00"),
                 "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
                 "cash_accounting_treatment": IvaCashAccountingTreatment.TAXPAYER_REGIME,
-                "cash_accounting_operation_date": date(2026, 3, 20),
+                "operation_date": date(2026, 3, 20),
                 "cash_accounting_payment_evidence": (
                     IvaCashAccountingPaymentEvidence(
                         payment_date=date(2026, 4, 15),
@@ -1227,7 +1227,7 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
     assert loaded == original
     loaded_txn = loaded.transactions[cash_sale.transaction_id]
     assert loaded_txn.cash_accounting_treatment is IvaCashAccountingTreatment.TAXPAYER_REGIME
-    assert loaded_txn.cash_accounting_operation_date == date(2026, 3, 20)
+    assert loaded_txn.operation_date == date(2026, 3, 20)
     assert len(loaded_txn.cash_accounting_payment_evidence) == 2
     first, second = loaded_txn.cash_accounting_payment_evidence
     assert isinstance(first, IvaCashAccountingPaymentEvidence)
