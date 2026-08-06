@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#ci-lane-deconflation'
 date: '2026-08-05'
-modified: '2026-08-05'
-body_hash: 'sha256:1c3cf6fd5ba9eea303a2a6ba910748aaa3c746cadf7fb8bd7fa6b1801492772a'
+modified: '2026-08-06'
+body_hash: 'sha256:d67461bf7b9dd223b81348fb5430fdbb40984e583d2593c8de4842f811c08bd0'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -39,14 +39,14 @@ The two new lanes both failed their first real execution and their fixes are unv
 - [ ] `P01.S02` - Verify the frontend lane passes on a runner under Node 22, its first run refused npm ci because jest-dom 7.0.0 requires node 22 and the manifest under-declares at 20.19; `.github/workflows/frontend.yml`.
 - [ ] `P01.S03` - Dispatch ci-full for its first ever execution and record the result, its run count is zero so every claim about its steps is structural rather than observed; `.github/workflows/ci-full.yml`.
 - [x] `P01.S04` - Move the ci-full docs build above the tooling-gates step so the terminology gates that resolve to built HTML get their artefact, blocked until the legal-entry defect stops masking the dependency; `.github/workflows/ci-full.yml`.
-- [ ] `P01.S05` - Decide whether to push the branch, a push carries every ancestor including peer in-flight work so it is an operator call and it gates the three verification rows above; `origin/main`.
+- [ ] `P01.S05` - Decide what to do about the already-pushed branch, a peer snapshot pushed it so the original decision is moot and the live question is whether the published history needs remediation; `origin/main`.
 
 ### Phase `P02` - Enrolled-lane backlog closure
 
 Enrolling the integration suite and the dev tooling gates exposed accumulated rot that had never been visible. These rows close it and lift the two non-blocking guards. A guard left non-blocking indefinitely becomes decorative, so each carries the condition for flipping it.
 
 - [ ] `P02.S06` - Close the entrypoints CLI integration failures, measured at 18 across 8 modules with 138 passing, and regenerate the set from two intersected runs rather than one; `src/cadrumo/entrypoints/cli/tests`.
-- [ ] `P02.S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock; `src/cadrumo/entrypoints/mcp`.
+- [x] `P02.S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock; `src/cadrumo/entrypoints/mcp`.
 - [ ] `P02.S08` - Measure the dev tooling gates at a clean HEAD, the local count of 55 is contaminated because 32 belong to an uncommitted peer legal entry and the true figure is nearer 23; `dev/audit, dev/deploy, dev/env, dev/registry, dev/docs`.
 - [ ] `P02.S09` - Flip continue-on-error off the integration parallel step once its backlog closes, the step is deterministic so it can go blocking independently of the serial pass; `.github/workflows/ci-full.yml`.
 - [ ] `P02.S10` - Flip continue-on-error off the integration serial step once one runner execution is observed, its build branch producing three wheels and three sdists has never been watched; `.github/workflows/ci-full.yml`.

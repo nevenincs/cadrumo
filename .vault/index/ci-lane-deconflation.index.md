@@ -6,9 +6,10 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:ea45c9d1285f5925466d2ff026a6e66058e2e53ed65ea3ea2c114adb5b245210'
+body_hash: 'sha256:15eb0de9e6dc693988a51b2fd2b08902a72502b8a59d4946cd18a42da9c178f0'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S04]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S07]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S22]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S23]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S11]]'
@@ -28,6 +29,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-plan]]'
   - '[[2026-08-05-ci-lane-deconflation-schema-size-instrument-adr]]'
   - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
+  - '[[2026-08-06-ci-lane-deconflation-close-honesty-review-audit]]'
 ---
 
 # `ci-lane-deconflation` feature index
@@ -46,6 +48,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 ### audit
 
 - `2026-08-05-ci-lane-deconflation-step-check-attribution-audit` - `ci-lane-deconflation` audit: `the reserialisation finding is disproved and its cause misattributed`
+- `2026-08-06-ci-lane-deconflation-close-honesty-review-audit` - `ci-lane-deconflation` audit: `what a fresh reader would find missing, vague, or unverified`
 
 ### exec
 
@@ -63,6 +66,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P04-S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in
 - `2026-08-05-ci-lane-deconflation-P04-S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero
 - `2026-08-05-ci-lane-deconflation-P04-S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads
+- `2026-08-05-ci-lane-deconflation-P02-S07` - Reshape overview.calendar profiles to a per-profile summary with detail behind a per-profile call, the resource_link this row first prescribed is refused because resolution re-runs a read verb over persisted state while this verb is computed from a clock
 
 ### plan
 
