@@ -21,6 +21,13 @@ operator-identifying and are kept out of committed text (gated by
 | macOS build host        | `self-hosted, macOS, ARM64`  | macOS    | `~/actions-runner`                        | `cleanup-macos.sh`   |
 | Linux ARM container     | `self-hosted, Linux, ARM64`  | Linux    | colima container `cadrumo-runner-mac-arm` | `cleanup-linux.sh`   |
 
+A runner's REGISTERED name (what `gh api .../actions/runners` reports) and its
+CONTAINER name (what `docker ps` reports) are NOT the same string for the two
+Linux X64 runners. Reconcile the two views by position and label set, never by
+matching names. The registered names are machine-identifying and so are kept out
+of committed text — `dev/quality/tests/test_doc_privacy.py` gates this file and
+will fail the build if they are pasted back in.
+
 The two Linux runners are docker containers that mount the host docker socket,
 so the smoke suite's nested containers create anonymous volumes and dangling
 images on the **host** daemon. The Linux hook prunes those from inside the
@@ -127,6 +134,37 @@ ssh <macos-build-host> '
 ```
 
 (Copy `cleanup-macos.sh` to the runner root first, e.g. `scp dev/runners/cleanup-macos.sh <macos-build-host>:~/actions-runner/`.)
+
+## Capability verification
+
+`uv run --no-sync python -m dev.containers.runner_capabilities` checks that a
+runner carries what the workflows assume. The `host-capabilities` job of
+`.github/workflows/runner-fleet-health.yml` runs it on every host-install runner;
+the container runners are covered instead by `just runner-image-test`.
+
+What counts as "assumed" is measured, not guessed. Parsing the `run:` blocks of
+every workflow shows `uv`, `just`, and `node` are each installed by a pinned
+setup action, while **`gh` is invoked by eight workflows and installed by none**
+(`publish-release`, `release-orchestrator`, `release-soak-promoter`,
+`packaging-smoke`, `packaging-scoop`, `packaging-claude`, `packaging-homebrew`,
+`packaging-campaign-trigger`). `packaging-scoop` requests the `windows-scoop`
+label that no runner carries, so that lane never schedules and `scoop` is
+deliberately not probed.
+
+**`.path` beats `.env`, and that is how `gh` went missing on macOS.** The runner
+root can hold both files. `.env` sets the service environment; `.path` sets the
+PATH applied to job steps, and `.path` is what wins. The macOS runner shipped a
+`.env` whose PATH included `/opt/homebrew/bin` and a `.path` whose PATH did not,
+and `gh` exists only under the Homebrew prefix — so every macOS/ARM leg of
+`packaging-homebrew` and `packaging-smoke` ran without a reachable `gh`, the
+`REFUSED: forge check needs the gh CLI on PATH` failure, live and unnoticed.
+
+The gap is invisible from an interactive SSH session, because a login profile
+puts Homebrew on PATH there. Read the LISTENER process environment instead —
+`ps eww -o command= -p "$(pgrep -f 'actions-runner/bin/Runner.Listener')"` — or
+run the probe under `env -i PATH="$(cat ~/actions-runner/.path)"`. Editing
+`.path` requires a runner restart to take effect, and the runner must be idle
+(see *Restart discipline*).
 
 ## How the runners relate to the other container images
 
@@ -265,12 +303,39 @@ drift the image removes.
 
 ```bash
 just runner-image-build   # docker build --target runner -t cadrumo-runner-linux .
-just runner-image-test    # gh, just, canonical-prefix brew, entrypoint, agent
+just runner-image-test    # gh, just, canonical-prefix brew, cache placement,
+                          # pre-warmed ruby, entrypoint, agent, volume-shadowing
 ```
 
 `runner-image-test` checks each capability whose absence caused a documented
 outage, including that `brew` resolves with no symlink indirection — a condition
-that otherwise only reveals itself at the very end of a real install.
+that otherwise only reveals itself at the very end of a real install — and it
+mounts a tmpfs over `/home/runner` to prove the volume cannot shadow the tools.
+
+### Distribution: build per host, no registry
+
+Only TWO machines need the image, so a registry would be more moving parts than
+the problem has. The docker host serving both Linux X64 containers builds it
+once for both; the ARM host builds its own natively. `--target runner` means the
+Python-based `dev` stage is never built, so neither build pulls the multi-gigabyte
+dependency set.
+
+- **Linux X64 host:** `just runner-image-build`, or the `runner-image` job of
+  `.github/workflows/runner-fleet-health.yml`, which also reclaims the tagged
+  image afterwards (the hygiene hook prunes only DANGLING images, so a tagged
+  build would otherwise leave gigabytes behind on a space-constrained box).
+- **ARM host:** build on the HOST, not inside the runner container — that
+  container has no docker socket, so it cannot build. Copy the `Dockerfile` and
+  `dev/runners/runner-entry-linux.sh` across, preserving the relative path, and
+  build with `docker buildx build --load --target runner -t
+  cadrumo-runner-linux:arm64 .`.
+
+**buildx is required, not optional.** The LEGACY builder ignores stage
+dependencies and builds every stage up to the target in file order, so
+`--target runner` on it also builds `base` and `dev` — the latter fails outright
+without a full repository context and, before failing, downloads the CUDA torch
+stack onto the machine with the least disk. If `docker build` prints the
+"legacy builder is deprecated" banner, install buildx before going further.
 
 ### Cutover, one runner at a time
 
@@ -284,7 +349,18 @@ pair.
 4. Confirm it comes back online and takes a job before touching the second.
 
 ```bash
-docker rm -f cadrumo-runner-linux-2   # idle only, confirmed busy=false
+# STOP GRACEFULLY, then WAIT for the daemon to actually report it stopped.
+# `docker stop` returning is NOT the same as the container being stopped: the
+# runner traps SIGTERM (RUNNER_MANUALLY_TRAP_SIG=1), and a `docker rm` issued
+# straight after fails with "container is running", leaving the old container
+# in place while the rest of the sequence half-executes.
+docker stop -t 45 cadrumo-runner-linux-2
+for i in $(seq 1 30); do
+  [ "$(docker inspect -f '{{.State.Running}}' cadrumo-runner-linux-2)" = false ] && break
+  sleep 2
+done
+docker rm cadrumo-runner-linux-2
+
 docker create --name cadrumo-runner-linux-2 --restart always \
   --user runner -w /home/runner \
   -v cadrumo-runner-state-2:/home/runner \
@@ -293,6 +369,17 @@ docker create --name cadrumo-runner-linux-2 --restart always \
   cadrumo-runner-linux
 docker start cadrumo-runner-linux-2
 ```
+
+**Prefer the graceful stop over `docker rm -f`.** A force-remove kills the agent
+without releasing its server-side session, and the replacement then loops on
+`POST .../session failed. HTTP Status: Conflict` until the stale session expires
+— measured at roughly 90 seconds of downtime. The same cutover done with a
+graceful stop was back online in 12 seconds.
+
+**From Git Bash on Windows, prefix the command with `MSYS_NO_PATHCONV=1`.**
+Otherwise the socket path is rewritten into a Windows path and `docker create`
+fails with `mkdir C:\Program Files\Git\run: Access is denied` — after the old
+container has already been removed, so the runner is down until you notice.
 
 Two differences from the old command. There is no `--entrypoint` override: the
 image declares it, at a path the volume cannot shadow. And the image is

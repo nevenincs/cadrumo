@@ -250,6 +250,29 @@ RUN mkdir -p /home/linuxbrew \
     && test -z "$(readlink -f /home/linuxbrew/.linuxbrew/bin/brew | grep -v '^/home/linuxbrew/')" \
     && su runner -c '/home/linuxbrew/.linuxbrew/bin/brew --version'
 
+# Pre-warm Homebrew's first-use state, and keep it OUT of /home/runner.
+#
+# Deliberately NOT `brew update --force`, which the old by-hand sequence ended
+# with: modern Homebrew resolves core formulae through the JSON API, so a fresh
+# clone taps and installs fine and cloning homebrew-core would cost roughly a
+# gigabyte for nothing. Measured on this image: `brew tap` self-provisions
+# portable-ruby and fetches the API data, and `brew info --json=v2` on a core
+# formula resolves with no core tap present at all.
+#
+# What DOES need doing is where that state lands. `HOMEBREW_CACHE` defaults to
+# `~/.cache/Homebrew` — i.e. inside `/home/runner`, which the state volume
+# mounts over — so every runner pays for and stores its own copy. Relocating it
+# under /home/linuxbrew puts it in a shared image layer instead: one copy for
+# the whole fleet rather than one per volume, which is the right trade on
+# space-constrained hosts. Pre-warming here also means the first real job does
+# not stop to download a Ruby.
+ENV HOMEBREW_NO_ANALYTICS=1 \
+    HOMEBREW_CACHE=/home/linuxbrew/.cache
+RUN install -d -o runner -g runner /home/linuxbrew/.cache \
+    && su runner -c 'HOMEBREW_NO_ANALYTICS=1 HOMEBREW_CACHE=/home/linuxbrew/.cache \
+    /home/linuxbrew/.linuxbrew/bin/brew info --json=v2 jq > /dev/null' \
+    && test -d /home/linuxbrew/.linuxbrew/Homebrew/Library/Homebrew/vendor/portable-ruby
+
 # The entrypoint lives in the IMAGE, at a path the state volume cannot
 # shadow. The previous incarnation was bind-mounted from an ephemeral temp
 # directory; when that directory was cleaned up Docker recreated the bind
