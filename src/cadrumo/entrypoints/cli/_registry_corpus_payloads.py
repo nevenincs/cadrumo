@@ -25,7 +25,7 @@ from ...application.registry import (
     RegistryCorpusIssueProjection,
     RegistryTopicProjection,
 )
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
 # Registered schemas

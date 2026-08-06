@@ -40,7 +40,7 @@ from pydantic import BaseModel
 from ...core import OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import UNMODELED_OBLIGATIONS as _UNMODELED_OBLIGATIONS
-from ...domain.calculations.registry import (
+from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )

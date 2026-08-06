@@ -5,11 +5,11 @@ tags:
 date: '2026-06-10'
 related:
   - "[[2026-06-10-ledger-invoice-unification-research]]"
-superseded_by: '2026-08-06-invoice-canonical-structure-adr'
-modified: '2026-08-06'
-body_hash: 'sha256:a009ecccf23ef904ef39aadce594b364c94edef3d7a77364028f7fbb174a6901'
+supersedes:
+modified: '2026-07-17'
+body_hash: 'sha256:f64d7959012461e66ffb044a76267bb7e04a3ab660a26a8961e8f2910067465e'
 ---
-# `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `superseded`)
+# `ledger-invoice-unification` adr: `Unify invoice CLI to invoice --kind (supersedes 2026-05-12)` | (**status:** `accepted`)
 
 ## Supersession
 

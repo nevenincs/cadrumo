@@ -75,13 +75,9 @@ from ...domain.calculations.registry import (
     SourceReference,
     SourceRefId,
     ValidatedRegistryAuthority,
-    collect_registry_tree_fingerprints,
     expression_casilla_refs,
     registry_scalar_value_type,
     revision_reference_identity_failures,
-)
-from ...domain.calculations.registry import (
-    clear_fingerprint_cache as _clear_loader_fingerprint_cache,
 )
 from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError, registry_schema_version
 
@@ -489,45 +485,28 @@ def _build_runtime_schema_provider_cached(
     )
 
 
-_FINGERPRINT_CACHE: dict[Path, tuple[float, tuple[tuple[str, int, int, str], ...]]] = {}
+_FINGERPRINT_CACHE: dict[Path, tuple[float, tuple[tuple[str, int, int], ...]]] = {}
 
 
 def clear_runtime_fingerprint_cache() -> None:
-    """Clear the time-based TTL cache for registry tree fingerprints.
-
-    Also clears the canonical collector's own cache
-    (:func:`~domain.calculations.registry.clear_fingerprint_cache`).
-    ``registry_tree_fingerprint`` now delegates its walk to that collector,
-    which carries its own path-keyed TTL cache underneath this module's
-    one-second wrapper; clearing only the outer layer would leave a caller
-    that mutates the registry tree and calls this function still served a
-    stale collector-cached value, exactly the correctness hole this
-    delegation exists to close.
-    """
+    """Clear the time-based TTL cache for registry tree fingerprints."""
     _FINGERPRINT_CACHE.clear()
-    _clear_loader_fingerprint_cache()
 
 
-def registry_tree_fingerprint(
+def registry_tree_fingerprint(  # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE
     root: Path,
-) -> tuple[tuple[str, int, int, str], ...]:
+) -> tuple[tuple[str, int, int], ...]:
     """Return the TTL-cached registry tree fingerprint for runtime schema loading.
 
-    Delegates the walk to the canonical
-    :func:`~domain.calculations.registry.collect_registry_tree_fingerprints`,
-    rather than a second hand-rolled tree walk: that collector adds a content
-    digest for mutable (non-bundled) trees specifically because
-    ``(size, mtime_ns)`` alone cannot distinguish two successive writes of
-    the same byte length within one coarse filesystem mtime tick, and
-    exempts the digest for the package-bundled tree (read-only, never
-    rewritten in-process) so the common case pays only per-file call
-    overhead, not hashing. It is used as a cache key for
-    :func:`build_runtime_schema_provider`; call
+    The fingerprint covers ``legal`` and ``modelos`` TOML files under
+    ``root`` and is keyed by relative path, mtime, and size. It is used as a
+    cache key for :func:`build_runtime_schema_provider`; call
     :func:`clear_runtime_fingerprint_cache` when tests or tooling mutate the
-    registry tree inside the one-second TTL this module's own cache holds
-    (the collector's own, longer-lived cache for the bundled root is a
-    separate, per-path layer this TTL sits in front of).
+    registry tree inside the one-second TTL.
     """
+    # ALT-FINGERPRINT-RATIONALE-REGISTRY-TREE:
+    # relative-path keyed for tree-walk change detection (distinct from
+    # filename-keyed canonical file_stat_fingerprint).
     import time
 
     now = time.monotonic()
@@ -536,7 +515,12 @@ def registry_tree_fingerprint(
         if now - cached_time < 1.0:
             return cached_val
 
-    val = collect_registry_tree_fingerprints(root)
+    paths = sorted((root / "legal").rglob("*.toml")) + sorted((root / "modelos").rglob("*.toml"))
+    fingerprint: list[tuple[str, int, int]] = []
+    for path in paths:
+        stat = path.stat()
+        fingerprint.append((path.relative_to(root).as_posix(), stat.st_mtime_ns, stat.st_size))
+    val = tuple(fingerprint)
     _FINGERPRINT_CACHE[root] = (now, val)
     return val
 

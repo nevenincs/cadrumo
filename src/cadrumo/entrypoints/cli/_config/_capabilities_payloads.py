@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from ....application.user_profile import CapabilitySource
 from ....core import ServiceCapability
-from ....core.json_contract import OutputSchema, register_schema
+from .._schemas import OutputSchema, register_schema
 
 
 class CapabilityRowPayload(OutputSchema):

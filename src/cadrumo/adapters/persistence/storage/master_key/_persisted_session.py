@@ -59,6 +59,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Final
 
+from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -69,7 +71,6 @@ from .....core.identity import BucketId
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._storage_path_definitions import PROFILE_SESSION_FILENAME
-from ..crypto import EncryptedBlob, decrypt_record, encrypt_record
 from ..errors import (
     DecryptionError,
     EncryptionError,
@@ -228,11 +229,6 @@ def _associated_data(
     return f"{_AAD_PREFIX}:{payload}".encode(_UTF_8_ENCODING)
 
 
-# ALT-DEK-WRAP-RATIONALE-SESSION: wraps the SAME bucket DEK as
-# adapters.persistence.storage.master_key._dek_wrap.wrap_dek, but under an
-# ephemeral OS-keychain session key for login-resumption custody rather than
-# the passphrase-derived KEK used at bucket-unlock enrollment -- two key
-# sources for two lifecycle events, not a fork of one custody path.
 def wrap_profile_session_dek(
     *,
     session_key: bytes,
@@ -278,6 +274,7 @@ def wrap_profile_session_dek(
     if idle_deadline > absolute_deadline:
         raise _encryption_error("idle_deadline must not exceed absolute_deadline")
 
+    nonce = secrets.token_bytes(_NONCE_BYTES)
     aad = _associated_data(
         schema_version=PROFILE_SESSION_SCHEMA_VERSION,
         bucket_id=bucket_id,
@@ -286,27 +283,10 @@ def wrap_profile_session_dek(
         idle_deadline=idle_deadline,
         absolute_deadline=absolute_deadline,
     )
-    # Routes through the canonical AEAD primitives (the same construction
-    # ._dek_wrap.wrap_dek uses for the sibling KEK-wrap), rather than calling
-    # AESGCM directly. The on-wire shape is unchanged: encrypt_record mints
-    # its own fresh nonce internally (same secrets.token_bytes(12) this
-    # module generated inline before), and EncryptedBlob.ciphertext (the
-    # cryptography library's ciphertext-with-tag) is split into
-    # PersistedProfileSession.ciphertext/.tag at the same 32-byte boundary
-    # _dek_wrap does, so every previously-wrapped session record remains
-    # readable and the persisted PersistedProfileSession/_PersistedSessionDocument
-    # shapes do not change.
     try:
-        blob = encrypt_record(dek, key=session_key, associated_data=aad)
-    except EncryptionError as exc:
-        # Re-raise the SAME exception object (preserving its __cause__ chain)
-        # with this module's translated_message, rather than wrapping it in a
-        # new EncryptionError -- a caller inspecting __cause__ sees the real
-        # underlying failure either way. Unreachable in practice: the
-        # session_key/dek length checks above already refuse before this
-        # call, but this mirrors _dek_wrap.wrap_dek's defence in depth.
-        exc.translated_message = _STORAGE_ENCRYPTION_MESSAGE_KEY
-        raise
+        cipher_with_tag = AESGCM(session_key).encrypt(nonce, dek, aad)
+    except (TypeError, ValueError) as exc:
+        raise _encryption_error("profile-session DEK wrap failed") from exc
     return PersistedProfileSession(
         schema_version=PROFILE_SESSION_SCHEMA_VERSION,
         bucket_id=bucket_id,
@@ -314,9 +294,9 @@ def wrap_profile_session_dek(
         authenticated_at=authenticated_at,
         idle_deadline=idle_deadline,
         absolute_deadline=absolute_deadline,
-        nonce=blob.nonce,
-        ciphertext=blob.ciphertext[:_DEK_BYTES],
-        tag=blob.ciphertext[_DEK_BYTES:],
+        nonce=nonce,
+        ciphertext=cipher_with_tag[:_DEK_BYTES],
+        tag=cipher_with_tag[_DEK_BYTES:],
     )
 
 
@@ -348,15 +328,12 @@ def unwrap_profile_session_dek(*, session_key: bytes, record: PersistedProfileSe
         idle_deadline=record.idle_deadline,
         absolute_deadline=record.absolute_deadline,
     )
-    blob = EncryptedBlob(nonce=record.nonce, ciphertext=record.ciphertext + record.tag)
     try:
-        return decrypt_record(blob, key=session_key, associated_data=aad)
-    except DecryptionError as exc:
-        # Same re-raise-in-place rationale as wrap_profile_session_dek:
-        # preserves __cause__ (e.g. the underlying
-        # cryptography.exceptions.InvalidTag) exactly.
-        exc.translated_message = _STORAGE_DECRYPTION_MESSAGE_KEY
-        raise
+        return AESGCM(session_key).decrypt(record.nonce, record.ciphertext + record.tag, aad)
+    except InvalidTag as exc:
+        raise _decryption_error("profile-session DEK unwrap tag verification failed") from exc
+    except (TypeError, ValueError) as exc:
+        raise _decryption_error("profile-session DEK unwrap failed") from exc
 
 
 def advance_profile_session_idle_deadline(

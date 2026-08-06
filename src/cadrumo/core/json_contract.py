@@ -6,7 +6,7 @@ Defines the strict pydantic v2 bases (:class:`OutputSchema`,
 (:class:`Notice`), the schema registry (:data:`SCHEMA_REGISTRY`), and
 the emit helpers (:func:`emit_json_document`, :func:`emit_json_success`)
 used by every registered machine-output path.  CLI payload modules import
-these primitives directly from this module, register
+these primitives through :mod:`entrypoints.cli._schemas`, register
 result models with :func:`register_schema`, and route JSON mode through
 :func:`entrypoints.cli._common._emit_envelope`.
 

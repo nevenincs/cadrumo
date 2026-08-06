@@ -80,7 +80,7 @@ def _ensure_result_schemas_registered(
     """Import every ``*_payloads`` module so ``SCHEMA_REGISTRY`` is complete.
 
     The CLI registers result schemas through module-level
-    :func:`~core.json_contract.register_schema` decorators that only
+    :func:`~entrypoints.cli._schemas.register_schema` decorators that only
     run when their payload module is imported. The manifest must reflect the
     whole registry, so this imports every payload module under the known payload
     packages before the projection is read. The ``payload`` substring match (not
@@ -182,7 +182,7 @@ def _contract_root(ctx: typer.Context) -> None:
     Builds the
     :class:`~application.operator_surface.OperatorSurfaceManifest` from the
     cached contract and the CLI's registered result schemas, then surfaces it
-    through :class:`~core.json_contract.SchemaEnvelope` under the
+    through :class:`~entrypoints.cli._schemas.SchemaEnvelope` under the
     ``contract`` key. Read-only: no AEAT contact, no state mutation.
     """
     if ctx.invoked_subcommand is not None:

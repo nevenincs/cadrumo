@@ -31,7 +31,7 @@ from collections.abc import Callable, Mapping
 
 from pydantic import BaseModel, model_validator
 
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 
 def _help_document_branch() -> type[BaseModel]:

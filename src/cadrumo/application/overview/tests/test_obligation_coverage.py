@@ -27,7 +27,7 @@ from ....core import (
     OUT_OF_SCOPE_OBLIGATIONS,
     UNMODELED_OBLIGATIONS,
 )
-from ....domain.calculations.registry import has_applicability_rule
+from ....domain.calculations.registry.applicability import has_applicability_rule
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,

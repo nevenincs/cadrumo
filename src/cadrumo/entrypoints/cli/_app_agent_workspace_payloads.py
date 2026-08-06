@@ -16,7 +16,7 @@ from enum import StrEnum
 
 from pydantic import Field, model_validator
 
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 
 class AgentLayout(StrEnum):

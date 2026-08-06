@@ -25,7 +25,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from ...application.user_profile import ProfileBundleExportPurpose
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 
 class ReconciledProfileExportPayload(OutputSchema):

@@ -45,8 +45,8 @@ from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.logging import get_logger as _get_logger
 from ...core.time import now
-from ...domain.calculations.registry import ApplicabilityVerdict, derive_modelo_applicability
-from ...domain.calculations.registry import taxpayer_model_is_declared as _taxpayer_model_is_declared
+from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ...domain.calculations.registry.applicability import taxpayer_model_is_declared as _taxpayer_model_is_declared
 from ...domain.deadlines import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines import DeadlineValidationError as _DeadlineValidationError
 from ...domain.deadlines import ModeloDeadline as _ModeloDeadline

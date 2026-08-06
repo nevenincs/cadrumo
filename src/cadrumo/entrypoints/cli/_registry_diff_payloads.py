@@ -1,8 +1,8 @@
 """Typed ``--json`` payload schemas for ``aeat app registry diff-revisions``.
 
 Each class declared here is a strict
-:class:`~core.json_contract.OutputSchema` subclass and is decorated
-with :func:`~core.json_contract.register_schema` so the JSON-contract test suite can enumerate the
+:class:`~entrypoints.cli._schemas.OutputSchema` subclass and is decorated
+with :func:`~entrypoints.cli._schemas.register_schema` so the JSON-contract test suite can enumerate the
 ``registry.diff_revisions`` command surface.
 
 Field sets mirror :class:`~application.registry.RegistryRevisionDiffReport`
@@ -24,16 +24,16 @@ See Also:
     :class:`~domain.calculations.registry.ModeloRevision`
         Registry revision type whose casillas, formulas, parameters, bindings,
         and legal refs are compared.
-    :class:`~core.json_contract.OutputSchema`
+    :class:`~entrypoints.cli._schemas.OutputSchema`
         Strict base class for typed CLI JSON result payloads.
-    :func:`~core.json_contract.register_schema`
+    :func:`~entrypoints.cli._schemas.register_schema`
         Schema registry hook used by the JSON-contract tests.
 """
 
 from __future__ import annotations
 
 from ...domain.calculations.registry import CasillaId, FormulaId, LegalRefId, ParameterId, RevisionId
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 
 class CasillaDiffPayload(OutputSchema):

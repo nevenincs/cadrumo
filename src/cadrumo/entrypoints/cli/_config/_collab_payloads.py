@@ -1,7 +1,7 @@
 """Typed ``--json`` payload schemas for the ``aeat config collab recipient`` CLI.
 
-Each class declared here is a strict :class:`~core.json_contract.OutputSchema`
-subclass and is decorated with :func:`~core.json_contract.register_schema` so
+Each class declared here is a strict :class:`~entrypoints.cli._schemas.OutputSchema`
+subclass and is decorated with :func:`~entrypoints.cli._schemas.register_schema` so
 the JSON-contract test suite can enumerate every collab-recipient command surface this
 module covers. Field sets mirror :class:`~application.modelo.RecipientFingerprintRecord`
 projected to plain JSON; the private key never appears anywhere in this module (the
@@ -11,9 +11,9 @@ registry stores only recipients' PUBLIC keys -- see
 See Also:
     :class:`~application.modelo.RecipientFingerprintRecord`
         Application record shape these output rows project.
-    :class:`~core.json_contract.OutputSchema`
+    :class:`~entrypoints.cli._schemas.OutputSchema`
         Base class for typed CLI JSON result payloads.
-    :func:`~core.json_contract.register_schema`
+    :func:`~entrypoints.cli._schemas.register_schema`
         Registry hook that publishes each command envelope schema.
     :mod:`~entrypoints.cli._config._collab`
         Command handlers that emit these payloads.
@@ -28,7 +28,7 @@ from datetime import datetime
 from pydantic import model_validator
 
 from ....application.modelo import RecipientFingerprintRecord
-from ....core.json_contract import OutputSchema, register_schema
+from .._schemas import OutputSchema, register_schema
 
 
 class RecipientFingerprintRowPayload(OutputSchema):

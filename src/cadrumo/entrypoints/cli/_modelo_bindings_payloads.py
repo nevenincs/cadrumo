@@ -29,7 +29,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from ...domain.calculations.registry import BindingId, LegalRefId, RelationId, SourceRefId
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 
 class BindingEncodedOptionPayload(OutputSchema):

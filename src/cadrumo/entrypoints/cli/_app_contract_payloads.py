@@ -14,7 +14,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from ...application.operator_surface import CommandSchemaRef, OperatorSurfaceContract
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("contract")

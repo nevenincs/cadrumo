@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4bbf7726ebea996663d31e8bdc310a77aa9bcdcd89020c36565b2fb3b242e11'
+body_hash: 'sha256:e031b4c5ebbb0d1569837faa35ff3a6d68897d86489601c82d725fe3f8082ae0'
 related:
   - "[[2026-08-06-llm-invoice-read-reconciliation-research]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
@@ -125,26 +125,6 @@ The same scoping appears in the layering contract: `.importlinter:2` declares
 contract either. And `aeat-architecture-boundaries` states the rule directly: "Place
 Python application code under `src/cadrumo/`. Do not add top-level Python packages,
 ad-hoc module roots, or hidden parallel implementations."
-
-**Correction, recorded after a fresh-context review of this record.** The sentence above is
-literally true and misleading by implicature: it invites the reading that a *subpackage*
-therefore does participate in a layered contract. It does not. `cadrumo.llm` appears in none
-of the five declared `.importlinter` contracts, and the `layers` contract sets
-`exhaustive = false`, so an unlisted top-level subpackage is not flagged. `root_package`
-governs graph membership, not contract membership. The correct statement is that a sibling
-package is outside the import graph entirely while a subpackage is inside the graph and
-still outside every contract — so the layering leg of the Option-B argument is **work to be
-done**, not a property inherited by choosing a subpackage. The governing ADR carries the
-corrected claim and adds the enrolment as a decision.
-
-The same correction applies one paragraph up, to "invisible to all five". The five checks do
-not share a mechanism: two scan by whole-tree rglob and therefore reach any new directory
-under the scanned root automatically, one **enumerates** a fixed surface list and reaches a
-new directory only when that list is edited, and two have narrower scopes that do not bear
-on a new subpackage. The enumerated one additionally fails **open** — a surface path that
-does not exist, or that has been emptied, yields the empty tuple with no error — which makes
-"a sibling package would be invisible" true but incomplete, since a subpackage can be
-invisible to that same check for a different reason.
 
 ### `EvidenceInput`'s tripwires guard serialization, not attribute access
 
@@ -375,177 +355,14 @@ wired.
 
 ### What was not investigated
 
-The runtime cost of the boundary (import time, process count) was not measured. Whether
-the invoice-store canonicalisation work interacts with the moved classifier's write path
-was not traced; that surface is owned by a concurrent campaign and is recorded as a
-dependency rather than analysed. No measurement was made of how many tests would need
-rewriting under either boundary beyond the counts reported for the cloud path.
-
-Two items listed here in an earlier pass have since been answered by the concurrent smoke
-harness and are reported in the two findings that follow this section, which were appended
-after it. The hardware floor is now measured rather than merely cited as the reason a
-capability axis is needed, and the structured-XML comparison is measured against real
-documents. Neither displaces the capability-axis finding above; both sharpen what belongs
-on each side of the boundary.
-
-One question remains open and is deliberately left so rather than resolved by assumption:
-the internal pipeline shape (one-shot extraction versus normalize-then-extract). The
-measurement that would settle it is specified below as a procedure to run offline with the
-fleet quiesced. It was not run.
-
-The share of real user documents arriving as structured XML rather than as scans or
-photographs was not measured and could not be, since the corpus was curated rather than
-sampled from user traffic. That ratio bounds how much of the ingestion problem the
-deterministic path removes.
-
-### Structured XML parsing outperforms every model path measured, and it needs nothing the core does not already have
-
-This finding arrived after the boundary analysis above and changes what belongs on
-which side of the boundary. It is the best-evidenced result available to this campaign,
-and it is measured rather than reasoned.
-
-**Figures corrected after first publication. An earlier pass of this document reported
-88.2% over 53 documents, with ZUGFeRD and UBL both exact. Those numbers were computed
-against an unstamped pre-v4 ground-truth key and are WITHDRAWN.** What follows is the v5
-re-score, reproduced independently for this document via `tools/rescore_structured.py`,
-which prints the key digest before any figure. Ground-truth key
-`e2db6a499f6f0ffafa4cf44084f433962dd3f8a0f6f0a65facaf7df07bb38593`, 302 corpus documents,
-103 detected as structured, 102 parsed, **56 scoreable** (carrying at least one non-null
-truth field).
-
-Direct structured parsing returned **82.1% mean field accuracy** at a **median parse of
-0.59 ms** (worst 86.8 ms), 21 of 56 documents perfect, with zero VRAM and no licence
-exposure. The local vision models on comparable documents returned **75.8% accuracy at a
-4.8 s median** for the application's default (`qwen2.5vl:3b`), rising to 17.2 s for
-`qwen3-vl:4b` at 78.8%.
-
-Accuracy by format under v5:
-
-| Format | n | Mean field accuracy | Perfect | Missing | Wrong | Hallucinated |
-|---|---:|---:|---:|---:|---:|---:|
-| Facturae 3.2.x | 17 | 88.8% | 8 | 1 | 9 | 0 |
-| ZUGFeRD / Factur-X (CII) | 20 | 88.5% | 4 | 0 | 22 | 9 |
-| VeriFactu / SII | 10 | 81.5% | 6 | 13 | 2 | 0 |
-| EN16931 UBL | 2 | 100.0% | 2 | 0 | 0 | 0 |
-| TicketBAI | 6 | 50.8% | 1 | 23 | 1 | 0 |
-| unrecognised | 1 | 0.0% | 0 | 2 | 0 | 0 |
-| **Overall** | **56** | **82.1%** | **21** | **39** | **34** | **9** |
-
-UBL remains at 100%, but at **n=2** that cell carries no weight and must not be quoted as
-evidence of format-level exactness. The withdrawn claim paired it with ZUGFeRD, which under
-v5 is 88.5%; the fields that made ZUGFeRD look exact were `null` in the old key and were
-therefore not being scored at all.
-
-**The residual shortfall is a located parser defect, not a format limit.** This is a
-stronger claim than the earlier one it replaces, because the causes are now diagnosed
-rather than merely asserted to be fixable. Two account for the bulk of it. The parser
-selects the **wrong tax identifier**, taking a French SIRET or a German Steuernummer where
-the truth holds the VAT number - which is why ZUGFeRD, a Franco-German format, carries 22
-of the 34 wrong fields despite having zero missing ones. And it **swaps emisor and
-destinatario** on received-invoice SII records. Both are one-edit fixes in roughly 300 lines
-of stdlib parsing code. The data is present in the documents; the gap is element selection.
-A misread digit from a vision model is not fixable in that way, at any cost.
-
-**The fail-loud property was observed rather than asserted.** One document,
-`REAL-SPA-aeat-sii-gisce-alta-factura-emitida-rectific`, refused with
-`ParseError: junk after document element: line 60, column 0` and produced no record at all.
-That is the whole argument in one line: **a parser fails loudly; a model fails silently.**
-A model handed the same malformed document would have returned a confident, plausible,
-wrong invoice. A silent wrong value in this product reaches a filing; a refusal does not.
-
-**The latency advantage is real but must be stated as a range, not a single flattering
-multiplier.** Against the application's default model, the median parse is roughly 8,000x
-faster (0.59 ms against 4.8 s); against the slowest model tested, roughly 29,000x. The
-honest floor is the worst observed parse against the fastest model - 86.8 ms against 4.8 s,
-still roughly 55x. An earlier draft quoted a single "20,000x" derived from mid-range models
-and the superseded latency median; it is withdrawn.
-
-**The core already has everything this path requires.** `defusedxml>=0.7.1,<1` is declared
-in `[project.dependencies]` at `pyproject.toml:55` and already carries production
-consumers in the filing and registry export paths
-(`application/filing/_export_xml_dictionary.py:34`,
-`domain/calculations/registry/_export_parse.py:13`), so hardened XML parsing costs no new
-dependency, no model, no GPU, no extra and no licence exposure. Verified at HEAD.
-
-**And no such parser exists today.** Confirmed at HEAD by targeted search rather than by
-semantic-search absence: `zugferd|factur-x|facturae|en16931|ticketbai|CrossIndustryInvoice`
-returns no production match anywhere in `src/cadrumo` - only the
-`zugferd_en16931_invoice.pdf` corpus fixture and a test asserting that a German word
-appears in its text layer (`application/ledger/tests/test_evidence_corpus_parsing.py:36-38`).
-`MediaKind` remains a closed two-member enum, `PDF` and `IMAGE`
-(`application/ledger/_evidence.py:108-112`). The most machine-readable invoice in the
-corpus is read as rendered prose, and because it carries a text layer it takes the cloud
-branch - so the format needing no model at all is the one whose bytes leave the host.
-
-The consequence for this campaign is unchanged by the correction, and cuts against a naive
-reading of the campaign's own proposal: the exact path does not belong in the optional
-inference extension. It belongs in the deterministic core, where it is available on a
-default install with no extra enabled. The extension is then correctly scoped to what
-genuinely needs a model - documents that carry no structured record.
-
-**The honest limits, stated so the ADR does not over-claim.** The accuracy margin over the
-default vision model is **82.1% against 75.8%** - a real advantage but a narrower one than
-the withdrawn figures implied, and the case now rests at least as much on the fail-loud
-property, the four-orders-of-magnitude latency gap, and the zero marginal cost as on
-accuracy alone. Separately, none of this establishes what share of documents a real user
-receives as structured XML versus as a photograph of a paper receipt. That ratio decides
-how much of the problem the deterministic path removes, and the harness did not and could
-not measure it - the corpus composition was curated by the corpus lane, not sampled from
-real user traffic. The directional argument remains strong for Spanish taxpayers
-specifically, because a business subject to VeriFactu is legally required to produce a
-structured record for every invoice.
-
-One instrument caveat is recorded because it bears on a different metric: 46 parsed
-documents remain unscoreable because the key carries no truth for them, and the 9
-hallucinations are wholly concentrated in ZUGFeRD, where the wrong-identifier defect also
-sits. Until that defect is fixed and the key's remaining gaps are closed, **the
-hallucination column above should not be quoted** as a property of structured parsing.
-The accuracy figures are unaffected, being computed only over fields with a non-null truth.
-
-### The internal pipeline shape is unmeasured, and the measurement that would settle it is specified
-
-A two-stage shape - normalize every origin to markdown, then run one uniform extraction
-stage over it - is an attractive reading of the ingestion findings, and this research
-deliberately does not adopt it. **The stage-1/stage-2 isolation was never measured.** The
-corpus transcriptions needed for it landed minutes before the session ended and the run
-never happened. No number in the harness distinguishes one-shot extraction from
-normalize-then-extract.
-
-Adopting the two-stage architecture on the strength of the one-shot measurements would
-repeat exactly the conflation this campaign exists to break, and it would do so against a
-known cost: the ingestion findings establish that promoting hostile document text across a
-stage boundary makes prompt injection *worse*, because extraction fields have no
-allow-list the way classification categories do. A two-stage shape must therefore earn its
-place with evidence rather than inherit it by assumption.
-
-The measurement, to be run later offline with the agent fleet quiesced and no concurrent
-GPU load, is: over the same corpus and the same model, score (a) one-shot direct field
-extraction from page images against (b) transcribe-to-markdown followed by a separate
-text-only extraction pass, reporting per-field accuracy, end-to-end median latency and
-resident VRAM for each, and holding prompt, model, revision and decoding parameters fixed
-across both arms so the stage count is the only variable. Two-stage is preferable only if
-it wins on accuracy by a margin that justifies both its added latency and the injection
-surface it opens. The ADR must therefore be able to stand on its packaging and boundary
-decisions without depending on the answer.
-
-### Running live local inference destabilised the host, which is operational evidence for the boundary
-
-Recorded factually. During this campaign, live local model inference on the development
-host destabilised the entire machine and terminated four concurrently running agent
-sessions. Work continued only against already-captured results.
-
-This is not an argument about model quality, and it is not evidence that inference should
-not ship. It is evidence about *where* it should sit. An inference path embedded in the
-deterministic core is one that every developer environment, every test run and every CI
-lane carries by default, so its resource profile becomes everyone's resource profile.
-Behind an opt-in extra, the same path is absent from the default build, test and
-development loop and is exercised only by environments that asked for it. The isolation
-that matters here is operational rather than architectural, and it is a benefit the extra
-delivers on the day it lands, independent of the licence and privacy arguments.
-
-It also independently supports the finding above: the deterministic XML path has no such
-profile at all - no model, no GPU, no daemon - which is a further reason it belongs on the
-core side rather than behind the extra.
+The runtime cost of the boundary (import time, process count) was not measured. The
+hardware floor itself — which models fit which VRAM budgets — is owned by concurrent
+harness work and is taken here only as the reason a capability axis is needed, not as a
+number. Whether the invoice-store canonicalisation work interacts with the moved
+classifier's write path was not traced; that surface is owned by a concurrent campaign
+and is recorded as a dependency rather than analysed. No measurement was made of how many
+tests would need rewriting under either boundary beyond the counts reported for the cloud
+path.
 
 ## Sources
 

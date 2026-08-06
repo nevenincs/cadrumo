@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
-from ...deadlines import EntityType, TaxpayerProfile
+from ...deadlines.taxpayer_model import EntityType, TaxpayerProfile
 from ._ids import LegalRefId
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]

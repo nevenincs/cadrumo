@@ -25,7 +25,7 @@ from ....core import (
     StorageOverridePolicy,
     StorageScope,
 )
-from ....core.json_contract import OutputSchema, register_schema
+from .._schemas import OutputSchema, register_schema
 
 
 class StorageCategoryPayload(OutputSchema):

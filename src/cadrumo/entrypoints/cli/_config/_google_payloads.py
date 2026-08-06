@@ -36,7 +36,7 @@ from pydantic import Field
 
 from ....adapters.outbound.storage import ProviderKind
 from ....domain.calculations.registry import CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
-from ....core.json_contract import OutputSchema, register_schema
+from .._schemas import OutputSchema, register_schema
 
 
 @register_schema("config.google.register")

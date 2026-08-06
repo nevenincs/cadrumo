@@ -19,7 +19,7 @@ from ....deadlines import (
     LegalEntityForm,
     TaxpayerProfile,
 )
-from .. import (
+from ..applicability import (
     ApplicabilityVerdict,
     Modelo202Modality,
     Modelo202ModalityVerdict,

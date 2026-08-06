@@ -8,7 +8,7 @@ conformance gate bind the ``aeat app ledger bienes-inversion`` leaves to a schem
 
 from __future__ import annotations
 
-from ...core.json_contract import OutputSchema, register_schema
+from ._schemas import OutputSchema, register_schema
 
 
 class BienInversionDisposalPayload(OutputSchema):

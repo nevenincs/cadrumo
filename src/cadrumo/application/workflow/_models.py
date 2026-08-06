@@ -69,7 +69,6 @@ from ...core import (
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
-from ...core.time import now as utc_now
 from ...domain.submission import ModeloDraftStatus
 from .._workflow_auth_models import AuthState
 from .._workflow_review_models import (
@@ -79,6 +78,7 @@ from .._workflow_review_models import (
 )
 from ._profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
 from ._profile_bucket_scan import resolve_profile_bucket
+from ._utils import utc_now
 from ._workflow_abort import WorkflowAbortReason as WorkflowAbortReason
 
 if TYPE_CHECKING:
