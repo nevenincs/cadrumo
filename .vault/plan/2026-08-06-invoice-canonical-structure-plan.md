@@ -4,11 +4,17 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-06'
-body_hash: 'sha256:86d16a8efc3aac8844ea8f1fdb736e0e6fbfc705978a34f79364eaac99e7e40f'
+body_hash: 'sha256:d88f41644057ada6ec7ae3b3c9ac863a7de4b3a5f11ff288510e26e66145e84f'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-research]]'
+  - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
+  - '[[2026-08-06-invoice-canonical-structure-audit]]'
+  - '[[2026-08-06-invoice-canonical-structure-naming-and-capability-reference]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
+  - '[[2026-08-06-llm-package-split-adr]]'
+  - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
 ---
 
 # `invoice-canonical-structure` plan
@@ -23,68 +29,237 @@ The ADR supersedes `2026-06-10-ledger-invoice-unification-adr` on its ruling tha
 
 **Tier `L2`, chosen from the real structure rather than inflated.** The work has five phases with load-bearing ordering between them and no genuine grouping above the phase level. `L1` cannot express the ordering, which is the plan's most important property: the canonical decision must land before anything is deleted. `L3` would add a Wave frame containing a single wave, which is inflation. `L2` is the honest fit.
 
-Phase ordering is the safety property. `P01` proves the replacement exists, `P02` makes the canonical surface usable, and only then does `P03` delete. `P04` and `P05` are independent of the fold. `P05` is severable and could be lifted into its own campaign without disturbing the rest.
+Phase ordering is the safety property. `P01` proves the replacement exists and closes the field and invariant gaps where it does not, `P02` makes the canonical surface usable, and only then does `P03` delete. `P04` and `P05` are independent of the fold.
+
+**This plan is a rewrite, and the reason is recorded so the same failure is not repeated.** A fresh-context honesty review of the first draft found `P03`, `P04` and `P05` containing zero Steps while seven of the ADR's decisions had no implementation path, and concluded that executing what the plan then contained would leave the codebase *worse* than it is today: `P02` makes the rich writer more attractive while the shorter, more discoverable bare verb still writes the weaker store, so more operators migrate to the richer verb and the unguarded double-count exposure rises. That review also found three of the seven original Steps already satisfied or vacuous at `HEAD`, because the campaign was written against `0b1e3f040b` and committed into a tree that had already moved — one of its own assertions was refuted by the very commit that landed it.
+
+**Capability conservation is this plan's organising law, and it outranks the fold.** Invoices are the evidence base for three distinct concerns — income from issued invoices, business operations from received ones, and purchase evidence — and no calculation in this project is legally valid without them. So the migration is engineered, not executed: **no capability loss may occur.** Nothing is deleted until its replacement is proven by a test that fails when the capability is absent, and a capability with no named replacement blocks the fold rather than being waived. Because the filings' legal validity rests on this evidence, a lost, silently-altered or silently-reidentified invoice invalidates every downstream calculation — so there is no silent coercion, no best-effort default filling a field the source never stated, and every value crossing the fold traces to what the source record actually held. Where the canonical model needs a value the slim record never had, that is a refusal or an explicit operator input, never a synthesised guess.
+
+**This plan retains the authority to conclude the fold should be staged or deferred.** `P01.S31` is the capability-parity proof that decides it. If that proof cannot be written, `P03` does not open and the plan says so. An honest "not yet, and here is what is missing" is a successful outcome; a plan that ships a capability loss is not.
+
+**Every Step in this plan must be able to fail for the reason it exists.** That is the single discipline this rewrite is organised around, and the Verification section names the red condition for each Step individually. A Step whose criterion is already green at `HEAD`, a gate enrolled before its target exists, or a "confirm" against a check with no opinion is a defect in this plan, not a completed item. Before executing any Step, re-measure its premise at `HEAD`: the citations this campaign inherited are line-drifted, and the invoice surface carries live peer WIP.
+
+**Load-bearing correction carried from that review.** The rich aggregate is the richer schema but is *not* a constraint-shape superset of the slim record. Rich requires a non-empty counterparty name, a two-letter counterparty country, at least one line, and an exact totals identity; the slim model has no `model_validator` at all. So the fold is a **narrowing of the operator input contract**, not a re-home, and `P01.S08` exists to decide what happens to a slim shape the canonical model refuses. In the other direction the slim record holds three fields rich lacks — `eu_iva_id`, `created_at`, `updated_at` — and `eu_iva_id` is load-bearing for M349 party identity, which is why `P01.S02` is a hard precondition of `P03` rather than a nicety.
 
 ## Steps
 
-### Phase `P01` - Prove canonical coverage before anything is deleted
+### Phase `P01` - Capability conservation - inventory, close the gaps, prove the replacement
 
-Establish that every declarable fact the slim store contributes today is reproducible on the canonical aggregate, and resolve the M349 clave asymmetry in the permissive direction. Nothing is removed in this phase, it is the gate on P03.
+Capability conservation is this plan's organising law and this phase is where the law is made checkable. Invoices are the evidence base for three distinct concerns - income from issued invoices, business operations from received ones, and purchase evidence - and no calculation in this project is legally valid without them. Inventory every capability of BOTH stores across all three lanes, each with its named canonical replacement and the proof that the replacement works, then close every gap on the canonical side. Nothing is removed in this phase and nothing is deleted anywhere until its replacement is proven by a test that fails when the capability is absent. A capability with no named replacement blocks the fold, it is not waived. This phase may legitimately conclude that the fold is not ready, and saying so is a success. The M349 clave asymmetry is NOT closed here: the canonical path already carries the iva_category fallback and the slim record cannot hold an iva_category at all, so it closes by the deletion in P03. A Step claiming to make the fallback surviving would have nothing to do.
 
-- [ ] `P01.S01` - Prove the canonical path reproduces the M347 per-party totals and M349 operator rows that the two-store union produces today, for a bucket exercising both stores; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
-- [ ] `P01.S02` - Make the iva_category clave fallback the surviving behaviour and prove an invoice carrying a category but no operation_type is declared rather than dropped; `src/cadrumo/application/invoices/_source_resolver.py`.
-- [ ] `P01.S03` - Inventory every slim-store consumer and record the named canonical replacement for each, refusing to proceed to P03 while any consumer has no replacement; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
+- [ ] `P01.S01` - Prove declarable coverage, that every declarable fact the slim store contributes today is reachable on the canonical path for both M347 per-party totals and M349 operator rows, asserting fact-level reachability and never output-equality with the double-counting two-store union; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
+- [ ] `P01.S02` - Add eu_iva_id to the canonical Invoice aggregate and give the rich M349 projection the same EU-VAT-ID preference and country-prefix derivation the slim path carries, so an EU counterparty holding both a domestic NIF and an EU VAT ID declares under the EU VAT ID; `src/cadrumo/domain/invoices/_models.py`.
+- [ ] `P01.S03` - Inventory every production slim-store consumer and record the named canonical replacement for each in the execution record, refusing to proceed to P03 while any consumer has no replacement; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
+- [ ] `P01.S08` - Decide and implement the fold rule per unmigratable-record class, covering the empty counterparty_name, the null country_code, the totals that do not reconcile, the absent line concept and the bare Decimal iva_rate against the closed IvaRate enum, stating per class whether the fold synthesises, refuses or quarantines and never silently coercing a value the source record did not hold; `src/cadrumo/application/invoices/_creation.py`.
+- [ ] `P01.S09` - Remove the COLLECTIBLE_INVOICE default from InvoiceObservation.source_kind and make the direction axis required, after confirming every production construction site already passes it explicitly; `src/cadrumo/domain/calculations/registry/_invoice_bindings.py`.
+- [ ] `P01.S10` - Carry created_at and updated_at onto the canonical aggregate or record their loss as a deliberate decision in the execution record, so no slim field disappears unremarked; `src/cadrumo/domain/invoices/_models.py`.
+- [ ] `P01.S28` - Produce the three-lane capability inventory covering income, business operations and purchase evidence, listing for BOTH stores every field, validator, CLI verb, downstream binding and persistence or custody behaviour, each with its named canonical replacement and the test that proves it, treating any entry with no named replacement as a blocker on the fold rather than a waiver; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
+- [ ] `P01.S29` - Strengthen the custody-carry proof for the canonical catalogue from a non-empty assertion to a strict save-export-import-load equality roundtrip with every defaultable field populated non-default, plus the anti-tautology proof that a mutated exported payload surfaces refusal or inequality; `src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py`.
+- [ ] `P01.S30` - Add the parameters that make the canonical writer reach parity with what the canonical model already claims to represent, namely invoice-class, series, rectifies-invoice-number and recargo-amount, which no production path can set today so every canonically written invoice is ORDINARIA with no series and no recargo by construction and rectificativas are unrepresentable; `src/cadrumo/application/invoices/_creation.py`.
+- [ ] `P01.S31` - Write the capability-parity proof, a bucket exercising every capability of both stores run through the canonical path asserting identical M347, M349, M303 and M390 outputs and an identical export-import roundtrip, and if that proof cannot be written record that the fold is not ready and what is missing; `src/cadrumo/application/invoices/tests/test_source_resolver.py`.
+- [ ] `P01.S32` - Enrol the invoice decomposition contract as a capability-inventory row with both production consumers and the modelos each serves, the renta sales-evidence gate running the full grounded check and the M349 gate narrowed to the two self-contradiction defects, and record which record classes each would exclude after the fold; `src/cadrumo/domain/invoices/_decomposition.py`.
+- [ ] `P01.S33` - Prove decomposition parity, that an ex-slim record and a natively rich record carrying identical economic facts decompose to identical components and land on the same partition side, and decide per unmigratable class whether it decomposes correctly, refuses loudly or is flagged defective; `src/cadrumo/domain/invoices/tests/test_decomposition.py`.
 
-### Phase `P02` - Extend the writer surface to the canonical model
+### Phase `P02` - Extend the writer surface to the canonical model and the confirm boundary
 
-Additive only. Make the canonical aggregate's existing fields reachable from single-invoice entry, so canonicalisation does not leave one store the operator still cannot express a retencion, a regime, or a mixed-rate invoice in.
+Additive only. Make the canonical aggregate's existing fields reachable from single-invoice entry and from the confirm boundary, so canonicalisation does not leave one store the operator still cannot express a retencion, a regime, a recargo or a mixed-rate invoice in. Every option added lands inside the peer totals identity pinned by the decomposition ADR and must not silently alter it.
 
-- [ ] `P02.S04` - Add retention-rate and retention-amount options to the canonical writer and both entry verbs, with an encrypted roundtrip proving they persist; `src/cadrumo/application/invoices/_creation.py`.
-- [ ] `P02.S05` - Add explicit recargo, iva-category, invoice-class and series options so every regime is expressible without inferring one from operation-type; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [ ] `P02.S04` - Prove the already-landed retention-rate and retention-amount writer options persist through the real encrypted namespace with a strict save-load-equality roundtrip plus an anti-tautology proof, the CLI and builder code having landed in ef0438561d and only the roundtrip gate remaining; `src/cadrumo/application/invoices/tests/test_creation.py`.
+- [ ] `P02.S05` - Add explicit recargo, iva-category, invoice-class and series options to the canonical writer and both entry verbs so every regime is expressible without inferring one from operation-type, holding the peer totals identity grand_total equals base_total plus iva_total plus recargo_amount with retencion outside it; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
 - [ ] `P02.S06` - Accept operation-date on every entry verb including the guided one, so a guided entry can reach a declared devengo rank rather than only the proxy rank; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [ ] `P02.S07` - Stop synthesising exactly one line and accept a supplied line set, proving a two-line invoice at different rates persists and aggregates per line with no persisted-schema change; `src/cadrumo/application/invoices/_creation.py`.
+- [ ] `P02.S07` - Stop synthesising exactly one line at BOTH synthesis sites, the canonical builder and the live bulk importer, accepting a supplied line set and proving a two-line invoice at different rates persists and aggregates per line with no persisted-schema change; `src/cadrumo/application/invoices/_creation.py`.
+- [ ] `P02.S26` - Widen the confirm-boundary override set from the extraction draft's field set to the writer's, adding retencion, recargo, invoice-class, series, rectifies-invoice-number, iva-category, operation-date and the missing iva-amount, so an operator confirming a rectificativa or a retencion-bearing invoice from evidence need not abandon the evidence path; `src/cadrumo/application/ledger/_evidence_draft.py`.
+- [ ] `P02.S27` - Make the recargo figure reachable at the confirm boundary and on the persisted invoice once the llm-package-split lane lands its draft-side recargo slot at W02.P04.S79, so the printed-total discrepancy that lane's reader already detects has somewhere to resolve to, this Step owning only the confirm side and never the draft model; `src/cadrumo/application/ledger/_evidence_draft.py`.
 
 ### Phase `P03` - Fold and delete the slim store
 
-Move the operator CRUD surface onto the canonical aggregate, then remove the slim model, services, repository, namespace, payloads and locale leaves from the tree. Delete, never bridge.
+Move the operator CRUD surface onto the canonical aggregate, then remove the slim model, services, repository, namespace, payloads and locale leaves from the tree. Delete, never bridge. This phase is where the double-count actually closes. Landing P01 and P02 without it is strictly worse than today, because P02 makes the rich writer more attractive while the shorter, more discoverable bare verb still writes the weaker store and both still union into M347 and M349 with no dedup.
 
+- [ ] `P03.S11` - Repoint the five bare invoice verbs add, view, list, update and remove at the canonical aggregate and retire the catalogue sub-noun, keeping the operator noun and the kind issued-or-received flag exactly as the superseded ADR established them; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [ ] `P03.S12` - Record the lane-partition decision explicitly, whether the slim store's per-source-kind document partition is reproduced on the canonical home or consciously dropped in favour of the existing per-consumer gates, naming those gates and what each still guarantees; `src/cadrumo/domain/invoices/_service.py`.
+- [ ] `P03.S13` - Remove the two-store union, the slim loader and the slim observation adapter from the invoice source resolver so exactly one store feeds M347 and M349; `src/cadrumo/application/invoices/_source_resolver.py`.
+- [ ] `P03.S14` - Delete the slim model, both services, the repository, the storage namespace and the BusinessOperationInvoiceDirection enum in one atomic explicit-path commit carrying every consumer, fixture and __all__ update, with no alias, bridge or re-export left behind; `src/cadrumo/application/ledger/_business_operation_invoice.py`.
+- [ ] `P03.S15` - Delete the slim CLI payload schemas and retire the blessing test that creates one invoice in both stores and asserts only that the ids differ, keeping the surviving link tests in that module; `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`.
+- [ ] `P03.S16` - Remove every locale leaf orphaned by the deletion through the locales CLI so all four catalogues stay in parity, then run the locale and apidocs drift gates; `src/cadrumo/locales/en.yml`.
 
-### Phase `P04` - Close the remaining second-authority and boundary gaps
+### Phase `P04` - Close the remaining second-authority, boundary and duplicate-type gaps
 
-Resolve the unwired second Invoice writer, rename the misleading category token, and add the confirm-boundary plausibility gate. Independent of the fold.
+Delete the dead second Invoice writer, rename the misleading category token, add the confirm-boundary plausibility gate, and retire the two duplicate direction types over the canonical source-kind strings. Independent of the fold. The bare Invoice and InvoiceCatalogue names are deliberately not renamed, because the duplication causes the ambiguity and retiring the duplicate removes it by construction.
 
+- [ ] `P04.S17` - Delete the dead second Invoice writer and its tests outright rather than routing it, because the live bulk importer already routes canonically and routing would create a third import surface; `src/cadrumo/application/invoices/_importing.py`.
+- [ ] `P04.S18` - Rename InvoiceLine.category_id to state what it is, first confirming whether the preflight site using category_id with the spending-taxonomy meaning shares a serialised key with it or is unrelated, and sweeping data consumers as well as callers; `src/cadrumo/domain/invoices/_models.py`.
+- [ ] `P04.S19` - Add the plausibility gate at the confirm boundary refusing a document confirmed as ISSUED that was not plausibly issued by this taxpayer, mirroring the hard gate that already refuses an ISSUED invoice as purchase evidence; `src/cadrumo/application/ledger/_evidence_draft.py`.
+- [ ] `P04.S20` - Retire InvoiceKindOption and type the CLI kind option directly on InvoiceKind, in one atomic explicit-path commit across all thirteen sites; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [ ] `P04.S21` - Relocate InvoiceKind from the iva domain to the invoices domain keeping its name, as one atomic explicit-path commit tagged relocation carrying every consumer, fixture and __all__ update plus a regenerated apidocs scaffold; `src/cadrumo/domain/iva/_classification.py`.
 
 ### Phase `P05` - Close the M303 screen blind spots and give M390 an equivalent
 
-Severable and highest filing consequence. Extend the invoice-versus-ledger screen past its ES-only and cuota-only reach, and add an M390 equivalent, because the M390 blocking rule compares two ledger-derived sides and cannot detect consistent under-population.
+The source sweep ranked this the highest-consequence finding it carried and asked that it be acted on first. It is placed last here only because it is severable, it touches neither store's shape, and it can be lifted into its own campaign without disturbing P01 through P04. Severable is not optional: this phase carries Steps and Verification criteria of its own, and closing the plan with P05 untouched is a failed outcome, not a partial success.
 
+- [ ] `P05.S22` - Answer whether an invoice-only bucket can reach a filed M390 through the screen gap, tracing the M390 binding set to its value sources and settling whether both sides of the 390-to-303 reconciliation blocking rule derive from the same ledger, and encode the answer as a test rather than as prose; `src/cadrumo/application/aggregation/tests/test_modelo_bindings.py`.
+- [ ] `P05.S23` - Extend the invoice-versus-ledger screen past its ES-only counterparty filter so intracomunitaria, import and export invoices are screened, proving a non-ES invoice diverging from the ledger is now caught where it passes silently today; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [ ] `P05.S24` - Extend the screen past its four-cuota screened binding set to cover recargo de equivalencia, proving a recargo figure diverging from the ledger is caught; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [ ] `P05.S25` - Add an M390-scoped equivalent of the invoice-versus-ledger screen, because the 390-to-303 blocking rule compares two ledger-derived sides and cannot detect consistent under-population, proving a bucket whose invoices exceed its ledger is caught on the annual path; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 
 ## Parallelization
 
-`P01` must complete before `P03` begins. This is the plan's one hard ordering constraint and its reason for existing: `P03` deletes a live M347/M349 source, and `P01` is what proves the canonical path already carries that coverage. A deletion landing before its replacement is verified is how a campaign loses work.
+`P01` must complete before `P03` begins. This is the plan's hardest ordering constraint and its reason for existing: `P03` deletes a live M347/M349 source, and `P01` is what proves the canonical path already carries that coverage. A deletion landing before its replacement is verified is how a campaign loses work. `P01.S02` is the sharpest instance — deleting the slim store before the canonical aggregate carries `eu_iva_id` silently degrades M349 party identity for any EU counterparty holding both a domestic NIF and an EU VAT ID, and no gate downstream of the deletion would catch it.
 
-`P02` is additive and may run concurrently with `P01`. It touches the writer surface and the CLI, not the resolver.
+Ordering inside `P01`: `S01` and `S03` are measurements and may run first and concurrently. `S02`, `S08`, `S09` and `S10` change the canonical model or its construction and must all land before `P03` opens; `S08` depends on `S01`'s inventory of what the slim store actually contains.
 
-`P04` is independent of `P01` through `P03` and may run at any time. Its three steps are mutually independent and may run concurrently with each other.
+`P02` is additive and may run concurrently with `P01`. It touches the writer surface, the confirm boundary and the CLI, not the resolver. `P02.S07` must land before or with `P01.S08`, because folding a slim record into the rich shape must synthesise a line and single-line synthesis is exactly what `S07` changes — the two decisions are about the same mechanism and must not disagree.
 
-`P05` is severable from the whole plan. It shares subject matter but touches neither store's shape. It may run concurrently or be lifted into its own campaign.
+Ordering inside `P03` is itself load-bearing and is not free: `S11` repoints the operator verbs, `S12` records the lane-partition decision, `S13` removes the union, and only then do `S14`, `S15` and `S16` delete. Deleting the store before the verbs are repointed leaves the operator with no CRUD surface at all.
+
+`P04` is independent of `P01` through `P03` and may run at any time, with one exception: `S20` and `S21` are symbol relocations and each lands as its own atomic explicit-path commit, so they may not be bundled with each other or with any other Step.
+
+`P05` is severable from the whole plan and touches neither store's shape, so it may run concurrently or be lifted into its own campaign. Severable does not mean optional — see its Phase intent and its Verification criteria. `P05.S22` answers a question the rest of `P05` assumes, and must run first: if an invoice-only bucket cannot in fact reach a filed M390, `S25` needs re-scoping rather than executing, and that is a legitimate outcome recorded in the execution record.
 
 Two campaigns are live on this surface: `2026-08-05-ledger-invoice-decomposition` and `2026-08-06-llm-invoice-read-reconciliation`, the latter constrained to not alter the `Invoice` domain model. `P03` collides with that constraint and must not begin until that campaign settles. Before any first edit to a shared file, run `git diff -- <file>` and abort on non-authored WIP.
+
+## Cross-lane coordination
+
+A separate team executes `2026-08-06-llm-package-split-adr` in this same worktree. Two teams editing one file is the failure mode this section exists to prevent. The shared file is `src/cadrumo/application/ledger/_evidence_draft.py`, and the boundary inside it was settled between the two lanes rather than assumed.
+
+**They own** the `InvoiceDraft` model and the extraction/parse path: the line-carrying draft structure, the per-rate IVA breakdown their deterministic EN16931-CII, EN16931-UBL and Facturae parsers produce, and the draft-side **recargo** slot. Their parsers map onto `InvoiceLine` (`src/cadrumo/domain/invoices/_models.py:417-428`) directly rather than inventing a parallel shape.
+
+**This plan owns** the invoice stores, the writer, the confirm *function's* parameter list and gate, and the M303/M390 screens. `P02.S26` widens the `confirm_invoice_draft_from_evidence` override list; `P04.S19` adds the plausibility gate inside it. Neither touches `InvoiceDraft` fields.
+
+**Ordering between the lanes, with their Step ids so a receiving pair can reconcile without either coordinator.** All in `2026-08-06-llm-package-split-plan`:
+
+| Their Step | Subject | Relation to this plan |
+|---|---|---|
+| `W02.P04.S67` | extends the draft with the line set and per-rate breakdown | produces what `P02.S07` consumes |
+| `W02.P04.S79` | the draft-side recargo slot | **blocks `P02.S27`** |
+| `W02.P04.S80` | the `IvaRate` enum boundary, refuse never round | protects `P01.S08`'s rate class |
+| `W02.P05.S81` | the invoice-level totals identity | same identity as `P02.S05` |
+| `W02.P05.S70` | multi-rate producer proof | **sequenced after `P02.S07`** |
+| `W02.P05.S69` / `S71` | `evidence add` idempotency | accepted by that lane, not deferred |
+
+`P02.S07` is provable without them, by an operator-supplied multi-rate invoice — the writer half alone ships no operator-visible change on the extraction path, so their producer is what makes it visible.
+
+A concrete trap that lane surfaced and this one should not re-derive: the `IvaRate` enum deliberately omits the transient 2022-2024 5% rate, so a pre-2025 ZUGFeRD or Facturae line is precisely the case that must refuse rather than resolve. An unread rate currently lands on the exempt member, minting a zero-cuota invoice against a printed cuota.
+
+**A correction this lane accepted from theirs.** This plan initially characterised `evidence add`'s clock-in-id as a straight breach of `single-subject-mutation-is-idempotent-guarded`. That was wrong, and the fix is not to drop `created_at`. `derive_purchase_invoice_evidence_id` (`src/cadrumo/application/ledger/_evidence.py:162-202`) states in its own docstring that `created_at` plus the `disambiguator` ordinal **preserve a genuine-duplicate case the ledger deliberately supports** — two evidence records for the same file must keep distinct ids. Dropping the clock would silently collapse real duplicates, a worse defect than the one being fixed. The correct shape, which that rule already provides for, is a caller-supplied idempotency key giving a clock-free id and a guarded no-op on retry, with the keyless path staying deliberately additive and documented as such. **If any Step here ever calls that verb, use the keyed path.**
+
+**Three constraints handed to that lane, repeated here because they bind our side too.** `InvoiceLine.iva_rate` is the closed `IvaRate` enum, not a `Decimal`, so a rate that is not a member must refuse rather than round — an unread rate currently resolves to `EXEMPT`, minting a zero-cuota invoice whose printed total still shows the cuota charged. `InvoiceLine.category_id` is being renamed by `P04.S18`, so nothing new should bind to that name. And the invoice-level identity `grand_total == base_total + iva_total + recargo_amount`, retención outside it, holds across both lanes.
+
+**Handed to them, tracked here so it is not dropped by both:** `evidence add` folds `created_at` into its derived record id, breaching `single-subject-mutation-is-idempotent-guarded`. It sits in their ingestion surface. If that lane declines it, it returns here as an explicitly-deferred item with the declining lane named — it does not disappear.
+
+## Traps a new team will walk into blind
+
+Recorded here because they are not discoverable from the code and every one of them has already cost this campaign real work.
+
+**The vacuous-green defect class — the reason this plan was rewritten.** A verification criterion already green at HEAD, a gate enrolled before its target exists, a "confirm" against a check with no opinion. Three of the seven original Steps were already satisfied or vacuous. The Verification section's per-Step RED conditions are the countermeasure; do not close a Step whose criterion passes on arrival.
+
+**This worktree is shared with concurrent peer campaigns.** Destructive git is categorically forbidden — no `stash`, `reset` (including index-only pathspec reset), `checkout <path>`, `switch`, `restore`, `clean`, `rebase`, `revert` of a peer commit, `push --force`, `worktree remove`, or `branch -D`. There is no reset escape hatch. Commits need an **explicit pathspec**: a bare `git commit` takes the whole shared index, and peer registry TOMLs have been sitting staged in it. An uncommitted change with no reachable owner is live peer WIP, not orphaned work.
+
+**The `vaultspec-rag` code index reports itself SHRUNKEN. Absence is NOT evidence.** Every negative claim in this campaign was confirmed with a targeted `rg` at HEAD, and every negative claim a new team makes must be too. Related: `rg -rn` is a trap — `-r` is `--replace` and silently rewrites every match to the literal `n`. It manufactured a plausible false finding during the audit that triggered this rewrite. Use `rg -n`.
+
+**GPU contention** swung a same-class RAG query from 1.58s to 126.6s. Cap fan-out; do not run a wide parallel sweep.
+
+**No live LLM inference.** Running a model crashed a prior session and killed four agents. Nothing in this plan requires one.
+
+**Blast-radius counts must exclude `docs/_build/**`.** It is generated Sphinx output and inflates symbol counts three- to six-fold — `InvoiceCatalogue` reads 226 with it and 1 without. Any count quoting `_build` is counting build artefacts.
+
+**Citations in the inherited documents are line-drifted** by roughly thirty lines against `_models.py`, and the invoice surface carries live peer edits. Re-read every cited site at HEAD before editing on it.
 
 ## Verification
 
 The plan is complete when every Step is closed and the following hold.
 
-Coverage is preserved, not merely assumed: a test proves the canonical path produces the same M347 per-party totals and the same M349 operator rows that the two-store union produces today, for a bucket exercising both stores.
+**The governing rule: every criterion below must be red at `HEAD` before its Step runs.** A criterion that already passes proves nothing and closes a checkbox over a surviving defect — the failure mode that made this plan a rewrite. Each Step therefore states what a red looks like. An executor who finds a criterion already green must not check the Step: record the measurement, and either re-scope the Step or close it as already-satisfied with the commit that satisfied it named. Both are honest; a silent tick is not.
 
-The double-count is closed by construction: no `BusinessOperationInvoice` symbol remains in the tree, confirmed by a tree-wide search, and the union at `_source_resolver.py:200-202` is gone rather than guarded. A cross-store dedup helper appearing anywhere is a failed outcome, not a partial success.
+### Phase `P01`
 
-The M349 clave asymmetry resolves permissively: an invoice carrying an `iva_category` implying a clave but no `operation_type` is declared, where it is silently dropped today.
+`S01` — RED: the test enumerates the declarable facts the slim store contributes (party tax id, country code, transaction date, base amount, invoice total, intracommunity clave, party legal name) and finds at least one unreachable on the canonical path for the same invoice. It must assert **fact-level reachability**, never equality with the two-store union: for a bucket exercising both stores with the same real invoice the union's totals are *doubled*, so a union-equality assertion demands the canonical path reproduce the defect and is either unsatisfiable or proves the wrong thing.
 
-The writer surface reaches the model: a strict save-load-equality roundtrip through the real encrypted namespace, with retencion, recargo, `iva_category`, `invoice_class`, `series` and `operation_date` all populated non-default, plus an anti-tautology proof that a mutated on-disk payload surfaces inequality or a `ValidationError`.
+`S02` — RED: build an EU counterparty carrying both a domestic NIF and an EU VAT ID, project it through the canonical M349 path, and assert the declared `party_tax_id` is the EU VAT ID and the `country_code` its prefix. Today this fails: the canonical projection passes `counterparty_tax_id` with no preference and derives no prefix, while the slim path prefers `eu_iva_id` and derives the prefix from it including the `EL`-to-`GR` mapping. A green here before the field exists means the test is not exercising the canonical path.
 
-Mixed-rate lands: a two-line invoice at different rates persists and aggregates per line, with no change to the persisted schema.
+`S03` — RED: the inventory names at least one production consumer with no canonical replacement. The Step's output is the inventory itself, so it cannot be closed by asserting a clean result — it is closed by a complete list, one line per consumer, each naming its replacement or naming the gap. An inventory with zero entries or with an unexplained "n/a" is a failed Step.
 
-Exactly one `Invoice` writer persists, and `python -m dev.docs.apidocs scaffold --check` plus the locale `scaffold --check` both exit clean after the deletions.
+`S28` — RED: the inventory names at least one capability with no canonical replacement. Like `S03` it is closed by a complete artefact, not by a green assertion — three sections (income, business operations, purchase evidence), one row per capability, each row carrying its replacement and the test id that proves it. A row whose proof column is empty is an open blocker. **A proof that covers only the payable path is not a proof.** This Step has standing authority to conclude the fold is not ready; recording that is a successful outcome, not a failure.
 
-Every deletion step names its replacement in its execution record. Every symbol relocation lands as one atomic explicit-path commit carrying the canonical-site move, every consumer update, every fixture update and every `__all__` update, with `uv run --no-sync pytest --collect-only -q` observed clean immediately before the commit.
+`S29` — RED: populate an `Invoice` with **every** defaultable field set to a non-default value, save, export the profile, import it, and assert strict model equality. Today's custody test asserts only that the loaded catalogue is non-empty (`test_custody_store_matrix.py:319-320`), which passes even if the boundary silently drops a field and reloads its default — the exact blindness `aeat-roundtrip-discipline` names. Then the anti-tautology half: mutate the exported payload to delete a field, reload, and assert refusal or strict inequality. **If that mutation test passes with the field dropped, the roundtrip proof is tautological and every custody claim resting on it is void.** Correcting a recorded premise: the canonical catalogue *is* carried today — `INVOICE_CATALOGUE_NAMESPACE` declares `STRUCTURED_CUSTODY` with a `default_object_key`, `_custody_carry.py:468-471` resolves single-document stores through a fixed key, and an unresolvable namespace raises `ProfileExportError` rather than dropping silently. This Step strengthens a weak proof; it is not adding a missing registration.
+
+`S30` — RED: write an invoice through the canonical path with `invoice_class=RECTIFICATIVA`, a `series`, a `rectifies_invoice_number` and a `recargo_amount`, and assert all four persist. Today every one of them fails: no parameter exists on `build_catalogue_invoice` or `create_catalogue_invoice`, so every canonically-written invoice is `ORDINARIA` with no series and no recargo **by construction**, and a rectificativa cannot be represented at all. This is the sharpest instance of the conservation law — folding onto the canonical aggregate does not even reach parity with what that aggregate already *claims* to model until this lands.
+
+`S31` — RED: the parity proof cannot yet be written, or it is written and fails. It is the test that decides whether the fold is ready: one bucket exercising every capability of both stores, run through the canonical path, asserting identical M347, M349, M303 and M390 outputs, an identical export/import roundtrip, **and the decomposition parity of `S33`** — a record whose figures aggregate identically but decompose differently has not been conserved. If it cannot be written, the Step is closed by recording **why** and naming what is missing — and `P03` does not open. A parity proof that passes while any inventory row from `S28` is unproven is not this test.
+
+`S32` — RED: the inventory row is missing a consumer or a modelo. Closed by an artefact, not an assertion. Both production consumers must appear — the renta sales-evidence gate at `_renta_income_ledger.py:711`, which runs the **full** `is_grounded` check, and the M349 gate at `_source_resolver.py:286`, which is narrowed to the two self-contradiction defects at `:224-228`. A row naming only the renta consumer is incomplete: the module performing the two-store union is itself a decomposition consumer, which is easy to miss because it reads as a resolver rather than a calculation. Record per consumer which record classes it would exclude after the fold.
+
+`S33` — RED: build the same economic facts twice — once as a record that came through the slim shape, once natively rich — decompose both, and assert identical `InvoiceComponents` **and** the same partition side. Today the ex-slim construction has no `iva_category` (the slim record cannot hold one), so it yields `IVA_TREATMENT_UNDECLARED` and lands ungrounded while its rich twin lands grounded. That divergence is the red.
+
+Then, per unmigratable class from `S08`, assert what decomposition does with it. Three findings bound this Step and keep it from over-reaching — each was measured at HEAD and each should be re-confirmed before relying on it:
+
+- **Decomposition does not partition on `recargo_amount`, `suplido_amount`, `retention_amount` or the line set.** Each is read with an `or Decimal("0")` default, so a record lacking them decomposes cleanly on those axes. Do not write a test asserting a divergence there; it would be green for the wrong reason.
+- **Decomposition computes the totals identity rather than validating it.** A non-reconciling record never becomes an `Invoice` at all, so that class is `S08`'s problem, not this Step's.
+- **The lane that actually loses capability is income, not the informativas.** M347 is deliberately unchecked and M349 deliberately excludes absence, both for recorded and measured reasons — so a test asserting an ex-slim record is dropped from M347 or M349 by decomposition would be **red for a defect that does not exist**. The renta sales-evidence path is where an ex-slim invoice would be refused, with the typed `UNGROUNDED_DECOMPOSITION` reason. Aim the proof there.
+
+If a class cannot be made to decompose equivalently, the correct outcome is to **stage or defer the fold for that class** and record it — not to widen the criterion until it passes.
+
+`S08` — RED: **one test per unmigratable class**, each constructing a record that is valid as slim and asserting the fold's stated outcome. The classes are: empty `counterparty_name` (slim `default=""`, rich `min_length=1`); null `country_code` (rich requires exactly two characters); totals that do not reconcile (slim has no cross-field validator at all, rich demands the exact identity); no line concept (rich requires at least one line with per-line arithmetic); and a bare `Decimal | None` `iva_rate` against rich's closed `IvaRate` enum. The live blessing test at `test_catalogue_invoice_link_flow.py:143-155` writes a record hitting three of these today, so the reds are reachable from a payload already in the tree.
+
+Whichever outcome each class gets, the test must distinguish it from silence: a refusal raises a named error identifying the missing invariant, a synthesis produces a specific documented value, a quarantine lands the record somewhere inspectable. "It works" is not an outcome, and **"the fold will handle it" is not a decision**. The legal-validity standard binds hardest here: a record that cannot be represented must fail **loudly at migration**, never be silently dropped and never be silently coerced into a different number. A rate that is not an `IvaRate` member must refuse, not round to the nearest member — an unread rate currently resolves to `EXEMPT`, minting a zero-cuota invoice whose printed total still shows the cuota that was charged.
+
+`S09` — RED: construct an `InvoiceObservation` without `source_kind` and assert it raises. Today it silently becomes `COLLECTIBLE_INVOICE`, so the direction axis defaults to *issued*. If every production construction site is confirmed to pass `source_kind` explicitly, say so in the execution record and state plainly that the change is a safety ratchet with no behaviour change — that is a legitimate result, but it must be stated rather than implied by a green test.
+
+`S10` — RED: either the canonical aggregate gains the two fields and a roundtrip proves they persist non-default, or the execution record carries a written decision that they are dropped and why. A Step closed with neither is the silent-drop this plan exists to prevent.
+
+### Phase `P02`
+
+`S04` — RED: populate `retention_rate` and `retention_amount` non-default, save through the real encrypted namespace, reload, assert strict model equality, then mutate the on-disk payload to delete `retention_amount` and assert the reload raises or surfaces inequality. The anti-tautology half is what makes this Step non-vacuous: the writer code already landed in `ef0438561d`, so a test that merely calls the builder proves nothing. If the roundtrip is already green, close the Step against that commit and record it.
+
+`S05` — RED: each of `--recargo`, `--iva-category`, `--invoice-class`, `--series` is absent from the CLI at `HEAD`, so a test invoking each option fails at parse time before it reaches any assertion. Additionally: an invoice carrying a recargo must satisfy `grand_total == base_total + iva_total + recargo_amount` with retención *outside* `grand_total`, per the amendment of 2026-08-06 to `2026-08-05-ledger-invoice-decomposition-adr`. A test that passes while the identity is violated means the identity is not being enforced.
+
+`S06` — RED: `--operation-date` is present on `catalogue create` and absent from the guided verb, so the guided path can reach only the proxy devengo rank. The test must drive the *guided* verb specifically; a test driving the non-guided verb is already green and proves nothing.
+
+`S07` — RED: a two-line invoice at 21% and 10% is written through each of the two synthesis sites and asserted to persist two lines aggregating per rate. Today both collapse it to one line. **The Step is not complete with one site fixed** — the live bulk importer carries its own single-line synthesis and is reachable from `catalogue import`, so a test covering only the canonical builder leaves the live import path collapsing mixed rates. One test per site.
+
+`S26` — RED: call the confirm boundary with a `retention_rate` override and assert it reaches the persisted invoice. Today the parameter does not exist, so the call fails on an unexpected keyword — that is the red. Repeat per field for `recargo_amount`, `invoice_class`, `series`, `rectifies_invoice_number`, `iva_category`, `operation_date` and `iva_amount`. The `iva_amount` case is the subtle one: the extraction draft carries it and the confirm boundary does not, so it is a gap even against the *reader* set, and a Step that widens only to the reader set would still leave it open.
+
+`S27` — RED: extract a document printing `base + cuota + recargo`, confirm it, and assert the persisted invoice carries the recargo. Today the record understates the document by exactly the surcharge while the printed-total detector (`_evidence_draft.py:501-514`) fires an advisory the operator cannot act on. The test must assert **both** halves: that the recargo persists, and that the printed-total discrepancy no longer fires for that document. A test asserting only persistence leaves the advisory firing on a now-correct record, which is a new false positive.
+
+**Cross-lane blocker, do not start this Step blind.** The draft-side recargo field belongs to the `llm-package-split` campaign, not this one — see the Cross-lane coordination section. This Step owns the confirm boundary and the persisted invoice only. If the draft slot has not landed, the Step is blocked, not failed; record the blocker and move on rather than extending `InvoiceDraft` here and colliding with that lane in `_evidence_draft.py`.
+
+### Phase `P03`
+
+`S11` — RED: invoke each of the five bare `invoice` verbs and assert the record lands in the canonical store. Today they land in the slim store. Assert also that `--kind issued|received` still parses and that no `catalogue` sub-noun remains registered.
+
+`S12` — RED: the execution record names each of the existing per-consumer lane gates and states, per gate, what it still guarantees once the physical per-source-kind partition is gone. A Step closed without that enumeration has dropped a structural guarantee by oversight, which the ADR explicitly forbids.
+
+`S13` — RED: assert the resolver loads exactly one store. Today it loads two and concatenates their observations. **A cross-store dedup helper appearing anywhere is a failed outcome, not a partial success** — building one institutionalises the split this campaign removes.
+
+`S14`, `S15`, `S16` — RED: a tree-wide search finds no `BusinessOperationInvoice`, `BusinessOperationInvoiceRepository`, `PayableInvoiceService`, `CollectibleInvoiceService`, `BusinessOperationInvoiceDirection` or `LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE` symbol, and no alias, bridge or re-export replaces any of them. Each deletion Step names its replacement in its execution record. The `payable_invoice` and `collectible_invoice` source-kind strings must **still be present** — deleting the store does not touch the taxonomy, and their disappearance is a regression, not progress. `S16` closes only when the locale drift gate and `python -m dev.docs.apidocs scaffold --check` both exit clean, with every locale change made through the locales CLI so all four catalogues stay in parity.
+
+### Phase `P04`
+
+`S17` — RED: `application/invoices/_importing.py` and its tests are gone, and the module's exports are gone from `application/invoices/__init__.py` `__all__`. The Step must confirm before deleting that the live import path is the other module and that it routes canonically — a deletion premised on an unverified reachability claim is the mis-specified retirement this plan is guarding against.
+
+`S18` — RED: the renamed field is absent under its old name from the model, every serialised fixture and every data consumer, not only from callers. The Step must first settle whether the preflight site using `category_id` with the spending-taxonomy meaning shares a serialised key with the invoice line field or is an unrelated homonym; renaming on the assumption that they are unrelated, when they cross a boundary, breaks the preflight silently.
+
+`S19` — RED: confirm a document as ISSUED that was not plausibly issued by this taxpayer and assert the refusal. Today it is accepted. The gate must be asserted to *refuse*, and a matching positive control must prove a genuinely-issued document still confirms — a gate that refuses everything passes the negative test and is worse than no gate.
+
+`S20`, `S21` — RED: no `InvoiceKindOption` symbol remains, and `InvoiceKind` resolves from the invoices domain rather than the iva domain. Each lands as **one** atomic explicit-path commit carrying the canonical-site move, every consumer, every fixture and every `__all__` update, subject-tagged `relocation:<symbol>`, with `python -m dev.docs.apidocs scaffold` run in the same commit and `uv run --no-sync pytest --collect-only -q` observed clean immediately before it. A relocation split across two commits is a failed Step even if the end state is correct.
+
+### Phase `P05`
+
+`S22` — RED: the Step is closed by a *test encoding the answer*, not by prose. Whichever way the reachability question resolves, the test must fail if the answer changes. If the answer is that an invoice-only bucket cannot reach a filed M390, `S25` is re-scoped rather than executed and the execution record says so — that is a legitimate outcome and must be visible.
+
+`S23` — RED: an invoice with a non-ES counterparty diverging from the ledger passes the screen today because of the `counterparty_country == "ES"` filter. The test asserts it is now caught. A positive control must prove a *consistent* non-ES invoice still passes, or the extension is a blanket refusal rather than a screen.
+
+`S24` — RED: a recargo figure diverging from the ledger passes today because recargo is outside the four-cuota screened binding set. Same positive-control requirement.
+
+`S25` — RED: a bucket whose invoices consistently exceed its ledger passes the M390 path today. The `modelo-390-cuota-devengada-total-equals-reconciliacion-303` blocking rule cannot substitute — the Step must demonstrate that rule passing on the same bucket, which is the whole reason a separate screen is needed. If that demonstration cannot be produced, the premise of `S25` is wrong and the Step is re-scoped.
+
+### Whole-plan gates
+
+**The conservation gate outranks every other criterion here.** No Step in `P03` opens until `P01.S28`'s inventory has a named replacement and a passing proof for every row across all three lanes, and until `P01.S31`'s capability-parity proof passes. If either cannot be satisfied, the correct outcome is a recorded "the fold is not ready, and here is what is missing" — not a narrowed criterion.
+
+After the fold, the slim namespace must be gone from the custody definitions with no dangling namespace left behind, and the canonical catalogue must still carry through a profile export/import roundtrip at `S29`'s strict-equality standard. A capability that survived the deletion but not the roundtrip is still a capability lost.
+
+Exactly one `Invoice` writer persists in the tree. `python -m dev.docs.apidocs scaffold --check` and the locale `scaffold --check` both exit clean. No alias, bridge, deprecation path or compatibility shim exists anywhere in the delta — `no-legacy-compatibility` governs in full, the regime is `PRE_RELEASE`, and no data migration is written.
+
+`P05` closing with zero Steps executed is a failed plan, not a severed phase. Severing it requires lifting its Steps into a named successor campaign, recorded here.
+
+Every Step has an execution record before it is checked, per `plan-closure-requires-exec-records`. Before each Step's first edit to a shared file, `git diff -- <file>` and abort on non-authored WIP; the invoice model currently carries live peer edits.
