@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#ci-lane-deconflation'
-date: '2026-08-05'
-modified: '2026-08-05'
+date: '2026-08-06'
+modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:36deebcb4c9e6891f9761903c522f3a9f803d2b97d1eb351627fcf8b9c17696d'
+body_hash: 'sha256:ea45c9d1285f5925466d2ff026a6e66058e2e53ed65ea3ea2c114adb5b245210'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S04]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S22]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-P04-S15]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S20]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S21]]'
+  - '[[2026-08-05-ci-lane-deconflation-P04-S24]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S25]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S26]]'
   - '[[2026-08-05-ci-lane-deconflation-P04-S27]]'
@@ -58,6 +59,7 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P04-S15` - Repair the four core tests broken by the root-only Modelo localization migration, it stripped title and official_name and label from the M036 manifest without updating hand-derived expectations
 - `2026-08-05-ci-lane-deconflation-P04-S20` - Resolve the import-hygiene test-debt failures from the maternidad private reaches, raising a baseline designed to only decrease would invert the ratchet so establish whether the debt is legitimate before admitting it
 - `2026-08-05-ci-lane-deconflation-P04-S21` - Replace the two bare 303 literals in the relation-source validator with the core enum, they entered in today's operator snapshot rather than becoming newly visible and they red a tree-wide gate for every agent
+- `2026-08-05-ci-lane-deconflation-P04-S24` - Confirm with the localization cascade owner that the result-summary application row is meant to follow the active output language, the repair is stronger than what it replaced but it crosses another campaign's surface
 - `2026-08-05-ci-lane-deconflation-P04-S25` - Sweep for tests relying on the English CLI env override for help text, it is inert against the cached Click tree so any such test asserts against whatever language the tree was built in
 - `2026-08-05-ci-lane-deconflation-P04-S26` - Require an exec record whose evidence is a passing test to state the selection that produced it, three agents in one day nearly accepted a marker expression that selected nothing and exited zero
 - `2026-08-05-ci-lane-deconflation-P04-S27` - Rule on whether the schema-size gate should measure emitted content, its docstring calls itself a proxy for structured content while it directly measures the definition bytes a client actually loads
