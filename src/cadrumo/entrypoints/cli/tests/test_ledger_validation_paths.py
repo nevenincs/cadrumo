@@ -167,11 +167,58 @@ def test_ledger_add_gross_mismatch_surfaces_clean_refusal_not_pydantic_repr(
     combined = result.output or ""
     # The clean validator message is surfaced (Click's Rich box may wrap the
     # line at the box border, so assert on a fragment that stays on one line).
-    assert "iva_amount must equal the gross to the cent" in combined, combined
+    assert "taxable_base + iva_amount + recargo_amount must equal the gross to the cent" in combined, combined
     # ... and the raw pydantic model repr is NOT dumped to the operator.
     assert "RawTransaction(" not in combined, combined
     assert "RawProvenance(" not in combined, combined
     assert "mappingproxy(" not in combined, combined
+
+
+def test_ledger_add_gross_mismatch_above_substrate_hints_recargo_amount(
+    tmp_path: Path,
+) -> None:
+    """A cash movement above the declared base+IVA substrate, with no recargo
+    recorded, must hint ``--recargo-amount`` rather than a bare arithmetic
+    mismatch.
+
+    ``_gross_mismatch_detail`` (``domain/transactions/_models.py``) names the
+    one field that would legitimately explain this direction of the gap: a
+    supply to or from a comerciante minorista under recargo de equivalencia
+    (LIVA art. 161) charges the surcharge on top of the cuota, so the cash the
+    operator recorded can legitimately exceed base+IVA alone.
+    """
+    result = _invoke(
+        [
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-04-15",
+            "--amount",
+            "150.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "supplier purchase",
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            "material_oficina",
+            "--taxable-base",
+            "100.00",
+            "--iva-rate",
+            "0.21",
+            "--iva-amount",
+            "21.00",
+        ],
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    )
+
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    assert "taxable_base + iva_amount + recargo_amount must equal the gross to the cent" in combined, combined
+    assert "--recargo-amount" in combined, combined
+    assert "recargo de equivalencia" in combined, combined
 
 
 def test_ledger_classify_persists_professional_income_net_of_irpf_withholding(
