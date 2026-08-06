@@ -37,14 +37,14 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import NamedTuple, Self
+from typing import Annotated, NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Modelo, Period, PeriodKind, elided_prose
+from ...core import ElidedProse, Modelo, Period, PeriodKind
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ...core.money import round_to_cents
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
@@ -114,7 +114,7 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-_IssueDetail = elided_prose(512)
+_IssueDetail = Annotated[str, ElidedProse(512)]
 
 
 class SalesInvoiceEvidenceRefusal(StrEnum):
@@ -569,7 +569,7 @@ def _classify_income_transaction(
         # Operator reviewed and deliberately excluded this row from filing (a
         # final disposition): omit it silently. This short-circuits before the
         # ``irpf_category=actividad_economica`` business override in
-        # ``_income_business_amount`` so an excluded row can never slip back into
+        # ``_income_business_proportion`` so an excluded row can never slip back into
         # aggregation through the category tag.
         return None
     if transaction.direction is not TransactionDirection.INCOMING:
@@ -597,8 +597,8 @@ def _classify_income_transaction(
             ),
         )
 
-    gross_amount = _income_business_amount(transaction)
-    if gross_amount is None:
+    proportion = _income_business_proportion(transaction)
+    if proportion is None:
         reason = (
             RentaIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
             if transaction.business_classification is BusinessClassification.PERSONAL
@@ -609,6 +609,7 @@ def _classify_income_transaction(
             reason=reason,
             detail=(f"business classification {transaction.business_classification.value!r} cannot feed Renta income"),
         )
+    gross_amount = abs(transaction.raw.amount) * proportion
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
     if not (cumulative_start <= filing_date <= cumulative_end):
@@ -631,12 +632,11 @@ def _classify_income_transaction(
     # expense pipeline uses. A grounded row therefore also stops reporting
     # CASH_FALLBACK below, correctly: the substrate now genuinely exists.
     declared_base = evidence.taxable_base if evidence.taxable_base is not None else transaction.taxable_base
-    taxable_base_amount: Decimal | None = None
-    if declared_base is not None:
-        if transaction.business_classification is BusinessClassification.MIXED and transaction.business_pct is not None:
-            taxable_base_amount = declared_base * transaction.business_pct
-        else:
-            taxable_base_amount = declared_base
+    # Scaled by the SAME proportion the gross above carries, never a second
+    # decision: the two figures describe one receipt, so a rule that divided one
+    # and not the other would declare a fraction of the income while the
+    # retención derived from the undivided base stayed whole.
+    taxable_base_amount: Decimal | None = None if declared_base is None else declared_base * proportion
 
     withheld = _income_withheld_amount(transaction, evidence=evidence)
 
@@ -720,24 +720,41 @@ def _sales_invoice_evidence_payload(
     )
 
 
-def _income_business_amount(transaction: Transaction) -> Decimal | None:
-    """Return the business-attributed income amount, or None if not eligible.
+def _income_business_proportion(transaction: Transaction) -> Decimal | None:
+    """Return the share of one income row that is activity income, or ``None``.
+
+    The single proportion decision for the row: every money figure the
+    observation carries is scaled by this one value, so the gross and the
+    taxable base cannot disagree about how much of the receipt is the
+    activity's.
 
     When ``irpf_category`` is explicitly set to ``"actividad_economica"`` the
     transaction is already classified as a professional-activity receipt and
     ``business_classification`` is treated as ``BUSINESS`` by definition (the
-    category tag is the authoritative signal).  This avoids the common case
+    category tag is the authoritative signal). This avoids the common case
     where a transaction is tagged with ``irpf_category=actividad_economica``
     before the broader ``business_classification`` sweep has run.
+
+    That short-circuit is also the legally correct answer to a MIXED
+    classification on an activity receipt, not merely a convenience. Partial
+    affectation is a property of ASSETS: LIRPF art. 29.2 (Ley 35/2006,
+    BOE-A-2006-20764) limits it to "elementos patrimoniales que sirvan sólo
+    parcialmente al objeto de la actividad económica", and it reaches the
+    rendimiento neto through the deductibility of the gastos those assets
+    generate (art. 28.1). Nothing in art. 27-30 divides an INGRESO by a usage
+    percentage -- a client's payment for professional services is wholly an
+    ingreso íntegro of the activity however the taxpayer's own desk, car or
+    flat happens to be split. The retención the payer withholds on it agrees:
+    RIRPF art. 95.1 (RD 439/2007) fixes the rate "sobre los ingresos íntegros
+    satisfechos", a fact about the payment, carrying no affectation term at
+    all. So an activity-tagged row is undivided on every figure, and because
+    ``_income_withheld_amount`` derives a retención for activity rows only,
+    every row that carries one is a row this returns ``1`` for.
     """
-    amount = abs(transaction.raw.amount)
     if has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         # The explicit IRPF category is the authoritative M130 eligibility gate.
-        return amount
-    proportion = business_proportion(transaction.business_classification, transaction.business_pct)
-    if proportion is None:
-        return None
-    return amount * proportion
+        return Decimal("1")
+    return business_proportion(transaction.business_classification, transaction.business_pct)
 
 
 def _computable_income_amount(observation: RentaIncomeObservation) -> Decimal:
