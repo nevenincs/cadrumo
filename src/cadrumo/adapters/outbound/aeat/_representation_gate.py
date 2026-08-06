@@ -81,4 +81,83 @@ async def wait_for_own_name_representation_selector(
     raise AssertionError("raise_configuration_error must raise")  # pragma: no cover
 
 
-__all__ = ["own_name_representation_selectors", "wait_for_own_name_representation_selector"]
+def continue_button_selectors(
+    modal_selector: str,
+    button_text: str,
+    *,
+    scoped_to_shown: bool,
+) -> tuple[str, ...]:
+    """Return continue-button selector variants for an AEAT alert modal.
+
+    Generates the title-case and as-given renderings of ``button_text`` plus a
+    generic ``.modal-footer`` fallback for a button whose own text does not
+    match either variant (the auth caller's original third selector). When
+    ``scoped_to_shown`` is True every selector is qualified with ``.show``, so
+    it matches only while the modal carries that CSS state -- the auth
+    caller's convention, applied there only after it has already gated on the
+    modal's ``"show"`` class itself. ``scoped_to_shown=False`` (the wallet
+    caller) omits the qualifier, preserving that caller's existing
+    unconditional match -- this function changes what is TRIED, never what is
+    REQUIRED to be present for a click to succeed.
+
+    Args:
+        modal_selector: The modal container's CSS selector (e.g. ``"#alertsModal"``).
+        button_text: The configured continue-button text to match.
+        scoped_to_shown: Whether every generated selector is qualified with ``.show``.
+
+    Returns:
+        A tuple of candidate selectors, in try-order, deduplicated.
+    """
+    scope = ".show" if scoped_to_shown else ""
+    title_case = button_text[:1].upper() + button_text[1:] if button_text else button_text
+    selectors: list[str] = []
+    for text in (title_case, button_text):
+        value = text.strip()
+        if not value:
+            continue
+        selector = f'{modal_selector}{scope} button:has-text("{value}")'
+        if selector not in selectors:
+            selectors.append(selector)
+    fallback = f'{modal_selector}{scope} .modal-footer button[type="button"]'
+    if fallback not in selectors:
+        selectors.append(fallback)
+    return tuple(selectors)
+
+
+async def click_first_matching_selector(page: object, selectors: tuple[str, ...]) -> None:
+    """Click the first selector in ``selectors`` that resolves.
+
+    Tries each selector via ``page.click`` in order, catching
+    :class:`PlaywrightError` and trying the next; re-raises the LAST error
+    only once every candidate has failed. A single-element ``selectors``
+    tuple reproduces raise-on-first-miss exactly (today's wallet behaviour);
+    a multi-element tuple adds fallback attempts strictly on top of that --
+    this never removes a selector that used to be tried, only adds more
+    chances to succeed before giving up.
+
+    Args:
+        page: A Playwright ``Page`` or a page-like object exposing an async
+            ``click(selector)`` method (both current callers' page types
+            declare this unconditionally, unlike ``wait_for_selector`` above).
+        selectors: Candidate selectors, in try-order.
+
+    Raises:
+        PlaywrightError: If every selector failed to resolve.
+    """
+    last_error: PlaywrightError | None = None
+    for selector in selectors:
+        try:
+            await page.click(selector)  # type: ignore[attr-defined]
+            return
+        except PlaywrightError as exc:
+            last_error = exc
+    if last_error is not None:
+        raise last_error
+
+
+__all__ = [
+    "click_first_matching_selector",
+    "continue_button_selectors",
+    "own_name_representation_selectors",
+    "wait_for_own_name_representation_selector",
+]

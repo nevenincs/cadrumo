@@ -3,18 +3,26 @@
 Round-3 semantic duplicate discovery found `_dismiss_pre303_alert_modal_if_present`
 implemented twice -- once in `auth._clave_movil_page_flow` (a method on
 `_ClaveMovilPageFlowMixin`), once in `sede._iva_compensation_wallet` (a free
-function) -- with no cross-reference between the two, and a real behavioural
-divergence rather than a calling-convention difference: the auth copy checks
-the modal's CSS `"show"` class before acting and tries several continue-button
-selector variants; the wallet copy does a raw substring check on the page HTML
-(no class-state test at all) and clicks exactly one constructed selector with
-no fallback.
+function) -- with no cross-reference between the two, and TWO real
+behavioural divergences rather than a calling-convention difference: (1) the
+auth copy checks the modal's CSS `"show"` class before acting at all, the
+wallet copy does a raw substring check on the page HTML with no class-state
+test; (2) the auth copy tries several continue-button selector variants with
+a generic fallback, the wallet copy tried exactly one constructed selector
+with no fallback.
 
-Neither implementation had any test coverage before this module. This is a
-CHARACTERISATION pass, not a fix: every test here asserts what each
-implementation DOES TODAY, not what it should do. The point is to make the
-divergence measurable so the canonical-behaviour question can be decided on
-evidence rather than reasoning.
+Neither implementation had any test coverage before this module. This module
+started as a CHARACTERISATION pass -- pinning what each implementation did,
+not what it should do -- so the class-gate question (1) could be decided on
+evidence. That question is still held pending real-page evidence: it REMOVES
+an action (the wallet declining to click), and this synthetic fixture cannot
+prove that removal safe on AEAT's actual page. The fallback question (2) was
+judged STRICTLY ADDITIVE -- a candidate selector can only succeed where the
+current code already failed, so no working click path can regress -- and was
+promoted into `adapters.outbound.aeat._representation_gate` in the same
+landing that updated this module's fallback tests to match. The class-gate
+tests below remain a live characterisation of a held decision; the fallback
+tests below now characterise the POST-promotion shared behaviour.
 
 ## Fixture provenance
 
@@ -225,23 +233,29 @@ def test_auth_falls_back_to_the_generic_modal_footer_button_when_unlabelled() ->
     )
 
 
-def test_wallet_has_no_fallback_for_an_unlabelled_continue_button() -> None:
-    """Today: the wallet path's single selector cannot find an unlabelled continue button.
+def test_wallet_now_shares_the_generic_modal_footer_fallback() -> None:
+    """The selector-fallback axis is UNIFIED (landed after this module first pinned the gap).
 
-    `_wallet_dismiss` constructs exactly one selector,
-    `f'{modal_selector} button:has-text("{button_text}")'`, with no fallback
-    equivalent to the auth path's generic `.modal-footer` selector. Against a
-    modal whose button carries no matching text, the click raises, and
-    `_wallet_dismiss` does not catch it -- the exception propagates to the
-    caller uncaught, which is itself part of the divergence: the auth path
-    only raises after exhausting every variant, the wallet path raises on its
-    first and only attempt.
+    The team lead's ruling on the four cells split the two divergences:
+    the selector fallback was strictly additive (adding a candidate can
+    only succeed where the current code already failed) and was promoted
+    into `adapters.outbound.aeat._representation_gate.continue_button_selectors`
+    / `click_first_matching_selector`; the "show" class gate was held as a
+    behaviour REMOVAL pending real-page evidence (see the class-gate tests
+    above, still red-line accurate). This test replaces
+    `test_wallet_has_no_fallback_for_an_unlabelled_continue_button`, which
+    pinned the pre-promotion gap and would now fail as a false regression
+    signal if left unchanged -- the gap it named is the one this landing
+    closed.
     """
-    page = _FakePage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=lambda _selector: False)
+    # Wallet selectors are never ".show"-scoped (scoped_to_shown=False), so the
+    # matching predicate here checks only for the fallback shape, unlike the
+    # auth-side predicate above which requires ".show" too.
+    page = _FakePage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=lambda s: "modal-footer" in s)
 
-    with pytest.raises(Exception, match="no element matches"):
-        _run(lambda: _run_wallet(page))
+    _run(lambda: _run_wallet(page))
 
-    assert len(page.attempted_selectors) == 1, (
-        f"expected exactly one attempt with no fallback, got {page.attempted_selectors}"
+    assert page.attempted_selectors, "wallet path did not reach the shared generic modal-footer fallback"
+    assert "modal-footer" in page.attempted_selectors[-1], (
+        f"expected the fallback selector to be tried last, got {page.attempted_selectors}"
     )

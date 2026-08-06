@@ -39,7 +39,11 @@ from ....persistence.storage import (
     secure_object_repository_for_active_bucket,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from .._representation_gate import wait_for_own_name_representation_selector
+from .._representation_gate import (
+    click_first_matching_selector,
+    continue_button_selectors,
+    wait_for_own_name_representation_selector,
+)
 from ._authenticator_types import BrowserPageLike
 from ._clave_movil_support import (
     DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS as _DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS,
@@ -620,7 +624,16 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         return own_name is not None and _html_input_checked(own_name)
 
     async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPageLike) -> None:
-        """Dismiss the visible Pre303 alert modal before submitting own-name access."""
+        """Dismiss the visible Pre303 alert modal before submitting own-name access.
+
+        The ``"show"`` class gate below is NOT shared with the sede wallet
+        reader's copy of this function -- that divergence is a recorded,
+        held-pending-evidence decision
+        (`sede/tests/test_pre303_alert_modal_divergence.py`), not an
+        oversight. Only the selector-fallback chain past the gate is shared,
+        via :func:`~adapters.outbound.aeat.continue_button_selectors` /
+        :func:`~adapters.outbound.aeat.click_first_matching_selector`.
+        """
         pre303 = self._settings.external_constants().aeat.pre303
         content = getattr(page, "content", None)
         click = getattr(page, "click", None)
@@ -631,35 +644,12 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         modal = soup.select_one(pre303.alert_modal_selector)
         if modal is None or not _html_node_has_class(modal, "show"):
             return
-        last_error: PlaywrightError | None = None
-        for continue_selector in _alert_continue_button_selectors(
+        selectors = continue_button_selectors(
             pre303.alert_modal_selector,
             pre303.alert_continue_button_text,
-        ):
-            try:
-                await click(continue_selector)
-                return
-            except PlaywrightError as exc:
-                last_error = exc
-        if last_error is not None:
-            raise last_error
-
-
-def _alert_continue_button_selectors(modal_selector: str, button_text: str) -> tuple[str, ...]:
-    title_case = button_text[:1].upper() + button_text[1:] if button_text else button_text
-    variants = (title_case, button_text)
-    selectors: list[str] = []
-    for text in variants:
-        value = text.strip()
-        if not value:
-            continue
-        selector = f'{modal_selector}.show button:has-text("{value}")'
-        if selector not in selectors:
-            selectors.append(selector)
-    fallback = f'{modal_selector}.show .modal-footer button[type="button"]'
-    if fallback not in selectors:
-        selectors.append(fallback)
-    return tuple(selectors)
+            scoped_to_shown=True,
+        )
+        await click_first_matching_selector(page, selectors)
 
 
 def _html_input_checked(node: object) -> bool:

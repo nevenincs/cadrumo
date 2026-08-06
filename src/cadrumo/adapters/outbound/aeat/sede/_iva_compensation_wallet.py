@@ -34,7 +34,11 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError
-from .._representation_gate import wait_for_own_name_representation_selector
+from .._representation_gate import (
+    click_first_matching_selector,
+    continue_button_selectors,
+    wait_for_own_name_representation_selector,
+)
 from ..browser import DefaultBrowserSession, default_browser_session_factory
 from ._adapter_utils import assert_read_landing, is_aeat_auth_gate_redirect, landed_origin
 from ._auth_state import storage_state_for_session
@@ -449,12 +453,26 @@ async def _assert_own_name_representation_form(page: Page, *, expected_path: str
 
 
 async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
+    """Dismiss the pre303 alert modal without checking its "show" class.
+
+    That gap is a recorded, held-pending-evidence decision
+    (`tests/test_pre303_alert_modal_divergence.py`), not touched here. What
+    IS added is the fallback selector chain the auth reader's copy already
+    had: previously this raised on the first (and only) selector miss;
+    now it tries the same selector first, then the auth path's title-case
+    and generic ``.modal-footer`` fallbacks, before giving up. Strictly
+    additive -- a selector this used to succeed on still succeeds first.
+    """
     html = await page.content()
     modal_marker = _PRE303.alert_modal_selector.lstrip("#")
     if _PRE303.alert_modal_selector not in html and modal_marker not in html:
         return
-    continue_selector = f'{_PRE303.alert_modal_selector} button:has-text("{_PRE303.alert_continue_button_text}")'
-    await page.click(continue_selector)
+    selectors = continue_button_selectors(
+        _PRE303.alert_modal_selector,
+        _PRE303.alert_continue_button_text,
+        scoped_to_shown=False,
+    )
+    await click_first_matching_selector(page, selectors)
 
 
 async def _select_own_name_actuacion_if_present(page: Page, *, settings: Settings) -> bool:
