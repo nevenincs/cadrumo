@@ -4,7 +4,7 @@ tags:
   - '#ci-lane-deconflation'
 date: '2026-08-05'
 modified: '2026-08-06'
-body_hash: 'sha256:2a5f39e25cc79315cd4a1af68b4b86cacfb664c412c1f3dd1543c7cb45421916'
+body_hash: 'sha256:033c01394ec7e9674ea2ddc358198f6cd6d3ebdaca73ae65b30dd04f1087dfcd'
 tier: L2
 related:
   - '[[2026-07-21-ci-discipline-adr]]'
@@ -59,7 +59,7 @@ Findings the campaign surfaced in the registry and core surfaces that are real b
 
 - [x] `P03.S11` - Build the registry selector parity gate binding declared period_selector tokens to the accepted set, delegating to the production validator rather than restating it so the gate cannot become a second authority; `src/cadrumo/domain/calculations/registry/tests`.
 - [x] `P03.S12` - Route the declaracion parser administrative-token set through the core authority, it hardcodes four tokens and is missing COMUNICACION and VARIACION from the core set it shadows; `src/cadrumo/adapters/inbound/declaracion/_parser.py`.
-- [ ] `P03.S13` - Decide the strength class for casillas 0529 and 0531, promoting them to the coverage-gated class raises the denominator and could flip verdicts on legitimate filings so it needs domain grounding; `src/cadrumo/_data/registry/aeat/modelos/100`.
+- [x] `P03.S13` - Decide the strength class for casillas 0529 and 0531, promoting them to the coverage-gated class raises the denominator and could flip verdicts on legitimate filings so it needs domain grounding; `src/cadrumo/_data/registry/aeat/modelos/100`.
 - [x] `P03.S14` - Fix the embedded newline in the rd-439-2007 art-76 legal entry notes field, the validator rejects any Unicode C category and a narrower scan for control characters reads as clean; `src/cadrumo/_data/registry/aeat/legal`.
 - [x] `P03.S18` - Pin which snapshot coordinates the filing-period cross-check covers, the consistency validator returns early on a null filing period so administrative-token snapshots quietly lost a check the validator's name still implies; `src/cadrumo/domain/calculations/registry/tests/test_snapshot_filing_period_coverage.py`.
 - [x] `P03.S19` - State in the filing-period consistency validator's own docstring which coordinates it no longer covers and why, a test enforces the fact but the explanation belongs at the validator; `src/cadrumo/domain/calculations/registry`.
