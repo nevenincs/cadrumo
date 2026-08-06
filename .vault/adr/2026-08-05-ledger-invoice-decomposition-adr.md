@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-06'
 body_schema: 'body-v1'
-body_hash: 'sha256:9b2e11097a7ff9782065fb37dd6a63eb238c1692c44ee86363b51a7e30a0ef42'
+body_hash: 'sha256:19586f96c8844c2802e45d0f7ecc51df1151ac44541320aa039db1b9a5e9f067'
 related:
   - "[[2026-08-05-ledger-invoice-decomposition-reference]]"
   - '[[2026-08-05-ledger-invoice-decomposition-research]]'
@@ -453,6 +453,81 @@ Corpus obligation, gating: RD 1619/2012 art. 6 (mandatory content) and art. 11 (
 deadline) are NOT bundled — only art. 2 is. The mandatory-content list is the authority
 from which this schema's field set is derived, so bundling it precedes authoring the
 schema, per `legal-grounding-verifies-bundled-authoritative-corpus`.
+
+**D12 — the external-grounding gate admits BOUND casillas, under one anti-tautology
+condition (ruled 2026-08-06).** The gate currently requires every casilla named in
+`externally_grounded_casilla_ids` to be COMPUTED, reporting anything else as
+`oracle_casilla_not_computed`. That excludes bound casillas — and the ledger-income
+chain's casilla 01 is bound, resolved by `ledger_renta_income_aggregation`, so the gate
+as written forbids grounding the very chain this record exists to ground.
+
+The exclusion rests on an assumption worth naming: that a bound value is not
+independently checkable because the test supplies its own substrate. That is a real
+hazard, but it is NOT what bound-versus-computed distinguishes. A computed casilla is
+equally circular if its inputs are chosen to hit the target; a bound casilla is genuinely
+checked when the binding — which fact, which selector, which aggregation op — must
+select and fold real substrate to reach a figure the test did not choose. The binding IS
+the thing under test, exactly as the formula is for a computed casilla.
+
+So the discriminator is not the casilla's kind. It is **where the fixture came from**.
+
+RULING: a bound casilla may be declared externally grounded when its fixture is authored
+from the worked example's DESCRIBED FACTS — the operations, amounts and dates the AEAT
+example states — and never from its RESULT. If the example describes three invoices and
+states a total, the fixture carries the three invoices and the oracle checks the total. A
+fixture constructed backwards from the total is tautological whatever the casilla's kind,
+and is already forbidden by `no-tautological-calculation-tests`; this ruling neither
+weakens nor restates that.
+
+The gate is therefore amended to admit a bound casilla, and the anti-tautology burden
+moves where it belongs — onto fixture provenance, which the oracle's own
+`raw_evidence_locator` already anchors. A grounding claim whose fixture cannot be traced
+to described facts in the cited example is the failure this condition names; "the casilla
+is bound" was never the right proxy for it.
+
+**D13 — factura simplificada eligibility is enforced where the document can answer, and
+DECLARED where it cannot (ruled 2026-08-06).** RD 1619/2012 art. 4 is now bundled and was
+read verbatim before this ruling. It carries four eligibility axes, not the single ceiling
+the finding assumed: a 400 € general threshold (apartado 1.a); a SECOND 3.000 € threshold
+restricted to a closed list of about fourteen named sectors (apartado 2 — ventas al por
+menor, ambulancia, hostelería, peluquería, aparcamiento and others); AEAT discretionary
+authorisation for other cases (apartado 3); and four categorical exclusions independent of
+amount (apartado 4).
+
+ENFORCED, because the record can answer it: apartado 4.a), an entrega intracomunitaria
+exenta may NEVER be simplificada. Checkable from `invoice_class` and `iva_category`, both
+already present. This closed a hole wider than the one it was scoped for — the existing
+NIF-mandatory re-imposition for that category silently ALLOWED a simplificada
+intra-community invoice to construct once a tax id was supplied, so the actual prohibition
+(never, tax id or not) was never enforced at all.
+
+DECLARED, NOT ENFORCED, each with its reason:
+
+*The amount thresholds.* Both are PERMISSIONS, not ceilings. A naive "refuse above 400 €"
+would false-refuse every legitimate 3.000 €-tier retail or hostelería invoice — the exact
+refuse-the-truthful-document shape this record has now corrected at four sites. Enforcing
+the second tier needs a sector-classification field that does not exist, and inventing one
+from the counterparty's name or category would be fabricated legal behaviour.
+
+*Apartado 3, the discretionary authorisation.* A live AEAT administrative fact about this
+taxpayer. It is unverifiable from any field of any document, and no bundled corpus can
+settle it. This is the same class as the VIES-registration question: a fact the system can
+record if declared, never derive.
+
+*Three of the four categorical exclusions.* Distance sales need a LIVA cross-reference
+against the existing OSS fields; self-billing by a foreign provider needs a "who
+physically issued this document" fact the record does not carry — and specifically NOT the
+one the issuer-establishment predicate answers, which is a different question about the
+taxpayer's own territoriality; and the fourth needs an art. 2.3.b) cross-reference not yet
+analysed.
+
+The posture is the one this record already takes on the VIES question and the
+permanent-establishment carve-out: where a legal condition turns on facts the document
+cannot hold, the system records the operator's declaration and does not pretend to verify
+it — stated in the ADR so the limit is DECLARED rather than discovered. What is forbidden
+is leaving it implicit, which is the state S44's relaxation shipped in: an invoice could
+declare itself simplificada, thereby escaping the counterparty-NIF requirement, with
+nothing checking it was eligible to be one.
 
 **Named change list for the implementation plan.**
 
