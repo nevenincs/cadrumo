@@ -12,20 +12,24 @@ VISIBLE without becoming noisy. The whole value of the advisory is the
 discrimination, so that is what is asserted here rather than the weaker "an
 advisory was raised":
 
-* a genuine 15 % withholding raises NO advisory, and neither does a 7 %
-  inicio-de-actividades one — an advisory that fired on the correct domestic-B2B
-  majority would train operators to ignore the channel;
+* a genuine withholding at ANY grounded art. 95 rate raises NO advisory — the
+  15 % general and 7 % inicio figures of apartado 1, and the sectoral 2 % and 1 %
+  of apartados 4, 5 and 6.1.º. An advisory that fired on the correct domestic-B2B
+  majority, or on an agricultural or módulos filer, would train operators to
+  ignore the channel;
 * each non-rate shortfall DOES raise exactly one, naming its transaction;
 * a retención DECLARED on a linked invoice is never screened, because that figure
-  is the document's statement rather than something this application inferred.
+  is the document's statement rather than something this application inferred;
+* a shortfall that COINCIDES with a statutory rate passes silently — the known
+  limit, asserted here so it stays a documented state rather than a surprise.
 
 If a later edit made the advisory unconditional, the conforming gates go red; if
 it disabled the advisory, the phantom gates go red. Neither direction passes
 silently.
 
 The expected figures are invoice arithmetic (declared gross minus declared cash)
-and the statutory RIRPF art. 95.1 rates read from the registry parameter
-catalogue, not the output of any formula under test.
+and the statutory RIRPF art. 95 rates read from the registry parameter catalogue,
+not the output of any formula under test.
 """
 
 from __future__ import annotations
@@ -49,6 +53,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
     load_retencion_actividades_rates,
+    statutory_activity_retencion_rates,
 )
 from .._renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .._retencion_rate_advisory import (
@@ -128,17 +133,84 @@ def _observations(*rows: Transaction) -> tuple[RentaIncomeObservation, ...]:
     return tuple(aggregation.observations)
 
 
-def test_the_registry_grounds_exactly_the_two_art_95_1_rates() -> None:
-    """The screen compares against 15 % / 7 %, read rather than restated.
+def test_the_registry_grounds_every_art_95_rate() -> None:
+    """The screen compares against the whole grounded set, read not restated.
 
-    Pinned because the discrimination is only as good as the rate set behind it:
-    were a third rate to be grounded later, the conforming gates below would
-    admit it and this gate is where that change announces itself.
+    Pinned per apartado because the discrimination is only as good as the rate
+    set behind it, and because art. 95.4 is deliberately two figures rather than
+    one: the 2 % general agrícola/ganadera rate carries an express 1 % carve-out
+    for engorde de porcino y avicultura. Grounding only the general figure would
+    have left that carve-out false-firing.
+
+    The distinct-value set is what the advisory consumes; six declared
+    parameters collapse to four figures because 95.4.2.º/95.5 both fix 2 % and
+    95.4.1.º/95.6.1.º both fix 1 %.
     """
     rates = load_retencion_actividades_rates()
 
     assert rates.general_rate == Decimal("0.15")
     assert rates.inicio_actividad_rate == Decimal("0.07")
+    assert rates.agricola_ganadera_rate == Decimal("0.02")
+    assert rates.ganadera_engorde_rate == Decimal("0.01")
+    assert rates.forestal_rate == Decimal("0.02")
+    assert rates.estimacion_objetiva_rate == Decimal("0.01")
+    assert statutory_activity_retencion_rates() == {
+        Decimal("0.15"),
+        Decimal("0.07"),
+        Decimal("0.02"),
+        Decimal("0.01"),
+    }
+
+
+@pytest.mark.parametrize(
+    ("provider_id", "cash", "withheld", "apartado"),
+    [
+        ("sectoral-agricola-2pct", "2380.00", Decimal("40.00"), "95.4.2.º agrícola/ganadera general"),
+        ("sectoral-forestal-2pct", "2380.00", Decimal("40.00"), "95.5 forestal"),
+        ("sectoral-engorde-1pct", "2400.00", Decimal("20.00"), "95.4.1.º engorde porcino/avicultura"),
+        ("sectoral-objetiva-1pct", "2400.00", Decimal("20.00"), "95.6.1.º estimación objetiva"),
+    ],
+)
+def test_a_genuine_sectoral_rate_retencion_raises_no_advisory(
+    provider_id: str,
+    cash: str,
+    withheld: Decimal,
+    apartado: str,
+) -> None:
+    """The reason the sectoral rates were grounded: these must stay silent.
+
+    Before art. 95.4/95.5/95.6 were in the registry, the screen knew only 15 %
+    and 7 %, so an agricultural, forestry or módulos filer withholding at their
+    correct statutory rate raised the advisory on a perfectly correct filing.
+    That is the false positive this closes.
+    """
+    assert _GROSS - Decimal(cash) == withheld
+    assert apartado
+
+    observations = _observations(_income_row(provider_id, cash=cash))
+
+    assert len(observations) == 1
+    assert observations[0].withheld_amount == withheld
+    assert inferred_actividad_retencion_rate_advisory_observations(observations) == ()
+
+
+def test_a_shortfall_coinciding_with_a_statutory_rate_passes_silently() -> None:
+    """The documented limit, asserted so it is a known state and not a surprise.
+
+    A 20,00 EUR correspondent-bank fee on a 2.000,00 base is exactly 1 % — the
+    art. 95.4.1.º / 95.6.1.º figure — so it is arithmetically indistinguishable
+    from a genuine engorde or módulos withholding and the screen cannot flag it.
+    Grounding the sectoral rates WIDENED this band rather than narrowing it,
+    which is the accepted cost of not false-firing on correct sectoral filings.
+
+    This gate exists so that trade-off is visible in the suite rather than
+    discovered by an operator. If a future design closes it (a declared
+    retención, a régimen signal on the row), this test should change.
+    """
+    observations = _observations(_income_row("swift-fee-coincides-with-1pct", cash="2400.00"))
+
+    assert observations[0].withheld_amount == Decimal("20.00")
+    assert inferred_actividad_retencion_rate_advisory_observations(observations) == ()
 
 
 def test_a_genuine_fifteen_percent_retencion_raises_no_advisory() -> None:
@@ -169,7 +241,7 @@ def test_a_genuine_seven_percent_inicio_retencion_raises_no_advisory() -> None:
 @pytest.mark.parametrize(
     ("provider_id", "cash", "shortfall"),
     [
-        ("swift-fee", "2400.00", Decimal("20.00")),
+        ("swift-fee", "2401.50", Decimal("18.50")),
         ("rounding-short-pay", "2419.50", Decimal("0.50")),
         ("pronto-pago-discount", "2371.60", Decimal("48.40")),
         ("disputed-line", "2170.00", Decimal("250.00")),
@@ -211,12 +283,12 @@ def test_a_cuota_less_exempt_row_is_screened_on_the_same_rate_basis() -> None:
     statutory rate, still a phantom credit.
     """
     observations = _observations(
-        _income_row("exempt-swift-fee", cash="1980.00", iva_amount=None, iva_category=IvaCategory.DOMESTIC_EXEMPT),
+        _income_row("exempt-swift-fee", cash="1981.50", iva_amount=None, iva_category=IvaCategory.DOMESTIC_EXEMPT),
     )
 
     assert len(observations) == 1
     assert observations[0].withheld_derivation is LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA
-    assert observations[0].withheld_amount == Decimal("20.00")
+    assert observations[0].withheld_amount == Decimal("18.50")
 
     diagnostics = inferred_actividad_retencion_rate_advisory_observations(observations)
 
@@ -236,13 +308,14 @@ def test_the_advisory_discriminates_within_one_mixed_aggregation() -> None:
     observations = _observations(
         _income_row("mixed-genuine-15", cash="2120.00"),
         _income_row("mixed-genuine-07", cash="2280.00"),
-        _income_row("mixed-swift-fee", cash="2400.00"),
+        _income_row("mixed-sectoral-2pct", cash="2380.00"),
+        _income_row("mixed-swift-fee", cash="2401.50"),
         _income_row("mixed-rounding-short-pay", cash="2419.50"),
         _income_row("mixed-pronto-pago-discount", cash="2371.60"),
         _income_row("mixed-disputed-line", cash="2170.00"),
     )
 
-    assert len(observations) == 6
+    assert len(observations) == 7
 
     diagnostics = inferred_actividad_retencion_rate_advisory_observations(observations)
     flagged = {
@@ -254,4 +327,4 @@ def test_the_advisory_discriminates_within_one_mixed_aggregation() -> None:
 
     assert len(diagnostics) == 4
     assert len(flagged) == 4
-    assert len(silent) == 2
+    assert len(silent) == 3

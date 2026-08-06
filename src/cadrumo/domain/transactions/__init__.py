@@ -169,6 +169,7 @@ from ._retencion_parameters import (
     RirpfArt95RetencionRates,
     load_retencion_actividades_rates,
     maximum_supported_activity_retencion_rate,
+    statutory_activity_retencion_rates,
 )
 from ._service import (
     find_transaction,
@@ -302,6 +303,7 @@ __all__ = [
     "resolve_split_proposer",
     "set_classification",
     "snapshot_classification_state",
+    "statutory_activity_retencion_rates",
     "transaction_eligible_date_span",
     "transaction_filing_date",
     "transaction_index_object_key",

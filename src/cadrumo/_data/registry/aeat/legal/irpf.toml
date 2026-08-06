@@ -283,11 +283,14 @@ effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
 reviewed_by = "operator"
-notes = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades economicas. Establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas IAE grupos 851-869). Base reglamentaria de la retencion sobre rendimientos de actividades economicas profesionales en Modelo 111."
+notes = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades economicas. El apartado 1 establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas IAE grupos 851-869). Los apartados 4, 5 y 6.1 fijan los tipos sectoriales: 2 por ciento agricola/ganadero general con carve-out del 1 por ciento para engorde de porcino y avicultura (apartado 4), 2 por ciento forestal (apartado 5) y 1 por ciento en estimacion objetiva (apartado 6.1). Base reglamentaria de la retencion sobre rendimientos de actividades economicas en Modelo 111 y del credito de pagos a cuenta en Modelo 130."
 required_text = [
     "Importe de las retenciones sobre rendimientos de actividades económicas",
     "15 por ciento sobre los ingresos íntegros",
     "7 por ciento",
+    "Actividades ganaderas de engorde de porcino y avicultura: 1 por ciento",
+    "contraprestación de una actividad forestal, se aplicará el tipo de retención del 2 por ciento",
+    "arreglo al método de estimación objetiva, se aplicará el tipo de retención del 1 por ciento",
 ]
 
 [legal."rd-439-2007:art-108"]

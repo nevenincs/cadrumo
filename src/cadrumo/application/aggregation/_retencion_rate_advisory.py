@@ -65,15 +65,24 @@ advisory on every inference would fire on those and train operators to ignore th
 channel, the failure mode ``ledger-iva-advisory-only-on-cuota-bearing-categories``
 exists to prevent.
 
-Two limits are worth stating rather than leaving to be discovered. A phantom
-shortfall that happens to land exactly on 15 % or 7 % of the base is
-indistinguishable from a real withholding and passes silently; the screen narrows
-the exposure, it does not close it. And the registry grounds only the art. 95.1
-15 %/7 % pair, so a genuine retención at a sectoral rate (the agrícola/ganadera and
-módulos figures of RIRPF art. 95.4 and 95.6) would not match and would raise the
-advisory. That direction is the safe one — the advisory asks the operator to confirm
-a figure, it never changes one — and it resolves by grounding those rates in the
-registry, never by widening the comparison with a literal.
+The comparison reads the whole grounded art. 95 rate set — 15 %, 7 %, 2 % and 1 %
+— from the registry parameter catalogue, never a literal restated here. The
+sectoral rates (art. 95.4 agrícola/ganadera, with its 1 % engorde de porcino y
+avicultura carve-out from the 2 % general figure; art. 95.5 forestal; art. 95.6.1.º
+estimación objetiva) were grounded precisely because screening against the art. 95.1
+pair alone made every genuine sectoral withholding look like a phantom credit.
+
+One limit remains and is worth stating rather than leaving to be discovered: a
+shortfall that lands exactly on a statutory rate is indistinguishable from a real
+withholding and passes silently. Grounding the sectoral rates *widened* that band
+rather than narrowing it, and deliberately so — 1 % and 2 % are small figures a
+routine bank fee can hit exactly (a 20,00 EUR correspondent fee on a 2.000,00 base
+is precisely 1 %), so those rows now pass where the art. 95.1-only screen caught
+them. That is the cost of not false-firing on the agricultural, forestry and
+módulos filers whose withholding genuinely is 1 % or 2 %, and it is the right
+trade: a false positive on a correct filing trains operators to ignore the channel,
+which forfeits every true positive too. The screen narrows the exposure; it has
+never closed it, and closing it needs a declared retención, which the ADR rejected.
 """
 
 from __future__ import annotations
@@ -86,7 +95,7 @@ from ...core.aggregation import (
     RetencionScheme,
     work_income_retencion_treatment,
 )
-from ...domain.transactions import load_retencion_actividades_rates
+from ...domain.transactions import statutory_activity_retencion_rates
 from ._renta_income_ledger import RentaIncomeObservation
 from ._retenciones import RetencionObservation
 from ._source_mesh import CalculationSourceDiagnostic
@@ -191,13 +200,15 @@ def inferred_actividad_retencion_rate_advisory_observations(
     A :class:`~._source_mesh.CalculationSourceDiagnostic` (reason
     ``inferred_retencion_rate_unmatched``) is emitted for each income observation
     whose ``withheld_derivation`` says the figure was INFERRED from a cash
-    shortfall and whose ``withheld_amount`` is neither the general 15 % nor the
-    inicio-de-actividades 7 % product of its own ``taxable_base_amount``. Rows
-    carrying a retención DECLARED on a linked invoice, rows carrying no retención,
-    and rows with no positive base are out of scope and never fire.
+    shortfall and whose ``withheld_amount`` is no statutory-rate product of its
+    own ``taxable_base_amount``. Rows carrying a retención DECLARED on a linked
+    invoice, rows carrying no retención, and rows with no positive base are out
+    of scope and never fire.
 
-    Both rates are read from the registry parameter catalogue, so the comparison
-    tracks the grounded legal figures rather than a literal restated here.
+    The rate set is read from the registry parameter catalogue via
+    :func:`~domain.transactions.statutory_activity_retencion_rates`, so the
+    comparison tracks the grounded legal figures rather than a literal restated
+    here, and a newly-grounded rate widens the conforming band automatically.
 
     Per row rather than aggregated, unlike the ungrounded-substrate advisory: the
     firing set is meant to be small and the actionable unit is one transaction
@@ -209,9 +220,8 @@ def inferred_actividad_retencion_rate_advisory_observations(
     Returns:
         A tuple of non-blocking rate-mismatch diagnostics, in input order.
     """
-    rates = load_retencion_actividades_rates()
-    general_rate = rates.general_rate
-    inicio_rate = rates.inicio_actividad_rate
+    rates = statutory_activity_retencion_rates()
+    rendered_rates = ", ".join(str(rate) for rate in sorted(rates))
     diagnostics: list[CalculationSourceDiagnostic] = []
     for observation in observations:
         if observation.withheld_derivation not in _INFERRED_WITHHOLDING_MARKERS:
@@ -220,11 +230,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
         if base is None or base <= Decimal("0"):
             continue
         amount = observation.withheld_amount
-        if _conforms_to_fixed_rate(base, amount, general_rate) or _conforms_to_fixed_rate(
-            base,
-            amount,
-            inicio_rate,
-        ):
+        if any(_conforms_to_fixed_rate(base, amount, rate) for rate in rates):
             continue
         diagnostics.append(
             CalculationSourceDiagnostic(
@@ -233,9 +239,9 @@ def inferred_actividad_retencion_rate_advisory_observations(
                 message=(
                     f"Transaction {observation.transaction_id!r} was paid {amount} EUR short of its "
                     f"invoice total, which was credited as retención practicada on a base of {base}. "
-                    f"That figure is neither the RIRPF art. 95.1 general rate of {general_rate} nor "
-                    f"the inicio-de-actividades {inicio_rate}, so the shortfall may be a bank fee, a "
-                    f"discount, or a disputed amount rather than tax withheld on your behalf."
+                    f"That figure matches no RIRPF art. 95 retención rate ({rendered_rates}), so the "
+                    f"shortfall may be a bank fee, a discount, or a disputed amount rather than tax "
+                    f"withheld on your behalf."
                 ),
                 remedy=(
                     "Claiming a pago a cuenta nobody withheld over-declares it. Confirm the shortfall "
