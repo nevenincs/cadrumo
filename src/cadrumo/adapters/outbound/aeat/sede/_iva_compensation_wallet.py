@@ -15,7 +15,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import quote, urljoin, urlsplit
 
 from bs4 import BeautifulSoup
@@ -34,6 +34,10 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightError
+from .._representation_gate import (
+    dismiss_pre303_alert_modal_if_present,
+    wait_for_own_name_representation_selector,
+)
 from ..browser import DefaultBrowserSession, default_browser_session_factory
 from ._adapter_utils import assert_read_landing, is_aeat_auth_gate_redirect, landed_origin
 from ._auth_state import storage_state_for_session
@@ -426,31 +430,16 @@ async def _continue_own_name_representation(
 
 
 async def _wait_for_own_name_representation_selector(page: Page, *, settings: Settings) -> str:
-    last_error: PlaywrightError | None = None
-    for selector in _own_name_representation_selectors(
-        _PRE303.representation_own_name_label_selector,
-        _PRE303.representation_own_name_selector,
-    ):
-        try:
-            await page.wait_for_selector(selector, timeout=settings.cadrumo_browser_selector_probe_timeout_ms)
-            return selector
-        except PlaywrightError as exc:
-            last_error = exc
-    if last_error is not None:
-        raise last_error
-    raise SedeNavigationError(
-        "AEAT own-name representation selector configuration is empty",
-        failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+    def _raise_configuration_error(message: str) -> NoReturn:
+        raise SedeNavigationError(message, failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED)
+
+    return await wait_for_own_name_representation_selector(
+        page,
+        own_name_label_selector=_PRE303.representation_own_name_label_selector,
+        own_name_selector=_PRE303.representation_own_name_selector,
+        probe_timeout_ms=settings.cadrumo_browser_selector_probe_timeout_ms,
+        raise_configuration_error=_raise_configuration_error,
     )
-
-
-def _own_name_representation_selectors(*selectors: str) -> tuple[str, ...]:
-    deduped: list[str] = []
-    for selector in selectors:
-        value = selector.strip()
-        if value and value not in deduped:
-            deduped.append(value)
-    return tuple(deduped)
 
 
 async def _assert_own_name_representation_form(page: Page, *, expected_path: str) -> None:
@@ -463,12 +452,34 @@ async def _assert_own_name_representation_form(page: Page, *, expected_path: str
 
 
 async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
-    html = await page.content()
-    modal_marker = _PRE303.alert_modal_selector.lstrip("#")
-    if _PRE303.alert_modal_selector not in html and modal_marker not in html:
-        return
-    continue_selector = f'{_PRE303.alert_modal_selector} button:has-text("{_PRE303.alert_continue_button_text}")'
-    await page.click(continue_selector)
+    """Dismiss AEAT's pre303 alert modal, delegating to the canonical collapsed check.
+
+    Per operator directive, this reader's prior raw-substring test (no
+    ``"show"``-class check at all) was ruled the incorrect half of a critical
+    double declaration against the auth reader's copy and is deleted, not
+    kept as an alternative -- see
+    :func:`~adapters.outbound.aeat.dismiss_pre303_alert_modal_if_present` for
+    the collapsed predicate and the residual evidence gap this ruling
+    accepts. Unlike the auth caller, this one supplies a diagnostic: a
+    decline here is NEW behaviour (the deleted version would have clicked in
+    this exact case), on a live AEAT money-surface reader, so it must be
+    visible in this reader's own log output rather than read off a stack
+    trace three layers away if the read subsequently stalls or times out.
+    """
+
+    def _log_declined_hidden_modal() -> None:
+        log.warning(
+            "pre303 alert modal present but not shown; declining to dismiss it "
+            "(selector=%r) -- if the read stalls or times out next, this is why",
+            _PRE303.alert_modal_selector,
+        )
+
+    await dismiss_pre303_alert_modal_if_present(
+        page,
+        alert_modal_selector=_PRE303.alert_modal_selector,
+        alert_continue_button_text=_PRE303.alert_continue_button_text,
+        on_declined_hidden_modal=_log_declined_hidden_modal,
+    )
 
 
 async def _select_own_name_actuacion_if_present(page: Page, *, settings: Settings) -> bool:
