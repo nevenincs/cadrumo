@@ -33,14 +33,14 @@ from collections.abc import Callable
 import pytest
 
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import verify_legal_catalogue
-from ....domain.calculations.registry.applicability import (
+from ....domain.calculations.registry import (
     ApplicabilityVerdict,
     TaxRoute,
     derive_modelo_applicability,
     derive_tax_route,
     iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
+    verify_legal_catalogue,
 )
 from ....domain.deadlines import (
     EntityType,
