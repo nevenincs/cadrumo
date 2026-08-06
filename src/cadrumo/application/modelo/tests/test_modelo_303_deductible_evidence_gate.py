@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -20,6 +21,7 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.iva import InvoiceKind
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
@@ -51,7 +53,12 @@ from ...aggregation import (
     compute_ledger_filing_snapshot,
 )
 from ...calculations import IvaWalletDecisionRepository
-from ...ledger import PurchaseInvoiceEvidenceService, attach_manual_transaction_evidence
+from ...invoices import create_catalogue_invoice
+from ...ledger import (
+    PurchaseInvoiceEvidenceService,
+    attach_manual_transaction_evidence,
+    link_manual_transaction_invoice,
+)
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     calculate_modelo_revision_from_bucket_aggregation,
@@ -451,6 +458,132 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         ]
         assert len(purchase_rows) == 1
         assert purchase_rows[0].purchase_invoice_evidence_id == evidence.record.evidence_id
+
+
+def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
+    tmp_path: Path,
+) -> None:
+    """A row bound to a real, validated ``Invoice`` passes verify AND survives filing.
+
+    This is the real path, not the model boundary: the invoice is minted
+    through :func:`create_catalogue_invoice` -- the sanctioned catalogue
+    writer that runs RD 1619/2012 art. 6 content validation -- and bound to
+    the transaction through :func:`link_manual_transaction_invoice`, the sole
+    invoice-linkage writer. Neither is a mock; both are the production
+    functions an operator's ``aeat app ledger link`` command calls.
+
+    Before the fix this test defends, ``_row_has_deduction_grade_evidence``
+    read only ``purchase_invoice_evidence_id`` and never ``invoice_id``, so a
+    row linked to a fully-validated ``Invoice`` still blocked verification --
+    a validated invoice was treated as no evidence at all. This test fails on
+    that code, and the sibling
+    ``test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set``
+    in ``test_evidence_advisory.py`` proves the widening did not also silence
+    a row with neither carrier set.
+
+    The ``file_modelo_revision`` step at the end defends the SECOND grading
+    surface this discovery uncovered: ``LedgerEvidenceRow`` (the bundle
+    ``verify`` freezes) never carried ``invoice_id``, so a row credited only
+    through a linked invoice at verify time bundled with
+    ``purchase_invoice_evidence_id`` and ``attachment_ids`` both empty --
+    and ``raise_if_deductible_vat_evidence_missing``
+    (``_ledger_evidence_gate.py``) then blocked local filing on a revision
+    ``verify`` had JUST granted. That is not a hypothetical: it reproduced
+    against the first version of this fix, and is exactly the "permanent dead
+    end" failure class the surrounding campaign was built to close -- a
+    revision that is VERIFICADO_COMPLETO and content-addressed cannot be
+    re-verified or recalculated into a different id, so a fix that only
+    closes the verify-time gate while leaving the bundle-time gate blind
+    would strand the taxpayer worse than before the fix.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
+            _calculate_irene_revision(profile.repository)
+        )
+
+        invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        created = create_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            counterparty_name="Proveedor Ejemplo SL",
+            counterparty_tax_id="B12345674",
+            counterparty_country="ES",
+            invoice_number="F2026-0042",
+            issued_at=date(_YEAR, 2, 15),
+            taxable_base=Decimal("200.00"),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            repository=invoice_repo,
+        )
+
+        linked = link_manual_transaction_invoice(
+            bucket_id=_BUCKET_ID,
+            transaction_id=purchase.transaction_id,
+            invoice_id=created.invoice.invoice_id,
+            actor="operator",
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+            bucket_event_repository=event_repo,
+            occurred_at=_VERIFIED_AT,
+        )
+
+        linked_transaction = linked.transactions.get(purchase.transaction_id)
+        assert linked_transaction is not None
+        assert linked_transaction.invoice_id == created.invoice.invoice_id
+        assert linked_transaction.purchase_invoice_evidence_id is None
+        reloaded = tx_repo.load().get(purchase.transaction_id)
+        assert reloaded is not None
+        assert reloaded.invoice_id == created.invoice.invoice_id
+
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator",
+            workflow_profile=_workflow_profile(),
+            settings=ready_clave_settings(_TAX_ID),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+            clock=_VERIFIED_AT,
+        )
+
+        assert report.granted_verificado_completo is True
+        assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+        assert not any(
+            purchase.transaction_id in finding.message and "deductible VAT" in finding.message
+            for finding in report.findings
+        )
+
+        stored = cr_repo.load().get(revision.calculation_revision_id)
+        assert stored is not None
+        assert stored.ledger_filing_evidence is not None
+        purchase_rows = [
+            row for row in stored.ledger_filing_evidence.rows if row.transaction_id == purchase.transaction_id
+        ]
+        assert len(purchase_rows) == 1
+        assert purchase_rows[0].invoice_id == created.invoice.invoice_id
+        assert purchase_rows[0].purchase_invoice_evidence_id is None
+
+        # The load-bearing half of this test: filing a VERIFICADO_COMPLETO
+        # revision whose only deductible evidence is a linked invoice must
+        # NOT dead-end. Before the LedgerEvidenceRow.invoice_id fix, this
+        # raised ModeloFilingEvidenceMissingError even though verify had just
+        # granted the same revision.
+        filed = file_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator",
+            workflow_profile=_workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=event_repo,
+            clock=_VERIFIED_AT,
+        )
+        assert filed is not None
+        assert tuple(filing_repo.load().values()) != ()
 
 
 def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
