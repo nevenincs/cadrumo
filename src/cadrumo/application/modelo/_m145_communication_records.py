@@ -33,7 +33,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import InvalidOperation
 from enum import StrEnum
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
@@ -63,7 +63,6 @@ from ...domain.calculations.registry import (
     undeclared_casilla_ids,
 )
 from ...domain.modelos import ModeloError, ModeloExportError
-from ..live import SecureSnapshotRepository
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -72,6 +71,9 @@ from ._m145_communication import (
 from ._ports import FicheroBoeRecordRenderer
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+
+if TYPE_CHECKING:
+    from ..live import SecureSnapshotRepository
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 _FOUR_DIGIT_YEAR_PATTERN = re.compile(r"^\d{4}$")
@@ -366,6 +368,8 @@ def _m145_communication_record_ambiguous_prefix(
 
 
 def _m145_communication_record_repository(bucket_id: BucketId):
+    from ..live import SecureSnapshotRepository
+
     return SecureSnapshotRepository(
         bucket_id=bucket_id,
         payload_model=M145CommunicationRecord,

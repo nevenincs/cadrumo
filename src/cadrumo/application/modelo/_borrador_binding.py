@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -46,14 +47,10 @@ from ..aggregation import (
     CalculationSourceResolution,
     storage_degradation_resolution,
 )
-from ..live import (
-    Borrador100Snapshot,
-    Borrador100SnapshotRepository,
-    BorradorSnapshotNotFoundError,
-    LiveApplicationInputError,
-    SnapshotLifecycleState,
-)
 from ._decimal_parsing import decimal_from_string
+
+if TYPE_CHECKING:
+    from ..live import Borrador100Snapshot, Borrador100SnapshotRepository
 
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
@@ -122,6 +119,13 @@ def resolve_modelo_100_borrador_bindings(
             resolver_id=_BORRADOR_RESOLVER_ID,
             owned_sources=(BindingSourceKind.BORRADOR,),
         )
+
+    from ..live import (
+        Borrador100SnapshotRepository,
+        BorradorSnapshotNotFoundError,
+        LiveApplicationInputError,
+        SnapshotLifecycleState,
+    )
 
     if not registry_snapshot.modelo.has_capability("borrador"):
         target_modelo = command.modelo.strip()
