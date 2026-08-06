@@ -18,7 +18,14 @@ _HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
 _WHITESPACE_RE = re.compile(r"\s+")
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 _ARTICLE_ANCHOR_RE = re.compile(r"^(?:a|art|articulo)(\d+)$")
-_ARTICLE_TITLE_RE = re.compile(r"^articulo(\d+)")
+# ``_canonical_anchor`` folds every ``art``/``articulo`` prefix down to ``a``
+# before this pattern ever sees a title, so the canonical form is now the only
+# one it will meet in practice; the ``articulo`` alternative stays only for the
+# locally-built ``expanded`` strings in ``_title_matches_anchor``, which are
+# assembled from the un-canonicalised ``_ANCHOR_PREFIXES`` replacement values.
+_ARTICLE_TITLE_RE = re.compile(r"^(?:articulo|a)(\d+)")
+_ARTICLE_BASE_ANCHOR_RE = re.compile(r"^(?:a|arts?|articulos?)[\s._-]*(\d+)$")
+_ARTICLE_SUBSECTION_ANCHOR_RE = re.compile(r"^(?:a|arts?|articulos?)[\s._-]*(\d+)[\s._-]+\d+(?:$|[\s._-])")
 
 _SPANISH_ORDINALS: Final[dict[str, str]] = {
     "primero": "1",
@@ -128,13 +135,14 @@ def resolve_anchored_extracted_unit(
         return _render_unit(*exact[0], include_title=include_title)
     if len(exact) > 1:
         raise CorpusAnchorResolutionError(f"anchor {anchor!r} is duplicated in {sidecar_path}")
-    if len(units) == 1 and not any(_canonical_anchor(unit_anchor) for unit_anchor, _title, _text in units):
-        # Whole-file fallback, narrowed to sidecars that declare NO anchor at
-        # all. Falling back for a file that DOES declare one made the anchor
-        # unfalsifiable: any string resolved, including a wrong article, so an
-        # anchor pointing at the wrong provision read exactly like a right one.
-        # A single-unit file with a declared id is checkable, so it is checked.
-        return _render_unit(*units[0][1:], include_title=include_title)
+    if len(units) == 1:
+        unit_anchor, title, text = units[0]
+        if not _canonical_anchor(unit_anchor) or _single_unit_covers_subsection(unit_anchor, anchor):
+            # A sidecar containing one article is already scoped to that
+            # article. It may therefore cover a numeric subsection citation
+            # of the same article even when extraction persisted only the
+            # article unit. A different article remains a missing anchor.
+            return _render_unit(title, text, include_title=include_title)
 
     structural = [(title, text) for _unit_anchor, title, text in units if _title_matches_anchor(title, target)]
     if len(structural) == 1:
@@ -163,6 +171,12 @@ def _render_unit(title: str, text: str, *, include_title: bool) -> str:
     return text
 
 
+def _single_unit_covers_subsection(unit_anchor: str, requested_anchor: str) -> bool:
+    declared = _ARTICLE_BASE_ANCHOR_RE.fullmatch(normalise_corpus_text(unit_anchor).lstrip("#"))
+    requested = _ARTICLE_SUBSECTION_ANCHOR_RE.match(normalise_corpus_text(requested_anchor).lstrip("#"))
+    return declared is not None and requested is not None and declared.group(1) == requested.group(1)
+
+
 #: Two notations for the same article anchor coexist in the corpus: the
 #: extractor emits ``#aN`` while the convenio entries were authored as
 #: ``#art-N``. They name the same provision, so they are folded to one key
@@ -184,6 +198,10 @@ def _title_matches_anchor(title: str, target: str) -> bool:
     title_key = _canonical_anchor(title)
     if not title_key:
         return False
+    if title_key == target:
+        return True
+    if _title_heading_matches_anchor(title, target):
+        return True
     if target.isdigit():
         return title_key == target or (
             title_key.startswith(target) and len(title_key) > len(target) and not title_key[len(target)].isdigit()
@@ -219,3 +237,17 @@ def _is_exact_article_title_match(title_key: str, expanded_anchor: str) -> bool:
     return (
         anchor_article is not None and title_article is not None and anchor_article.group(1) == title_article.group(1)
     )
+
+
+def _title_heading_matches_anchor(title: str, target: str) -> bool:
+    """Match an article anchor against the title's heading, not its prose.
+
+    Legacy sidecars often persist no anchor, or persist a source anchor that
+    differs from the registry's citation anchor.  The heading is the
+    load-bearing structural evidence in that case.  Limiting the comparison
+    to the text before the first heading delimiter keeps ``a1`` distinct from
+    ``a1bis`` while still accepting ordinal and qualified article titles.
+    """
+    normalised = normalise_corpus_text(title)
+    heading = re.split(r"[.:]", normalised, maxsplit=1)[0]
+    return _canonical_anchor(heading) == target
