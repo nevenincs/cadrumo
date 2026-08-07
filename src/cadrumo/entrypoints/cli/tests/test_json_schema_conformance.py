@@ -236,13 +236,25 @@ def test_every_emitted_command_identifier_is_registered() -> None:
     diagnostic surfaces whose identifiers are deliberately not registered, so
     including it would flag those by design.
     """
-    # SCHEMA_REGISTRY is populated by IMPORTING the payload modules, and the
-    # CLI loads them lazily at dispatch. An AST walk reads files without
-    # importing them, so without materialising the live tree first the registry
-    # is nearly empty and every emit site reads as unregistered.
-    _live_app()
-
+    # Both sides are read by AST rather than from the live SCHEMA_REGISTRY.
+    # The registry is populated by IMPORTING payload modules, which the CLI
+    # defers to dispatch, so a gate that imported them to fill it would leave
+    # the extra keys behind in a process-global mapping and break the sibling
+    # tests that assert the registry's exact contents. Reading the decorators
+    # is side-effect free and answers the same question.
     validating_emitters = {"_emit_envelope", "emit_operator_json_success"}
+    registered = {
+        node.args[0].value
+        for source in Path("src/cadrumo").rglob("*.py")
+        for node in ast.walk(ast.parse(source.read_text(encoding="utf-8"), filename=str(source)))
+        if isinstance(node, ast.Call)
+        and (node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)) == "register_schema"
+        and node.args
+        and isinstance(node.args[0], ast.Constant)
+        and isinstance(node.args[0].value, str)
+    }
+    assert registered, "found no @register_schema literals; the decorator scan is not reaching the tree"
+
     root = Path("src/cadrumo/entrypoints/cli")
     violations: list[str] = []
     emitted = 0
@@ -265,7 +277,7 @@ def test_every_emitted_command_identifier_is_registered() -> None:
                     continue
                 identifier = keyword.value.value
                 emitted += 1
-                if identifier not in SCHEMA_REGISTRY:
+                if identifier not in registered:
                     violations.append(f"{path.as_posix()}:{keyword.value.lineno}: emits unregistered {identifier!r}")
 
     assert emitted > 0, "found no literal command= emit sites; the walk is not reaching the CLI"
