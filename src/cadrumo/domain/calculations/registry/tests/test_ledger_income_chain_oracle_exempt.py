@@ -171,7 +171,7 @@ def test_the_declared_category_is_what_makes_the_cuota_zero() -> None:
     premise is asserted rather than assumed.
     """
     assert category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_EXEMPT, InvoiceKind.ISSUED)
-    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL_21, InvoiceKind.ISSUED)
+    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL, InvoiceKind.ISSUED)
 
 
 def test_the_declared_invoice_reaches_casilla_01_as_its_published_base() -> None:

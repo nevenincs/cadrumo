@@ -41,7 +41,7 @@ def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> N
         taxable_base=Decimal("100.00"),
         iva_rate=Decimal("0.21"),
         iva_amount=Decimal("21.00"),
-        iva_category="domestic_general_21",
+        iva_category="domestic_general",
         category_id="office-supplies",
         irpf_category="professional-services",
         counterparty_eu_member_state="DE",

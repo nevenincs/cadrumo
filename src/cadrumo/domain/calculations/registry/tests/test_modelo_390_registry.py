@@ -468,7 +468,7 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
         IvaLedgerObservation(
             ledger_id=f"q{idx}-rep",
             transaction_date=date(2025, idx * 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("1000") * idx,

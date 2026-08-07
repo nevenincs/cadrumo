@@ -667,7 +667,6 @@ def apply_llm_classification(
 # ── stage-2 saturation: grounded rich tax metadata ────────────────
 
 
-
 def _derive_iva_substrate(
     iva_category: IvaCategory,
     *,
@@ -751,11 +750,7 @@ def saturate_llm_classification(
             context={"transaction_id": transaction_id},
         )
     resolved_settings = settings if settings is not None else load_settings()
-    resolved_classifier = (
-        classifier
-        if classifier is not None
-        else None
-    )
+    resolved_classifier = classifier if classifier is not None else None
     evidence = (
         _resolve_evidence(
             transaction,
@@ -1025,7 +1020,6 @@ def derive_operator_iva_substrate(
 # ── stage-3b: evidence-driven N-way split ─────────────────────────
 
 
-
 def _split_child_description(child_index: int, *, citation: str, category: SpendingCategory | None) -> str:
     """Build a distinct, operator-facing description for one split child.
 
@@ -1095,11 +1089,7 @@ def suggest_evidence_split(
             context={"transaction_id": transaction_id},
         )
     resolved_settings = settings if settings is not None else load_settings()
-    resolved_proposer = (
-        proposer
-        if proposer is not None
-        else None
-    )
+    resolved_proposer = proposer if proposer is not None else None
     evidence = (
         _resolve_evidence(
             transaction,

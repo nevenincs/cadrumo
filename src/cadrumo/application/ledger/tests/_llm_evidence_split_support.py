@@ -58,13 +58,13 @@ def _two_line_proposal() -> LLMSplitResponse:
             LLMSplitChild(
                 proportion=Decimal("0.6"),
                 category=SpendingCategory.MATERIAL_OFICINA,
-                iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+                iva_category=IvaCategory.DOMESTIC_GENERAL,
                 evidence_citation="material de oficina",
             ),
             LLMSplitChild(
                 proportion=Decimal("0.4"),
                 category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-                iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+                iva_category=IvaCategory.DOMESTIC_GENERAL,
                 evidence_citation="licencia software",
             ),
         ),
@@ -79,7 +79,7 @@ def _single_line_proposal() -> LLMSplitResponse:
             LLMSplitChild(
                 proportion=Decimal("1.0"),
                 category=SpendingCategory.MATERIAL_OFICINA,
-                iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+                iva_category=IvaCategory.DOMESTIC_GENERAL,
                 evidence_citation="material de oficina",
             ),
         ),

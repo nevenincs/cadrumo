@@ -82,7 +82,7 @@ _CLASSIFICATION_CASES = (
     (
         "r05-domestic-general-21",
         {"rate_tier": IvaRateKind.GENERAL},
-        IvaCategory.DOMESTIC_GENERAL_21,
+        IvaCategory.DOMESTIC_GENERAL,
         "R05_domestic_at_rate_tier",
         None,
         Decimal("21"),
@@ -90,7 +90,7 @@ _CLASSIFICATION_CASES = (
     (
         "r05-domestic-reduced-10",
         {"rate_tier": IvaRateKind.REDUCED},
-        IvaCategory.DOMESTIC_REDUCED_10,
+        IvaCategory.DOMESTIC_REDUCED,
         None,
         None,
         Decimal("10"),
@@ -98,7 +98,7 @@ _CLASSIFICATION_CASES = (
     (
         "r05-domestic-super-reduced-4",
         {"rate_tier": IvaRateKind.SUPER_REDUCED},
-        IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+        IvaCategory.DOMESTIC_SUPER_REDUCED,
         None,
         None,
         Decimal("4"),

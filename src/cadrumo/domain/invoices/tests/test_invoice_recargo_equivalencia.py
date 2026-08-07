@@ -145,7 +145,7 @@ def test_a_recargo_on_an_all_exempt_supply_is_refused() -> None:
 
 def test_the_decomposition_carries_the_recargo_into_the_contraprestacion() -> None:
     """A grounded recargo invoice decomposes with the surcharge inside ``total``."""
-    verdict = decompose_invoice(_invoice(iva_category=IvaCategory.DOMESTIC_GENERAL_21))
+    verdict = decompose_invoice(_invoice(iva_category=IvaCategory.DOMESTIC_GENERAL))
 
     assert verdict.is_grounded
     components = verdict.components
@@ -166,7 +166,7 @@ def test_recargo_and_retencion_sit_on_opposite_sides_of_the_identity() -> None:
     """
     retencion = Decimal("150.00")
     verdict = decompose_invoice(
-        _invoice(iva_category=IvaCategory.DOMESTIC_GENERAL_21, retention_amount=retencion),
+        _invoice(iva_category=IvaCategory.DOMESTIC_GENERAL, retention_amount=retencion),
     )
 
     components = verdict.components

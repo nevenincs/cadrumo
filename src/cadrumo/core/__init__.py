@@ -94,6 +94,10 @@ from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._casilla_value_kind import CasillaValueKind
 from ._concept_lifecycle import ConceptLifecycle
+from ._concepto_ingreso import (
+    INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE,
+    ConceptoIngreso,
+)
 from ._config_state_root import (
     FormerProductStateError,
     StateRootInputs,
@@ -117,6 +121,7 @@ from ._descendant_relacion import (
 from ._document_shape import AEAT_RECORD_BATCH_SHAPES, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
+from ._field_origin import FieldOrigin
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
@@ -312,6 +317,7 @@ __all__: list[str] = [
     "HEX_PATTERN_128",
     "IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "IBAN_SHAPE_RE",
+    "INGRESO_CONCEPTS_OUTSIDE_THE_VOLUME_BASE",
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
     "LLM_EXTRA",
@@ -351,6 +357,7 @@ __all__: list[str] = [
     "CasillaValueKind",
     "CompatibilityRegime",
     "ConceptLifecycle",
+    "ConceptoIngreso",
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
@@ -361,6 +368,7 @@ __all__: list[str] = [
     "ExternalOracleCorpus",
     "ExternalPathDeclaration",
     "ExternalPathRole",
+    "FieldOrigin",
     "FilingPeriodCode",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",

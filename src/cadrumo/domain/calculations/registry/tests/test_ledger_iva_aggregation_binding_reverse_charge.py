@@ -329,8 +329,8 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
         IvaCategory.ERRONEOUS_INVOICE,
     }
     rate_for_category = {
-        IvaCategory.DOMESTIC_REDUCED_10: IvaRateKind.REDUCED,
-        IvaCategory.DOMESTIC_SUPER_REDUCED_4: IvaRateKind.SUPER_REDUCED,
+        IvaCategory.DOMESTIC_REDUCED: IvaRateKind.REDUCED,
+        IvaCategory.DOMESTIC_SUPER_REDUCED: IvaRateKind.SUPER_REDUCED,
     }
     # Imports are an inbound purchase the operator received; everything else here
     # is an outbound sale/supply the operator issued. This is the realistic

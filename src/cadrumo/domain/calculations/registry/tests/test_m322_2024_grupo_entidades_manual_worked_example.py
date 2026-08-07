@@ -111,7 +111,7 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
         IvaLedgerObservation(
             ledger_id="devengado-general",
             transaction_date=date(2024, 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("0"),
@@ -120,7 +120,7 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
         IvaLedgerObservation(
             ledger_id="deducible-general",
             transaction_date=date(2024, 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("0"),

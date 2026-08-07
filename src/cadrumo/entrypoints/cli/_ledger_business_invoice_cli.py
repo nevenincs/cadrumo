@@ -61,10 +61,6 @@ def register_business_invoice_commands(app: typer.Typer) -> None:
     app.add_typer(invoice_app, name="invoice")
 
 
-
-
-
-
 def _parse_intracom_operation_type(raw: str | None, *, translation_key: str) -> IntracomOperationType | None:
     if raw is None:
         return None
@@ -104,10 +100,6 @@ def _catalogue_iva_category_for_operation_type(
     return _OPERATION_TYPE_TO_IVA_CATEGORY.get(operation_type)
 
 
-
-
-
-
 invoice_app = typer.Typer(
     name="invoice",
     help=tr(
@@ -116,7 +108,6 @@ invoice_app = typer.Typer(
     ),
     no_args_is_help=True,
 )
-
 
 
 # The invoice fields every operator surface renders, declared once. Both

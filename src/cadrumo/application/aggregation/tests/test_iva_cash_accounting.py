@@ -78,7 +78,7 @@ def _transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
             "cash_accounting_treatment": cash_accounting_treatment,
             "operation_date": operation_date,
             "cash_accounting_payment_evidence": cash_accounting_payment_evidence,

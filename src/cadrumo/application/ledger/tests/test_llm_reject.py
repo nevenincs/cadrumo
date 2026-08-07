@@ -160,7 +160,7 @@ def test_reject_saturated_suggestion_captures_iva_category(
         category=SpendingCategory.MATERIAL_OFICINA,
         confidence=Decimal("0.8"),
         reason="domestic purchase",
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
     )
 
     reject_llm_suggestion(
@@ -174,7 +174,7 @@ def test_reject_saturated_suggestion_captures_iva_category(
     )
 
     payload = _rejection_events(events)[0].payload
-    assert payload["iva_category"] == IvaCategory.DOMESTIC_GENERAL_21.value
+    assert payload["iva_category"] == IvaCategory.DOMESTIC_GENERAL.value
 
 
 def test_reject_unknown_transaction_raises(

@@ -101,7 +101,7 @@ def _observation(
     *,
     ledger_id: str = "ledger-1",
     txn_date: date = date(2025, 6, 15),
-    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL_21,
+    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL,
     exemption_article: IvaExemptionArticle | None = None,
     rate_kind: IvaRateKind = IvaRateKind.GENERAL,
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,

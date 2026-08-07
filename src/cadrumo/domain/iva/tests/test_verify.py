@@ -48,7 +48,7 @@ def test_a_plausible_quotation_absent_from_the_corpus_is_reported() -> None:
     sentence shape, wrong rate -- because that is the failure the check exists
     for. A non-emptiness check, which is what this replaced, passes it happily.
     """
-    original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL_21]
+    original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL]
     fabricated = IvaCitation.model_validate(
         {
             "legal_reference": original.citations[0].legal_reference,
@@ -59,7 +59,7 @@ def test_a_plausible_quotation_absent_from_the_corpus_is_reported() -> None:
         IvaCatalogue(
             regulations={
                 **_CATALOGUE.regulations,
-                IvaCategory.DOMESTIC_GENERAL_21: original.model_copy(
+                IvaCategory.DOMESTIC_GENERAL: original.model_copy(
                     update={"citations": (fabricated, *original.citations[1:])},
                 ),
             },
@@ -71,7 +71,7 @@ def test_a_plausible_quotation_absent_from_the_corpus_is_reported() -> None:
 
 
 def test_unknown_registry_legal_reference_is_reported() -> None:
-    original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL_21]
+    original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL]
     invalid_citation = IvaCitation.model_validate(
         {
             "legal_reference": "ley-37-1992:art-not-in-registry",
@@ -88,11 +88,11 @@ def test_unknown_registry_legal_reference_is_reported() -> None:
         IvaCatalogue(
             regulations={
                 **_CATALOGUE.regulations,
-                IvaCategory.DOMESTIC_GENERAL_21: invalid_regulation,
+                IvaCategory.DOMESTIC_GENERAL: invalid_regulation,
             },
         ),
     )
     assert any(
-        issue.code == "unknown_legal_reference" and issue.category_id == IvaCategory.DOMESTIC_GENERAL_21.value
+        issue.code == "unknown_legal_reference" and issue.category_id == IvaCategory.DOMESTIC_GENERAL.value
         for issue in report.errors
     )

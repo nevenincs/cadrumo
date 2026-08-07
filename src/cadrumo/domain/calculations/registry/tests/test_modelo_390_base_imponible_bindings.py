@@ -77,28 +77,28 @@ def _observation(
 def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
     return (
         _observation(
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.REPERCUTIDO,
             base=_GENERAL_BASE,
             iva=_GENERAL_CUOTA,
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_REDUCED_10,
+            category=IvaCategory.DOMESTIC_REDUCED,
             rate_kind=IvaRateKind.REDUCED,
             flow=IvaFlowDirection.REPERCUTIDO,
             base=_REDUCIDO_BASE,
             iva=_REDUCIDO_CUOTA,
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            category=IvaCategory.DOMESTIC_SUPER_REDUCED,
             rate_kind=IvaRateKind.SUPER_REDUCED,
             flow=IvaFlowDirection.REPERCUTIDO,
             base=_SUPER_REDUCIDO_BASE,
             iva=_SUPER_REDUCIDO_CUOTA,
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             base=_SOPORTADO_BASE,

@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> DataBindingDefinition:
     selector: dict[str, object] = {
-        "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED_4,),
+        "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
         "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
         "flow_direction": IvaFlowDirection.REPERCUTIDO,
         "fact": "base_amount_sum",
@@ -67,7 +67,7 @@ def _row(ledger_id: str, *, applied_rate: Decimal | None, base: str) -> IvaLedge
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=date(2024, 11, 15),
-        category=IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+        category=IvaCategory.DOMESTIC_SUPER_REDUCED,
         rate_kind=IvaRateKind.SUPER_REDUCED,
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=Decimal(base),

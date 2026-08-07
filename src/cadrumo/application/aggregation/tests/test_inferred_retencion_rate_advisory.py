@@ -102,7 +102,7 @@ def _income_row(
     *,
     cash: str,
     iva_amount: str | None = "420.00",
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
 ) -> Transaction:
     return Transaction.model_validate(
         {

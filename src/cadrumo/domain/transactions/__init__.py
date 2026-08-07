@@ -178,6 +178,7 @@ from ._tipo_actividad_partitions import (
     art_95_partition_for,
     load_tipo_actividad_partitions,
 )
+from ._volumen_ingresos import counts_toward_volumen_de_ingresos
 
 if TYPE_CHECKING:
     from ._repository import (
@@ -274,6 +275,7 @@ __all__ = [
     "art_95_partition_for",
     "build_split_prompt",
     "catalogue",
+    "counts_toward_volumen_de_ingresos",
     "default_classification_choices",
     "default_iva_category_choices",
     "default_prompt_spec",

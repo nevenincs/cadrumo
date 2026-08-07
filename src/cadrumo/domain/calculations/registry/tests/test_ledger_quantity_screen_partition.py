@@ -29,6 +29,7 @@ from .._ledger_bindings import (
     _IVA_ALTERNATIVE_MEASURE_FACTS,
     _IVA_INDEPENDENT_QUANTITY_FACTS,
     _IVA_SUPPORTED_FACTS,
+    _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS,
     _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS,
 )
 
@@ -42,11 +43,14 @@ def test_the_iva_family_excludes_nothing_as_an_alternative_measure() -> None:
     IVA adapter rests on: no one of the three stands in for another, so an empty
     exclusion set is correct here where the renta side's is deliberately not.
     """
-    assert frozenset() == _IVA_ALTERNATIVE_MEASURE_FACTS
+    assert _IVA_ALTERNATIVE_MEASURE_FACTS == {}
     assert _IVA_INDEPENDENT_QUANTITY_FACTS == _IVA_SUPPORTED_FACTS
-    assert frozenset(
-        {"base_amount_sum", "iva_amount_sum", "recargo_amount_sum"},
-    ) == _IVA_INDEPENDENT_QUANTITY_FACTS
+    assert (
+        frozenset(
+            {"base_amount_sum", "iva_amount_sum", "recargo_amount_sum"},
+        )
+        == _IVA_INDEPENDENT_QUANTITY_FACTS
+    )
 
 
 def test_the_renta_family_screens_only_the_withholding() -> None:
@@ -59,10 +63,38 @@ def test_the_renta_family_screens_only_the_withholding() -> None:
     assert frozenset({"withheld_amount_sum"}) == _RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS
 
 
+def test_every_declared_exclusion_states_its_reason() -> None:
+    """The renta exclusions are declarations a reviewer can check, not bare members.
+
+    Nothing can prove two facts measure one quantity -- that is a reading of the
+    form. What is checkable is that somebody wrote down the claim, so a later
+    author narrowing the screen has to state which quantity the fact re-measures
+    instead of appending a member nobody has to justify.
+    """
+    assert set(_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS) == {
+        "ingresos_integros_sum",
+        "taxable_base_sum",
+        "cash_received_sum",
+    }
+    for fact, reason in _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS.items():
+        assert reason.strip(), f"{fact} is excluded from the quantity screen with no stated reason"
+
+
 def test_a_stale_alternative_measure_classification_is_refused() -> None:
     """An exclusion naming a fact the family does not support excludes nothing."""
     with pytest.raises(RegistryValidationError, match="stale"):
-        independent_quantity_facts(frozenset({"a_sum"}), frozenset({"b_sum"}))
+        independent_quantity_facts(frozenset({"a_sum"}), {"b_sum": "measures a_sum by another rule"})
+
+
+def test_an_exclusion_with_no_reason_is_refused() -> None:
+    """The narrowing direction no check can validate, forced into the open.
+
+    Classifying a genuinely independent quantity as an alternative measure
+    silently shrinks the screen and every other gate stays green. A blank reason
+    refuses, so the edit cannot be made without writing a claim down.
+    """
+    with pytest.raises(RegistryValidationError, match="declare no reason"):
+        independent_quantity_facts(frozenset({"a_sum", "b_sum"}), {"b_sum": "   "})
 
 
 def test_a_screened_fact_with_no_reader_is_refused() -> None:

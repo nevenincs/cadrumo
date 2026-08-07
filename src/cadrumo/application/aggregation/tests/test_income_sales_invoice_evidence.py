@@ -107,7 +107,7 @@ def _invoice(
     retention_amount: str | None = "150.00",
     retention_rate: str = "0.15",
     number: str = "F-2024-001",
-    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL_21,
+    iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
 ) -> Invoice:
     rate = iva_rate_percentage(IvaRate.RATE_21)
     assert rate is not None

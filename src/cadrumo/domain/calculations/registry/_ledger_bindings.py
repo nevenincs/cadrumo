@@ -836,18 +836,19 @@ def unsupported_ledger_iva_observations(
     )
 
 
-# The IVA facts that measure the SAME quantity by different rules. There are
-# NONE: ``base_amount_sum``, ``iva_amount_sum`` and ``recargo_amount_sum`` are
-# three INDEPENDENT quantities carried on one line -- the taxable base, the
-# cuota charged on it, and the recargo de equivalencia charged alongside. No
-# one of them stands in for another, so every undrawn one is a real gap and the
-# exclusion set stays empty.
+# The IVA facts excluded from the quantity screen. There are NONE:
+# ``base_amount_sum``, ``iva_amount_sum`` and ``recargo_amount_sum`` are three
+# INDEPENDENT quantities carried on one line -- the taxable base, the cuota
+# charged on it, and the recargo de equivalencia surcharged alongside. No one of
+# them stands in for another, so every undrawn one is a real gap.
 #
 # Contrast the renta side, where three income measures ARE alternatives
 # (:data:`_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS`) and screening all three
-# would fire on every revision. The empty set here is a measured property of
-# this family, not an unfilled placeholder.
-_IVA_ALTERNATIVE_MEASURE_FACTS: frozenset[str] = frozenset()
+# would fire on every revision. The emptiness here is a measured property of
+# this family, not an unfilled placeholder, and
+# ``test_ledger_quantity_screen_partition`` asserts it so the claim is checked
+# rather than left as an absence a later author could fill in unnoticed.
+_IVA_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {}
 
 #: DERIVED as the complement, exactly as the renta side derives its own, so the
 #: two sets cannot drift apart.
@@ -1495,19 +1496,30 @@ def ungrounded_ledger_renta_income_observations(
     return UngroundedRentaIncome(facts=frozenset(facts), observations=ungrounded)
 
 
-# The renta-income facts that measure the SAME quantity by different rules, so a
-# revision declaring one deliberately omits the others: ``ingresos_integros_sum``
-# (declared base, else cash), ``taxable_base_sum`` (declared base only), and
-# ``cash_received_sum`` (raw bank credit) are three measures of one income. A
-# screen that demanded all three would fire on every revision.
+# The renta-income facts excluded from the quantity screen, each with the reason
+# it re-measures a quantity another fact already carries. These are DECLARATIONS
+# a reviewer can check against the form, not proofs: excluding a fact narrows the
+# screen, so the claim is written at the site rather than inferred from an
+# absence.
 #
-# ``withheld_amount_sum`` is NOT in this group, and that is the whole point: the
-# retención a taxpayer suffered is an INDEPENDENT quantity carried on the same
-# observation, not an alternative measure of its income. Nothing else can stand
-# in for it.
-_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: frozenset[str] = frozenset(
-    {"ingresos_integros_sum", "taxable_base_sum", "cash_received_sum"},
-)
+# ``withheld_amount_sum`` is deliberately absent from this mapping, and that is
+# the whole point: the retención a taxpayer suffered is an INDEPENDENT quantity
+# carried on the same observation, not an alternative measure of its income.
+# Nothing else can stand in for it.
+_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
+    "ingresos_integros_sum": (
+        "measures the row's income as its declared taxable base, falling back to bank cash; "
+        "one of three income measures a revision picks between"
+    ),
+    "taxable_base_sum": (
+        "measures the same income as the declared taxable base only, contributing nothing for a "
+        "base-less row; the stricter sibling of ingresos_integros_sum"
+    ),
+    "cash_received_sum": (
+        "measures the same income as the raw bank credit, net of retención and possibly "
+        "IVA-inclusive; the loosest of the three measures"
+    ),
+}
 
 #: The independent quantities, DERIVED as the complement so the two sets cannot
 #: drift apart. A new fact added to the closed set is screened by default and

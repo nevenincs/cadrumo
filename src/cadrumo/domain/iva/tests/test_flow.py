@@ -55,19 +55,19 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
     ("category", "direction", "expected"),
     (
         pytest.param(
-            IvaCategory.DOMESTIC_GENERAL_21,
+            IvaCategory.DOMESTIC_GENERAL,
             InvoiceKind.ISSUED,
             IvaFlowDirection.REPERCUTIDO,
             id="issued-general",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_REDUCED_10,
+            IvaCategory.DOMESTIC_REDUCED,
             InvoiceKind.ISSUED,
             IvaFlowDirection.REPERCUTIDO,
             id="issued-reduced",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            IvaCategory.DOMESTIC_SUPER_REDUCED,
             InvoiceKind.ISSUED,
             IvaFlowDirection.REPERCUTIDO,
             id="issued-super-reduced",
@@ -109,19 +109,19 @@ def test_iva_flow_direction_string_values_are_kebab_case() -> None:
             id="issued-export-assimilated",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_GENERAL_21,
+            IvaCategory.DOMESTIC_GENERAL,
             InvoiceKind.RECEIVED,
             IvaFlowDirection.SOPORTADO,
             id="received-general",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_REDUCED_10,
+            IvaCategory.DOMESTIC_REDUCED,
             InvoiceKind.RECEIVED,
             IvaFlowDirection.SOPORTADO,
             id="received-reduced",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+            IvaCategory.DOMESTIC_SUPER_REDUCED,
             InvoiceKind.RECEIVED,
             IvaFlowDirection.SOPORTADO,
             id="received-super-reduced",

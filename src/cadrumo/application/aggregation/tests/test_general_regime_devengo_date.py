@@ -75,7 +75,7 @@ def _transaction(provider_id: str, **overrides: Any) -> Transaction:
         "raw": _raw(provider_id),
         "direction": TransactionDirection.INCOMING,
         "business_classification": BusinessClassification.BUSINESS,
-        "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+        "iva_category": IvaCategory.DOMESTIC_GENERAL,
         "taxable_base": Decimal("1000.00"),
         "iva_amount": _CUOTA,
         "iva_rate": Decimal("0.21"),

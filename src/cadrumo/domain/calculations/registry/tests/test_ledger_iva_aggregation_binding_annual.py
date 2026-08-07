@@ -67,7 +67,7 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
             _observation(
                 ledger_id="q3-output-reduced",
                 txn_date=date(2025, 8, 12),
-                category=IvaCategory.DOMESTIC_REDUCED_10,
+                category=IvaCategory.DOMESTIC_REDUCED,
                 rate_kind=IvaRateKind.REDUCED,
                 iva=Decimal("50.00"),
             ),

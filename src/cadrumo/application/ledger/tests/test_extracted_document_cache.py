@@ -103,11 +103,14 @@ def test_a_second_extraction_of_the_same_bytes_replaces_rather_than_appends(
     cache = load_extracted_document_cache(profile.bucket_id, profile.settings)
 
     assert len(cache.entries) == 2, "one entry per content address"
-    assert read_cached_extraction(
-        bucket_id=profile.bucket_id,
-        content_sha256=_DIGEST,
-        settings=profile.settings,
-    ) == "second pass"
+    assert (
+        read_cached_extraction(
+            bucket_id=profile.bucket_id,
+            content_sha256=_DIGEST,
+            settings=profile.settings,
+        )
+        == "second pass"
+    )
 
 
 def test_a_miss_returns_none_rather_than_raising(profile: TestRuntimeProfile) -> None:

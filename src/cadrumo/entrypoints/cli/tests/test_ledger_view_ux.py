@@ -129,7 +129,7 @@ def test_ledger_history_shows_post_hoc_purchase_invoice_evidence_attach(tmp_path
             "--iva-amount",
             "21.00",
             "--iva-category",
-            "domestic_general_21",
+            "domestic_general",
         ],
     )
     assert added_txn.exit_code == 0, added_txn.output
@@ -215,7 +215,7 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
     """IVA category corrections are observable mutations, not no-ops.
 
     A persona run marked a row ``erroneous_invoice`` while investigating a
-    corrective invoice, then could not change it back to ``domestic_general_21``:
+    corrective invoice, then could not change it back to ``domestic_general``:
     the mutation signature ignored ``iva_category`` and ``ledger view`` hid the
     stored value. This reproduces that flow through the real CLI and confirms
     the list surface shows the same operator-visible category.
@@ -259,7 +259,7 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
             "--iva-amount",
             "21.00",
             "--iva-category",
-            "domestic_general_21",
+            "domestic_general",
             "--reaffirm",
         ],
     )
@@ -269,10 +269,10 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
     viewed = _invoke(["--format", "json", "app", "ledger", "view", txn])
     assert viewed.exit_code == 0, viewed.output
     transaction = json.loads(viewed.output)["result"]["transaction"]
-    assert transaction["iva_category"] == "domestic_general_21"
+    assert transaction["iva_category"] == "domestic_general"
     text_view = _invoke(["app", "ledger", "view", txn[:8]])
     assert text_view.exit_code == 0, text_view.output
-    assert "IVA category\tdomestic_general_21" in text_view.output
+    assert "IVA category\tdomestic_general" in text_view.output
 
     listed = _invoke(["app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
@@ -287,7 +287,7 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
         "review_status",
     ]
     listed_row = next(line for line in listed.output.splitlines() if txn in line)
-    assert listed_row.split("\t")[5] == "domestic_general_21"
+    assert listed_row.split("\t")[5] == "domestic_general"
 
     listed_es = _invoke(["--language", "es", "app", "ledger", "list"])
     assert listed_es.exit_code == 0, listed_es.output
@@ -302,7 +302,7 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
         "estado_revisión",
     ]
     listed_es_row = next(line for line in listed_es.output.splitlines() if txn in line)
-    assert listed_es_row.split("\t")[5] == "domestic_general_21"
+    assert listed_es_row.split("\t")[5] == "domestic_general"
 
 
 def test_ledger_view_surfaces_manual_decision_provenance(tmp_path: Path) -> None:

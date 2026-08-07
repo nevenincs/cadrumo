@@ -41,12 +41,28 @@ class IvaCategory(StrEnum):
     The member names and string values are the authoritative identifiers used
     by the downstream classifier layers (financial providers, the spending
     category taxonomy, and the transaction-data-pipeline engine) to tag a
-    transaction.
+    transaction. Registry binding selectors match these values as STRINGS, so a
+    member's value is a stored token, not a label.
+
+    A member names its TIER and never that tier's percentage. The three
+    domestic rate members once appended the rate to the name, which was safe
+    only while a tier had exactly one rate for all time. RD-ley 4/2024 ended
+    that: it put certain foodstuffs at 2 % and 7,5 % while the rest of the
+    super-reducido and reducido tiers stayed at 4 % and 10 %, so a 2 % line was
+    classified under a member whose name ended in ``_4`` -- asserting a rate the
+    line did not carry, and read verbatim by the operator in the CLI's own
+    choice list, which renders these values as its accepted set.
+
+    The number is not lost, it is relocated to where it can be correct: the tier
+    is this enum's job, the rate the line actually carried rides on the
+    observation's ``applied_rate``, and the registry dates it. Do not
+    reintroduce a percentage into a member name -- the next statute that steps a
+    tier makes it false again.
     """
 
-    DOMESTIC_GENERAL_21 = "domestic_general_21"
-    DOMESTIC_REDUCED_10 = "domestic_reduced_10"
-    DOMESTIC_SUPER_REDUCED_4 = "domestic_super_reduced_4"
+    DOMESTIC_GENERAL = "domestic_general"
+    DOMESTIC_REDUCED = "domestic_reduced"
+    DOMESTIC_SUPER_REDUCED = "domestic_super_reduced"
     DOMESTIC_ZERO = "domestic_zero"
     DOMESTIC_EXEMPT = "domestic_exempt"
     DOMESTIC_NOT_SUBJECT = "domestic_not_subject"

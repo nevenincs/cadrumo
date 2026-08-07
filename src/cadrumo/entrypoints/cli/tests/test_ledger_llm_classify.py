@@ -76,9 +76,6 @@ def test_llm_rejects_combination_with_manual_classification(
     assert result.exit_code != 0
 
 
-
-
-
 # ---------------------------------------------------------------------------
 # unknown option: --nif is refused, never silently ignored (audit m18)
 # ---------------------------------------------------------------------------

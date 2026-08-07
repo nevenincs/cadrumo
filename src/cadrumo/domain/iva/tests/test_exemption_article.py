@@ -45,8 +45,8 @@ def test_classification_result_rejects_exemption_article_on_non_exempt_category(
     # Pydantic v2 wraps validator-raised exceptions in ValidationError;
     # the inner IvaValidationError message reaches the rendered output.
     for non_exempt_category in (
-        IvaCategory.DOMESTIC_GENERAL_21,
-        IvaCategory.DOMESTIC_REDUCED_10,
+        IvaCategory.DOMESTIC_GENERAL,
+        IvaCategory.DOMESTIC_REDUCED,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,

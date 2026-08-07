@@ -246,7 +246,7 @@ def _income_transaction(period: str) -> Transaction:
             "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "iva_category": IvaCategory.DOMESTIC_GENERAL,
             "taxable_base": base,
             "iva_rate": _IVA_RATE,
             "iva_amount": iva,
@@ -281,7 +281,7 @@ def _persist_invoice_life(secure_objects: SecureObjectRepository) -> None:
             taxable_base=base,
             iva_rate=Decimal("21"),
             currency="EUR",
-            iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+            iva_category=IvaCategory.DOMESTIC_GENERAL,
         )
         invoices = InvoiceCatalogue.model_validate({**invoices.invoices, invoice.invoice_id: invoice})
         transaction = _income_transaction(period)

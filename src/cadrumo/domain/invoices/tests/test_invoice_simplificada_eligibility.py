@@ -131,7 +131,7 @@ def test_a_simplificada_for_a_different_category_is_unaffected() -> None:
         lines=(_rated_line(),),
         iva_total=_CUOTA,
         grand_total=_BASE + _CUOTA,
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
     )
 
     assert invoice.invoice_class is InvoiceClass.SIMPLIFICADA

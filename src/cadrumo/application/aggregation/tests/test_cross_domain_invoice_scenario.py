@@ -141,7 +141,7 @@ def _invoice_transaction(
         payload["taxable_base"] = _BASE
         payload["iva_amount"] = _CUOTA
         payload["iva_rate"] = Decimal("0.21")
-        payload["iva_category"] = IvaCategory.DOMESTIC_GENERAL_21
+        payload["iva_category"] = IvaCategory.DOMESTIC_GENERAL
     return Transaction.model_validate(payload)
 
 

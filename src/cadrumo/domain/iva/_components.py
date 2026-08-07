@@ -620,12 +620,12 @@ _RECEIVED: Final = InvoiceKind.RECEIVED
 _COMPONENT_ROWS: Final[tuple[_RowEntry, ...]] = (
     # Domestic categories occur on both sides: the taxpayer both issues and
     # receives them. Components are symmetric, the retención role is not.
-    _domestic_rated(IvaCategory.DOMESTIC_GENERAL_21, _LIVA_TIPO_GENERAL, _ISSUED),
-    _domestic_rated(IvaCategory.DOMESTIC_GENERAL_21, _LIVA_TIPO_GENERAL, _RECEIVED),
-    _domestic_rated(IvaCategory.DOMESTIC_REDUCED_10, _LIVA_TIPOS_REDUCIDOS, _ISSUED),
-    _domestic_rated(IvaCategory.DOMESTIC_REDUCED_10, _LIVA_TIPOS_REDUCIDOS, _RECEIVED),
-    _domestic_rated(IvaCategory.DOMESTIC_SUPER_REDUCED_4, _LIVA_TIPOS_REDUCIDOS, _ISSUED),
-    _domestic_rated(IvaCategory.DOMESTIC_SUPER_REDUCED_4, _LIVA_TIPOS_REDUCIDOS, _RECEIVED),
+    _domestic_rated(IvaCategory.DOMESTIC_GENERAL, _LIVA_TIPO_GENERAL, _ISSUED),
+    _domestic_rated(IvaCategory.DOMESTIC_GENERAL, _LIVA_TIPO_GENERAL, _RECEIVED),
+    _domestic_rated(IvaCategory.DOMESTIC_REDUCED, _LIVA_TIPOS_REDUCIDOS, _ISSUED),
+    _domestic_rated(IvaCategory.DOMESTIC_REDUCED, _LIVA_TIPOS_REDUCIDOS, _RECEIVED),
+    _domestic_rated(IvaCategory.DOMESTIC_SUPER_REDUCED, _LIVA_TIPOS_REDUCIDOS, _ISSUED),
+    _domestic_rated(IvaCategory.DOMESTIC_SUPER_REDUCED, _LIVA_TIPOS_REDUCIDOS, _RECEIVED),
     _zero_cuota_domestic(IvaCategory.DOMESTIC_ZERO, _LIVA_TIPOS_REDUCIDOS, _ISSUED),
     _zero_cuota_domestic(IvaCategory.DOMESTIC_ZERO, _LIVA_TIPOS_REDUCIDOS, _RECEIVED),
     _zero_cuota_domestic(IvaCategory.DOMESTIC_EXEMPT, _LIVA_EXENCIONES_INTERIORES, _ISSUED),

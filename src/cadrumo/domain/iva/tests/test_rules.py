@@ -92,7 +92,7 @@ def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> 
 
 
 def test_cite_domestic_general_renders_its_registry_legal_reference() -> None:
-    rendered = cite(IvaCategory.DOMESTIC_GENERAL_21, on=date(2025, 6, 15))
+    rendered = cite(IvaCategory.DOMESTIC_GENERAL, on=date(2025, 6, 15))
     assert rendered
     assert "BOE-A-1992-28740" in rendered
     assert "Art. 90" in rendered

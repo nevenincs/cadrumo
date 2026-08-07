@@ -87,7 +87,7 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
         "fact": "iva_amount_sum",
     },
     "ledger_iva_aggregation": {
-        "categories": ("domestic_general_21",),
+        "categories": ("domestic_general",),
         "rate_kinds": ("general",),
         "flow_direction": "repercutido",
         "fact": "iva_amount_sum",

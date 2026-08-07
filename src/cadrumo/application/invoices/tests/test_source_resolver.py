@@ -1203,7 +1203,7 @@ def _same_facts_invoice(*, with_category: bool):
             ),
         ),
         payment_status=PaymentStatus.PENDING,
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21 if with_category else None,
+        iva_category=IvaCategory.DOMESTIC_GENERAL if with_category else None,
     )
 
 

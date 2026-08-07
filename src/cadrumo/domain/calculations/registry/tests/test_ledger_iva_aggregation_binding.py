@@ -113,7 +113,7 @@ _MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES = (
     pytest.param({"exemption_articles": ("bogus",)}, id="unknown-exemption-article"),
     pytest.param(
         {
-            "categories": (IvaCategory.DOMESTIC_GENERAL_21,),
+            "categories": (IvaCategory.DOMESTIC_GENERAL,),
             "exemption_articles": (IvaExemptionArticle.ART_20_UNO_14,),
         },
         id="exemption-article-without-domestic-exempt-category",
@@ -313,13 +313,13 @@ def test_resolve_filters_by_category_set() -> None:
     observations whose category is in the tuple count, others don't."""
     observations = [
         _observation(
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("210"),
         ),
         _observation(
-            category=IvaCategory.DOMESTIC_REDUCED_10,
+            category=IvaCategory.DOMESTIC_REDUCED,
             rate_kind=IvaRateKind.REDUCED,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("100"),
@@ -342,7 +342,7 @@ def test_resolve_filters_by_category_set() -> None:
     # Filter contract verification: the binding's category set excludes
     # RECARGO_EQUIVALENCIA. The aggregator must (1) NOT leak the 999
     # EUR recargo observation into the result and (2) include both
-    # DOMESTIC_GENERAL_21 and DOMESTIC_REDUCED_10 observations. This
+    # DOMESTIC_GENERAL and DOMESTIC_REDUCED observations. This
     # bounds the result between the largest single matching observation
     # and the upper bound that would include the excluded category.
     cuota = result["modelo-303-iva-soportado-interiores-cuota"]

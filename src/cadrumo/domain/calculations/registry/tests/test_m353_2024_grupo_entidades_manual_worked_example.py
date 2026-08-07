@@ -115,7 +115,7 @@ def _calculate() -> object:
         IvaLedgerObservation(
             ledger_id="grupo-devengado-general",
             transaction_date=date(2024, 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("0"),
@@ -126,7 +126,7 @@ def _calculate() -> object:
         IvaLedgerObservation(
             ledger_id="grupo-deducible-general",
             transaction_date=date(2024, 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("0"),

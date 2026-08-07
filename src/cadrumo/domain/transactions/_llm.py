@@ -404,9 +404,9 @@ def prompt_spec_with_every_spending_category(
 # not carried in the locale catalogues, so they cannot serve as hints; these
 # curated one-liners are the authoritative prompt descriptions instead.
 _IVA_CATEGORY_HINTS: dict[IvaCategory, str] = {
-    IvaCategory.DOMESTIC_GENERAL_21: "domestic supply at the general 21% rate",
-    IvaCategory.DOMESTIC_REDUCED_10: "reduced 10% rate (hospitality, transport, some foods)",
-    IvaCategory.DOMESTIC_SUPER_REDUCED_4: "super-reduced 4% rate (basic foods, books, medicines)",
+    IvaCategory.DOMESTIC_GENERAL: "domestic supply at the general 21% rate",
+    IvaCategory.DOMESTIC_REDUCED: "reduced 10% rate (hospitality, transport, some foods)",
+    IvaCategory.DOMESTIC_SUPER_REDUCED: "super-reduced 4% rate (basic foods, books, medicines)",
     IvaCategory.DOMESTIC_ZERO: "domestic supply at a 0% rate",
     IvaCategory.DOMESTIC_EXEMPT: "domestic supply exempt from IVA (education, health, finance — Art. 20)",
     IvaCategory.DOMESTIC_NOT_SUBJECT: "operation not subject to Spanish IVA",
@@ -651,7 +651,7 @@ def _render_prompt(
     if spec.categories:
         example += ', "category": "manutencion_dietas_nacional"'
     if spec.iva_categories:
-        example += ', "iva_category": "domestic_general_21", "business_pct": null'
+        example += ', "iva_category": "domestic_general", "business_pct": null'
     example += "}"
     sections.extend(
         [

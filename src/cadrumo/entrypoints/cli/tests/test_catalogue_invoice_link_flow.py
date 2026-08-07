@@ -133,7 +133,6 @@ def test_catalogue_create_then_link_succeeds_bidirectionally() -> None:
     assert "transaction-only" not in check.output, check.output
 
 
-
 def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
     """An invoice stamped to a foreign bucket is refused by the link guard.
 

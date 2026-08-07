@@ -78,7 +78,7 @@ def _con_derecho_locales(con_derecho_volume: Decimal) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id="manual-locales-con-derecho",
         transaction_date=date(2025, 3, 10),
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=con_derecho_volume,
@@ -103,7 +103,7 @@ def _excluded_non_habitual_inmueble() -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id="non-habitual-inmueble-sale",
         transaction_date=date(2025, 9, 20),
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=_EXCLUDED_NON_HABITUAL_INMUEBLE_SALE,

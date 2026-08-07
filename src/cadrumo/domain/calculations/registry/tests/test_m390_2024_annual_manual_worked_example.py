@@ -45,13 +45,13 @@ Aggregation ``sum`` is associative, so one row carrying a pre-summed
 base/iva/recargo resolves identically to N rows summing to the same totals:
 
     1T (pag. 292-293):
-      domestic_general_21 REPERCUTIDO: "Ventas interiores ... + Servicios
+      domestic_general REPERCUTIDO: "Ventas interiores ... + Servicios
         prestados ... Total IVA devengado en Ventas interiores y servicios
         prestados (83.000 x 21%): 17.430 euros" -> base=83.000, iva=17.430;
         recargo "(24.000(9) x 5,2%): 1.248 euros" -> recargo=1.248.
       AIC (autorepercutido intracomunitaria): "Adquisiciones intracomunitarias:
         [(18.000(2) + 3.000(4))] x 21%: 4.410 euros" -> base=21.000, iva=4.410.
-      domestic_general_21 SOPORTADO: "Total cuotas soportadas en operaciones
+      domestic_general SOPORTADO: "Total cuotas soportadas en operaciones
         interiores: 9.870 euros" -> base=47.000 (36.000+6.000+5.000),
         iva=9.870.
       import_third_country SOPORTADO: "Por cuotas satisfechas en
@@ -66,7 +66,7 @@ base/iva/recargo resolves identically to N rows summing to the same totals:
       soportado: (-6.000 x 21%): -1.260 euros"), and the deducible total
       separately nets "Rectificacion de deducciones: (-6.000(25) x 21%):
       -1.260 euros" (the same AIC correction's deducible leg):
-      domestic_general_21 REPERCUTIDO: "Total IVA Devengado en Ventas
+      domestic_general REPERCUTIDO: "Total IVA Devengado en Ventas
         interiores y servicios prestados (91.000 x 21%): 19.110 euros" net
         of op(27)'s -1.260/-6.000 domestic correction -> base=85.000
         (91.000-6.000), iva=17.850 (19.110-1.260); recargo "(12.000(14) x
@@ -76,7 +76,7 @@ base/iva/recargo resolves identically to N rows summing to the same totals:
         (shared identically by the devengado and deducible legs, since
         both read the SAME iva.anual.autorepercutido.intracomunitaria
         casilla) -> base=15.000 (21.000-6.000), iva=3.150 (4.410-1.260).
-      domestic_general_21 SOPORTADO: "Total cuotas soportadas en
+      domestic_general SOPORTADO: "Total cuotas soportadas en
         operaciones interiores: 13.020 euros" (corrientes 11.970 +
         bienes de inversion 1.050) -> base=62.000 (57.000+5.000),
         iva=13.020.
@@ -86,13 +86,13 @@ base/iva/recargo resolves identically to N rows summing to the same totals:
     3T (pag. 299-300): devengado nets "Devolucion de ventas: (-6.000(38)
       x 21%): -1.260 euros" (a plain domestic return, no AIC leg this
       quarter):
-      domestic_general_21 REPERCUTIDO: "Ventas interiores: [...] : 19.782
+      domestic_general REPERCUTIDO: "Ventas interiores: [...] : 19.782
         euros" net of the -1.260/-6.000 devolucion -> base=88.200
         (94.200-6.000), iva=18.522 (19.782-1.260); recargo "(24.000(32) x
         5,2%): 1.248 euros" -> recargo=1.248.
       AIC: "Adquisiciones intracomunitarias: (12.000(36) x 21%): 2.520
         euros" (no correction this quarter) -> base=12.000, iva=2.520.
-      domestic_general_21 SOPORTADO: "Servicios recibidos: (1.200(39) x
+      domestic_general SOPORTADO: "Servicios recibidos: (1.200(39) x
         21%): 252 euros" -> base=1.200, iva=252.
       import_third_country SOPORTADO: "(6.000(31) x 21%): 1.260 euros"
         -> base=6.000, iva=1.260.
@@ -100,17 +100,17 @@ base/iva/recargo resolves identically to N rows summing to the same totals:
     4T (pag. 301-302): devengado nets "Devolucion de mercancias: -3.000(46)
       x 21%: -630 euros" (no AIC this quarter - op(47)'s AIC anticipo
       explicitly "no devengan el IVA"):
-      domestic_general_21 REPERCUTIDO: "Ventas interiores:[(12.000(45) +
+      domestic_general REPERCUTIDO: "Ventas interiores:[(12.000(45) +
         90.000(49))x 21%]: 21.420 euros" net of the -630/-3.000 devolucion
         -> base=99.000 (102.000-3.000), iva=20.790 (21.420-630); recargo
         "(12.000(45) x 5,2%): 624 euros" -> recargo=624.
-      domestic_general_21 SOPORTADO: "[(12.000(42) + 72.000(53)) x 21%]:
+      domestic_general SOPORTADO: "[(12.000(42) + 72.000(53)) x 21%]:
         17.640 euros" plus "Facturas pendientes de recibir: (18.000(44) x
         21%): 3.780 euros" plus "Rectificacion deduccion (-18.000(43) x
         21%): -3.780 euros" (the pending-invoice and its rectification
         net to zero) -> base=84.000 (12.000+72.000+18.000-18.000),
         iva=17.640 (17.640+3.780-3.780).
-      domestic_reduced_10 SOPORTADO: "Compras realizadas: (60.000(41) x
+      domestic_reduced SOPORTADO: "Compras realizadas: (60.000(41) x
         10%): 6.000 euros" (op(41), "Le repercuten el 10% en lugar del
         21%. No puede deducirse mas de lo que le han repercutido") ->
         base=60.000, iva=6.000.
@@ -214,7 +214,7 @@ def _dg_repercutido(ledger_id: str, *, day_month: tuple[int, int], base: Decimal
     return {
         "ledger_id": ledger_id,
         "transaction_date": date(2024, month, day),
-        "category": IvaCategory.DOMESTIC_GENERAL_21,
+        "category": IvaCategory.DOMESTIC_GENERAL,
         "rate_kind": IvaRateKind.GENERAL,
         "flow_direction": IvaFlowDirection.REPERCUTIDO,
         "base_amount": base,
@@ -241,7 +241,7 @@ def _dg_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
     return {
         "ledger_id": ledger_id,
         "transaction_date": date(2024, month, day),
-        "category": IvaCategory.DOMESTIC_GENERAL_21,
+        "category": IvaCategory.DOMESTIC_GENERAL,
         "rate_kind": IvaRateKind.GENERAL,
         "flow_direction": IvaFlowDirection.SOPORTADO,
         "base_amount": base,
@@ -254,7 +254,7 @@ def _dr_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
     return {
         "ledger_id": ledger_id,
         "transaction_date": date(2024, month, day),
-        "category": IvaCategory.DOMESTIC_REDUCED_10,
+        "category": IvaCategory.DOMESTIC_REDUCED,
         "rate_kind": IvaRateKind.REDUCED,
         "flow_direction": IvaFlowDirection.SOPORTADO,
         "base_amount": base,
@@ -449,7 +449,7 @@ def _dr_super_reducido_repercutido(
     return {
         "ledger_id": ledger_id,
         "transaction_date": date(2024, month, day),
-        "category": IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+        "category": IvaCategory.DOMESTIC_SUPER_REDUCED,
         "rate_kind": IvaRateKind.SUPER_REDUCED,
         "flow_direction": IvaFlowDirection.REPERCUTIDO,
         "base_amount": base,

@@ -136,7 +136,7 @@ def test_a_suplido_may_accompany_an_exempt_supply() -> None:
 
 def test_the_decomposition_carries_the_suplido_into_the_contraprestacion() -> None:
     """A grounded suplido invoice decomposes with the disbursement inside ``total``."""
-    verdict = decompose_invoice(_invoice(iva_category=IvaCategory.DOMESTIC_GENERAL_21))
+    verdict = decompose_invoice(_invoice(iva_category=IvaCategory.DOMESTIC_GENERAL))
 
     assert verdict.is_grounded
     components = verdict.components
@@ -150,7 +150,7 @@ def test_suplido_and_retencion_sit_on_opposite_sides_like_recargo_does() -> None
     """The suplido joins ``total`` and, through it, ``cash``; retención comes off ``cash`` only."""
     retencion = Decimal("150.00")
     verdict = decompose_invoice(
-        _invoice(iva_category=IvaCategory.DOMESTIC_GENERAL_21, retention_amount=retencion),
+        _invoice(iva_category=IvaCategory.DOMESTIC_GENERAL, retention_amount=retencion),
     )
 
     components = verdict.components
@@ -165,7 +165,7 @@ def test_recargo_and_suplido_both_join_the_total_independently() -> None:
     recargo = Decimal("52.00")
     verdict = decompose_invoice(
         _invoice(
-            iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+            iva_category=IvaCategory.DOMESTIC_GENERAL,
             recargo_amount=recargo,
             grand_total=_BASE + _CUOTA + recargo + _SUPLIDO,
         ),

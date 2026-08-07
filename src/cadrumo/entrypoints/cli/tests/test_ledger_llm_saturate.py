@@ -113,7 +113,7 @@ def test_operator_derive_without_llm_persists_derived_substrate(tmp_path: Path) 
             "classify",
             tx,
             "--iva-category",
-            IvaCategory.DOMESTIC_GENERAL_21.value,
+            IvaCategory.DOMESTIC_GENERAL.value,
             "--saturate",
         ],
     )
@@ -124,7 +124,7 @@ def test_operator_derive_without_llm_persists_derived_substrate(tmp_path: Path) 
     row = _row_by_id(tx)
     # The business classification chosen earlier is preserved; only the IVA
     # substrate was derived and stamped derived:. The derived 0.21 rate proves
-    # the operator-selected DOMESTIC_GENERAL_21 category drove the registry lookup.
+    # the operator-selected DOMESTIC_GENERAL category drove the registry lookup.
     assert row["business_classification"] == "BUSINESS"
     assert row["classified_by"] == "derived:iva-category"
     assert Decimal(str(row["taxable_base"])) == Decimal("100.00")
@@ -150,7 +150,7 @@ def test_operator_derive_refuses_non_business_row(tmp_path: Path) -> None:
     tx = _import_one_transaction(tmp_path)  # row stays NOT_YET_PROCESSED
 
     result = _invoke(
-        ["app", "ledger", "classify", tx, "--iva-category", IvaCategory.DOMESTIC_GENERAL_21.value, "--saturate"],
+        ["app", "ledger", "classify", tx, "--iva-category", IvaCategory.DOMESTIC_GENERAL.value, "--saturate"],
     )
     assert result.exit_code != 0
     assert "business" in result.output.lower()

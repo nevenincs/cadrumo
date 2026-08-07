@@ -55,6 +55,7 @@ import asyncio
 from ..application.ledger import InvoiceDraft
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
+from ._errors import LLMConfigError
 from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 
@@ -109,11 +110,22 @@ class LocalVisionInvoiceFieldExtractor:
         self,
         *,
         model: str | None = None,
+        provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
         settings: Settings | None = None,
     ) -> None:
         resolved_settings = settings if settings is not None else load_settings()
-        self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model
+        self._provider = provider
+        if provider is LLMProvider.LOCAL:
+            self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model
+        elif model is None:
+            # The only default that exists is the local Ollama vision model, and
+            # forwarding that identifier to another vendor asks for a model it
+            # does not serve. Refuse rather than send a name that cannot resolve.
+            msg = f"a vision model must be named explicitly for provider {provider.value!r}; no default exists for it"
+            raise LLMConfigError(msg, suggestion="pass model=<vendor vision model id>")
+        else:
+            self._model = model
         # A local vision model on consumer hardware can take minutes; give the
         # vision read its own (longer) timeout, mirroring LocalVisionLLMClassifier.
         vision_settings = resolved_settings.model_copy(
@@ -131,8 +143,16 @@ class LocalVisionInvoiceFieldExtractor:
 
     @property
     def decided_by(self) -> str:
-        """Provenance stamp for this extractor's transport (distinct from classification)."""
-        return f"llm:local-vision:{self._model}"
+        """Provenance stamp for this extractor's transport (distinct from classification).
+
+        The transport half is DERIVED from the provider actually used, never
+        written as a constant. A stamp is the only durable record of how a
+        figure was reached, so one that says ``local`` for a read served
+        off-host is worse than no stamp at all: it answers the audit question
+        confidently and wrongly.
+        """
+        transport = "local" if self._provider is LLMProvider.LOCAL else self._provider.value.lower()
+        return f"llm:{transport}-vision:{self._model}"
 
     def extract(self, *, evidence_images: tuple[MultimodalImageInput, ...]) -> InvoiceDraft:
         """Read ``evidence_images`` with the local vision model and return a grounded draft.
@@ -150,7 +170,7 @@ class LocalVisionInvoiceFieldExtractor:
         """
         request = LLMRequest(
             prompt=_FIELD_EXTRACTION_PROMPT,
-            provider_override=LLMProvider.LOCAL,
+            provider_override=self._provider,
             model_override=self._model,
             images=evidence_images,
         )
@@ -167,6 +187,7 @@ def extract_invoice_fields_from_images(
     evidence_images: tuple[MultimodalImageInput, ...],
     *,
     model: str | None = None,
+    provider: LLMProvider = LLMProvider.LOCAL,
     settings: Settings | None = None,
 ) -> InvoiceDraft:
     """Convenience wrapper: build a :class:`LocalVisionInvoiceFieldExtractor` and extract.
@@ -175,10 +196,14 @@ def extract_invoice_fields_from_images(
         evidence_images: In-memory page/image renders of the evidence, each
             carrying its declared media type.
         model: Optional vision model override.
+        provider: Transport serving the read. Defaults to
+            :attr:`~adapters.outbound.llm.LLMProvider.LOCAL`, so the production
+            route stays on-host; naming another provider is the caller's
+            explicit, per-invocation decision to read off-host.
         settings: Optional resolved settings override.
 
     Returns:
         :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
     """
-    extractor = LocalVisionInvoiceFieldExtractor(model=model, settings=settings)
+    extractor = LocalVisionInvoiceFieldExtractor(model=model, provider=provider, settings=settings)
     return extractor.extract(evidence_images=evidence_images)

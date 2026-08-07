@@ -60,12 +60,12 @@ def test_suggest_derives_substrate_from_selected_category(
     suggestion = saturate_llm_classification(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL_21),
+        classifier=_saturating_subprocess_classifier(iva_category=IvaCategory.DOMESTIC_GENERAL),
         transaction_repository=repository,
     )
 
     assert isinstance(suggestion, LLMSaturatedSuggestion)
-    assert suggestion.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert suggestion.iva_category is IvaCategory.DOMESTIC_GENERAL
     assert suggestion.rate_derivable is True
     assert suggestion.iva_rate == Decimal("0.21")
     assert suggestion.taxable_base == Decimal("100.00")

@@ -59,7 +59,7 @@ def _invoice(
     tax_id: str = "B12345674",
     currency: str = "EUR",
     fx_rate: str | None = None,
-    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL_21,
+    category: IvaCategory = IvaCategory.DOMESTIC_GENERAL,
 ) -> Invoice:
     subtotal = Decimal(base)
     rate = iva_rate_percentage(IvaRate.RATE_21)

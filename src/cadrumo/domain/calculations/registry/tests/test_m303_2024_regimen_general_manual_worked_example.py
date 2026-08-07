@@ -240,7 +240,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
         _op(
             "op1-compra-motores",
             day=5,
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("36000.00"),
             iva=Decimal("7560.00"),
@@ -256,7 +256,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
         _op(
             "op3-servicios-abogado",
             day=8,
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("6000.00"),
             iva=Decimal("1260.00"),
@@ -272,7 +272,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
         _op(
             "op5-alquiler-local",
             day=1,
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("5000.00"),
             iva=Decimal("1050.00"),
@@ -288,7 +288,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
         _op(
             "op7-ventas-mayorista",
             day=10,
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             flow=IvaFlowDirection.REPERCUTIDO,
             base=Decimal("55000.00"),
             iva=Decimal("11550.00"),
@@ -296,7 +296,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
         _op(
             "op8-montajes-arreglos",
             day=15,
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             flow=IvaFlowDirection.REPERCUTIDO,
             base=Decimal("4000.00"),
             iva=Decimal("840.00"),
@@ -304,7 +304,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
         _op(
             "op9-ventas-recargo-equivalencia",
             day=18,
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             flow=IvaFlowDirection.REPERCUTIDO,
             base=Decimal("24000.00"),
             iva=Decimal("5040.00"),

@@ -29,9 +29,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_classify_issued_invoice_at_each_rate_slot_resolves_to_repercutido() -> None:
     cases: tuple[tuple[IvaRate, IvaCategory, IvaRateKind], ...] = (
         (IvaRate.RATE_0, IvaCategory.DOMESTIC_ZERO, IvaRateKind.ZERO),
-        (IvaRate.RATE_4, IvaCategory.DOMESTIC_SUPER_REDUCED_4, IvaRateKind.SUPER_REDUCED),
-        (IvaRate.RATE_10, IvaCategory.DOMESTIC_REDUCED_10, IvaRateKind.REDUCED),
-        (IvaRate.RATE_21, IvaCategory.DOMESTIC_GENERAL_21, IvaRateKind.GENERAL),
+        (IvaRate.RATE_4, IvaCategory.DOMESTIC_SUPER_REDUCED, IvaRateKind.SUPER_REDUCED),
+        (IvaRate.RATE_10, IvaCategory.DOMESTIC_REDUCED, IvaRateKind.REDUCED),
+        (IvaRate.RATE_21, IvaCategory.DOMESTIC_GENERAL, IvaRateKind.GENERAL),
         (IvaRate.EXEMPT, IvaCategory.DOMESTIC_EXEMPT, IvaRateKind.EXEMPT),
     )
 
@@ -93,7 +93,7 @@ def test_classification_record_validates_settlement_sides_against_flow() -> None
     fields."""
     with pytest.raises(ValueError, match="does not match flow_direction"):
         IvaInvoiceClassification(
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             settlement_sides=frozenset(
@@ -143,7 +143,7 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
     assert isinstance(obs, IvaLedgerObservation)
     assert obs.ledger_id == "inv-001"
     assert obs.transaction_date == date(2025, 6, 15)
-    assert obs.category is IvaCategory.DOMESTIC_GENERAL_21
+    assert obs.category is IvaCategory.DOMESTIC_GENERAL
     assert obs.rate_kind is IvaRateKind.GENERAL
     assert obs.flow_direction is IvaFlowDirection.REPERCUTIDO
     assert obs.base_amount == Decimal("1000")
@@ -227,7 +227,7 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
             id=binding_id,
             source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
             selector={
-                "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED_4,),
+                "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
                 "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
                 "flow_direction": IvaFlowDirection.REPERCUTIDO,
                 "applied_rates": (rate,),
@@ -296,7 +296,7 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
         iva_amount=Decimal("50"),
     )
     assert obs.flow_direction is IvaFlowDirection.SOPORTADO
-    assert obs.category is IvaCategory.DOMESTIC_REDUCED_10
+    assert obs.category is IvaCategory.DOMESTIC_REDUCED
     assert obs.rate_kind is IvaRateKind.REDUCED
 
 

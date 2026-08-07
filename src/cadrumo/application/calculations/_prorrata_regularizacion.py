@@ -135,9 +135,9 @@ _SOURCE_CASILLA_IDS: Final[tuple[CasillaId, ...]] = (
 )
 _CON_DERECHO_OUTPUT_CATEGORIES: frozenset[IvaCategory] = frozenset(
     {
-        IvaCategory.DOMESTIC_GENERAL_21,
-        IvaCategory.DOMESTIC_REDUCED_10,
-        IvaCategory.DOMESTIC_SUPER_REDUCED_4,
+        IvaCategory.DOMESTIC_GENERAL,
+        IvaCategory.DOMESTIC_REDUCED,
+        IvaCategory.DOMESTIC_SUPER_REDUCED,
         IvaCategory.DOMESTIC_ZERO,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,

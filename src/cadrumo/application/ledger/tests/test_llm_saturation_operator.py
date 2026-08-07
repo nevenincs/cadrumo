@@ -38,7 +38,7 @@ def test_operator_derive_persists_substrate_with_derived_provenance(
     derivation = derive_operator_iva_substrate(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+        iva_category=IvaCategory.DOMESTIC_GENERAL,
         actor="operator-A",
         source_command="aeat app ledger classify --iva-category --saturate",
         transaction_repository=repository,
@@ -58,7 +58,7 @@ def test_operator_derive_persists_substrate_with_derived_provenance(
     assert reloaded.classified_by == "derived:iva-category"
     assert reloaded.business_classification is BusinessClassification.BUSINESS
     assert reloaded.category_id == SpendingCategory.ARRENDAMIENTO_LOCAL.value
-    assert reloaded.iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert reloaded.iva_category is IvaCategory.DOMESTIC_GENERAL
     assert reloaded.taxable_base is not None and reloaded.iva_amount is not None
     assert reloaded.taxable_base + reloaded.iva_amount == gross
 
@@ -104,7 +104,7 @@ def test_operator_derive_refuses_non_business_row(
         derive_operator_iva_substrate(
             bucket_id=_BUCKET,
             transaction_id=tx_id,
-            iva_category=IvaCategory.DOMESTIC_GENERAL_21,
+            iva_category=IvaCategory.DOMESTIC_GENERAL,
             actor="operator-A",
             source_command="aeat app ledger classify --iva-category --saturate",
             transaction_repository=repository,

@@ -35,14 +35,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _VALID_SPLIT_JSON = (
     '{"reason": "two lines on the invoice",'
     ' "children": ['
-    '{"proportion": 0.6, "iva_category": "domestic_general_21", "evidence_citation": "line 1"},'
-    '{"proportion": 0.4, "iva_category": "domestic_general_21", "evidence_citation": "line 2"}'
+    '{"proportion": 0.6, "iva_category": "domestic_general", "evidence_citation": "line 1"},'
+    '{"proportion": 0.4, "iva_category": "domestic_general", "evidence_citation": "line 2"}'
     "]}"
 )
 
 
 def _child(proportion: str) -> LLMSplitChild:
-    return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory.DOMESTIC_GENERAL_21)
+    return LLMSplitChild(proportion=Decimal(proportion), iva_category=IvaCategory.DOMESTIC_GENERAL)
 
 
 def _assert_validation_error(case_id: str, build: Callable[[], object]) -> None:
@@ -96,7 +96,7 @@ def test_parse_split_extracts_nested_json_amid_prose() -> None:
     noisy = "Here is the split:\n" + _VALID_SPLIT_JSON + "\nHope that helps!"
     response = parse_split_response(noisy, spec=prompt_spec_with_saturation_fields())
     assert len(response.children) == 2
-    assert response.children[0].iva_category is IvaCategory.DOMESTIC_GENERAL_21
+    assert response.children[0].iva_category is IvaCategory.DOMESTIC_GENERAL
 
 
 def test_parse_split_rejects_invalid_outputs() -> None:

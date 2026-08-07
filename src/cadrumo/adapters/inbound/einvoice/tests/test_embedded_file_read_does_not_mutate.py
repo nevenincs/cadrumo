@@ -92,8 +92,7 @@ def test_reading_the_payload_writes_nothing_to_disk(tmp_path, monkeypatch) -> No
     iter_pdf_embedded_files(_pdf_with_embedded_xml())
 
     assert set(tmp_path.rglob("*")) == before, (
-        "reading an embedded payload left a file behind; evidence bytes must never reach disk "
-        "outside encrypted storage"
+        "reading an embedded payload left a file behind; evidence bytes must never reach disk outside encrypted storage"
     )
 
 
@@ -121,8 +120,7 @@ def test_the_sanitiser_still_strips_what_the_probe_can_read() -> None:
     assert result.surface == "attachments"
     assert result.count == 1, "the sanitiser must report the attachment it removed"
     assert iter_pdf_embedded_files(scrubbed) == (), (
-        "the sanitiser no longer strips embedded files the probe can read; an attack surface "
-        "survived scrubbing"
+        "the sanitiser no longer strips embedded files the probe can read; an attack surface survived scrubbing"
     )
 
 

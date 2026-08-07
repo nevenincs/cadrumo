@@ -292,7 +292,7 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
             "--series", "R",
             "--rectifies-invoice-number", "2026-0044",
             "--recargo", "52.00",
-            "--iva-category", "domestic_general_21",
+            "--iva-category", "domestic_general",
         ],
     )  # fmt: skip
 

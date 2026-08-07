@@ -244,7 +244,7 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             base="1000.00",
         ),
         _ledger_observation(
@@ -257,14 +257,14 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
         _ledger_observation(
             "input-purchase-ignored",
             transaction_date=date(2026, 2, 15),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             flow=IvaFlowDirection.SOPORTADO,
             base="700.00",
         ),
         _ledger_observation(
             "outside-ejercicio-ignored",
             transaction_date=date(2025, 12, 31),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             base="999.00",
         ),
     )
@@ -300,13 +300,13 @@ def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             base="1000.00",
         ),
         _ledger_observation(
             "non-habitual-inmueble",
             transaction_date=date(2026, 6, 10),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             base="4000.00",
         ),
     )
@@ -339,13 +339,13 @@ def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion() -> 
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             base="1000.00",
         ),
         _ledger_observation(
             "foreign-pe-sale",
             transaction_date=date(2026, 6, 10),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             base="4000.00",
         ),
     )
@@ -373,7 +373,7 @@ def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values() 
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL_21,
+            category=IvaCategory.DOMESTIC_GENERAL,
             base="1000.00",
         ),
         _ledger_observation(
@@ -402,7 +402,7 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator() ->
     taxable_sale = _ledger_observation(
         "taxable-sale",
         transaction_date=date(2026, 1, 20),
-        category=IvaCategory.DOMESTIC_GENERAL_21,
+        category=IvaCategory.DOMESTIC_GENERAL,
         base="1000.00",
     )
     domestic_exempt_sale = _ledger_observation(
