@@ -233,6 +233,9 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     )
 
 
+# ANY-RETURN-RATIONALE-JSON-SCHEMA: the recursive JSON-schema tree walked and
+# returned here is genuinely arbitrary JSON at every depth, not an escape from
+# a known type.
 def _without_generated_titles(schema: dict[str, Any]) -> dict[str, Any]:
     """Drop pydantic's auto-generated ``title`` keys from an output schema.
 

@@ -406,9 +406,9 @@ class DescendantInfo(BaseModel):
         """
         if not isinstance(data, dict):
             return data
-        # Untyped by construction: this is raw pre-validation input, and
-        # pydantic re-validates every value against the declared field type
-        # immediately after.
+        # CAST-RATIONALE-PRE-VALIDATION-INPUT: untyped by construction, this
+        # is raw pre-validation input, and pydantic re-validates every value
+        # against the declared field type immediately after.
         # nosemgrep: no-cast-in-domain-application
         raw = cast("dict[str, object]", data)
         if raw.get("relacion") is not None:

@@ -56,9 +56,9 @@ def _load_intentional_identical(path: Path) -> dict[str, dict[str, object]]:
         raise LocaleError(f"Cannot read {path.name}: {exc}") from exc
     if not isinstance(loaded, dict):
         raise LocaleError(f"{path.name} must contain a JSON object")
-    # JSON boundary: the decoded object carries no key or value types, and the
-    # isinstance guard above establishes only that it is a mapping. Each entry is
-    # checked again below before being copied.
+    # CAST-RATIONALE-JSON-BOUNDARY: the decoded object carries no key or value
+    # types, and the isinstance guard above establishes only that it is a
+    # mapping. Each entry is checked again below before being copied.
     decoded = cast("dict[str, object]", loaded)
     return {locale: dict(entries) for locale, entries in decoded.items() if isinstance(entries, dict)}
 

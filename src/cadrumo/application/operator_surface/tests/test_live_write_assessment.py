@@ -1,3 +1,6 @@
+# INTENTIONAL: unit because "live" here names the assessed live_write flag,
+# not a live AEAT contact -- this module unit-tests the risk_declared/
+# live_write derivation without touching AEAT.
 """A command's safety assessment is distinguishable from its absence.
 
 `aeat-safety-legal-gates` forbids live AEAT submission outright, so `live_write` is
