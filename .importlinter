@@ -360,8 +360,8 @@ ignore_imports =
     # ── application → adapters (permitted by architecture ADR sec. 538) ──
     # application/ may import adapters/ for outbound wiring; full inversion
     # would require a major refactor and is deferred.
-    cadrumo.application.aggregation._modelo_bindings -> cadrumo.adapters.**
-    cadrumo.application.aggregation._oss_ioss -> cadrumo.adapters.**
+    cadrumo.application.aggregation._modelo_bindings -> cadrumo.adapters.persistence.**
+    cadrumo.application.aggregation._oss_ioss -> cadrumo.adapters.persistence.**
     cadrumo.application.aggregation._percepciones_observations_repository -> cadrumo.adapters.persistence.storage
     cadrumo.application.aggregation._retencion_observations_repository -> cadrumo.adapters.persistence.storage
     # _observation_window carries the shared replace-observations helper extracted from
@@ -370,20 +370,27 @@ ignore_imports =
     cadrumo.application.aggregation._observation_window -> cadrumo.adapters.persistence.storage
     cadrumo.application.aggregation._withholding_source -> cadrumo.adapters.persistence.storage
     cadrumo.application.auth._apoderado -> cadrumo.adapters.persistence.storage
-    cadrumo.application.auth._certificate_secret_backend -> cadrumo.adapters.**
-    cadrumo.application.auth._diagnostics -> cadrumo.adapters.**
-    cadrumo.application.auth._operator_probes -> cadrumo.adapters.**
-    cadrumo.application.auth._operator_scope -> cadrumo.adapters.**
-    cadrumo.application.auth._sessions -> cadrumo.adapters.**
-    cadrumo.application.bienes_inversion -> cadrumo.adapters.**
-    cadrumo.application.bucket_maintenance._manifest_digest -> cadrumo.adapters.**
-    cadrumo.application.bucket_maintenance._sandbox -> cadrumo.adapters.**
-    cadrumo.application.bucket_maintenance._service -> cadrumo.adapters.**
-    cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.**
-    cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.**
-    cadrumo.application.calculations._multi_year -> cadrumo.adapters.**
-    cadrumo.application.calculations._observations_repository -> cadrumo.adapters.**
-    cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.**
+    cadrumo.application.auth._certificate_secret_backend -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth._diagnostics -> cadrumo.adapters.persistence.**
+    # AEAT authentication is an outbound integration and these modules are its
+    # callers, so the edges are pinned at the named outbound packages rather
+    # than a wildcard -- the sec. 538 outbound-wiring treatment.
+    cadrumo.application.auth._operator_probes -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.auth._operator_probes -> cadrumo.adapters.outbound.aeat.auth.certificate
+    cadrumo.application.auth._operator_probes -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth._operator_scope -> cadrumo.adapters.persistence.**
+    cadrumo.application.auth._sessions -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.auth._sessions -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.auth._sessions -> cadrumo.adapters.persistence.**
+    cadrumo.application.bienes_inversion -> cadrumo.adapters.persistence.**
+    cadrumo.application.bucket_maintenance._manifest_digest -> cadrumo.adapters.persistence.**
+    cadrumo.application.bucket_maintenance._sandbox -> cadrumo.adapters.persistence.**
+    cadrumo.application.bucket_maintenance._service -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._iva_compensation_annual_partition -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._iva_compensation_history -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._multi_year -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._observations_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.persistence.**
     cadrumo.application.diagnostics -> cadrumo.adapters.outbound.aeat.browser
     cadrumo.application.diagnostics -> cadrumo.adapters.persistence.**
     cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm
@@ -569,35 +576,54 @@ ignore_imports =
     cadrumo.application.live._session -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.live._snapshot_base -> cadrumo.adapters.persistence.**
     cadrumo.application.live._verify -> cadrumo.adapters.persistence.**
-    cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.**
-    cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.**
-    cadrumo.application.modelo._reconcile -> cadrumo.adapters.**
-    cadrumo.application.prorrata_register -> cadrumo.adapters.**
+    cadrumo.application.modelo._borrador_binding -> cadrumo.adapters.persistence.**
+    cadrumo.application.modelo._m036_lifecycle -> cadrumo.adapters.persistence.**
+    # Reconciliation compares a filed declaracion and its justificante against
+    # the local calculation. Both arrive as externally-authored documents an
+    # INBOUND adapter parses; this module consumes those parses and owns only
+    # the comparison. Same class as the einvoice pins, previously admitted by
+    # a broad wildcard without review.
+    cadrumo.application.modelo._reconcile -> cadrumo.adapters.inbound.declaracion
+    cadrumo.application.modelo._reconcile -> cadrumo.adapters.inbound.justificante
+    cadrumo.application.modelo._reconcile -> cadrumo.adapters.persistence.**
+    cadrumo.application.prorrata_register -> cadrumo.adapters.persistence.**
     cadrumo.application.registry -> cadrumo.adapters.outbound.aeat.sede
-    cadrumo.application.repair_integrity -> cadrumo.adapters.**
-    cadrumo.application.state_projection -> cadrumo.adapters.**
-    cadrumo.application.storage.calc_sheets._parity_harness -> cadrumo.adapters.**
-    cadrumo.application.user_profile._aggregate -> cadrumo.adapters.**
-    cadrumo.application.user_profile._bundle -> cadrumo.adapters.**
-    cadrumo.application.user_profile._bundle_encryption -> cadrumo.adapters.**
-    cadrumo.application.user_profile._capabilities -> cadrumo.adapters.**
-    cadrumo.application.user_profile._custody -> cadrumo.adapters.**
-    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.**
-    cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.**
+    cadrumo.application.repair_integrity -> cadrumo.adapters.persistence.**
+    cadrumo.application.state_projection -> cadrumo.adapters.persistence.**
+    # The Sheets parity harness drives the outbound Google client; the export
+    # mirror is one-way, so this reaches no persistence at all.
+    cadrumo.application.storage.calc_sheets._parity_harness -> cadrumo.adapters.outbound.google
+    cadrumo.application.user_profile._aggregate -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._bundle -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._bundle_encryption -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._capabilities -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._custody -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.outbound.aeat.sede
+    cadrumo.application.user_profile._custody_carry -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._language_resolver -> cadrumo.adapters.persistence.**
     # ── 2026-04-30-aeat-restructure-adr: the login/logout session lifecycle
     #    reaches only the master-key session primitives and the persistence
     #    storage error taxonomy; pinned narrow instead of a wildcard exception ──
     cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.errors
     cadrumo.application.user_profile._login_session -> cadrumo.adapters.persistence.storage.master_key
-    cadrumo.application.user_profile._orchestration -> cadrumo.adapters.**
-    cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.**
-    cadrumo.application.user_profile._repository -> cadrumo.adapters.**
-    cadrumo.application.verification._verify -> cadrumo.adapters.**
-    cadrumo.application.workflow._adapters -> cadrumo.adapters.**
-    cadrumo.application.workflow._models -> cadrumo.adapters.**
-    cadrumo.application.workflow._persistence -> cadrumo.adapters.**
-    cadrumo.application.workflow._profile_bucket_scan -> cadrumo.adapters.**
-    cadrumo.application.workflow._profile_health -> cadrumo.adapters.**
+    cadrumo.application.user_profile._orchestration -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.persistence.**
+    cadrumo.application.user_profile._repository -> cadrumo.adapters.persistence.**
+    # Reaches NO persistence: the second pin in this sweep whose storage-shaped
+    # label permitted only an inbound edge. Verification reads the taxpayer's
+    # filed declaracion through the inbound parse and checks it against the
+    # engine; the parse is inbound-adapter work and the check is this layer's.
+    cadrumo.application.verification._verify -> cadrumo.adapters.inbound.declaracion
+    cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.auth
+    cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.sede
+    # The workflow model surface reports whether a browser session can be
+    # established, so it names the outbound browser adapter alongside its
+    # persistence reach.
+    cadrumo.application.workflow._models -> cadrumo.adapters.outbound.aeat.browser
+    cadrumo.application.workflow._models -> cadrumo.adapters.persistence.**
+    cadrumo.application.workflow._persistence -> cadrumo.adapters.persistence.**
+    cadrumo.application.workflow._profile_bucket_scan -> cadrumo.adapters.persistence.**
+    cadrumo.application.workflow._profile_health -> cadrumo.adapters.persistence.**
     # The shared secure-SQL test helper wraps the real persistence adapter for
     # roundtrip-discipline tests; ignoring its adapter edge breaks the layer
     # path for every application/domain test that routes fixtures through it.
