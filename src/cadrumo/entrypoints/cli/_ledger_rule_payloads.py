@@ -21,7 +21,7 @@ from pydantic import Field, model_validator
 
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.transactions import BusinessClassification, LedgerClassificationRule
-from ...llm import LLMProvider
+from ...llm import SubprocessProvider
 from ._decimal_wire import DecimalWireText
 
 
@@ -154,7 +154,7 @@ class LLMProviderAvailabilityPayload(OutputSchema):
     not spawn the provider CLI or send transaction data to a cloud service.
     """
 
-    provider: LLMProvider
+    provider: SubprocessProvider
     cli_binary: str = Field(min_length=1)
     available: bool
     resolved_path: str | None = None

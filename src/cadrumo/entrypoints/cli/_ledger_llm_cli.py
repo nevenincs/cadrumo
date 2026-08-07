@@ -47,11 +47,11 @@ from ...domain.transactions import (
 )
 from ...llm import (
     LLMClassificationSuggestion,
-    LLMProvider,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
+    SubprocessProvider,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo
 from ._ledger_support import _ledger_validation_bad, _parse_decimal, _resolve_id
@@ -135,7 +135,7 @@ def emit_llm_rejection(
     _emit_envelope(ctx, command="ledger.classify", result=payload, lines=lines, notices=[notice])
 
 
-def split_recommendation_notice(transaction_id: str, *, provider: LLMProvider | None) -> Notice:
+def split_recommendation_notice(transaction_id: str, *, provider: SubprocessProvider | None) -> Notice:
     """Build the typed ``info`` :class:`Notice` recommending an evidence-driven split.
 
     Fired when the evidence read judged the invoice multi-component. The
@@ -191,7 +191,7 @@ def dispatch_autosplit(
     transaction_id: str | None,
     classification: BusinessClassification | None,
     file: str | None,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool,
@@ -469,7 +469,7 @@ def _validate_classify_llm_options(
     reject: bool,
     apply: bool,
     transaction_id: str | None,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
 ) -> str:
     """Reject the manual-override combination, the reject/apply conflict, a missing id, and an unavailable provider.
 
@@ -542,7 +542,7 @@ def _render_classify_llm_preview(
     ctx: typer.Context,
     *,
     suggestion: LLMClassificationSuggestion,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
 ) -> None:
     """Emit the non-persisting stage-1 classify suggestion. Approve = --apply, reject = --reject."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
@@ -580,7 +580,7 @@ def _render_saturate_llm_preview(
     ctx: typer.Context,
     *,
     suggestion: LLMSaturatedSuggestion,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
 ) -> None:
     """Emit the non-persisting saturated classify suggestion (model picks IVA category, system derives numbers)."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSaturateResult
@@ -630,7 +630,7 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     classification: BusinessClassification | None,
     file: str | None,
     transaction_id: str | None,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool,
@@ -696,7 +696,7 @@ def ledger_classify_llm(
     classification: BusinessClassification | None,
     file: str | None,
     business_pct: str | None,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
@@ -762,7 +762,7 @@ def ledger_saturate_llm(
     classification: BusinessClassification | None,
     file: str | None,
     business_pct: str | None,
-    provider: LLMProvider | None,
+    provider: SubprocessProvider | None,
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,

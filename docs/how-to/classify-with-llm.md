@@ -39,18 +39,11 @@ names such as `claude`, `antigravity`, and `codex`; `antigravity` uses
 Google's `agy` CLI, the supported successor to the retired standalone
 `gemini` CLI.
 
-List the provider CLIs visible on `PATH`. Each row reports a provider, its
-status (`available` or `unavailable`), and a fix when something is missing:
-
-```{cli-sequence} llm-providers
-:verify: Confirm each provider CLI reports whether it is available.
-```
-
-This checks discoverability only, not account login. The local vision reader
-appears here too: `ollama-vision` shows `unavailable` with a fix until Ollama
-is running. For a wider check that also reports profile service capabilities,
-run `aeat config check`; it lists each LLM provider as `disponible` or `ausente`
-with the fix for each problem.
+Check which provider CLIs are visible on `PATH` with `aeat config check`.
+It lists each provider as `disponible` or `ausente` with the fix for each
+problem, alongside the profile service capabilities. This reports
+discoverability only, not account login. The local vision reader appears
+there too: it shows `ausente` with a fix until Ollama is running.
 
 Install and authenticate the provider with its own CLI or account flow. The
 login command and data-retention settings belong to the provider, not to
@@ -199,21 +192,10 @@ with `--vision-model qwen2.5vl:7b`:
 ```{cli-sequence} llm-read-evidence-local
 ```
 
-Reading a text-layer PDF through a cloud provider requires all of the
-following, or the command refuses and explains why:
-
-- The installation permits it. Cloud evidence reads are off by default
-  and stay off in gestor installations; whoever administers the
-  installation decides this deployment setting.
-- You acknowledge it on this run with `--evidence-acknowledged`. The
-  acknowledgement is never remembered; pass it every time.
-
-```{cli-sequence} llm-read-evidence-cloud
-```
-
-The acknowledgement gates the upload of the invoice text only. A transaction
-with no attached evidence sends nothing extra: the provider receives only
-the transaction row, exactly as in the plain suggestion flow.
+Evidence is read on-host only. There is no path that uploads an invoice
+off the machine: a transaction with no attached evidence sends nothing
+extra either, so the provider receives only the transaction row, exactly as
+in the plain suggestion flow.
 
 ### Split a multi-line invoice automatically
 

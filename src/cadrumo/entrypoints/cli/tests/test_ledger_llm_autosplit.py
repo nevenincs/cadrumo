@@ -82,7 +82,7 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
 
 def test_auto_split_requires_read_evidence(tmp_path: Path) -> None:
     tx = _import_one_transaction(tmp_path)
-    result = _invoke(["app", "ledger", "classify", tx, "--llm", "ANTHROPIC", "--auto-split"])
+    result = _invoke(["app", "ledger", "classify", tx, "--llm", "claude", "--auto-split"])
     assert result.exit_code != 0
     assert "--read-evidence" in result.output
 
@@ -98,7 +98,7 @@ def test_auto_split_requires_read_evidence(tmp_path: Path) -> None:
 def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_flags: list[str]) -> None:
     tx = _import_one_transaction(tmp_path)
     result = _invoke(
-        ["app", "ledger", "classify", tx, "--llm", "ANTHROPIC", "--reject", "--apply", *extra_flags],
+        ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--apply", *extra_flags],
     )
     assert result.exit_code != 0
     assert "--reject" in result.output and "--apply" in result.output
