@@ -211,6 +211,110 @@ def derive_purchase_invoice_evidence_id(
     )[:16]
 
 
+def derive_keyed_purchase_invoice_evidence_id(*, bucket_id: str, idempotency_key: str) -> str:
+    """Return a CLOCK-FREE evidence id for a caller-supplied idempotency key.
+
+    The keyless derivation above deliberately folds ``created_at`` plus a
+    disambiguator, and that is not an oversight to correct: two evidence records
+    for the same file are a legitimate case -- the same invoice PDF can be
+    attached twice as two distinct pieces of evidence -- and simply dropping the
+    clock would silently collapse them into one. The codified rule anticipates
+    exactly this and supplies the shape: a deliberately-additive verb documents
+    itself as such, while a caller-supplied key provides the guarded path for
+    callers that need one.
+
+    So this is not "drop the clock", it is "add the key". The id derives from
+    the bucket and the key alone, which is what makes a retry at a different
+    instant resolve to the same record.
+    """
+    return content_hash_hex({"bucket_id": bucket_id, "idempotency_key": idempotency_key})[:16]
+
+
+def _derive_additive_evidence_id(
+    *,
+    bucket_id: str,
+    digest: str,
+    media_kind: MediaKind,
+    supplier: str | None,
+    invoice_number: str | None,
+    invoice_date: str | None,
+    taxable_base: Decimal | None,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+    notes: str,
+    now: datetime,
+    existing_ids: set[str],
+) -> str:
+    """Derive the keyless, deliberately-additive evidence id.
+
+    Extracted from the mint site when the keyed path landed beside it, so the
+    two identity regimes read as two named alternatives rather than as one loop
+    with a conditional range. The disambiguator preserves the genuine-duplicate
+    case: two attachments of the same file are distinct evidence.
+    """
+    for disambiguator in range(_ID_DISAMBIGUATION_CAP):
+        candidate = derive_purchase_invoice_evidence_id(
+            bucket_id=bucket_id,
+            source_sha256=digest,
+            media_kind=media_kind,
+            supplier=supplier,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
+            taxable_base=taxable_base,
+            iva_rate=iva_rate,
+            iva_amount=iva_amount,
+            notes=notes,
+            created_at=now,
+            disambiguator=disambiguator,
+        )
+        if candidate not in existing_ids:
+            return candidate
+    # Unreachable unless the derivation stops incorporating the disambiguator:
+    # then every attempt collides and the loop would spin forever. Fail loudly
+    # on the bounded cap instead of hanging.
+    raise RuntimeError(
+        f"could not derive a unique purchase-invoice evidence id after "
+        f"{_ID_DISAMBIGUATION_CAP} attempts; the content digest is not "
+        "incorporating the disambiguator (a derivation regression)",
+    )
+
+
+def _divergent_evidence_fields(
+    prior: PurchaseInvoiceEvidence,
+    *,
+    source_sha256: str,
+    media_kind: MediaKind,
+    supplier: str | None,
+    invoice_number: str | None,
+    invoice_date: str | None,
+    taxable_base: Decimal | None,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+    notes: str,
+) -> tuple[str, ...]:
+    """Name every persisted field on which a same-key re-add differs.
+
+    Compares EVERY persisted field, not a subset, and that is the load-bearing
+    part rather than a thoroughness flourish. A guarded no-op that matches on a
+    subset silently DROPS whatever changed in the fields it did not look at --
+    an under-declaration wearing an idempotency guard's clothes. The close
+    review of this rule's origin campaign caught exactly that failure, on a
+    recargo field a match had omitted.
+    """
+    candidate = {
+        "source_sha256": source_sha256,
+        "media_kind": media_kind,
+        "supplier": supplier,
+        "invoice_number": invoice_number,
+        "invoice_date": invoice_date,
+        "taxable_base": taxable_base,
+        "iva_rate": iva_rate,
+        "iva_amount": iva_amount,
+        "notes": notes,
+    }
+    return tuple(name for name, value in candidate.items() if getattr(prior, name) != value)
+
+
 class PurchaseInvoiceEvidenceDocument(BaseModel):
     """Encrypted bucket-local purchase invoice evidence catalogue."""
 
@@ -410,6 +514,7 @@ class PurchaseInvoiceEvidenceService:
         iva_amount: Decimal | None = None,
         notes: str = "",
         actor: str = "cli",
+        idempotency_key: str | None = None,
     ) -> PurchaseInvoiceEvidenceResult:
         """Attach a new purchase invoice evidence file to a bucket (ledger).
 
@@ -487,10 +592,41 @@ class PurchaseInvoiceEvidenceService:
         digest = attachment.attachment_id
         records = _load(self._settings, bucket_id)
         existing_ids = {existing.evidence_id for existing in records}
-        for disambiguator in range(_ID_DISAMBIGUATION_CAP):
-            evidence_id = derive_purchase_invoice_evidence_id(
+        if idempotency_key is not None:
+            keyed_id = derive_keyed_purchase_invoice_evidence_id(
                 bucket_id=bucket_id,
-                source_sha256=digest,
+                idempotency_key=idempotency_key,
+            )
+            prior = next((row for row in records if row.evidence_id == keyed_id), None)
+            if prior is not None:
+                divergent = _divergent_evidence_fields(
+                    prior,
+                    source_sha256=digest,
+                    media_kind=media_kind,
+                    supplier=supplier,
+                    invoice_number=invoice_number,
+                    invoice_date=invoice_date,
+                    taxable_base=taxable_base,
+                    iva_rate=iva_rate,
+                    iva_amount=iva_amount,
+                    notes=notes,
+                )
+                if divergent:
+                    raise PurchaseInvoiceEvidenceInputError(
+                        f"idempotency key {idempotency_key!r} already names evidence {keyed_id} whose "
+                        f"content differs on: {', '.join(divergent)}. Re-adding the same key with "
+                        "different content would silently drop the new values.",
+                        suggestion="use a fresh idempotency key, or re-add without one to append a distinct record",
+                    )
+                # Guarded no-op: the existing record, no second bucket event, no
+                # re-stamped timestamp. The empty event tuple is the signal that
+                # nothing was written.
+                return PurchaseInvoiceEvidenceResult(record=prior, bucket_event_ids=())
+            evidence_id = keyed_id
+        else:
+            evidence_id = _derive_additive_evidence_id(
+                bucket_id=bucket_id,
+                digest=digest,
                 media_kind=media_kind,
                 supplier=supplier,
                 invoice_number=invoice_number,
@@ -499,19 +635,8 @@ class PurchaseInvoiceEvidenceService:
                 iva_rate=iva_rate,
                 iva_amount=iva_amount,
                 notes=notes,
-                created_at=now,
-                disambiguator=disambiguator,
-            )
-            if evidence_id not in existing_ids:
-                break
-        else:
-            # Unreachable unless the derivation stops incorporating the
-            # disambiguator: then every attempt collides and the loop would spin
-            # forever. Fail loudly on the bounded cap instead of hanging.
-            raise RuntimeError(
-                f"could not derive a unique purchase-invoice evidence id after "
-                f"{_ID_DISAMBIGUATION_CAP} attempts; the content digest is not "
-                "incorporating the disambiguator (a derivation regression)",
+                now=now,
+                existing_ids=existing_ids,
             )
         record = PurchaseInvoiceEvidence(
             evidence_id=evidence_id,

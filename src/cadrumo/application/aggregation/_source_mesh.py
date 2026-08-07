@@ -118,6 +118,12 @@ CalculationSourceDiagnosticReason = Literal[
     # an automated operator routes on the field; the two carry different
     # epistemic weight and must not be collapsed.
     "inferred_retencion_sectoral_rate_unconfirmed",
+    # An independent QUANTITY the consumed rows carry that no binding on the
+    # revision draws. Distinct from "unrouted_observation", which asks whether a
+    # ROW reaches any binding: a row can be consumed for its income while a
+    # second, independent figure on it -- a retención credit -- reaches nothing,
+    # and the row-keyed screen stays silent because the row itself was routed.
+    "unrouted_quantity",
     # A Modelo 349 clave the resolver INFERRED from the invoice's IVA category
     # because the record stated no operation type. Correct for an ordinary LIVA
     # art. 25 exempt supply, but a supply following an exempt importation (art.

@@ -216,6 +216,62 @@ def _live_app() -> typer.Typer:
     return live_app
 
 
+def test_every_emitted_command_identifier_is_registered() -> None:
+    """Every ``command=`` string a handler emits must be a registered key.
+
+    The leaf gate below derives the command path from the Typer tree and checks
+    it is registered. That leaves one route open, and a live defect took it:
+    ``ledger.invoice.add`` was registered and declared in the risk table, while
+    the handler emitted ``ledger.invoice.create``. Both halves of the leaf gate
+    agreed, so it stayed green, and ``aeat --format json app ledger invoice
+    add`` refused at runtime with "no registered output schema" -- a
+    JSON-emitting verb that could not emit.
+
+    Deriving the path and emitting it are two separate acts, so a rename applied
+    to one is invisible to a gate that only reads the other. This walks the
+    literal strings actually passed at every emit site.
+
+    Scoped to the emitters that actually consult the registry. The low-level
+    ``emit_json_success`` stays a transport primitive for metadata and
+    diagnostic surfaces whose identifiers are deliberately not registered, so
+    including it would flag those by design.
+    """
+    # SCHEMA_REGISTRY is populated by IMPORTING the payload modules, and the
+    # CLI loads them lazily at dispatch. An AST walk reads files without
+    # importing them, so without materialising the live tree first the registry
+    # is nearly empty and every emit site reads as unregistered.
+    _live_app()
+
+    validating_emitters = {"_emit_envelope", "emit_operator_json_success"}
+    root = Path("src/cadrumo/entrypoints/cli")
+    violations: list[str] = []
+    emitted = 0
+    for path in sorted(root.rglob("*.py")):
+        if path.name.startswith("test_") or path.name == "conftest.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            called = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)
+            if called not in validating_emitters:
+                continue
+            for keyword in node.keywords:
+                if keyword.arg != "command":
+                    continue
+                if not isinstance(keyword.value, ast.Constant) or not isinstance(keyword.value.value, str):
+                    # A computed identifier cannot be checked here; the leaf
+                    # gate still covers the path it resolves to.
+                    continue
+                identifier = keyword.value.value
+                emitted += 1
+                if identifier not in SCHEMA_REGISTRY:
+                    violations.append(f"{path.as_posix()}:{keyword.value.lineno}: emits unregistered {identifier!r}")
+
+    assert emitted > 0, "found no literal command= emit sites; the walk is not reaching the CLI"
+    assert violations == [], "emitted command identifiers with no registered schema:\n" + "\n".join(violations)
+
+
 def test_every_cli_leaf_has_a_registered_schema() -> None:
     """Every CLI leaf command must have a registered OutputSchema.
 

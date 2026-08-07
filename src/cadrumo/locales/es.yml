@@ -817,15 +817,6 @@ application:
           %{invoice_id}.'
         unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno
           de: %{accepted}.'
-    importing:
-      errors:
-        import_file_read_failed: 'No se pudo leer el archivo de importación de facturas:
-          %{path_name}.'
-        invalid_json: El contenido JSON de facturas no es válido en la línea %{line},
-          columna %{column}.
-        invalid_json_shape: El contenido JSON de facturas debe ser un objeto o una
-          lista de objetos.
-        invalid_kind: 'El tipo de factura no está admitido: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}
@@ -835,6 +826,7 @@ application:
         remove_linked_invoice: 'No se puede eliminar la factura %{invoice_id} mientras
           siga vinculada a transacciones: %{linked_transaction_ids}. Desvincúlelas
           primero.'
+        empty_invoice_patch: 'Una corrección de factura debe indicar al menos un campo a modificar.'
     linking:
       errors:
         linked_invoice_not_found: No se encontró la factura %{invoice_id} después
@@ -2039,12 +2031,10 @@ cli:
         valuation_preview_help: Previsualiza existencias finales y coste de ventas
         year_help: Ejercicio fiscal
       invoice:
-        add_help: Registra una nueva factura de negocio
         catalogue:
           country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (por
             defecto ES).
           create_help: Crea una factura de conciliación vinculable en el catálogo.
-          group_help: Facturas del catálogo de conciliación que se vinculan a transacciones.
           import_all_refused: 'importación masiva de facturas fallida: se rechazaron
             todas las filas; no se creó ninguna factura'
           import_file_help: Ruta a un archivo CSV o XLSX con filas de facturas (counterparty_nif,

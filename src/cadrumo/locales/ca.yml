@@ -813,15 +813,6 @@ application:
           %{invoice_id}.'
         unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un
           de: %{accepted}.'
-    importing:
-      errors:
-        import_file_read_failed: 'No s ha pogut llegir el fitxer d importació de factures:
-          %{path_name}.'
-        invalid_json: El contingut JSON de factures no és vàlid a la línia %{line},
-          columna %{column}.
-        invalid_json_shape: El contingut JSON de factures ha de ser un objecte o una
-          llista d objectes.
-        invalid_kind: 'El tipus de factura no està admès: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}
@@ -831,6 +822,7 @@ application:
         remove_linked_invoice: 'No es pot eliminar la factura %{invoice_id} mentre
           continuï vinculada a transaccions: %{linked_transaction_ids}. Desvinculeu-les
           primer.'
+        empty_invoice_patch: 'Una correcció de factura ha d''indicar almenys un camp a modificar.'
     linking:
       errors:
         linked_invoice_not_found: No s ha trobat la factura %{invoice_id} després
@@ -2029,13 +2021,11 @@ cli:
         valuation_preview_help: Previsualitza existències finals i cost de vendes
         year_help: Exercici fiscal
       invoice:
-        add_help: Registra una nova factura de negoci
         catalogue:
           country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
             determina l''encaminament de totes dues informatives, per això mai no
             es dóna per suposat.'
           create_help: Crea una factura de conciliació vinculable al catàleg.
-          group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
           import_all_refused: 'importació massiva de factures fallida: totes les files
             van ser rebutjades; no es va crear cap factura'
           import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,

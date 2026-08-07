@@ -735,14 +735,6 @@ application:
           catalogue: %{invoice_id}.'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
-    importing:
-      errors:
-        import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
-        invalid_json: The invoice JSON payload is not valid JSON at line %{line},
-          column %{column}.
-        invalid_json_shape: The invoice JSON payload must be an object or a list of
-          objects.
-        invalid_kind: 'The invoice kind is not supported: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;
@@ -751,6 +743,7 @@ application:
         invoice_not_found: 'Catalogue invoice not found: %{invoice_id}.'
         remove_linked_invoice: 'Cannot remove invoice %{invoice_id} while it is still
           linked to transactions: %{linked_transaction_ids}. Unlink them first.'
+        empty_invoice_patch: 'An invoice correction must state at least one field to change.'
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -1890,12 +1883,10 @@ cli:
         valuation_preview_help: Preview closing stock and cost of sales
         year_help: Tax year
       invoice:
-        add_help: Register a new business invoice
         catalogue:
           country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
             it routes both informativas, so it is never assumed.'
           create_help: Create a linkable reconciliation invoice in the catalogue.
-          group_help: Reconciliation catalogue invoices that link to transactions.
           import_all_refused: 'bulk invoice import failed: every row was refused;
             no invoices were created'
           import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,

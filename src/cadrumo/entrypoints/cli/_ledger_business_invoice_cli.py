@@ -440,7 +440,7 @@ def invoice_add(
 
     _emit_envelope(
         ctx,
-        command="ledger.invoice.create",
+        command="ledger.invoice.add",
         result=CatalogueInvoiceCreateResult.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
     )
