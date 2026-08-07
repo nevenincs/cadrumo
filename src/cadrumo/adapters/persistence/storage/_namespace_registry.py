@@ -540,6 +540,23 @@ LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
+LEDGER_EXTRACTION_DRAFT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_extraction_draft",
+    namespace="cadrumo.application.ledger.extraction_draft",
+    owner="cadrumo.application.ledger",
+    # An extraction draft is DERIVED FINANCIAL DATA -- supplier tax id, invoice
+    # number, taxable base, per-rate cuota. Persisting it is storage, not
+    # processing, so it sits on the core side of the inference boundary at
+    # FINANCIAL sensitivity like every other record carrying those figures.
+    # It is pre-confirm and operator-correctable, which changes its LIFECYCLE
+    # but not its sensitivity: a draft that leaked would disclose exactly what
+    # the confirmed invoice would.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{bucket_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
     namespace="cadrumo.ledger.classification.rules",
@@ -1047,6 +1064,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
         LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
         LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE,
+        LEDGER_EXTRACTION_DRAFT_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_M036_DECLARATION_NAMESPACE,
