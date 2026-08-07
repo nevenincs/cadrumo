@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:c00569a1eab139e1d92121f7323f5e9227681b1285391037cc6a727e631e9797'
+body_hash: 'sha256:30cdb189f2e36b5ff235cdcd22696a072595ef8fa7e940c762c613f02ed4b5ee'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -294,6 +294,8 @@ Lands the review surface, the blocking-findings gate, assertion-shaped correctio
 - [ ] `W09.P17.S142` - Let a postal field carry role evidence, since the role-evidence flag derives from the tax-identifier form and the validator refuses a role-evidence instruction on any other form, so the two identity fields each get a key asking the model to quote the printed heading proving whose they are while the two postal fields structurally cannot and their party attribution rests on prose alone. A transposition produces a fully valid draft with both fields grounded and every gate green, and once the consumer lands both parties get a confident wrong territory. Either widen the flag to a declared per-contract axis or record in the ADR rather than only the exec record that postal party attribution is anchor-reviewed rather than evidence-anchored, and make that a stated precondition on the consumer row; `src/cadrumo/llm`.
 - [ ] `W09.P17.S143` - Surface a populated postal code that is not five digits as a draft discrepancy, since the free-text grounder passes an address blob through verbatim into the draft and the operator payload where the surface labels it a postal code. Not a safety defect because the domain resolver returns nothing for it rather than the mainland, and the grounder must stay permissive because dropping the value would destroy the anchor the operator reviews. Add the check at the layer that already owns deterministic read-time findings rather than a second copy of the rule upstream of the domain authority; `src/cadrumo/application/ledger`.
 - [ ] `W09.P17.S144` - Drive the anchor-not-equal-to-value gate from the contract declaration rather than a hardcoded name tuple, since the postal fixtures honour the property by author convention and collapsing an anchor to equal its value reds nothing, following the sibling gates in the same file that already derive their subjects. Rename the free-text grounder which now serves four fields while naming one of them; `src/cadrumo/llm`.
+- [ ] `W09.P17.S146` - Acquire a real Cross Industry Invoice specimen, since no CII artefact exists anywhere in the corpus beyond a malformed fragment proving the parser refuses one, so the CII postal case is exercised against a specimen hand-built from the EN16931 mapping. That case proves the branch is reached and correctly scoped and cannot prove a real-world CII invoice states its address that way, and the lane included it rather than leaving a reader that exists and is never exercised, which is the built-and-unreached shape this campaign keeps finding; `src/cadrumo/_data/corpus`.
+- [ ] `W09.P17.S147` - Build provenance envelopes on the structured projection, since it constructs none for any field at all, not the tax identifier, not the regime legend and not the postal codes, so a value read exactly from a machine-readable document reaches the operator with no origin while a transcribed value carries a full envelope. Path-wide rather than specific to any one field, and the reason the postal carry could not stamp an origin without inventing one; `src/cadrumo/application/ledger`.
 
 ## Wave `W10` - Consent lifecycle, deinstallation, and surface conformance
 
