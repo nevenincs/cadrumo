@@ -5,12 +5,12 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e7c20396c8c390d1ed453b085f58581fea2323c8cc65c0c693f06dbd38049079'
+body_hash: 'sha256:6f798c3405621f942acba4b1b6401408905281d44d70dd691360a04593aa1b88'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
 ---
-# `aeat-design-relayout-boundary` adr: `a design epoch narrower than a filing year is expressed by period-token partition` | (**status:** `proposed`)
+# `aeat-design-relayout-boundary` adr: `a design epoch narrower than a filing year is expressed by period-token partition` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -112,12 +112,23 @@ No offset check, length check or digest detects either.
   a setdefault over a filename sort, so of the two 2024 workbooks whichever sorts
   first wins and the other is discarded. Its silence about 2024 is therefore not
   evidence.
-- The gate's own verdict could not be re-run for this record. At the working tree
-  measured, registry load fails before any gate assertion, on an unrelated Modelo
-  202 revision whose export layout declares four decimal fields without declared
-  decimals. That failure is outside this record's surface and is not owned here;
-  the design-side measurement above reads the bundled corpus directly and does not
-  depend on the registry loading.
+- The landed span gate was re-run for this record once an unrelated Modelo 202
+  export-layout defect stopped blocking registry load, and its verdict corroborates
+  this record while demonstrating the blindness above. It reports
+  `2023-y-siguientes` as spanning 2 re-layouts and needing 3 revisions, naming
+  boundaries at 2024/2025 and 2025/2026. Those are two of the three boundaries
+  measured here, and it names them from the same evidence: sheet DP30302 growing
+  1706 to 1900, and sheet DP30305 growing 1523 to 1528 alongside a large box
+  relocation. It does not name the mid-2024 boundary, exactly as its one-design-per-
+  year inventory predicts. The gate therefore understates this revision's split by
+  one boundary and one revision, and a future reader must not take its count as the
+  answer.
+- The gate and this record's instrument agree on the fact of the 2025-to-2026
+  relocation but not on its exact size: the gate reports 125 of 174 shared boxes
+  moved, this record's pass 128 of 183 numbered slots, because the two extract the
+  box number from a field description by different conventions. The disagreement is
+  in the denominator, not in the finding, and neither figure should be quoted as
+  precise without re-deriving it.
 
 ## Considered options
 
@@ -165,9 +176,6 @@ No offset check, length check or digest detects either.
 - The span gate must be made able to see a mid-year boundary before it can certify
   this split, since it currently keeps one design per year. Until then a green gate
   is not evidence that a mid-year epoch is modelled.
-- Registry load is failing at the measured working tree on an unrelated Modelo 202
-  export-layout defect. That must clear before any gate verdict on this work is
-  meaningful.
 - The year-only selector surface must be given a defined answer for a split year
   before the split lands, or three read-only surfaces begin raising an ambiguity
   error they do not catch.
