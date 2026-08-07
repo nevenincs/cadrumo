@@ -20,6 +20,7 @@ from typing import Annotated, Final
 
 import typer
 
+from ._rung2_query_authority import load_query_alias_authority
 from ._sweep import (
     DEFAULT_MAX_RESULTS,
     ServiceRagSearchClient,
@@ -42,6 +43,13 @@ def run(
     concept: Annotated[
         list[str] | None,
         typer.Option("--concept", help="Limit the sweep to these concept ids (repeatable)."),
+    ] = None,
+    alias_authority: Annotated[
+        Path | None,
+        typer.Option(
+            "--alias-authority",
+            help="Use this independently ratified query-alias authority JSON.",
+        ),
     ] = None,
     out: Annotated[
         Path | None,
@@ -67,6 +75,7 @@ def run(
     result = run_sweep(
         client=client,
         concept_ids=concept,
+        query_alias_authority=(load_query_alias_authority(alias_authority) if alias_authority is not None else None),
         max_results=max_results,
         score_floor=score_floor,
         port=port,

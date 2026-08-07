@@ -59,9 +59,9 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: str | None = Field(default=None, min_length=1)
     counterparty_country: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
-    base_total: Decimal = Field(ge=0)
-    iva_total: Decimal = Field(ge=0)
-    grand_total: Decimal = Field(ge=0)
+    base_total: Decimal = Field(ge=Decimal("0"))
+    iva_total: Decimal = Field(ge=Decimal("0"))
+    grand_total: Decimal = Field(ge=Decimal("0"))
     currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")
     payment_status: PaymentStatus
     linked_transaction_ids: list[TransactionId] = Field(default_factory=list)

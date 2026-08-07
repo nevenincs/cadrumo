@@ -233,7 +233,11 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
         raw_mentions = payload["legal_mentions"]
         if isinstance(raw_mentions, Sequence) and not isinstance(raw_mentions, str | bytes):
             coerced: list[InvoiceLegalMention] = []
-            for entry in raw_mentions:
+            # Deserialisation boundary: the payload is a raw mapping, so the
+            # narrowed sequence carries no element type. Each entry is inspected
+            # by isinstance below before anything is read off it.
+            entries: Sequence[object] = raw_mentions  # pyright: ignore[reportUnknownVariableType]  # reason: deserialisation boundary, the payload sequence carries no element type and every entry is isinstance-checked below
+            for entry in entries:
                 if isinstance(entry, InvoiceLegalMention):
                     coerced.append(entry)
                     continue
@@ -447,7 +451,17 @@ class InvoiceLine(BaseModel):
     subtotal: Decimal
     iva_rate: IvaRate
     iva_amount: Decimal
-    category_id: str | None = None
+    # Named for the taxonomy it belongs to, not "category" bare. This aggregate
+    # already carries `Invoice.iva_category`, a completely unrelated axis: one
+    # is the IVA TREATMENT of the operation, the other a SPENDING classification
+    # of the line. Two fields called "category" on one aggregate is how a reader
+    # reaches for the wrong one, and how a grep for either finds both.
+    #
+    # Currently written and persisted but read by no production consumer. Kept
+    # rather than removed because per-line spending classification is a real
+    # capability the aggregate is shaped for; the honest state is recorded here
+    # so a reader does not infer from its presence that aggregation consumes it.
+    spending_category_id: str | None = None
     oss_rate_kind: IvaRateKind | None = None
 
     @model_validator(mode="before")
@@ -477,14 +491,14 @@ class InvoiceLine(BaseModel):
             raise InvoiceValidationError("description must not be blank")
         return trimmed
 
-    @field_validator("category_id")
+    @field_validator("spending_category_id")
     @classmethod
-    def _validate_category_id(cls, value: str | None) -> str | None:
+    def _validate_spending_category_id(cls, value: str | None) -> str | None:
         if value is None:
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise InvoiceValidationError("category_id must not be blank")
+            raise InvoiceValidationError("spending_category_id must not be blank")
         return trimmed
 
     @field_validator("quantity")
@@ -947,10 +961,11 @@ class Invoice(BaseModel):
                     "counterparty_tax_id is required unless invoice_class is SIMPLIFICADA and kind is ISSUED; "
                     "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
                 )
-            if self.iva_category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES:
+            category = self.iva_category
+            if category is not None and category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES:
                 raise InvoiceValidationError(
                     "counterparty_tax_id is required on a factura simplificada whose iva_category is "
-                    f"{self.iva_category.value!r} (RD 1619/2012 art. 6.1.d)",
+                    f"{category.value!r} (RD 1619/2012 art. 6.1.d)",
                 )
         return self
 

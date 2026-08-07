@@ -27,3 +27,4 @@ Submodules
 
    cadrumo.adapters.outbound.aeat._operator_progress
    cadrumo.adapters.outbound.aeat._playwright
+   cadrumo.adapters.outbound.aeat._representation_gate

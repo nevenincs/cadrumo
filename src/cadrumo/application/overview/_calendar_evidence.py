@@ -454,6 +454,7 @@ def _filing_evidence_from_calculation_observation(
     if isinstance(source_metadata_raw, Mapping):
         # CAST-RATIONALE-CALENDAR-EVIDENCE-SOURCE-METADATA: isinstance narrows to
         # Mapping but cannot check its type parameters.
+        # nosemgrep: no-cast-in-domain-application
         source_metadata = cast(Mapping[str, object], source_metadata_raw)
     else:
         source_metadata = {}

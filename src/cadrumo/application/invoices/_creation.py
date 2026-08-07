@@ -28,7 +28,7 @@ add->link gap without collapsing the two stores.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
@@ -39,6 +39,7 @@ from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
+from ...core.time import now
 from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
@@ -93,18 +94,35 @@ class CatalogueInvoiceCreateResult(BaseModel):
 # canonical store speaks the same event vocabulary the slim store did rather
 # than inventing a second one. Issued invoices are collectible (a customer owes
 # us); received ones are payable (we owe a vendor).
-_CREATED_EVENT_BY_KIND: dict[InvoiceKind, tuple[BucketEventType, BucketEventObjectType]] = {
-    InvoiceKind.ISSUED: (BucketEventType.COLLECTIBLE_INVOICE_CREATED, BucketEventObjectType.COLLECTIBLE_INVOICE),
-    InvoiceKind.RECEIVED: (BucketEventType.PAYABLE_INVOICE_CREATED, BucketEventObjectType.PAYABLE_INVOICE),
+_EVENT_OBJECT_BY_KIND: dict[InvoiceKind, BucketEventObjectType] = {
+    InvoiceKind.ISSUED: BucketEventObjectType.COLLECTIBLE_INVOICE,
+    InvoiceKind.RECEIVED: BucketEventObjectType.PAYABLE_INVOICE,
+}
+
+# (created, updated, removed) per direction, mirroring the triple the slim
+# store declared. Kept as one table so a caller cannot pair a created event
+# with a removed object type, and so the three verbs stay visibly related.
+_EVENT_TYPES_BY_KIND: dict[InvoiceKind, tuple[BucketEventType, BucketEventType, BucketEventType]] = {
+    InvoiceKind.ISSUED: (
+        BucketEventType.COLLECTIBLE_INVOICE_CREATED,
+        BucketEventType.COLLECTIBLE_INVOICE_UPDATED,
+        BucketEventType.COLLECTIBLE_INVOICE_REMOVED,
+    ),
+    InvoiceKind.RECEIVED: (
+        BucketEventType.PAYABLE_INVOICE_CREATED,
+        BucketEventType.PAYABLE_INVOICE_UPDATED,
+        BucketEventType.PAYABLE_INVOICE_REMOVED,
+    ),
 }
 
 _INVOICE_EVENT_PAYLOAD_VERSION = 1
 
 
-def _emit_catalogue_invoice_created(
+def emit_catalogue_invoice_event(
     *,
     invoice: Invoice,
     bucket_id: str,
+    slot: int,
     event_repository: BucketEventHistoryRepositoryProtocol | None,
     occurred_at: datetime,
     actor: str,
@@ -127,7 +145,8 @@ def _emit_catalogue_invoice_created(
     repository = event_repository or BucketEventHistoryRepository(
         objects=secure_object_repository_for_bucket(bucket_id),
     )
-    event_type, object_type = _CREATED_EVENT_BY_KIND[invoice.kind]
+    event_type = _EVENT_TYPES_BY_KIND[invoice.kind][slot]
+    object_type = _EVENT_OBJECT_BY_KIND[invoice.kind]
     event = emit_bucket_event(
         repository=repository,
         bucket_id=bucket_id,
@@ -252,7 +271,10 @@ def build_catalogue_invoice(
     # NOT_SUBJECT resolve to None and carry a zero cuota.
     pct = iva_rate_percentage(rate_slot)
     if lines:
-        if not all(isinstance(item, InvoiceLine) for item in lines):
+        # Deliberate runtime guard on a boundary sequence: the annotation does not
+        # constrain what a caller actually passes, and a foreign element would reach
+        # the totals arithmetic before anything noticed.
+        if not all(isinstance(item, InvoiceLine) for item in lines):  # pyright: ignore[reportUnnecessaryIsInstance]
             raise InvoiceValidationError("lines must be InvoiceLine records")
         base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
         iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
@@ -436,11 +458,12 @@ def create_catalogue_invoice(
     # did not persist. The reverse order would leave an event pointing at an
     # invoice that is not there, which is worse than a missing event: it reads
     # as evidence.
-    event_ids = _emit_catalogue_invoice_created(
+    event_ids = emit_catalogue_invoice_event(
         invoice=invoice,
         bucket_id=bucket_id,
+        slot=0,
         event_repository=event_repository,
-        occurred_at=occurred_at or datetime.now(UTC),
+        occurred_at=occurred_at or now(),
         actor=actor,
     )
     return CatalogueInvoiceCreateResult(

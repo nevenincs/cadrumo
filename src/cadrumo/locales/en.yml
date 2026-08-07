@@ -1916,6 +1916,11 @@ cli:
           wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
           wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
             already exists (%{invoice_id}); nothing was created.'
+          invoice_class_help: 'Invoice class. A rectificativa also requires --rectifies-invoice-number naming the invoice it corrects.'
+          series_help: 'Invoice numbering series, when the issuer uses one.'
+          recargo_help: 'Recargo de equivalencia charged on top of the cuota (LIVA art. 161). It rides inside the invoice total, unlike a retencion.'
+          iva_category_help: 'IVA treatment of the operation. Required for a renta income calculation to ground it.'
+          rectifies_help: 'Number of the invoice this rectificativa corrects.'
         country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
           EU operations)
         eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations

@@ -179,6 +179,13 @@ def classify_invoice_line_for_iva(
     :class:`IvaCategory` from the substrate classifier
     (:func:`cadrumo.domain.iva.classify_iva`).
 
+    ``recargo_amount`` defaults to zero because most lines carry none. It is a
+    parameter here rather than something a caller sets on the returned
+    observation, so this stays the ONE bridge from invoice metadata into the
+    observation shape: a caller that constructed the record itself to add a
+    recargo would be a second construction path for the same concept, free to
+    drift from this one's classification rules.
+
     Args:
         iva_rate: One of the closed :class:`IvaRate` slots.
             :attr:`IvaRate.NOT_SUBJECT` is rejected — see module
@@ -226,6 +233,7 @@ def invoice_line_to_iva_observation(
     iva_rate: IvaRate,
     base_amount: Decimal,
     iva_amount: Decimal,
+    recargo_amount: Decimal = Decimal("0"),
 ) -> IvaLedgerObservation:
     """Build an :class:`IvaLedgerObservation` from invoice line metadata.
 
@@ -253,6 +261,10 @@ def invoice_line_to_iva_observation(
             (substrate-NULL category needs explicit construction).
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR.
+        recargo_amount: Recargo de equivalencia charged on this line in EUR
+            (LIVA art. 161), or zero when none was. Routed to the Modelo 303
+            recargo cuota casilla for the line's rate tier via the
+            ``recargo_amount_sum`` fact.
 
     Returns:
         An :class:`IvaLedgerObservation` with the full classification
@@ -275,6 +287,7 @@ def invoice_line_to_iva_observation(
         flow_direction=classification.flow_direction,
         base_amount=base_amount,
         iva_amount=iva_amount,
+        recargo_amount=recargo_amount,
     )
 
 

@@ -20,4 +20,3 @@ Submodules
    cadrumo.domain.deadlines._plazo
    cadrumo.domain.deadlines._profiles
    cadrumo.domain.deadlines._recargo
-   cadrumo.domain.deadlines.taxpayer_model

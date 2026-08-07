@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -48,7 +49,7 @@ def _revision(*bindings: DataBindingDefinition) -> ModeloRevision:
     return _modelo_349_revision().model_copy(update={"bindings": bindings})
 
 
-def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
+def _with_selector(binding: DataBindingDefinition, **updates: Any) -> DataBindingDefinition:
     return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
@@ -607,7 +608,9 @@ def test_an_observation_without_a_source_kind_refuses() -> None:
     where the caller can still say what it meant.
     """
     with pytest.raises(ValidationError):
-        InvoiceObservation(
+        # The omission IS the subject: this proves the axis has no default, so a
+        # caller cannot silently declare an operation as issued by leaving it out.
+        InvoiceObservation(  # ty: ignore[missing-argument]
             invoice_id="inv-no-source-kind",
             party_tax_id="B12345674",
             country_code="ES",

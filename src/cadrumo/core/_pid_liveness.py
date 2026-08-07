@@ -13,6 +13,7 @@ actually inspect.
 from __future__ import annotations
 
 import os
+import sys
 
 from .logging import get_logger
 
@@ -39,7 +40,7 @@ def pid_is_alive(pid: int) -> bool:
     """
     if pid <= 0:
         return False
-    if os.name == "nt":
+    if sys.platform == "win32":
         return _pid_is_alive_windows(pid)
     try:
         os.kill(pid, 0)
@@ -60,6 +61,12 @@ def _pid_is_alive_windows(pid: int) -> bool:
     code is not ``STILL_ACTIVE`` (259) is dead even if its PID is still
     allocated.
     """
+    if sys.platform != "win32":  # pragma: no cover - dispatch never routes here
+        # Narrowed on sys.platform rather than os.name: the ctypes Windows API
+        # below does not exist in the POSIX stubs, so a checker running on Linux
+        # reports every reference unresolved unless the platform is established.
+        raise RuntimeError("the Windows liveness probe is not available on this platform")
+
     import ctypes
     from ctypes import wintypes
 

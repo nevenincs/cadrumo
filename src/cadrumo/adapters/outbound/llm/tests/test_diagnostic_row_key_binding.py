@@ -24,9 +24,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from .....llm import LLMCacheError, LLMProvider, UsageRecord
 from .....tests.secure_sql import TestRuntimeProfile
-from .._errors import LLMCacheError
-from .._models import LLMProvider, UsageRecord
 from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from .._usage import UsageRecorder
 

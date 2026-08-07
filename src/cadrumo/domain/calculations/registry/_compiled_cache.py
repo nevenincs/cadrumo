@@ -131,7 +131,7 @@ def _compiled_payload_root_models() -> tuple[type[BaseModel], ...]:
     return (ModeloDefinition, RegistryCatalogues, *ordered)
 
 
-def _iter_annotation_types(annotation: object) -> Iterator[type]:
+def _iter_annotation_types(annotation: object) -> Iterator[type[object]]:
     """Yield every concrete type a pydantic field annotation can hold at runtime.
 
     Unwraps type aliases, ``Annotated`` metadata, unions, and container
@@ -513,7 +513,10 @@ def _is_two_object_tuple(value: object) -> TypeGuard[tuple[object, object]]:
     """Narrow an untyped pickle tuple to the expected two-item envelope."""
     if not isinstance(value, tuple):
         return False
-    return len(value) == 2
+    # Narrowing an object to tuple yields no element type; the guard only asks how
+    # many items the envelope carries, so the elements stay opaque by design.
+    items: tuple[object, ...] = value  # pyright: ignore[reportUnknownVariableType]  # reason: narrowing an object to tuple yields no element type, and this guard only asks how many items the envelope carries
+    return len(items) == 2
 
 
 def _read_cache_bytes(path: Path) -> bytes | None:

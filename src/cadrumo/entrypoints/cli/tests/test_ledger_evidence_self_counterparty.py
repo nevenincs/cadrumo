@@ -162,3 +162,75 @@ def test_an_operator_confirming_the_misread_identifier_is_still_refused(tmp_path
 
     assert confirmed.exit_code != 0, confirmed.output
     assert "counterparty-nif" in confirmed.output
+
+
+def test_a_supplier_document_confirmed_as_issued_is_refused(tmp_path: Path) -> None:
+    """The opposite mis-direction from the guard above, and it needs its own gate.
+
+    Here the document names a real third-party supplier and the operator
+    confirms it as ISSUED. The self-counterparty guard sees nothing wrong: the
+    counterparty is a genuine third party and the record is internally
+    coherent. It simply describes the wrong direction.
+
+    The evidence settles it. On a genuinely issued document the printed
+    supplier is the filer, so an extracted supplier who is somebody else is
+    positive evidence that somebody else issued it.
+
+    Direction is not cosmetic: a received invoice booked as issued moves a
+    purchase into the sales column, inverts the cuota between soportado and
+    repercutido, and reaches Modelo 347 as an operation the counterparty will
+    have declared with the opposite sign -- and AEAT reconciles the two
+    declarations against each other.
+    """
+    evidence_id = _add_evidence(
+        tmp_path,
+        _invoice_lines(_SUPPLIER_CIF, number="2026-0500"),
+        filename="supplier_as_issued.pdf",
+    )
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--evidence-id", evidence_id,
+            "--kind", "issued",
+            "--counterparty-name", "Acme Suministros SL",
+        ],
+    )  # fmt: skip
+
+    assert confirmed.exit_code != 0, confirmed.output
+    # Matched on a phrase only THIS gate emits. Asserting merely that the word
+    # "received" appears would also pass if some unrelated refusal fired, which
+    # would leave the gate unproven while the test looked green.
+    assert "names another issuer" in confirmed.output
+    # And it names the remedy, not just the fault.
+    assert "confirm it as received" in confirmed.output
+
+
+def test_the_direction_gate_declines_to_judge_a_document_with_no_issuer_identity(
+    tmp_path: Path,
+) -> None:
+    """Positive control: silence is not evidence, so the gate must not fire on it.
+
+    A document the scan found no issuer identity on gives the gate nothing to
+    compare against. Refusing there would block every issued invoice whose
+    letterhead the extractor could not read -- a gate that refuses what it
+    cannot judge is worse than no gate, because it blocks correct work while
+    appearing principled.
+    """
+    evidence_id = _add_evidence(
+        tmp_path,
+        ("FACTURA", "Numero: 2026-0600", "Fecha: 10/03/2026", "Base imponible: 100,00", "Total: 121,00"),
+        filename="no_issuer.pdf",
+    )
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--evidence-id", evidence_id,
+            "--kind", "issued",
+            "--counterparty-name", "Cliente SL",
+            "--counterparty-nif", _SUPPLIER_CIF,
+        ],
+    )  # fmt: skip
+
+    assert confirmed.exit_code == 0, confirmed.output

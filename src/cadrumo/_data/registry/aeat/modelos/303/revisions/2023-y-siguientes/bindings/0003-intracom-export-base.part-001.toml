@@ -1,3 +1,14 @@
+# Casilla 59 admits ONLY intra_community_supply, and the official box title is
+# NOT authority to widen it. The AEAT diseño titles the box "Entregas
+# intracomunitarias de bienes y servicios", which reads as an invitation to add
+# a services category; it is not one. A plain B2B service supplied to an
+# EU-established taxable person is located outside the TAI by LIVA art.
+# 69.Uno.1, so it is not subject in Spain and belongs in casilla 61
+# (operaciones no sujetas), never here. Only a service with a Spanish fiscal
+# adjustment point under art. 25 belongs in casilla 59, and the operator
+# declares that by tagging intra_community_supply explicitly. Adding a
+# not-subject services category to this selector would over-declare.
+#
 # M303 informativa base-imponible boxes for exempt entregas intracomunitarias
 # (casilla 59, LIVA art. 25 — entregas de bienes destinados a otro Estado miembro)
 # and exportaciones (casilla 60, LIVA art. 21 — exenciones en las exportaciones de

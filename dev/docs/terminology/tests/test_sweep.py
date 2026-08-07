@@ -20,6 +20,7 @@ service error rather than skipping.
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -32,6 +33,11 @@ from dev.docs.terminology._resolution import (
     ResolutionResult,
     TargetResolver,
     resolve_chunk_hits,
+)
+from dev.docs.terminology._rung2_query_authority import (
+    QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
+    Rung2QueryAliasAuthority,
+    Rung2QueryAliasEntry,
 )
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import (
@@ -178,6 +184,51 @@ def test_enumerate_full_vocabulary_is_a_bounded_closed_set() -> None:
     assert queries  # non-empty
     keys = [(q.concept_id, q.query.casefold()) for q in queries]
     assert len(keys) == len(set(keys)), "duplicate (concept, query) pairs"
+
+
+def test_run_sweep_uses_explicit_alias_authority_for_the_same_pipeline(
+    _authoritative_projection: SearchRecordProjection,
+) -> None:
+    """An explicit ratified alias is enumerated and laundered by the normal sweep.
+
+    The client replays the committed real-service fixture boundary; the alias
+    itself is unseen by that fixture and therefore exercises the honest empty
+    retrieval path plus deterministic originating-concept seeding. The test
+    proves the authority is threaded through enumeration rather than copied
+    into a separate mapping path.
+    """
+    authority = Rung2QueryAliasAuthority(
+        schema_version=QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
+        authority_version=2,
+        entries=(
+            Rung2QueryAliasEntry(
+                concept_id="prorrata",
+                language=OutputLanguage.EN,
+                query="pro-rata",
+                canonical_query="pro rata",
+                status="ratified",
+                review_reason="Independent spelling form reviewed for the English prorrata query surface.",
+                reviewed_at=date(2026, 8, 6),
+            ),
+        ),
+    )
+    queries = enumerate_query_vocabulary(
+        concept_ids={"prorrata"},
+        query_alias_authority=authority,
+    )
+    assert any(query.query == "pro-rata" and query.is_hidden_form for query in queries)
+
+    result = run_sweep(
+        client=_RecordedClient({}),
+        concept_ids={"prorrata"},
+        query_alias_authority=authority,
+        search_record_projection=_authoritative_projection,
+        reindex=False,
+    )
+
+    alias_mapping = next(mapping for mapping in result.mappings if mapping.query == "pro-rata")
+    assert alias_mapping.concept_id == "prorrata"
+    assert [target.record_id for target in alias_mapping.targets] == ["concept:prorrata"]
 
 
 # ---------------------------------------------------------------------------

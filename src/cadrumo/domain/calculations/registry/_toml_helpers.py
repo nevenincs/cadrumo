@@ -18,6 +18,7 @@ def as_toml_table(value: object) -> dict[str, object] | None:
         return None
     # CAST-RATIONALE-TOML-TABLE-KEY-ITERATION: isinstance narrows to dict but
     # not its type parameters; each key is validated as str in the loop below.
+    # nosemgrep: no-cast-in-domain-application
     for key in cast("dict[object, object]", value):
         if not isinstance(key, str):
             return None

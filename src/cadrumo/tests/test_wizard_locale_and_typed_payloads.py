@@ -7,9 +7,6 @@
   ``_api``.
 - ``OAuthClientPayload`` TypedDict and ``_OAuthClientWrapper`` pydantic
   model validate the Cloud Console Desktop envelope.
-- ``InvoiceRowPayload`` TypedDict is returned by
-  ``_decode_invoice_payload`` and survives the ``parse_invoice_payload``
-  pipeline.
 - Orphan namespace ``__init__`` modules carry intent documentation.
 
 See Also:
@@ -21,11 +18,9 @@ See Also:
         TypedDict contracts.
     :class:`~entrypoints.cli.OAuthClientPayload`
         CLI Google OAuth payload boundary validated from Cloud Console JSON.
-    :class:`~application.invoices.InvoiceRowPayload`
-        Invoice import row boundary carried through JSON decoding and parsing.
 
 These locale and typed-boundary contracts group the wizard's dynamic-key
-materialization with the Google and invoice payload boundaries it shares.
+materialization with the Google payload boundaries it shares.
 """
 
 from __future__ import annotations
@@ -204,74 +199,6 @@ def test_oauth_client_wrapper_rejects_non_dict_payload() -> None:
 
 
 # ---------------------------------------------------------------------------
-# InvoiceRowPayload TypedDict from _decode_invoice_payload
-# ---------------------------------------------------------------------------
-
-
-def test_invoice_row_payload_typeddict_importable() -> None:
-    """InvoiceRowPayload must be importable from _importing."""
-    from ..application.invoices import InvoiceRowPayload
-
-    assert hasattr(InvoiceRowPayload, "__annotations__")
-    expected_fields = {"kind", "currency", "counterparty_name", "counterparty_tax_id", "lines"}
-    missing = expected_fields - set(InvoiceRowPayload.__annotations__)
-    assert not missing, f"InvoiceRowPayload missing fields: {missing}"
-
-
-def test_decode_invoice_payload_returns_invoice_row_payload_from_json() -> None:
-    """_decode_invoice_payload must return InvoiceRowPayload instances from JSON input."""
-    from ..application.invoices._importing import _decode_invoice_payload
-
-    raw = json.dumps(
-        [
-            {
-                "kind": "received",
-                "currency": "EUR",
-                "counterparty_name": "Acme SL",
-                "counterparty_tax_id": "B12345678",
-            },
-        ],
-    )
-    (row,) = _decode_invoice_payload(raw)
-    # TypedDict at runtime is just a dict — verify field access works
-    assert row.get("kind") == "received"
-    assert row.get("currency") == "EUR"
-
-
-def test_parse_invoice_payload_end_to_end_json() -> None:
-    """parse_invoice_payload must produce a validated Invoice from a complete JSON row."""
-    from ..application.invoices import parse_invoice_payload
-    from ..domain.invoices import Invoice
-
-    raw = json.dumps(
-        {
-            "invoice_number": "F2024-001",
-            "issued_at": "2024-01-15",
-            "counterparty_name": "Test Vendor SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": "100.00",
-            "iva_total": "21.00",
-            "grand_total": "121.00",
-            "currency": "EUR",
-            "payment_status": "PAID",
-            "lines": [
-                {
-                    "description": "Service",
-                    "quantity": "1",
-                    "unit_price": "100.00",
-                    "subtotal": "100.00",
-                    "iva_rate": "RATE_21",
-                    "iva_amount": "21.00",
-                },
-            ],
-        },
-    )
-    (invoice,) = parse_invoice_payload(raw, default_kind="received")
-    assert isinstance(invoice, Invoice)
-    assert invoice.invoice_number == "F2024-001"
-
-
 # ---------------------------------------------------------------------------
 # Orphan __init__ modules remain namespace containers
 # ---------------------------------------------------------------------------

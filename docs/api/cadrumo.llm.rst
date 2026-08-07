@@ -1,0 +1,31 @@
+cadrumo.llm package
+===================
+
+.. automodule:: cadrumo.llm
+   :members:
+   :show-inheritance:
+   :ignore-module-all:
+
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.llm._providers
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   cadrumo.llm._client
+   cadrumo.llm._errors
+   cadrumo.llm._evidence_draft_vision
+   cadrumo.llm._models
+   cadrumo.llm._pricing
+   cadrumo.llm._retention
+   cadrumo.llm._text_classifier
+   cadrumo.llm._vision_classifier

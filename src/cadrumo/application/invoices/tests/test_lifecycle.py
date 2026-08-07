@@ -18,17 +18,28 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceNotFoundError, InvoiceValidationError
+from ....domain.invoices import (
+    Invoice,
+    InvoiceCatalogue,
+    InvoiceLine,
+    InvoiceNotFoundError,
+    InvoiceValidationError,
+    IvaRate,
+    PaymentStatus,
+)
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
+    CatalogueInvoicePatch,
     build_catalogue_invoice,
     create_catalogue_invoice,
     remove_catalogue_invoice,
     resolve_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,
+    update_catalogue_invoice,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -174,3 +185,156 @@ def test_remove_catalogue_invoice_refuses_linked_record(tmp_path: Path) -> None:
         # The refusal left the record intact — nothing was deleted.
         reloaded = repository.load()
         assert linked_invoice.invoice_id in reloaded
+
+
+def _linked_invoice(bucket_id: str):
+    """A persisted invoice already bound to a transaction."""
+    from datetime import date as _date
+
+    from ....domain.invoices import derive_invoice_id
+
+    kind = InvoiceKind.RECEIVED
+    number = "UPD-2026-001"
+    issued = _date(2026, 6, 1)
+    tax_id = "A58818501"
+    return Invoice(
+        invoice_id=derive_invoice_id(
+            kind=kind,
+            invoice_number=number,
+            issued_at=issued,
+            counterparty_tax_id=tax_id,
+            currency="EUR",
+            grand_total=Decimal("121.00"),
+        ),
+        bucket_id=bucket_id,
+        kind=kind,
+        invoice_number=number,
+        issued_at=issued,
+        counterparty_name="Papeleria Sol SL",
+        counterparty_tax_id=tax_id,
+        counterparty_country="ES",
+        base_total=Decimal("100.00"),
+        iva_total=Decimal("21.00"),
+        grand_total=Decimal("121.00"),
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Material",
+                quantity=Decimal("1"),
+                unit_price=Decimal("100.00"),
+                subtotal=Decimal("100.00"),
+                iva_rate=IvaRate.RATE_21,
+                iva_amount=Decimal("21.00"),
+            ),
+        ),
+        payment_status=PaymentStatus.PENDING,
+        linked_transaction_ids=("e" * 64,),
+    )
+
+
+def test_a_correction_keeps_the_invoice_id_and_its_transaction_links(tmp_path: Path) -> None:
+    """The canonical update corrects in place without re-keying the record.
+
+    This is the property the whole verb exists to provide. The canonical
+    invoice id is content-addressed, so any operation that changed an identity
+    field would mint a different id and strand every transaction already bound
+    to the old one. The patch model excludes those fields entirely, so a
+    correction cannot re-key the record even by mistake.
+
+    The links are asserted explicitly rather than assumed: they are why this
+    aggregate is the reconciliation authority, and an update that dropped them
+    would sever a bidirectional binding the operator never asked to break.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        original = _linked_invoice(_BUCKET_ID)
+        repo = InvoiceCatalogueRepository(objects=profile.repository)
+        repo.save(InvoiceCatalogue.from_invoices((original,)))
+
+        result = update_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            invoice_id=original.invoice_id,
+            patch=CatalogueInvoicePatch(
+                counterparty_name="Papeleria Sol SLU",
+                notes="Razon social corregida.",
+            ),
+            repository=repo,
+        )
+        restored = InvoiceCatalogueRepository(objects=profile.repository).load().get(original.invoice_id)
+
+    assert restored is not None
+    assert restored.invoice_id == original.invoice_id
+    assert restored.counterparty_name == "Papeleria Sol SLU"
+    assert restored.notes == "Razon social corregida."
+    assert restored.linked_transaction_ids == ("e" * 64,)
+    # Untouched fields keep their stored value: a correction never has to
+    # restate the whole record.
+    assert restored.grand_total == Decimal("121.00")
+    # The record-lifecycle stamp records WHEN it was corrected.
+    assert restored.updated_at is not None
+    assert result.bucket_event_ids != ()
+
+
+def test_a_correction_that_breaks_an_invariant_refuses(tmp_path: Path) -> None:
+    """The corrected record is re-validated in full, not patched blindly.
+
+    A retención cannot exceed the base it is withheld from. Merging a patch
+    without re-validating would persist an invoice whose own invariants it
+    violates -- and the persistence boundary would then refuse to load it,
+    turning a correctable input error into an unreadable record.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        original = _linked_invoice(_BUCKET_ID)
+        repo = InvoiceCatalogueRepository(objects=profile.repository)
+        repo.save(InvoiceCatalogue.from_invoices((original,)))
+
+        with pytest.raises((InvoiceValidationError, ValidationError)):
+            update_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                invoice_id=original.invoice_id,
+                patch=CatalogueInvoicePatch(retention_amount=Decimal("500.00")),
+                repository=repo,
+            )
+
+
+def test_an_empty_correction_refuses(tmp_path: Path) -> None:
+    """A patch stating no change is an operator error, not a no-op.
+
+    Accepting it would emit an UPDATED audit event for a record nothing
+    changed on, which pollutes the trail the event exists to provide.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        original = _linked_invoice(_BUCKET_ID)
+        repo = InvoiceCatalogueRepository(objects=profile.repository)
+        repo.save(InvoiceCatalogue.from_invoices((original,)))
+
+        with pytest.raises(InvoiceValidationError):
+            update_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                invoice_id=original.invoice_id,
+                patch=CatalogueInvoicePatch(),
+                repository=repo,
+            )
+
+
+def test_the_patch_model_cannot_express_an_identity_change() -> None:
+    """Structural, not a runtime refusal: identity fields are absent entirely.
+
+    A runtime check could be bypassed by a future caller building the payload
+    another way. Excluding the fields from the patch model means there is no
+    code path that can attempt an identity change at all, which is the stronger
+    guarantee for the one axis where getting it wrong strands a link.
+    """
+    identity_fields = {
+        "kind",
+        "invoice_number",
+        "issued_at",
+        "counterparty_tax_id",
+        "currency",
+        "base_total",
+        "iva_total",
+        "grand_total",
+        "recargo_amount",
+        "lines",
+    }
+
+    assert identity_fields.isdisjoint(set(CatalogueInvoicePatch.model_fields))

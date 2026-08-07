@@ -11,7 +11,6 @@ service over the encrypted
 
 from __future__ import annotations
 
-from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -37,6 +36,7 @@ from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.invoices import InvoiceClass
 from ...domain.iva import InvoiceKind, IvaCategory
 from ._common import (
     _bad,
@@ -67,20 +67,6 @@ from ._ledger_payloads import (
 )
 
 
-class InvoiceKindOption(StrEnum):
-    """Operator-facing ``--kind`` axis for the unified invoice command.
-
-    Mirrors :class:`InvoiceKind`; declared as the Typer option
-    type so click renders ``Choice([issued, received])`` and instructs the
-    operator on parse failure. ``issued`` settles to ``collectible_invoice``;
-    ``received`` settles to ``payable_invoice`` via
-    :func:`invoice_direction_to_source_kind`.
-    """
-
-    ISSUED = "issued"
-    RECEIVED = "received"
-
-
 def register_business_invoice_commands(app: typer.Typer) -> None:
     """Mount the unified invoice command group on the ledger app."""
     invoice_app.add_typer(catalogue_app, name="catalogue")
@@ -88,10 +74,10 @@ def register_business_invoice_commands(app: typer.Typer) -> None:
 
 
 def _service_for_kind(
-    kind: InvoiceKindOption,
+    kind: InvoiceKind,
 ) -> PayableInvoiceService | CollectibleInvoiceService:
     """Select the slim CRUD service for ``kind`` via the contractual mapping."""
-    source_kind = invoice_direction_to_source_kind(InvoiceKind(kind.value))
+    source_kind = invoice_direction_to_source_kind(kind)
     if source_kind is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE:
         return CollectibleInvoiceService()
     return PayableInvoiceService()
@@ -183,7 +169,7 @@ invoice_app = typer.Typer(
 )
 def invoice_add(
     ctx: typer.Context,
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -283,7 +269,7 @@ def invoice_view(
         ...,
         help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -312,7 +298,7 @@ def invoice_view(
 )
 def invoice_list(
     ctx: typer.Context,
-    kind: InvoiceKindOption | None = typer.Option(
+    kind: InvoiceKind | None = typer.Option(
         None,
         "--kind",
         help=tr(
@@ -367,7 +353,7 @@ def invoice_update(
         ...,
         help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -480,6 +466,15 @@ def _catalogue_invoice_lines(invoice) -> list[str]:
         f"grand_total\t{format(invoice.grand_total, 'f')}",
         f"currency\t{invoice.currency}",
         f"operation_type\t{'' if invoice.operation_type is None else invoice.operation_type.value}",
+        # The regime axes an operator can now set. Echoed back because a
+        # setting the surface does not confirm is one the operator cannot tell
+        # they failed to apply -- and a rectificativa silently recorded as
+        # ordinaria is a filing error, not a display one.
+        f"invoice_class\t{invoice.invoice_class.value}",
+        f"series\t{invoice.series or ''}",
+        f"rectifies_invoice_number\t{invoice.rectifies_invoice_number or ''}",
+        f"recargo_amount\t{'' if invoice.recargo_amount is None else format(invoice.recargo_amount, 'f')}",
+        f"iva_category\t{'' if invoice.iva_category is None else invoice.iva_category.value}",
         f"linked_transaction_ids\t{','.join(invoice.linked_transaction_ids)}",
     ]
 
@@ -489,7 +484,7 @@ def _catalogue_invoice_lines(invoice) -> list[str]:
 # once keeps the ``cli.app.ledger.invoice.*`` help keys in one home so ``--help``
 # renders identically for both verbs from one ``tr`` lookup.
 _CatalogueKindOpt = Annotated[
-    InvoiceKindOption,
+    InvoiceKind,
     typer.Option(
         "--kind",
         help=tr(
@@ -553,6 +548,67 @@ _CatalogueOperationTypeOpt = Annotated[
     ),
 ]
 _CatalogueNotesOpt = Annotated[str, typer.Option("--notes")]
+_CatalogueInvoiceClassOpt = Annotated[
+    InvoiceClass | None,
+    typer.Option(
+        "--invoice-class",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.invoice_class_help",
+            default=(
+                "Invoice class. A rectificativa also requires"
+                " --rectifies-invoice-number naming the invoice it corrects."
+            ),
+        ),
+    ),
+]
+
+_CatalogueSeriesOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--series",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.series_help",
+            default="Invoice numbering series, when the issuer uses one.",
+        ),
+    ),
+]
+
+_CatalogueRectifiesOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--rectifies-invoice-number",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.rectifies_help",
+            default="Number of the invoice this rectificativa corrects.",
+        ),
+    ),
+]
+
+_CatalogueRecargoOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--recargo",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.recargo_help",
+            default=(
+                "Recargo de equivalencia charged on top of the cuota (LIVA art. 161)."
+                " It rides inside the invoice total, unlike a retención."
+            ),
+        ),
+    ),
+]
+
+_CatalogueIvaCategoryOpt = Annotated[
+    IvaCategory | None,
+    typer.Option(
+        "--iva-category",
+        help=tr(
+            "cli.app.ledger.invoice.catalogue.iva_category_help",
+            default="IVA treatment of the operation. Required for a renta income calculation to ground it.",
+        ),
+    ),
+]
+
 _CatalogueRetentionRateOpt = Annotated[
     str | None,
     typer.Option(
@@ -604,6 +660,11 @@ def catalogue_create(
     operation_date: _CatalogueOperationDateOpt = None,
     retention_rate: _CatalogueRetentionRateOpt = None,
     retention_amount: _CatalogueRetentionAmountOpt = None,
+    invoice_class: _CatalogueInvoiceClassOpt = None,
+    series: _CatalogueSeriesOpt = None,
+    rectifies_invoice_number: _CatalogueRectifiesOpt = None,
+    recargo: _CatalogueRecargoOpt = None,
+    iva_category: _CatalogueIvaCategoryOpt = None,
     notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
@@ -627,13 +688,17 @@ def catalogue_create(
         operation_type,
         translation_key="cli.app.ledger.invoice.operation_type_invalid",
     )
-    iva_category = _catalogue_iva_category_for_operation_type(
+    # An explicitly stated treatment WINS over the one derived from the M349
+    # clave. The derivation exists so an intracomunitaria is not left
+    # ungrounded when the operator only states the clave; it is a fallback, and
+    # silently overriding a value the operator did state would be the reverse.
+    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(
         parsed_operation_type,
     )
     try:
         result = create_catalogue_invoice(
             bucket_id=bucket_id,
-            kind=InvoiceKind(kind.value),
+            kind=kind,
             counterparty_name=counterparty_name,
             counterparty_tax_id=counterparty_nif,
             counterparty_country=country_code,
@@ -643,13 +708,17 @@ def catalogue_create(
             iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
             currency=currency,
             notes=notes,
-            iva_category=iva_category,
+            iva_category=resolved_iva_category,
             operation_type=parsed_operation_type,
             operation_date=(
                 None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")
             ),
             retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
             retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
+            invoice_class=invoice_class or InvoiceClass.ORDINARIA,
+            series=series,
+            rectifies_invoice_number=rectifies_invoice_number,
+            recargo_amount=parse_optional_decimal_amount(recargo, label="recargo"),
         )
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
@@ -684,8 +753,14 @@ def catalogue_wizard(
     iva_rate: _CatalogueIvaRateOpt = None,
     currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
     operation_type: _CatalogueOperationTypeOpt = None,
+    operation_date: _CatalogueOperationDateOpt = None,
     retention_rate: _CatalogueRetentionRateOpt = None,
     retention_amount: _CatalogueRetentionAmountOpt = None,
+    invoice_class: _CatalogueInvoiceClassOpt = None,
+    series: _CatalogueSeriesOpt = None,
+    rectifies_invoice_number: _CatalogueRectifiesOpt = None,
+    recargo: _CatalogueRecargoOpt = None,
+    iva_category: _CatalogueIvaCategoryOpt = None,
     notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Guided manual-entry invoice creation for when extraction is unavailable.
@@ -711,11 +786,11 @@ def catalogue_wizard(
         operation_type,
         translation_key="cli.app.ledger.invoice.operation_type_invalid",
     )
-    iva_category = _catalogue_iva_category_for_operation_type(parsed_operation_type)
+    resolved_iva_category = iva_category or _catalogue_iva_category_for_operation_type(parsed_operation_type)
     try:
         wizard_result = create_invoice_via_wizard(
             bucket_id=bucket_id,
-            kind=InvoiceKind(kind.value),
+            kind=kind,
             counterparty_nif=counterparty_nif,
             counterparty_name=counterparty_name,
             invoice_number=invoice_number,
@@ -725,8 +800,9 @@ def catalogue_wizard(
             currency=currency,
             country_code=country_code,
             notes=notes,
-            iva_category=iva_category,
+            iva_category=resolved_iva_category,
             operation_type=parsed_operation_type,
+            operation_date=operation_date,
             retention_rate=retention_rate,
             retention_amount=retention_amount,
         )
@@ -789,7 +865,7 @@ def catalogue_import(
             ),
         ),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(
@@ -823,7 +899,7 @@ def catalogue_import(
         )
     try:
         rows = list(read_bulk_invoice_import_rows(file))
-        result = import_invoices_from_rows(rows, bucket_id=bucket_id, kind=InvoiceKind(kind.value))
+        result = import_invoices_from_rows(rows, bucket_id=bucket_id, kind=kind)
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
 
@@ -879,7 +955,7 @@ def catalogue_import(
 )
 def catalogue_list(
     ctx: typer.Context,
-    kind: InvoiceKindOption | None = typer.Option(
+    kind: InvoiceKind | None = typer.Option(
         None,
         "--kind",
         help=tr(
@@ -893,7 +969,7 @@ def catalogue_list(
 
     bucket_id = _business_invoice_bucket_id()
     catalogue = InvoiceCatalogueRepository(bucket_id=bucket_id).load()
-    wanted = None if kind is None else InvoiceKind(kind.value)
+    wanted = None if kind is None else kind
     rows = tuple(invoice for invoice in catalogue.values() if wanted is None or invoice.kind is wanted)
     payload = {
         "bucket_id": bucket_id,
@@ -1006,7 +1082,7 @@ def invoice_remove(
         ...,
         help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
     ),
-    kind: InvoiceKindOption = typer.Option(
+    kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
         help=tr(

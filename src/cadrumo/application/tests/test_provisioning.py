@@ -31,7 +31,6 @@ from ..provisioning import (
     probe_optional_extra,
     probe_optional_extras,
     probe_playwright_browser,
-    probe_subprocess_providers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -146,19 +145,6 @@ def test_playwright_browsers_root_still_honours_vendor_env_var(tmp_path: Path) -
 
     assert _playwright_browsers_root(env={"PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}) == vendor_root
     assert _playwright_browsers_root(env={}) != vendor_root
-
-
-def test_probe_subprocess_providers_returns_typed_statuses_and_never_raises() -> None:
-    """Each subprocess provider yields one DependencyStatus; the probe never raises on absence."""
-    statuses = probe_subprocess_providers()
-    assert isinstance(statuses, tuple)
-    assert statuses, "expected at least one subprocess LLM provider to be probed"
-    for status in statuses:
-        assert isinstance(status, DependencyStatus)
-        assert status.service.startswith("llm-provider:")
-        # A reachable provider carries no remediation; an absent one names the fix.
-        if not status.available:
-            assert "PATH" in status.remediation
 
 
 def test_probe_optional_extra_present_for_an_installed_package() -> None:

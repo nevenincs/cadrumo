@@ -550,6 +550,9 @@ def test_supplier_sale_under_recargo_reconstitutes_the_cash_it_received() -> Non
     assert tx.recargo_amount == _RECARGO_CUOTA
     assert tx.taxable_base is not None
     assert tx.iva_amount is not None
+    # The third operand is optional too; without this the sum raises on None
+    # instead of the assertion reporting which component was missing.
+    assert tx.recargo_amount is not None
     assert tx.taxable_base + tx.iva_amount + tx.recargo_amount == tx.raw.amount
 
 

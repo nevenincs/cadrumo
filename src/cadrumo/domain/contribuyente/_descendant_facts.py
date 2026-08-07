@@ -49,7 +49,7 @@ import re
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, TypedDict
 
 from ...core import DescendantRelacion
 from ...core.decimal import try_parse_canonical_decimal
@@ -202,7 +202,18 @@ _N_RE = re.compile(
 )
 
 
-def relacion_kwarg(relacion: DescendantRelacion | None) -> dict[str, DescendantRelacion]:
+class RelacionKwarg(TypedDict, total=False):
+    """The single optional constructor keyword :func:`relacion_kwarg` may supply.
+
+    A plain mapping loses which keyword is present, so splatting it into a
+    constructor reported every unrelated field as mistyped. Declaring the one
+    key it can carry keeps the splat precise.
+    """
+
+    relacion: DescendantRelacion
+
+
+def relacion_kwarg(relacion: DescendantRelacion | None) -> RelacionKwarg:
     """Render an optional relación as the constructor keyword, OMITTING it when unstated.
 
     "Unstated" and "ordinary descendant" are different inputs and the record

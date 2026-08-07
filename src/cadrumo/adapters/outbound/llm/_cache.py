@@ -24,16 +24,16 @@ from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
-from ._errors import LLMCacheError
-from ._models import (
+from ....llm import (
     CachedEntry,
     CacheKey,
     CacheStats,
+    LLMCacheError,
     LLMProvider,
     LLMRequest,
     LLMResponse,
+    select_retention_removal_keys,
 )
-from ._retention import select_retention_removal_keys
 
 if TYPE_CHECKING:
     from ....adapters.persistence.storage import SecureObjectRepository

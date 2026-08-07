@@ -60,6 +60,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -543,6 +544,7 @@ class _RecordCollector(logging.Handler):
         super().__init__(level=logging.DEBUG)
         self.records: list[logging.LogRecord] = []
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         """Retain ``record`` for later inspection."""
         self.records.append(record)

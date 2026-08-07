@@ -79,7 +79,9 @@ def test_every_retencion_parameter_cites_its_binding_provision(parameter_id: str
     """A regulatory value without its binding provision is ungrounded."""
     parameter = _parameters_toml()[parameter_id]
     assert parameter["evidence_tier"] == "legal_authority"
-    assert _LEGAL_REF in parameter["legal_refs"]
+    legal_refs = parameter["legal_refs"]
+    assert isinstance(legal_refs, list), "legal_refs must be a list in the parameters table"
+    assert _LEGAL_REF in legal_refs
 
 
 def test_the_cited_provision_resolves_in_the_bundled_legal_catalogue() -> None:

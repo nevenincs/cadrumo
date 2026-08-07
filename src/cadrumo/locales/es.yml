@@ -2066,6 +2066,11 @@ cli:
             no está disponible.
           wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura
             con esta identidad (%{invoice_id}); no se creó nada.'
+          invoice_class_help: 'Clase de factura. Una rectificativa exige además --rectifies-invoice-number indicando la factura que corrige.'
+          series_help: 'Serie de numeración de la factura, cuando el emisor utiliza una.'
+          rectifies_help: 'Número de la factura que corrige esta rectificativa.'
+          recargo_help: 'Recargo de equivalencia repercutido sobre la cuota (LIVA art. 161). Va incluido en el total de la factura, a diferencia de una retención.'
+          iva_category_help: 'Tratamiento de IVA de la operación. Necesario para que un cálculo de renta pueda fundamentarla.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
           intracomunitarias UE)
         eu_iva_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)

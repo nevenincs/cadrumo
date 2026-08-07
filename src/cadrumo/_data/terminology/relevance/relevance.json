@@ -1106,6 +1106,23 @@
       "dominant_cluster": "concept:domain:modelo"
     },
     {
+      "query": "autonomos",
+      "concept_id": "modelo-130",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-130",
+          "target": "_generated/glossary.html#term-modelo-130",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.9
+        }
+      ],
+      "dropped_count": 20,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
       "query": "modelo 130",
       "concept_id": "modelo-130",
       "language": "es",
@@ -1531,6 +1548,23 @@
     },
     {
       "query": "autoliquidacion de IVA",
+      "concept_id": "modelo-303",
+      "language": "es",
+      "targets": [
+        {
+          "record_id": "concept:modelo-303",
+          "target": "_generated/glossary.html#term-modelo-303",
+          "kind": "concept",
+          "surface": "concept",
+          "ranking_weight": 0.9
+        }
+      ],
+      "dropped_count": 20,
+      "collapsed_count": 0,
+      "dominant_cluster": null
+    },
+    {
+      "query": "autoliquidacion iva",
       "concept_id": "modelo-303",
       "language": "es",
       "targets": [
@@ -2437,7 +2471,7 @@
       "dominant_cluster": "concept:domain:concepto"
     }
   ],
-  "query_count": 112,
+  "query_count": 114,
   "concept_count": 49,
   "failed_query_count": 0,
   "reindex_note": "fresh code index completed: f444e105223c47c19f6bb705d5788253; sweep used the completed index",

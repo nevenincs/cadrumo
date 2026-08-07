@@ -14,5 +14,6 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core.i18n._auth_provider
+   cadrumo.core.i18n._catalogue_cache
    cadrumo.core.i18n._render
    cadrumo.core.i18n._translatable

@@ -266,6 +266,7 @@ def _enroll_revision_localization(
             casilla = _as_toml_table(raw_casilla)
             if casilla is None:
                 casillas.append(
+                    # nosemgrep: no-cast-in-domain-application
                     dict(cast(Mapping[str, object], raw_casilla))
                     if isinstance(raw_casilla, Mapping)
                     else {"value": raw_casilla},
@@ -287,6 +288,7 @@ def _enroll_revision_localization(
                     alias = _as_toml_table(raw_alias)
                     if alias is None:
                         aliases.append(
+                            # nosemgrep: no-cast-in-domain-application
                             dict(cast(Mapping[str, object], raw_alias))
                             if isinstance(raw_alias, Mapping)
                             else {"value": raw_alias},
@@ -314,6 +316,7 @@ def _enroll_revision_localization(
             construct = _as_toml_table(raw_construct)
             if construct is None:
                 constructs.append(
+                    # nosemgrep: no-cast-in-domain-application
                     dict(cast(Mapping[str, object], raw_construct))
                     if isinstance(raw_construct, Mapping)
                     else {"value": raw_construct},

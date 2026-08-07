@@ -82,7 +82,10 @@ from ...domain.modelos import (
     validate_m347_threshold,
 )
 from ..aggregation import CalculationSourceDiagnostic
-from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS
+
+# Intra-package reuse of a sibling module's cap, permitted by the architecture
+# rule; only cross-package private reaches are barred, and that gate is separate.
+from ._minimo_descendientes_advisory import _MAX_NAMED_DESCENDANTS  # pyright: ignore[reportPrivateUsage]
 from ._profile_binding import MaternidadMesesResolution
 from ._registry_helpers import validate_casilla_input_ids
 from ._semantic_role_resolution import (
@@ -394,7 +397,7 @@ def build_work_calculate_input_bundle(
         if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
             if casilla_def.semantic_role == "irnr_tipo_renta":
                 m210_official_tipo_renta_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
-                text_casilla_inputs[key] = M210_TIPO_RENTA_CODE_PROJECTION[m210_official_tipo_renta_code].value
+                text_casilla_inputs[key] = _projected_m210_tipo_renta_code(m210_official_tipo_renta_code)
             elif casilla_def.semantic_role == _DECLARANTE_SELECTOR_SEMANTIC_ROLE:
                 text_casilla_inputs[key] = _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def)
             else:
@@ -601,8 +604,8 @@ def _text_value(raw_value: str, *, key: str) -> str:
     return value
 
 
-def _validated_m210_tipo_renta_code(raw_value: str, *, key: str) -> str:
-    """Validate a Modelo 210 ``tipo_renta`` value against the declared official codes.
+def _projected_m210_tipo_renta_code(official_code: str) -> str:
+    """Project a validated Modelo 210 official ``tipo_renta`` code to its rate concept.
 
     The generic ``--casilla key=value`` surface cannot render a static Typer
     ``Choice`` for one casilla's value, so this is the sanctioned
@@ -625,7 +628,7 @@ def _validated_m210_tipo_renta_code(raw_value: str, *, key: str) -> str:
     per-code form-fidelity display belongs to the fetch-gated full-casilla
     schema.)
     """
-    return M210_TIPO_RENTA_CODE_PROJECTION[_validated_m210_official_tipo_renta_code(raw_value, key=key)].value
+    return M210_TIPO_RENTA_CODE_PROJECTION[official_code].value
 
 
 def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str:

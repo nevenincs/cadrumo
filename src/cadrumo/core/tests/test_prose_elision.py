@@ -26,7 +26,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 class _Capped(BaseModel):
     """A field declaring the eliding annotation and nothing else."""
 
-    text: elided_prose(40)  # type: ignore[valid-type]
+    # Declared through the factory deliberately: this model exists to prove that
+    # form still elides, so rewriting it to the literal annotation would delete
+    # the thing under test.
+    text: elided_prose(40)  # ty: ignore[invalid-type-form]
 
 
 class _Raising(BaseModel):

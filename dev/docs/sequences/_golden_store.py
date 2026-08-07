@@ -54,6 +54,7 @@ from ._schema import FrameKind, SequenceId
 
 __all__ = [
     "PACKAGE_VERSION_TOKEN",
+    "PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS",
     "REPO_ROOT_TOKEN",
     "SANDBOX_STORAGE_ROOT_TOKEN",
     "SANDBOX_WORKDIR_TOKEN",
@@ -62,9 +63,11 @@ __all__ = [
     "build_golden",
     "default_goldens_root",
     "golden_path",
+    "mask_host_conditional_details",
     "masked_envelope_values",
     "normalise_document_paths",
     "normalise_text_output",
+    "platform_conditional_details",
     "read_golden",
     "refresh_invocation",
     "write_golden",
@@ -251,6 +254,96 @@ def golden_path(page: str, sequence_id: str, *, goldens_root: Path | None = None
     return root / _validated_page(page) / f"{sequence_id}.json"
 
 
+PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS = frozenset(
+    {
+        "storage:windows-long-path",
+        "model-runtime-hardware-floor",
+    },
+)
+"""Health rows whose ``detail`` describes the HOST, not the product.
+
+Docs are rendered FROM these goldens, so a row here becomes a sentence in
+user-facing prose. Both members state a fact about the machine that happened to
+record the capture:
+
+- ``storage:windows-long-path`` reports ``"not applicable on this platform"``
+  off Windows and one of several ``LongPathsEnabled`` verdicts on it.
+- ``model-runtime-hardware-floor`` reports the host's total RAM against the
+  configured floor -- literally ``"total system memory 63.9 GiB meets ..."``.
+
+Pinning either means the golden can only match the machine that wrote it: a
+Windows capture reds the Linux docs runner, a Linux capture reds every Windows
+developer, and a 64 GiB capture publishes that number to every reader. Masking
+the detail keeps the row and its id under exact comparison and drops only the
+host-specific sentence.
+
+Keyed on the stable row id, never on the detail text: the long-path check alone
+has five detail variants and the memory one is unbounded, so enumerating strings
+would rot immediately. The id is matched against either ``check`` (preflight
+rows) or ``service`` (dependency rows) -- the two shapes ``config check`` emits.
+"""
+
+#: Row keys that carry a host-conditional row's stable identifier.
+_ROW_ID_KEYS: tuple[str, ...] = ("check", "service")
+
+
+def _host_conditional_row_id(node: Mapping[str, object]) -> str | None:
+    """Return the row's id when it names a host-conditional row, else ``None``."""
+    for key in _ROW_ID_KEYS:
+        value = node.get(key)
+        if isinstance(value, str) and value in PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS:
+            return value
+    return None
+
+
+def platform_conditional_details(document: object) -> frozenset[str]:
+    """Collect ``detail`` values belonging to host-conditional health rows.
+
+    Walks any envelope shape looking for mappings that carry both a
+    host-conditional row id (under ``check`` or ``service``) and a string
+    ``detail``. Matching on the pair is what keeps this narrow: a bare ``detail``
+    key elsewhere in the envelope is untouched.
+    """
+    values: set[str] = set()
+
+    def _walk(node: object) -> None:
+        if isinstance(node, Mapping):
+            detail = node.get("detail")
+            if _host_conditional_row_id(node) is not None and isinstance(detail, str) and detail:
+                values.add(detail)
+            for item in node.values():
+                _walk(item)
+            return
+        if isinstance(node, list | tuple):
+            for item in node:
+                _walk(item)
+
+    _walk(document)
+    return frozenset(values)
+
+
+def mask_host_conditional_details(document: object) -> object:
+    """Replace host-conditional row details with the mask sentinel.
+
+    The structural-tier counterpart to :func:`platform_conditional_details`,
+    which serves the text tier. Both route through the same row-id predicate so
+    the two tiers cannot drift into disagreeing about which rows are
+    host-conditional.
+
+    Rebuilds the document rather than mutating it, so the caller's envelope is
+    untouched and the diff paths reported on a genuine divergence still line up
+    with the stored artifact.
+    """
+    if isinstance(document, Mapping):
+        masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
+        if _host_conditional_row_id(document) is not None and isinstance(document.get("detail"), str):
+            masked["detail"] = MASK_SENTINEL
+        return masked
+    if isinstance(document, list | tuple):
+        return [mask_host_conditional_details(item) for item in document]
+    return document
+
+
 def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     """Collect the transcript's centrally-masked surrogate-key values.
 
@@ -258,6 +351,11 @@ def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     the :data:`GOLDEN_MASK_FIELDS` keys at any depth. Text normalisation replaces
     these values where they appear inline in text output — the "central masked
     ids where they appear inline" half of the text-normalisation policy.
+
+    Platform-conditional preflight details ride the same channel. Each side
+    collects the values from ITS OWN run, exactly as the sandbox paths do, so
+    the writer's Windows sentence and the reader's Linux sentence both reduce to
+    the mask sentinel and compare equal without either being declared correct.
     """
     values: set[str] = set()
 
@@ -276,6 +374,7 @@ def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     for frame in transcript.frames:
         if frame.envelope is not None:
             _walk(frame.envelope)
+            values |= platform_conditional_details(frame.envelope)
     return frozenset(values)
 
 

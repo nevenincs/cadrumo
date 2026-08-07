@@ -101,7 +101,14 @@ def test_config_check_reports_capabilities_and_dependencies() -> None:
     services = {d["service"] for d in payload["dependencies"]}
     assert "ollama-vision" in services
     assert "playwright-chromium" in services
-    assert any(s.startswith("llm-provider:") for s in services)
+    # Re-pointed rather than dropped when the subprocess provider probe was
+    # deleted: the doctor must still report a row for the LOCAL model runtime,
+    # which is now the only classification backend. Deleting the assertion
+    # outright would have removed the coverage along with the cloud rows.
+    assert "model-runtime-hardware-floor" in services
+    assert not any(s.startswith("llm-provider:") for s in services), (
+        "the subprocess cloud providers are deleted; no llm-provider row may survive"
+    )
     # The doctor reports every capability-gated optional extra's importability.
     assert {"extra:google", "extra:browser", "extra:anthropic"} <= services
 

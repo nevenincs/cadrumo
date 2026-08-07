@@ -71,7 +71,7 @@ def _bucket(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _operator_text(diagnostic: object) -> str:
+def _operator_text(diagnostic: CalculationSourceDiagnostic) -> str:
     """The text an OPERATOR sees, not the message field alone.
 
     A diagnostic states the problem in ``message`` and the fix in ``remedy``,
@@ -80,7 +80,7 @@ def _operator_text(diagnostic: object) -> str:
     the operator-facing surface without any test noticing.
     """
     remedy = getattr(diagnostic, "remedy", None)
-    message = diagnostic.message  # type: ignore[attr-defined]
+    message = diagnostic.message
     return message if remedy is None else f"{message} {remedy}"
 
 

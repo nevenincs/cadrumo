@@ -116,6 +116,8 @@ class Rung2ReportCoverage(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_arithmetic(self) -> Rung2ReportCoverage:
+        if self.total_query_token_count < self.query_count:
+            raise ValueError("total query token count cannot be below query count")
         if self.total_covered_token_count > self.total_query_token_count:
             raise ValueError("covered token count cannot exceed query token count")
         if self.fully_covered_query_count > self.query_count:
@@ -124,6 +126,8 @@ class Rung2ReportCoverage(BaseModel):
             raise ValueError("zero-covered query count cannot exceed query count")
         if self.below_minimum_coverage_query_count > self.query_count:
             raise ValueError("below-minimum query count cannot exceed query count")
+        if self.fully_covered_query_count + self.zero_covered_query_count > self.query_count:
+            raise ValueError("fully covered and zero-covered queries cannot overlap")
         if self.zero_covered_query_count > self.below_minimum_coverage_query_count:
             raise ValueError("zero-covered queries must be below the minimum coverage threshold")
         expected_ratio = self.total_covered_token_count / self.total_query_token_count

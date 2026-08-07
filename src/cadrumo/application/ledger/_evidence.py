@@ -107,7 +107,6 @@ _SUFFIX_MIME = {
 }
 
 
-
 def _attachment_kind_for(media_kind: MediaKind) -> AttachmentKind:
     """Map a purchase-invoice ``MediaKind`` to the attachment manifest kind."""
     return AttachmentKind.INVOICE_PDF if media_kind is MediaKind.PDF else AttachmentKind.RECEIPT_IMAGE
@@ -262,8 +261,7 @@ def _resolve_media_kind(source_path: Path) -> MediaKind:
         return MediaKind.IMAGE
     accepted = ", ".join(sorted(_PDF_EXTENSIONS | _STRUCTURED_EXTENSIONS | _IMAGE_EXTENSIONS))
     raise PurchaseInvoiceEvidenceInputError(
-        f"source path {source_path!s} has unsupported extension {suffix!r}; "
-        f"accepted extensions are: {accepted}",
+        f"source path {source_path!s} has unsupported extension {suffix!r}; accepted extensions are: {accepted}",
         suggestion="aeat app ledger evidence list",
     )
 

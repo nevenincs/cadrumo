@@ -380,6 +380,8 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
             _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
 
     assert exc_info.value.translated_message == "aggregation.retenciones.errors.perceptor_observations_missing"
-    assert exc_info.value.context["modelo"] == "111"
-    assert exc_info.value.context["period"] == "1T"
+    context = exc_info.value.context
+    assert context is not None, "the refusal must carry its context, not just a message"
+    assert context["modelo"] == "111"
+    assert context["period"] == "1T"
     assert "--retencion-observation" in (exc_info.value.suggestion or "")

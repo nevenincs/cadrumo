@@ -57,6 +57,7 @@ Submodules
    cadrumo.domain.calculations.registry._ids
    cadrumo.domain.calculations.registry._invoice_bindings
    cadrumo.domain.calculations.registry._irnr_ledger_bindings
+   cadrumo.domain.calculations.registry._iva_wallet_relation_targets
    cadrumo.domain.calculations.registry._ledger_binding_resolution
    cadrumo.domain.calculations.registry._ledger_bindings
    cadrumo.domain.calculations.registry._ledger_impatriado_bindings
@@ -145,4 +146,3 @@ Submodules
    cadrumo.domain.calculations.registry._workbook_parity
    cadrumo.domain.calculations.registry._workbook_parity_models
    cadrumo.domain.calculations.registry._workbook_parity_types
-   cadrumo.domain.calculations.registry.applicability

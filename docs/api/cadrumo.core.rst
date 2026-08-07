@@ -56,6 +56,7 @@ Submodules
    cadrumo.core._credentials
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
+   cadrumo.core._document_shape
    cadrumo.core._export_layout_format
    cadrumo.core._external_oracle_corpus
    cadrumo.core._foreign_asset_obligation
@@ -106,6 +107,7 @@ Submodules
    cadrumo.core.output_rendering
    cadrumo.core.paths
    cadrumo.core.product_identity
+   cadrumo.core.prose_elision
    cadrumo.core.secure_object_write
    cadrumo.core.setup_answers
    cadrumo.core.storage_route_guidance

@@ -24,7 +24,6 @@ Submodules
    cadrumo.application.ledger._evidence
    cadrumo.application.ledger._evidence_advisory
    cadrumo.application.ledger._evidence_draft
-   cadrumo.application.ledger._evidence_draft_vision
    cadrumo.application.ledger._evidence_input
    cadrumo.application.ledger._evidence_reference
    cadrumo.application.ledger._evidence_split
@@ -41,4 +40,3 @@ Submodules
    cadrumo.application.ledger._ratios
    cadrumo.application.ledger._review_projection
    cadrumo.application.ledger._rule_repository
-   cadrumo.application.ledger._vision_classifier

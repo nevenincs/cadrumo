@@ -1208,7 +1208,7 @@ class RepairIntegrityRegistryResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check is in...
 
 
 # Apoderado verb result schemas

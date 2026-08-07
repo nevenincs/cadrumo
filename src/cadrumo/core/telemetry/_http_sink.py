@@ -31,7 +31,7 @@ Two additional invariants beyond the consent gate keep this sink safe:
 
 The HTTP transport reuses :mod:`httpx`, the project's single outbound HTTP
 client dependency (the same library the
-:class:`~adapters.outbound.llm._providers.gemini.GeminiAdapter` and
+:class:`~llm._providers.gemini.GeminiAdapter` and
 sibling LLM provider adapters use), rather than introducing a second HTTP
 client dependency.
 

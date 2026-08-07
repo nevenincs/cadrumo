@@ -42,7 +42,7 @@ def test_unmapped_ratified_alias_fails_closed_before_compilation() -> None:
         review_reason="RAG-grounded project wording reviewed for the closed vocabulary.",
         reviewed_at="2026-08-06",
     )
-    expanded = authority.model_copy(update={"entries": (alias,)})
+    expanded = authority.model_copy(update={"entries": (*authority.entries, alias)})
 
     with pytest.raises(Rung2InputError, match="missing"):
         _require_current_handbook_vocabulary(load_committed_relevance(), expanded)

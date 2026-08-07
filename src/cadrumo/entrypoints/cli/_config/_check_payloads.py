@@ -44,7 +44,6 @@ class CheckDependencyPayload(OutputSchema):
     and mirrors
     :class:`DependencyStatus` rows from
     :func:`probe_ollama_vision`,
-    :func:`probe_subprocess_providers`,
     :func:`probe_playwright_browser`, and
     :func:`probe_optional_extras`. ``remediation``
     is populated only when the probe can name a concrete operator action.

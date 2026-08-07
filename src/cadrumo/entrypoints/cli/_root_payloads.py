@@ -109,7 +109,7 @@ class RootStatusResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check is in...
 
     @model_validator(mode="before")
     @classmethod
@@ -139,7 +139,7 @@ class AppRootResult(OutputSchema):
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    model_config = {"extra": "allow"}  # type: ignore[assignment]  # reason: TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR: pydantic v2 model_config class var shadows ConfigDict descriptor; mypy assignment check is in...
 
     @model_validator(mode="before")
     @classmethod

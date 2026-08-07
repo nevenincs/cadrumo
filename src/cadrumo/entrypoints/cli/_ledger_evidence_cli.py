@@ -27,7 +27,7 @@ from ._common import (
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )
-from ._ledger_business_invoice_cli import InvoiceKindOption, _catalogue_invoice_shared_fields
+from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
 from ._ledger_payloads import (
     EvidenceAddResult,
     EvidenceConfirmResult,
@@ -437,7 +437,7 @@ def _register_evidence_confirm_command() -> None:
     )
     def evidence_confirm(
         ctx: typer.Context,
-        kind: InvoiceKindOption = typer.Option(
+        kind: InvoiceKind = typer.Option(
             ...,
             "--kind",
             help=tr(
@@ -560,7 +560,7 @@ def _register_evidence_confirm_command() -> None:
 def _run_evidence_confirm(
     *,
     ctx: typer.Context,
-    kind: InvoiceKindOption,
+    kind: InvoiceKind,
     evidence_id: str | None,
     attachment_id: str | None,
     counterparty_nif: str | None,
@@ -585,7 +585,7 @@ def _run_evidence_confirm(
     try:
         result = confirm_invoice_draft_from_evidence(
             bucket_id=bucket_id,
-            kind=InvoiceKind(kind.value),
+            kind=kind,
             counterparty_country=country_code,
             evidence_id=evidence_id,
             attachment_id=attachment_id,

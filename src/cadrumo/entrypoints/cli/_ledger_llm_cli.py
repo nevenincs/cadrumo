@@ -248,7 +248,7 @@ def dispatch_autosplit(
                 default=(
                     f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
+                    "or run 'aeat config check' to confirm the local model runtime is reachable."
                 ),
             ),
         )
@@ -514,7 +514,7 @@ def _validate_classify_llm_options(
                 default=(
                     f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
                     f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
+                    "or run 'aeat config check' to confirm the local model runtime is reachable."
                 ),
             ),
         )

@@ -65,19 +65,15 @@ from ._creation import (
     create_catalogue_invoice,
     numeric_iva_rate_slots,
 )
-from ._importing import (
-    InvoiceImportResult,
-    InvoiceRowPayload,
-    import_invoices_from_path,
-    merge_invoice_import,
-    parse_invoice_payload,
-)
 from ._issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 from ._lifecycle import (
+    CatalogueInvoicePatch,
     CatalogueInvoiceRemoveResult,
+    CatalogueInvoiceUpdateResult,
     remove_catalogue_invoice,
     resolve_catalogue_invoice,
     resolve_catalogue_invoice_from_repository,
+    update_catalogue_invoice,
 )
 from ._linking import (
     InvoiceTransactionLinkResult,
@@ -121,15 +117,15 @@ __all__ = [
     "BulkInvoiceImportRow",
     "BulkInvoiceImportRowFailure",
     "CatalogueInvoiceCreateResult",
+    "CatalogueInvoicePatch",
     "CatalogueInvoiceRemoveResult",
+    "CatalogueInvoiceUpdateResult",
     "InvoiceCatalogueSourceResolver",
-    "InvoiceImportResult",
     "InvoiceListRow",
     "InvoiceMatchProjection",
     "InvoiceMatchRow",
     "InvoiceReconciliationResult",
     "InvoiceReviewProjection",
-    "InvoiceRowPayload",
     "InvoiceTransactionLinkResult",
     "InvoiceWizardFieldError",
     "InvoiceWizardResult",
@@ -142,7 +138,6 @@ __all__ = [
     "find_invoice",
     "find_unmatched",
     "get_invoice_from_repository",
-    "import_invoices_from_path",
     "import_invoices_from_rows",
     "invoice_direction_to_source_kind",
     "invoice_display_amounts",
@@ -154,9 +149,7 @@ __all__ = [
     "list_invoice_rows",
     "list_unmatched_invoice_repository_rows",
     "list_unmatched_invoice_rows",
-    "merge_invoice_import",
     "numeric_iva_rate_slots",
-    "parse_invoice_payload",
     "project_invoice_payment_matches",
     "project_invoice_review",
     "project_invoice_reviews",
@@ -167,5 +160,6 @@ __all__ = [
     "resolve_catalogue_invoice",
     "resolve_catalogue_invoice_from_repository",
     "simplificada_requires_tax_id_for_domestic_issuer",
+    "update_catalogue_invoice",
     "verify_invoice_repository_links",
 ]

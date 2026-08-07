@@ -32,7 +32,6 @@ def register(app: typer.Typer) -> None:
             probe_ollama_vision,
             probe_optional_extras,
             probe_playwright_browser,
-            probe_subprocess_providers,
         )
         from ....application.user_profile import resolve_active_capability
 
@@ -48,10 +47,9 @@ def register(app: typer.Typer) -> None:
 
         ollama = probe_ollama_vision()
         hardware_floor = probe_model_runtime_hardware_floor()
-        providers = probe_subprocess_providers()
         playwright = probe_playwright_browser()
         extras = probe_optional_extras()
-        dependencies = [d.model_dump() for d in (ollama, hardware_floor, *providers, playwright, *extras)]
+        dependencies = [d.model_dump() for d in (ollama, hardware_floor, playwright, *extras)]
         # Per-provider cert/clave health, storage/corpus/env preflight, and
         # registry referential integrity. Report-only: a red preflight row is
         # surfaced for operator visibility but does not, on its own, flip the
@@ -65,14 +63,11 @@ def register(app: typer.Typer) -> None:
                 object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
             )
         ]
-        any_provider = any(p.available for p in providers)
         extra_available = {status.service: status.available for status in extras}
 
         issues: list[str] = []
         if cap_enabled[ServiceCapability.LLM_VISION.value] and not ollama.available:
             issues.append(f"llm_vision is on but {ollama.detail}: {ollama.remediation}")
-        if cap_enabled[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not any_provider:
-            issues.append("cloud_evidence_upload is on but no cloud LLM provider CLI is on PATH (claude / agy / codex)")
         if cap_enabled[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
             issues.append("google_export is on but the 'google' extra is not installed (pip install cadrumo[google])")
 

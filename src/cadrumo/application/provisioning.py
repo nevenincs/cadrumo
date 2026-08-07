@@ -41,7 +41,6 @@ __all__ = [
     "probe_optional_extra",
     "probe_optional_extras",
     "probe_playwright_browser",
-    "probe_subprocess_providers",
 ]
 
 _OLLAMA_PROBE_TIMEOUT_S = 2.0
@@ -97,12 +96,14 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
                 raise ValueError("Ollama tags response must be a JSON object")
             # CAST-RATIONALE-OLLAMA-TAGS-PAYLOAD: httpx.Response.json() returns
             # Any; isinstance narrows to dict but not its type parameters.
+            # nosemgrep: no-cast-in-domain-application
             payload_object = cast(dict[str, object], payload)
             models = payload_object.get("models")
             if not isinstance(models, list):
                 raise ValueError("Ollama tags response must contain model objects with string names")
             # CAST-RATIONALE-OLLAMA-TAGS-MODELS: isinstance narrows to list but
             # not its element type; entries are validated individually below.
+            # nosemgrep: no-cast-in-domain-application
             models = cast(list[object], models)
             names: set[str] = set()
             for entry in models:
@@ -110,6 +111,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
                     raise ValueError("Ollama tags response must contain model objects with string names")
                 # CAST-RATIONALE-OLLAMA-TAGS-MODEL-ENTRY: isinstance narrows to
                 # dict but not its type parameters.
+                # nosemgrep: no-cast-in-domain-application
                 name = cast(dict[str, object], entry).get("name")
                 if not isinstance(name, str):
                     raise ValueError("Ollama tags response must contain model objects with string names")
@@ -136,35 +138,6 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
         available=True,
         detail=f"Ollama is reachable and {model!r} is pulled",
     )
-
-
-def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
-    """Probe each subprocess LLM CLI provider on ``PATH``.
-
-    Delegates provider discovery to the ledger classification surface and adapts
-    each availability row into the common :class:`DependencyStatus` shape. The
-    probe resolves binaries only; it does not spawn provider processes.
-    ``aeat config check`` combines these rows with
-    :class:`~cadrumo.core.ServiceCapability` decisions to flag opted-in cloud
-    evidence uploads that lack a provider CLI.
-    """
-    from .ledger import available_llm_providers
-
-    statuses: list[DependencyStatus] = []
-    for listing in available_llm_providers():
-        statuses.append(
-            DependencyStatus(
-                service=f"llm-provider:{listing.provider.value}",
-                available=listing.available,
-                detail=(
-                    f"{listing.cli_binary} resolved at {listing.resolved_path}"
-                    if listing.available
-                    else f"{listing.cli_binary} not found on PATH"
-                ),
-                remediation="" if listing.available else f"install the {listing.cli_binary!r} CLI and put it on PATH",
-            ),
-        )
-    return tuple(statuses)
 
 
 PLAYWRIGHT_BROWSERS_ROOT_ROLE = ExternalPathRole.THIRD_PARTY_CACHE
@@ -256,12 +229,17 @@ def read_total_system_memory_bytes() -> int | None:
     platform answers nothing, because an unknown quantity must not be reported
     as a shortfall -- see :func:`probe_model_runtime_hardware_floor`.
     """
-    names = getattr(os, "sysconf_names", {})
-    if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
-        try:
-            return int(os.sysconf("SC_PAGE_SIZE")) * int(os.sysconf("SC_PHYS_PAGES"))
-        except (OSError, ValueError):
-            return None
+    if sys.platform != "win32":
+        # Guarded on the platform rather than on getattr so a type checker can
+        # follow it: os.sysconf is absent from the Windows stubs entirely. The
+        # inner membership check stays for POSIX variants that omit the two
+        # constants themselves.
+        names = getattr(os, "sysconf_names", {})
+        if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
+            try:
+                return int(os.sysconf("SC_PAGE_SIZE")) * int(os.sysconf("SC_PHYS_PAGES"))
+            except (OSError, ValueError):
+                return None
     if sys.platform == "win32":
         import ctypes
 
@@ -281,7 +259,7 @@ def read_total_system_memory_bytes() -> int | None:
         status = _MemoryStatusEx()
         status.dwLength = ctypes.sizeof(_MemoryStatusEx)
         try:
-            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):  # type: ignore[attr-defined]
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
                 return int(status.ullTotalPhys)
         except (OSError, AttributeError):
             return None

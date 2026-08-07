@@ -27,9 +27,9 @@ LLM. This module makes no network call and performs no filesystem write.
 A scan-only PDF (no embedded text layer) or an image attachment has nothing for
 :func:`~application.ledger.extract_invoice_fields` to read, so
 :func:`~application.ledger.extract_invoice_draft_from_evidence` falls back to the
-on-host LOCAL vision reader (:mod:`~application.ledger._evidence_draft_vision`)
+on-host LOCAL vision reader (:mod:`~llm._evidence_draft_vision`)
 -- the same rasterise-then-read-with-Ollama transport
-:class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier` already
+:class:`~llm._vision_classifier.LocalVisionLLMClassifier` already
 uses for classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and
 never a cloud call. When on-host vision reading is disabled for the profile, or
 the local Ollama runtime is unreachable, the caller gets a typed, instructive
@@ -84,7 +84,7 @@ See Also:
     :func:`~application.ledger.confirm_invoice_draft_from_evidence`
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
-    :mod:`~application.ledger._evidence_draft_vision`
+    :mod:`~llm._evidence_draft_vision`
         On-host vision fallback for scan-only PDFs and image attachments.
     :func:`~application.invoices.create_catalogue_invoice`
         Sole sanctioned writer for the resulting catalogue invoice.
@@ -98,11 +98,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.llm import (
-    LLMPdfRasterisationError,
-    LLMProviderError,
-    rasterise_pdf_pages_to_base64_png,
-)
+from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
@@ -114,8 +110,8 @@ from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import IdentityError, tax_id_identity_token, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice
-from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
-from ...domain.iva import InvoiceKind
+from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine, IvaRate
+from ...domain.iva import InvoiceKind, IvaCategory
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
@@ -519,7 +515,7 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         )
 
     try:
-        from ._evidence_draft_vision import extract_invoice_fields_from_images
+        from ...llm import extract_invoice_fields_from_images
 
         if evidence.media_kind is MediaKind.PDF:
             images = rasterise_pdf_pages_to_base64_png(evidence.data)
@@ -779,6 +775,92 @@ def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Deci
     return value
 
 
+def _iva_rate_slot_for(rate: Decimal | None) -> IvaRate:
+    """Map a resolved percentage to its closed rate slot, refusing an unknown one.
+
+    Reuses the writer's own accepted-slot table rather than restating it, so
+    the confirm boundary and the direct writer cannot drift about which rates
+    exist. An unread or unsupported rate REFUSES here; letting it fall to the
+    exempt slot would mint a zero-cuota invoice against a document that printed
+    a cuota.
+    """
+    from ...application.invoices import numeric_iva_rate_slots
+
+    if rate is None:
+        return IvaRate.EXEMPT
+    slot = numeric_iva_rate_slots().get(rate)
+    if slot is None:
+        accepted = ", ".join(format(value, "f") for value in sorted(numeric_iva_rate_slots()))
+        rendered = format(rate, "f")
+        raise PurchaseInvoiceEvidenceInputError(
+            f"iva_rate {rendered} is not a recognised IVA percentage (accepted: {accepted})",
+        )
+    return slot
+
+
+def _refuse_an_issued_document_the_filer_did_not_issue(
+    *,
+    kind: InvoiceKind,
+    extracted_supplier_tax_id: str | None,
+) -> None:
+    """Refuse a document confirmed as ISSUED that someone else issued.
+
+    The sibling guard refuses a counterparty that names the filer. This one
+    catches the opposite mis-direction: a supplier's invoice TO the taxpayer,
+    confirmed as issued BY them. There the counterparty is a real third party,
+    so the sibling guard sees nothing wrong -- the record is internally
+    coherent and simply describes the wrong direction.
+
+    The evidence itself settles it. On a genuinely issued document the printed
+    supplier IS the filer, so an extracted supplier identity that is somebody
+    else is positive evidence the document was issued by that somebody else.
+
+    Direction is not cosmetic. It decides which informativa the record feeds
+    and on which side: a received invoice booked as issued moves a purchase
+    into the sales column, inverts the cuota's meaning between soportado and
+    repercutido, and reaches Modelo 347 as an operation the counterparty will
+    have declared with the opposite sign. AEAT reconciles those two
+    declarations against each other.
+
+    Refusing rather than warning, for the same reason the sibling guard does:
+    the direction is wrong under every reading, not merely doubtful.
+
+    The guard declines to judge where it cannot. An absent extracted supplier
+    means the scan found no issuer identity, which is silence rather than
+    evidence, and a bucket whose profile carries no tax id gives nothing to
+    compare against. Both return without refusing -- a guard that cannot run
+    must not block a path it cannot judge.
+
+    Args:
+        kind: The direction the operator is confirming the document as.
+        extracted_supplier_tax_id: Issuer identity recovered from the document,
+            or ``None`` when the scan found none.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: The document names an issuer who is
+            not the filer, yet is being confirmed as issued by the filer.
+    """
+    if kind is not InvoiceKind.ISSUED or extracted_supplier_tax_id is None:
+        return
+
+    from ..invoices import counterparty_is_the_filer
+    from ..wizard import WizardStatusError, load_active_taxpayer_profile
+    from ..workflow import workflow_state_repository
+
+    try:
+        profile = load_active_taxpayer_profile(workflow_state_repository().load())
+    except WizardStatusError:
+        return
+    # The loader raises rather than returning None, and that failure is already
+    # handled by the except clause above, so the former None guard was unreachable.
+    if counterparty_is_the_filer(counterparty_tax_id=extracted_supplier_tax_id, profile=profile):
+        return
+    raise PurchaseInvoiceEvidenceInputError(
+        "this document names another issuer, so it cannot be confirmed as issued by you; "
+        "confirm it as received, or correct the document reference",
+    )
+
+
 def confirm_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -793,6 +875,15 @@ def confirm_invoice_draft_from_evidence(
     taxable_base: Decimal | None = None,
     iva_rate: Decimal | None = None,
     currency: str | None = None,
+    iva_amount: Decimal | None = None,
+    iva_category: IvaCategory | None = None,
+    operation_date: date | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
+    recargo_amount: Decimal | None = None,
+    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
     notes: str = "",
     settings: Settings | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
@@ -836,6 +927,26 @@ def confirm_invoice_draft_from_evidence(
         currency: ISO-4217 currency code overriding the extracted one.
             When omitted, the currency printed on the document is used,
             falling back to euro only when the document shows none.
+        iva_amount: The cuota PRINTED on the document, when it differs from
+            base times rate. A printed figure is evidence and outranks a
+            recomputed one, so supplying it makes the persisted line carry it
+            exactly. The line invariants still apply, so a cuota the base and
+            rate cannot support refuses rather than overriding them.
+        iva_category: IVA treatment of the operation. Required for the renta
+            income lane to ground the record.
+        operation_date: Date the operation was performed, when it differs from
+            the issue date, letting the record reach a declared devengo rank.
+        retention_rate: RIRPF art. 95 withholding fraction, settled OUTSIDE
+            the invoice total.
+        retention_amount: The withheld figure. Accepted alone; required
+            whenever a rate is supplied.
+        recargo_amount: Recargo de equivalencia (LIVA art. 161), which rides
+            INSIDE the invoice total, unlike a retención.
+        invoice_class: Invoice class. A rectificativa also needs
+            ``rectifies_invoice_number``.
+        series: Invoice numbering series, when the issuer uses one.
+        rectifies_invoice_number: Number of the invoice a rectificativa
+            corrects.
         notes: Free-text operator notes carried onto the invoice.
         settings: Resolved ``Settings``; ``load_settings()`` when ``None``.
         invoice_repository: Optional injected
@@ -875,6 +986,10 @@ def confirm_invoice_draft_from_evidence(
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
+    _refuse_an_issued_document_the_filer_did_not_issue(
+        kind=kind,
+        extracted_supplier_tax_id=draft.supplier_tax_id,
+    )
     _refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
     resolved_invoice_number = _require_confirmed_field(
         invoice_number if invoice_number is not None else draft.invoice_number,
@@ -936,6 +1051,24 @@ def confirm_invoice_draft_from_evidence(
             total_discrepancy=printed_total_discrepancy(draft=draft, invoice=existing),
         )
 
+    # A PRINTED cuota is evidence and outranks a recomputed one. When the
+    # operator states it, the line carries that exact figure rather than
+    # base * rate, so a document whose printed cuota differs by a cent from the
+    # arithmetic is recorded as it was issued. The line invariants still apply,
+    # so a cuota the base and rate cannot support refuses rather than being
+    # accepted as an override.
+    confirmed_lines = None
+    if iva_amount is not None:
+        confirmed_lines = (
+            InvoiceLine(
+                description=resolved_invoice_number or "Invoice",
+                quantity=Decimal("1"),
+                unit_price=resolved_taxable_base,
+                subtotal=resolved_taxable_base,
+                iva_rate=_iva_rate_slot_for(resolved_iva_rate),
+                iva_amount=iva_amount,
+            ),
+        )
     result = create_catalogue_invoice(
         bucket_id=bucket_id,
         kind=kind,
@@ -948,6 +1081,15 @@ def confirm_invoice_draft_from_evidence(
         iva_rate=resolved_iva_rate,
         currency=resolved_currency,
         notes=notes,
+        iva_category=iva_category,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        recargo_amount=recargo_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        lines=confirmed_lines,
         repository=repository,
     )
     # Auto-link the source evidence/attachment to the newly minted invoice, closing

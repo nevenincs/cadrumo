@@ -31,8 +31,8 @@ screen:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import NoReturn
+from collections.abc import Callable, Iterable
+from typing import NoReturn, Protocol, cast
 
 from bs4 import BeautifulSoup
 
@@ -142,7 +142,18 @@ def continue_button_selectors(
     return tuple(selectors)
 
 
-async def click_first_matching_selector(page: object, selectors: tuple[str, ...]) -> None:
+class ClickablePage(Protocol):
+    """The one page capability :func:`click_first_matching_selector` requires.
+
+    Declared rather than accepting ``object`` and reaching through it: the
+    function needs exactly one method, and saying so lets a caller pass any page
+    that provides it while keeping the call site checkable.
+    """
+
+    async def click(self, selector: str) -> None: ...
+
+
+async def click_first_matching_selector(page: ClickablePage, selectors: tuple[str, ...]) -> None:
     """Click the first selector in ``selectors`` that resolves.
 
     Tries each selector via ``page.click`` in order, catching
@@ -165,7 +176,7 @@ async def click_first_matching_selector(page: object, selectors: tuple[str, ...]
     last_error: PlaywrightError | None = None
     for selector in selectors:
         try:
-            await page.click(selector)  # type: ignore[attr-defined]
+            await page.click(selector)
             return
         except PlaywrightError as exc:
             last_error = exc
@@ -173,13 +184,30 @@ async def click_first_matching_selector(page: object, selectors: tuple[str, ...]
         raise last_error
 
 
+def _absent_attribute(_name: str, default: object = None) -> object:
+    """Stand in for ``node.get`` on a node that has no attribute accessor.
+
+    A named function rather than a lambda: lambda parameters cannot carry
+    annotations, so the fallback erased the type of everything read through it.
+    """
+    return default
+
+
 def _html_node_has_class(node: object, class_name: str) -> bool:
-    classes = getattr(node, "get", lambda _name, _default=None: _default)("class", [])
+    getter = getattr(node, "get", _absent_attribute)
+    classes = getter("class", [])
     if isinstance(classes, str):
         return class_name in classes.split()
-    if classes is None:
-        return False
-    return class_name in classes
+    if isinstance(classes, Iterable):
+        # Third-party boundary: the node is whatever the HTML parser returned, so
+        # its class attribute is an iterable of unknown element type. The runtime
+        # check above establishes the iterability; the element type cannot be
+        # recovered and is compared as an opaque value.
+        entries = cast("Iterable[object]", classes)
+        return any(class_name == entry for entry in entries)
+    # Neither a class string nor an iterable of names: the node declares no
+    # usable class attribute, which is an absence rather than a match.
+    return False
 
 
 async def dismiss_pre303_alert_modal_if_present(
@@ -249,7 +277,10 @@ async def dismiss_pre303_alert_modal_if_present(
             on_declined_hidden_modal()
         return
     selectors = continue_button_selectors(alert_modal_selector, alert_continue_button_text, scoped_to_shown=True)
-    await click_first_matching_selector(page, selectors)
+    # The getattr probes above already established that this page provides
+    # click; this function stays duck-typed by design, returning early for a
+    # page that does not, so the capability is proven here rather than declared.
+    await click_first_matching_selector(cast("ClickablePage", page), selectors)
 
 
 __all__ = [

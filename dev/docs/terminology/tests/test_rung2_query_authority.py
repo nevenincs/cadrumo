@@ -54,12 +54,31 @@ def _canonical_queries() -> tuple[tuple[str, OutputLanguage, str], ...]:
     return tuple((query.concept_id, query.language, query.query) for query in enumerate_query_vocabulary())
 
 
-def test_bundled_authority_is_versioned_and_empty_until_independent_ratification() -> None:
+def test_bundled_authority_is_versioned_and_contains_independently_ratified_aliases() -> None:
     authority = load_query_alias_authority()
 
     assert authority.schema_version == QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION
     assert authority.authority_version == 1
-    assert authority.entries == ()
+    assert [entry.model_dump(mode="json") for entry in authority.entries] == [
+        {
+            "concept_id": "modelo-130",
+            "language": "es",
+            "query": "autonomos",
+            "canonical_query": "modelo 130",
+            "status": "ratified",
+            "review_reason": "Independent RAG grounding and live sweep resolve the user term to Modelo 130.",
+            "reviewed_at": "2026-08-06",
+        },
+        {
+            "concept_id": "modelo-303",
+            "language": "es",
+            "query": "autoliquidacion iva",
+            "canonical_query": "modelo 303",
+            "status": "ratified",
+            "review_reason": "Independent RAG grounding and live sweep resolve the user term to Modelo 303.",
+            "reviewed_at": "2026-08-07",
+        },
+    ]
     assert query_alias_authority_path().as_posix().endswith(
         "src/cadrumo/_data/terminology/rung2/query-alias-authority.json"
     )

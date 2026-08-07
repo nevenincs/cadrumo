@@ -127,8 +127,8 @@ def _stdin_is_a_real_console() -> bool:
 
         # TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES:
         # get_osfhandle and WinDLL are Windows-only, absent from cross-platform stubs.
-        handle = msvcrt.get_osfhandle(sys.stdin.fileno())  # type: ignore[attr-defined]
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
+        handle = msvcrt.get_osfhandle(sys.stdin.fileno())  # type: ignore[attr-defined]  # reason: TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES: get_osfhandle and WinDLL are Windows-only, absent from cross-platform stubs
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]  # reason: TYPE-IGNORE-RATIONALE-PLATFORM-WINDOWS-CTYPES, same Windows-only gate as the get_osfhandle call above
         kernel32.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
         kernel32.GetConsoleMode.restype = wintypes.BOOL
         mode = wintypes.DWORD()

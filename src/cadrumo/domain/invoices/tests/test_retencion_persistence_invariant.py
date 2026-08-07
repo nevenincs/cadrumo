@@ -36,6 +36,7 @@ import json
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Final
 
 import pytest
 from pydantic import ValidationError
@@ -54,6 +55,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # these proofs mutating bytes nothing reads.
 _INVOICE_NAMESPACE = INVOICE_CATALOGUE_NAMESPACE.namespace
 _INVOICE_OBJECT_KEY = INVOICE_CATALOGUE_NAMESPACE.default_object_key
+# These proofs address the catalogue by its declared default key. A namespace
+# without one would leave them mutating bytes nothing reads, which is exactly
+# the silent-no-op this module exists to rule out, so assert it rather than
+# letting the reads fail further down.
+if _INVOICE_OBJECT_KEY is None:  # pragma: no cover - namespace declares one
+    raise AssertionError("invoice catalogue namespace declares no default object key")
+_INVOICE_OBJECT_KEY_STR: Final[str] = _INVOICE_OBJECT_KEY
 _INVOICE_CATALOGUE_VERSION = INVOICE_CATALOGUE_NAMESPACE.schema_version
 
 _BASE = Decimal("1000.00")
@@ -115,7 +123,7 @@ def _persist_and_mutate(tmp_path: Path, mutate, *, names: tuple[str, ...]) -> No
 
         record = profile.repository.load(
             _INVOICE_NAMESPACE,
-            _INVOICE_OBJECT_KEY,
+            _INVOICE_OBJECT_KEY_STR,
             expected_class=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
             max_supported_version=_INVOICE_CATALOGUE_VERSION,
         )
@@ -135,7 +143,7 @@ def _persist_and_mutate(tmp_path: Path, mutate, *, names: tuple[str, ...]) -> No
         mutate(stored)
         profile.repository.save(
             namespace=_INVOICE_NAMESPACE,
-            object_key=_INVOICE_OBJECT_KEY,
+            object_key=_INVOICE_OBJECT_KEY_STR,
             classification=record.classification,
             schema_version=record.schema_version,
             written_at=record.written_at,

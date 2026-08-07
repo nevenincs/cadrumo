@@ -25,7 +25,10 @@ from ...domain.user_profile import (
     UserProfileFactValue,
     load_user_profile_schema,
 )
-from ._profile_binding import _profile_fact_index, _resolve_one
+
+# Intra-package reuse of this package's own resolver internals, which the
+# architecture rule permits; the cross-package boundary has its own gate.
+from ._profile_binding import _profile_fact_index, _resolve_one  # pyright: ignore[reportPrivateUsage]
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 

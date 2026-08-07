@@ -37,8 +37,11 @@ See Also:
         Validates ledger ``category_id`` / ``usage_ratio_id`` facts before the
         application source mesh feeds modelo calculation.
     :mod:`domain.invoices`
-        Carries the same stable category identifiers on invoice and purchase
-        evidence records used by aggregation.
+        Declares a per-line ``spending_category_id`` slot shaped for these
+        identifiers. It is NOT typed to this taxonomy and no aggregation
+        consumer reads it today -- an earlier form of this entry claimed both,
+        and a reader who trusted it would look for a coupling that does not
+        exist.
     :mod:`domain.calculations.registry`
         Owns modelo applicability, binding declarations, formulas, and casilla
         routing outside this taxonomy surface.

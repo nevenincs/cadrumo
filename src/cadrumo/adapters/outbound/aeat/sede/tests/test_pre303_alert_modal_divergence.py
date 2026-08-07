@@ -70,12 +70,15 @@ page."
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
+from typing import Any, cast
 
 import pytest
 
 from ......core.config import Settings, load_settings
+from ..._playwright import Page
 from ...auth import ClaveMovilAuthProvider
+from ...auth._authenticator_types import BrowserPageLike
 from .._iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as _wallet_dismiss
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -90,7 +93,7 @@ _BUTTON_TEXT = _PRE303.alert_continue_button_text
 # SYNTHETIC — hand-built, not captured from AEAT. See module docstring.
 _HTML_SHOWN = f"""
 <html><body>
-  <div id="{_MODAL_SELECTOR.lstrip('#')}" class="modal show" role="dialog">
+  <div id="{_MODAL_SELECTOR.lstrip("#")}" class="modal show" role="dialog">
     <div class="modal-footer">
       <button type="button">{_BUTTON_TEXT.capitalize()}</button>
     </div>
@@ -104,7 +107,7 @@ _HTML_SHOWN = f"""
 # canonical predicate now treats identically for both callers.
 _HTML_HIDDEN = f"""
 <html><body>
-  <div id="{_MODAL_SELECTOR.lstrip('#')}" class="modal" role="dialog">
+  <div id="{_MODAL_SELECTOR.lstrip("#")}" class="modal" role="dialog">
     <div class="modal-footer">
       <button type="button">{_BUTTON_TEXT.capitalize()}</button>
     </div>
@@ -119,7 +122,7 @@ _HTML_HIDDEN = f"""
 # fallback selector.
 _HTML_SHOWN_UNLABELLED_BUTTON = f"""
 <html><body>
-  <div id="{_MODAL_SELECTOR.lstrip('#')}" class="modal show" role="dialog">
+  <div id="{_MODAL_SELECTOR.lstrip("#")}" class="modal show" role="dialog">
     <div class="modal-footer">
       <button type="button">&times;</button>
     </div>
@@ -168,14 +171,20 @@ def _matches_when_shown_unlabelled(selector: str) -> bool:
 async def _run_auth(page: _FakePage) -> None:
     provider = ClaveMovilAuthProvider(load_settings())
     # Reaches the private method deliberately: this test characterises that method itself.
-    await provider._dismiss_pre303_alert_modal_if_present(page)
+    # The fake implements only the two members the delegation path touches; the
+    # declared page protocol is wider than that path needs, so the substitution is
+    # asserted here rather than loosening the production annotation to fit a double.
+    await provider._dismiss_pre303_alert_modal_if_present(cast("BrowserPageLike", page))
 
 
 async def _run_wallet(page: _FakePage) -> None:
-    await _wallet_dismiss(page)  # type: ignore[arg-type] -- _FakePage satisfies the narrow surface used
+    # Same substitution as the auth path above: the fake implements exactly the
+    # members this call touches, and the mypy-shaped suppression it carried
+    # silences nothing in the checkers actually running.
+    await _wallet_dismiss(cast("Page", page))
 
 
-def _run(coro_factory: Callable[[], Awaitable[None]]) -> None:
+def _run(coro_factory: Callable[[], Coroutine[Any, Any, None]]) -> None:
     import asyncio
 
     asyncio.run(coro_factory())

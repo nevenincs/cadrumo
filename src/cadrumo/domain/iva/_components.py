@@ -64,7 +64,7 @@ from ._schema import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     IvaCategory,
     IvaStrictFrozen,
-    _RegistryLegalRef,  # reason: intra-package reuse of the package's own constrained legal-ref alias
+    _RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
 )
 
 if TYPE_CHECKING:

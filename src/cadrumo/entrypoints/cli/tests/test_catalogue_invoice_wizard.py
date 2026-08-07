@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -287,3 +288,47 @@ def test_wizard_is_non_interactive() -> None:
     """
     result = invoke_cached_cli(_BASE_ARGS, input="")
     assert result.exit_code == 0, result.output
+
+
+def test_the_guided_verb_reaches_a_declared_devengo_rank() -> None:
+    """``--operation-date`` on the GUIDED verb, not only the direct one.
+
+    The non-guided verb has always accepted an operation date, so a test
+    driving that verb would be green already and prove nothing. This drives the
+    guided verb specifically, which is where the gap was.
+
+    It matters because the operation date is what lets a record reach a
+    DECLARED devengo rank. Without it the issue date stands as a proxy, and
+    period attribution rests on when the invoice was written rather than on
+    when the operation was performed -- which are the same date often enough
+    that the difference is invisible until it is not.
+    """
+    result = invoke_cached_cli(
+        ["--format", "json", *_BASE_ARGS, "--invoice-number", "2026-DEVENGO-001", "--operation-date", "2026-03-01"],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result.output)
+
+    stored = InvoiceCatalogueRepository().load().get(str(payload["invoice_id"]))
+    assert stored is not None
+    assert stored.operation_date == date(2026, 3, 1)
+    # The declared operation date is what raises the record above the proxy
+    # rank; the issue date remains what the document states.
+    assert stored.operation_date != stored.issued_at
+
+
+def test_the_guided_verb_reports_a_malformed_operation_date_under_its_own_field() -> None:
+    """The refusal names ``operation_date``, not ``invoice_date``.
+
+    The guided verb's contract is that every field failure is attributed and
+    accumulated, so a refusal naming the wrong field would send the operator to
+    correct a value that was already correct. That is why the operation date
+    has its own validator rather than sharing the invoice-date one.
+    """
+    result = invoke_cached_cli(
+        ["--format", "json", *_BASE_ARGS, "--invoice-number", "2026-DEVENGO-002", "--operation-date", "01/03/2026"],
+    )
+
+    assert result.exit_code != 0
+    assert "operation_date" in result.output

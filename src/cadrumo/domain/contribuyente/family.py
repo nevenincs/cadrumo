@@ -125,8 +125,8 @@ class MinimoDescendientesThresholds(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    rentas_anuales_limite: Decimal = Field(ge=0)
-    declaracion_propia_rentas_limite: Decimal = Field(ge=0)
+    rentas_anuales_limite: Decimal = Field(ge=Decimal("0"))
+    declaracion_propia_rentas_limite: Decimal = Field(ge=Decimal("0"))
 
 
 class GuarderiaMonthSpend(BaseModel):
@@ -318,7 +318,7 @@ class DescendantInfo(BaseModel):
     convive_con_contribuyente: bool = True
     dependencia_economica: bool | None = None
     custodia_compartida: bool = False
-    rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
+    rentas_anuales_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     presenta_declaracion_propia: bool = False
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
@@ -409,6 +409,7 @@ class DescendantInfo(BaseModel):
         # Untyped by construction: this is raw pre-validation input, and
         # pydantic re-validates every value against the declared field type
         # immediately after.
+        # nosemgrep: no-cast-in-domain-application
         raw = cast("dict[str, object]", data)
         if raw.get("relacion") is not None:
             return raw
@@ -1316,7 +1317,7 @@ class RentaFamilyProfile(BaseModel):
     descendants: tuple[RentaDescendantProfile, ...] = ()
     ascendants: tuple[RentaAscendantProfile, ...] = ()
     descendientes: tuple[DescendantInfo, ...] = ()
-    anualidades_alimentos_euros: Decimal | None = Field(default=None, ge=0)
+    anualidades_alimentos_euros: Decimal | None = Field(default=None, ge=Decimal("0"))
     """Judicial anualidades por alimentos the filer PAYS, or ``None`` if undeclared.
 
     Filer-level rather than per-descendant, and that is the staged boundary
@@ -1369,6 +1370,7 @@ class RentaFamilyProfile(BaseModel):
             # to list but not its element type; pydantic re-validates each
             # element against the field's declared item type after this
             # coercion.
+            # nosemgrep: no-cast-in-domain-application
             return tuple(cast("list[object]", value))
         return value
 
@@ -1379,6 +1381,7 @@ class RentaFamilyProfile(BaseModel):
             # CAST-RATIONALE-DESCENDIENTES-COERCION: isinstance narrows to list
             # but not its element type; pydantic re-validates each element
             # against the field's declared item type after this coercion.
+            # nosemgrep: no-cast-in-domain-application
             return tuple(cast("list[object]", value))
         return value
 

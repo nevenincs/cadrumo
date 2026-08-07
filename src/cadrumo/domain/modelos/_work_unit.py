@@ -324,6 +324,7 @@ class WorkUnitCatalogue(BaseModel):
             # check above already narrows the union to tuple[WorkUnit, ...];
             # ty narrows the tuple union conservatively, so the cast restates
             # what pyright itself already knows.
+            # nosemgrep: no-cast-in-domain-application
             units_tuple = cast(tuple[WorkUnit, ...], units)  # pyright: ignore[reportUnnecessaryCast]
             for unit in units_tuple:
                 if unit.work_unit_id in mapping:
