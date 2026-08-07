@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:bf5b7e2a035e2a3ad20ec841c6e230fd675d7ba7ff8f90b8f136066d1eb20825'
+body_hash: 'sha256:299b41afa93688fdb98da21a1978a04461ffd8d869e3a3227f1b33df6802afed'
 related: []
 ---
 # `adr-corpus-reconciliation` audit: `Reconciling the ADR corpus against HEAD`
@@ -55,24 +55,40 @@ open anywhere in the current body. Confirmed independently: art. 85 and all
 eight previously-missing articles are grounded and resolve through the live
 legal-catalogue resolver. No action needed.
 
-### aic-routing-and-rate-box-implementing-rows-absent-from-plan | medium | two amendments ruling on code have no corresponding vault/plan Step
+### aic-routing-and-rate-box-implementing-rows-absent-from-plan | medium | closed: plan opened, both ADRs repointed at it
 
 Both of the above amendments explicitly state "this amendment rules on code
-and is not self-executing" and describe the corpus/implementation work as
+and is not self-executing" and described the corpus/implementation work as
 "tracked as separate open rows." Searched .vault/plan/ for any Step naming
 the AIC re-route, the rate-box per-block test, the recargo mismatch advisory,
-or the art-161 re-key: none exists. The only tracking artefacts found are
-ephemeral coordination-fleet task-board entries (not .vault/ documents,
-not durable, not visible to a future reader of the ADR corpus). Per
-plan-closure-requires-exec-records and this campaign's own discipline
-("an ADR amendment that rules on CODE is not self-executing... open the
-implementing rows in the same action as the amendment"), these amendments
-currently read as in-force rulings with no durable row a future session can
-find. Recommend a plan Step (or a small dedicated plan) enrolling: the AIC
-re-route (M390 ISP-line to AIC-line correction plus its two cross-modelo
-residues - AIC base imponible reaching no official box on either return, and
-the zero rate-kind gap), the four-block rate-box precondition test, the
-art-161 recargo re-key plus its blocked-on-ADR mismatch advisory.
+or the art-161 re-key: none existed. The only tracking artefacts found were
+ephemeral coordination-fleet task-board entries (not .vault/ documents, not
+durable, not visible to a future reader of the ADR corpus).
+
+Closed by this reconciliation: opened
+2026-08-07-adr-amendment-implementing-rows-plan (tier L1, related to all
+three governing ADRs) with Steps S02 (the AIC re-route plus its two named
+cross-modelo residues), S03 (the four-block rate-box precondition test), S04
+(the recargo mismatch advisory, blocked on recargo-equivalencia-source-of-truth-adr
+reaching accepted), S05 (the art-161 re-key - recorded CLOSED rather than
+pending, since d43bd3366a is an ancestor of HEAD; a Step reading open when
+its work is done is the same class of lie as one reading closed when it is
+not). Then re-checked both amended ADRs' own text: modelo-iva-routing-carry-adr
+said "the corpus work and the re-route are tracked as separate open rows" -
+rewritten to name S02 by plan stem directly. rate-box-evidence-assertion-adr
+did not use that exact phrase but had no pointer at all for its per-block
+test obligation - added one naming S03. The phrasing that made the tracking
+invisible in the first place ("separate open rows" with nothing to resolve
+to) no longer appears ungrounded anywhere in the reconciled set.
+
+One tooling gap surfaced while closing this: `vault add exec --step S05`
+refuses to scaffold an execution record because a cluster-plan's feature tag
+carries no ADR of its own (by design - it spans three ADRs under different
+feature tags). S05's provenance rests on the plan's Description prose plus
+the citable commit sha rather than a formal exec artifact; scaffolding under
+a wrong feature tag to work around the refusal would have been worse; a
+mis-tagged exec record looks like provenance while pointing at the wrong
+feature.
 
 ### llm-invoice-read-reconciliation-still-blocking | low | genuinely current, correctly proposed
 
@@ -201,6 +217,32 @@ audit found it uncorrected while the record was still proposed. This puts
 the pointer where whoever ratifies D8a will see it directly, not only in
 this audit.
 
+### output-casilla-id-framing-checked-against-tonights-fourth-enum-member | low | framing survives, unaffected
+
+Follow-up check: a fourth IvaFlowDirection member, OPERACION_CON_INVERSION,
+landed tonight (src/cadrumo/domain/iva/_flow.py, the supplier's side of a
+reverse-charge operation, deliberately contributing to NEITHER settlement
+side). Asked whether this is the kind of schema change the
+binding-output-casilla-declaration-adr's framing needs to survive, since it
+is exactly the sort of precedent someone could later cite.
+
+Checked: it is not analogous. The new member widens the VALUE SET of an
+existing field (flow_direction) that _IvaLedgerSelector already carries; the
+ADR's structural claim is that _IvaLedgerSelector has NO FIELD AT ALL to
+express a casilla-divergence (a different axis - a missing selector field,
+not a missing enum value). Also checked whether OPERACION_CON_INVERSION's
+landing exercised the gap in practice: it has zero production registry
+consumers (only its own definition and test file reference it), so no
+binding has yet tried to route it through the casilla-declares-binding
+mechanism at all, let alone hit the missing-field wall. The ADR's framing is
+unaffected and needs no correction.
+
+### amended-adrs-now-point-at-the-plan | mechanical | closed by this reconciliation
+
+Verified both ADRs' closing text points at
+2026-08-07-adr-amendment-implementing-rows-plan by name rather than at
+"separate open rows": see the closed finding above for the exact edits.
+
 ## Recommendations
 
 - When 2026-08-07-unstructured-document-ingestion-adr is ratified (or
@@ -214,20 +256,11 @@ this audit.
   to do this now lives in D8a's own text (added by this reconciliation), not
   only in this audit.
 
-- DONE (this reconciliation): opened
-  2026-08-07-adr-amendment-implementing-rows-plan (tier L1) enrolling the
-  three amendments' implementing work as Steps S02-S05: the AIC re-route
-  (with its two named cross-modelo residues), the four-block rate-box
-  precondition test, the art-161 recargo re-key (already landed at
-  d43bd3366a, recorded closed rather than pending), and the recargo mismatch
-  advisory (blocked on recargo-equivalencia-source-of-truth-adr reaching
-  accepted). These were previously tracked only in an ephemeral
-  coordination-fleet task board, invisible to a future reader of the vault
-  corpus and not satisfying plan-closure-requires-exec-records.
-
 No contradictions, duplications, or fragmented-decision clusters were found
 in the reconciled set beyond the one drift finding above. The corpus's
 handling of premise-superseded situations elsewhere in this cluster (the
 activity-type-placement ADR's self-audit, the rate-box and IVA-routing
 amendments' explicit withdrawals) is unusually disciplined and is noted as a
-positive pattern worth preserving.
+positive pattern worth preserving. The corpus was scoped to the named
+cluster rather than swept in full: the rest of the 625-record corpus is
+unswept, not clean.
