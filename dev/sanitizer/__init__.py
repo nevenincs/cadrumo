@@ -12,14 +12,14 @@ or general-purpose anonymisation. Cleartext mappings belong in operator-local
 scratch files; the committed artefact should be the sanitised PDF plus the
 cleartext-free audit output from :class:`SanitizationResult`.
 
-Callers outside :mod:`adapters.inbound.sanitizer` must import
+Callers outside :mod:`dev.sanitizer` must import
 exclusively from this module — the private modules
 (``_records``, ``_errors``, ``_pipeline``, ``_streams``,
 ``_metadata``, ``_dynamic``, ``_structtree``, ``_determinism``)
 are implementation details.
 
 Examples:
-    >>> from cadrumo.adapters.inbound.sanitizer import sanitize_pdf, TokenMap, NifReplacement  # doctest: +SKIP
+    >>> from dev.sanitizer import sanitize_pdf, TokenMap, NifReplacement  # doctest: +SKIP
     >>> mapping = TokenMap(  # doctest: +SKIP
     ...     nif=(NifReplacement(real="Y1234567X", synthetic="Y0000001S", surface_label="taxpayer NIE"),),
     ... )

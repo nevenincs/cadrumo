@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for the :mod:`adapters.inbound.sanitizer` subpackage.
+"""Strict pydantic v2 records for the :mod:`dev.sanitizer` subpackage.
 
 Every record in this module is `frozen`, `extra="forbid"`,
 `strict=True`. Cleartext PII lives exclusively in
@@ -27,8 +27,9 @@ from pydantic import (
     model_validator,
 )
 
-from ....core.hashing import sha256_hex
-from ....core.identity import validate_spanish_tax_id
+from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.identity import validate_spanish_tax_id
+
 from ._errors import SanitizerValidationError
 
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"

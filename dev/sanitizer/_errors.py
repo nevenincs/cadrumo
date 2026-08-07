@@ -1,22 +1,44 @@
-"""Domain errors raised by the :mod:`adapters.inbound.sanitizer` subpackage.
+"""Domain errors raised by the :mod:`dev.sanitizer` subpackage.
 
-All sanitiser errors inherit from
-:class:`core.errors.CadrumoError` so callers can catch the family
-without importing implementation details. The hierarchy mirrors the
-failure surfaces the sanitiser pipeline can encounter — source-parse
-failure, signature-present refusal, already-sanitised guard, and
-unhandled PII surfaces.
+All sanitiser errors inherit from :class:`SanitizationError` so callers
+can catch the family without importing implementation details. The
+hierarchy mirrors the failure surfaces the sanitiser pipeline can
+encounter — source-parse failure, signature-present refusal,
+already-sanitised guard, and unhandled PII surfaces.
+
+The root is a bare :class:`Exception` rather than
+:class:`cadrumo.core.errors.CadrumoError`. That hierarchy binds every
+subclass to the product's operator-facing error-code registry at class
+creation and expects a locale-catalogue message key per code; this
+package is fixture-preparation tooling with no operator-facing surface,
+so it has no code to register and no string to translate. Re-parenting it
+would put unshipped tooling into the shipped error contract.
 """
 
 from __future__ import annotations
 
-from ....core.errors import CadrumoError
+from collections.abc import Mapping
 
 _SANITIZER_SOURCE_LABEL = "<input-pdf>"
 
 
-class SanitizationError(CadrumoError):
-    """Base error for the :mod:`adapters.inbound.sanitizer` subpackage."""
+class SanitizationError(Exception):
+    """Base error for the :mod:`dev.sanitizer` subpackage."""
+
+    def __init__(self, message: str | None = None, *, context: Mapping[str, object] | None = None) -> None:
+        """Construct a sanitiser error with optional redacted structured context.
+
+        Args:
+            message: Human-readable diagnostic text, already redacted by the
+                caller.
+            context: Structured detail safe to render — never a source path,
+                a cleartext identity value, or a full digest.
+        """
+        if message:
+            super().__init__(message)
+        else:
+            super().__init__()
+        self.context: dict[str, object] | None = dict(context) if context is not None else None
 
 
 class SanitizerValidationError(SanitizationError, ValueError):
@@ -60,7 +82,6 @@ class SanitizerSourceParseError(SanitizationError):
         super().__init__(
             f"source PDF could not be opened for sanitization: {_SANITIZER_SOURCE_LABEL}",
             context=context,
-            translated_message="errors.fail.fail_sanitization_source_parse",
         )
         self.failure: str | None = failure
 
@@ -92,7 +113,6 @@ class AlreadySanitizedError(SanitizationError):
         super().__init__(
             "source PDF is already a committed sanitised fixture; pass refuse_if_already_sanitized=False to override",
             context={"source_sha256_prefix": source_sha256[:16]},
-            translated_message="errors.refused.refused_sanitization_already_sanitized",
         )
         self.source_sha256: str = source_sha256
 

@@ -37,9 +37,9 @@ from pathlib import Path
 import pikepdf
 import pytest
 
-from .....tests import FIXTURES_DIR
+from cadrumo.tests import FIXTURES_DIR
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _committed_fixture_pairs() -> list[tuple[Path, Path]]:

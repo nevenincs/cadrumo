@@ -81,7 +81,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from .....tests import SRC_CADRUMO
+from cadrumo.tests import SRC_CADRUMO
+
 from .. import sanitize_pdf
 from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
 from ._residual_identity_scan import (
@@ -90,7 +91,7 @@ from ._residual_identity_scan import (
     scan_for_residual_identities,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: Synthetic specimen identities PLANTED to prove the scanner actually fires.
 #:

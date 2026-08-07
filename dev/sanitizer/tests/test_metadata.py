@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`cadrumo.adapters.inbound.sanitizer._metadata`.
+"""Unit tests for :mod:`dev.sanitizer._metadata`.
 
 The tests synthesise PDFs in-process (no fixture dep) covering:
 
@@ -18,7 +18,7 @@ import pytest
 
 from .._metadata import scrub_docinfo, scrub_xmp
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _new_pdf_with_docinfo() -> pikepdf.Pdf:

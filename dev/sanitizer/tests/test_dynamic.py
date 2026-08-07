@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`cadrumo.adapters.inbound.sanitizer._dynamic` and ``_structtree``.
+"""Unit tests for :mod:`dev.sanitizer._dynamic` and ``_structtree``.
 
 Each surface is exercised in isolation against a synthesised PDF
 that pins the surface in question. The tests assert presence
@@ -25,7 +25,7 @@ from .._dynamic import (
 )
 from .._structtree import drop_struct_tree
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _new_one_page_pdf() -> pikepdf.Pdf:

@@ -1,4 +1,4 @@
-"""Byte-stable save flags for :mod:`adapters.inbound.sanitizer`.
+"""Byte-stable save flags for :mod:`dev.sanitizer`.
 
 The default :meth:`pikepdf.Pdf.save` invocation is non-deterministic:
 the trailer ``/ID`` array is timestamp-seeded, ``recompress_flate``

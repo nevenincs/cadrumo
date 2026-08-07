@@ -1,4 +1,4 @@
-"""Content-stream rewrite for :mod:`adapters.inbound.sanitizer`.
+"""Content-stream rewrite for :mod:`dev.sanitizer`.
 
 Walks every text-show operator on every page of a PDF and rewrites
 the operand text in place against a :class:`TokenMap`. Pikepdf's
@@ -45,7 +45,7 @@ from pikepdf import (
     Object as PikepdfObject,
 )
 
-from ....core.hashing import sha256_hex
+from cadrumo.core.hashing import sha256_hex
 
 if TYPE_CHECKING:
     from pikepdf.models._content_stream import UnparseableContentStreamInstructions

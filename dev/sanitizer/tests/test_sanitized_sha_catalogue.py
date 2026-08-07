@@ -31,10 +31,11 @@ import hashlib
 
 import pytest
 
-from .....tests import FIXTURES_DIR
+from cadrumo.tests import FIXTURES_DIR
+
 from ..fixtures import SANITIZED_SHAS
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _JUSTIFICANTES = FIXTURES_DIR / "justificantes"
 

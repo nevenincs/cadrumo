@@ -43,8 +43,8 @@ from typing import Any
 
 import pikepdf
 
-from .....core import IBAN_SHAPE_RE, iban_mod_97
-from .....core.identity import IdentityError, validate_identity
+from cadrumo.core import IBAN_SHAPE_RE, iban_mod_97
+from cadrumo.core.identity import IdentityError, validate_identity
 
 
 class ResidualKind(StrEnum):

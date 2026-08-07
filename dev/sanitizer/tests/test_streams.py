@@ -1,11 +1,11 @@
-"""Unit tests for :mod:`cadrumo.adapters.inbound.sanitizer._streams`.
+"""Unit tests for :mod:`dev.sanitizer._streams`.
 
 The tests synthesise PDFs in-process with content streams that pin each
 text-show operator the sanitiser must rewrite (``Tj``, ``TJ``, ``'``,
 ``"``). For each operator the test asserts that the cleartext is gone
 from the post-rewrite content stream, the synthetic value is present at
 the same position, and one
-:class:`cadrumo.adapters.inbound.sanitizer._records.Replacement` row landed
+:class:`dev.sanitizer._records.Replacement` row landed
 per cleartext occurrence carrying the SHA-256 of the cleartext (never
 the cleartext itself).
 """
@@ -23,7 +23,7 @@ from pydantic import SecretStr
 from .._records import ArbitraryReplacement, NameReplacement, NifReplacement, TokenMap
 from .._streams import apply_token_map_to_pdf
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REAL_NIE_CANARY = "Y1234567X"
 _REAL_NIE_CANARY_PREFIX = "Y1234567"

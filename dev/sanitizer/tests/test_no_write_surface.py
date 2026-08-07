@@ -1,4 +1,4 @@
-"""Write-guard tests for :mod:`~adapters.inbound.sanitizer`.
+"""Write-guard tests for :mod:`~dev.sanitizer`.
 
 The sanitiser subpackage MUST NOT contain any public symbol whose
 name implies an AEAT mutation. This module is a CI-time grep guard
@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 # Banned verbs from the parent aeat-verify write guard.
@@ -59,14 +59,14 @@ _FORBIDDEN_VERBS: tuple[str, ...] = (
 #: must exist and must contribute at least one non-test module; that floor is
 #: enforced PER ROOT (see the module docstring for why a global floor cannot
 #: see a dead root). Adding a root here automatically extends the floor to it.
-_GUARDED_ROOTS: tuple[str, ...] = ("src/cadrumo/adapters/inbound/sanitizer",)
+_GUARDED_ROOTS: tuple[str, ...] = ("dev/sanitizer",)
 
 
 def _project_root() -> Path:
     """Returns the repository root from this test file's location."""
     here = Path(__file__).resolve()
-    # src/cadrumo/adapters/inbound/sanitizer/tests/test_no_write_surface.py → up 7 levels
-    return here.parents[6]
+    # dev/sanitizer/tests/test_no_write_surface.py -> up 4 levels
+    return here.parents[3]
 
 
 def _modules_under(directory: Path) -> list[Path]:

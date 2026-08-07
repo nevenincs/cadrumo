@@ -1,4 +1,4 @@
-"""Top-level orchestrator for :mod:`adapters.inbound.sanitizer`.
+"""Top-level orchestrator for :mod:`dev.sanitizer`.
 
 Implements the canonical sanitiser pipeline:
 
@@ -33,8 +33,9 @@ from typing import Literal
 import pikepdf
 from pikepdf import PdfError as PikepdfError
 
-from ....core.hashing import hash_file, sha256_hex
-from ....core.logging import get_logger
+from cadrumo.core.hashing import hash_file, sha256_hex
+from cadrumo.core.logging import get_logger
+
 from . import fixtures as _fixtures
 from ._determinism import save_with_deterministic_flags
 from ._dynamic import (

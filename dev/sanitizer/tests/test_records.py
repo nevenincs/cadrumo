@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`cadrumo.adapters.inbound.sanitizer._records`.
+"""Unit tests for :mod:`dev.sanitizer._records`.
 
 The tests focus on three load-bearing contracts:
 
@@ -20,7 +20,8 @@ from hashlib import sha256
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from .....core.identity import IdentityError
+from cadrumo.core.identity import IdentityError
+
 from .._records import (
     AddressReplacement,
     ArbitraryReplacement,
@@ -39,7 +40,7 @@ from .._records import (
     TokenMap,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 _SHA = "0" * 64

@@ -1,4 +1,4 @@
-"""Dynamic-surface strip for :mod:`adapters.inbound.sanitizer`.
+"""Dynamic-surface strip for :mod:`dev.sanitizer`.
 
 Dynamic surfaces are the parts of a PDF that can rewrite content at
 view time: embedded JavaScript, AcroForm field values, annotations,

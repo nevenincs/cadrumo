@@ -1,4 +1,4 @@
-"""End-to-end tests for :mod:`cadrumo.adapters.inbound.sanitizer._pipeline`.
+"""End-to-end tests for :mod:`dev.sanitizer._pipeline`.
 
 These tests exercise the orchestrator on synthesised PDFs and
 assert:
@@ -8,7 +8,7 @@ assert:
 * The signed-PDF refuse guard fires.
 * The already-sanitised refuse guard fires when the source SHA
   is in :data:`SANITIZED_SHAS`, and can be opted out per-call.
-* Public re-exports import cleanly from :mod:`cadrumo.adapters.inbound.sanitizer`.
+* Public re-exports import cleanly from :mod:`dev.sanitizer`.
 """
 
 from __future__ import annotations
@@ -22,12 +22,13 @@ import pikepdf
 import pytest
 from pydantic import SecretStr
 
-from .....tests import FIXTURES_DIR
+from cadrumo.tests import FIXTURES_DIR
+
 from .. import fixtures, sanitize_pdf
 from .._errors import AlreadySanitizedError, SanitizerSourceParseError, SignaturePresentError
 from .._records import NameReplacement, NifReplacement, TokenMap
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 # A committed justificante whose SHA-256 is catalogued in
 # fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires against
@@ -273,10 +274,10 @@ class TestRefuseIfAlreadySanitized:
 
 
 class TestPublicReexports:
-    """Every public symbol is importable from :mod:`cadrumo.adapters.inbound.sanitizer`."""
+    """Every public symbol is importable from :mod:`dev.sanitizer`."""
 
     def test_all_public_names_are_importable(self) -> None:
-        sanitizer = import_module("cadrumo.adapters.inbound.sanitizer")
+        sanitizer = import_module("dev.sanitizer")
 
         assert sanitizer.__all__, "package must declare a non-empty __all__"
         for name in sanitizer.__all__:
