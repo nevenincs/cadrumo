@@ -2020,7 +2020,7 @@ required_text = [
 [legal."real-decreto-ley-4-2024:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
-kind = "real-decreto-ley"
+kind = "real_decreto_ley"
 corpus_ref = "corpus/normatives/html/boe-a-2024-12944-rdl-4-2024-iva-alimentos.html#a1"
 document_id = "BOE-A-2024-12944"
 article = "1"
