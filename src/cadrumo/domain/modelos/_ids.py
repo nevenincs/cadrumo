@@ -14,9 +14,10 @@ single hex-64 alias would lose the role separation.
 The cross-cutting bucket identity lives in :mod:`cadrumo.core.identity`
 because it is a per-profile storage-container identity owned by the
 persistence boundary, not by any record domain. The ledger-transaction
-identity lives in :mod:`cadrumo.domain.transactions._ids` under
-owner-domain placement; the modelo records never reference the
-transaction identity directly so no sibling-domain import is required.
+identity lives in :mod:`cadrumo.core.identity` for the same reason -- it
+is consumed by several sibling domains rather than owned by one; the
+modelo records never reference it directly, so no sibling-domain import
+is required.
 """
 
 from __future__ import annotations

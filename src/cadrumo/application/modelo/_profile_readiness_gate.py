@@ -340,7 +340,7 @@ def modelo_applicability_refusal(
         modelo: Modelo code being checked.
     """
     modelo_code = modelo.strip()
-    profile = projection_for_taxpayer(record, tax_id_default="00000000T")
+    profile = projection_for_taxpayer(record)
     applicability = derive_modelo_applicability(profile, modelo_code)
     if applicability.verdict not in _BLOCKING_APPLICABILITY_VERDICTS:
         return None

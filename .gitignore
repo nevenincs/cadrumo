@@ -381,6 +381,10 @@ cache/
 # Root-level scratch text dumps that don't fit the tmp_*.txt shape above
 # (e.g. scratch_pathspec.txt from a staged-pathspec probe).
 /scratch_*.txt
+# Root-level scratch markdown drafts staged for a vault document
+# (e.g. scratch_adr_body.md fed to `vault edit --body-file`). The vault
+# document is the durable artefact; the draft is not.
+/scratch_*.md
 # Root-level captured command/gate output dumps (e.g. test_docs_output.txt
 # from an ad-hoc docs-gate run). Never a durable repo artifact.
 /*_output.txt

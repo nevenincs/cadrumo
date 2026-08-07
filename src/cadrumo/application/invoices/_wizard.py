@@ -1,6 +1,6 @@
 """Guided, non-blocking manual-entry path for one catalogue :class:`~domain.invoices.Invoice`.
 
-``aeat app ledger invoice catalogue wizard`` is the fallback entry point for
+``aeat app ledger invoice wizard`` is the fallback entry point for
 when automated extraction (``ledger evidence extract`` / vision OCR) is
 unavailable or insufficient: the operator (an autonomous LLM agent that cannot
 answer an interactive prompt) supplies every invoice field as CLI options in
@@ -53,11 +53,12 @@ from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,
     InvoiceValidationError,
+    numeric_iva_rate_slots,
     validate_country_code,
     validate_iva_number,
 )
 from ...domain.iva import InvoiceKind, IvaCategory
-from ._creation import build_catalogue_invoice, create_catalogue_invoice, numeric_iva_rate_slots
+from ._creation import build_catalogue_invoice, create_catalogue_invoice
 
 __all__ = [
     "InvoiceWizardFieldError",

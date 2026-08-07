@@ -292,11 +292,6 @@ _EXEMPT_BOOL_SITES: Mapping[str, tuple[int, str]] = {
         "widening it here would disable the guard. The descendiente reads in the same file are "
         "NOT exempt -- they were converted, which is why this is granted for one site only.",
     ),
-    "src/cadrumo/application/modelo/_profile_binding.py": (
-        1,
-        "Same canonical round-trip as the descendant facts it reads: the convivencia fact is "
-        "written as 'true'/'false' by the writer above, so this is decoding, not interpreting.",
-    ),
     "src/cadrumo/domain/calculations/registry/_record_design.py": (
         2,
         "A FALSE POSITIVE, and the reason is worth stating so nobody 'fixes' it. The tokens are "

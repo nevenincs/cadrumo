@@ -132,7 +132,7 @@ def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -
 
     # The invoice is a real row in the rich catalogue store -- not merely the
     # confirm command's echoed payload.
-    listed = _invoke(["--format", "json", "app", "ledger", "invoice", "catalogue", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "invoice", "list"])
     assert listed.exit_code == 0, listed.output
     catalogue = json.loads(listed.output)["result"]
     assert catalogue["count"] == 1
@@ -170,7 +170,7 @@ def test_confirm_is_idempotent_guarded_on_a_second_identical_confirm(tmp_path: P
     assert second_result["invoice_id"] == first_result["invoice_id"]
 
     # No duplicate row was minted: the catalogue still carries exactly one invoice.
-    listed = _invoke(["--format", "json", "app", "ledger", "invoice", "catalogue", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "invoice", "list"])
     assert listed.exit_code == 0, listed.output
     assert json.loads(listed.output)["result"]["count"] == 1
 
@@ -236,7 +236,7 @@ def test_confirm_of_a_different_override_mints_a_distinct_invoice(tmp_path: Path
     assert second_result["created"] is True
     assert second_result["invoice_id"] != first_result["invoice_id"]
 
-    listed = _invoke(["--format", "json", "app", "ledger", "invoice", "catalogue", "list"])
+    listed = _invoke(["--format", "json", "app", "ledger", "invoice", "list"])
     assert listed.exit_code == 0, listed.output
     assert json.loads(listed.output)["result"]["count"] == 2
 

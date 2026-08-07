@@ -4,20 +4,17 @@ Owns the operator-facing ledger lifecycle: importing bank statements and
 records, classifying transactions for tax, splitting and merging entries,
 attaching evidence, and checking a period's tax-readiness before a modelo
 calculation consumes it. The primary movement fact remains
-``ledger_transaction``. Purchase invoice evidence and payable / collectible
-business invoices are related bucket-scoped records, not ledger rows, and their
-source-kind identity is carried by
-:class:`BusinessOperationInvoiceDirection`.
+``ledger_transaction``. Purchase invoice evidence is a related bucket-scoped
+record, not a ledger row.
 
-The ledger-mounted invoice surface is intentionally slim:
-:class:`BusinessOperationInvoice` records carry the
-:class:`BusinessOperationInvoiceDirection` source-kind discriminator consumed by
-:class:`PayableInvoiceService` and :class:`CollectibleInvoiceService`. Rich
-invoice-line detail and reconciliation links stay in
-:mod:`domain.invoices`, while the application invoice package maps issued /
-received invoice directions back onto
-:attr:`core.BindingSourceKind.PAYABLE_INVOICE` and
-:attr:`core.BindingSourceKind.COLLECTIBLE_INVOICE`.
+This package owns no invoice record of its own. Invoices live in exactly one
+place -- the :class:`domain.invoices.Invoice` aggregate, held in an
+:class:`domain.invoices.InvoiceCatalogue` and driven by
+:mod:`application.invoices`. The issued / received direction maps onto
+:attr:`core.BindingSourceKind.COLLECTIBLE_INVOICE` and
+:attr:`core.BindingSourceKind.PAYABLE_INVOICE` through
+:func:`application.invoices.invoice_direction_to_source_kind`, which is the one
+home for that mapping.
 
 Major declarations:
 
@@ -47,10 +44,6 @@ Major declarations:
   :class:`InvoiceConfirmationResult` - the non-interactive confirm step that
   re-extracts a draft, layers operator overrides on top, and delegates the
   actual write to :func:`application.invoices.create_catalogue_invoice`.
-* :class:`PayableInvoiceService`,
-  :class:`CollectibleInvoiceService`, and
-  :class:`BusinessOperationInvoiceRepository` - the
-  encrypted CRUD surface behind ``aeat app ledger invoice --kind issued|received``.
 * :func:`resolve_transaction_id` - the
   unambiguous-prefix id resolver, and
   :func:`resolve_lineage_transaction_id` - its
@@ -131,19 +124,6 @@ if TYPE_CHECKING:
         split_transaction,
         split_transaction_with_classified_children,
     )
-    from ._business_operation_invoice import (
-        BusinessOperationInvoice,
-        BusinessOperationInvoiceDirection,
-        BusinessOperationInvoiceDocument,
-        BusinessOperationInvoiceInputError,
-        BusinessOperationInvoiceNotFoundError,
-        BusinessOperationInvoicePatch,
-        BusinessOperationInvoiceRepository,
-        BusinessOperationInvoiceResult,
-        CollectibleInvoiceService,
-        PayableInvoiceService,
-        validate_eu_iva_id,
-    )
     from ._evidence import (
         MediaKind,
         PurchaseInvoiceEvidence,
@@ -170,15 +150,6 @@ if TYPE_CHECKING:
         resolve_transaction_id,
     )
     from ._llm_classification import (
-        LLMClassificationSuggestion,
-        LLMProvider,
-        LLMProviderAvailability,
-        LLMSaturatedSuggestion,
-        LLMSplitApplyResult,
-        LLMSplitChildSuggestion,
-        LLMSplitSuggestion,
-        LLMSuggestionRejectionResult,
-        OperatorIvaDerivationResult,
         apply_evidence_classification,
         apply_evidence_split,
         apply_llm_classification,
@@ -274,28 +245,11 @@ _LAZY_EXPORTS: dict[str, str] = {
     "BulkClassifyFailure": "._models",
     "BulkClassifyResult": "._models",
     "BulkClassifyRow": "._models",
-    "BusinessOperationInvoice": "._business_operation_invoice",
-    "BusinessOperationInvoiceDirection": "._business_operation_invoice",
-    "BusinessOperationInvoiceDocument": "._business_operation_invoice",
-    "BusinessOperationInvoiceInputError": "._business_operation_invoice",
-    "BusinessOperationInvoiceNotFoundError": "._business_operation_invoice",
-    "BusinessOperationInvoicePatch": "._business_operation_invoice",
-    "BusinessOperationInvoiceRepository": "._business_operation_invoice",
-    "BusinessOperationInvoiceResult": "._business_operation_invoice",
-    "CollectibleInvoiceService": "._business_operation_invoice",
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD": "._llm_diagnostics",
     "EligibleCategoryRow": "._ratios",
     "ExportSerializationFormat": "..export",
     "InvoiceConfirmationResult": "._evidence_draft",
     "InvoiceDraft": "._evidence_draft",
-    "LLMClassificationSuggestion": "._llm_suggestions",
-    "LLMProvider": "._llm_suggestions",
-    "LLMProviderAvailability": "._llm_suggestions",
-    "LLMSaturatedSuggestion": "._llm_suggestions",
-    "LLMSplitApplyResult": "._llm_suggestions",
-    "LLMSplitChildSuggestion": "._llm_suggestions",
-    "LLMSplitSuggestion": "._llm_suggestions",
-    "LLMSuggestionRejectionResult": "._llm_suggestions",
     "LedgerCatalogueResetReport": "._models",
     "LedgerClassificationRuleRepository": "._rule_repository",
     "LedgerExportCommand": "._models",
@@ -334,8 +288,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "ManualLedgerTransactionResult": "._models",
     "MediaKind": "._evidence",
     "MergeTransactionsResult": "._models",
-    "OperatorIvaDerivationResult": "._llm_suggestions",
-    "PayableInvoiceService": "._business_operation_invoice",
     "PrintedTotalDiscrepancy": "._evidence_draft",
     "PurchaseInvoiceEvidence": "._evidence",
     "PurchaseInvoiceEvidenceDocument": "._evidence",
@@ -408,7 +360,6 @@ _LAZY_EXPORTS: dict[str, str] = {
     "unset_usage_ratio": "._ratios",
     "update_manual_transaction": "._actions_manual",
     "update_manual_transaction_fields": "._actions_manual",
-    "validate_eu_iva_id": "._business_operation_invoice",
     "validate_ratios_for_bucket": "._ratios",
     "validate_ratios_profile": "._ratios",
 }
@@ -456,27 +407,10 @@ __all__ = [
     "BulkClassifyFailure",
     "BulkClassifyResult",
     "BulkClassifyRow",
-    "BusinessOperationInvoice",
-    "BusinessOperationInvoiceDirection",
-    "BusinessOperationInvoiceDocument",
-    "BusinessOperationInvoiceInputError",
-    "BusinessOperationInvoiceNotFoundError",
-    "BusinessOperationInvoicePatch",
-    "BusinessOperationInvoiceRepository",
-    "BusinessOperationInvoiceResult",
-    "CollectibleInvoiceService",
     "EligibleCategoryRow",
     "ExportSerializationFormat",
     "InvoiceConfirmationResult",
     "InvoiceDraft",
-    "LLMClassificationSuggestion",
-    "LLMProvider",
-    "LLMProviderAvailability",
-    "LLMSaturatedSuggestion",
-    "LLMSplitApplyResult",
-    "LLMSplitChildSuggestion",
-    "LLMSplitSuggestion",
-    "LLMSuggestionRejectionResult",
     "LedgerCatalogueResetReport",
     "LedgerClassificationRuleRepository",
     "LedgerExportCommand",
@@ -514,8 +448,6 @@ __all__ = [
     "ManualLedgerTransactionResult",
     "MediaKind",
     "MergeTransactionsResult",
-    "OperatorIvaDerivationResult",
-    "PayableInvoiceService",
     "PrintedTotalDiscrepancy",
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceDocument",
@@ -588,7 +520,6 @@ __all__ = [
     "unset_usage_ratio",
     "update_manual_transaction",
     "update_manual_transaction_fields",
-    "validate_eu_iva_id",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
 ]

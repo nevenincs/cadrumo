@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 from ....core import Modelo
-from ._ids import CasillaId
+from ._ids import BindingId, CasillaId
 
 if TYPE_CHECKING:
     from ._snapshot import RegistrySnapshot
@@ -28,12 +28,21 @@ class CrossDomainSnapshotCheck(Protocol):
     every registered check at snapshot-build time without naming the
     peer.
 
-    A check receives the modelo id, the snapshot's casilla id set, and
-    the revision's OWN renta first-slice ledger-aggregation binding
-    target casillas (a strict subset of the universal routing table's
-    codomain -- older revisions may declare no such bindings at all, so
-    their required set is legitimately empty) and returns a list of
-    failure strings (empty when consistent).
+    A check receives the modelo id, the snapshot's casilla id set, the
+    revision's OWN renta first-slice ledger-aggregation binding target
+    casillas (a strict subset of the universal routing table's codomain --
+    older revisions may declare no such bindings at all, so their required
+    set is legitimately empty), and the revision's declared binding ids. It
+    returns a list of failure strings (empty when consistent).
+
+    Both derived inputs exist for the same reason: a peer-domain routing
+    assertion should be conditional on the revision actually declaring the
+    thing that creates the requirement. A check that asserts unconditionally
+    over a modelo fires on revisions it has no claim over -- including the
+    synthetic ones built to exercise unrelated properties -- and a gate that
+    reddens where it has no claim trains its readers to work around it.
+    ``revision_binding_ids`` carries a default so a registered check that
+    predates it stays callable, which keeps the widening additive.
     """
 
     def __call__(
@@ -41,6 +50,7 @@ class CrossDomainSnapshotCheck(Protocol):
         modelo_id: str,
         casilla_ids: frozenset[CasillaId],
         renta_first_slice_binding_targets: frozenset[CasillaId],
+        revision_binding_ids: frozenset[BindingId] = ...,
     ) -> list[str]: ...
 
 
@@ -95,6 +105,7 @@ def check_cross_domain_snapshot_routing(
 
     casilla_ids = frozenset(checker.casilla_ids)
     renta_first_slice_binding_targets = renta_first_slice_binding_target_casillas(snapshot.revision)
+    revision_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
     if snapshot.modelo.id == Modelo.M100 and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
         checker.failures.append(
             f"{checker.prefix}: modelo 100 requires the renta first-slice "
@@ -104,5 +115,10 @@ def check_cross_domain_snapshot_routing(
             "runs before validation",
         )
     for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
-        for failure in check(snapshot.modelo.id, casilla_ids, renta_first_slice_binding_targets):
+        for failure in check(
+            snapshot.modelo.id,
+            casilla_ids,
+            renta_first_slice_binding_targets,
+            revision_binding_ids,
+        ):
             checker.failures.append(f"{checker.prefix}: {failure}")

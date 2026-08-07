@@ -129,7 +129,7 @@ def test_extract_never_persists_an_invoice(tmp_path: Path) -> None:
     assert listed.exit_code == 0, listed.output
     assert json.loads(listed.output)["result"]["count"] == 0
 
-    catalogue_listed = _invoke(["--format", "json", "app", "ledger", "invoice", "catalogue", "list"])
+    catalogue_listed = _invoke(["--format", "json", "app", "ledger", "invoice", "list"])
     assert catalogue_listed.exit_code == 0, catalogue_listed.output
     assert json.loads(catalogue_listed.output)["result"]["count"] == 0
 

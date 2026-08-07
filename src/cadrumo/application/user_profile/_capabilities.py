@@ -8,10 +8,14 @@ overlaying that profile fact onto the global
 :class:`CapabilityDecision` with the reason.
 
 The load-bearing invariant: a capability may only NARROW the global safety
-floor, never widen it. For ``cloud_evidence_upload`` the
-gestor-mode bar is applied FIRST and absolutely — no profile opt-in can re-enable
-cloud upload for a gestor deployment. The resolver is the single place this is
-computed; every gate routes through it.
+floor, never widen it. The resolver is the single place this is computed; every
+gate routes through it.
+
+The one capability that carried an absolute safety-floor bar was
+``cloud_evidence_upload`` — gestor mode refused it regardless of any profile
+opt-in — and it was deleted along with the off-host read path it gated. Every
+surviving capability is on-host or non-sensitive, so no member currently needs
+a floor bar; the mechanism stays because the next one might.
 """
 
 from __future__ import annotations
@@ -87,47 +91,12 @@ def resolve_capability(
     """Resolve ``capability`` for a :class:`UserProfileRecord` against the global posture.
 
     Pure: no I/O. Reads the profile's capability fact (when present), falls back to
-    the global ``Settings`` flag (cloud upload) or the conservative capability
-    default (vision / google), and applies the global safety floor on top. The
-    safety floor can only DISABLE, never enable.
+    the conservative capability default, and applies the global safety floor on
+    top. The safety floor can only DISABLE, never enable.
 
     Returns:
         The resolved :class:`CapabilityDecision` carrying the posture and reason.
     """
-    if capability is ServiceCapability.CLOUD_EVIDENCE_UPLOAD:
-        # The gestor bar is absolute and applied first: no profile opt-in re-enables it.
-        if settings.cadrumo_evidence_gestor_mode:
-            return CapabilityDecision(
-                capability=capability,
-                enabled=False,
-                source=CapabilitySource.SAFETY_FLOOR,
-                reason="gestor mode bars cloud evidence upload for this deployment",
-            )
-        fact = _parse_bool_fact(fact_value(profile_record, capability.schema_path))
-        if fact is not None:
-            return CapabilityDecision(
-                capability=capability,
-                enabled=fact,
-                source=CapabilitySource.PROFILE,
-                reason=(
-                    "profile opted in to cloud evidence upload"
-                    if fact
-                    else "profile opted out of cloud evidence upload"
-                ),
-            )
-        # No profile fact: the global deployment flag is the fallback default.
-        enabled = settings.cadrumo_evidence_cloud_upload_permitted
-        return CapabilityDecision(
-            capability=capability,
-            enabled=enabled,
-            source=CapabilitySource.GLOBAL_SETTING,
-            reason=(
-                "global cadrumo_evidence_cloud_upload_permitted is set"
-                if enabled
-                else "cloud evidence upload is off by default (no profile opt-in, global flag unset)"
-            ),
-        )
-
     # llm_vision / google_export: profile fact, else the conservative default. No
     # safety-floor bar — vision is on-host, google export is non-sensitive.
     fact = _parse_bool_fact(fact_value(profile_record, capability.schema_path))

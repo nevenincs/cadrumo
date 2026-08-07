@@ -231,9 +231,14 @@ def _active_profile_storage_span():
         from ...adapters.persistence.storage import StorageValidationError as _StorageValidationError
 
         raise _StorageValidationError(translated_message="errors.storage.runtime.not_ready")
-    from ...adapters.persistence.storage import has_active_bucket_session as _has_active_bucket_session
+    from ...adapters.persistence.storage import (
+        active_bucket_session_serves as _active_bucket_session_serves,
+    )
 
-    if _has_active_bucket_session():
+    # Reuse only a session already open for THIS bucket. Reusing on the mere
+    # presence of a session would capture whichever bucket happened to be
+    # bound and read the wrong profile's encrypted store under its key.
+    if _active_bucket_session_serves(active_bucket_id):
         yield
         return
     with _profile_storage_session(active_bucket_id):

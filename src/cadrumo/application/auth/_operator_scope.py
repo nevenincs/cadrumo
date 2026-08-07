@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel
 
 from ...adapters.persistence.storage.bucket import acquire_lock, bucket_paths, release_lock
-from ...adapters.persistence.storage.master_key import current_active_bucket_session
+from ...adapters.persistence.storage.master_key import current_active_bucket_session, session_serves_bucket
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import LIVE_READ_TEST_OPT_IN_SETTINGS_FIELD, Settings, load_settings
 from ._catalogue import get_auth_provider, known_auth_provider_ids
@@ -131,7 +131,7 @@ def _can_reuse_active_session(
     reuses only on an exact root match; a session without one reuses only when
     the caller did not explicitly route and the ambient root matches the target.
     """
-    if active_session is None or active_session.bucket_id != bucket_id:
+    if not session_serves_bucket(active_session, bucket_id):
         return False
     if active_session.storage_root is not None:
         return _canonical_storage_root(active_session.storage_root) == target_storage_root

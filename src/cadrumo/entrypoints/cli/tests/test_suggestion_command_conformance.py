@@ -770,7 +770,7 @@ def test_the_gate_flags_a_reconstructed_evidence_defect() -> None:
         (
             "Notice(",
             "    suggestion=(",
-            '        "aeat app ledger invoice catalogue create --kind received "',
+            '        "aeat app ledger invoice add --kind received "',
             "        f\"--counterparty-nif {draft.supplier_tax_id or '<nif>'} \"",
             '        f"--invoice-number {draft.invoice_number}"',
             "    ),",

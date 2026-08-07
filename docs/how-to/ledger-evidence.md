@@ -34,7 +34,7 @@ an evidence file and an expense, then attaches one to the other:
 
 A transaction carries at most one purchase-invoice evidence record. The command refuses a second one, and refuses re-attaching the same one.
 
-Do not reach for `aeat app ledger link` here. `attach` and `link` are different operations on the same transaction: `attach` carries the evidence document, while `link` binds the transaction to an entry in the enriched invoice catalogue and requires `--invoice-id`. That id comes from an imported, reconciled, or `invoice catalogue create` entry - it is not the id `aeat app ledger invoice add` prints.
+Do not reach for `aeat app ledger link` here. `attach` and `link` are different operations on the same transaction: `attach` carries the evidence document, while `link` binds the transaction to an entry in the enriched invoice catalogue and requires `--invoice-id`. That id comes from an imported, reconciled, or `invoice add` entry - it is not the id `aeat app ledger invoice add` prints.
 
 For most receipts and invoices, `--purchase-invoice-evidence-id` above is the path to use; the evidence id comes straight from `evidence add`.
 

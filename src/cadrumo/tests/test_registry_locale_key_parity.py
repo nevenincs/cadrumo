@@ -93,7 +93,7 @@ def test_registry_scan_excludes_citation_quotes() -> None:
     re-examined rather than silently widened.
     """
     keys = scan_registry_keys()
-    assert len(keys) == 86
+    assert len(keys) == 88
     assert not [key for key in keys if key.endswith(".quote")]
 
 

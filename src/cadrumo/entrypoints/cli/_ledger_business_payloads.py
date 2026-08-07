@@ -7,19 +7,20 @@ module's own docstring documents for
 :mod:`~entrypoints.cli._ledger_rule_payloads`,
 :mod:`~entrypoints.cli._ledger_llm_payloads`, and
 :mod:`~entrypoints.cli._ledger_catalogue_invoice_payloads`.
-Covers three CLI sub-app payload families:
+Covers two CLI sub-app payload families:
 
-* P06 -- the unified business-operation ``invoice`` noun-group (gated by
-  ``--kind issued|received``; the persisted ``source_kind`` discriminator
-  carries payable / collectible).
 * P07 -- the ``inventory`` sub-app.
 * P08 -- the purchase-invoice ``evidence`` sub-app.
+
+The ``invoice`` noun-group is *not* here: every invoice payload lives in
+:mod:`~entrypoints.cli._ledger_catalogue_invoice_payloads`, which projects the
+sole invoice aggregate.
 
 Each class is a strict :class:`~core.json_contract.OutputSchema`
 subclass, decorated with :func:`~core.json_contract.register_schema`
 so the JSON-contract test suite can enumerate the surface. Re-imported into
 :mod:`~entrypoints.cli._ledger_payloads` so existing ``from ._ledger_payloads import
-BusinessInvoiceRecordPayload`` (etc.) call sites keep resolving unchanged.
+InventoryLedgerPayload`` (etc.) call sites keep resolving unchanged.
 """
 
 from __future__ import annotations
@@ -60,91 +61,6 @@ _InventorySchemaVersion = Annotated[str, AfterValidator(_validate_inventory_sche
 
 if TYPE_CHECKING:
     from ...application.inventory import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
-
-# ---------------------------------------------------------------------------
-# P06 — Unified business operation invoice sub-app
-# (one ``invoice`` noun-group gated by ``--kind issued|received``; the
-# persisted ``source_kind`` discriminator carries payable / collectible)
-# ---------------------------------------------------------------------------
-
-
-class BusinessInvoiceRecordPayload(OutputSchema):
-    """One business-operation invoice record.
-
-    Mirrors ``BusinessOperationInvoice.model_dump(mode='json')``
-    plus the ``bucket_event_ids`` field the CLI appends at the emit
-    site for mutation verbs (defaults to empty for read verbs). The
-    ``source_kind`` field carries the persisted ``payable_invoice`` /
-    ``collectible_invoice`` taxonomy value selected by ``--kind``.
-
-    ``fx_rate`` / ``fx_rate_date`` mirror the euro-conversion stamp the
-    record carries for a foreign-currency invoice; both are ``None`` for a
-    EUR invoice and for a foreign invoice whose ECB rate could not be
-    resolved (which is withheld from modelo projection rather than declared
-    at face value). Surfacing them keeps the conversion provenance visible
-    on the operator payload instead of dropping it at the CLI boundary.
-    """
-
-    invoice_id: str
-    bucket_id: str
-    source_kind: str
-    counterparty_nif: str
-    counterparty_name: str = ""
-    invoice_number: str
-    invoice_date: str
-    currency: str
-    taxable_base: str
-    iva_rate: str | None = None
-    iva_amount: str
-    total_amount: str
-    fx_rate: str | None = None
-    fx_rate_date: str | None = None
-    notes: str = ""
-    country_code: str | None = None
-    eu_iva_id: str | None = None
-    operation_type: str | None = None
-    created_at: str
-    updated_at: str
-    bucket_event_ids: list[str] = []
-
-
-class BusinessInvoiceListResult(OutputSchema):
-    """Shared list result for the unified invoice ``list`` verb.
-
-    ``rows`` carries both ``payable_invoice`` and ``collectible_invoice``
-    records when ``--kind`` is omitted (each row's own ``source_kind``
-    discriminates the kind), or a single kind when ``--kind`` filters.
-    """
-
-    bucket_id: str
-    rows: list[BusinessInvoiceRecordPayload]
-    count: int
-
-
-@register_schema("ledger.invoice.add")
-class InvoiceAddResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice add``."""
-
-
-@register_schema("ledger.invoice.view")
-class InvoiceViewResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice view``."""
-
-
-@register_schema("ledger.invoice.update")
-class InvoiceUpdateResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice update``."""
-
-
-@register_schema("ledger.invoice.remove")
-class InvoiceRemoveResult(BusinessInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice remove``."""
-
-
-@register_schema("ledger.invoice.list")
-class InvoiceListResult(BusinessInvoiceListResult):
-    """JSON envelope for ``aeat app ledger invoice list``."""
-
 
 # ---------------------------------------------------------------------------
 # P07 — Inventory sub-app
@@ -317,6 +233,29 @@ class EvidenceListResult(OutputSchema):
     rows: list[EvidenceRecordPayload]
 
 
+class EvidenceDraftLinePayload(OutputSchema):
+    """One extracted invoice line on the reviewable draft."""
+
+    description: str | None = None
+    quantity: str | None = None
+    unit_price: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+    recargo_rate: str | None = None
+    recargo_amount: str | None = None
+
+
+class EvidenceDraftRateBreakdownPayload(OutputSchema):
+    """One per-rate subtotal extracted from a multi-rate invoice."""
+
+    iva_rate: str | None = None
+    taxable_base: str | None = None
+    iva_amount: str | None = None
+    recargo_rate: str | None = None
+    recargo_amount: str | None = None
+
+
 @register_schema("ledger.evidence.extract")
 class EvidenceExtractResult(OutputSchema):
     """JSON envelope for ``aeat app ledger evidence extract``.
@@ -325,7 +264,7 @@ class EvidenceExtractResult(OutputSchema):
     extraction) plus the resolved reference id the operator supplied. This is a
     reviewable draft only: extracting never mints or persists an
     ``cadrumo.domain.invoices.Invoice`` -- the operator confirms the fields (via
-    ``aeat app ledger invoice add`` / ``invoice catalogue create``) before any
+    ``aeat app ledger invoice add`` / ``invoice add``) before any
     invoice record is created.
     """
 
@@ -340,6 +279,14 @@ class EvidenceExtractResult(OutputSchema):
     iva_amount: str | None = None
     grand_total: str | None = None
     currency: str | None = None
+    # Mirrors the rest of the draft the extractor produces. Omitting these left
+    # the operator reviewing a total with no visible per-line or per-rate
+    # breakdown -- and a recargo de equivalencia (LIVA art. 161) invisible at
+    # the confirm step, which is where the operator is meant to catch it.
+    recargo_amount: str | None = None
+    lines: list[EvidenceDraftLinePayload] = []
+    iva_breakdown: list[EvidenceDraftRateBreakdownPayload] = []
+    iva_category: str | None = None
     raw_text_length: int = 0
 
 

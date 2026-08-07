@@ -199,10 +199,11 @@ def _html_node_has_class(node: object, class_name: str) -> bool:
     if isinstance(classes, str):
         return class_name in classes.split()
     if isinstance(classes, Iterable):
-        # Third-party boundary: the node is whatever the HTML parser returned, so
-        # its class attribute is an iterable of unknown element type. The runtime
-        # check above establishes the iterability; the element type cannot be
-        # recovered and is compared as an opaque value.
+        # CAST-RATIONALE-HTML-CLASS-ATTR: third-party boundary -- the node is
+        # whatever the HTML parser returned, so its class attribute is an
+        # iterable of unknown element type. The runtime check above establishes
+        # the iterability; the element type cannot be recovered and is compared
+        # as an opaque value.
         entries = cast("Iterable[object]", classes)
         return any(class_name == entry for entry in entries)
     # Neither a class string nor an iterable of names: the node declares no
@@ -277,9 +278,10 @@ async def dismiss_pre303_alert_modal_if_present(
             on_declined_hidden_modal()
         return
     selectors = continue_button_selectors(alert_modal_selector, alert_continue_button_text, scoped_to_shown=True)
-    # The getattr probes above already established that this page provides
-    # click; this function stays duck-typed by design, returning early for a
-    # page that does not, so the capability is proven here rather than declared.
+    # CAST-RATIONALE-DUCK-TYPED-PAGE: the getattr probes above already
+    # established that this page provides click; this function stays
+    # duck-typed by design, returning early for a page that does not, so the
+    # capability is proven here rather than declared.
     await click_first_matching_selector(cast("ClickablePage", page), selectors)
 
 

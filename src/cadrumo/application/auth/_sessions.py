@@ -917,8 +917,8 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     """
     from ...adapters.persistence.storage import (
         activate_master_key_provider,
+        active_bucket_session_serves,
         get_master_key_provider,
-        has_active_bucket_session,
     )
     from ...core import resolve_active_bucket_id
     from ...domain.user_profile import ProfileNotFoundError
@@ -932,7 +932,10 @@ def _active_profile_auth_facts() -> ClaveAuthFacts:
     if bucket_id is None:
         return ClaveAuthFacts()
     try:
-        if has_active_bucket_session():
+        # Read through the ambient session only when it is THIS bucket's; a
+        # session bound to another profile would decrypt this record under the
+        # wrong key rather than fall through to the provider branch below.
+        if active_bucket_session_serves(bucket_id):
             record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
         else:
             from ...core.config import override_settings

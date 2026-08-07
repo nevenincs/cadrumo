@@ -48,9 +48,8 @@ def _show() -> dict[str, Any]:
 
 def test_show_reports_every_capability_with_default_posture() -> None:
     rows = _show()
-    assert set(rows) == {"cloud_evidence_upload", "llm_vision", "google_export"}
+    assert set(rows) == {"llm_vision", "google_export"}
     # Defaults: cloud off (global), vision/google on (default).
-    assert rows["cloud_evidence_upload"]["enabled"] is False
     assert rows["llm_vision"]["enabled"] is True
     assert rows["google_export"]["enabled"] is True
 
@@ -96,7 +95,7 @@ def test_config_check_reports_capabilities_and_dependencies() -> None:
     assert payload["ok"] is True
     assert payload["issues"] == []
     caps = {c["capability"]: c for c in payload["capabilities"]}
-    assert set(caps) == {"cloud_evidence_upload", "llm_vision", "google_export"}
+    assert set(caps) == {"llm_vision", "google_export"}
     assert caps["llm_vision"]["enabled"] is False
     services = {d["service"] for d in payload["dependencies"]}
     assert "ollama-vision" in services
@@ -151,9 +150,9 @@ def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[
 
 def test_set_enables_cloud_upload_via_profile_opt_in() -> None:
     setres = invoke_cached_cli(
-        ["config", "profile", "capabilities", "set", "cloud_evidence_upload", "on"],
+        ["config", "profile", "capabilities", "set", "google_export", "off"],
     )
     assert setres.exit_code == 0, setres.output
     rows = _show()
-    assert rows["cloud_evidence_upload"]["enabled"] is True
-    assert rows["cloud_evidence_upload"]["source"] == "profile"
+    assert rows["google_export"]["enabled"] is False
+    assert rows["google_export"]["source"] == "profile"

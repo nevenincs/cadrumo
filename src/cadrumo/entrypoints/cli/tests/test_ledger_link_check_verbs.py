@@ -83,7 +83,7 @@ def test_link_help_names_catalogue_create_for_invoice_id() -> None:
     # real terminal width, so a multi-word phrase can legitimately span a
     # line break at a word boundary.
     flat = " ".join(result.output.split())
-    assert "aeat app ledger invoice catalogue create" in flat
+    assert "aeat app ledger invoice add" in flat
     assert "aeat app ledger invoice add" in flat
 
 
@@ -188,26 +188,22 @@ def _line_value(output: str, key: str) -> str:
     raise AssertionError(f"no {key!r} line in CLI output:\n{output}")
 
 
-def test_link_refuses_operator_invoice_add_id_instructively() -> None:
-    """`link --invoice-id` must refuse an id minted by ``invoice add``.
+def test_invoice_add_id_is_linkable() -> None:
+    """The documented ``invoice add`` -> ``link --invoice-id`` chain resolves.
 
-    The slim operator-CRUD ``BusinessOperationInvoice`` store (filled by
-    ``invoice add``) and the rich reconciliation ``InvoiceCatalogue`` that
-    ``link --invoice-id`` targets are intentionally distinct: only the rich
-    ``Invoice`` carries ``linked_transaction_ids``. An ``invoice add`` id is
-    therefore not a valid ``--invoice-id`` target. This is a documented sharp
-    edge, deliberate so the two stores are never unified by mistake, and it is
-    the runtime fact the ledger-evidence how-to must reflect.
-
-    The refusal must be the instructive typed message that names the ``invoice
-    add`` provenance and points at the evidence/attach path — never a silent
-    accept, a raw traceback, or a bare "value invalid".
+    This was once a refusal: two invoice stores existed, ``invoice add`` wrote
+    the one WITHOUT ``linked_transaction_ids``, and ``link --invoice-id``
+    targeted the other, so the documented chain dead-ended on an instructive
+    error. Collapsing the two stores onto the single
+    ``Invoice`` aggregate is what makes the chain reachable, and this test is
+    the guard against the split reappearing: an id an operator can mint must be
+    an id the operator can link.
     """
     added = _invoke(
         [
             "app", "ledger", "add",
             "--date", "2026-03-10", "--amount", "121.00",
-            "--direction", "OUTGOING", "--description", "Supplier payment B12345678",
+            "--direction", "OUTGOING", "--description", "Supplier payment B12345674",
         ],
     )  # fmt: skip
     assert added.exit_code == 0, added.output
@@ -217,11 +213,12 @@ def test_link_refuses_operator_invoice_add_id_instructively() -> None:
         [
             "app", "ledger", "invoice", "add",
             "--kind", "received",
-            "--counterparty-nif", "B12345678",
+            "--counterparty-nif", "B12345674",
+            "--counterparty-name", "Proveedor SL",
             "--invoice-number", "2026-0142",
             "--invoice-date", "2026-03-10",
             "--taxable-base", "100.00", "--iva-rate", "21",
-            "--iva-amount", "21.00", "--total-amount", "121.00",
+            "--country-code", "ES",
         ],
     )  # fmt: skip
     assert invoice.exit_code == 0, invoice.output
@@ -231,17 +228,8 @@ def test_link_refuses_operator_invoice_add_id_instructively() -> None:
         ["app", "ledger", "link", transaction_id, "--invoice-id", invoice_add_id],
     )
 
-    # The documented `invoice add` -> `link --invoice-id` chain is refused.
-    assert linked.exit_code != 0, linked.output
-    lowered = linked.output.lower()
-    # Instructive: the refusal names the `invoice add` provenance and routes the
-    # operator to the evidence path — not a bare invalid or a Python traceback.
-    # The shipped message is localized, so match the language-stable command
-    # token plus the shared evidence/`evidencia` stem rather than English prose.
-    assert "invoice add" in lowered, linked.output
-    assert "invoice catalogue create" in lowered, linked.output
-    assert "evidenc" in lowered, linked.output
-    assert "traceback" not in lowered, linked.output
+    assert linked.exit_code == 0, linked.output
+    assert "traceback" not in linked.output.lower(), linked.output
 
 
 def test_check_reports_zero_link_inconsistencies_on_a_consistent_bucket() -> None:
@@ -285,7 +273,7 @@ def test_check_reports_a_one_sided_invoice_link(tmp_path: Path) -> None:
 
     created = _invoke(
         [
-            "app", "ledger", "invoice", "catalogue", "create",
+            "app", "ledger", "invoice", "add",
             "--kind", "received",
             "--counterparty-nif", "B12345674",
             "--counterparty-name", "Proveedor SL",

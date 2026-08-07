@@ -1,6 +1,6 @@
 """CLI regression for the guided manual-entry invoice wizard.
 
-``aeat app ledger invoice catalogue wizard`` (#254 slice 4b) is the guided,
+``aeat app ledger invoice wizard`` (#254 slice 4b) is the guided,
 non-interactive fallback for when extraction (evidence extract / vision OCR)
 is unavailable or insufficient: every invoice field is supplied up front as a
 CLI option, each field is validated independently (a malformed NIF and a
@@ -67,7 +67,7 @@ def _redacted(tax_id: str) -> str:
 _RECEIVED_COUNTERPARTY_CIF = "A58818501"
 
 _BASE_ARGS = [
-    "app", "ledger", "invoice", "catalogue", "wizard",
+    "app", "ledger", "invoice", "wizard",
     "--kind", "received",
     "--counterparty-nif", _RECEIVED_COUNTERPARTY_CIF,
     "--counterparty-name", "Papeleria Sol SL",

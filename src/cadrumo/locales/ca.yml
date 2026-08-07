@@ -813,15 +813,6 @@ application:
           %{invoice_id}.'
         unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; useu un
           de: %{accepted}.'
-    importing:
-      errors:
-        import_file_read_failed: 'No s ha pogut llegir el fitxer d importació de factures:
-          %{path_name}.'
-        invalid_json: El contingut JSON de factures no és vàlid a la línia %{line},
-          columna %{column}.
-        invalid_json_shape: El contingut JSON de factures ha de ser un objecte o una
-          llista d objectes.
-        invalid_kind: 'El tipus de factura no està admès: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}
@@ -831,6 +822,7 @@ application:
         remove_linked_invoice: 'No es pot eliminar la factura %{invoice_id} mentre
           continuï vinculada a transaccions: %{linked_transaction_ids}. Desvinculeu-les
           primer.'
+        empty_invoice_patch: 'Una correcció de factura ha d''indicar almenys un camp a modificar.'
     linking:
       errors:
         linked_invoice_not_found: No s ha trobat la factura %{invoice_id} després
@@ -2029,13 +2021,11 @@ cli:
         valuation_preview_help: Previsualitza existències finals i cost de vendes
         year_help: Exercici fiscal
       invoice:
-        add_help: Registra una nova factura de negoci
         catalogue:
           country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
             determina l''encaminament de totes dues informatives, per això mai no
             es dóna per suposat.'
           create_help: Crea una factura de conciliació vinculable al catàleg.
-          group_help: Factures del catàleg de conciliació que es vinculen a transaccions.
           import_all_refused: 'importació massiva de factures fallida: totes les files
             van ser rebutjades; no es va crear cap factura'
           import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
@@ -2062,16 +2052,12 @@ cli:
           rectifies_help: 'Número de la factura que corregeix aquesta rectificativa.'
           recargo_help: 'Recàrrec d''equivalència repercutit sobre la quota (LIVA art. 161). Va inclòs en el total de la factura, a diferència d''una retenció.'
           iva_category_help: 'Tractament d''IVA de l''operació. Necessari perquè un càlcul de renda la pugui fonamentar.'
-        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
-          intracomunitàries UE)
-        eu_iva_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Registres de factures de negoci (emeses o rebudes)
         invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
           p. ex. 2026-01-15.
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
         kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus
           a un proveïdor)'
-        list_help: Llista les factures de negoci (ambdós tipus llevat que --kind filtri)
         operation_date_help: Data en que es va fer el lliurament o la prestacio (AAAA-MM-DD).
           Es la data de meritacio de l'art. 75 LIVA que determina en quin periode
           es declara la quota; sense aquesta s'utilitza la data de factura.
@@ -2081,11 +2067,7 @@ cli:
           adquirits, R transferències de béns en consigna, D devolucions de béns en
           consigna, C substitucions del destinatari en consigna'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
-        remove_help: Elimina una factura de negoci
-        total_amount_required: 'L''opció --total-amount és obligatòria: indiqueu el
-          total de la factura com a import decimal, per exemple 121.00.'
         update_help: Actualitza les dades d'una factura de negoci
-        view_help: Mostra una factura de negoci
         yes_help: Confirma l'eliminació de la factura
         yes_required: Has de passar --yes per eliminar una factura
       prorrata:
@@ -6532,10 +6514,6 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
       d'antiguitat de la cartera i torneu-ho a intentar.
-    refused_ledger_business_operation_invoice_input: Una dada indicada infringeix
-      el contracte de la factura d'operació. Corregeix l'entrada i torna-ho a provar.
-    refused_ledger_business_operation_invoice_not_found: No existeix cap factura d'operació
-      amb l'identificador indicat.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra

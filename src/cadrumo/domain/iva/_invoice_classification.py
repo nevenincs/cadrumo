@@ -37,7 +37,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, model_validator
@@ -45,12 +44,12 @@ from pydantic import BaseModel, model_validator
 from ...core import STRICT_FROZEN_CONFIG
 
 # IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
-# inside ``_iva_rate_to_domestic_category`` and ``classify_invoice_line_for_iva``
+# inside ``classify_invoice_line_for_iva``
 # to break a circular initialisation without violating the sibling-domain
 # ``_enums`` ban (clause 5 of the structural enum-import placement check).
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
-from ._classification import InvoiceKind
+from ._classification import InvoiceKind, domestic_categories_by_rate_kind
 from ._flow import (
     IvaFlowDirection,
     IvaSettlementSide,
@@ -72,29 +71,6 @@ def _invoice_validation_error(message: str) -> Exception:
     from ..invoices import InvoiceValidationError
 
     return InvoiceValidationError(message)
-
-
-@lru_cache(maxsize=1)
-def _iva_rate_to_domestic_category() -> dict[IvaRate, IvaCategory]:
-    """Closed mapping from invoice IvaRate slot to the matching domestic IvaCategory.
-
-    This mapping covers DOMESTIC operations only. Intra-community,
-    export, import, recargo de equivalencia, OSS / IOSS, and reverse-charge
-    operations have their own IvaCategory values not derivable from
-    IvaRate alone.
-
-    Built lazily for the same package-init reason as the public
-    ``cadrumo.domain.invoices.iva_rate_kind`` accessor.
-    """
-    from ..invoices import IvaRate
-
-    return {
-        IvaRate.RATE_0: IvaCategory.DOMESTIC_ZERO,
-        IvaRate.RATE_4: IvaCategory.DOMESTIC_SUPER_REDUCED_4,
-        IvaRate.RATE_10: IvaCategory.DOMESTIC_REDUCED_10,
-        IvaRate.RATE_21: IvaCategory.DOMESTIC_GENERAL_21,
-        IvaRate.EXEMPT: IvaCategory.DOMESTIC_EXEMPT,
-    }
 
 
 class IvaInvoiceClassification(BaseModel):
@@ -212,10 +188,14 @@ def classify_invoice_line_for_iva(
             "IvaInvoiceClassification directly with IvaCategory.OPERACION_NO_SUJETA",
         )
 
-    category = _iva_rate_to_domestic_category()[iva_rate]
     rate_kind = iva_rate_kind(iva_rate)
     if rate_kind is None:  # unreachable: NOT_SUBJECT (the only keyless rate) is rejected above
         raise _invoice_validation_error(f"IvaRate {iva_rate!r} has no rate-tier classification")
+    # One canonical rate-kind to domestic-category table, composed with the
+    # public rate-kind accessor. A local IvaRate-keyed copy used to live here
+    # and was exactly this composition, so it could drift without any symbol
+    # search relating the two.
+    category = domestic_categories_by_rate_kind()[rate_kind]
     flow_direction = IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
     return IvaInvoiceClassification(
         category=category,

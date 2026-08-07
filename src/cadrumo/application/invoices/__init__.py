@@ -1,13 +1,12 @@
 """Application invoice orchestration and calculation-source surface.
 
-This package is the public application boundary for invoice catalogue import,
+This package is the public application boundary for invoice import,
 linking, review, reconciliation, and source-mesh projection. Callers outside the
 subpackage must import only from this module so private underscore-prefixed
 implementation modules can evolve freely.
 
 The calculation-facing export is :class:`InvoiceCatalogueSourceResolver`. It
-projects both rich :class:`domain.invoices.InvoiceCatalogue` entries and
-slim :class:`application.ledger.BusinessOperationInvoice` records into
+projects :class:`domain.invoices.InvoiceCatalogue` entries into
 :class:`application.aggregation.CalculationSourceResolution` values for
 the :attr:`core.BindingSourceKind.COLLECTIBLE_INVOICE` and
 :attr:`core.BindingSourceKind.PAYABLE_INVOICE` source kinds. The helper
@@ -63,7 +62,6 @@ from ._creation import (
     CatalogueInvoiceCreateResult,
     build_catalogue_invoice,
     create_catalogue_invoice,
-    numeric_iva_rate_slots,
 )
 from ._issuer_establishment import issuer_established_in_tai, simplificada_requires_tax_id_for_domestic_issuer
 from ._lifecycle import (
@@ -149,7 +147,6 @@ __all__ = [
     "list_invoice_rows",
     "list_unmatched_invoice_repository_rows",
     "list_unmatched_invoice_rows",
-    "numeric_iva_rate_slots",
     "project_invoice_payment_matches",
     "project_invoice_review",
     "project_invoice_reviews",

@@ -52,7 +52,7 @@ from ._models import (
     MonetaryAmount,
     NormalizedAmount,
 )
-from ._service import CurrencyNormalizationService, ExchangeRateProvider
+from ._service import CurrencyNormalizationService, ExchangeRateProvider, resolve_fx_conversion_stamp
 
 __all__ = [
     "CurrencyError",
@@ -65,4 +65,5 @@ __all__ = [
     "NormalizedAmount",
     "StaleExchangeRateError",
     "UnsupportedCurrencyError",
+    "resolve_fx_conversion_stamp",
 ]

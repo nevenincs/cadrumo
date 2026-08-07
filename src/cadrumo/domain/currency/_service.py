@@ -84,3 +84,51 @@ class CurrencyNormalizationService:
             rate_source="provider",
             rate_date=rate_date,
         )
+
+
+def resolve_fx_conversion_stamp(
+    *,
+    currency: str,
+    on_date: date,
+    rate_provider: ExchangeRateProvider,
+) -> tuple[Decimal, date] | None:
+    """Return the euro-conversion stamp for a foreign-currency record, or ``None``.
+
+    The single authority for the *stamping policy*: which date the rate is taken
+    at, when a record is left unstamped, and what an unresolvable rate means.
+    The rate SOURCE was already centralised behind
+    :class:`ExchangeRateProvider`; this centralises the decision made around it,
+    which had been hand-declared at two application call sites.
+
+    Conversion happens at the record's own operation date — the issue or invoice
+    date — because that is the date Spanish law binds the official rate to (Ley
+    46/1998 art. 36), and because converting once at ingest keeps a stored euro
+    figure stable rather than drifting with every later read.
+
+    A euro record is left unstamped: there is nothing to convert, and a
+    ``1``-valued stamp would assert a conversion that never happened. A foreign
+    record whose rate cannot be resolved is ALSO left unstamped rather than
+    defaulted, and that is the load-bearing half of this policy. Without a
+    stamp the record reports no euro value and is held back from projection,
+    which an operator can see and correct; a fabricated or assumed rate would
+    instead flow silently into a filed euro amount, and nothing downstream could
+    tell it from a real one.
+
+    Args:
+        currency: The record's currency. Compared case-insensitively against
+            the euro token, so a caller that has not yet normalised it is safe.
+        on_date: The operation date to take the rate at.
+        rate_provider: The rate source. Required rather than defaulted: the
+            default ECB provider is an outbound adapter, and this layer must not
+            reach for it.
+
+    Returns:
+        The ``(rate, rate_date)`` pair to stamp, or ``None`` when the record
+        must be left unstamped — euro, or no resolvable rate.
+    """
+    if currency.strip().upper() == DEFAULT_CURRENCY:
+        return None
+    rate = rate_provider.get_eur_rate(currency, on_date)
+    if rate is None:
+        return None
+    return (rate, on_date)

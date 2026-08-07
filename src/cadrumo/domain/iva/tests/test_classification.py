@@ -152,7 +152,7 @@ _CLASSIFICATION_CASES = (
             "kind": TransactionKind.SERVICES_GENERAL,
             "direction": InvoiceKind.RECEIVED,
         },
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
         "R13_services_b2b_eu_inbound",
         None,
         None,

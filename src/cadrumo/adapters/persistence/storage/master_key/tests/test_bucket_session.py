@@ -13,6 +13,7 @@ from ...bucket import BucketLockedError
 from ...errors import StorageValidationError
 from .._active_session import (
     activate_session,
+    active_bucket_session_serves,
     close_active_bucket_session,
     current_active_bucket_session,
     has_active_bucket_session,
@@ -405,3 +406,31 @@ def test_acquire_engine_does_not_build_a_route_it_will_discard(tmp_path: Path) -
 
     assert first is second
     assert builds == 1
+
+
+def test_active_bucket_session_serves_matches_only_the_bound_bucket() -> None:
+    """The reuse predicate discriminates the bucket; presence alone does not.
+
+    This is the whole reason the predicate exists. Four application spans
+    decided whether to reuse an ambient session, and two of them asked only
+    whether SOME session was bound. With a session for one bucket ambient and
+    a caller targeting another, that question answers "yes" and the caller
+    proceeds to read or write the wrong profile's encrypted store under the
+    wrong key. The second assertion is the discriminating one: if
+    ``active_bucket_session_serves`` ever returns ``True`` for a foreign
+    bucket it has become ``has_active_bucket_session`` and buys nothing.
+    """
+    session = _open_session(bucket_id=_BUCKET_ID)
+
+    with activate_session(session):
+        assert has_active_bucket_session() is True
+
+        assert active_bucket_session_serves(_BUCKET_ID) is True
+        assert active_bucket_session_serves(_OTHER_BUCKET_ID) is False
+
+
+def test_active_bucket_session_serves_is_false_with_no_session_bound() -> None:
+    """No bound session serves any bucket, including a well-formed id."""
+    assert has_active_bucket_session() is False
+
+    assert active_bucket_session_serves(_BUCKET_ID) is False

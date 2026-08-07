@@ -269,9 +269,25 @@ def active_bucket_repair_session() -> Generator[None]:
     """
     provider: object | None = None
     try:
-        from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+        from ..adapters.persistence.storage import (
+            active_bucket_session_serves,
+            get_master_key_provider,
+            has_active_bucket_session,
+        )
+        from ..core import resolve_active_bucket_id
 
-        if has_active_bucket_session():
+        # Probing decryptability under the WRONG bucket's key reports readable
+        # rows as unreadable, and this context feeds the quarantine flows, so a
+        # mismatched reuse would quarantine sound records. Bucket-match when a
+        # target resolves; with no resolvable active bucket there is nothing to
+        # compare against, and reusing whatever is bound stays correct.
+        target_bucket_id = resolve_active_bucket_id()
+        reusable = (
+            active_bucket_session_serves(target_bucket_id)
+            if target_bucket_id is not None
+            else has_active_bucket_session()
+        )
+        if reusable:
             yield
             return
         provider = get_master_key_provider()

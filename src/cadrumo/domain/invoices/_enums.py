@@ -236,27 +236,51 @@ def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
     return _IVA_RATE_TO_IVA_KIND.get(rate)
 
 
+_NUMERIC_RATE_PREFIX = "RATE_"
+
+
+def numeric_iva_rate_slots() -> dict[Decimal, IvaRate]:
+    """Return the integer percentage to :class:`IvaRate` slot mapping.
+
+    The one canonical percentage-to-slot resolution, and the only place the
+    ``0 / 4 / 10 / 21`` correspondence is expressed. The derivation is
+    structural — the ``RATE_`` prefix is stripped from each member name and the
+    remainder parsed as an integer — so the mapping tracks :class:`IvaRate`
+    membership rather than re-listing literals beside it.
+    :attr:`IvaRate.EXEMPT` and :attr:`IvaRate.NOT_SUBJECT` carry no numeric
+    percentage and are excluded.
+
+    Deriving rather than listing is what keeps the accepted rate set consistent
+    across surfaces as the taxonomy changes, and the trigger is already named in
+    :class:`IvaRate`'s own docstring: ``RATE_5``, the transient 2022-2024 rate,
+    is deliberately absent, and ingesting pre-2025 data would require adding it.
+    An invoice-creation path holding a hand-written copy of this table would
+    keep rejecting the new slot while a sibling that derived it accepted one —
+    creation and editing disagreeing about what a valid rate is.
+
+    Returns:
+        A fresh mutable mapping, so a caller cannot mutate the shared taxonomy.
+    """
+    return {
+        Decimal(member.value[len(_NUMERIC_RATE_PREFIX) :]): member
+        for member in IvaRate
+        if member.value.startswith(_NUMERIC_RATE_PREFIX)
+    }
+
+
 def numeric_iva_rate_percentages() -> frozenset[Decimal]:
     """Return the integer-percentage values for the numeric :class:`IvaRate` slots.
 
-    Parses the ``RATE_<n>`` member names of :class:`IvaRate` to derive the
-    closed set of integer percentages the CLI boundary accepts on
-    ``--set iva.rate``.  :attr:`IvaRate.EXEMPT` and
-    :attr:`IvaRate.NOT_SUBJECT` carry no numeric percentage and are
-    excluded.
-
-    The derivation is structural — the ``RATE_`` prefix is stripped and the
-    remainder is parsed as an integer — so the returned set tracks
-    :class:`IvaRate` membership without re-listing ``0 / 4 / 10 / 21`` as
-    literals.
+    The keys of :func:`numeric_iva_rate_slots`, and derived from it rather than
+    by a second walk of the enum, so the accepted percentages and the slots they
+    resolve to cannot drift apart.
 
     Returns:
         A :class:`frozenset` of :class:`Decimal` integer percentages; for
         the current taxonomy ``frozenset({Decimal("0"), Decimal("4"),
         Decimal("10"), Decimal("21")})``.
     """
-    _prefix = "RATE_"
-    return frozenset(Decimal(member.value[len(_prefix) :]) for member in IvaRate if member.value.startswith(_prefix))
+    return frozenset(numeric_iva_rate_slots())
 
 
 __all__ = [
@@ -270,4 +294,5 @@ __all__ = [
     "iva_rate_kind",
     "iva_rate_percentage",
     "numeric_iva_rate_percentages",
+    "numeric_iva_rate_slots",
 ]

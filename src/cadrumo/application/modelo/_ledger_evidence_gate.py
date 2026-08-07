@@ -23,6 +23,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ..aggregation import invoice_kind_for_direction
 
 _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozenset(
     {
@@ -95,17 +96,9 @@ def _row_has_linked_evidence(row: LedgerEvidenceRow) -> bool:
     return bool(row.purchase_invoice_evidence_id) or bool(row.invoice_id) or bool(row.attachment_ids)
 
 
-def _invoice_kind_for(direction: TransactionDirection | None) -> InvoiceKind | None:
-    if direction is TransactionDirection.INCOMING:
-        return InvoiceKind.ISSUED
-    if direction is TransactionDirection.OUTGOING:
-        return InvoiceKind.RECEIVED
-    return None
-
-
 def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
     direction = _enum_or_none(TransactionDirection, row.direction)
-    invoice_kind = _invoice_kind_for(direction)
+    invoice_kind = invoice_kind_for_direction(direction)
     if invoice_kind is None:
         return None
     category = _enum_or_none(IvaCategory, row.iva_category)

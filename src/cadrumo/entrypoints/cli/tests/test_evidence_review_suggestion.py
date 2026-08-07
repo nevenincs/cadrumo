@@ -83,7 +83,7 @@ def test_the_funnel_really_would_break_an_embedded_nif() -> None:
     and shows the redaction it produced, so the guard is measured against a
     real failing input rather than assumed.
     """
-    old_shape = f"aeat app ledger invoice catalogue create --kind received --counterparty-nif {_NATURAL_PERSON_NIF}"
+    old_shape = f"aeat app ledger invoice add --kind received --counterparty-nif {_NATURAL_PERSON_NIF}"
 
     redacted = redact_for_cli_output(old_shape)
 

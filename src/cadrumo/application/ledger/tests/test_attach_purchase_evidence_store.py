@@ -32,7 +32,6 @@ from .. import (
     create_manual_transaction,
     update_manual_transaction_fields,
 )
-from .._business_operation_invoice import PayableInvoiceService
 from .._evidence import PurchaseInvoiceEvidenceService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -177,22 +176,21 @@ def test_nonexistent_evidence_id_is_refused_with_instructive_message(profile: Te
     assert "aeat app ledger evidence add" in str(exc_info.value)
 
 
-def test_slim_invoice_add_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
-    # An id minted by the slim operator invoice CRUD (`aeat app ledger invoice add`)
-    # is NOT a valid evidence reference under the evidence/invoice store split;
-    # attach must refuse it.
-    invoice_service = PayableInvoiceService(
-        settings=profile.settings,
-        bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
-    )
-    slim_invoice = invoice_service.add(
-        bucket_id=_BUCKET,
-        counterparty_nif="B12345678",
+def test_invoice_id_is_refused_by_attach(profile: TestRuntimeProfile) -> None:
+    # An invoice id (minted by `aeat app ledger invoice add`) is NOT a valid
+    # evidence reference under the evidence/invoice store split; attach must
+    # refuse it. The two id spaces stay distinct even though both are
+    # content-addressed 64-hex digests, so the refusal cannot lean on shape.
+    from ....domain.invoices import derive_invoice_id
+    from ....domain.iva import InvoiceKind
+
+    invoice_id = derive_invoice_id(
+        kind=InvoiceKind.RECEIVED,
         invoice_number="INV-2026-001",
-        invoice_date="2026-05-01",
-        taxable_base=Decimal("100.00"),
-        iva_amount=Decimal("21.00"),
-        total_amount=Decimal("121.00"),
+        issued_at=date(2026, 5, 1),
+        counterparty_tax_id="B12345674",
+        currency="EUR",
+        grand_total=Decimal("121.00"),
     )
     transaction_id = _create_outgoing_business_transaction(profile, idempotency_key="attach-slim-invoice")
 
@@ -200,7 +198,7 @@ def test_slim_invoice_add_id_is_refused_by_attach(profile: TestRuntimeProfile) -
         attach_manual_transaction_evidence(
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
-            purchase_invoice_evidence_id=slim_invoice.record.invoice_id,
+            purchase_invoice_evidence_id=invoice_id,
             actor="operator-A",
             transaction_repository=_transaction_repository(profile),
             bucket_event_repository=_event_repository(profile),

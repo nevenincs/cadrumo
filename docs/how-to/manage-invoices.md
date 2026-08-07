@@ -38,7 +38,7 @@ Cadrumo keeps invoices in two separate places, for two different jobs.
 
 Record everyday invoices with `invoice add`. When an invoice must drive a
 calculation or be reconciled against a payment, also create it in the catalogue
-with `invoice catalogue create`.
+with `invoice add`.
 
 Every command takes `--kind issued` or `--kind received`. *Issued* means a
 customer owes you (a collectible invoice); *received* means you owe a supplier
@@ -147,7 +147,7 @@ expense in the ledger and classify it (see
 ledger. Recording an invoice here does not add it to a Modelo 303.
 
 Cross-border B2C sales under the One-Stop-Shop scheme (Modelo 369) are a
-separate flow not yet reachable from `invoice catalogue create`; record those
+separate flow not yet reachable from `invoice add`; record those
 through the OSS-specific workflow.
 
 ## Where to go next

@@ -12,12 +12,6 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import StorageValidationError
-from ....application.ledger import (
-    BusinessOperationInvoiceDirection,
-    BusinessOperationInvoiceRepository,
-    CollectibleInvoiceService,
-    PayableInvoiceService,
-)
 from ....core import M347_THRESHOLD_EUR, BindingSourceKind, IntracomOperationType, Period
 from ....core.errors import CadrumoError, get_registered_error_code, resolve_error_message
 from ....core.resources import bundled_path, resources
@@ -28,7 +22,7 @@ from ....domain.modelos import Modelo349CountryPrefixContextError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
-from .._source_resolver import _OWNED_SOURCES, _intracommunity_clave
+from .._source_resolver import _OWNED_SOURCES, M349_CLAVE_INFERRED_REASON, _intracommunity_clave
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -38,23 +32,18 @@ class TestInvoiceDirectionToSourceKind:
     resolver and the unified operator invoice CLI."""
 
     def test_issued_maps_to_collectible(self) -> None:
-        assert (
-            invoice_direction_to_source_kind(InvoiceKind.ISSUED)
-            is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE
-        )
+        assert invoice_direction_to_source_kind(InvoiceKind.ISSUED) is BindingSourceKind.COLLECTIBLE_INVOICE
 
     def test_received_maps_to_payable(self) -> None:
-        assert (
-            invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BusinessOperationInvoiceDirection.PAYABLE_INVOICE
-        )
+        assert invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BindingSourceKind.PAYABLE_INVOICE
 
     def test_mapping_is_total_over_invoice_kind(self) -> None:
         # Anti-tautology: the function must resolve every InvoiceKind member to a
         # distinct source kind, never collapse the two directions onto one.
         resolved = {invoice_direction_to_source_kind(kind) for kind in InvoiceKind}
         assert resolved == {
-            BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE,
-            BusinessOperationInvoiceDirection.PAYABLE_INVOICE,
+            BindingSourceKind.COLLECTIBLE_INVOICE,
+            BindingSourceKind.PAYABLE_INVOICE,
         }
 
 
@@ -88,6 +77,7 @@ def _invoice(
     currency: str = "EUR",
     fx_rate: Decimal | None = None,
     fx_rate_date: date | None = None,
+    operation_type: IntracomOperationType | None = None,
 ) -> Invoice:
     from ....domain.invoices import derive_invoice_id
 
@@ -127,6 +117,61 @@ def _invoice(
         linked_transaction_ids=linked_transaction_ids,
         fx_rate=fx_rate,
         fx_rate_date=fx_rate_date,
+        operation_type=operation_type,
+    )
+
+
+def _domestic_invoice(
+    *,
+    bucket_id: str,
+    kind: InvoiceKind,
+    invoice_number: str,
+    issued_at: date,
+    counterparty_tax_id: str,
+    counterparty_name: str,
+    base_total: Decimal,
+    iva_total: Decimal,
+) -> Invoice:
+    """A domestic ES invoice carrying real IVA, for the M347 gross-total path.
+
+    Distinct from :func:`_invoice`, which mints a zero-IVA intra-community
+    record: M347 declares the GROSS total, so a fixture whose base and total
+    coincide cannot tell the two apart.
+    """
+    from ....domain.invoices import derive_invoice_id
+
+    grand_total = base_total + iva_total
+    return Invoice(
+        invoice_id=derive_invoice_id(
+            kind=kind,
+            invoice_number=invoice_number,
+            issued_at=issued_at,
+            counterparty_tax_id=counterparty_tax_id,
+            currency="EUR",
+            grand_total=grand_total,
+        ),
+        bucket_id=bucket_id,
+        kind=kind,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        counterparty_name=counterparty_name,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_country="ES",
+        base_total=base_total,
+        iva_total=iva_total,
+        grand_total=grand_total,
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Operacion interior",
+                quantity=Decimal("1"),
+                unit_price=base_total,
+                subtotal=base_total,
+                iva_rate=IvaRate.RATE_21,
+                iva_amount=iva_total,
+            ),
+        ),
+        payment_status=PaymentStatus.PENDING,
     )
 
 
@@ -217,88 +262,49 @@ def test_invoice_catalogue_source_resolver_folds_received_acquisition_for_m349(
     assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{acquisition.invoice_id}"}
 
 
-def test_invoice_catalogue_source_resolver_folds_slim_received_service_acquisition_for_m349(
-    secure_profile: TestRuntimeProfile,
-) -> None:
-    added = PayableInvoiceService(settings=secure_profile.settings).add(
-        bucket_id=secure_profile.bucket_id,
-        counterparty_nif="IT12345678901",
-        counterparty_name="Servizi SRL",
-        invoice_number="IT-SERV-2026-001",
-        invoice_date="2026-03-10",
-        taxable_base=Decimal("3000.00"),
-        iva_rate=Decimal("0"),
-        country_code="IT",
-        operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
-    )
-    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
-
-    resolution = InvoiceCatalogueSourceResolver(
-        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
-        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=secure_profile.bucket_id,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
-
-    from ....domain.modelos import Modelo349OperadorRow
-
-    assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal("1")
-    assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == Decimal("3000.00")
-    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
-    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("3000.00")
-    assert len(resolution.detail_rows) == 1
-    row = resolution.detail_rows[0]
-    assert isinstance(row, Modelo349OperadorRow)
-    assert row.codigo_pais == "IT"
-    assert row.nif_comunitario == "IT12345678901"
-    assert row.clave_operacion == "I"
-    assert row.importe == Decimal("3000.00")
-    assert {item.source_ref for item in resolution.provenance} == {f"payable_invoice:{added.record.invoice_id}"}
-
-
 def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_invoice_totals(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    collectible = CollectibleInvoiceService(settings=secure_profile.settings).add(
+    """M347 counts a counterparty only once it passes the declaration floor.
+
+    The third invoice sits at EXACTLY the threshold, not above it: M347's floor
+    is "supera", so a counterparty landing on the figure is not declarable, and
+    a test whose control sat comfortably below would pass just as well against
+    a `>=` comparison.
+    """
+    collectible = _domestic_invoice(
         bucket_id=secure_profile.bucket_id,
-        counterparty_nif="B12345674",
-        counterparty_name="Cliente M347 SL",
+        kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-001",
-        invoice_date="2025-02-10",
-        taxable_base=Decimal("1500.00"),
-        iva_amount=Decimal("315.00"),
-        total_amount=Decimal("1815.00"),
-    )
-    payable = PayableInvoiceService(settings=secure_profile.settings).add(
-        bucket_id=secure_profile.bucket_id,
-        counterparty_nif="B12345674",
+        issued_at=date(2025, 2, 10),
+        counterparty_tax_id="B12345674",
         counterparty_name="Cliente M347 SL",
-        invoice_number="M347-P-2025-001",
-        invoice_date="2025-03-10",
-        taxable_base=Decimal("1000.00"),
-        iva_amount=Decimal("190.07"),
-        total_amount=Decimal("1190.07"),
+        base_total=Decimal("1500.00"),
+        iva_total=Decimal("315.00"),
     )
-    floor_control = CollectibleInvoiceService(settings=secure_profile.settings).add(
+    payable = _domestic_invoice(
         bucket_id=secure_profile.bucket_id,
-        counterparty_nif="B87654321",
-        counterparty_name="At Floor SL",
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="M347-P-2025-001",
+        issued_at=date(2025, 3, 10),
+        counterparty_tax_id="B12345674",
+        counterparty_name="Cliente M347 SL",
+        base_total=Decimal("983.53"),
+        iva_total=Decimal("206.54"),
+    )
+    floor_control = _domestic_invoice(
+        bucket_id=secure_profile.bucket_id,
+        kind=InvoiceKind.ISSUED,
         invoice_number="M347-C-2025-002",
-        invoice_date="2025-03-15",
-        taxable_base=Decimal("2483.52"),
-        iva_amount=Decimal("521.54"),
-        total_amount=M347_THRESHOLD_EUR,
+        issued_at=date(2025, 3, 15),
+        counterparty_tax_id="A58818501",
+        counterparty_name="At Floor SL",
+        base_total=Decimal("2483.52"),
+        iva_total=Decimal("521.54"),
     )
-    resolver = InvoiceCatalogueSourceResolver(
-        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
-        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
-    )
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices((collectible, payable, floor_control)))
+    resolver = InvoiceCatalogueSourceResolver(invoice_repository=repository)
     m347_revision = _modelo_revision("347", "2008-y-siguientes")
 
     m347_resolution = resolver.resolve(
@@ -311,15 +317,16 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         ),
     )
 
+    assert floor_control.grand_total == M347_THRESHOLD_EUR
     assert m347_resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert m347_resolution.binding_values[
         "modelo-347-declarante-importe-total-anual-operaciones"
     ] == M347_THRESHOLD_EUR + Decimal("0.01")
     assert m347_resolution.detail_rows == ()
     assert {item.source_ref for item in m347_resolution.provenance} == {
-        f"collectible_invoice:{collectible.record.invoice_id}",
-        f"payable_invoice:{payable.record.invoice_id}",
-        f"collectible_invoice:{floor_control.record.invoice_id}",
+        f"collectible_invoice:{collectible.invoice_id}",
+        f"payable_invoice:{payable.invoice_id}",
+        f"collectible_invoice:{floor_control.invoice_id}",
     }
 
     m349_revision = _modelo_revision("349", "2020-y-siguientes")
@@ -339,160 +346,32 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
     assert m349_resolution.provenance == ()
 
 
-def test_invoice_catalogue_source_resolver_folds_slim_consignment_transfer_for_m349(
-    secure_profile: TestRuntimeProfile,
-) -> None:
-    added = CollectibleInvoiceService(settings=secure_profile.settings).add(
-        bucket_id=secure_profile.bucket_id,
-        counterparty_nif="DE222222222",
-        counterparty_name="Consignment Customer GmbH",
-        invoice_number="DE-CONSIGN-2026-001",
-        invoice_date="2026-03-10",
-        taxable_base=Decimal("100.00"),
-        iva_rate=Decimal("0"),
-        country_code="DE",
-        operation_type=IntracomOperationType.R,
-    )
-    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
-
-    resolution = InvoiceCatalogueSourceResolver(
-        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
-        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=secure_profile.bucket_id,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
-
-    from ....domain.modelos import Modelo349OperadorRow
-
-    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("1")
-    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == Decimal("100.00")
-    assert len(resolution.detail_rows) == 1
-    row = resolution.detail_rows[0]
-    assert isinstance(row, Modelo349OperadorRow)
-    assert row.codigo_pais == "DE"
-    assert row.nif_comunitario == "DE222222222"
-    assert row.clave_operacion == "R"
-    assert row.importe == Decimal("100.00")
-    assert {item.source_ref for item in resolution.provenance} == {f"collectible_invoice:{added.record.invoice_id}"}
-
-
-def test_invoice_catalogue_source_resolver_accepts_current_slim_business_invoice_m349_claves(
-    secure_profile: TestRuntimeProfile,
-) -> None:
-    collectible_service = CollectibleInvoiceService(settings=secure_profile.settings)
-    payable_service = PayableInvoiceService(settings=secure_profile.settings)
-    collectible_cases = (
-        (IntracomOperationType.E, "DE100000001", Decimal("100.00")),
-        (IntracomOperationType.H, "DE100000002", Decimal("200.00")),
-        (IntracomOperationType.M, "DE100000003", Decimal("300.00")),
-        (IntracomOperationType.S, "DE100000004", Decimal("400.00")),
-        (IntracomOperationType.T, "DE100000005", Decimal("500.00")),
-        (IntracomOperationType.R, "DE100000006", Decimal("600.00")),
-        (IntracomOperationType.D, "DE100000007", Decimal("700.00")),
-        (IntracomOperationType.C, "DE100000008", Decimal("800.00")),
-    )
-    payable_cases = (
-        (IntracomOperationType.A, "DE200000001", Decimal("900.00")),
-        (IntracomOperationType.ADQUISICION_SERVICIOS, "DE200000002", Decimal("1000.00")),
-        (IntracomOperationType.T, "DE200000003", Decimal("1100.00")),
-    )
-
-    for index, (operation_type, nif, amount) in enumerate(collectible_cases, start=1):
-        collectible_service.add(
-            bucket_id=secure_profile.bucket_id,
-            counterparty_nif=nif,
-            counterparty_name=f"Collectible {operation_type.value}",
-            invoice_number=f"DE-CURRENT-COLLECTIBLE-{index}",
-            invoice_date="2026-03-10",
-            taxable_base=amount,
-            iva_rate=Decimal("0"),
-            country_code="DE",
-            operation_type=operation_type,
-        )
-    for index, (operation_type, nif, amount) in enumerate(payable_cases, start=1):
-        payable_service.add(
-            bucket_id=secure_profile.bucket_id,
-            counterparty_nif=nif,
-            counterparty_name=f"Payable {operation_type.value}",
-            invoice_number=f"DE-CURRENT-PAYABLE-{index}",
-            invoice_date="2026-03-10",
-            taxable_base=amount,
-            iva_rate=Decimal("0"),
-            country_code="DE",
-            operation_type=operation_type,
-        )
-    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
-
-    resolution = InvoiceCatalogueSourceResolver(
-        invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
-        business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=secure_profile.bucket_id,
-            modelo="349",
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision=snapshot.revision,
-        ),
-    )
-
-    from ....domain.modelos import Modelo349OperadorRow
-
-    expected_amounts = {
-        (nif, operation_type.value): amount for operation_type, nif, amount in (*collectible_cases, *payable_cases)
-    }
-    # Filter to only Modelo349OperadorRow rows (the expected type for M349 operations)
-    operator_rows = [row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)]
-    # Verify all expected keys are present in operator_rows
-    found_keys = {(row.nif_comunitario, row.clave_operacion) for row in operator_rows}
-    expected_keys = set(expected_amounts)
-    assert found_keys == expected_keys
-    # Verify amounts for each row
-    for row in operator_rows:
-        row_key: tuple[str, str] = (row.nif_comunitario, str(row.clave_operacion))
-        assert row_key in expected_amounts
-        assert row.importe == expected_amounts[row_key]
-    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal(len(expected_amounts))
-    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == sum(
-        expected_amounts.values(),
-        Decimal("0"),
-    )
-    assert resolution.binding_values["iva-349-declarante-numero-operadores-adquisicion"] == Decimal(
-        len(payable_cases),
-    )
-    assert resolution.binding_values["iva-349-declarante-importe-operaciones-adquisicion"] == sum(
-        (amount for _, _, amount in payable_cases),
-        Decimal("0"),
-    )
-
-
 def test_invoice_catalogue_source_resolver_refuses_payable_consignment_transfer_for_m349(
     secure_profile: TestRuntimeProfile,
 ) -> None:
-    PayableInvoiceService(settings=secure_profile.settings).add(
-        bucket_id=secure_profile.bucket_id,
-        counterparty_nif="DE222222222",
-        counterparty_name="Supplier GmbH",
-        invoice_number="DE-RECT-2026-001",
-        invoice_date="2026-03-10",
-        taxable_base=Decimal("100.00"),
-        iva_rate=Decimal("0"),
-        country_code="DE",
-        operation_type=IntracomOperationType.R,
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(
+        InvoiceCatalogue.from_invoices(
+            (
+                _invoice(
+                    bucket_id=secure_profile.bucket_id,
+                    kind=InvoiceKind.RECEIVED,
+                    invoice_number="DE-RECT-2026-001",
+                    issued_at=date(2026, 3, 10),
+                    counterparty_tax_id="DE222222222",
+                    counterparty_name="Supplier GmbH",
+                    counterparty_country="DE",
+                    base_total=Decimal("100.00"),
+                    iva_category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                    operation_type=IntracomOperationType.R,
+                ),
+            ),
+        ),
     )
     snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
 
     with pytest.raises(RegistryValidationError, match="source kind 'payable_invoice'"):
-        InvoiceCatalogueSourceResolver(
-            invoice_repository=InvoiceCatalogueRepository(objects=secure_profile.repository),
-            business_invoice_repository=BusinessOperationInvoiceRepository(objects=secure_profile.repository),
-        ).resolve(
+        InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
             CalculationSourceContext(
                 bucket_id=secure_profile.bucket_id,
                 modelo="349",
@@ -821,7 +700,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
     forces the tax id to BE that country's NIF-IVA, so there is only ever one
     party identity on the aggregate. Same facts, fewer authorities.
     """
-    from .._source_resolver import _business_invoice_observation, _invoice_observation
+    from .._source_resolver import _invoice_observation
 
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
@@ -831,24 +710,20 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
         revision=resources().modelos.authority.snapshot("349", filing_year=2026, period="1T").revision,
     )
 
-    slim = (
-        PayableInvoiceService(settings=secure_profile.settings)
-        .add(
-            bucket_id=secure_profile.bucket_id,
-            counterparty_nif="B12345674",
-            counterparty_name="Servizi SRL",
-            invoice_number="IT-SERV-2026-001",
-            invoice_date="2026-03-10",
-            taxable_base=Decimal("3000.00"),
-            iva_rate=Decimal("0"),
-            total_amount=Decimal("3000.00"),
-            country_code=None,
-            eu_iva_id="DE345678901",
-            operation_type=IntracomOperationType.ADQUISICION_SERVICIOS,
-        )
-        .record
-    )
-    slim_facts = _declarable_facts(_business_invoice_observation(slim, context=context))
+    # The contract the retired slim store contributed, pinned as literals so
+    # the proof outlives the store it conserves. Every value is read straight
+    # off the fixture below except ``intracommunity_clave``, which the M349
+    # clave table fixes for an ADQUISICION_SERVICIOS operation ("I", servicios
+    # adquiridos).
+    declared_facts = {
+        "party_tax_id": "DE345678901",
+        "country_code": "DE",
+        "transaction_date": date(2026, 3, 10),
+        "base_amount": Decimal("3000.00"),
+        "invoice_total_amount": Decimal("3000.00"),
+        "intracommunity_clave": "I",
+        "party_legal_name": "Servizi SRL",
+    }
 
     canonical = _invoice(
         bucket_id=secure_profile.bucket_id,
@@ -863,7 +738,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
     )
     canonical_facts = _declarable_facts(_invoice_observation(canonical, context=context))
 
-    assert canonical_facts == slim_facts
+    assert canonical_facts == declared_facts
 
 
 def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
@@ -913,7 +788,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     coincide would not detect the two being confused.
     """
     from ....domain.invoices import derive_invoice_id
-    from .._source_resolver import _business_invoice_observation, _invoice_observation
+    from .._source_resolver import _invoice_observation
 
     context = CalculationSourceContext(
         bucket_id=secure_profile.bucket_id,
@@ -923,22 +798,18 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
         revision=_modelo_revision("347", "2008-y-siguientes"),
     )
 
-    slim = (
-        CollectibleInvoiceService(settings=secure_profile.settings)
-        .add(
-            bucket_id=secure_profile.bucket_id,
-            counterparty_nif="B12345674",
-            counterparty_name="Cliente M347 SL",
-            invoice_number="M347-C-2025-001",
-            invoice_date="2025-02-10",
-            taxable_base=Decimal("1500.00"),
-            iva_amount=Decimal("315.00"),
-            total_amount=Decimal("1815.00"),
-            country_code="ES",
-        )
-        .record
-    )
-    slim_facts = _declarable_facts(_business_invoice_observation(slim, context=context))
+    # Pinned for the same reason as the M349 proof above: these are the facts
+    # the retired slim store declared, every one of them read off the fixture.
+    # ``intracommunity_clave`` is None because M347 is the domestic informativa.
+    declared_facts = {
+        "party_tax_id": "B12345674",
+        "country_code": "ES",
+        "transaction_date": date(2025, 2, 10),
+        "base_amount": Decimal("1500.00"),
+        "invoice_total_amount": Decimal("1815.00"),
+        "intracommunity_clave": None,
+        "party_legal_name": "Cliente M347 SL",
+    }
 
     canonical = Invoice(
         invoice_id=derive_invoice_id(
@@ -974,7 +845,7 @@ def test_m347_declarable_facts_are_reachable_on_the_canonical_path(
     )
     canonical_facts = _declarable_facts(_invoice_observation(canonical, context=context))
 
-    assert canonical_facts == slim_facts
+    assert canonical_facts == declared_facts
 
 
 def test_an_unattributed_invoice_in_the_bucket_store_is_still_declared(
@@ -1409,3 +1280,116 @@ def test_the_renta_lane_is_where_the_divergence_actually_bites() -> None:
     # Named, not anonymous: the operator fix for an absent category differs
     # from the fix for a contradictory one, so the two must stay separable.
     assert verdict.defects == (InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED,)
+
+
+def _m349_resolution(repository: InvoiceCatalogueRepository):
+    """Resolve the committed Modelo 349 revision against a saved catalogue."""
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+    return InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+
+def _ic_supply_without_operation_type() -> Invoice:
+    """An ordinary exempt intra-community supply, clave unstated.
+
+    The ambiguous record: the resolver must pick a clave, and nothing on the
+    invoice says whether the goods were previously imported.
+    """
+    return _invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_number="IC-SUPPLY-001",
+        issued_at=date(2026, 1, 15),
+        counterparty_tax_id="DE123456789",
+        base_total=Decimal("1000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    )
+
+
+def _third_country_import() -> Invoice:
+    """An importation in the same bucket -- the fact that makes M/H possible."""
+    return _invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="IMPORT-001",
+        issued_at=date(2026, 1, 10),
+        counterparty_tax_id="US99887766",
+        counterparty_country="US",
+        base_total=Decimal("800.00"),
+        iva_category=IvaCategory.IMPORT_THIRD_COUNTRY,
+        linked_transaction_ids=("2" * 64,),
+    )
+
+
+def _inferred_clave_reasons(resolution) -> list[str]:
+    return [d.reason for d in resolution.diagnostics if d.reason == M349_CLAVE_INFERRED_REASON]
+
+
+def test_an_inferred_entrega_clave_is_disclosed_when_the_bucket_also_holds_an_importation(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The one case the advisory exists for: E was a guess and M/H was possible.
+
+    Clave M (or H) applies only to an intra-community supply following an EXEMPT
+    IMPORTATION by the same taxpayer, per LIVA art. 27.12 -- the diseño defines E
+    as excluding exactly those. Nothing on the supply records the prior
+    importation, so the resolver's E is a guess. Here the bucket holds an
+    importation, so the guess could be wrong and the operator is told.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices((_ic_supply_without_operation_type(), _third_country_import())))
+
+    resolution = _m349_resolution(repository)
+
+    assert _inferred_clave_reasons(resolution) == [M349_CLAVE_INFERRED_REASON]
+    advisory = next(d for d in resolution.diagnostics if d.reason == M349_CLAVE_INFERRED_REASON)
+    # Names the record and both alternatives, so the operator can act without
+    # already knowing that clave M exists.
+    assert "IC-SUPPLY-001" in advisory.message
+    assert "'M'" in advisory.message
+    assert "'H'" in advisory.message
+
+
+def test_the_same_supply_is_silent_when_the_taxpayer_never_imports(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """The negative control, and the reason this is a disclosure not an alarm.
+
+    Byte-identical supply, importation removed. A taxpayer who imports nothing
+    cannot have made a post-importation supply, so E is not merely the likely
+    clave -- it is the only one available, and an advisory here would fire on
+    every Modelo 349 an ordinary EU-trading taxpayer ever files.
+
+    Without this control the positive test above would pass just as well against
+    an unconditional advisory, which is the design that was measured and
+    rejected.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices((_ic_supply_without_operation_type(),)))
+
+    assert _inferred_clave_reasons(_m349_resolution(repository)) == []
+
+
+def test_a_stated_operation_type_is_never_disclosed_as_inferred(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A clave the record STATES is not a guess, even with an importation present.
+
+    Separates the two conditions the advisory ANDs together. With the importation
+    still in the bucket, the only changed fact is that the supply now declares its
+    operation type -- so a screen keying on the importation alone would still fire
+    here, and must not.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    stated = _ic_supply_without_operation_type().model_copy(
+        update={"operation_type": IntracomOperationType.E},
+    )
+    repository.save(InvoiceCatalogue.from_invoices((stated, _third_country_import())))
+
+    assert _inferred_clave_reasons(_m349_resolution(repository)) == []

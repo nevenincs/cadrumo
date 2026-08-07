@@ -22,8 +22,7 @@ The application layer remains authoritative for
 :class:`LedgerSourceImportResult`,
 :class:`LedgerTransactionPayload`,
 :class:`LedgerTransactionResultPayload`,
-:class:`LedgerPreflightReport`, and the slim
-:class:`BusinessOperationInvoice` record.  Adjacent
+:class:`LedgerPreflightReport`.  Adjacent
 surfaces that split out of this module keep their own transport schemas in
 :mod:`_ledger_rule_payloads`,
 :mod:`_ledger_llm_payloads`,
@@ -44,8 +43,6 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import BucketId, SnapshotId, TransactionId
 from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
 from ._ledger_business_payloads import (
-    BusinessInvoiceListResult,
-    BusinessInvoiceRecordPayload,
     EvidenceAddResult,
     EvidenceConfirmResult,
     EvidenceExtractResult,
@@ -62,11 +59,6 @@ from ._ledger_business_payloads import (
     InventoryMovementPayload,
     InventoryStockLayerPayload,
     InventoryValuationPreviewPayload,
-    InvoiceAddResult,
-    InvoiceListResult,
-    InvoiceRemoveResult,
-    InvoiceUpdateResult,
-    InvoiceViewResult,
 )
 from ._ledger_ratios_payloads import (
     RatiosEligibleResult,
@@ -89,8 +81,6 @@ from ._ledger_rule_payloads import (
 )
 
 _LEDGER_BUSINESS_PAYLOAD_EXPORTS = (
-    BusinessInvoiceListResult,
-    BusinessInvoiceRecordPayload,
     EvidenceAddResult,
     EvidenceConfirmResult,
     EvidenceExtractResult,
@@ -107,11 +97,6 @@ _LEDGER_BUSINESS_PAYLOAD_EXPORTS = (
     InventoryMovementPayload,
     InventoryStockLayerPayload,
     InventoryValuationPreviewPayload,
-    InvoiceAddResult,
-    InvoiceListResult,
-    InvoiceRemoveResult,
-    InvoiceUpdateResult,
-    InvoiceViewResult,
 )
 _LEDGER_RULE_PAYLOAD_EXPORTS = (
     ClassificationRulePayload,

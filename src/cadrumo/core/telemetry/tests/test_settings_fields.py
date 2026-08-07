@@ -2,7 +2,7 @@
 
 Confirms the default-off posture and that each field reads its documented
 environment variable, mirroring the coverage
-``cadrumo_evidence_cloud_upload_permitted`` / ``cadrumo_evidence_gestor_mode`` carry
+the retired evidence cloud-upload and gestor-mode flags carried
 for the sibling off-host consent gate.
 
 See Also:

@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .._llm_suggestions import ExtractionPayload, ExtractionProducer, ExtractionSourceKind
+from ....llm import ExtractionPayload, ExtractionProducer, ExtractionSourceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

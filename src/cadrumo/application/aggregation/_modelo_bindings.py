@@ -47,7 +47,6 @@ from ...domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,
     UngroundedRentaIncome,
-    renta_income_binding_output_casilla_values,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_irnr_income_aggregation_binding_values,
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
@@ -55,6 +54,7 @@ from ...domain.calculations.registry import (
     resolve_ledger_renta_income_aggregation_binding_values,
     resolve_retenciones_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
+    unrouted_ledger_renta_income_quantities,
     unsupported_ledger_impatriado_income_observations,
     unsupported_ledger_irnr_income_observations,
     unsupported_ledger_iva_observations,
@@ -70,7 +70,11 @@ from ...domain.invoices import (
     invoice_line_to_iva_observation,
 )
 from ...domain.modelos import Modelo210AgrupacionRentaRow
-from ...domain.renta import RentaDeductibleExpenseObservation
+from ...domain.renta import (
+    RENTA_130_RETENCIONES_BINDING_ID,
+    RENTA_130_RETENCIONES_OUTPUT_CASILLA,
+    RentaDeductibleExpenseObservation,
+)
 from ...domain.transactions import (
     OutOfWindowTransactionSummary,
     TransactionCatalogueRepositoryProtocol,
@@ -468,11 +472,19 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # thing standing between the operator and a silently mis-measured
         # income casilla.
         ungrounded = ungrounded_ledger_renta_income_observations(context.revision, aggregation.observations)
+        # Third screen, on the axis the two above cannot see. Both of those key
+        # on the ROW, and every observation is built with target_casilla_id="01"
+        # whatever fact a binding reads off it -- so a row consumed for its
+        # income reads as routed while a SECOND, independent quantity it carries
+        # (the retención suffered) reaches no binding at all. Without this the
+        # taxpayer's whole retención credit can disappear with both other
+        # screens clean.
+        unrouted_quantities = unrouted_ledger_renta_income_quantities(context.revision, aggregation.observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            bound_inputs_by_casilla_id=renta_income_binding_output_casilla_values(context.revision, binding_values),
+            bound_inputs_by_casilla_id=_m130_retenciones_backend_inputs(context, binding_values),
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
@@ -504,11 +516,26 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 )
                 for observation in unrouted
             )
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_declarable_quantity",
+                    source_kind="ledger_renta_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"{len(quantity.observations)} income row(s) carry {quantity.total} EUR of "
+                        f"{quantity.fact!r}, which no ledger_renta_income_aggregation binding on revision "
+                        f"{context.revision.id!r} draws; that amount is not declared on this calculation. "
+                        f"The rows themselves ARE consumed for their income, so no other screen reports them"
+                    ),
+                )
+                for quantity in unrouted_quantities
+            )
             + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
             + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
             + inferred_actividad_retencion_rate_advisory_observations(
                 aggregation.observations,
                 bucket_id=context.bucket_id,
+                resolver_id=self.resolver_id,
             ),
             provenance=tuple(
                 CalculationSourceProvenance(
@@ -688,6 +715,46 @@ def _fitted_id_list(identifiers: Sequence[str], *, budget: int) -> str:
             return candidate
     fallback = f"{total} transaction(s), ids omitted to fit the diagnostic length limit"
     return fallback if len(fallback) <= budget else ""
+
+
+def _m130_retenciones_backend_inputs(
+    context: CalculationSourceContext,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Redirect the retenciones binding's resolved value to its output casilla.
+
+    This is the OUTPUT half of a fact that is declared with
+    `target_casilla_id = "01"` in the registry (see the comment on the
+    `modelo-130-actividad-economica-retenciones-cumulative` binding in
+    `_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/
+    0003-m130-income-cumulative.toml`). That selector field is the
+    OBSERVATION-MATCH key -- it must stay "01" for the aggregation to see any
+    rows at all -- not a declaration of where the aggregate lands.
+    `RENTA_130_RETENCIONES_OUTPUT_CASILLA` is hardcoded here because this
+    binding family has no schema field to express "match on X's
+    observations, output to Y's casilla" honestly; do not "fix" the selector
+    to that casilla without reading that TOML comment first, since doing so
+    silently zeroes this value instead of redirecting it.
+
+    A schema field expressing that divergence honestly was tried and
+    reverted: it would reopen the cross-domain routing-table design T-05
+    governs (`.vault/reference/2026-05-15-linkage-design-audit-reference.md`),
+    which needs a superseding ADR, not an implementation choice made in
+    passing. Following T-05's established remedy instead: the hardcoded
+    casilla constant lives in `domain.renta` and is validated against every
+    M130 revision by a `CrossDomainSnapshotCheck` registered at snapshot-build
+    time (`domain.renta._retenciones_routing_integrity`), the same mechanism
+    that already validates the Modelo 100 first-slice routing table. A
+    revision that dropped or renumbered the output casilla would fail loudly
+    at snapshot build, before this function ever runs -- it does not
+    re-validate that guarantee itself.
+    """
+    if str(context.modelo) != Modelo.M130.value:
+        return {}
+    value = binding_values.get(RENTA_130_RETENCIONES_BINDING_ID)
+    if value is None:
+        return {}
+    return {RENTA_130_RETENCIONES_OUTPUT_CASILLA: value}
 
 
 class LedgerImpatriadoIncomeAggregationSourceResolver:
@@ -1315,7 +1382,7 @@ def _empty_source_resolution(
 #: BOTH the live calculate mesh (:meth:`RetencionesAggregationSourceResolver.resolve`)
 #: and the per-modelo aggregation service (:func:`~._service.aggregate_per_modelo`,
 #: the CLI ``aggregate`` / pull surface), so the two paths cannot drift
-#: (``one-aggregation-path-pull-equals-calculate``).
+#: (``aeat-calculation-aggregation``).
 #:
 #: The calculate path is scoped to the modelos whose registry declares a
 #: ``retenciones_aggregation`` binding (111/115/180/193 today) by the resolver's
@@ -1371,7 +1438,7 @@ class RetencionesAggregationSourceResolver:
         ``aggregate`` / pull surface) route through this single method over the
         shared :data:`_RETENCIONES_AGGREGATORS` dispatch, so the calculate and
         pull surfaces produce byte-identical aggregation and cannot drift
-        (``one-aggregation-path-pull-equals-calculate``). Raises ``KeyError``
+        (``aeat-calculation-aggregation``). Raises ``KeyError``
         for a non-retenciones modelo, matching the prior service dispatch.
         """
         return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period)

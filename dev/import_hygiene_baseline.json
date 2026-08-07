@@ -5,10 +5,8 @@
     "sites": []
   },
   "family2_shim_modules": {
-    "_note": "Every module the scanner classifies as a Family-2 shim / pure-reexport surface. Each is a DOCUMENTED bridge: a single non-__init__ public re-export module is an acceptable canonical source when it carries a docstring explaining why. The gate fails if a NEW undocumented shim appears that is not in this list.",
-    "paths": [
-      "src/cadrumo/domain/transactions/_ids.py"
-    ]
+    "_note": "Every module the scanner classifies as a Family-2 shim / pure-reexport surface. Now EMPTY: the last documented bridge, src/cadrumo/domain/transactions/_ids.py, is gone -- its consumers resolve TransactionId through cadrumo.core.identity, the canonical owner. The operator directive is that a symbol has exactly one home and is imported from it, so a re-export module is no longer an acceptable canonical source at all. The gate fails if ANY shim appears; do not re-add a path here to make a new bridge pass.",
+    "paths": []
   },
   "family3_pinned_duplicate_symbols": {
     "_note": "Named Family-3 'genuine duplicate' symbols with an investigated, pinned disposition. The 7 umbrella app-layer re-exports (CalculationRevision, CalculationRevisionAmendmentKind, ExternalEvidenceKind, WorkUnit, link_transaction, suggest_reconciliations, verify_link_consistency) were RETIRED and must never reappear as multi-facade symbols. save_envelope and DEFAULT_IVA_GENERAL_RATE_PCT were investigated and require no action (two unrelated same-named functions; a benign zero-consumer duplicate declaration respectively) -- they are pinned here as the exact tolerated set so a NEW genuine cross-facade duplicate fails the gate.",

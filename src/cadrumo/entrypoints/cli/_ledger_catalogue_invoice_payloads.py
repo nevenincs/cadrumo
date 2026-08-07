@@ -1,4 +1,4 @@
-"""JSON-contract payloads for the rich catalogue-invoice CLI verbs.
+"""JSON-contract payloads for the ``aeat app ledger invoice`` verbs.
 
 Each payload is a strict
 :class:`OutputSchema` subclass registered with
@@ -6,18 +6,14 @@ Each payload is a strict
 :class:`SchemaEnvelope` surface through
 :func:`_emit_envelope`.
 
-The unified ``aeat app ledger invoice`` group drives the slim
-:class:`BusinessOperationInvoice` operator record
-(payloads in :mod:`_ledger_payloads`). The ``catalogue``
-subgroup added here drives the **rich** :class:`Invoice`
-in the
-:class:`InvoiceCatalogue` — the only invoice aggregate
-that carries ``linked_transaction_ids`` and the one ``link --invoice-id``
-resolves through
-:func:`link_invoice_transaction_repositories`. These
-payloads are declared in their own module so the registration side-effects live
-next to the verb that emits them without touching the slim
-:mod:`_ledger_payloads` surface.
+Every verb in the group projects the canonical :class:`Invoice`
+held in the :class:`InvoiceCatalogue` — the sole invoice
+aggregate, carrying ``linked_transaction_ids`` and the identity
+``link --invoice-id`` resolves through
+:func:`link_invoice_transaction_repositories`. The
+``Catalogue`` prefix on these classes names that aggregate, not a CLI
+subgroup: the operator surface is the bare ``invoice`` noun, so the
+registered command identifiers are ``ledger.invoice.<verb>``.
 """
 
 from __future__ import annotations
@@ -87,18 +83,18 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
         return self
 
 
-@register_schema("ledger.invoice.catalogue.create")
+@register_schema("ledger.invoice.add")
 class CatalogueInvoiceCreateResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice catalogue create``.
+    """JSON envelope for ``aeat app ledger invoice add``.
 
     Mirrors the ``invoice`` inside the application-layer create result returned
     by :func:`create_catalogue_invoice`.
     """
 
 
-@register_schema("ledger.invoice.catalogue.wizard")
+@register_schema("ledger.invoice.wizard")
 class CatalogueInvoiceWizardResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice catalogue wizard``.
+    """JSON envelope for ``aeat app ledger invoice wizard``.
 
     Mirrors the ``invoice`` inside the application-layer result returned by
     :func:`create_invoice_via_wizard`. ``already_existed`` reports the guarded
@@ -109,18 +105,35 @@ class CatalogueInvoiceWizardResult(CatalogueInvoiceRecordPayload):
     already_existed: bool = False
 
 
-@register_schema("ledger.invoice.catalogue.view")
+@register_schema("ledger.invoice.view")
 class CatalogueInvoiceViewResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice catalogue view``.
+    """JSON envelope for ``aeat app ledger invoice view``.
 
     Projects the rich :class:`Invoice` resolved by
     :func:`resolve_catalogue_invoice_from_repository`.
     """
 
 
-@register_schema("ledger.invoice.catalogue.remove")
+@register_schema("ledger.invoice.update")
+class CatalogueInvoiceUpdateResult(CatalogueInvoiceRecordPayload):
+    """JSON envelope for ``aeat app ledger invoice update``.
+
+    Projects the re-validated :class:`Invoice` returned by
+    :func:`update_catalogue_invoice`. The content-addressed ``invoice_id`` is
+    unchanged: identity fields are structurally excluded from
+    :class:`~application.invoices.CatalogueInvoicePatch`, so a correction never
+    silently re-mints the record under a new identity.
+
+    ``bucket_event_ids`` carries the lifecycle events the correction emitted,
+    so the operator can trace the write without a second read.
+    """
+
+    bucket_event_ids: list[str] = Field(default_factory=list)
+
+
+@register_schema("ledger.invoice.remove")
 class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
-    """JSON envelope for ``aeat app ledger invoice catalogue remove``.
+    """JSON envelope for ``aeat app ledger invoice remove``.
 
     Reports the deleted rich :class:`Invoice` returned by
     :func:`remove_catalogue_invoice`; linked invoices are refused before this
@@ -128,9 +141,9 @@ class CatalogueInvoiceRemoveResult(CatalogueInvoiceRecordPayload):
     """
 
 
-@register_schema("ledger.invoice.catalogue.list")
+@register_schema("ledger.invoice.list")
 class CatalogueInvoiceListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger invoice catalogue list``.
+    """JSON envelope for ``aeat app ledger invoice list``.
 
     Each row is a
     :class:`CatalogueInvoiceRecordPayload`
@@ -152,9 +165,9 @@ class BulkInvoiceImportRowFailurePayload(OutputSchema):
     reason: str = Field(min_length=1)
 
 
-@register_schema("ledger.invoice.catalogue.import")
+@register_schema("ledger.invoice.import")
 class CatalogueInvoiceImportResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger invoice catalogue import``.
+    """JSON envelope for ``aeat app ledger invoice import``.
 
     Mirrors the application-layer
     :class:`~application.invoices.BulkInvoiceImportResult`: ``created``
@@ -180,6 +193,7 @@ __all__ = [
     "CatalogueInvoiceListResult",
     "CatalogueInvoiceRecordPayload",
     "CatalogueInvoiceRemoveResult",
+    "CatalogueInvoiceUpdateResult",
     "CatalogueInvoiceViewResult",
     "CatalogueInvoiceWizardResult",
 ]

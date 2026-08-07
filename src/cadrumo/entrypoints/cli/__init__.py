@@ -294,14 +294,14 @@ def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
     (which pull the registry) — it only renders the profile-creation prompt. Use
     the lightweight core resolver to avoid importing workflow.
     """
-    from ...adapters.persistence.storage import has_active_bucket_session
+    from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.operator_surface import build_root_landing_report
     from ...core import resolve_active_bucket_id
     from ._root_landing import render_cli_root_landing_lines
 
     active = resolve_active_bucket_id()
     landing = build_root_landing_report(active)
-    if active is None or not has_active_bucket_session():
+    if active is None or not active_bucket_session_serves(active):
         # Bare invocation with no active profile OR no open
         # session: render the landing card and exit. Bare
         # invocation is a metadata-emitting introspection
@@ -474,7 +474,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     this fallback an in-process invocation would be misclassified as
     bare and the session would never open.
     """
-    from ...adapters.persistence.storage import has_active_bucket_session
+    from ...adapters.persistence.storage import active_bucket_session_serves
     from ...application.storage_write_policy import inspect_storage_write_policy
     from ...core import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
@@ -514,7 +514,9 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     if _is_unregistered_profile_status_probe(verb_path, active_bucket_id):
         return
     _register_wizard_catalogue_for_profile_keys()
-    if has_active_bucket_session():
+    # A session bound to another bucket does not serve this verb's profile;
+    # returning on its presence skips the resume and runs against the wrong one.
+    if active_bucket_session_serves(active_bucket_id):
         return
     _resume_profile_session_or_refuse(ctx, active_bucket_id)
     # The active profile's encrypted record is only decryptable once the

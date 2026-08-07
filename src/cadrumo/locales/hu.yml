@@ -761,13 +761,6 @@ application:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
         unsupported_iva_rate: 'A(z) %{iva_rate} áfakulcs nem ismert; használja az
           alábbiak egyikét: %{accepted}.'
-    importing:
-      errors:
-        import_file_read_failed: 'A számlaimport fájl nem olvasható: %{path_name}.'
-        invalid_json: A számla JSON nem érvényes a(z) %{line}. sor %{column}. oszlopában.
-        invalid_json_shape: A számla JSON tartalma objektum vagy objektumlista kell
-          legyen.
-        invalid_kind: 'A számla típusa nem támogatott: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;
@@ -776,6 +769,7 @@ application:
         invoice_not_found: 'A katalógusban nem található számla: %{invoice_id}.'
         remove_linked_invoice: 'A(z) %{invoice_id} számla nem törölhető, amíg tranzakciókhoz
           kapcsolódik: %{linked_transaction_ids}. Előbb oldja fel a kapcsolatokat.'
+        empty_invoice_patch: 'A számla javításához legalább egy módosítandó mezőt meg kell adni.'
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} számla nem található a kapcsolás
@@ -1965,12 +1959,10 @@ cli:
         valuation_preview_help: Zárópreparát és értékesítési önköltség előnézete.
         year_help: Adóév.
       invoice:
-        add_help: Új üzleti számla regisztrálása.
         catalogue:
           country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
             adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
           create_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
-          group_help: Egyeztetési katalógus számlái, amelyek tranzakciókhoz kapcsolhatók.
           import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
             elutasításra került; nem jött létre számla'
           import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
@@ -1998,17 +1990,12 @@ cli:
           rectifies_help: 'Annak a számlának a száma, amelyet ez a rectificativa javít.'
           recargo_help: 'Az adótételre felszámított recargo de equivalencia (LIVA 161. cikk). A retencióval ellentétben a számla végösszegén belül szerepel.'
           iva_category_help: 'Az ügylet áfakezelése. Szükséges ahhoz, hogy egy renta-számítás megalapozhassa.'
-        country_code_help: Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi
-          műveletek).
-        eu_iva_id_help: Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi
-          műveletekhez.
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
         invoice_id_help: Számla azonosítója (vagy egyértelmű előtag).
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
-        list_help: Üzleti számlák listázása (mindkét típus, ha a --kind nem szűr).
         operation_date_help: A teljesites (termekertekesites vagy szolgaltatasnyujtas)
           idopontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adofizetesi kotelezettseg
           keletkezesenek napja, amely meghatarozza, melyik idoszakban kell az adot
@@ -2020,11 +2007,7 @@ cli:
           címzettcseréje'
         operation_type_invalid: 'A --operation-type értéke csak a következők egyike
           lehet: {valid}'
-        remove_help: Üzleti számla törlése.
-        total_amount_required: 'A --total-amount megadása kötelező: adja meg a számla
-          végösszegét tizedes értékként, például 121.00.'
         update_help: Üzleti számla adatainak frissítése.
-        view_help: Üzleti számla adatainak megjelenítése.
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
       prorrata:
@@ -6432,10 +6415,6 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
       egy szükséges feltételt sértenek. Ellenőrizze a tárca-kor beállítást, és próbálja
       újra.
-    refused_ledger_business_operation_invoice_input: Egy megadott bemenet sérti az
-      üzleti művelet-számla szerződést. Javítsa a bemenetet, és próbálja újra.
-    refused_ledger_business_operation_invoice_not_found: Nem létezik üzleti művelet-számla
-      a megadott azonosítóval.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsa a bemenetet, és próbálja újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott

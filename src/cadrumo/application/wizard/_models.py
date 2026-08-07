@@ -167,6 +167,19 @@ class WizardFlow(BaseModel):
         clause: every named question must precede the gated question
         so the runtime has the parent answer in hand when it evaluates
         visibility.
+
+        This invariant is enforced a second time, over a different model, by
+        :meth:`~application.flows.FlowDefinition._validate_visible_when_targets`.
+        The two exist because the models differ, not by oversight: every
+        ``WizardFlow`` is bridged into a ``FlowDefinition``, but
+        ``attach_descendant_group`` then splices in pages authored directly in
+        ``FlowPage`` vocabulary that no ``WizardFlow`` ever contained, so the
+        flows-side check covers content this one cannot see. This one runs at
+        catalogue-authoring time, before the bridge, and names the offending
+        QUESTIONS rather than the bridged pages.
+
+        Change the rule here and the sibling silently keeps enforcing the old
+        one; they are linked by this note and nothing else.
         """
         seen: dict[str, int] = {}
         index = 0

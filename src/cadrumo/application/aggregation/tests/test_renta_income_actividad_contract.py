@@ -13,6 +13,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry import (
+    CasillaDefinition,
     DataBindingDefinition,
     ModeloRevision,
     PeriodSelector,
@@ -61,17 +62,33 @@ def _m130_renta_income_binding(
     *,
     fact: str,
     legal_refs: tuple[str, ...],
-    output_casilla_id: str | None = None,
 ) -> DataBindingDefinition:
-    selector = {"modelo": "130", "target_casilla_id": "01", "fact": fact}
-    if output_casilla_id is not None:
-        selector["output_casilla_id"] = output_casilla_id
     return DataBindingDefinition(
         id=binding_id,
         source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector=selector,
+        selector={"modelo": "130", "target_casilla_id": "01", "fact": fact},
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=legal_refs,
+        source_refs=_M130_INCOME_SOURCE_REFS,
+    )
+
+
+def _m130_casilla(casilla_id: str) -> CasillaDefinition:
+    """Minimal casilla declaration for this fixture's synthetic revision.
+
+    Declaring both casillas 01 and 06 keeps the fixture realistic relative
+    to the committed registry's revision, even though the T-05 cross-check
+    that validates the output casilla runs at snapshot-build time
+    (`domain.renta._retenciones_routing_integrity`), not against this
+    hand-built revision -- see that module's own test file for that
+    coverage.
+    """
+    return CasillaDefinition(
+        id=casilla_id,
+        number=casilla_id,
+        localization_keys=("test.schema.casilla.label",),
+        section=("test",),
+        legal_refs=_M130_INCOME_SOURCE_REFS,
         source_refs=_M130_INCOME_SOURCE_REFS,
     )
 
@@ -84,6 +101,7 @@ def _m130_2026_q1_revision() -> ModeloRevision:
         period_selector=PeriodSelector(year_from=2019, periods=("1T", "2T", "3T", "4T")),
         legal_refs=_M130_INGRESOS_LEGAL_REFS,
         source_refs=_M130_INCOME_SOURCE_REFS,
+        casillas=(_m130_casilla(_M130_INGRESOS_CASILLA), _m130_casilla(_M130_RETENCIONES_CASILLA)),
         bindings=(
             _m130_renta_income_binding(
                 _M130_INGRESOS_BINDING,
@@ -94,13 +112,6 @@ def _m130_2026_q1_revision() -> ModeloRevision:
                 _M130_RETENCIONES_BINDING,
                 fact="withheld_amount_sum",
                 legal_refs=_M130_RETENCIONES_LEGAL_REFS,
-                # Mirrors the committed registry declaration: this fact matches
-                # casilla 01 income rows but reports on casilla 06 (see
-                # _RentaLedgerIncomeSelector's docstring). Omitting this here
-                # would silently zero bound_inputs_by_casilla_id["06"] now that
-                # the resolver reads the registry's declaration instead of a
-                # hardcoded Python override.
-                output_casilla_id=_M130_RETENCIONES_CASILLA,
             ),
         ),
     )
@@ -341,6 +352,74 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
     assert resolution.bound_inputs_by_casilla_id[_M130_RETENCIONES_CASILLA] == Decimal("300.00")
 
 
+def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The dropped retención reaches the operator, and no other screen reports it.
+
+    Same substrate as the test above -- a net-paid professional invoice carrying
+    300,00 of retención -- against a revision declaring only the income binding.
+    Every row is still consumed for its income, so the row-keyed screens stay
+    silent; without the quantity screen the whole credit would vanish from the
+    form with a clean calculation on both sides.
+    """
+    tx = _actividad_transaction(
+        "ae-net-paid-unrouted-retencion",
+        value_date=date(2026, 3, 15),
+        amount=Decimal("2120.00"),
+        taxable_base=Decimal("2000.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("420.00"),
+    )
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    tx_repo.save(TransactionCatalogue.from_transactions((tx,)))
+    income_only = _m130_revision_without_the_retenciones_binding()
+    context = CalculationSourceContext(
+        bucket_id="test",
+        modelo="130",
+        filing_year=2026,
+        period=_period(2026, "1T"),
+        revision=income_only,
+    )
+
+    resolution = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context)
+
+    advisories = [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
+    assert len(advisories) == 1, "a dropped retenciones binding must surface exactly one advisory"
+    assert "withheld_amount_sum" in advisories[0].message
+    assert "300.00" in advisories[0].message, "the advisory must name the amount the taxpayer loses"
+    # Attributed like every sibling diagnostic in this resolver's envelope, so
+    # an agent can trace the advisory to the source that raised it.
+    assert advisories[0].resolver_id == "ledger_renta_income_aggregation"
+    # The reason must NOT collapse into the row-keyed screen's: an operator has
+    # to distinguish "no binding consumes this row" from "this row is consumed
+    # but its withholding reaches nothing", and the row screen is silent here by
+    # construction, so a shared reason would make its silence read as agreement.
+    assert not [diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_observation"], (
+        "the quantity advisory must carry its own reason, not the row screen's"
+    )
+    # Non-blocking: the income still resolves, so calculate succeeds and the
+    # operator sees the gap rather than a refusal.
+    assert resolution.binding_values[_M130_INGRESOS_BINDING] == Decimal("2000.00")
+
+    # Silence control: with the binding present the retención is drawn and the
+    # advisory must not fire, or it would fire on every correct M130 filing.
+    complete = LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+        CalculationSourceContext(
+            bucket_id="test",
+            modelo="130",
+            filing_year=2026,
+            period=_period(2026, "1T"),
+            revision=_m130_2026_q1_revision(),
+        ),
+    )
+    assert not [
+        diagnostic for diagnostic in complete.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
+
+
 def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> None:
     """Casilla 01 projection carries computable income, never IVA-inclusive gross.
 
@@ -558,3 +637,17 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each(
     advisories = _ungrounded_diagnostics(resolution)
     assert len(advisories) == 1, "three ungrounded rows must fold into one advisory, not three"
     assert resolution.binding_values[_M130_INGRESOS_BINDING] == Decimal("1500.00")
+
+
+def _m130_revision_without_the_retenciones_binding() -> ModeloRevision:
+    """The same revision with only the ingresos binding declared.
+
+    Every row is still consumed -- for its income -- so both row-keyed screens
+    stay silent. The retención the rows carry reaches nothing.
+    """
+    full = _m130_2026_q1_revision()
+    return full.model_copy(
+        update={
+            "bindings": tuple(binding for binding in full.bindings if binding.id != _M130_RETENCIONES_BINDING),
+        },
+    )

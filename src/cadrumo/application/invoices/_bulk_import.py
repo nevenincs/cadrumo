@@ -90,7 +90,7 @@ BULK_INVOICE_IMPORT_ALLOWED_COLUMNS: frozenset[str] = (
 class BulkInvoiceImportRow(BaseModel):
     """One parsed row from a bulk invoice import CSV/XLSX file.
 
-    Mirrors the operator fields ``aeat app ledger invoice catalogue create``
+    Mirrors the operator fields ``aeat app ledger invoice add``
     accepts one at a time; ``taxable_base`` and ``iva_rate`` synthesise the
     single line item exactly as :func:`build_catalogue_invoice` does for the
     single-invoice verb, so a bulk row produces an identical

@@ -1084,7 +1084,7 @@ def modelo_202_modality_for_work_unit(work_unit: WorkUnit) -> Modelo202ModalityS
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
-    profile = projection_for_taxpayer(record or {}, tax_id_default="00000000T")
+    profile = projection_for_taxpayer(record or {})
     verdict = derive_modelo_202_modality(profile)
     return Modelo202ModalitySummary(modality=verdict.modality.value, reason=verdict.reason)
 

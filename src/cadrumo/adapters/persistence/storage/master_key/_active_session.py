@@ -35,7 +35,7 @@ import atexit as _atexit
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import override
+from typing import TypeGuard, override
 
 from .....core.errors import resolve_error_message
 from .....core.logging import get_logger
@@ -166,6 +166,53 @@ def current_active_bucket_session() -> BucketSession | None:
     return _active_session.get()
 
 
+def session_serves_bucket(session: BucketSession | None, bucket_id: str) -> TypeGuard[BucketSession]:
+    """Return whether ``session`` is open for exactly ``bucket_id``.
+
+    The single bucket-identity comparison for session reuse. Callers holding an
+    explicitly-passed session (the auth scope resolves one, then layers
+    storage-root and explicit-routing agreement on top) use this; callers
+    reading the ambient binding use :func:`active_bucket_session_serves`, which
+    is this function applied to the active-session ``ContextVar``.
+
+    One comparison, two entry points: an injected-session caller must not
+    re-derive ``session.bucket_id == bucket_id`` locally, because that is the
+    comparison whose omission produces the cross-bucket read.
+
+    Typed as a :data:`~typing.TypeGuard` so a caller that passes the guard may
+    read the session's own attributes without a redundant ``is not None``
+    re-check. :data:`~typing.TypeIs` would be unsound here: this returns
+    ``False`` for a perfectly non-``None`` session bound to a different bucket,
+    which must not narrow the negative branch to ``None``.
+    """
+    return session is not None and session.bucket_id == bucket_id
+
+
+def active_bucket_session_serves(bucket_id: str) -> bool:
+    """Return whether the bound session is open for exactly ``bucket_id``.
+
+    The single reuse predicate for callers deciding whether an ambient session
+    already serves the bucket they are about to read or write, rather than
+    opening a second span over it.
+
+    :func:`has_active_bucket_session` answers a strictly weaker question --
+    whether *any* session is bound -- and a caller that resolves a target
+    bucket and then reuses on presence alone will operate against whichever
+    bucket happens to be bound. The two differ exactly when a session for one
+    bucket is ambient while the caller targets another, which is the case that
+    reads or writes one profile's encrypted store under another profile's
+    identity. Callers that hold a target bucket MUST use this predicate;
+    :func:`has_active_bucket_session` remains correct only for callers with no
+    target to compare against.
+
+    Storage-root and explicit-routing agreement are a separate, stricter
+    concern layered on top of this by
+    :func:`~cadrumo.application.auth.active_profile_storage_span`; this
+    function owns the bucket-identity half that every caller needs.
+    """
+    return session_serves_bucket(_active_session.get(), bucket_id)
+
+
 def close_active_bucket_session() -> None:
     """Close and evict the currently bound :class:`BucketSession`.
 
@@ -232,10 +279,12 @@ _atexit.register(_close_active_session_at_exit)
 __all__ = [
     "NoActiveBucketSessionError",
     "activate_session",
+    "active_bucket_session_serves",
     "bind_active_bucket_session",
     "close_active_bucket_session",
     "current_active_bucket_session",
     "get_active_master_key",
     "has_active_bucket_session",
+    "session_serves_bucket",
     "suspend_active_session",
 ]

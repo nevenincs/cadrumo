@@ -27,5 +27,6 @@ Submodules
    cadrumo.llm._models
    cadrumo.llm._pricing
    cadrumo.llm._retention
+   cadrumo.llm._suggestions
    cadrumo.llm._text_classifier
    cadrumo.llm._vision_classifier

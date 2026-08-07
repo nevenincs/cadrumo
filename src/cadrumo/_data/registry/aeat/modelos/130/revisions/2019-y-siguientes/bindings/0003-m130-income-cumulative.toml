@@ -74,13 +74,12 @@ required_text = ["Rendimiento neto", "Casilla 03"]
 # application code: `_m130_retenciones_backend_inputs` in
 # application/aggregation/_modelo_bindings.py reads this binding's resolved value by
 # id and writes it to casilla 06 directly, bypassing the registry's normal
-# casilla-to-binding wiring. That hardcoded override exists because this binding
-# family's selector schema has no field for "match on X's observations, output to
-# Y's casilla" -- `target_casilla_id` can only express one of those two facts, and
-# the observation-match role is the one that must stay "01" for the aggregation to
-# resolve anything at all. Retiring the hardcoded override in favour of an honest
-# `output_casilla_id` field is a real schema change, tracked separately -- not a
-# one-line correction here.
+# casilla-to-binding wiring. That function now also asserts casilla 06 is a real
+# casilla on the M130 revision before writing to it (a snapshot cross-check, T-05
+# pattern) rather than trusting the hardcoded constant blindly. A schema field
+# expressing "match on X's observations, output to Y's casilla" honestly was tried
+# and reverted: it reopens the cross-domain routing-table design T-05 governs, and
+# that needs a superseding ADR, not an implementation-choice workaround.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-actividad-economica-retenciones-cumulative"
 source = "ledger_renta_income_aggregation"

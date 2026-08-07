@@ -24,7 +24,6 @@ from ...domain.iva import IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassificationResponse,
-    TransactionValidationError,
     prompt_spec_with_saturation_fields,
 )
 from ...tests.secure_sql import TestRuntimeProfile

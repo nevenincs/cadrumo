@@ -297,11 +297,26 @@ def test_the_derivation_check_accepts_an_inline_namespace_attribute() -> None:
 def test_the_derivation_check_actually_reaches_the_read_paths() -> None:
     """Anti-vacuity: a scan that inspected nothing would report clean.
 
-    Twenty read paths were swept onto the predicate. If the scan stops finding
+    The swept read paths must stay ON the predicate. If the scan stops finding
     them — a rename, a moved facade, a changed scan surface — leg three silently
     stops guarding anything while still passing.
+
+    The floor was 20 when the sweep landed and is 16 now. That drop is
+    CONSOLIDATION, not lost coverage, and the distinction is the whole point of
+    this gate, so it is recorded rather than silently re-baselined:
+    ``sede/_observation_store.py`` hand-rolled the classification-and-version
+    pair at four read paths and ``profile/invoices.py`` at one; all five now
+    route through :class:`SecureBoundRepository`, whose kernel in
+    ``profile/_secure_enveloped_document.py`` performs the one check every
+    subclass inherits. Five call sites became one, so the reads are still
+    guarded — by a single shared check instead of five copies.
+
+    Lowering this floor is therefore only ever legitimate alongside evidence
+    that the missing calls moved into a shared reader. A drop with no such
+    consolidation is the regression this gate exists to catch: verify before
+    re-baselining, never the reverse.
     """
     call_sites = sum(len(_predicate_calls(ast.parse(source))) for _, source in _reader_sources())
-    assert call_sites >= 20, (
+    assert call_sites >= 16, (
         f"expected the swept inner-envelope read paths to remain on the predicate; found {call_sites} call sites"
     )

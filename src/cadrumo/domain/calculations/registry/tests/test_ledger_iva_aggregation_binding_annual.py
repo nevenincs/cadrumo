@@ -17,6 +17,7 @@ from .. import (
 )
 from ._ledger_iva_aggregation_support import (
     _M303_COMPENSACION_GENERADA_PERIODO_CASILLA,
+    _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
     _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
     _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
     _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
@@ -126,3 +127,73 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
     assert annual_result.values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA] == non_q4_generated
     assert annual_result.values[_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA] > Decimal("0")
     assert annual_result.values[_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA] > Decimal("0")
+
+
+def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisition() -> None:
+    """An EU services acquisition reaches the annual return, not only the quarters.
+
+    Modelo 390 reconciles its annual devengada against the sum of the four
+    Modelo 303 quarters, so any category the quarterly line consumes and the
+    annual line does not produces a divergence that is either a blocked filing
+    or a silently under-declared annual return. Both lines therefore have to
+    select the same intra-community acquisition categories.
+
+    The goods and services legs rest on different articles — arts. 13/15 for
+    goods, art. 69.Uno.1 read subject to art. 70 for services, with art.
+    84.Uno.2.a) making the recipient the sujeto pasivo on either — but AEAT
+    reports them on one line, so both legs are booked on both surfaces. The
+    expectation is derived by comparing the annual figure against the summed
+    quarterly figures, never from a literal.
+    """
+    services_cuota = Decimal("21.00")
+    goods_cuota = Decimal("63.00")
+    quarterly_observations = {
+        "1T": (
+            _observation(ledger_id="sale-1t", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),
+            _observation(
+                ledger_id="eu-goods",
+                txn_date=date(2025, 3, 1),
+                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+                rate_kind=IvaRateKind.GENERAL,
+                iva=goods_cuota,
+            ),
+        ),
+        "2T": (
+            _observation(ledger_id="sale-2t", txn_date=date(2025, 5, 15), iva=Decimal("105.00")),
+            _observation(
+                ledger_id="eu-service",
+                txn_date=date(2025, 6, 1),
+                category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+                rate_kind=IvaRateKind.GENERAL,
+                iva=services_cuota,
+            ),
+        ),
+        "3T": (_observation(ledger_id="sale-3t", txn_date=date(2025, 8, 15), iva=Decimal("105.00")),),
+        "4T": (_observation(ledger_id="sale-4t", txn_date=date(2025, 11, 15), iva=Decimal("105.00")),),
+    }
+    quarterly_results = {
+        period: _calculate_303_from_observations(filing_year=2025, period=period, observations=observations)
+        for period, observations in quarterly_observations.items()
+    }
+    all_observations = tuple(row for rows in quarterly_observations.values() for row in rows)
+    annual_result = _calculate_390_from_observations_and_303_filings(
+        filing_year=2025,
+        observations=all_observations,
+        quarterly_results=quarterly_results,
+    )
+
+    # The annual devengada total must equal the summed quarterly devengada
+    # totals. Dropping the services leg from the annual line breaks this by
+    # exactly the services cuota.
+    summed_quarterly_devengada = sum(
+        (result.values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA] for result in quarterly_results.values()),
+        Decimal("0"),
+    )
+    assert annual_result.values[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA] == summed_quarterly_devengada
+    # And the reconciliation casilla the blocking rule reads must agree with it.
+    assert (
+        annual_result.values[_M390_CUOTA_DEVENGADA_TOTAL_CASILLA]
+        == annual_result.values[_M390_RECONCILIACION_DEVENGADA_303_CASILLA]
+    )

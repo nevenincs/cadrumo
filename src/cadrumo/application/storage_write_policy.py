@@ -157,9 +157,9 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger evidence remove",
     "app ledger evidence confirm",
     "app ledger restore",
-    "app ledger invoice catalogue create",
-    "app ledger invoice catalogue import",
-    "app ledger invoice catalogue remove",
+    "app ledger invoice add",
+    "app ledger invoice import",
+    "app ledger invoice remove",
     # Fetches a document and stores its bytes as encrypted evidence through
     # ``add_attachment_bytes``; ``pull-folder`` is the same primitive applied
     # once per Drive child. A link is never stored on its own, so both verbs
@@ -169,7 +169,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     # Composes the same ``create_catalogue_invoice`` primitive its guarded
     # ``catalogue create`` sibling uses, so it was the one unguarded door into
     # the invoice catalogue.
-    "app ledger invoice catalogue wizard",
+    "app ledger invoice wizard",
     # Operator-declared IVA registers, each an encrypted bucket-scoped
     # document: the capital-goods register (``add``), and the prorrata
     # register (``upsert_entry`` / ``upsert_sector_definition``).

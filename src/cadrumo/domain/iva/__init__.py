@@ -58,6 +58,8 @@ from ._classification import (
     IvaTerritorialScope,
     TransactionKind,
     classify_iva,
+    domestic_categories_by_rate_kind,
+    rate_kind_for_domestic_category,
 )
 from ._components import (
     IVA_CATEGORY_COMPONENTS,
@@ -264,6 +266,7 @@ __all__ = [
     "deductible_percentage_for",
     "derive_flow_for_classification",
     "derive_sepa_marca",
+    "domestic_categories_by_rate_kind",
     "especial_mandatory_rule",
     "invoice_line_to_iva_observation",
     "is_deducible_flow",
@@ -280,6 +283,7 @@ __all__ = [
     "m303_annual_settlement_order_key",
     "m303_annual_settlement_period_order",
     "m303_annual_settlement_period_tokens",
+    "rate_kind_for_domestic_category",
     "recargo_rate_for",
     "refund_disposition_available",
     "refund_eligibility_reason",

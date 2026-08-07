@@ -73,6 +73,7 @@ from ._schema import DataBindingDefinition, ModeloRevision
 __all__ = [
     "LEDGER_BINDING_SOURCE_KINDS",
     "IvaLedgerObservation",
+    "IvaSelectorAxesProtocol",
     "OssIossLedgerObservation",
     "RentaGastosEstimacionDirectaObservationProtocol",
     "RentaGastosPagoFraccionadoObservationProtocol",
@@ -536,9 +537,117 @@ def validate_ledger_iva_aggregation_binding_definition(
             f"facts {{iva_amount_sum, base_amount_sum, recargo_amount_sum}}, got {selector.fact!r}",
         )
 
+    try:
+        _iva_reachability_probe(selector)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
+
+
+class IvaSelectorAxesProtocol(Protocol):
+    """The five axes the IVA selector matcher reads off an observation.
+
+    Declared so the matcher can state the shape it actually needs instead of
+    naming the full :class:`IvaLedgerObservation` record. Both that record and
+    the reachability probe below satisfy it structurally, which is what makes
+    the probe a legitimate stand-in rather than an unchecked substitution --
+    previously the probe was passed where the concrete record was declared and
+    only the absence of a checked seam kept that quiet.
+
+    Same shape as :class:`RentaIncomeObservationProtocol` serves for the renta
+    side of this module.
+    """
+
+    @property
+    def category(self) -> IvaCategory: ...
+
+    @property
+    def rate_kind(self) -> IvaRateKind: ...
+
+    @property
+    def flow_direction(self) -> IvaFlowDirection: ...
+
+    @property
+    def cash_accounting_treatment(self) -> IvaCashAccountingTreatment: ...
+
+    @property
+    def exemption_article(self) -> IvaExemptionArticle | None: ...
+
+
+class _IvaReachabilityProbeObservation(NamedTuple):
+    """Minimal shape carrying only the five axes the IVA matcher reads.
+
+    Stands in for :class:`IvaLedgerObservation` so the probe never needs the
+    full record's unrelated required fields (ledger id, dates, amounts). The
+    matcher reads exactly these five attributes, which is the seam that makes
+    the substitution legitimate.
+    """
+
+    category: IvaCategory
+    rate_kind: IvaRateKind
+    flow_direction: IvaFlowDirection
+    cash_accounting_treatment: IvaCashAccountingTreatment
+    exemption_article: IvaExemptionArticle | None
+
+
+def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
+    """Assert the selector matches at least one constructible observation shape.
+
+    Builds a synthetic observation from the selector's OWN declared values and
+    runs it through the real matcher this family's resolver builds
+    (:func:`_iva_build_matcher`), not a reimplementation of the match rule.
+    A selector whose matcher accepts no shape assembled from its own
+    declarations can never resolve a value: the binding aggregates to zero
+    forever, indistinguishable from a taxpayer with no IVA of that kind.
+
+    This family is where a selector-derived probe genuinely bites, and the
+    reason is worth stating because it is not true of every family. Four of the
+    five selector axes are constrained so they cannot be empty --
+    ``categories``, ``rate_kinds`` and ``exemption_articles`` each carry a
+    ``MinLen(1)``, and ``flow_direction`` is a single enum. But
+    ``cash_accounting_treatments`` carries **no minimum length**, so
+    ``cash_accounting_treatments = []`` is constructible today, and the matcher
+    tests ``observation.cash_accounting_treatment in set(...)`` against it. An
+    empty set rejects every treatment the enum defines, so such a binding
+    compiles clean, validates clean, and silently resolves to zero for every
+    taxpayer, forever.
+
+    What this cannot catch, stated so no reader over-trusts it:
+
+    * It never touches real ledger data, so it proves the selector CAN match a
+      shape, never that any real row DOES.
+    * It cannot catch a matcher that accepts the WRONG rows, only one that
+      accepts none.
+    * It cannot catch a resolver that aggregates correctly-matched rows
+      incorrectly. That is the residual blind spot the governing ADR names,
+      and no build-time data-free check can observe it.
+    """
+    matcher = _iva_build_matcher(selector)
+    probe = _IvaReachabilityProbeObservation(
+        category=selector.categories[0],
+        rate_kind=selector.rate_kinds[0],
+        flow_direction=selector.flow_direction,
+        # An absent treatment tuple is the only axis that can be empty. Index 0
+        # when populated; when empty there is no value to offer, and NONE is the
+        # treatment an ordinary non-cash-accounting row carries -- so the probe
+        # asks the fairest possible question of an empty selector and still
+        # gets a refusal.
+        cash_accounting_treatment=(
+            selector.cash_accounting_treatments[0]
+            if selector.cash_accounting_treatments
+            else IvaCashAccountingTreatment.NONE
+        ),
+        exemption_article=(selector.exemption_articles[0] if selector.exemption_articles else None),
+    )
+    if not matcher(probe):
+        raise RegistryValidationError(
+            "ledger_iva_aggregation selector matches no constructible observation shape -- "
+            "the binding can never resolve a value from any ledger data. The usual cause is an "
+            "empty cash_accounting_treatments tuple, which rejects every treatment the enum defines",
+        )
+
 
 def _iva_ledger_observation_matches_selector(
-    observation: IvaLedgerObservation,
+    observation: IvaSelectorAxesProtocol,
     selector: _IvaLedgerSelector,
     *,
     categories: set[IvaCategory],
@@ -557,11 +666,11 @@ def _iva_ledger_observation_matches_selector(
     return observation.exemption_article in set(selector.exemption_articles)
 
 
-def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaLedgerObservation], bool]:
+def _iva_build_matcher(selector: _IvaLedgerSelector) -> Callable[[IvaSelectorAxesProtocol], bool]:
     categories = set(selector.categories)
     rate_kinds = set(selector.rate_kinds)
 
-    def matcher(observation: IvaLedgerObservation) -> bool:
+    def matcher(observation: IvaSelectorAxesProtocol) -> bool:
         return _iva_ledger_observation_matches_selector(
             observation,
             selector,
@@ -1242,6 +1351,126 @@ def ungrounded_ledger_renta_income_observations(
     return UngroundedRentaIncome(facts=frozenset(facts), observations=ungrounded)
 
 
+# The renta-income facts that measure the SAME quantity by different rules, so a
+# revision declaring one deliberately omits the others: ``ingresos_integros_sum``
+# (declared base, else cash), ``taxable_base_sum`` (declared base only), and
+# ``cash_received_sum`` (raw bank credit) are three measures of one income. A
+# screen that demanded all three would fire on every revision.
+#
+# ``withheld_amount_sum`` is NOT in this group, and that is the whole point: the
+# retención a taxpayer suffered is an INDEPENDENT quantity carried on the same
+# observation, not an alternative measure of its income. Nothing else can stand
+# in for it.
+_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS: frozenset[str] = frozenset(
+    {"ingresos_integros_sum", "taxable_base_sum", "cash_received_sum"},
+)
+
+#: The independent quantities, DERIVED as the complement so the two sets cannot
+#: drift apart. A new fact added to the closed set is screened by default and
+#: must be classified deliberately as an alternative measure to be excluded --
+#: the safe direction, since forgetting to classify one surfaces an advisory
+#: rather than silently dropping a quantity.
+_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = (
+    _RENTA_INCOME_SUPPORTED_FACTS - _RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS
+)
+
+
+#: Per-fact readers for the independent quantities. Keyed on the same
+#: selector-fact vocabulary the resolver dispatches on
+#: (:func:`_renta_income_aggregate`), so a fact cannot be screened under one
+#: reading and resolved under another.
+_RENTA_INDEPENDENT_QUANTITY_READERS: dict[str, Callable[[RentaIncomeObservationProtocol], Decimal]] = {
+    "withheld_amount_sum": lambda observation: observation.withheld_amount,
+}
+
+
+class UnroutedRentaQuantity(NamedTuple):
+    """An independent renta quantity the observations carry that no binding draws.
+
+    ``fact`` is the selector fact that would have drawn it, ``total`` the sum
+    the rows carry, and ``observations`` the contributing rows in input order.
+    """
+
+    fact: str
+    total: Decimal
+    observations: tuple[RentaIncomeObservationProtocol, ...]
+
+
+def unrouted_ledger_renta_income_quantities(
+    revision: ModeloRevision,
+    observations: Iterable[RentaIncomeObservationProtocol],
+) -> tuple[UnroutedRentaQuantity, ...]:
+    """Return independent quantities the rows carry that no binding on ``revision`` draws.
+
+    The third renta-income screen, and it watches an axis the other two cannot
+    see. :func:`unsupported_ledger_renta_income_observations` asks whether a ROW
+    is selected by some binding; :func:`ungrounded_ledger_renta_income_observations`
+    asks whether a consumed row carried the substrate its binding's fact assumes.
+    Both key on the row. This one keys on the QUANTITY.
+
+    The distinction is load-bearing because every ``RentaIncomeObservation`` is
+    built with ``target_casilla_id = "01"`` regardless of which fact a binding
+    reads off it (see the note in the M130 ``0003-m130-income-cumulative.toml``
+    bindings fragment). A row therefore matches the income bindings on that key
+    and counts as consumed — while a SECOND, independent quantity it carries,
+    the retención suffered, reaches nothing at all. Drop the
+    ``withheld_amount_sum`` binding from a revision and the row-level screen
+    stays silent: every row is still consumed, for its income. The taxpayer's
+    whole retención credit disappears with a clean screen on both sides, which
+    is precisely the silent under-declaration the screens exist to prevent.
+
+    Alternative MEASURES of one quantity are excluded
+    (:data:`_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS`): a revision picks one
+    income measure and omitting the other two is correct, so demanding all three
+    would fire on every revision and train the operator to ignore the advisory.
+    Only a genuinely independent quantity is screened.
+
+    Reports nothing when the rows carry nothing: a taxpayer who suffered no
+    retención has a zero total, which is a legitimate zero rather than a
+    modelling gap, and this screen must not manufacture a finding from it.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose renta-income bindings
+            decide which facts are drawn.
+        observations: Actividad-económica income observations to screen.
+
+    Returns:
+        One :class:`UnroutedRentaQuantity` per uncovered non-zero quantity,
+        ordered by fact name. Empty when every quantity the rows carry is drawn.
+    """
+    drawn = {
+        _renta_ledger_income_selector(binding).fact
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    }
+    rows = tuple(observations)
+    unrouted: list[UnroutedRentaQuantity] = []
+    for fact in sorted(_RENTA_INCOME_INDEPENDENT_QUANTITY_FACTS):
+        if fact in drawn:
+            continue
+        read = _RENTA_INDEPENDENT_QUANTITY_READERS.get(fact)
+        if read is None:
+            # A fact classified as independent with no reader is a partition
+            # break, not a silent skip: the build-time gate below pins the two
+            # together, so reaching here means that gate was bypassed.
+            raise RegistryValidationError(
+                f"renta-income fact {fact!r} is screened as an independent quantity but declares no reader; "
+                "add it to _RENTA_INDEPENDENT_QUANTITY_READERS or classify it in "
+                "_RENTA_INCOME_ALTERNATIVE_MEASURE_FACTS",
+            )
+        carrying = tuple(row for row in rows if read(row) != Decimal("0"))
+        if not carrying:
+            continue
+        unrouted.append(
+            UnroutedRentaQuantity(
+                fact=fact,
+                total=sum((read(row) for row in carrying), Decimal("0")),
+                observations=carrying,
+            ),
+        )
+    return tuple(sorted(unrouted, key=lambda entry: entry.fact))
+
+
 # Casilla IDs that the M130 gastos cumulative aggregation may feed. Validated at
 # registry load time so a binding targeting any other casilla surfaces before
 # any calculation runs.
@@ -1292,6 +1521,80 @@ def _renta_ledger_gastos_pago_fraccionado_selector(
         ) from exc
 
 
+class _ReachabilityProbeObservation(NamedTuple):
+    """Minimal structural instance of :class:`RentaGastosPagoFraccionadoObservationProtocol`.
+
+    Not a test double: this is production code, called at registry-build
+    time, constructing the smallest object that satisfies the registry's
+    own declared Protocol. It exists so the reachability probe below never
+    needs to import the concrete
+    :class:`~cadrumo.application.aggregation._renta_gasto_ledger.RentaGastoObservation`
+    -- doing so would have domain code depend on the application layer,
+    the wrong hexagonal direction (`aeat-architecture-boundaries`). The
+    Protocol is exactly the seam that makes this substitution legitimate:
+    the resolver's matcher only ever reads the two declared attributes.
+    """
+
+    target_casilla_id: CasillaId
+    deductible_amount: Decimal
+
+
+def _renta_gastos_pago_fraccionado_reachability_probe(
+    selector: _RentaLedgerGastosPagoFraccionadoSelector,
+) -> None:
+    """Assert the selector matches at least one constructible observation shape.
+
+    Constructs a synthetic minimal observation from the selector's own
+    declared ``target_casilla_id`` and runs it through the real matcher this
+    family's resolver builds
+    (:func:`_renta_gastos_pago_fraccionado_build_matcher`) -- not a
+    reimplementation of the match rule, the same one production calculate
+    and this probe both call. A selector whose matcher accepts no
+    constructible shape is a defect no runtime ledger data can ever
+    surface: the binding would aggregate to zero forever, indistinguishable
+    from a taxpayer with no gasto deducible that period.
+
+    This is a REACHABILITY probe only, and deliberately narrow. It proves
+    the selector CAN match a shape built from its own declared fields; it
+    never touches real ledger data and so cannot prove real data DOES
+    match, and it cannot catch a matcher that accepts the wrong rows or a
+    resolver that aggregates matched rows incorrectly -- both are outside
+    what a build-time, data-free check can observe.
+
+    **It also cannot fail as this family is currently matched, and saying so
+    is the point.** The matcher tests
+    ``observation.target_casilla_id == selector.target_casilla_id`` while the
+    probe builds the observation from that same field, so the comparison is
+    ``x == x`` for every selector, including a nonsense casilla id. Read
+    without this paragraph the probe looks like coverage of a defect class it
+    cannot reach, which is worse than no probe at all.
+
+    It is kept rather than deleted because it costs nothing and becomes live
+    the moment this family's matcher tests anything the selector declares as a
+    SET -- the shape that makes the sibling
+    :func:`_iva_reachability_probe` genuinely bite. The tautology is pinned by
+    ``test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail``,
+    which reddens if the match rule changes, forcing this paragraph to be
+    rewritten instead of quietly outliving its truth.
+
+    The reachability guarantee this family actually has is elsewhere and is
+    real: ``target_casilla_id`` is validated against
+    :data:`_RENTA_130_GASTO_CASILLAS` by the caller below, and the revision's
+    own casilla set is cross-checked at snapshot build.
+    """
+    matcher = _renta_gastos_pago_fraccionado_build_matcher(selector)
+    probe = _ReachabilityProbeObservation(
+        target_casilla_id=selector.target_casilla_id,
+        deductible_amount=Decimal("1.00"),
+    )
+    if not matcher(probe):
+        raise RegistryValidationError(
+            f"ledger_renta_gastos_pago_fraccionado_aggregation binding target_casilla_id "
+            f"{selector.target_casilla_id!r} matches no constructible observation shape -- "
+            "the binding can never resolve a value from any ledger data",
+        )
+
+
 def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition(
     binding: DataBindingDefinition,
 ) -> None:
@@ -1317,6 +1620,10 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition
             f"binding {binding.id!r} ledger_renta_gastos_pago_fraccionado_aggregation supports only "
             f"fact 'deductible_amount_sum', got {selector.fact!r}",
         )
+    try:
+        _renta_gastos_pago_fraccionado_reachability_probe(selector)
+    except RegistryValidationError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} {exc}") from exc
 
 
 def _renta_gastos_pago_fraccionado_build_matcher(

@@ -1,4 +1,4 @@
-"""CLI regression for bulk catalogue-invoice import (``ledger invoice catalogue import``).
+"""CLI regression for bulk catalogue-invoice import (``ledger invoice import``).
 
 Covers the #254 sub-slice 4c (CSV/XLSX bulk import): a spreadsheet of invoice
 rows creates one catalogue :class:`~domain.invoices.Invoice` per row,
@@ -117,7 +117,7 @@ def test_bulk_import_creates_one_invoice_per_valid_row(tmp_path: Path) -> None:
     result = invoke_cached_cli(
         [
             "--format", "json",
-            "app", "ledger", "invoice", "catalogue", "import",
+            "app", "ledger", "invoice", "import",
             "--file", str(csv_path), "--kind", "received",
         ],
     )  # fmt: skip
@@ -132,7 +132,7 @@ def test_bulk_import_creates_one_invoice_per_valid_row(tmp_path: Path) -> None:
     assert all(isinstance(id_val, str) and len(id_val) == 64 for id_val in created_ids)
 
     listed = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
+        ["--format", "json", "app", "ledger", "invoice", "list", "--kind", "received"],
     )
     assert listed.exit_code == 0, listed.output
     listed_payload = _json_result(listed.output)
@@ -158,7 +158,7 @@ def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Pa
     first = invoke_cached_cli(
         [
             "--format", "json",
-            "app", "ledger", "invoice", "catalogue", "import",
+            "app", "ledger", "invoice", "import",
             "--file", str(csv_path), "--kind", "received",
         ],
     )  # fmt: skip
@@ -170,7 +170,7 @@ def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Pa
     second = invoke_cached_cli(
         [
             "--format", "json",
-            "app", "ledger", "invoice", "catalogue", "import",
+            "app", "ledger", "invoice", "import",
             "--file", str(csv_path), "--kind", "received",
         ],
     )  # fmt: skip
@@ -182,7 +182,7 @@ def test_bulk_import_reimport_of_identical_file_is_idempotent_no_op(tmp_path: Pa
     assert _get_list_value(second_payload, "refused") == []
 
     listed = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
+        ["--format", "json", "app", "ledger", "invoice", "list", "--kind", "received"],
     )
     listed_payload = _json_result(listed.output)
     rows = _get_list_value(listed_payload, "rows")
@@ -204,7 +204,7 @@ def test_bulk_import_refuses_malformed_row_with_row_number_and_field(tmp_path: P
     result = invoke_cached_cli(
         [
             "--format", "json",
-            "app", "ledger", "invoice", "catalogue", "import",
+            "app", "ledger", "invoice", "import",
             "--file", str(csv_path), "--kind", "received",
         ],
     )  # fmt: skip
@@ -242,7 +242,7 @@ def test_bulk_import_all_rows_refused_exits_nonzero_with_notice(tmp_path: Path) 
     result = invoke_cached_cli(
         [
             "--format", "json",
-            "app", "ledger", "invoice", "catalogue", "import",
+            "app", "ledger", "invoice", "import",
             "--file", str(csv_path), "--kind", "received",
         ],
     )  # fmt: skip
@@ -266,7 +266,7 @@ def test_bulk_import_kind_issued_routes_to_collectible_invoices(tmp_path: Path) 
     result = invoke_cached_cli(
         [
             "--format", "json",
-            "app", "ledger", "invoice", "catalogue", "import",
+            "app", "ledger", "invoice", "import",
             "--file", str(csv_path), "--kind", "issued",
         ],
     )  # fmt: skip
@@ -275,14 +275,14 @@ def test_bulk_import_kind_issued_routes_to_collectible_invoices(tmp_path: Path) 
     assert _get_int_value(payload, "created") == 1
 
     issued_listed = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "issued"],
+        ["--format", "json", "app", "ledger", "invoice", "list", "--kind", "issued"],
     )
     issued_payload = _json_result(issued_listed.output)
     issued_rows = _get_list_value(issued_payload, "rows")
     assert any(isinstance(row, dict) and row.get("invoice_number") == "2026-ISSUED-001" for row in issued_rows)
 
     received_listed = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
+        ["--format", "json", "app", "ledger", "invoice", "list", "--kind", "received"],
     )
     received_payload = _json_result(received_listed.output)
     received_rows = _get_list_value(received_payload, "rows")
@@ -294,7 +294,7 @@ def test_bulk_import_file_not_found_refuses_cleanly(tmp_path: Path) -> None:
     missing = tmp_path / "does-not-exist.csv"
     result = invoke_cached_cli(
         [
-            "app", "ledger", "invoice", "catalogue", "import",
+            "app", "ledger", "invoice", "import",
             "--file", str(missing), "--kind", "received",
         ],
     )  # fmt: skip
@@ -312,12 +312,12 @@ def test_bulk_import_unknown_column_is_refused(tmp_path: Path) -> None:
     )
 
     result = invoke_cached_cli(
-        ["app", "ledger", "invoice", "catalogue", "import", "--file", str(csv_path), "--kind", "received"],
+        ["app", "ledger", "invoice", "import", "--file", str(csv_path), "--kind", "received"],
     )
     assert result.exit_code != 0
 
     listed = invoke_cached_cli(
-        ["--format", "json", "app", "ledger", "invoice", "catalogue", "list", "--kind", "received"],
+        ["--format", "json", "app", "ledger", "invoice", "list", "--kind", "received"],
     )
     listed_payload = _json_result(listed.output)
     rows = _get_list_value(listed_payload, "rows")

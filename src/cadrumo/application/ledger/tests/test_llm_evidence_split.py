@@ -26,9 +26,8 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....domain.iva import IvaCategory
+from ....llm import LLMSplitSuggestion, SubprocessProvider
 from .. import (
-    LLMProvider,
-    LLMSplitSuggestion,
     suggest_evidence_split,
 )
 from ._llm_evidence_split_support import (
@@ -61,7 +60,7 @@ def test_suggest_derives_child_amounts_summing_to_parent(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -87,7 +86,7 @@ def test_suggest_derives_each_child_substrate_from_registry(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=False,
@@ -115,7 +114,7 @@ def test_suggest_no_linked_evidence_does_not_require_cloud_acknowledgement(
     suggestion = suggest_evidence_split(
         bucket_id=_BUCKET,
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         proposer=_split_subprocess_proposer(response=_two_line_proposal()),
         transaction_repository=repository,
         read_evidence=True,

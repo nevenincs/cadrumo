@@ -38,7 +38,7 @@
             "profile_present_keys": 6,
             "profile_record_error": "",
             "profile_record_present": true,
-            "profile_total_keys": 76,
+            "profile_total_keys": 75,
             "registered_bucket": true,
             "repairable_by_clearing_pointer": false,
             "source": "pointer",

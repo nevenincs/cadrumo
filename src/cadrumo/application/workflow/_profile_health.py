@@ -346,12 +346,16 @@ def assess_active_profile_health_with_session() -> ActiveProfileHealth:
     if before.status != "profile_record_unreadable" or not cold_session_error:
         return before
     try:
-        from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+        from ...adapters.persistence.storage import active_bucket_session_serves, get_master_key_provider
 
-        if has_active_bucket_session():
-            return before
+        # Resolve the target BEFORE asking about the ambient session: a session
+        # bound to some other bucket does not make this profile's record
+        # readable, and returning early on its mere presence reports a
+        # recoverable cold-session miss as an unreadable profile record.
         registered_pointer = resolve_profile_bucket(before.active_profile or "")
         if registered_pointer is None:
+            return before
+        if active_bucket_session_serves(registered_pointer.bucket_id):
             return before
         with (
             override_settings(cadrumo_active_profile=registered_pointer.bucket_id),

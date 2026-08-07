@@ -735,14 +735,6 @@ application:
           catalogue: %{invoice_id}.'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
-    importing:
-      errors:
-        import_file_read_failed: 'The invoice import file could not be read: %{path_name}.'
-        invalid_json: The invoice JSON payload is not valid JSON at line %{line},
-          column %{column}.
-        invalid_json_shape: The invoice JSON payload must be an object or a list of
-          objects.
-        invalid_kind: 'The invoice kind is not supported: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;
@@ -751,6 +743,7 @@ application:
         invoice_not_found: 'Catalogue invoice not found: %{invoice_id}.'
         remove_linked_invoice: 'Cannot remove invoice %{invoice_id} while it is still
           linked to transactions: %{linked_transaction_ids}. Unlink them first.'
+        empty_invoice_patch: 'An invoice correction must state at least one field to change.'
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -1890,12 +1883,10 @@ cli:
         valuation_preview_help: Preview closing stock and cost of sales
         year_help: Tax year
       invoice:
-        add_help: Register a new business invoice
         catalogue:
           country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
             it routes both informativas, so it is never assumed.'
           create_help: Create a linkable reconciliation invoice in the catalogue.
-          group_help: Reconciliation catalogue invoices that link to transactions.
           import_all_refused: 'bulk invoice import failed: every row was refused;
             no invoices were created'
           import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
@@ -1921,15 +1912,11 @@ cli:
           recargo_help: 'Recargo de equivalencia charged on top of the cuota (LIVA art. 161). It rides inside the invoice total, unlike a retencion.'
           iva_category_help: 'IVA treatment of the operation. Required for a renta income calculation to ground it.'
           rectifies_help: 'Number of the invoice this rectificativa corrects.'
-        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
-          EU operations)
-        eu_iva_id_help: Counterparty EU IVA-ID (e.g. DE345678901) for intracom operations
         group_help: Business invoice records (issued or received)
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_id_help: Invoice id (or unambiguous prefix)
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
-        list_help: List business invoices (both kinds unless --kind filters)
         operation_date_help: Date the entrega or prestacion took place (YYYY-MM-DD).
           This is the LIVA art. 75 devengo date that decides which period declares
           the cuota; without it the invoice date stands in for it.
@@ -1938,11 +1925,7 @@ cli:
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         operation_type_invalid: '--operation-type must be one of: {valid}'
-        remove_help: Delete a business invoice
-        total_amount_required: 'Option --total-amount is required: state the invoice
-          total as a decimal amount, for example 121.00.'
         update_help: Update business invoice details
-        view_help: Show one business invoice
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
       prorrata:
@@ -6105,10 +6088,6 @@ errors:
       the accepted range.'
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
       violate a required invariant. Check the wallet age configuration and retry.
-    refused_ledger_business_operation_invoice_input: An input provided violates the
-      business-operation invoice contract. Correct the input and try again.
-    refused_ledger_business_operation_invoice_not_found: No business-operation invoice
-      exists with the identifier provided.
     refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
       contract. Correct the input and try again.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the

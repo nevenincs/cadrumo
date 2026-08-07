@@ -120,6 +120,8 @@ _M390_RECONCILIATION_PREDICATES = (
 )
 _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     {
+        "ley-37-1992:art-69",
+        "ley-37-1992:art-70",
         "ley-37-1992:art-84",
         "ley-37-1992:art-88",
         "ley-37-1992:art-92",

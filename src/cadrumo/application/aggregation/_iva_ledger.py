@@ -73,6 +73,7 @@ from ...domain.iva import (
     ProrrataReference,
     deductible_percentage_for,
     derive_flow_for_classification,
+    domestic_categories_by_rate_kind,
     lookup_rate,
     validate_prorrata_reference,
 )
@@ -90,18 +91,13 @@ from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationValidationError, t
+from ._invoice_kind import invoice_kind_for_direction
 
 _LedgerId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
 ]
 
-_RATE_KIND_TO_DOMESTIC_CATEGORY: dict[IvaRateKind, IvaCategory] = {
-    IvaRateKind.ZERO: IvaCategory.DOMESTIC_ZERO,
-    IvaRateKind.SUPER_REDUCED: IvaCategory.DOMESTIC_SUPER_REDUCED_4,
-    IvaRateKind.REDUCED: IvaCategory.DOMESTIC_REDUCED_10,
-    IvaRateKind.GENERAL: IvaCategory.DOMESTIC_GENERAL_21,
-}
 _HUNDRED = Decimal("100")
 
 
@@ -124,6 +120,14 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     UNSUPPORTED_IVA_RATE = "unsupported_iva_rate"
+    # The transaction's DATE falls outside every rate record the table holds,
+    # so no tier could match whatever rate the row carries. Distinct from
+    # UNSUPPORTED_IVA_RATE, which means the date is covered and the rate still
+    # matched no tier: there the operator's rate is what needs looking at, here
+    # it is the year. Collapsing the two tells a taxpayer filing an
+    # out-of-coverage year that their rate is wrong, sending them to correct a
+    # figure that was right.
+    IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE = "iva_rate_date_outside_table_coverage"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
@@ -1068,15 +1072,41 @@ _NON_DECLARABLE_IVA_CATEGORIES = frozenset(
     },
 )
 
+# Categories outside the criterio-de-caja regime. Ley 37/1992 art. 163 duodecies
+# excludes on TWO distinct mechanisms, and this one set carries both -- the
+# distinction is why a member could go missing without anyone noticing:
+#
+#   Apartado DOS enumerates carve-outs for operations that ARE in the TAI:
+#     (b) arts. 21-25 exempt supplies  -> INTRA_COMMUNITY_SUPPLY, both exports
+#     (c) adquisiciones intracomunitarias -> INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE
+#     (d) art. 84.Uno.2/3/4 reverse charge -> DOMESTIC_REVERSE_CHARGE
+#     (e) importaciones -> IMPORT_THIRD_COUNTRY
+#
+#   Apartado UNO scopes the regime to operations "que se entiendan realizadas en
+#   el territorio de aplicacion del Impuesto". An operation that is not subject
+#   in the TAI is outside by SCOPE and matches no letter of apartado Dos. Both
+#   not-subject members belong here on that ground and neither on any other:
+#     OPERACION_NO_SUJETA, DOMESTIC_NOT_SUBJECT
+#
+# The scope limb reaches every rule emitting a not-subject category -- outbound
+# EU B2B services (art. 69.Uno.1 locates them at the customer), B2C distance
+# sales, the OSS rules, and issuers outside the territory. An OSS operation is
+# doubly outside: art. 163 unvicies.Uno places it in the Member State of
+# consumption, art. 163 duovicies.Uno.c gives the scheme its own
+# declaracion-liquidacion, and art. 163 tervicies.Uno bars deduction within it.
+# A non-subject operation has no devengo for a timing rule to defer.
 _CASH_ACCOUNTING_EXCLUDED_CATEGORIES = frozenset(
     {
+        # apartado Dos carve-outs
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         IvaCategory.IMPORT_THIRD_COUNTRY,
         IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        # apartado Uno scope: not subject in the TAI
         IvaCategory.OPERACION_NO_SUJETA,
+        IvaCategory.DOMESTIC_NOT_SUBJECT,
     },
 )
 
@@ -1179,11 +1209,25 @@ def _classify_iva_transaction(
     assert transaction.iva_rate is not None
     rate_kind = _iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
     if rate_kind is None:
+        covered = _rate_table_covers(operation_date)
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
-                detail=f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate",
+                reason=(
+                    IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+                    if covered
+                    else IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE
+                ),
+                detail=(
+                    f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate"
+                    if covered
+                    else (
+                        f"no IVA rate is on record for {operation_date.isoformat()}: the rate table holds "
+                        f"current rates only, so a transaction dated before its earliest record cannot be "
+                        f"classified whatever rate it carries. The rate {transaction.iva_rate} is not what "
+                        f"needs correcting -- the filing year is outside the supported window"
+                    )
+                ),
             ),
         )
     base_amount = transaction.taxable_base * proportionality
@@ -1203,7 +1247,7 @@ def _classify_iva_transaction(
             return _IvaTransactionOutcome(gate_issue=d5_issue)
         effective_category = explicit_category
     else:
-        effective_category = _RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind]
+        effective_category = domestic_categories_by_rate_kind()[rate_kind]
 
     if (
         cash_treatment is not IvaCashAccountingTreatment.NONE
@@ -1227,7 +1271,7 @@ def _classify_iva_transaction(
     # to INVERSION_SUJETO_PASIVO and leaves every other category on its
     # repercutido/soportado direction. ``_invoice_kind_for`` cannot be
     # None here: ``flow_direction`` above already gated unknown directions.
-    invoice_kind = _invoice_kind_for(transaction.direction)
+    invoice_kind = invoice_kind_for_direction(transaction.direction)
     assert invoice_kind is not None
     flow_direction = derive_flow_for_classification(
         category=effective_category,
@@ -1515,21 +1559,6 @@ def validate_iva_ledger_counterparty_category(transaction: Transaction) -> IvaLe
     )
 
 
-def _invoice_kind_for(direction: TransactionDirection) -> InvoiceKind | None:
-    """Map a bank :class:`TransactionDirection` onto the invoice-issuance axis.
-
-    ``INCOMING`` money is a sale the autónomo issued (output IVA);
-    ``OUTGOING`` money is a purchase the autónomo received (input IVA).
-    Returns ``None`` for any direction that is not an IVA settlement
-    flow, so the caller can reject it as ``UNSUPPORTED_DIRECTION``.
-    """
-    if direction is TransactionDirection.INCOMING:
-        return InvoiceKind.ISSUED
-    if direction is TransactionDirection.OUTGOING:
-        return InvoiceKind.RECEIVED
-    return None
-
-
 def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | None:
     """Return the direction-only IVA flow, used as the settlement-flow gate.
 
@@ -1541,7 +1570,7 @@ def _flow_direction_for(direction: TransactionDirection) -> IvaFlowDirection | N
     categories to :attr:`~domain.iva.IvaFlowDirection.INVERSION_SUJETO_PASIVO` while
     preserving ``REPERCUTIDO``/``SOPORTADO`` for every other category.
     """
-    invoice_kind = _invoice_kind_for(direction)
+    invoice_kind = invoice_kind_for_direction(direction)
     if invoice_kind is None:
         return None
     return IvaFlowDirection.REPERCUTIDO if invoice_kind is InvoiceKind.ISSUED else IvaFlowDirection.SOPORTADO
@@ -1601,8 +1630,33 @@ def _prorrata_reference_for(
         )
 
 
+def _rate_table_covers(on_date: date) -> bool:
+    """Return whether ANY Spanish rate record covers ``on_date``.
+
+    Separates the two ways :func:`_iva_rate_kind_for` returns ``None``. The
+    rate table is a CURRENT-rates table refreshed in bulk, not a historical
+    one -- no record for any member state starts before 2024 -- so a
+    transaction dated earlier cannot be classified whatever rate it carries,
+    and telling its filer that their rate is unsupported sends them to correct
+    a figure that was right. Reads the same table
+    :func:`_iva_rate_kind_for` reads rather than a duplicated floor constant,
+    so the two cannot disagree about what is covered.
+    """
+    for kind in domestic_categories_by_rate_kind():
+        try:
+            lookup_rate(EUMemberState.ES, kind, on_date)
+        except IvaRateNotFoundError:
+            continue
+        return True
+    return False
+
+
 def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
-    for kind in _RATE_KIND_TO_DOMESTIC_CATEGORY:
+    # Iterates the canonical rate-kind set. EXEMPT is present here and has no
+    # rate record, so lookup_rate raises and the except below skips it -- the
+    # local 4-entry copy this replaced simply omitted EXEMPT, which is the same
+    # outcome reached by accident rather than by contract.
+    for kind in domestic_categories_by_rate_kind():
         try:
             rate_record = lookup_rate(EUMemberState.ES, kind, on_date)
         except IvaRateNotFoundError:

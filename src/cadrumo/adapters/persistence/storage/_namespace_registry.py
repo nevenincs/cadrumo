@@ -517,15 +517,45 @@ LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
-LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="ledger_business_operation_invoices",
-    namespace="cadrumo.application.ledger.business_operation_invoices",
+LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_extracted_document_cache",
+    namespace="cadrumo.application.ledger.extracted_document_cache",
     owner="cadrumo.application.ledger",
+    # FINANCIAL, and the classification is the point rather than a formality.
+    # What this caches is the deterministic text extraction of an invoice --
+    # which IS the invoice, in a shape a grep can read. On disk in the clear it
+    # would be a NEW plaintext store of taxpayer financial data that does not
+    # exist in this tree today, and the secure-storage rule names "on-disk
+    # caches" explicitly among the things the in-memory processing exemption
+    # does not reach.
+    #
+    # Deliberately NOT called a *normalization* cache: that name presupposes the
+    # normalize-then-extract pipeline shape the governing ADR leaves open for
+    # want of a measurement, and no identifier may assert a decision the record
+    # says is undecided. What is cached is the extraction, which exists under
+    # either shape.
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{bucket_id}:{source_kind}",
+    object_key_grammar="{bucket_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
+LEDGER_EXTRACTION_DRAFT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_extraction_draft",
+    namespace="cadrumo.application.ledger.extraction_draft",
+    owner="cadrumo.application.ledger",
+    # An extraction draft is DERIVED FINANCIAL DATA -- supplier tax id, invoice
+    # number, taxable base, per-rate cuota. Persisting it is storage, not
+    # processing, so it sits on the core side of the inference boundary at
+    # FINANCIAL sensitivity like every other record carrying those figures.
+    # It is pre-confirm and operator-correctable, which changes its LIFECYCLE
+    # but not its sensitivity: a draft that leaked would disclose exactly what
+    # the confirmed invoice would.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{bucket_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
@@ -1033,7 +1063,8 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
         APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
         LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
-        LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
+        LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE,
+        LEDGER_EXTRACTION_DRAFT_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_M036_DECLARATION_NAMESPACE,
@@ -1091,7 +1122,6 @@ __all__ = [
     "IVA_COMPENSATION_HISTORY_NAMESPACE",
     "IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE",
     "IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE",
-    "LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE",
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
     "LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",

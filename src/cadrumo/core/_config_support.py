@@ -3,7 +3,7 @@
 This module holds the closed settings enums and derived records consumed
 by :class:`~core.config.Settings`: secret storage selection
 (:class:`~core.config.SecretStoreBackend`), LLM provider selection
-(:class:`~core.config.LLMProviderSetting`), and database routing via
+(:class:`~core.config.LLMProvider`), and database routing via
 :class:`~core.config.StorageRouteKind` and
 :class:`~core.config.StorageRouteClassification`.
 
@@ -75,8 +75,21 @@ def unwrap_optional_secret(value: SecretStr | None) -> str:
     return value.get_secret_value() if value is not None else ""
 
 
-class LLMProviderSetting(StrEnum):
-    """Closed set of LLM provider names accepted by :class:`~core.config.Settings`."""
+class LLMProvider(StrEnum):
+    """The closed set of model-transport identities, declared once, here.
+
+    Canonical home for the value set, not a settings-only convenience. Two
+    byte-identical copies of it existed -- this one and a second in the
+    inference package's request models -- so a reader could not tell which was
+    authoritative and a value added to one would silently not exist in the
+    other.
+
+    It lives in ``core`` because a closed value set is declared in ``core`` by
+    the architecture boundary, and because the direction is forced: the
+    inference package may import ``core`` (inward), while ``core`` importing
+    the optional inference package is refused by contract. The package consumes
+    this enum; it does not redeclare it.
+    """
 
     ANTHROPIC = "ANTHROPIC"
     OPENAI = "OPENAI"
@@ -177,7 +190,7 @@ __all__ = [
     "AEAT_CERTIFICATE_PROTECTED_PATH",
     "AEAT_CERTIFICATE_PROTECTED_URL",
     "JustificanteParserBackendSetting",
-    "LLMProviderSetting",
+    "LLMProvider",
     "SecretStoreBackend",
     "StorageRouteClassification",
     "StorageRouteKind",

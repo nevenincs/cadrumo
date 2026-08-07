@@ -29,9 +29,9 @@ _CADRUMO_ROOT = Path(__file__).resolve().parents[2]
 _RETENTION_WIRING: dict[str, tuple[str, str]] = {
     # The three LLM diagnostic stores are swept once per client construction
     # (LLMClient._sweep_retention_stores), not on every append.
-    "cadrumo_llm_cache_dir": ("adapters/outbound/llm/_client.py", "self.cache.prune"),
-    "cadrumo_llm_usage_dir": ("adapters/outbound/llm/_client.py", "self.usage_recorder.prune"),
-    "cadrumo_llm_run_telemetry_dir": ("adapters/outbound/llm/_client.py", "self.run_telemetry_recorder.prune"),
+    "cadrumo_llm_cache_dir": ("llm/_client.py", "self.cache.prune"),
+    "cadrumo_llm_usage_dir": ("llm/_client.py", "self.usage_recorder.prune"),
+    "cadrumo_llm_run_telemetry_dir": ("llm/_client.py", "self.run_telemetry_recorder.prune"),
     "cadrumo_runs_dir": ("core/observability/_store.py", "prune_run_traces("),
     "cadrumo_registry_disk_cache_dir": (
         "domain/calculations/registry/_compiled_cache.py",

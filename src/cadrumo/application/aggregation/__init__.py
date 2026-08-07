@@ -111,6 +111,7 @@ from ._invoice_devengo import (
     proxy_attributed_invoice_ids,
     resolve_invoice_devengo,
 )
+from ._invoice_kind import invoice_kind_for_direction
 from ._invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,
     InvoiceRetencionProjection,
@@ -367,6 +368,7 @@ __all__ = [
     "get_per_modelo_aggregation_contract",
     "inferred_actividad_retencion_rate_advisory_observations",
     "invoice_devengo_in_period",
+    "invoice_kind_for_direction",
     "iva_ledger_missing_fact_reasons",
     "merge_manual_and_routed_retencion_observations",
     "merge_source_resolutions",

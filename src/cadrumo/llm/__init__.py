@@ -41,12 +41,27 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     # Static counterpart to the ``__getattr__`` below. A type checker cannot see
-    # through module ``__getattr__``, so without this both lazily-resolved
-    # symbols degrade to ``object`` at every use site -- which reads as
+    # through module ``__getattr__`` -- neither the name checks nor the
+    # membership test against the export set -- so without this every lazily
+    # resolved symbol degrades to ``object`` at its use sites, which reads as
     # "not callable" at construction and "not allowed in a parameter
     # annotation" wherever one is declared. This block never executes, so the
     # import cycle the lazy resolution exists to break stays broken.
     from ._evidence_draft_vision import extract_invoice_fields_from_images
+    from ._suggestions import (
+        ExtractionPayload,
+        ExtractionProducer,
+        ExtractionSourceKind,
+        LLMClassificationSuggestion,
+        LLMProviderAvailability,
+        LLMSaturatedSuggestion,
+        LLMSplitApplyResult,
+        LLMSplitChildSuggestion,
+        LLMSplitSuggestion,
+        LLMSuggestionRejectionResult,
+        OperatorIvaDerivationResult,
+        SubprocessProvider,
+    )
     from ._vision_classifier import LocalVisionLLMClassifier
 
 from ._client import LLMClient
@@ -80,21 +95,33 @@ __all__ = [
     "CacheKey",
     "CacheStats",
     "CachedEntry",
+    "ExtractionPayload",
+    "ExtractionProducer",
+    "ExtractionSourceKind",
     "LLMCacheError",
+    "LLMClassificationSuggestion",
     "LLMClient",
     "LLMConfigError",
     "LLMError",
     "LLMPdfRasterisationError",
     "LLMProvider",
+    "LLMProviderAvailability",
     "LLMProviderError",
     "LLMRateLimitError",
     "LLMRequest",
     "LLMResponse",
+    "LLMSaturatedSuggestion",
+    "LLMSplitApplyResult",
+    "LLMSplitChildSuggestion",
+    "LLMSplitSuggestion",
+    "LLMSuggestionRejectionResult",
     "LocalTextLLMClassifier",
     "LocalVisionLLMClassifier",
     "MultimodalImageInput",
+    "OperatorIvaDerivationResult",
     "PromptDefinition",
     "PromptRegistry",
+    "SubprocessProvider",
     "Translation",
     "UsageRecord",
     "UsageSummary",
@@ -104,10 +131,33 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str) -> object:
-    """Resolve the two application-facing readers lazily.
+_SUGGESTION_EXPORTS = frozenset({
+    "ExtractionPayload",
+    "ExtractionProducer",
+    "ExtractionSourceKind",
+    "LLMClassificationSuggestion",
+    "SubprocessProvider",
+    "LLMProviderAvailability",
+    "LLMSaturatedSuggestion",
+    "LLMSplitApplyResult",
+    "LLMSplitChildSuggestion",
+    "LLMSplitSuggestion",
+    "LLMSuggestionRejectionResult",
+    "OperatorIvaDerivationResult",
+})
+"""Interchange DTOs resolved lazily from :mod:`._suggestions`.
 
-    Only these two need deferring, and for one specific reason: both import
+They live HERE rather than in the ledger because every LLM definition belongs
+to this package; the ledger consumes them. Lazy because the DTO module reaches
+back into ``application.ledger`` for one result type, so an eager binding would
+close the loop at import time.
+"""
+
+
+def __getattr__(name: str) -> object:
+    """Resolve the application-facing readers and interchange DTOs lazily.
+
+    These need deferring for one specific reason: they import
     ``application.ledger`` for the draft and classification shapes they
     produce, while the ledger's own paths import this package to reach them --
     so an eager binding would close that loop at import time. Everything above
@@ -115,6 +165,10 @@ def __getattr__(name: str) -> object:
     layer. Lazy resolution governs WHEN a module executes, never WHERE a symbol
     lives: each still has exactly one canonical home and one import path.
     """
+    if name in _SUGGESTION_EXPORTS:
+        from . import _suggestions
+
+        return getattr(_suggestions, name)
     if name == "LocalVisionLLMClassifier":
         from ._vision_classifier import LocalVisionLLMClassifier
 

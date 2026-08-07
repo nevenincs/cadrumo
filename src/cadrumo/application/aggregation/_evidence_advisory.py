@@ -45,9 +45,9 @@ from ...domain.iva import (
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
-    TransactionDirection,
     TransactionLifecycleState,
 )
+from ._invoice_kind import invoice_kind_for_direction
 from ._source_mesh import CalculationSourceDiagnostic
 
 #: Business classifications that carry a deductible / declarable economic role.
@@ -131,18 +131,9 @@ def _is_cuota_bearing_iva_category(category: IvaCategory | None) -> bool:
     return category is None or category not in EVIDENCE_EXEMPT_IVA_CATEGORIES
 
 
-def _invoice_kind_for(direction: TransactionDirection) -> InvoiceKind | None:
-    """Map bank direction onto the invoice issuance axis used by IVA flow."""
-    if direction is TransactionDirection.INCOMING:
-        return InvoiceKind.ISSUED
-    if direction is TransactionDirection.OUTGOING:
-        return InvoiceKind.RECEIVED
-    return None
-
-
 def _flow_for_transaction(transaction: Transaction) -> IvaFlowDirection | None:
     """Return the IVA settlement flow for an evidence-significance test."""
-    invoice_kind = _invoice_kind_for(transaction.direction)
+    invoice_kind = invoice_kind_for_direction(transaction.direction)
     if invoice_kind is None:
         return None
     if transaction.iva_category is None:

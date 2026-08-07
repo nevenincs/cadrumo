@@ -14,8 +14,6 @@ import typer
 from pydantic import ValidationError
 
 from ...application.ledger import (
-    LLMProvider,
-    LLMSplitApplyResult,
     PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
     archive_manual_transaction,
@@ -40,11 +38,13 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
+from ...llm import LLMProvider, LLMSplitApplyResult
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
 from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
 
 if TYPE_CHECKING:
-    from ...application.ledger import LLMSplitSuggestion, ManualLedgerTransactionResult
+    from ...application.ledger import ManualLedgerTransactionResult
+    from ...llm import LLMSplitSuggestion
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -775,14 +775,6 @@ def ledger_split(
             default="Read the transaction's attached invoice on-host and feed it to the --llm split proposer.",
         ),
     ),
-    evidence_acknowledged: bool = typer.Option(
-        False,
-        "--evidence-acknowledged",
-        help=tr(
-            "cli.ledger.split.evidence_acknowledged_help",
-            default="Acknowledge --read-evidence sends the evidence to a cloud model (off by default, gestor-barred).",
-        ),
-    ),
     vision_model: str | None = typer.Option(
         None,
         "--vision-model",
@@ -805,7 +797,6 @@ def ledger_split(
             provider=llm,
             apply=apply,
             read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
             reason=reason,
             yes=yes,
@@ -1052,7 +1043,6 @@ def _ledger_split_llm(
     provider: LLMProvider | None,
     apply: bool,
     read_evidence: bool,
-    evidence_acknowledged: bool,
     vision_model: str | None,
     reason: str,
     yes: bool,
@@ -1096,7 +1086,6 @@ def _ledger_split_llm(
             provider=provider,
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
         )
     except PurchaseInvoiceEvidenceInputError as exc:

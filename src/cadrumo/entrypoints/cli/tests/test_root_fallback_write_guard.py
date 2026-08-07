@@ -592,8 +592,6 @@ _REVIEWED_NON_MUTATING_APP_LEAVES: frozenset[str] = frozenset(
         "app ledger evidence view",
         "app ledger history",
         "app ledger inventory list",
-        "app ledger invoice catalogue list",
-        "app ledger invoice catalogue view",
         "app ledger invoice list",
         "app ledger invoice view",
         "app ledger list",

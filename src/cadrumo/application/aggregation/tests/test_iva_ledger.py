@@ -802,7 +802,15 @@ def test_missing_base_and_amount_are_reported_as_distinct_tax_fact_issues() -> N
     ]
 
 
-def test_dated_iva_registry_gap_is_reported_as_unsupported_rate() -> None:
+def test_a_date_outside_the_rate_table_blames_the_year_not_the_rate() -> None:
+    """21 % in 2023 is a correct rate; only the date is unsupported.
+
+    The rate table holds CURRENT rates -- no member state has a record before
+    2024 -- so a 2023 row cannot be classified whatever rate it carries. This
+    previously reported ``UNSUPPORTED_IVA_RATE``, which told the filer that the
+    one figure they had right was wrong and sent them to correct it. The two
+    conditions now carry separate reasons.
+    """
     transaction = _transaction(
         "row-pre-registry",
         booked_date=date(2023, 4, 5),
@@ -813,6 +821,31 @@ def test_dated_iva_registry_gap_is_reported_as_unsupported_rate() -> None:
     result = aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions((transaction,)),
         period=_Q2_2023,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE
+    assert "filing year is outside the supported window" in result.issues[0].detail
+    # The 21 % is named as NOT the thing to correct -- a filer who reads only
+    # the number in the message must not go looking for a rate error.
+    assert "not what needs correcting" in result.issues[0].detail
+
+
+def test_a_covered_date_with_a_non_canonical_rate_still_blames_the_rate() -> None:
+    """The discriminator's other side: inside coverage, the rate is the fault.
+
+    Without this the new reason could swallow both conditions and the split
+    would buy nothing -- a genuinely wrong rate must still say so.
+    """
+    transaction = _transaction(
+        "row-bad-rate-covered",
+        iva_rate=Decimal("0.13"),
+        iva_amount=Decimal("13.00"),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
     )
 
     assert result.observations == ()

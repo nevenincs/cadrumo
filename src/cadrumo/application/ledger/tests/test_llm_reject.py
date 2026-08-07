@@ -33,12 +33,14 @@ from ....domain.transactions import (
     TransactionLifecycleState,
     TransactionNotFoundError,
 )
-from ....tests.secure_sql import isolated_runtime_profile
-from .. import (
+from ....llm import (
     LLMClassificationSuggestion,
-    LLMProvider,
     LLMSaturatedSuggestion,
     LLMSuggestionRejectionResult,
+    SubprocessProvider,
+)
+from ....tests.secure_sql import isolated_runtime_profile
+from .. import (
     reject_llm_suggestion,
 )
 from .._llm_review_workflow import (
@@ -95,7 +97,7 @@ def _seed_parent(repository: TransactionCatalogueRepository, *, amount: Decimal 
 def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
     return LLMClassificationSuggestion(
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         provenance="llm:claude:test-model",
         classification=BusinessClassification.BUSINESS,
         category=SpendingCategory.MATERIAL_OFICINA,
@@ -155,7 +157,7 @@ def test_reject_saturated_suggestion_captures_iva_category(
     tx_id = _seed_parent(repository)
     saturated = LLMSaturatedSuggestion(
         transaction_id=tx_id,
-        provider=LLMProvider.CLAUDE,
+        provider=SubprocessProvider.CLAUDE,
         provenance="llm:claude:test-model",
         classification=BusinessClassification.BUSINESS,
         category=SpendingCategory.MATERIAL_OFICINA,

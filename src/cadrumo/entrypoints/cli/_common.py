@@ -596,8 +596,8 @@ def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
 
     record = state.active_profile_record()
     if record is None:
-        return projection_for_taxpayer({}, tax_id_default="00000000T")
-    return projection_for_taxpayer(record, tax_id_default="00000000T")
+        return projection_for_taxpayer({})
+    return projection_for_taxpayer(record)
 
 
 # ---------------------------------------------------------------------

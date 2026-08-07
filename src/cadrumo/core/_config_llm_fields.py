@@ -23,15 +23,15 @@ from pathlib import Path
 from pydantic import Field, SecretStr
 
 from ._config_integration_fields import CadrumoIntegrationSettings
-from ._config_support import LLMProviderSetting
+from ._config_support import LLMProvider
 
 
 class CadrumoLlmSettings(CadrumoIntegrationSettings):
     """Settings for the LLM provider, its on-disk caches, and retention windows."""
 
     # ── LLM ─────────────────────────────────────────────────────────────────
-    cadrumo_llm_provider: LLMProviderSetting = Field(
-        default=LLMProviderSetting.ANTHROPIC,
+    cadrumo_llm_provider: LLMProvider = Field(
+        default=LLMProvider.ANTHROPIC,
         description="Default LLM provider name",
     )
     cadrumo_llm_model: str = Field(

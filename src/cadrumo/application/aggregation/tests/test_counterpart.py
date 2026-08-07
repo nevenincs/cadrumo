@@ -309,6 +309,47 @@ class TestObservationBoundaryAuthorities:
         with pytest.raises(ValidationError):
             _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", period=unconstrained)
 
+    @pytest.mark.parametrize(
+        "uncanonical",
+        [
+            "Entregas_Y_Prestaciones",
+            "entregas y prestaciones",
+            "entregas_y_prestacion",
+            "A",
+            "E",
+            "delivery",
+        ],
+    )
+    def test_uncanonical_operation_kinds_are_refused(self, uncanonical: str) -> None:
+        """An ``operation_kind`` outside the 347/349 clave vocabulary is refused here.
+
+        Admitted, such a token did not merely mis-group — it made the operation
+        *vanish*. The aggregator routes each observation by testing this field
+        against the requested modelo's clave set, so a token in neither set
+        matches neither pass and is dropped, while the aggregation's totals
+        still reconcile because they are summed from the surviving rollups.
+        Before this refusal, the observation below aggregated to
+        ``total_counterparties == 0`` and ``total_taxable_base == 0`` with no
+        error and no notice, silently under-declaring a real above-threshold
+        operation on an informativa a human files.
+        """
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            _obs(nif="A1", op_kind=uncanonical, base="10000")
+
+    def test_a_349_clave_still_routes_past_the_347_pass(self) -> None:
+        """Cross-modelo filtering is correct and is deliberately left intact.
+
+        The refusal above targets a token belonging to *neither* vocabulary. A
+        canonical 349 clave handed to the 347 pass must still be skipped rather
+        than refused, so the boundary check must not collapse the two cases.
+        """
+        observation = _obs(nif="A1", op_kind=OperationKind349.INTRA_DELIVERY.value, base="10000")
+
+        aggregation = aggregate_counterpart_347((observation,), period=_P_2025_ANNUAL)
+        assert aggregation.total_counterparties == 0
+
     def test_canonical_observation_is_admitted_and_aggregates(self) -> None:
         """The positive control: canonical values are admitted and produce a rollup.
 

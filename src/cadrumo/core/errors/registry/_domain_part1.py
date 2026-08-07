@@ -536,28 +536,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger._business_operation_invoice.BusinessOperationInvoiceInputError",
-        ErrorCode(
-            code="REFUSED_LEDGER_BUSINESS_OPERATION_INVOICE_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_ledger_business_operation_invoice_input",
-            default_suggestion="aeat app ledger invoice list",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.ledger._business_operation_invoice.BusinessOperationInvoiceNotFoundError",
-        ErrorCode(
-            code="REFUSED_LEDGER_BUSINESS_OPERATION_INVOICE_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_ledger_business_operation_invoice_not_found",
-            default_suggestion="aeat app ledger invoice list",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.evidence._models.EvidenceBundleNotFoundError",
         ErrorCode(
             code="REFUSED_EVIDENCE_BUNDLE_NOT_FOUND",

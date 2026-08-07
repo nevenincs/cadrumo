@@ -39,7 +39,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "cloud_evidence_upload\tdisabled\tprofile\tprofile opted out of cloud evidence upload\nllm_vision\tenabled\tprofile\tprofile opted in to llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\n"
+      "text": "llm_vision\tenabled\tprofile\tprofile opted in to llm_vision\ngoogle_export\tenabled\tprofile\tprofile opted in to google_export\n"
     },
     {
       "argv": [
@@ -76,12 +76,6 @@
         "notices": [],
         "result": {
           "capabilities": [
-            {
-              "capability": "cloud_evidence_upload",
-              "enabled": false,
-              "reason": "profile opted out of cloud evidence upload",
-              "source": "profile"
-            },
             {
               "capability": "llm_vision",
               "enabled": false,

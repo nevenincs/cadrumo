@@ -155,7 +155,7 @@ def modelo_work_create_applicability_refusal(
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     try:
-        profile = projection_for_taxpayer(record or {}, tax_id_default="00000000T")
+        profile = projection_for_taxpayer(record or {})
     except ValidationError:
         return None
     applicability = derive_modelo_applicability(profile, modelo.strip())

@@ -254,7 +254,20 @@ class FlowDefinition(BaseModel):
 
     @model_validator(mode="after")
     def _validate_visible_when_targets(self) -> FlowDefinition:
-        """Every gate clause must name an earlier page so the engine holds the parent answer."""
+        """Every gate clause must name an earlier page so the engine holds the parent answer.
+
+        The same invariant is enforced over a different model by the wizard
+        catalogue's ``WizardFlow._validate_visible_when_targets``. The two exist
+        because the models differ, not by oversight: that one runs at
+        catalogue-authoring time and names the offending QUESTIONS, before the
+        bridge into this definition, so it reports against the vocabulary the
+        author wrote. This one is the only check that sees pages spliced in
+        after the bridge — a repeating group authored directly in
+        :class:`FlowPage` vocabulary never passed through a ``WizardFlow``.
+
+        Change the rule here and the sibling silently keeps enforcing the old
+        one; they are linked by this note and nothing else.
+        """
         order: dict[str, int] = {}
         for index, (page, _group) in enumerate(_iter_pages_with_group(self)):
             order[page.id] = index

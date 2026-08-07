@@ -22,14 +22,8 @@ import typer
 from pydantic import BaseModel, ValidationError
 
 from ...application.ledger import (
-    LLMClassificationSuggestion,
-    LLMProvider,
     LlmReviewDecision,
     LlmReviewInvocationOrigin,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
     ManualLedgerTransactionResult,
     apply_evidence_classification,
     derive_operator_iva_substrate,
@@ -50,6 +44,14 @@ from ...domain.transactions import (
     LLMClassifierError,
     TransactionCatalogueRepositoryProtocol,
     TransactionValidationError,
+)
+from ...llm import (
+    LLMClassificationSuggestion,
+    LLMProvider,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo
 from ._ledger_support import _ledger_validation_bad, _parse_decimal, _resolve_id
@@ -193,7 +195,6 @@ def dispatch_autosplit(
     apply: bool,
     actor: str | None,
     read_evidence: bool,
-    evidence_acknowledged: bool,
     vision_model: str | None,
     reject: bool = False,
     reason: str = "",
@@ -264,7 +265,6 @@ def dispatch_autosplit(
             provider=provider,
             transaction_repository=transaction_repository,
             read_evidence=True,
-            evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
         )
     except LLMClassifierError as exc:
@@ -634,7 +634,6 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     apply: bool,
     actor: str | None,
     read_evidence: bool,
-    evidence_acknowledged: bool,
     vision_model: str | None,
     reject: bool,
     reason: str,
@@ -665,7 +664,6 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
             provider=provider,
             transaction_repository=transaction_repository,
             read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
             vision_model=vision_model,
         )
     except LLMClassifierError as exc:
@@ -702,7 +700,6 @@ def ledger_classify_llm(
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
-    evidence_acknowledged: bool = False,
     vision_model: str | None = None,
     reject: bool = False,
     reason: str = "",
@@ -728,7 +725,6 @@ def ledger_classify_llm(
         apply=apply,
         actor=actor,
         read_evidence=read_evidence,
-        evidence_acknowledged=evidence_acknowledged,
         vision_model=vision_model,
         reject=reject,
         reason=reason,
@@ -770,7 +766,6 @@ def ledger_saturate_llm(
     apply: bool,
     actor: str | None,
     read_evidence: bool = False,
-    evidence_acknowledged: bool = False,
     vision_model: str | None = None,
     reject: bool = False,
     reason: str = "",
@@ -798,7 +793,6 @@ def ledger_saturate_llm(
         apply=apply,
         actor=actor,
         read_evidence=read_evidence,
-        evidence_acknowledged=evidence_acknowledged,
         vision_model=vision_model,
         reject=reject,
         reason=reason,

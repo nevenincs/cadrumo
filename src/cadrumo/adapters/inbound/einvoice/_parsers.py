@@ -26,10 +26,11 @@ to the nearest slot and mint an invoice whose cuota disagrees with its face.
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from xml.etree.ElementTree import Element
 
 from ....core import DocumentShape
+from ....core.decimal import coerce_decimal
 from ._shape import iter_pdf_embedded_files, probe_document_shape
 from ._xml import EInvoiceXmlParseError, parse_hardened_xml
 
@@ -133,13 +134,15 @@ def _first_text(parent: Element, name: str) -> str | None:
 
 
 def _decimal(raw: str | None) -> Decimal | None:
-    """Parse a fixed-point amount, refusing rather than coercing a bad value."""
-    if raw is None:
-        return None
-    try:
-        return Decimal(raw.strip())
-    except (InvalidOperation, ValueError):
-        return None
+    """Parse a fixed-point amount from machine-produced e-invoice XML text.
+
+    Routes through the canonical machine-produced-text coercer rather than a
+    bare ``Decimal(...)`` construction: the source is structured e-invoice
+    XML (UBL/Facturae), not operator-typed text, so ``coerce_decimal``'s
+    silent-``None``-on-failure contract is the correct one, not
+    ``try_parse_canonical_decimal``'s operator-grammar validation.
+    """
+    return coerce_decimal(raw)
 
 
 def _vat_id(party: Element) -> str | None:
@@ -303,7 +306,17 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
         parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))
         parsed.iva_amount = _decimal(_first_text(totals, "TotalTaxOutputs"))
         parsed.grand_total = _decimal(_first_text(totals, "InvoiceTotal"))
-    for tax in _find_all(invoice, "Tax"):
+    # Facturae states taxes TWICE: once at invoice level under TaxesOutputs and
+    # again per line under Items/InvoiceLine/TaxesOutputs. A descendant walk
+    # collects both and double-counts every rate -- the invoice-level breakdown
+    # then reports each band twice, so a single-rate invoice looks like a
+    # two-rate one and the identity check fails on a document that is perfectly
+    # well formed. Scope to the INVOICE-level block only.
+    header_taxes: list[Element] = []
+    for node in invoice:
+        if _local(node.tag) == "TaxesOutputs":
+            header_taxes.extend(child for child in node if _local(child.tag) == "Tax")
+    for tax in header_taxes:
         rate = _decimal(_first_text(tax, "TaxRate"))
         base = None
         amount = None

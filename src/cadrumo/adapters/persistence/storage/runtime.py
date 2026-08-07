@@ -35,7 +35,7 @@ from .errors import (
 from .errors import (
     storage_validation_error as _storage_validation_error,
 )
-from .master_key import current_active_bucket_session
+from .master_key import current_active_bucket_session, session_serves_bucket
 
 if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
@@ -182,7 +182,7 @@ class StorageRuntime(BaseModel):
                 "storage runtime is not ready for profile-bound storage: active bucket session uses unsecured backend.",
                 message_key="errors.storage.runtime.unsecured_backend",
             )
-        if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and active.bucket_id != self.bucket_id:
+        if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and not session_serves_bucket(active, self.bucket_id):
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session changed.",
                 message_key="errors.storage.runtime.session_changed",
@@ -430,7 +430,7 @@ def _bucket_route_settings(bucket_id: str, source: Settings) -> Settings:
     answer.
     """
     session = current_active_bucket_session()
-    if session is not None and not session.sealed and session.bucket_id == bucket_id:
+    if session_serves_bucket(session, bucket_id) and not session.sealed:
         return session.routed_settings(source)
     return settings_for_active_profile_bucket(bucket_id, source)
 

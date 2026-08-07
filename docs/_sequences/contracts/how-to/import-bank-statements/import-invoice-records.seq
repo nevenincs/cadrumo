@@ -1,5 +1,5 @@
 @step Record a supplier's received invoice.
-aeat --format json app ledger invoice add --kind received --counterparty-nif B12345678 --invoice-number "2026-0142" --invoice-date 2026-03-21 --total-amount 121.00
+aeat --format json app ledger invoice add --kind received --counterparty-nif B12345674 --counterparty-name "Proveedor SL" --country-code ES --invoice-number "2026-0142" --invoice-date 2026-03-21 --taxable-base 100.00 --iva-rate 21
 @capture invoice_id result.invoice_id
 @step List issued invoices.
 aeat app ledger invoice list --kind issued

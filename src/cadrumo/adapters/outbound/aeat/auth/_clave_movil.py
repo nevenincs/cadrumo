@@ -628,8 +628,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         try:
             from .....adapters.persistence.storage import (
                 activate_master_key_provider,
+                active_bucket_session_serves,
                 get_master_key_provider,
-                has_active_bucket_session,
             )
             from .....application.user_profile import (
                 build_lifecycle_service,
@@ -658,7 +658,10 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 context["identity_alignment"] = "no_active_profile"
                 return context
             try:
-                if has_active_bucket_session():
+                # Only this bucket's own session may serve the read; a foreign
+                # session would decrypt under the wrong key instead of taking
+                # the explicit provider branch below.
+                if active_bucket_session_serves(bucket_id):
                     record = build_lifecycle_service(bucket_id=bucket_id).read(bucket_id)
                 else:
                     with override_settings(cadrumo_active_profile=bucket_id):

@@ -394,12 +394,13 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     provider_context: object | None = None
     try:
         try:
-            from ..adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+            from ..adapters.persistence.storage import active_bucket_session_serves, get_master_key_provider
             from ..core import resolve_active_bucket_id
             from .wizard import build_wizard_status
             from .workflow import assess_active_profile_health, workflow_state_repository
 
-            if not has_active_bucket_session() and resolve_active_bucket_id() is not None:
+            _active_bucket = resolve_active_bucket_id()
+            if _active_bucket is not None and not active_bucket_session_serves(_active_bucket):
                 provider_context = get_master_key_provider()
                 # TYPE-IGNORE-RATIONALE-RUNTIME-CM-PROTOCOL:
                 # get_master_key_provider returns a runtime context object;

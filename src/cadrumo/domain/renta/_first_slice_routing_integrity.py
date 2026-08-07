@@ -43,6 +43,7 @@ def check_first_slice_routing(
     modelo_id: str,
     casilla_ids: frozenset[CasillaId],
     renta_first_slice_binding_targets: frozenset[CasillaId],
+    revision_binding_ids: frozenset[str] = frozenset(),  # shared Protocol shape, unused here
 ) -> list[str]:
     """Assert every casilla a revision's own first-slice bindings target exists on it.
 

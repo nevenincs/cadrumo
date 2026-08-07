@@ -37,9 +37,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import Modelo, Period
+from ....core import Modelo
 from ....core.resources import resources
-from .. import CalculationSourceContext
 from .._modelo_bindings import _INVOICE_LEDGER_SCREEN_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -94,15 +94,15 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
+from ...adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice
-from ...core import STRICT_FROZEN_CONFIG, MissingOptionalExtraError, ServiceCapability
+from ...core import STRICT_FROZEN_CONFIG, STRUCTURED_DOCUMENT_SHAPES, MissingOptionalExtraError, ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import coerce_finite_european_decimal
@@ -112,6 +112,7 @@ from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine, IvaRate
 from ...domain.iva import InvoiceKind, IvaCategory
+from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
@@ -366,14 +367,21 @@ def _parse_labelled_amount(pattern: re.Pattern[str], text: str) -> Decimal | Non
 
 
 def _find_iva_rate(text: str) -> Decimal | None:
+    """Return the IVA rate captured from the text layer, or ``None``.
+
+    Routes through the same finite European-decimal authority as
+    :func:`_parse_labelled_amount` above. This previously hand-rolled the
+    comma-to-dot swap, which agreed with the authority only because
+    :data:`_IVA_RATE_RE` caps its capture at two digits and a two-digit
+    fraction -- no thousands separator or non-finite token could reach it. That
+    made the regex load-bearing for the parse's correctness, silently: widening
+    the pattern would have diverged two extractors eight lines apart, and a
+    wrong IVA rate surfaces on a filed form rather than at the parse.
+    """
     match = _IVA_RATE_RE.search(text)
     if match is None:
         return None
-    normalized = match.group(1).replace(",", ".")
-    try:
-        return Decimal(normalized)
-    except InvalidOperation:
-        return None
+    return coerce_finite_european_decimal(match.group(1))
 
 
 def extract_invoice_fields(evidence: EvidenceInput) -> InvoiceDraft:
@@ -485,6 +493,22 @@ def extract_invoice_draft_from_evidence(
         assert attachment_id is not None  # narrowed by the exactly-one guard above
         evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
 
+    # Routing order, and the order is itself a control rather than an
+    # optimisation: a document carrying a STRUCTURED record is read exactly and
+    # reaches no model at all, which makes prompt injection categorically
+    # impossible for that document rather than merely mitigated. The decision is
+    # made on DocumentShape -- derived from the bytes -- because the stored MIME
+    # type answers "pdf" for a ZUGFeRD invoice and a photograph alike, which is
+    # how the most machine-readable document in the corpus ended up on the least
+    # exact path.
+    if evidence_input.document_shape in STRUCTURED_DOCUMENT_SHAPES:
+        try:
+            return _extract_invoice_fields_from_structured_record(evidence_input)
+        except EInvoiceXmlParseError:
+            # A malformed structured record refuses rather than yielding a
+            # partial one; fall through so a document whose embedded payload is
+            # broken can still be read by the text or vision path.
+            pass
     if evidence_input.media_kind is MediaKind.PDF:
         try:
             return extract_invoice_fields(evidence_input)
@@ -492,6 +516,44 @@ def extract_invoice_draft_from_evidence(
             # No usable text layer (scan-only / XFA) -> on-host vision fallback below.
             pass
     return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
+
+
+def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
+    """Read a structured e-invoice exactly into the line-carrying draft.
+
+    No model, no rasterisation, no network. The per-rate breakdown and the line
+    set come from the document's own record, which is the whole reason the
+    draft grew them: a flat base/rate/cuota triple structurally cannot hold a
+    two-rate invoice.
+    """
+    parsed = parse_einvoice_document(evidence.data)
+    return InvoiceDraft(
+        supplier_tax_id=parsed.supplier_tax_id,
+        invoice_number=parsed.invoice_number,
+        invoice_date=parsed.invoice_date,
+        taxable_base=parsed.taxable_base,
+        iva_amount=parsed.iva_amount,
+        grand_total=parsed.grand_total,
+        currency=parsed.currency,
+        recargo_amount=parsed.recargo_amount,
+        iva_category=parsed.iva_category,
+        lines=tuple(
+            InvoiceDraftLine(
+                description=line.description,
+                quantity=line.quantity,
+                unit_price=line.unit_price,
+                taxable_base=line.taxable_base,
+                iva_rate=line.iva_rate,
+                iva_amount=line.iva_amount,
+            )
+            for line in parsed.lines
+        ),
+        iva_breakdown=tuple(
+            InvoiceDraftRateBreakdown(iva_rate=rate, taxable_base=base, iva_amount=cuota)
+            for rate, base, cuota in parsed.iva_breakdown
+        ),
+        raw_text_length=len(evidence.data),
+    )
 
 
 def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Settings) -> InvoiceDraft:
@@ -784,7 +846,7 @@ def _iva_rate_slot_for(rate: Decimal | None) -> IvaRate:
     exempt slot would mint a zero-cuota invoice against a document that printed
     a cuota.
     """
-    from ...application.invoices import numeric_iva_rate_slots
+    from ...domain.invoices import numeric_iva_rate_slots
 
     if rate is None:
         return IvaRate.EXEMPT

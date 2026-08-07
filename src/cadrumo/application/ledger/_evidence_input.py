@@ -20,8 +20,7 @@ from typing import Never, Self, SupportsIndex, override
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
-from ...core.config import Settings
+from ...core import STRICT_FROZEN_CONFIG, DocumentShape
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hashing import sha256_hex
 from ...domain.attachments import AttachmentStoreProtocol, normalize_media_type
@@ -29,44 +28,9 @@ from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEviden
 
 __all__ = [
     "EvidenceInput",
-    "cloud_evidence_read_permitted",
     "resolve_attachment_evidence_input",
     "resolve_purchase_invoice_evidence_input",
 ]
-
-
-def cloud_evidence_read_permitted(settings: Settings, *, acknowledged: bool) -> bool:
-    """Whether an off-host cloud evidence read is permitted for THIS invocation.
-
-    On-host reading is always allowed and is the default; this gate governs only
-    the cloud exception. A cloud read is permitted only when the
-    ``cloud_evidence_upload`` capability resolves enabled for the active profile
-    AND the operator acknowledged the upload for this specific invocation.
-
-    The capability resolution (``resolve_active_capability``) is the single place
-    the posture is computed: the gestor-mode bar is applied first and absolutely
-    (``cadrumo_evidence_gestor_mode``), then the active profile's opt-in/out fact, then
-    — when no profile fact is set — the global ``cadrumo_evidence_cloud_upload_permitted``
-    flag as the fallback default (so existing deployments behave unchanged until a
-    profile sets the capability). A capability can only NARROW this floor, never
-    widen it. The acknowledgement is never sticky -- it must be re-affirmed each
-    time (sensitive-financial-data-secure-storage-only).
-
-    Args:
-        settings: Resolved deployment settings carrying the consent posture.
-        acknowledged: Whether the operator acknowledged the off-host upload for
-            this invocation.
-
-    Returns:
-        ``True`` only when the capability resolves enabled AND ``acknowledged``.
-    """
-    from ...core import ServiceCapability
-    from ..user_profile import resolve_active_capability
-
-    decision = resolve_active_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, settings=settings)
-    if not decision.enabled:
-        return False
-    return acknowledged
 
 
 _REFUSAL_MESSAGE = (
@@ -129,6 +93,27 @@ class EvidenceInput(BaseModel):
     def model_dump(self, *args: object, **kwargs: object) -> Never:  # reason: deliberate persistence tripwire
         """Refuse serialization -- decrypted FINANCIAL bytes must never be persisted."""
         raise NotImplementedError(_REFUSAL_MESSAGE)
+
+    @property
+    def document_shape(self) -> DocumentShape:
+        """What this evidence actually IS, derived from its own bytes.
+
+        Supersedes :attr:`media_kind` as the reading decision. That field is
+        derived from the STORED MIME TYPE, which is a label the producer
+        attached and which cannot see inside the document -- so a ZUGFeRD
+        invoice, a PDF carrying a complete machine-readable EN16931 record,
+        answered ``PDF`` and was routed to prose extraction exactly like a
+        photograph of a receipt. The most exactly readable document in the
+        corpus took the least exact path, decided by a label.
+
+        Derived rather than stored, so it costs no constructor change and
+        cannot drift from the bytes it describes: there is no second field to
+        forget to update. The probe reads magic bytes and, for a PDF, walks the
+        embedded-file table -- it never consults ``mime_type``.
+        """
+        from ...adapters.inbound.einvoice import probe_document_shape
+
+        return probe_document_shape(self.data)
 
     @override
     def model_dump_json(self, *args: object, **kwargs: object) -> Never:  # reason: deliberate persistence tripwire

@@ -131,7 +131,7 @@ _HTML_SHOWN_UNLABELLED_BUTTON = f"""
 """
 
 
-class _FakePage:
+class _ScriptedPage:
     """Minimal page double exposing only `content()` / `click()`.
 
     `click()` decides success by an explicit, hand-declared predicate over the
@@ -168,7 +168,7 @@ def _matches_when_shown_unlabelled(selector: str) -> bool:
     return ".show" in selector and "modal-footer" in selector
 
 
-async def _run_auth(page: _FakePage) -> None:
+async def _run_auth(page: _ScriptedPage) -> None:
     provider = ClaveMovilAuthProvider(load_settings())
     # Reaches the private method deliberately: this test characterises that method itself.
     # The fake implements only the two members the delegation path touches; the
@@ -177,7 +177,7 @@ async def _run_auth(page: _FakePage) -> None:
     await provider._dismiss_pre303_alert_modal_if_present(cast("BrowserPageLike", page))
 
 
-async def _run_wallet(page: _FakePage) -> None:
+async def _run_wallet(page: _ScriptedPage) -> None:
     # Same substitution as the auth path above: the fake implements exactly the
     # members this call touches, and the mypy-shaped suppression it carried
     # silences nothing in the checkers actually running.
@@ -192,7 +192,7 @@ def _run(coro_factory: Callable[[], Coroutine[Any, Any, None]]) -> None:
 
 def test_auth_dismisses_the_modal_when_shown() -> None:
     """Cell 1/4: auth clicks through when the modal carries the "show" class."""
-    page = _FakePage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
+    page = _ScriptedPage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_auth(page))
 
@@ -205,7 +205,7 @@ def test_auth_declines_when_the_modal_is_present_but_hidden() -> None:
     This is now the CANONICAL predicate, not merely "auth's own behaviour" --
     both callers share this check post-collapse.
     """
-    page = _FakePage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
+    page = _ScriptedPage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_auth(page))
 
@@ -220,7 +220,7 @@ def test_wallet_dismisses_the_modal_when_shown() -> None:
     the matching predicate here is the SAME one the auth test above uses --
     before the collapse this used a `.show`-agnostic predicate instead.
     """
-    page = _FakePage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
+    page = _ScriptedPage(_HTML_SHOWN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_wallet(page))
 
@@ -239,7 +239,7 @@ def test_wallet_now_declines_when_the_modal_is_present_but_hidden() -> None:
     canonical predicate stopped checking `"show"`), which is exactly the
     regression this module exists to catch.
     """
-    page = _FakePage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
+    page = _ScriptedPage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
     _run(lambda: _run_wallet(page))
 
@@ -263,7 +263,7 @@ def test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal(
     (matching its own unchanged pre-collapse behaviour); this test is
     wallet-specific.
     """
-    page = _FakePage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
+    page = _ScriptedPage(_HTML_HIDDEN, click_matches=_matches_when_shown_and_labelled)
 
     with caplog.at_level(logging.WARNING, logger="cadrumo.adapters.outbound.aeat.sede._iva_compensation_wallet"):
         _run(lambda: _run_wallet(page))
@@ -282,7 +282,7 @@ def test_auth_falls_back_to_the_generic_modal_footer_button_when_unlabelled() ->
     carries no text matching the configured button text at all, isolating
     that fallback.
     """
-    page = _FakePage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=_matches_when_shown_unlabelled)
+    page = _ScriptedPage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=_matches_when_shown_unlabelled)
 
     _run(lambda: _run_auth(page))
 
@@ -301,7 +301,7 @@ def test_wallet_shares_the_generic_modal_footer_fallback() -> None:
     this used a `.show`-agnostic predicate, since the wallet's own selectors
     were unscoped then.
     """
-    page = _FakePage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=_matches_when_shown_unlabelled)
+    page = _ScriptedPage(_HTML_SHOWN_UNLABELLED_BUTTON, click_matches=_matches_when_shown_unlabelled)
 
     _run(lambda: _run_wallet(page))
 
