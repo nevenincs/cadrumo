@@ -1889,33 +1889,6 @@ cli:
         year_help: Tax year
       invoice:
         add_help: Create a linkable reconciliation invoice in the catalogue.
-        catalogue:
-          import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
-            counterparty_name, invoice_number, invoice_date, taxable_base, and optional
-            iva_rate/currency/country_code/notes).
-          import_file_not_found: 'File not found: {path}'
-          import_help: Bulk-create catalogue invoices from a CSV or XLSX file.
-          invoice_class_help: Invoice class. A rectificativa also requires --rectifies-invoice-number
-            naming the invoice it corrects.
-          invoice_id_help: Catalogue invoice id (or unambiguous prefix).
-          iva_category_help: IVA treatment of the operation. Required for a renta
-            income calculation to ground it.
-          list_help: List reconciliation catalogue invoices.
-          recargo_help: Recargo de equivalencia charged on top of the cuota (LIVA
-            art. 161). It rides inside the invoice total, unlike a retencion.
-          rectifies_help: Number of the invoice this rectificativa corrects.
-          remove_help: Delete one reconciliation catalogue invoice.
-          retention_amount_help: Amount of IRPF retención withheld by the payer, in
-            euros. May be supplied alone, or alongside --retention-rate.
-          retention_rate_help: RIRPF art. 95.1 retención fraction withheld by the
-            payer (0.15 for the general 15%, or 0.07 during the inicio-de-actividad
-            window). Requires --retention-amount; a rate alone is refused.
-          series_help: Invoice numbering series, when the issuer uses one.
-          view_help: Show one reconciliation catalogue invoice by id or unambiguous
-            prefix.
-          wizard_help: Guided, non-interactive manual entry when extraction is unavailable.
-          wizard_idempotent_noop: 'Idempotent no-op: an invoice with this identity
-            already exists (%{invoice_id}); nothing was created.'
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
           it routes both informativas, so it is never assumed.'
         group_help: Business invoice records (issued or received)

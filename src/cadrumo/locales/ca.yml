@@ -2027,37 +2027,6 @@ cli:
         year_help: Exercici fiscal
       invoice:
         add_help: Crea una factura de conciliació vinculable al catàleg.
-        catalogue:
-          import_all_refused: 'importació massiva de factures fallida: totes les files
-            van ser rebutjades; no es va crear cap factura'
-          import_file_help: Camí a un fitxer CSV o XLSX amb files de factures (counterparty_nif,
-            counterparty_name, invoice_number, invoice_date, taxable_base, i opcionalment
-            iva_rate/currency/country_code/notes).
-          import_file_not_found: 'Fitxer no trobat: {path}'
-          import_help: Crea factures del catàleg en lot des d'un fitxer CSV o XLSX.
-          invoice_class_help: Classe de factura. Una rectificativa exigeix a més --rectifies-invoice-number
-            indicant la factura que corregeix.
-          invoice_id_help: Identificador de factura del catàleg (o prefix no ambigu).
-          iva_category_help: Tractament d'IVA de l'operació. Necessari perquè un càlcul
-            de renda la pugui fonamentar.
-          list_help: Llista les factures del catàleg de conciliació.
-          recargo_help: Recàrrec d'equivalència repercutit sobre la quota (LIVA art.
-            161). Va inclòs en el total de la factura, a diferència d'una retenció.
-          rectifies_help: Número de la factura que corregeix aquesta rectificativa.
-          remove_help: Elimina una factura del catàleg de conciliació.
-          retention_amount_help: Import de la retenció d'IRPF retinguda pel pagador,
-            en euros. Es pot indicar sol, o juntament amb --retention-rate.
-          retention_rate_help: Fracció de retenció de l'art. 95.1 RIRPF que reté el
-            pagador (0,15 per al 15% general, o 0,07 durant el període d'inici d'activitat).
-            Requereix --retention-amount; una fracció sola es rebutja.
-          series_help: Sèrie de numeració de la factura, quan l'emissor n'utilitza
-            una.
-          view_help: Mostra una factura del catàleg de conciliació per identificador
-            o prefix no ambigu.
-          wizard_help: Entrada manual guiada i no interactiva quan l'extracció no
-            està disponible.
-          wizard_idempotent_noop: 'Sense operació idempotent: ja existeix una factura
-            amb aquesta identitat (%{invoice_id}); no s''ha creat res.'
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'

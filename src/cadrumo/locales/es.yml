@@ -2037,37 +2037,6 @@ cli:
         year_help: Ejercicio fiscal
       invoice:
         add_help: Crea una factura de conciliación vinculable en el catálogo.
-        catalogue:
-          import_all_refused: 'importación masiva de facturas fallida: se rechazaron
-            todas las filas; no se creó ninguna factura'
-          import_file_help: Ruta a un archivo CSV o XLSX con filas de facturas (counterparty_nif,
-            counterparty_name, invoice_number, invoice_date, taxable_base, y opcionalmente
-            iva_rate/currency/country_code/notes).
-          import_file_not_found: 'Archivo no encontrado: {path}'
-          import_help: Crea facturas del catálogo en lote desde un archivo CSV o XLSX.
-          invoice_class_help: Clase de factura. Una rectificativa exige además --rectifies-invoice-number
-            indicando la factura que corrige.
-          invoice_id_help: Identificador de factura del catálogo (o prefijo no ambiguo).
-          iva_category_help: Tratamiento de IVA de la operación. Necesario para que
-            un cálculo de renta pueda fundamentarla.
-          list_help: Lista las facturas del catálogo de conciliación.
-          recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
-            161). Va incluido en el total de la factura, a diferencia de una retención.
-          rectifies_help: Número de la factura que corrige esta rectificativa.
-          remove_help: Elimina una factura del catálogo de conciliación.
-          retention_amount_help: Importe de la retención de IRPF retenida por el pagador,
-            en euros. Puede indicarse solo, o junto con --retention-rate.
-          retention_rate_help: Fracción de retención del art. 95.1 RIRPF que retiene
-            el pagador (0,15 para el 15% general, o 0,07 durante el periodo de inicio
-            de actividad). Requiere --retention-amount; una fracción sola se rechaza.
-          series_help: Serie de numeración de la factura, cuando el emisor utiliza
-            una.
-          view_help: Muestra una factura del catálogo de conciliación por identificador
-            o prefijo no ambiguo.
-          wizard_help: Entrada manual guiada y no interactiva cuando la extracción
-            no está disponible.
-          wizard_idempotent_noop: 'Sin operación idempotente: ya existe una factura
-            con esta identidad (%{invoice_id}); no se creó nada.'
         country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (por
           defecto ES).
         group_help: Registros de facturas de negocio (emitidas o recibidas)
