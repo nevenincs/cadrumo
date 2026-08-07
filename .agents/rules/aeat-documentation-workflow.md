@@ -6,32 +6,55 @@ trigger: always_on
 # AEAT documentation workflow
 
 ## Rule
-Every change to user-facing or technical documentation must follow the `vaultspec-documentation` skill lifecycle, write incrementally in document-by-document steps, maintain simple taxpayer-general terminology, and verify command syntax against the live CLI and Sphinx build gates.
+
+Every change to user-facing or technical documentation follows the
+`vaultspec-documentation` skill lifecycle, is written incrementally
+document-by-document, keeps terminology simple and taxpayer-general, and has its
+command syntax verified against the live CLI and the Sphinx build gates.
 
 ## Why
-Ensuring user-facing docs are simple, technically accurate, and logically cross-linked prevents operator error and documentation rot. The dual-agent workflow isolates context collection from drafting to eliminate process noise and temporary assumptions from final documentation.
+
+Ensuring user docs are simple, technically accurate and logically cross-linked
+prevents operator error and documentation rot. Isolating context collection from
+drafting keeps temporary assumptions and process noise out of the final text.
 
 ## How
 
-### 1. VaultSpec Documentation Framing (`vaultspec-documentation`)
-- **Lifecycle:** All documentation processes MUST follow the phases defined in the `vaultspec-documentation` skill:
-  - **Phase 1-3:** Wireframe, Refinement (zero-context subagent), and User Approval.
-  - **Phase 4-5:** Context Gathering (single-section focus) and Drafting (isolated section-by-section drafting).
-  - **Phase 6-7:** Technical Review (cross-referencing codebase/conformance) and Editorial Review (zero-context prose-style review).
-  - **Phase 8:** User Approval (final).
-- **Dual-Subagent Pattern:**
-  - **Researcher:** Gathers codebase context, help commands, and CLI output structures without writing draft files.
-  - **Author:** Writes or updates the markdown pages using *only* the gathered research context.
-  - **Editor:** Reviews the final pages against newcomers' clarity, tone, and link integrity.
+### Lifecycle
 
-### 2. Simple Language & Story-Driven Content
-- **Simple, Non-Demanding Tone:** Do not present all options or complex parameters at once. Walk through concrete scenarios step-by-step.
-- ** taxpayer Generalization:** Use general terminology like NIF, CIF, DNI, NIE, or NII rather than referring to a single group (e.g. autónomos).
-- **Narrative Progression:** Guide the user from basic profile setup and transaction imports to calculations and reconciliations using clear, story-driven examples.
-- **Cross-linking:** Involve the user gradually in complex topics by cross-referencing to how-to guides and CLI references.
+Follow the phases the `vaultspec-documentation` skill defines: wireframe,
+refinement, and user approval; then context gathering (single-section focus) and
+isolated section-by-section drafting; then technical review (cross-referencing
+the codebase and conformance gates) and editorial review; then final approval.
 
-### 3. Verification & Compliance Gates
-- **Command Conformance:** Verify all documented commands against the live Click/Typer tree using `pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`.
-- **Sphinx Build:** Verify all cross-references and formatting using the nitpicky build gate `pytest dev/docs/tests/test_docs_build.py`.
-- **No Self-Praise:** Keep descriptions objective, factual, and free of self-congratulatory or boastful phrasing.
-- **Wiki-links:** Chat responses must use absolute `file://` scheme links with forward slashes for code and files; user-facing docs use relative markdown links.
+**Dual-subagent pattern.** A *researcher* gathers codebase context, help output
+and CLI structures without writing draft files. An *author* writes the pages
+using only that research. An *editor* reviews the result for a newcomer's
+clarity, tone, and link integrity. **Final wording and approval stay with the
+main session** — never delegate final documentation prose to a subagent.
+
+### Language
+
+Write in simple, singular, imperative instruction steps: "Create taxpayer
+profile.", "Import bank statement.", "Run calculation." — never "We will now set
+up the taxpayer profiles." or "Let's import our transactions."
+
+Do not present every option and parameter at once; walk through concrete
+scenarios step by step. Use general terminology (NIF, CIF, DNI, NIE, NII) rather
+than naming a single taxpayer group. Guide the reader from profile setup and
+transaction import through calculation and reconciliation, cross-linking to
+how-to guides and CLI references so complex topics arrive gradually.
+
+Keep descriptions objective and factual — no self-congratulatory or boastful
+phrasing.
+
+### Verification
+
+- Command conformance:
+  `pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`
+- Sphinx cross-references and formatting: the nitpicky build gate
+  `pytest dev/docs/tests/test_docs_build.py`
+- Chat responses use absolute `file://` links with forward slashes; user-facing
+  docs use relative markdown links.
+
+Companion: `aeat-user-docs-hardening` (the language rule in its shortest form).

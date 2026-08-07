@@ -1,7 +1,3 @@
----
-name: aeat-cli-pull-and-file-standard
----
-
 # AEAT CLI uses `pull` to fetch and `--file` for file input
 
 ## Rule
@@ -21,18 +17,17 @@ error-registry `default_suggestion` fields, the cross-period `next_action`
 builders, the curated operator help surface (`operator_surface/_help.py`), and
 the envelope `command=` identifiers. Updating only the verb registrations leaves
 dead operator instructions and drops the verb out of the profile-bound write
-guard (fail-open).
+guard, which then fails open.
 
 ## Why
 
 The reconcile surface had grown four divergent `--from-*` flags plus a sugar
-verb while `live` used `capture`, `censo` used `refresh`, and ledger import used
-`--source` — no operator could transfer knowledge across verbs. ADR
+verb while sibling surfaces used `capture`, `refresh`, and `--source` — no
+operator could transfer knowledge across verbs. ADR
 `2026-06-10-cli-pull-file-standard-adr` collapsed the surface onto `pull` ("read
-this from AEAT") and `--file` ("the one local file"). The gates
-`test_documented_command_conformance.py` and `test_json_schema_conformance.py`
-bind docs and envelope identifiers but do not scan production
-`suggestion`/`next_action`/curated-help strings, hence the mandatory hand-sweep.
+this from AEAT") and `--file` ("the one local file"). The conformance gates bind
+docs and envelope identifiers but do not scan production `suggestion`,
+`next_action`, or curated-help strings, hence the mandatory hand-sweep.
 
 ## How
 
@@ -40,24 +35,22 @@ bind docs and envelope identifiers but do not scan production
   `pull-history`; `aeat app ledger import --file STATEMENT.csv`; a dual-transport
   reconcile as a subgroup `reconcile pull` + `reconcile file --file PATH` with
   `history` listing prior runs. `aeat config profile censo` is the worked
-  example of that dual-transport shape: `censo file --file` ingests a local
-  artefact and `censo pull` reads the live AEAT censal consulta, both
-  reconciling through the one `apply_cotejo` authority behind the same
-  `--apply` door. (`2026-07-11-censo-operator-manual-enrolment-adr` retired an
-  earlier `censo pull` on a finding that AEAT exposed no read-only censal
-  projection. That premise was disproven by live measurement on 2026-07-25 —
-  the consulta launcher renders — and the ADR is superseded by
-  `2026-07-25-censal-profile-autofill-adr`. Censal facts are no longer
-  operator-manual-only. The retired scrape's write-adjacency hazard still
-  binds: the reader is pinned to the consulta view and fails closed on a
-  filing-tool or procedure-launcher landing.)
+  example of that shape: `censo file --file` ingests a local artefact and
+  `censo pull` reads the live AEAT censal consulta, both reconciling through the
+  one `apply_cotejo` authority behind the same `--apply` door.
 - **Bad:** a new `capture`/`refresh`/`fetch`/`download` verb for an AEAT read, a
   `--source`/`--from-capture` file input, or multiplexing one verb with a
-  `--from-sede`/`--from-justificante` flag family — rename to `pull` / `--file`.
+  `--from-sede`/`--from-justificante` flag family.
+
+**Safety constraint on the censal reader**, carried forward from the design that
+preceded it: it is pinned to the read-only consulta view and fails closed on a
+filing-tool or procedure-launcher landing. That write-adjacency guard binds
+regardless of the verb's name.
 
 ## Source
 
-ADR `2026-06-10-cli-pull-file-standard-adr` (supersedes the CLI-naming of
-`2026-06-10-live-justificante-reconcile-adr`); research/plan same stem. Enforced
-by `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`
-and `docs/how-to/`.
+ADR `2026-06-10-cli-pull-file-standard-adr` (superseding the CLI-naming of
+`2026-06-10-live-justificante-reconcile-adr`); censal transport per
+`2026-07-25-censal-profile-autofill-adr`. Enforced by
+`src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py` and
+`docs/how-to/`.

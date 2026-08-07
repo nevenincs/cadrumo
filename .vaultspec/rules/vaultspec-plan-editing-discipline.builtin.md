@@ -1,53 +1,41 @@
----
-name: vaultspec-plan-editing-discipline
----
-
-# Plan editing discipline: structure first, prose last
-
-A worked example of codification applied to an audit finding. Promoted from the rolling
-CLI UX audit (finding B6) following the discipline described in the `vaultspec-codify`
-rule.
+# Plan editing discipline: structure through the verbs, prose by hand
 
 ## Rule
 
-Treat the plan as one cohesive document: route every Wave, Phase, and Step structural
-mutation through the `vaultspec-core vault plan {wave,phase,step}` CLI verbs, and author
-the Description, Parallelization, and Verification prose sections by direct file edit.
-Prose and structure may interleave freely: the serializer preserves authored prose
-blocks verbatim across structural mutations.
+Treat the plan as one cohesive document. Route every Wave, Phase, and Step
+structural mutation through the `vaultspec-core vault plan {wave,phase,step}`
+CLI verbs, and author the Description, Parallelization, and Verification prose
+sections by direct file edit. Prose and structure may interleave freely: the
+serializer preserves authored prose blocks verbatim across structural mutations.
+
+## Rule: verify the whole file after any structural mutation
+
+A structural verb **reserialises the entire plan document** to change one row,
+so any defect in the writer rides along into rows you never touched — and
+`--dry-run` renders only the intended line, so the preview does not show it.
+
+The procedure that works:
+
+1. Capture the file first: `git show HEAD:<plan> > before`.
+2. Run the verb.
+3. Diff the **whole file** against that capture — not the dry-run, and not just
+   the row you meant to change.
+4. Repair any collateral rows to their HEAD bytes.
+5. Confirm the staged diff is exactly your row plus the machine-maintained
+   `body_hash`, then commit.
 
 ## Why
 
-The rolling CLI UX audit's B6 finding documented that plan structural verbs once
-silently discarded author-written prose sections, forcing a structure-first, prose-last
-ordering. The fix proposed in the sibling ADR `cli-plan-body-preservation` has landed:
-every structural mutation now reports "Preserved N unknown blocks", and a live
-confirmation against a prose-bearing scratch plan (sentinel sentences carried through
-`phase add`, `step add`, and `step check`) showed every authored sentence surviving
-byte-for-byte (verified against the live CLI on 2026-06-10, `vaultspec-core --version`
-0.1.26).
+Structural verbs once silently discarded author-written prose sections, forcing
+a structure-first ordering; the serializer now preserves them and reports the
+preserved block count. Prose *position* may still reflow, because the serializer
+re-anchors blocks around the canonical structure on write — review the diff when
+section ordering matters.
 
-## How
-
-- Prose content is preserved verbatim; prose position may reflow, because the serializer
-  re-anchors blocks around the canonical structure on write. Review the diff after a
-  structural verb when section ordering matters.
-- Every plan mutator accepts `--dry-run` to preview the rewritten document without
-  writing it.
-- `--canonicalise` is the explicit opt-in that strips unknown prose blocks; never pass
-  it on a plan whose prose you mean to keep.
-
-## Status
-
-Active. The serializer fix this rule anticipated (`cli-plan-body-preservation`
-`W03.P07`) has landed and was live-confirmed on 2026-06-10: the ordering constraint is
-retired, and preservation is the default with stripping behind the `--canonicalise`
-opt-in. The rule's intent (treat the plan as one cohesive document; mutate structure
-only through the CLI verbs) survives the fix; only the procedure changed.
+`--canonicalise` is the explicit opt-in that strips unknown prose blocks. Never
+pass it on a plan whose prose you mean to keep.
 
 ## Source
 
-Audit `2026-05-17-cli-simplification-ux-audit` (rolling), finding B6 sharp (three
-reproductions). Sibling decision ADR `2026-05-17-cli-plan-body-preservation-adr`.
-Umbrella plan steps `W03.P07.S23`, `S24`, `S25`, `S26` in
-`2026-05-17-cli-simplification-ux-plan`.
+Audit `2026-05-17-cli-simplification-ux-audit` (finding B6); sibling decision
+ADR `2026-05-17-cli-plan-body-preservation-adr`.

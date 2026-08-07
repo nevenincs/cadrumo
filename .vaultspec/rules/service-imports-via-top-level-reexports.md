@@ -1,103 +1,66 @@
----
-name: service-imports-via-top-level-reexports
----
-
 # Service imports via top-level re-exports
 
 ## Rule
 
-Every cross-package import project-wide MUST resolve to the SOLE canonical
-public top-level ``__all__`` facade of the symbol's owning package; a
+Every cross-package import project-wide MUST resolve to the sole canonical
+public top-level `__all__` facade of the symbol's owning package. A
 cross-package consumer MUST NEVER import from another package's private
-``_module`` (ownership of ``A.B._C...`` is ``A.B``). Intra-package private
-imports and a package building its own facade out of its own private modules
-are fine. When the symbol is not yet exported, promotion to ``__all__`` is a
-precondition of the consuming change, not a follow-up: add the symbol to the
-owning package's ``__all__`` (eager ``from .module import Name`` by default;
-lazy ``__getattr__`` / PEP 562 when the owning package already uses that
-pattern, or when eager import costs enough to matter — a measured
-import-time or cycle cost is sufficient justification, and converting an
-eager facade to lazy is a normal, permitted change, not a violation). What
-this rule governs is WHERE a symbol lives, never WHEN its module executes:
-lazy resolution keeps exactly one canonical home per symbol and one import
-path for consumers, so it satisfies the ownership constraint rather than
-bending it. Never mechanically rename a private ``_name``
-straight into ``__all__``; per-symbol, either rename-to-public and promote a
-genuinely shared primitive, or expose a narrower purpose-built public API for a
-single caller's need, or treat the reach as a design defect to remove. A
-single DOCUMENTED non-``__init__`` public re-export bridge module (a stated,
-one-line-docstring purpose) is an acceptable canonical source; an undocumented
-pure-reexport shim is not.
+`_module` — ownership of `A.B._C...` is `A.B`. Intra-package private imports,
+and a package building its own facade out of its own private modules, are fine.
+
+When the symbol is not yet exported, **promotion to `__all__` is a precondition
+of the consuming change, not a follow-up**. Eager (`from .module import Name`)
+is the default; lazy `__getattr__` / PEP 562 is equally acceptable where the
+owning package already uses that pattern, or where eager import costs enough to
+matter. This rule governs WHERE a symbol lives, never WHEN its module executes:
+lazy resolution keeps exactly one canonical home and one import path, so it
+satisfies the ownership constraint rather than bending it. Converting an eager
+facade to lazy is a normal, permitted change.
+
+Never mechanically rename a private `_name` straight into `__all__`. Per symbol,
+choose one of: rename-to-public and promote a genuinely shared primitive; expose
+a narrower purpose-built public API for a single caller's need; or treat the
+reach as a design defect to remove.
+
+**There are no standing non-`__init__` re-export bridge modules.** Every
+redefinition belongs on its single canonical home. Do not introduce a
+pure-reexport shim to avoid a proper facade promotion.
+
+The one shape that is not a bridge and must not be mistaken for one: a module
+defining its own optional-dependency fallback classes inside a
+`try`/`except ImportError` branch, where no canonical definition exists
+elsewhere. The AST scanner misclassifies that as a pure re-export because its
+walk does not see definitions nested inside the branch; read the file before
+acting on such a report.
 
 ## Why
 
-Per `2026-07-01-import-centralization-adr` (Rulings 1-4), letting one consumer dot
-into a package's internals reads to every later consumer as permission to do the
-same; the `2026-07-01-import-centralization-research` scan quantified 2465
-cross-package private imports across 250 files plus a naming collision and three
-latent violations hidden in a circular-import workaround. The constraint is
-ownership-first, promotion-before-rewrite, one canonical facade per symbol, enforced
-by the project-wide AST scanner `dev/import_hygiene_scan.py` and CI gate
-`src/cadrumo/tests/test_import_hygiene_gate.py` (ratcheting a checked-in production
-baseline toward zero; Family-2 documented-bridge allowlist and Family-3 pinned-symbol
-set are structural data).
+Letting one consumer dot into a package's internals reads to every later
+consumer as permission to do the same, and a single tree scan quantified
+thousands of cross-package private imports across hundreds of files, plus a
+naming collision and latent violations hidden inside a circular-import
+workaround. One canonical facade per symbol makes ownership checkable.
 
 ## How
 
-- **Good:** a new ``cadrumo.application.bucket_maintenance`` service imports
-  ``rename_profile`` from ``cadrumo.application.user_profile`` (the package
-  ``__all__`` re-export), promoted before the service file was authored.
-- **Superseded:** Ruling 4's six documented non-``__init__`` bridge modules are
-  NOT a standing exception anymore. An operator directive collapsing every
-  redefinition onto its single canonical home overrides Ruling 4 project-wide:
-  ``workflow/_utils.py``, ``deadlines/taxpayer_model.py``, and
-  ``registry/applicability.py`` are removed, their consumers repointed to the
-  owning package's own facade (``core.time``/``domain.contribuyente``,
-  ``domain.deadlines``, ``domain.calculations.registry`` respectively);
-  ``cli/_schemas.py`` is removed, its 47 consumers repointed to
-  ``core.json_contract``. ``outbound/aeat/_playwright.py`` is EXCLUDED from the
-  removal, not kept as a Ruling-4 survivor: it is not a re-export at all — it
-  defines its own optional-``playwright``-extra fallback exception classes with
-  no canonical definition elsewhere, and `dev/import_hygiene_scan.py`
-  misclassifies it as `pure_reexport_shape` because its walk does not see
-  definitions nested inside a `try`/`except ImportError` branch (a scanner
-  blind spot worth fixing separately). ``transactions/_ids.py`` is held, not
-  kept: its canonical target is ``core.identity`` for every consumer including
-  the four inside ``domain/invoices/``, but those four sit inside a
-  concurrently-frozen invoice-lane collapse and the removal is deferred to
-  that team rather than forced through the freeze.
-- **Good:** an underscore-named symbol reached by two or more unrelated production
-  packages is renamed to public and promoted to ``__all__`` (Ruling 3.i); one
-  reached by exactly one narrow caller instead gets a purpose-built narrower public
-  API (Ruling 3.ii), never a blanket ``_foo`` -> ``foo`` rename.
-- **Bad:** ``from ....application.user_profile._orchestration import rename_profile``
-  (dotting into a private submodule) — the next agent reads the precedent and
-  erodes the boundary; or an undocumented pure-reexport shim invented to avoid a
-  proper facade promotion (only the named documented bridges count under Ruling 4).
-- **Bad:** mechanically stripping the leading underscore from every reached private
-  symbol into ``__all__`` without judging shared-primitive vs single-caller vs
-  design-defect — the blanket promotion Ruling 3 forbids.
-
-## Status
-
-Active; generalized project-wide. Supersedes the prior narrower "new application-layer
-service" scope, now the first `Good` worked example.
-
-The eager/lazy clause was relaxed on 2026-08-04 after tracing where it came from.
-It had read "never retrofit an existing eager facade to lazy", which was stricter
-than the ADR it was codified from: ruling 2 of `2026-07-01-import-centralization-adr`
-permits lazy when "eager import risks a cycle/**cost**", and appended "do not
-retrofit the ~93 eager facades" as blast-radius control for a campaign already
-promoting 149 facades across 250 files. The backing research contains no mention of
-`lazy`, `PEP 562`, or `__getattr__` at all — no hazard was ever investigated — while
-twelve packages in this tree (`core`, `domain.transactions`, `domain.user_profile`,
-`entrypoints.cli`, …) already ship the pattern. One campaign's scope guard had
-hardened into a permanent prohibition with nothing behind it, and it was blocking a
-measured multi-second CLI import cost. Ownership — the constraint this rule exists
-to protect — is untouched by lazy resolution.
+- **Good:** a new application-layer service imports `rename_profile` from the
+  `user_profile` package's `__all__` re-export, promoted before the consuming
+  file was authored.
+- **Good:** an underscore-named symbol reached by two or more unrelated
+  production packages is renamed public and promoted; one reached by exactly one
+  narrow caller instead gets a purpose-built narrower public API.
+- **Bad:** importing from a private submodule path
+  (`....application.user_profile._orchestration`) — the next agent reads the
+  precedent and erodes the boundary.
+- **Bad:** stripping the leading underscore from every reached private symbol
+  into `__all__` without judging shared-primitive vs single-caller vs design
+  defect.
 
 ## Source
 
-ADR ``2026-06-03-cli-workflow-redesign-adr``; generalized by
-``2026-07-01-import-centralization-adr`` (research ``2026-07-01-import-centralization-research``).
-Enforced by ``dev/import_hygiene_scan.py`` and ``src/cadrumo/tests/test_import_hygiene_gate.py``.
+ADR `2026-07-01-import-centralization-adr` (generalising
+`2026-06-03-cli-workflow-redesign-adr`), research
+`2026-07-01-import-centralization-research`. Enforced by
+`dev/import_hygiene_scan.py` and `src/cadrumo/tests/test_import_hygiene_gate.py`
+(a checked-in production baseline ratcheting toward zero). Companion:
+`dynamic-import-targets-the-public-facade`.

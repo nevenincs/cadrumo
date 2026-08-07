@@ -39,10 +39,9 @@ professional use.
   sensitivity via the active-bucket wrapper; a consumer reads them into memory
   and uses them transiently, writing nothing to disk. A model that must read a
   document runs on-host (in-tree extraction or a local vision model fed in-memory
-  base64); any off-host transmission is gated behind an explicit, per-invocation,
-  default-off, gestor-barred consent acknowledgement (see
-  `off-host-evidence-upload-requires-explicit-consent-gate` when it lands) and
-  never uses a file-writing transport.
+  base64); any off-host transmission is gated behind an explicit,
+  per-invocation, default-off, gestor-barred consent acknowledgement, and never
+  uses a file-writing transport.
 - **Bad:** materialising decrypted evidence to a temp file (even bounded-lifetime,
   `chmod 600`, promptly removed) for a subprocess to read by path; storing only a
   `source_path` to a cleartext file as the durable home; or writing sensitive
