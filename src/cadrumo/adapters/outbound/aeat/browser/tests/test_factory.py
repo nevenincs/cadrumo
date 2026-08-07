@@ -10,6 +10,7 @@ import pytest
 
 from ......core.config import Settings
 from ...auth import BrowserSessionLike
+from ...tests._process_support import wait_for_process_exit
 from .. import BrowserError, Profile, create_browser_session, opened_browser_page, shared_playwright_runtime
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -39,13 +40,6 @@ async def _wait_for_descendants(
     return observed
 
 
-async def _wait_for_process_exit(pid: int, *, timeout_seconds: float = 10.0) -> None:
-    deadline = time.monotonic() + timeout_seconds
-    while time.monotonic() < deadline:
-        if not psutil.pid_exists(pid):
-            return
-        await asyncio.sleep(0.1)
-    pytest.fail(f"Playwright driver process {pid} remained alive after session close")
 
 
 async def _wait_for_owner_entry(
@@ -74,7 +68,7 @@ async def test_shared_playwright_runtime_reaps_its_real_driver() -> None:
         driver_pid = playwright._impl_obj._connection._transport._proc.pid
         assert psutil.pid_exists(driver_pid)
 
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="session close")
 
 
 @pytest.mark.asyncio
@@ -98,7 +92,7 @@ async def test_shared_playwright_runtime_finishes_real_teardown_under_cancellati
         await owner_task
 
     assert driver_pid > 0
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="session close")
 
 
 @pytest.mark.asyncio
@@ -130,7 +124,7 @@ async def test_opened_browser_page_reaps_all_real_owners_under_repeated_cancella
         await owner_task
 
     assert driver_pid > 0
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="session close")
 
 
 def _profile(name: str) -> Profile:
@@ -166,7 +160,7 @@ async def test_default_browser_session_is_protocol_complete_and_reaps_runtime() 
 
     await session.close()
     await session.close()
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="session close")
 
 
 @pytest.mark.asyncio
@@ -185,7 +179,7 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
 
     assert await _wait_for_descendants(driver_pid, expect_non_empty=False) == ()
     await session.close()
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="session close")
 
 
 @pytest.mark.asyncio
@@ -240,7 +234,7 @@ async def test_context_creation_cancellation_reaps_browser_after_real_launch() -
                 create_task.cancel()
                 await asyncio.gather(create_task, return_exceptions=True)
             await session.close()
-            await _wait_for_process_exit(driver_pid)
+            await wait_for_process_exit(driver_pid, after="session close")
         await asyncio.sleep(0)
         assert unhandled_contexts == [], f"Playwright left unhandled async outcomes: {unhandled_contexts!r}"
     finally:
@@ -309,4 +303,4 @@ async def test_real_browser_process_count_returns_to_zero_across_repeated_cycles
 
         await context.close()
         await session.close()
-        await _wait_for_process_exit(driver_pid)
+        await wait_for_process_exit(driver_pid, after="session close")

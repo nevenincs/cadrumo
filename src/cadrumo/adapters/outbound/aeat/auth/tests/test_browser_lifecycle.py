@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 from datetime import UTC, datetime, timedelta
 
-import psutil
 import pytest
 
 from ......core.config import Settings
 from ...browser import Profile, create_browser_session
+from ...tests._process_support import wait_for_process_exit
 from .._authenticator_types import AeatSession
 from .._browser_lifecycle import (
     _CloseIntentBarrier,
@@ -122,13 +121,6 @@ async def test_cancelled_queued_closer_releases_its_intent() -> None:
     await asyncio.wait_for(_exercise_cancelled_close_intent(), timeout=1.0)
 
 
-async def _wait_for_process_exit(pid: int, *, timeout_seconds: float = 10.0) -> None:
-    deadline = time.monotonic() + timeout_seconds
-    while time.monotonic() < deadline:
-        if not psutil.pid_exists(pid):
-            return
-        await asyncio.sleep(0.1)
-    pytest.fail(f"Playwright driver process {pid} remained alive after session close")
 
 
 @pytest.mark.asyncio
@@ -169,7 +161,7 @@ async def test_bounded_cleanup_retains_real_resources_for_retry() -> None:
         logger=logging.getLogger(__name__),
         owner="test-real-playwright-owner",
     )
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="session close")
 
 
 @pytest.mark.parametrize("provider_type", [ClaveMovilAuthProvider, ClavePermanenteAuthProvider])

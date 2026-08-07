@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-import psutil
 import pytest
 from pydantic import SecretStr
 
@@ -18,6 +16,7 @@ from ......core.config import AEAT_CERTIFICATE_PROTECTED_URL, Settings
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
+from ...tests._process_support import wait_for_process_exit
 from .. import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
@@ -36,13 +35,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "certificate-real-boundary"
 
 
-async def _wait_for_process_exit(pid: int, *, timeout_seconds: float = 10.0) -> None:
-    deadline = time.monotonic() + timeout_seconds
-    while time.monotonic() < deadline:
-        if not psutil.pid_exists(pid):
-            return
-        await asyncio.sleep(0.1)
-    pytest.fail(f"Playwright driver process {pid} remained alive after authenticator cancellation")
 
 
 def _certificate_session() -> AeatSession:
@@ -306,7 +298,7 @@ async def test_authenticator_context_exit_reaps_real_browser_under_body_cancella
                 await owner_task
 
         assert driver_pid > 0
-        await _wait_for_process_exit(driver_pid)
+        await wait_for_process_exit(driver_pid, after="authenticator cancellation")
 
 
 @pytest.mark.asyncio
@@ -340,4 +332,4 @@ async def test_authenticate_cancellation_retains_real_provider_owners_until_clos
                 assert authenticator._context is not None
 
         assert driver_pid > 0
-        await _wait_for_process_exit(driver_pid)
+        await wait_for_process_exit(driver_pid, after="authenticator cancellation")

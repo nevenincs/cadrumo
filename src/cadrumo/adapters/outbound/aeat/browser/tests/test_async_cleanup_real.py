@@ -5,11 +5,11 @@ from __future__ import annotations
 import asyncio
 import time
 
-import psutil
 import pytest
 
 from ......core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ......core.config import Settings
+from ...tests._process_support import wait_for_process_exit
 from .. import DefaultBrowserSession, Profile, create_browser_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -29,14 +29,6 @@ async def _opened_real_session(name: str) -> tuple[DefaultBrowserSession, int]:
     return session, driver_pid
 
 
-async def _wait_for_process_exit(pid: int, *, timeout_seconds: float = 10.0) -> None:
-    """Require the concrete Playwright driver to reach an OS-terminal state."""
-    deadline = time.monotonic() + timeout_seconds
-    while time.monotonic() < deadline:
-        if not psutil.pid_exists(pid):
-            return
-        await asyncio.sleep(0.1)
-    pytest.fail(f"Playwright driver process {pid} remained alive after cleanup retry")
 
 
 async def _cancel_blocked_cleanup_attempts(
@@ -104,7 +96,7 @@ async def test_body_error_retains_real_playwright_close_failure_for_retry() -> N
     assert cleanup_error._resources == (session,)
     assert cleanup_error._failures
     await cleanup_error.retry_cleanup()
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="cleanup retry")
 
 
 @pytest.mark.asyncio
@@ -137,7 +129,7 @@ async def test_cancellation_stays_primary_when_real_playwright_close_fails() -> 
     assert isinstance(cleanup_error, AsyncResourceCleanupError)
     assert cleanup_error._resources == (session,)
     await cleanup_error.retry_cleanup()
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="cleanup retry")
 
 
 @pytest.mark.asyncio
@@ -163,11 +155,11 @@ async def test_only_failed_real_owner_is_retained_and_retried() -> None:
     await cancel_close
 
     cleanup_error = exc_info.value
-    await _wait_for_process_exit(healthy_driver_pid)
+    await wait_for_process_exit(healthy_driver_pid, after="cleanup retry")
     assert cleanup_error._resources == (failed_session,)
     assert len(cleanup_error._failures) == 1
     await cleanup_error.retry_cleanup()
-    await _wait_for_process_exit(failed_driver_pid)
+    await wait_for_process_exit(failed_driver_pid, after="cleanup retry")
 
 
 @pytest.mark.asyncio
@@ -197,4 +189,4 @@ async def test_real_owner_exhausts_every_configured_close_attempt_before_retry()
     assert len(cleanup_error._failures) == 1
     assert cleanup_error._failures[0].__notes__ == ["resource close failed 2 times"]
     await cleanup_error.retry_cleanup()
-    await _wait_for_process_exit(driver_pid)
+    await wait_for_process_exit(driver_pid, after="cleanup retry")
