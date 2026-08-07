@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:90c1059930207a059a8138588f0cb9fe67152cfe5053e46b762f23bcf3668835'
+body_hash: 'sha256:58f360d4d2aaf6a254536dddf6c48d985f570f4b4d82361a7744daadd4523e29'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -147,6 +147,38 @@ Not a Modelo 322 problem specifically. Any modelo whose manifest was authored
 from its own casilla set rather than from the official form inherits it, and the
 repeated-id number fields are the readable signal that this one was. Belongs in
 front of whoever owns those modelos, grounded against the official forms.
+
+**Scope measured, by the coordinator, after this finding was widened.** The claim that any manifest authored from its own casilla set inherits the blindness is correct, and the readable signal is sharper than "repeated ids": it is whether the `number` field holds an official box number at all.
+
+`id == number` is NOT the signal. For most modelos the casilla id legitimately IS the box number -- Modelo 303 carries `casilla_id = "59"` with `number = "59"`, and that is the manifest correctly naming box 59. Counting id/number equality flags those as suspect and is the wrong measurement; it was run first and discarded.
+
+The discriminator is a `number` value that could not be a box: a dotted internal identifier such as `iva.autorepercutido.intracomunitaria` or `compensacion-disponible-fin-periodo`. Those name a casilla in the registry's own vocabulary, so the manifest is quoting itself where it should be quoting the form.
+
+Counted across every modelo completeness manifest in the tree, as non-box `number` values over total rows:
+
+| Modelo | Non-box | Rows |
+| --- | --- | --- |
+| 232 | 56 | 56 |
+| 309 | 3 | 3 |
+| 322 | 8 | 8 |
+| 349 | 4 | 4 |
+| 353 | 11 | 11 |
+| 369 | 8 | 8 |
+| 720 | 5 | 5 |
+| 303 | 42 | 102 |
+| 390 | 18 | 38 |
+| 210 | 6 | 22 |
+| 714 | 1 | 13 |
+
+Thirteen modelos are clean throughout: 111, 115, 117, 123, 126, 128, 136, 187, 188, 194, 202, 216, 296.
+
+Two readings this supports, and one it does not.
+
+**Seven modelos are wholly self-quoting** (232, 309, 322, 349, 353, 369, 720). For those the finding applies exactly as written: the manifest and the modelo were authored from the same source, so the gate compares a skeleton against itself.
+
+**Four are MIXED**, and that is the more interesting result. Modelo 303 is the campaign's best-modelled IVA form at 126 casillas, and 42 of its 102 manifest rows still carry an internal name where a box number belongs. So this is not a property of skeletal modelos -- a well-modelled one carries it too, on the part of its manifest that was written from the registry rather than from the form. A reader who took "skeletal modelo" as the boundary would not look at 303 at all.
+
+**What this does NOT establish** is that any of these rows is wrong in its declaration. A non-box `number` proves the manifest was authored from the casilla set; it does not prove the casilla set is incomplete against the official form. Those are separate claims and only the first is measured here. Modelo 303's 42 rows may correspond to real boxes whose numbers simply were not transcribed. Establishing under-modelling requires reading each form, which is the legal-grounding work this finding defers rather than performs.
 
 ### bulk-import-has-no-recargo-column | low | Not a silent loss: unknown columns are refused
 
