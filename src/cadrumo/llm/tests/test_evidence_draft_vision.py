@@ -7,12 +7,12 @@ Ollama HTTP server (no mocks) -- exactly the harness
 classification vision path.
 
 See Also:
-    :class:`~application.ledger._evidence_draft_vision.LocalVisionInvoiceFieldExtractor`
+    :class:`~llm._evidence_draft_vision.LocalVisionInvoiceFieldExtractor`
         On-host Ollama transport exercised through the loopback server.
-    :func:`~application.ledger._evidence_draft_vision.parse_vision_extraction_response`
+    :func:`~llm._evidence_draft_vision.parse_vision_extraction_response`
         JSON-object recovery and strict schema boundary covered by adversarial
         response cases.
-    :func:`~application.ledger._evidence_draft_vision._ground_extracted_fields`
+    :func:`~llm._evidence_draft_vision._ground_extracted_fields`
         Grounded re-validation step that rejects hallucinated identifiers and
         unparsable values.
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
@@ -28,11 +28,17 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.config import load_settings
-from ....core.decimal import coerce_finite_european_decimal
-from ....tests.secure_sql import TestRuntimeProfile
-from .._evidence import PurchaseInvoiceEvidenceInputError
-from .._evidence_draft import InvoiceDraft
+from ...application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
+from ...application.ledger.tests._llm_vision_evidence_support import (
+    _json_array,
+    _json_object,
+    _png_image,
+    _run_against_loopback_ollama,
+)
+from ...application.ledger.tests._llm_vision_evidence_support import profile as profile
+from ...core.config import load_settings
+from ...core.decimal import coerce_finite_european_decimal
+from ...tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft_vision import (
     LocalVisionInvoiceFieldExtractor,
     _ground_extracted_fields,
@@ -40,8 +46,6 @@ from .._evidence_draft_vision import (
     extract_invoice_fields_from_images,
     parse_vision_extraction_response,
 )
-from ._llm_vision_evidence_support import _json_array, _json_object, _png_image, _run_against_loopback_ollama
-from ._llm_vision_evidence_support import profile as profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["profile"]

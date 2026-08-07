@@ -327,6 +327,13 @@ ignore_imports =
     cadrumo.application.calculations._relation_prefill -> cadrumo.adapters.**
     cadrumo.application.diagnostics -> cadrumo.adapters.**
     cadrumo.application.diagnostics_run_health -> cadrumo.adapters.outbound.llm
+    # The ledger draft path reaches the gated local-inference subpackage for a
+    # scan-only document. Deferred inside the function, and pinned here for the
+    # same reason the outbound.llm edges above are: cadrumo.llm sits at the
+    # ADAPTER tier, so application -> llm is an outward edge. The inward half
+    # (llm -> application.ledger, for the draft shape it produces) needs no pin,
+    # being a legal inner reach, and resolves through the ledger's public facade.
+    cadrumo.application.ledger._evidence_draft -> cadrumo.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.**
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
@@ -343,7 +350,6 @@ ignore_imports =
     cadrumo.application.ledger._business_operation_invoice -> cadrumo.adapters.**
     cadrumo.application.ledger._evidence -> cadrumo.adapters.**
     cadrumo.application.ledger._evidence_draft -> cadrumo.adapters.**
-    cadrumo.application.ledger._evidence_draft_vision -> cadrumo.adapters.**
     cadrumo.application.ledger._evidence_textlayer -> cadrumo.adapters.**
     cadrumo.application.ledger._llm_classification -> cadrumo.adapters.**
     cadrumo.application.ledger._llm_diagnostics -> cadrumo.adapters.**

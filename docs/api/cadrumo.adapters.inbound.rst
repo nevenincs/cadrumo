@@ -16,6 +16,7 @@ Subpackages
    cadrumo.adapters.inbound.borrador
    cadrumo.adapters.inbound.censo
    cadrumo.adapters.inbound.declaracion
+   cadrumo.adapters.inbound.einvoice
    cadrumo.adapters.inbound.financial
    cadrumo.adapters.inbound.justificante
    cadrumo.adapters.inbound.pdf

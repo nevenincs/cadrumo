@@ -27,5 +27,4 @@ Submodules
    cadrumo.application.workflow._profile_health
    cadrumo.application.workflow._protocols
    cadrumo.application.workflow._resume
-   cadrumo.application.workflow._utils
    cadrumo.application.workflow._workflow_abort

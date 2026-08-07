@@ -45,6 +45,11 @@ _SENSITIVE_SURFACES = (
     SRC_CADRUMO / "adapters" / "outbound" / "aeat" / "sede" / "_observation_store.py",
     SRC_CADRUMO / "adapters" / "outbound" / "google",
     SRC_CADRUMO / "adapters" / "outbound" / "llm",
+    # The gated local-inference subpackage. Enumerated in the SAME change
+    # that creates it, never later: between creation and enumeration the
+    # code handling decrypted invoice bytes is unguarded, and the
+    # non-vacuity assertion above would refuse an entry added any earlier.
+    SRC_CADRUMO / "llm",
     # Successor of the vanished `entrypoints/cli/oauth.py`: the OAuth credential
     # flow now lives across the `_config/_google*` modules.
     SRC_CADRUMO / "entrypoints" / "cli" / "_config" / "_google.py",

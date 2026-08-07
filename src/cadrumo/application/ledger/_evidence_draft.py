@@ -27,7 +27,7 @@ LLM. This module makes no network call and performs no filesystem write.
 A scan-only PDF (no embedded text layer) or an image attachment has nothing for
 :func:`~application.ledger.extract_invoice_fields` to read, so
 :func:`~application.ledger.extract_invoice_draft_from_evidence` falls back to the
-on-host LOCAL vision reader (:mod:`~application.ledger._evidence_draft_vision`)
+on-host LOCAL vision reader (:mod:`~llm._evidence_draft_vision`)
 -- the same rasterise-then-read-with-Ollama transport
 :class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier` already
 uses for classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and
@@ -84,7 +84,7 @@ See Also:
     :func:`~application.ledger.confirm_invoice_draft_from_evidence`
         Non-interactive confirm step that re-extracts, applies overrides, and
         delegates the catalogue write.
-    :mod:`~application.ledger._evidence_draft_vision`
+    :mod:`~llm._evidence_draft_vision`
         On-host vision fallback for scan-only PDFs and image attachments.
     :func:`~application.invoices.create_catalogue_invoice`
         Sole sanctioned writer for the resulting catalogue invoice.
@@ -519,7 +519,7 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
         )
 
     try:
-        from ._evidence_draft_vision import extract_invoice_fields_from_images
+        from ...llm import extract_invoice_fields_from_images
 
         if evidence.media_kind is MediaKind.PDF:
             images = rasterise_pdf_pages_to_base64_png(evidence.data)
