@@ -397,6 +397,7 @@ def test_the_facturae_fixture_reads_recargo_and_does_not_double_count_its_taxes(
     assert cuota == parsed.iva_amount
     assert parsed.taxable_base is not None
     assert parsed.iva_amount is not None
+    assert parsed.recargo_amount is not None, "the recargo term is what this closure turns on"
     assert parsed.taxable_base + parsed.iva_amount + parsed.recargo_amount == parsed.grand_total
 
 

@@ -27,7 +27,7 @@ from __future__ import annotations
 import base64
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import pytest
 
@@ -55,6 +55,7 @@ class _RequestOptions:
     def __init__(self, payload: str) -> None:
         self.json_data = {"messages": [{"content": [{"type": "image", "source": {"data": payload}}]}]}
 
+    @override
     def __str__(self) -> str:
         return f"RequestOptions(json_data={self.json_data!r})"
 

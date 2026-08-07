@@ -214,6 +214,7 @@ def test_the_headroom_comparison_includes_the_configured_safety_margin() -> None
     chosen = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=_cuda_profile(14 * _GIB))
     assert chosen.candidate is not None
     exact = chosen.candidate.memory_requirement_bytes
+    assert exact is not None, "the selected candidate declares no memory requirement; there is no fit to test"
     with override_settings(cadrumo_llm_contention_safety_margin_bytes=2 * _GIB):
         tight = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=_cuda_profile(exact))
         roomy = select_model_for_role(ModelRole.VISION_TRANSCRIPTION, profile=_cuda_profile(exact + 2 * _GIB))
@@ -447,4 +448,7 @@ def test_the_mapping_role_never_resolves_to_a_vision_tier_model() -> None:
 
     text = select_model_for_role(ModelRole.TEXT_EXTRACTION, profile=_cuda_profile(14 * _GIB))
     assert text.candidate is not None
-    assert resolved.candidate.memory_requirement_bytes <= text.candidate.memory_requirement_bytes
+    resolved_bytes = resolved.candidate.memory_requirement_bytes
+    text_bytes = text.candidate.memory_requirement_bytes
+    assert resolved_bytes is not None and text_bytes is not None
+    assert resolved_bytes <= text_bytes
