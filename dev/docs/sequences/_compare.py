@@ -48,6 +48,7 @@ from cadrumo.core.observability import canonicalise, differing_paths, mask_docum
 from ._errors import SequenceGoldenMismatchError
 from ._golden_store import (
     SequenceGolden,
+    mask_host_conditional_details,
     masked_envelope_values,
     normalise_document_paths,
     normalise_text_output,
@@ -158,8 +159,12 @@ def compare_transcript_to_golden(
                     storage_root=transcript.storage_root,
                     workdir=transcript.workdir,
                 )
-                masked_expected = mask_document(expected.envelope)
-                masked_actual = mask_document(live_envelope)
+                # Same platform-conditional carve-out the text tier applies, at
+                # the structural tier: each side's own detail is masked, so the
+                # row's id and verdict stay under exact comparison while the
+                # sentence describing the HOST drops out of both.
+                masked_expected = mask_host_conditional_details(mask_document(expected.envelope))
+                masked_actual = mask_host_conditional_details(mask_document(live_envelope))
                 if canonicalise(masked_expected) != canonicalise(masked_actual):
                     diff = ", ".join(sorted(differing_paths(masked_expected, masked_actual)))
                     problems.append(f"{at}: envelope diverged at post-mask paths: {diff or '<whole-document>'}")
