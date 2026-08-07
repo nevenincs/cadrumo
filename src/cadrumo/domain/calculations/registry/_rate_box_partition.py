@@ -52,11 +52,24 @@ from ._schema_base import RegistryModel
 __all__ = [
     "RateBoxPartition",
     "RateBoxShortfall",
+    "RateBoxUnscreenedGroup",
     "derive_rate_box_partitions",
     "rate_box_coverage_shortfalls",
+    "rate_box_unscreened_groups",
 ]
 
 _APPLIED_RATES_AXIS = "applied_rates"
+
+#: Why a rate-split selector group formed no partition and was therefore never
+#: screened. Named rather than inlined so a caller can branch on severity: the
+#: first is the total absence of the blind layer and loses rate-unrecorded rows
+#: outright, while the rest are shapes the partition arithmetic cannot read.
+_NO_RATE_BLIND_SIBLING = "no_rate_blind_sibling"
+_MULTIPLE_RATE_BLIND_SIBLINGS = "multiple_rate_blind_siblings"
+_NO_SINGLE_TOTAL_CASILLA = "no_single_total_casilla"
+_TOTAL_CASILLA_EXPORTS = "total_casilla_exports"
+_NO_BOX_CASILLA_EXPORTS = "no_box_casilla_exports"
+_NO_RATE_KINDS = "no_rate_kinds"
 
 
 class RateBoxPartition(RegistryModel):
@@ -74,6 +87,22 @@ class RateBoxPartition(RegistryModel):
     """The quantity being partitioned (``iva_amount_sum`` / ``base_amount_sum`` /
     ``recargo_amount_sum``). Two layers over different facts are different
     partitions and never share one."""
+
+
+class RateBoxUnscreenedGroup(RegistryModel):
+    """A rate-split selector group that formed no partition, and why.
+
+    Its existence is the answer to a question the shortfall list cannot answer:
+    whether "no shortfalls" means everything was checked and was clean, or that
+    nothing was eligible to be checked.
+    """
+
+    selector_identity: tuple[str, ...] = Field(min_length=1)
+    """The partition key as ``axis=value`` pairs, excluding the rate axis."""
+    rated_binding_ids: tuple[BindingId, ...] = Field(min_length=1)
+    """The rate-pinned bindings whose rows this group would have screened."""
+    reason: str = Field(min_length=1)
+    """Why no partition formed. ``no_rate_blind_sibling`` is the severe one."""
 
 
 class RateBoxShortfall(RegistryModel):
@@ -218,6 +247,90 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
             ),
         )
     return tuple(sorted(partitions, key=lambda partition: partition.total_casilla_id))
+
+
+def rate_box_unscreened_groups(revision: ModeloRevision) -> tuple[RateBoxUnscreenedGroup, ...]:
+    """Return rate-split selector groups that :func:`derive_rate_box_partitions` drops.
+
+    A partition forms only when several conditions hold at once, and every one of
+    them is a way a group can vanish from the screened population. So an empty
+    shortfall list has two readings that are indistinguishable from the outside:
+    every partition was checked and was clean, or **nothing was eligible to be
+    checked at all**. This function separates them.
+
+    The population returned is deliberately narrow: groups that declare at least
+    one RATE-PINNED binding and still form no partition. A group with no
+    rate-pinned binding is not a rate split, forms no partition correctly, and is
+    NOT residue -- reporting it would bury the real cases under every ordinary
+    rate-blind binding in the registry.
+
+    That leaves three states a caller can now distinguish, where before there
+    were two names for three things:
+
+    * **screened** -- the group formed a partition and its arithmetic was read;
+    * **unscreened** -- returned here, with the reason it was dropped;
+    * **ineligible** -- no rate-pinned binding, correctly absent from both.
+
+    The severe case is ``NO_RATE_BLIND_SIBLING``: every binding for the selector
+    identity pins a rate, so a row whose rate the ledger never recorded matches
+    none of them and reaches no casilla at all. That is the total absence of the
+    blind layer, which is worse than the partial coverage
+    :func:`rate_box_coverage_shortfalls` measures, and it is invisible to it.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose bindings and casillas are read.
+
+    Returns:
+        One entry per dropped rate-split group, in canonical reason-then-binding
+        order; empty when every rate-split group the revision declares formed a
+        partition.
+    """
+    casillas_by_binding = _casillas_by_binding(revision)
+    exports = {casilla.id: bool(casilla.export_refs) for casilla in revision.casillas}
+
+    grouped: dict[tuple[tuple[str, str], ...], list[tuple[DataBindingDefinition, Mapping[str, object]]]] = {}
+    for binding in revision.bindings:
+        if binding.source is not BindingSourceKind.LEDGER_IVA_AGGREGATION:
+            continue
+        axes = _iva_selector_axes(binding)
+        grouped.setdefault(_partition_key(axes), []).append((binding, axes))
+
+    unscreened: list[RateBoxUnscreenedGroup] = []
+    for key, members in grouped.items():
+        rated = [member for member in members if member[1].get(_APPLIED_RATES_AXIS)]
+        if not rated:
+            continue
+        blind = [member for member in members if not member[1].get(_APPLIED_RATES_AXIS)]
+        rated_binding_ids = tuple(sorted(binding.id for binding, _ in rated))
+
+        reason: str | None = None
+        if not blind:
+            reason = _NO_RATE_BLIND_SIBLING
+        elif len(blind) > 1:
+            reason = _MULTIPLE_RATE_BLIND_SIBLINGS
+        else:
+            total_casillas = _distinct(casillas_by_binding.get(blind[0][0].id, ()))
+            box_casillas = _distinct(
+                casilla_id for binding, _ in rated for casilla_id in casillas_by_binding.get(binding.id, ())
+            )
+            if len(total_casillas) != 1 or not box_casillas:
+                reason = _NO_SINGLE_TOTAL_CASILLA
+            elif exports.get(total_casillas[0], False) or total_casillas[0] in box_casillas:
+                reason = _TOTAL_CASILLA_EXPORTS
+            elif not any(exports.get(casilla_id, False) for casilla_id in box_casillas):
+                reason = _NO_BOX_CASILLA_EXPORTS
+            elif not _rate_kind_names(blind[0][1].get("rate_kinds")):
+                reason = _NO_RATE_KINDS
+        if reason is None:
+            continue
+        unscreened.append(
+            RateBoxUnscreenedGroup(
+                selector_identity=tuple(f"{axis}={value}" for axis, value in key),
+                rated_binding_ids=rated_binding_ids,
+                reason=reason,
+            ),
+        )
+    return tuple(sorted(unscreened, key=lambda group: (group.reason, group.rated_binding_ids)))
 
 
 def rate_box_coverage_shortfalls(

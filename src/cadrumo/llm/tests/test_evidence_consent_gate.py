@@ -35,7 +35,7 @@ from pydantic_core import PydanticSerializationError
 
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
 from ...application.ledger import DocumentTranscription, TranscriberIdentity
-from ...core import FieldOrigin
+from ...core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from .. import (
@@ -65,7 +65,7 @@ def _transcription() -> DocumentTranscription:
         text="Factura 2026-001 Base imponible 100,00 EUR",
         page_count=1,
         source_content_sha256="d" * 64,
-        transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
+        transcriber=TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
     )
 
 

@@ -224,18 +224,26 @@ class LocalVisionDocumentTranscriber:
         on this identity. A revision naming only the model would let one
         prompt's output be served for another prompt's question.
 
-        The name folds the TRANSPORT for a different reason, and it is not
+        The TRANSPORT is recorded for a different reason, and it is not
         tidiness. A transcription is a durable artefact derived from the
         document, so if it was produced off-host it is one of the artefacts a
         consent withdrawal must enumerate -- and a model identifier reveals the
         vendor only to a reader who already knows the catalogue. Recorded this
         way, the artefact that most needs re-deriving is not the one the survey
         cannot see.
+
+        It rides its own field rather than the name, which is where it began.
+        ``name`` is contracted to say which reader produced the text and
+        explicitly not to carry a coarse label, so folding the transport
+        through it broke that contract and made a third provenance grammar --
+        one no parser knew, on top of the two the stamp constructor had just
+        collapsed into one. The reason for recording it was right; only the
+        place was wrong.
         """
-        transport = provenance_transport_label(self._provider)
         return TranscriberIdentity(
             origin=FieldOrigin.VISION,
-            name=f"{_TRANSCRIBER_NAME_PREFIX}-{transport}:{self._model}",
+            name=self._model,
+            transport=provenance_transport_label(self._provider),
             revision=f"prompt-v{self._prompt.version}",
         )
 

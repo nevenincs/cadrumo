@@ -2028,12 +2028,16 @@ cli:
             no borrada.
           transcriber_help: Clave de caché de la transcripción que se reutilizará.
         evidence_id_help: Identificador del justificante (coincidencia exacta)
+        extract_acknowledge_off_host_help: Confirma, solo para esta lectura, que el
+          documento sale de este equipo.
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
           los datos (alternativa a --evidence-id).
         extract_evidence_id_help: Identificador del justificante de factura de compra
           del que extraer los datos.
         extract_help: Lee los campos de una factura en PDF en el propio equipo y genera
           un borrador para revisar.
+        extract_off_host_provider_help: Envía este documento a un modelo alojado en
+          lugar de leerlo en este equipo.
         extract_reference_required: Indique exactamente uno de --evidence-id o --attachment-id.
         extract_review_hint_message: Este es un borrador aproximado; confirme cada
           campo antes de crear una factura.
@@ -2265,14 +2269,24 @@ cli:
           contienen valores que no son importes, por lo que no se incorporaron como
           evidencia de cálculo: {affected}. Todo lo numérico de esas declaraciones
           se incorporó con normalidad.'
+        discover_help: Mostrar qué pares de modelo y ejercicio recorrería una descarga
+          del historial.
+        discover_no_profile_denominator: 'Este informe no contiene ningún denominador
+          específico del contribuyente: falta el perfil o su fecha de inicio de actividad,
+          por lo que el número de pares no mide la cobertura. Complete el perfil y
+          vuelva a ejecutar la orden antes de interpretar este resultado como historial
+          completo.'
+        discover_register_scope_caveat: 'La lista de opciones del registro es lo que
+          AEAT ofrece, no un historial de presentaciones confirmado para este NIF.
+          No está confirmado si esa lista se limita al NIF autenticado, por lo que
+          solo amplía el recorrido: un par ausente de ella no prueba que no se presentara
+          nada.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
         pull_sources_help: Descarga las observaciones presentadas que requieren las
           dependencias de una declaración objetivo.
-        discover_help: 'Mostrar qué pares de modelo y ejercicio recorrería una descarga del historial.'
-        discover_register_scope_caveat: 'La lista de opciones del registro es lo que AEAT ofrece, no un historial de presentaciones confirmado para este NIF. No está confirmado si esa lista se limita al NIF autenticado, por lo que solo amplía el recorrido: un par ausente de ella no prueba que no se presentara nada.'
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -7326,29 +7340,6 @@ mcp:
       el runtime en caliente estaba {reason}; el resultado es idéntico, solo más lento.
       El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 modelo:
-  display:
-    input_kind:
-      computed: Se calcula automáticamente
-      informational: Solo informativa
-      manual: Lo introduce usted
-    input_kind_count:
-      bound: rellenadas desde sus registros
-      computed: calculadas
-      informational: solo informativas
-      manual: que introduce usted
-    legal_kind:
-      instruction: Instrucciones AEAT
-    length:
-      at_least: Al menos {min} caracteres
-      at_most: Como máximo {max} caracteres
-      between: De {min} a {max} caracteres
-    value_enum: 'Uno de: {values}'
-    value_range:
-      at_least: Al menos {min}
-      at_most: Como máximo {max}
-      between: Entre {min} y {max}
-      non_negative: Cero o más
-      non_positive: Cero o menos
   schema:
     '036':
       field:

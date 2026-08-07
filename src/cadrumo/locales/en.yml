@@ -1880,10 +1880,14 @@ cli:
             it now carries {current}. The earlier reading is superseded, not erased.
           transcriber_help: Cache key of the transcription to reuse.
         evidence_id_help: Evidence id (exact match)
+        extract_acknowledge_off_host_help: Acknowledge, for this one read, that the
+          document leaves this machine.
         extract_attachment_id_help: Linked attachment id to extract from (alternative
           to --evidence-id).
         extract_evidence_id_help: Purchase invoice evidence record id to extract from.
         extract_help: Read an invoice PDF's fields on-host into a reviewable draft.
+        extract_off_host_provider_help: Send this document to a hosted model instead
+          of reading it on-host.
         extract_reference_required: Supply exactly one of --evidence-id or --attachment-id.
         extract_review_hint_message: This is a best-effort draft; confirm every field
           before minting an invoice.
@@ -2098,13 +2102,21 @@ cli:
         casillas_not_enrolled: '{count} casilla(s) in the captured filings hold values
           that are not amounts, so they were not enrolled as calculation evidence:
           {affected}. Everything numeric in those filings was enrolled normally.'
+        discover_help: Show which modelo and ejercicio pairs a history pull would
+          walk.
+        discover_no_profile_denominator: 'This report carries no taxpayer-specific
+          denominator: the profile or its activity start date is missing, so the pair
+          count does not measure coverage. Complete the profile and re-run before
+          reading this result as a complete history.'
+        discover_register_scope_caveat: 'The register''s option list is what AEAT
+          offers, not a confirmed filing history for this NIF. Whether that list is
+          scoped to the authenticated NIF is unconfirmed, so it only widens the walk:
+          a pair absent from it is no proof that nothing was filed.'
         list_help: List filed declaration rows without downloading artefacts
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
           dependencies.
-        discover_help: 'Show which modelo and ejercicio pairs a history pull would walk.'
-        discover_register_scope_caveat: 'The register''s option list is what AEAT offers, not a confirmed filing history for this NIF. Whether that list is scoped to the authenticated NIF is unconfirmed, so it only widens the walk: a pair absent from it is no proof that nothing was filed.'
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
@@ -6837,113 +6849,6 @@ mcp:
       the warm in-process runtime was {reason}; the result is identical, only slower.
       Warm serving resumes once the slow call clears.'
 modelo:
-  display:
-    binding_source:
-      atribucion_member: from the atribución de rentas members you recorded
-      bienes_inversion_regularizacion: from your bienes de inversión regularisation
-      borrador: from the AEAT borrador
-      collectible_invoice: from the invoices you issued
-      donativo_donor: from the donativo donor records
-      foreign_asset: from your foreign-asset records
-      iva_compensation_annual_partition: from the IVA compensación carried across
-        the year
-      iva_wallet_decision: from your IVA compensación decision
-      ledger_impatriado_income_aggregation: from your ledger income under the impatriado
-        regime
-      ledger_irnr_income_aggregation: from your ledger IRNR income
-      ledger_iva_aggregation: from your IVA ledger entries
-      ledger_oss_aggregation: from your OSS ledger entries
-      ledger_renta_gastos_estimacion_directa_aggregation: from your ledger expenses
-        under estimación directa
-      ledger_renta_gastos_pago_fraccionado_aggregation: from your ledger expenses
-        for the pago fraccionado
-      ledger_renta_income_aggregation: from your ledger income
-      ledger_transaction: from your ledger transactions
-      manual_input: from a value you supply
-      payable_invoice: from the invoices you received
-      previous_filing: from your previous filing
-      profile: from your taxpayer profile
-      prorrata_regularizacion: from your prorrata regularisation
-      purchase_invoice_evidence: from your purchase-invoice evidence
-      refund_operation: from your refund operations
-      related_party_operation: from your related-party operations
-      relation_prefill: from a related modelo's result
-      retenciones_aggregation: from the retenciones you recorded
-      withholding: from the withholdings you recorded
-    cadence:
-      ad_hoc: Filed when the event occurs
-      annual: Filed annually
-      monthly: Filed monthly
-      profile_based: Filed when your profile requires it
-      quarterly: Filed quarterly
-    chrome:
-      alternative_join: ', or'
-      binding: Binding
-      casilla_count: '{casillas} casillas in {sections} sections'
-      casilla_id: Casilla id
-      derived_from: from
-      established_by: Established by
-      formula: Formula
-      general_section: General
-      index_intro: One page per modelo. Every casilla says how it is filled (you enter
-        it, it is calculated from other boxes, or it is filled from your records),
-        where it sits on the official form, and the law that establishes it.
-      index_title: Casilla reference
-      legal_basis: Legal basis
-      list_and: and
-      not_on_official_form: Not on the official form
-      record_design_number: Record-design number
-      registry_identifiers: Registry identifiers
-      registry_section: Registry section
-      required: Required
-      revisions: Revisions
-      sections_nav: Sections of this modelo
-      segmento: Segmento {segmento}
-      semantic_role: Semantic role
-      sources: Sources
-    data_type:
-      bic: BIC
-      boolean: Yes or no
-      ccaa_code: Autonomous-community code
-      country_code: Country code
-      date: Date
-      decimal: Decimal number
-      iban: IBAN
-      integer: Whole number
-      money: Amount in euros
-      municipality_code: Municipality code
-      name: Name
-      nif: NIF
-      nif_iva: VAT-registered NIF
-      period_code: Period
-      postal_code: Postcode
-      province_code: Province code
-      ratio: Percentage
-      text: Text
-      year: Year
-    input_kind:
-      bound: Filled automatically
-      computed: Calculated for you
-      informational: Reference only
-      manual: You enter this
-    input_kind_count:
-      bound: filled from your records
-      computed: calculated
-      informational: reference only
-      manual: you enter
-    legal_kind:
-      instruction: AEAT instructions
-    length:
-      at_least: At least {min} characters
-      at_most: Up to {max} characters
-      between: '{min} to {max} characters'
-    value_enum: 'One of: {values}'
-    value_range:
-      at_least: At least {min}
-      at_most: At most {max}
-      between: Between {min} and {max}
-      non_negative: Zero or more
-      non_positive: Zero or less
   schema:
     '036':
       field:

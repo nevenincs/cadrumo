@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from functools import lru_cache
+from typing import Final
 
 from .....application.calculations import resolve_iva_compensation_annual_partition_binding_values
 from .....core import BindingSourceKind
@@ -97,6 +98,13 @@ def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) 
     return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
+#: The tiers on which a real line always carries a rate, so a fixture that omits
+#: one is modelling a row no production path can mint.
+_DOMESTIC_RATE_TIERS: Final[frozenset[IvaRateKind]] = frozenset(
+    {IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED},
+)
+
+
 def _observation(
     *,
     ledger_id: str = "ledger-1",
@@ -108,7 +116,36 @@ def _observation(
     base: Decimal = Decimal("1000"),
     iva: Decimal = Decimal("210"),
     recargo: Decimal = Decimal("0"),
+    applied_rate: Decimal | None = None,
 ) -> IvaLedgerObservation:
+    """Build an observation fixture, requiring the rate on the domestic tiers.
+
+    ``applied_rate`` is MANDATORY whenever ``rate_kind`` is general, reducido or
+    super-reducido, because every production path that mints such an observation
+    supplies it: the ledger classifier refuses a transaction with no ``iva_rate``
+    before classification and derives the tier FROM the rate, and the invoice
+    classifier reads the rate off the line's slot. A fixture omitting it models a
+    row production cannot produce, which is how a binding narrowed to a specific
+    rate came to look like a silent under-declaration when it was not.
+
+    It is NOT defaulted from ``rate_kind``, and that is deliberate rather than
+    ergonomic. Deriving a rate from a tier is the one inference production
+    explicitly refuses: the tier-to-rate mapping is date-dependent, so it answers
+    "what does this tier mean today" when the question is "what was this line
+    actually charged". A tier default would be silently wrong for exactly the
+    rows this matters for -- a 2024 reducido line charged 7,5 % or 5 %, or a
+    super-reducido line charged 2 % -- and the fixture would pass while encoding
+    a rate the statute did not offer on that date.
+
+    Left optional for every other tier, where production legitimately leaves it
+    unset: an exempt or not-subject line carries no rate to state.
+    """
+    if rate_kind in _DOMESTIC_RATE_TIERS and applied_rate is None:
+        raise AssertionError(
+            f"fixture builds a {rate_kind.value} observation with no applied_rate; "
+            "every production path supplies one on the domestic tiers, so this models "
+            "a row that cannot occur. State the rate the line carried.",
+        )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -119,6 +156,7 @@ def _observation(
         base_amount=base,
         iva_amount=iva,
         recargo_amount=recargo,
+        applied_rate=applied_rate,
     )
 
 

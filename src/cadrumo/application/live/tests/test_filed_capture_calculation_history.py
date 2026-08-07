@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.inbound.justificante import parse_justificante_bytes
 from ....adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionObservationStore,
@@ -32,6 +33,7 @@ from ....tests.secure_sql import read_db_at_rest_bytes
 from ...calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
+    ObservationSourceKind,
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
@@ -57,6 +59,7 @@ from ._filed_capture_history_support import (
     _SYNTHETIC_EXPEDIENTE_ID,
     _SYNTHETIC_PROFILE_ID,
     _declaration,
+    _modelo_130_justificante_pdf_bytes,
     _parsed_303_submitted_file_observation,
     _prior_303_observation,
     _profile_backend,
@@ -961,6 +964,184 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
         assert remote_state.history.carry_forward_lot_count == history.carry_forward_lot_count
 
 
+def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_in() -> None:
+    """A period with two active filings collapses to one, and input order cannot change which.
+
+    The register can return an original and a later-presented amendment for the
+    same period, both registered ALTA. Selection must keep exactly one per
+    period and keep the later one -- and it must reach that answer by ranking,
+    not by whichever row happened to be seen last. Feeding the identical set in
+    reverse is what separates those two implementations: a last-write-wins
+    reduction agrees with a max-by-rank one on a conveniently ordered input and
+    disagrees the moment the order flips.
+
+    Ordinary single-filing periods sit in the same batch so a selector that
+    collapsed everything to one row per modelo-year would not pass.
+    """
+    original_3t = _prior_303_observation(
+        year=2024,
+        period="3T",
+        expediente_id="202430300000303C",
+        pending_compensation=Decimal("300.00"),
+        presented_at=datetime(2024, 10, 18, 12, 5, 11, tzinfo=UTC),
+    )
+    amendment_3t = _prior_303_observation(
+        year=2024,
+        period="3T",
+        expediente_id="202430300000505E",
+        pending_compensation=Decimal("355.00"),
+        presented_at=datetime(2025, 3, 14, 11, 20, 36, tzinfo=UTC),
+    )
+    original_4t = _prior_303_observation(
+        year=2024,
+        period="4T",
+        expediente_id="202430300000404D",
+        pending_compensation=Decimal("400.00"),
+        presented_at=datetime(2025, 1, 27, 16, 42, 58, tzinfo=UTC),
+    )
+    amendment_4t = _prior_303_observation(
+        year=2024,
+        period="4T",
+        expediente_id="202430300000606F",
+        pending_compensation=Decimal("444.00"),
+        presented_at=datetime(2025, 3, 14, 11, 58, 9, tzinfo=UTC),
+    )
+    single_1t = _prior_303_observation(
+        year=2024,
+        period="1T",
+        expediente_id="202430300000101A",
+        pending_compensation=Decimal("100.00"),
+        presented_at=datetime(2024, 4, 22, 10, 14, 3, tzinfo=UTC),
+    )
+    observations = (single_1t, original_3t, original_4t, amendment_3t, amendment_4t)
+
+    selected = select_latest_filed_observations_in_history_order(observations)
+    reversed_selection = select_latest_filed_observations_in_history_order(tuple(reversed(observations)))
+
+    periods_selected = [observation.period for observation in selected]
+    assert len(periods_selected) == len(set(periods_selected)), (
+        "a period survived more than once, so duplicated filings were not collapsed"
+    )
+    assert set(periods_selected) == {observation.period for observation in observations}, (
+        "collapsing dropped a period entirely instead of choosing one filing within it"
+    )
+    winners = {observation.period: observation.expediente_id for observation in selected}
+    assert winners[amendment_3t.period] == amendment_3t.expediente_id
+    assert winners[amendment_4t.period] == amendment_4t.expediente_id
+    assert winners[single_1t.period] == single_1t.expediente_id
+    assert reversed_selection == selected, (
+        "selection depends on the order the register rows arrived in, so it is not ranking them"
+    )
+
+
+def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_path: Path) -> None:
+    """AEAT's own request-type signal reaches the observation and is lost at persistence.
+
+    The capture path reads the register row's request type into the raw
+    observation's ``metadata``, and the calculation-observation source metadata
+    is built from a fixed key set that does not include it. So the one signal
+    that could distinguish an original filing from an amendment is discarded
+    before anything downstream could elect on it, and no selection logic reads
+    it today.
+
+    This pins that loss deliberately rather than repairing it: which identifier
+    an amendment-aware election should key on is an open decision, and a silent
+    half-fix would be worse than a visible gap. REVERSE THIS TEST when the
+    request-type signal is carried through -- assert the persisted metadata
+    carries it, and this assertion becomes the one to delete.
+    """
+    request_type = "SYNTHETIC-REQUEST-TYPE"
+    observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
+        update={"metadata": {"tipo_solicitud": request_type, "observaciones": ""}},
+    )
+    assert observation.metadata["tipo_solicitud"] == request_type, (
+        "the raw observation does not carry the signal, so this test cannot show it being dropped"
+    )
+
+    with _secure_backend(tmp_path):
+        persist_filed_calculation_observation(observation, repository=CalculationObservationRepository())
+        loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+
+    assert loaded is not None
+    assert "tipo_solicitud" not in loaded.source_metadata
+    assert request_type not in loaded.source_metadata.values(), (
+        "the request type reached persistence under some other key; this test must name that key instead"
+    )
+    assert "aeat_expediente_id" in loaded.source_metadata, (
+        "the expediente id is gone too, so the metadata was not built -- the absence above proves nothing"
+    )
+
+
+def test_receipt_presentation_identifier_is_rejected_against_a_register_expediente_id(tmp_path: Path) -> None:
+    """The match predicate refuses a receipt that belongs to the filing, so nothing is stamped.
+
+    A justificante carries its own presentation identifier, and the register row
+    carries an expediente id. Those are differently shaped identifiers for the
+    same filing, and the production comparison feeds the expediente id into the
+    receipt's presentation-identifier check. So a receipt agreeing on modelo,
+    ejercicio, period and taxpayer identity -- every axis that establishes it IS
+    this filing's receipt -- is still rejected, and no evidence is stamped onto
+    the filing record.
+
+    The first assertion is what makes this a false rejection rather than an
+    ordinary one: the same predicate accepts the receipt on every other axis
+    when the presentation identifier is not supplied.
+
+    The predicate is deliberately left as it is. Which identifier the comparison
+    should use is unsettled, and dropping the comparison would trade a visible
+    refusal for silent mis-stamping. REVERSE THIS TEST once that is decided:
+    assert the receipt stamps, and delete the rejection assertions below.
+    """
+    register_expediente_id = "202613000000101A"
+    receipt = parse_justificante_bytes(_modelo_130_justificante_pdf_bytes())
+    assert receipt.presentation_id is not None
+    assert receipt.presentation_id != register_expediente_id, (
+        "the receipt's presentation identifier equals the register expediente id, "
+        "so this fixture pair cannot exercise the divergence"
+    )
+    assert receipt.matches_filing_target(
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        tax_id="00000000T",
+    ), "the receipt does not belong to this filing on the other axes, so its rejection is not a false one"
+
+    assert (
+        receipt.matches_filing_target(
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            tax_id="00000000T",
+            presentation_id=register_expediente_id,
+        )
+        is False
+    )
+
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
+        store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
+        observation = _stored_130_justificante_observation(store, expediente_id=register_expediente_id)
+        _seed_current_130_filing(bucket_id=bucket_id)
+
+        result = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        current = (
+            ModeloRecordCatalogueRepository()
+            .load()
+            .current_for(
+                bucket_id=bucket_id,
+                modelo="130",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+            )
+        )
+
+    assert result.justificante_csvs == ()
+    assert result.filing_record_ids == ()
+    assert result.conflicting_filing_record_ids == ()
+    assert current is not None
+    assert current.external_evidence is None
+    assert current.aeat_accepted is False
+
+
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
@@ -984,3 +1165,104 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
 
         with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
             resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
+
+
+def test_discovery_driven_capture_stamps_the_same_official_source_kind(tmp_path: Path) -> None:
+    """A discovery-nominated pair is provenance-identical to a single-pair capture.
+
+    This is the Step's whole point, not a formality. The design deliberately adds
+    NO sixth ``ObservationSourceKind`` for a backfilled historical filing, on the
+    ground that an imported filing IS an AEAT-sourced filed declaración rather
+    than a lesser-trust echo of one. That claim is only safe if the discovery
+    signal genuinely cannot reach the stamp — so the same synthetic declaración is
+    pushed through the single-pair finalizer policy and through the bulk policy
+    the discovery-driven sweep uses, into two real repositories, and the two
+    persisted rows are compared field by field.
+
+    The comparison excludes nothing but the fields that MUST differ. It does not
+    compare ``captured_at`` loosely and then declare parity: ``captured_at`` is
+    derived from the filing's own ``presented_at``, so for one fixture it is
+    genuinely equal on both paths and is asserted equal. Everything else -- the
+    registry observation, the stamped revision, the source metadata -- is
+    asserted equal too, so a divergence anywhere in the provenance envelope
+    fails here rather than surfacing later as two filings a taxpayer cannot
+    reconcile.
+    """
+    observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
+    period = Period.from_year_and_code(2026, "1T")
+
+    with _secure_backend(tmp_path / "single"):
+        single_repository = CalculationObservationRepository()
+        single_keys = finalize_filed_capture(
+            (observation,),
+            policy=FiledCaptureFailurePolicy.FAIL_FAST,
+        ).calculation_observation_keys
+        single_row = single_repository.load_observation("303", period)
+
+    # The discovery-driven route reaches capture through the bulk grid, whose
+    # finalizer policy is BEST_EFFORT because a partial sweep is the expected
+    # outcome. That policy difference is the ONLY thing the discovery path
+    # changes about finalization, which is exactly why it is the arm under test.
+    with _secure_backend(tmp_path / "discovered"):
+        discovered_repository = CalculationObservationRepository()
+        finalization = finalize_filed_capture(
+            (observation,),
+            policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+        )
+        discovered_row = discovered_repository.load_observation("303", period)
+
+    assert single_row is not None
+    assert discovered_row is not None
+    assert finalization.failures == ()
+    assert single_keys == finalization.calculation_observation_keys
+
+    assert single_row.source_kind is ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE
+    assert discovered_row.source_kind is ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE
+    assert single_row.source_kind.is_official_aeat
+    assert discovered_row.source_kind is single_row.source_kind
+
+    assert discovered_row.observation == single_row.observation
+    assert discovered_row.stamped_revision_id == single_row.stamped_revision_id
+    assert discovered_row.source_metadata == single_row.source_metadata
+    assert discovered_row.member_nif == single_row.member_nif
+    assert discovered_row.captured_at == single_row.captured_at == observation.presented_at
+    assert discovered_row == single_row
+
+
+def test_no_discovery_signal_token_reaches_the_observation_provenance(tmp_path: Path) -> None:
+    """The persisted provenance names no discovery signal, so it cannot depend on one.
+
+    The parity assertion above compares two runs. This one closes the other side:
+    even if both paths agreed, a signal token leaking into ``source_metadata``
+    would make the stored provenance vary with WHICH signal nominated the pair,
+    which is precisely the distinction the domain does not have.
+    """
+    from ....core import FiledHistoryDiscoverySignal
+
+    observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
+    with _secure_backend(tmp_path):
+        repository = CalculationObservationRepository()
+        finalize_filed_capture((observation,), policy=FiledCaptureFailurePolicy.BEST_EFFORT)
+        row = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+
+    assert row is not None
+    stored = " ".join((*row.source_metadata.keys(), *row.source_metadata.values())).casefold()
+    for signal in FiledHistoryDiscoverySignal:
+        assert signal.value not in stored
+
+
+def test_the_official_source_kind_set_gains_no_discovery_specific_member() -> None:
+    """No sixth kind was introduced, and the official set is still exactly three.
+
+    Gated as membership of the official set rather than as a total count of the
+    enum, so adding a genuinely unrelated non-official kind does not force this
+    test to be edited -- while adding a discovery-specific OFFICIAL kind, which
+    is the decision this Step settled, fails here.
+    """
+    official = {kind for kind in ObservationSourceKind if kind.is_official_aeat}
+    assert official == {
+        ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        ObservationSourceKind.AEAT_SEDE_LIVE_CAPTURE,
+        ObservationSourceKind.AEAT_CSV_REGISTER,
+    }
+    assert not any("discover" in kind.value or "history" in kind.value for kind in ObservationSourceKind)

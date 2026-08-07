@@ -68,7 +68,7 @@ from ...application.ledger import (
     closure_findings,
     evaluate_anchor,
 )
-from ...core import FieldGroundingOutcome, FieldOrigin
+from ...core import LOCAL_TRANSPORT_LABEL, FieldGroundingOutcome, FieldOrigin
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from .. import LLMClient, LLMRequest
@@ -129,7 +129,7 @@ def _transcription() -> DocumentTranscription:
         text="\n".join(page for page in pages if page),
         page_count=len(pages),
         source_content_sha256=sha256(data).hexdigest(),
-        transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
+        transcriber=TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
     )
 
 

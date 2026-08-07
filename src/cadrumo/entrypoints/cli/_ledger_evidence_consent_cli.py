@@ -25,6 +25,9 @@ import typer
 
 from ...application.ledger import (
     ConsentedDispatch,
+    DocumentTranscription,
+    InvoiceDraft,
+    OnHostReader,
     rederive_artefact_on_host,
     survey_cloud_consent,
 )
@@ -177,18 +180,24 @@ def _register_consent_rederive_command() -> None:
         )
 
 
-def _on_host_reader() -> object:
+def _on_host_reader() -> OnHostReader:
     """Resolve the on-host reader, deferred to keep the gated extra optional.
 
     Imported at call time rather than at module load so this CLI module stays
     importable on an install without the inference extra: the verb refuses with
     the extra's own instructive message, which is better than the whole ledger
     CLI failing to load.
+
+    Returns the PROTOCOL rather than ``object``. The weaker annotation is what
+    let this closure keep calling a signature that no longer existed: with the
+    return typed as ``object`` the checker could not see through to the call,
+    and this module carries no tests, so a re-derivation would have raised
+    ``TypeError`` in an operator's hands.
     """
     from ...llm import TextInvoiceFieldExtractor
 
-    def _read(transcribed_text: str, /) -> tuple[object, str]:
+    def _read(transcription: DocumentTranscription, /) -> tuple[InvoiceDraft, str]:
         extractor = TextInvoiceFieldExtractor()
-        return extractor.extract(evidence_text=transcribed_text), extractor.decided_by
+        return extractor.extract(transcription=transcription), extractor.decided_by
 
     return _read

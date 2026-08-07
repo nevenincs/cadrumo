@@ -1959,12 +1959,22 @@ cli:
             volt; most {current}. A korábbi olvasás felülírásra került, de nem törlődött.
           transcriber_help: Az újrafelhasználandó átirat gyorsítótárkulcsa.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
+        extract_acknowledge_off_host_help: Megerősítés arról, hogy a dokumentum ennél
+          az egy beolvasásnál elhagyja a gépet.
+        extract_acknowledge_without_provider: Az --acknowledge-off-host olyan továbbítást
+          erősít meg, amely nem történne meg. Adja meg az --off-host-provider kapcsolót
+          is, vagy hagyja el a megerősítést.
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
           adatokat ki kell nyerni (a --evidence-id alternatívája).
         extract_evidence_id_help: A beszerzési számla bizonylat azonosítója, amelyből
           az adatokat ki kell nyerni.
         extract_help: A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető
           piszkozatba.
+        extract_off_host_provider_help: A dokumentum elküldése távoli modellnek a
+          helyi beolvasás helyett.
+        extract_off_host_provider_is_local: Az --off-host-provider local az alapértelmezés,
+          és semmit nem küld el a gépről. Hagyja el a kapcsolót, vagy adjon meg távoli
+          szolgáltatót.
         extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy
           --attachment-id.'
         extract_review_hint_message: Ez egy hozzávetőleges piszkozat; minden mezőt
@@ -2202,13 +2212,23 @@ cli:
         casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem
           összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett
           bevallások minden számszerű adata a szokásos módon bekerült.'
+        discover_help: Megjeleníti, mely modelo- és ejercicio-párokat járná be egy
+          előzményletöltés.
+        discover_no_profile_denominator: 'Ez a jelentés nem tartalmaz adózóspecifikus
+          nevezőt: hiányzik a profil vagy annak tevékenységkezdő dátuma, ezért a párok
+          száma nem méri a lefedettséget. Egészítse ki a profilt, és futtassa újra,
+          mielőtt teljes előzményként értelmezi ezt az eredményt.'
+        discover_register_scope_caveat: 'A nyilvántartás választéklistája azt mutatja,
+          mit ajánl az AEAT, nem pedig e NIF megerősített benyújtási előzményeit.
+          Nincs megerősítve, hogy a lista a hitelesített NIF-re szűkül, ezért csak
+          szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
+          be.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
         pull_sources_help: Letölti egy cél-nyilatkozat függőségeihez szükséges benyújtott
           megfigyeléseket.
-        discover_help: 'Megjeleníti, mely modelo- és ejercicio-párokat járná be egy előzményletöltés.'
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:
