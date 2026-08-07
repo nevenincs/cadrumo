@@ -510,6 +510,46 @@ def test_a_postal_code_alone_never_establishes_a_spanish_territory() -> None:
     assert all("no country code" in m.reason for m in assembly.missing)
 
 
+@pytest.mark.parametrize(
+    ("postal_code", "city"),
+    [("75001", "Paris"), ("10115", "Berlin"), ("00170", "Rome"), ("51001", "Reims")],
+)
+def test_a_foreign_postal_code_never_resolves_to_a_spanish_territory(postal_code: str, city: str) -> None:
+    """The five-digit shape discriminates NOTHING, so only the country gate does.
+
+    Spain, France, Germany and Italy all use five-digit postal codes, and the
+    Spanish resolver is named for its precondition rather than checking it:
+    measured directly, ``75001`` yields the peninsula and ``51001`` yields Ceuta
+    and Melilla. So a consumer that reaches the postal half without having
+    established Spain places a Paris party on the peninsula and a Reims party in
+    Ceuta -- on exactly the countries most likely to appear on an
+    intra-community invoice, where a wrong domestic placement silently drops the
+    reverse charge.
+
+    The composition is the trap: the country half and the postal half are each
+    fail-closed, and they compose fail-OPEN. The country resolver returns
+    nothing for a Spanish code BY DESIGN and also for an absent or malformed
+    one, so the obvious "country first, else postal" fallback treats a French
+    party whose country was unreadable exactly like a Spanish one. Gating on the
+    country evidence POSITIVELY naming Spain is what closes it, which is why
+    telling those three outcomes apart is load-bearing rather than cosmetic.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code=None,
+        issuer_postal_code=postal_code,
+        customer_country_code="FR",
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled, f"a {city} postal code was accepted as Spanish establishment evidence"
+    gap = next(m for m in assembly.missing if m.field == "issuer_residency")
+    assert "no country code" in gap.reason
+
+
 def test_a_malformed_country_code_is_not_reported_as_naming_spain() -> None:
     """The collapsed-outcome defect: three different situations wore one answer.
 
