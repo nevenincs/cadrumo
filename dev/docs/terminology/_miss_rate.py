@@ -42,7 +42,7 @@ __all__ = [
 # held-out queries miss the top-five shipped results. The gate default IS
 # that accepted number; never loosen it ad hoc.
 DEFAULT_RUNG2_MISS_RATE_THRESHOLD = 0.10
-#: ADR D3 counts a hit only within the top five shipped results.
+#: A hit counts only within the top five shipped results.
 TOP_RESULTS_BOUND = 5
 _UTF_8: Final[str] = "utf-8"
 
