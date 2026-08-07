@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from datetime import date
+from html import unescape
 from io import StringIO
 from pathlib import Path
 
@@ -17,6 +19,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
+_QUOTED_RE = re.compile(r'<blockquote lang="es">(?P<body>.*?)</blockquote>', re.DOTALL)
+
+
 def _system_messages(rst: str) -> tuple[str, ...]:
     """Parse generated RST and return docutils diagnostics from its tree."""
     warning_stream = StringIO()
@@ -25,6 +30,26 @@ def _system_messages(rst: str) -> tuple[str, ...]:
         settings_overrides={"report_level": 1, "warning_stream": warning_stream},
     )
     return tuple(node.astext() for node in doctree.findall(nodes.system_message))
+
+
+def _quoted_extracts(rst: str) -> list[str]:
+    """The official-wording paragraphs the page emits, unescaped back to text.
+
+    Read out of the emitted HTML because that is what reaches the reader. The
+    surrounding ``lang="es"`` is required by the pattern, so a block that lost
+    its language marking yields nothing and every extract assertion fails.
+    """
+    return [
+        unescape(paragraph)
+        for match in _QUOTED_RE.finditer(rst)
+        for paragraph in re.findall(r"<p>(.*?)</p>", match.group("body"), re.DOTALL)
+    ]
+
+
+def _headings(rst: str) -> list[str]:
+    """The provision headings on a page, read from their RST underlines."""
+    lines = rst.splitlines()
+    return [line for index, line in enumerate(lines) if index + 1 < len(lines) and set(lines[index + 1]) == {"-"}]
 
 
 def test_required_text_trailing_whitespace_is_removed_only_from_rst_projection() -> None:
@@ -41,14 +66,7 @@ def test_required_text_trailing_whitespace_is_removed_only_from_rst_projection()
     page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
 
     assert record.required_text == ("first authoritative phrase ", "second authoritative phrase")
-    doctree = publish_doctree(page.rst, settings_overrides={"report_level": 5})
-    quoted = [
-        paragraph.astext()
-        for quote in doctree.findall(nodes.block_quote)
-        for paragraph in quote.findall(nodes.paragraph)
-    ]
-
-    assert quoted == ["first authoritative phrase", "second authoritative phrase"]
+    assert _quoted_extracts(page.rst) == ["first authoritative phrase", "second authoritative phrase"]
     assert _system_messages(page.rst) == ()
 
 
@@ -71,14 +89,8 @@ def test_each_authored_extract_renders_as_its_own_block() -> None:
     )
 
     page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
-    doctree = publish_doctree(page.rst, settings_overrides={"report_level": 5})
-    quoted = [
-        paragraph.astext()
-        for quote in doctree.findall(nodes.block_quote)
-        for paragraph in quote.findall(nodes.paragraph)
-    ]
 
-    assert quoted == ["primera frase autoritativa", "segunda frase autoritativa"]
+    assert _quoted_extracts(page.rst) == ["primera frase autoritativa", "segunda frase autoritativa"]
 
 
 def test_an_extract_opening_with_a_subparagraph_marker_is_not_reparsed() -> None:
@@ -103,13 +115,40 @@ def test_an_extract_opening_with_a_subparagraph_marker_is_not_reparsed() -> None
     doctree = publish_doctree(page.rst, settings_overrides={"report_level": 5})
 
     assert not list(doctree.findall(nodes.enumerated_list))
-    quoted = [
-        paragraph.astext()
-        for quote in doctree.findall(nodes.block_quote)
-        for paragraph in quote.findall(nodes.paragraph)
-    ]
-    assert quoted == ["b) las facturas expedidas por el empresario"]
+    assert _quoted_extracts(page.rst) == ["b) las facturas expedidas por el empresario"]
     assert _system_messages(page.rst) == ()
+
+
+def test_official_wording_is_marked_spanish_and_the_note_is_not_the_summary() -> None:
+    """The Spanish boundary is explicit, and the unlabelled note does not lead.
+
+    Two rules meet on this entry. The official wording is Spanish that this
+    layer may not translate, so it is marked ``lang="es"`` rather than left for
+    the reader to infer. The authored ``notes`` field has no declared language
+    at all -- it is Spanish on most rows and English on others -- so it may not
+    occupy the summary position where a reader expects the answer; it belongs
+    with the provenance.
+    """
+    record = LegalProvisionRecord(
+        legal_id="ley-37-1992:art-96",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a96",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a96",
+        article="96",
+        notes="una nota del catalogo sin idioma declarado",
+        required_text=("no seran deducibles las cuotas soportadas",),
+    )
+
+    page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
+
+    assert _quoted_extracts(page.rst) == ["no seran deducibles las cuotas soportadas"]
+
+    note_at = page.rst.index("una nota del catalogo sin idioma declarado")
+    wording_at = page.rst.index("no seran deducibles las cuotas soportadas")
+    record_panel_at = page.rst.index("cadrumo-legal-record")
+    assert note_at > wording_at, "the undeclared-language note is leading the entry"
+    assert note_at > record_panel_at, "the note is outside the provenance panel"
 
 
 def test_provision_heading_leads_with_the_citation_not_the_catalogue_id() -> None:
@@ -130,10 +169,8 @@ def test_provision_heading_leads_with_the_citation_not_the_catalogue_id() -> Non
     )
 
     page = render_legal_reference(_REPO_ROOT, records=(record,)).pages[0]
-    lines = page.rst.splitlines()
-    headings = [line for index, line in enumerate(lines) if index + 1 < len(lines) and set(lines[index + 1]) == {"-"}]
 
-    assert headings == ["Ley 37/1992, Article 92"]
+    assert _headings(page.rst) == ["Ley 37/1992, art. 92"]
     assert page.instrument == "Ley 37/1992"
     assert "``ley-37-1992:art-92``" in page.rst
 
@@ -158,11 +195,10 @@ def test_same_article_versions_get_distinct_headings_by_in_force_date() -> None:
     )
 
     page = render_legal_reference(_REPO_ROOT, records=records).pages[0]
-    lines = page.rst.splitlines()
-    headings = [line for index, line in enumerate(lines) if index + 1 < len(lines) and set(lines[index + 1]) == {"-"}]
+    headings = _headings(page.rst)
 
     assert len(headings) == len(set(headings)) == 2
-    assert all(heading.startswith("Ley 35/2006, Article 52") for heading in headings)
+    assert all(heading.startswith("Ley 35/2006, art. 52") for heading in headings)
     assert {"2015-01-01" in heading for heading in headings} == {True, False}
     assert {"2021-01-01" in heading for heading in headings} == {True, False}
     assert _system_messages(page.rst) == ()

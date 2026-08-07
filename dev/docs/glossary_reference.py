@@ -63,6 +63,11 @@ _UTF_8 = "utf-8"
 #: ``docs/glossary.md`` stays in place until the cutover step swaps to this.
 _GENERATED_RELPATH = Path("_generated") / "glossary.rst"
 
+#: Body text for a concept with no definition authored in the build language.
+#: It states the absence rather than borrowing another language's prose, which
+#: would put text on the page that the reader of this build cannot read.
+_UNDEFINED_IN_BUILD_LANGUAGE = "No definition is available in this language yet."
+
 
 @dataclass(frozen=True)
 class LegalGrounding:
@@ -183,17 +188,22 @@ def _term_lines(concept: ConceptRecord) -> list[str]:
 
 
 def _body_text(concept: ConceptRecord, language: OutputLanguage) -> str:
-    """The entry body in the language this docs root is built for.
+    """The entry body in the build language, or empty when none is authored.
 
     Both fields are curated, taxpayer-general prose. The full ``definition`` is
-    preferred when authored; the required ``short_description`` is the
-    guaranteed fallback (every approved concept has one). When the build
-    language carries no authored section the body falls back to Spanish, the
-    authoritative source language for an AEAT concept, and then to English:
-    one language is always rendered, never several side by side.
+    preferred when authored; ``short_description`` is the shorter authored
+    form of the same language.
+
+    There is deliberately NO cross-language fallback. Only the four locale
+    catalogues and these curated per-language sections are sanctioned sources
+    of localized text, and prose the reader cannot read is worse than no prose:
+    it looks like an answer, is silently in another language, and cannot be
+    translated by this layer without authoring meaning. A concept with nothing
+    authored in the build language renders its compiled structure instead (see
+    :func:`_render_entry`).
     """
-    section = _section_for(concept, language) or _primary_section(concept) or _section_for(concept, OutputLanguage.EN)
-    if section is None:  # pragma: no cover - approved concepts always have a section
+    section = _section_for(concept, language)
+    if section is None:
         return ""
     return section.definition or section.short_description
 
@@ -256,9 +266,17 @@ def _render_entry(
         term_lines.append(term)
     body_indent = "      "
     lines = [f"   {term}" for term in term_lines]
-    block = [*lines, f"{body_indent}{_body_text(concept, language)}"]
+    body = _body_text(concept, language)
+    # A Sphinx glossary entry must carry a body, so an unauthored definition
+    # cannot simply be omitted. It says so plainly and then leans on the
+    # compiled record, which is language-safe: the domain, the legal grounding
+    # and the concept relations are structure, not prose, and stay true in
+    # every build language.
+    block = [*lines, f"{body_indent}{body}" if body else f"{body_indent}{_UNDEFINED_IN_BUILD_LANGUAGE}"]
     legal_count = 0
     grounding: list[str] = []
+    if not body:
+        grounding.append(f"{body_indent}* Domain: {concept.domain.value}")
     for ref in concept.legal_refs:
         resolved = permalinks.get(ref)
         if resolved:

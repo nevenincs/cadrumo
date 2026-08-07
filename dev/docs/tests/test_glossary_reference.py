@@ -227,6 +227,52 @@ def test_entry_bodies_render_the_build_language_and_no_other() -> None:
     assert spanish != english, "the es and en renders are identical; the build language is being ignored"
 
 
+def test_a_concept_without_build_language_prose_never_borrows_another_language() -> None:
+    """An unauthored definition degrades to structure, never to other-language prose.
+
+    The rule with teeth: only the curated per-language sections may supply
+    prose, so a concept with nothing authored in the build language must say so
+    and fall back to compiled structure, never to the Spanish or English text.
+    Exercised by rendering the real handbook in a language whose sections are
+    stripped from the records, which is the shape partial coverage takes.
+    """
+    from cadrumo.core import ConceptLifecycle
+    from cadrumo.core.external_constants import OutputLanguage
+
+    handbook = _load_handbook()
+    approved = [c for c in handbook.concepts if c.lifecycle is ConceptLifecycle.APPROVED]
+    assert approved, "no approved concepts to exercise"
+
+    # Drop the Catalan sections so every approved concept lacks build-language
+    # prose, without touching the Spanish/English text that must not leak.
+    stripped = handbook.model_copy(
+        update={
+            "concepts": tuple(
+                concept.model_copy(
+                    update={"languages": tuple(s for s in concept.languages if s.language is not OutputLanguage.CA)},
+                )
+                for concept in handbook.concepts
+            ),
+        },
+    )
+    rst, _ = render_glossary(_REPO_ROOT, stripped, OutputLanguage.CA)
+
+    other_language_prose = {
+        text
+        for concept in approved
+        for section in concept.languages
+        for text in (section.definition, section.short_description)
+        if text
+    }
+    leaked = sorted(text for text in other_language_prose if text in rst)
+    assert not leaked, f"other-language prose leaked onto a ca build: {leaked[:2]}"
+
+    # It degrades visibly rather than rendering an empty shell, and the
+    # language-safe compiled structure still carries the entry.
+    assert "No definition is available in this language yet." in rst
+    assert "Legal basis:" in rst
+
+
 def test_broader_related_relations_render_as_term_cross_references() -> None:
     """Concept relations render as ``:term:`` cross-references to approved targets.
 

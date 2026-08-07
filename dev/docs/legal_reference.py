@@ -19,6 +19,7 @@ import tomllib
 import unicodedata
 from dataclasses import dataclass
 from datetime import date
+from html import escape
 from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlsplit
@@ -100,6 +101,17 @@ _RENDERED_TEXT_FIELDS: Final[tuple[str, ...]] = (
 _GENERATED_INDEX_SLUG: Final[str] = "index"
 _UNSAFE_LINK_CHARS: Final[frozenset[str]] = frozenset({"<", ">", '"', "'", "`", "\\"})
 
+#: The language of this surface's page chrome.  Every generated page under
+#: ``docs/_generated`` is an English build product: the tree is excluded from
+#: the documentation gettext surface, and the four locale catalogues cannot
+#: carry these strings because the catalogue scaffold scans only
+#: ``src/cadrumo`` and prunes any key it does not find there.  The constant is
+#: declared so the chrome is marked for what it is instead of silently passing
+#: as localized, and so a later localization has one place to attach.
+_CHROME_LANG: Final[str] = "en"
+
+_OFFICIAL_WORDING_LABEL: Final[str] = "Official text, in extract (Spanish)"
+
 #: The authored id stem shape a citation can be derived from: an instrument
 #: prefix, the instrument number, and the four-digit year.
 _STEM_PATTERN: Final[re.Pattern[str]] = re.compile(r"^(?P<prefix>[a-z][a-z-]*[a-z])-(?P<number>\d+)-(?P<year>\d{4})$")
@@ -169,16 +181,22 @@ def legal_citation(
     appears.  A reader arriving on a fragment anchor sees this line first and
     nothing above it, so it names the instrument as well as the provision
     within it.
+
+    The citation is Spanish in every build language, and deliberately so.  It
+    is the official designation of a Spanish legal text, not page chrome: this
+    layer may not translate it, and an English word spliced into it ("Article
+    92") would render a citation that no Spanish source uses.  ``art.`` is the
+    abbreviation the catalogue's own authored notes use.  ``section`` is a free
+    authored Spanish label (``Anexo I``, ``Modelo 190``), never an ordinal, so
+    it is appended verbatim rather than introduced by a word of any language.
     """
     instrument = legal_instrument_designation(legal_id, kind)
-    parts: list[str] = []
+    parts = [instrument]
     if article is not None:
-        parts.append(f"Article {article}")
+        parts.append(f"art. {article}")
     if section is not None:
-        parts.append(f"section {section}" if parts else f"Section {section}")
-    if not parts:
-        return instrument
-    return f"{instrument}, {', '.join(parts)}"
+        parts.append(section)
+    return ", ".join(parts)
 
 
 def legal_provision_designation(record: LegalProvisionRecord) -> str:
@@ -618,6 +636,33 @@ def _in_force_sentence(record: LegalProvisionRecord) -> str | None:
     return None
 
 
+def _official_wording_block(required_text: tuple[str, ...]) -> list[str]:
+    """Render the authored extracts of the official text, marked as Spanish.
+
+    Emitted as raw HTML rather than RST for two reasons that both protect the
+    text.  It carries ``lang="es"``, which RST offers no way to set and which
+    is what tells a browser, a screen reader and a translation tool that this
+    run is Spanish inside an otherwise non-Spanish page -- the language
+    boundary made explicit rather than left for the reader to infer.  And HTML
+    escaping is total, so wording that opens with a subparagraph marker
+    ("b) ...") cannot be reparsed into a list item the way RST would; the
+    official text reaches the page as authored or not at all.
+
+    Each phrase is its own paragraph.  Run together they would read as one
+    continuous piece of statutory wording that the provision does not contain.
+    """
+    quoted = "".join(f"<p>{escape(item.rstrip())}</p>" for item in required_text)
+    return [
+        ".. raw:: html",
+        "",
+        '   <div class="cadrumo-legal-wording">',
+        f'     <p class="cadrumo-legal-wording-label" lang="{_CHROME_LANG}">{_OFFICIAL_WORDING_LABEL}</p>',
+        f'     <blockquote lang="es">{quoted}</blockquote>',
+        "   </div>",
+        "",
+    ]
+
+
 def _catalogue_record_block(record: LegalProvisionRecord) -> list[str]:
     """The demoted provenance panel: the identifiers and the review trail.
 
@@ -625,6 +670,14 @@ def _catalogue_record_block(record: LegalProvisionRecord) -> list[str]:
     which must stay visible for anyone auditing where the figure came from: the
     catalogue id, the instrument kind, the bundled-corpus locator, and the
     review stamp.  It renders after the content and is styled as subordinate.
+
+    The authored ``notes`` field lives here rather than leading the entry.  It
+    is a single free-text field with no declared language -- measured across
+    the catalogue it is roughly three quarters Spanish and one quarter English
+    -- so it cannot be marked honestly for the reader, and presenting it as the
+    entry's summary would put unlabelled other-language prose in the position
+    where a reader expects the answer.  As provenance beside the review stamp
+    it is what it actually is: the cataloguer's own note.
     """
     fields = [
         f":Catalogue id: {_rst_literal(record.legal_id)}",
@@ -644,6 +697,8 @@ def _catalogue_record_block(record: LegalProvisionRecord) -> list[str]:
         fields.append(f":Reviewed at: {record.reviewed_at.isoformat()}")
     if record.reviewed_by is not None:
         fields.append(f":Reviewed by: {_rst_escape(record.reviewed_by)}")
+    if record.notes is not None:
+        fields.append(f":Cataloguer's note: {_rst_escape(record.notes)}")
     return [".. container:: cadrumo-legal-record", "", "   Catalogue record", "", *(f"   {line}" for line in fields)]
 
 
@@ -671,8 +726,11 @@ def _headings_by_id(records: tuple[LegalProvisionRecord, ...], instrument: str) 
         if len(group) == 1 and citation != instrument:
             headings[group[0].legal_id] = citation
             continue
+        # The bare date is language-neutral: it disambiguates the consolidated
+        # versions without splicing a chrome word into a Spanish citation. The
+        # in-force line under the heading states what the date means.
         dated = [
-            f"{citation} (from {record.effective_from.isoformat()})" if record.effective_from is not None else citation
+            f"{citation} ({record.effective_from.isoformat()})" if record.effective_from is not None else citation
             for record in group
         ]
         distinct = len(set(dated)) == len(dated) and instrument not in dated
@@ -700,26 +758,8 @@ def _render_entry(record: LegalProvisionRecord, heading: str) -> tuple[str, str 
     if in_force is not None:
         lines.extend([".. container:: cadrumo-legal-force", "", f"   {in_force}", ""])
 
-    # The authored note is the only human summary the catalogue holds. It is
-    # rendered verbatim: restating a provision's meaning is a legal claim this
-    # presentation layer must never author.
-    if record.notes is not None:
-        lines.extend([".. container:: cadrumo-legal-summary", "", f"   {_rst_escape(record.notes)}", ""])
-
     if record.required_text:
-        # Each phrase is a separate extract from the official text. They are
-        # rendered as separate blocks: run together into one paragraph they
-        # would read as continuous statutory wording that no provision says.
-        # The leading backslash is an RST escape that renders as nothing and
-        # stops the line being reparsed as structure. Legal extracts routinely
-        # open with a subparagraph marker ("b) ...") that docutils would
-        # otherwise turn into an enumerated list item, restructuring the
-        # official wording into something the provision does not say.
-        extracts: list[str] = []
-        for item in record.required_text:
-            extracts.extend([f"      \\{_rst_escape(item.rstrip())}", ""])
-        label = "Official wording, in extract:" if len(record.required_text) == 1 else "Official wording, in extracts:"
-        lines.extend([".. container:: cadrumo-legal-wording", "", f"   {label}", "", *extracts])
+        lines.extend(_official_wording_block(record.required_text))
 
     lines.extend(
         [
