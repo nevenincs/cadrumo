@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:673c5df55ab2fbeda326229fdaaa2c80de634041a59ee4a3e84929db5cabe140'
+body_hash: 'sha256:4033c1f3af3011a44fe31c90cfc130feec2653e6eb6256d940df93f7bbe746f9'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -40,6 +40,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P05-S22]]'
   - '[[2026-08-06-invoice-canonical-structure-P05-S23]]'
   - '[[2026-08-06-invoice-canonical-structure-P05-S24]]'
+  - '[[2026-08-06-invoice-canonical-structure-P05-S25]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -96,6 +97,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P05-S22` - Answer whether an invoice-only bucket can reach a filed M390 through the screen gap, tracing the M390 binding set to its value sources and settling whether both sides of the 390-to-303 reconciliation blocking rule derive from the same ledger, and encode the answer as a test rather than as prose
 - `2026-08-06-invoice-canonical-structure-P05-S23` - Extend the invoice-versus-ledger screen past its ES-only counterparty filter so intracomunitaria, import and export invoices are screened, proving a non-ES invoice diverging from the ledger is now caught where it passes silently today
 - `2026-08-06-invoice-canonical-structure-P05-S24` - Extend the screen past its four-cuota screened binding set to cover recargo de equivalencia, proving a recargo figure diverging from the ledger is caught
+- `2026-08-06-invoice-canonical-structure-P05-S25` - Add an M390-scoped equivalent of the invoice-versus-ledger screen, because the 390-to-303 blocking rule compares two ledger-derived sides and cannot detect consistent under-population, proving a bucket whose invoices exceed its ledger is caught on the annual path
 
 ### plan
 

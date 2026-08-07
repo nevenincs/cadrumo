@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:4116856913602e4528f557cdd8dce3a354b48bd1205b2b53484b8dddb3a690ea'
+body_hash: 'sha256:11dd52eb4d0ac630cb338af16f7bcbacc99febb6a6b017d8ea84281aced682a8'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -104,7 +104,7 @@ The source sweep ranked this the highest-consequence finding it carried and aske
 - [x] `P05.S22` - Answer whether an invoice-only bucket can reach a filed M390 through the screen gap, tracing the M390 binding set to its value sources and settling whether both sides of the 390-to-303 reconciliation blocking rule derive from the same ledger, and encode the answer as a test rather than as prose; `src/cadrumo/application/aggregation/tests/test_modelo_bindings.py`.
 - [x] `P05.S23` - Extend the invoice-versus-ledger screen past its ES-only counterparty filter so intracomunitaria, import and export invoices are screened, proving a non-ES invoice diverging from the ledger is now caught where it passes silently today; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 - [x] `P05.S24` - Extend the screen past its four-cuota screened binding set to cover recargo de equivalencia, proving a recargo figure diverging from the ledger is caught; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
-- [ ] `P05.S25` - Add an M390-scoped equivalent of the invoice-versus-ledger screen, because the 390-to-303 blocking rule compares two ledger-derived sides and cannot detect consistent under-population, proving a bucket whose invoices exceed its ledger is caught on the annual path; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [x] `P05.S25` - Add an M390-scoped equivalent of the invoice-versus-ledger screen, because the 390-to-303 blocking rule compares two ledger-derived sides and cannot detect consistent under-population, proving a bucket whose invoices exceed its ledger is caught on the annual path; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 
 ## Parallelization
 
