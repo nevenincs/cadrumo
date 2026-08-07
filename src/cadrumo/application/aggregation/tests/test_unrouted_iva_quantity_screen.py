@@ -33,7 +33,13 @@ from ....domain.calculations.registry import (
     unrouted_ledger_iva_quantities,
     unsupported_ledger_iva_observations,
 )
-from ....domain.iva import IvaCategory
+from ....domain.iva import (
+    InvoiceKind,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaRateKind,
+    derive_flow_for_classification,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -64,6 +70,35 @@ _M303_REVISION_ID = "2023-y-siguientes"
 @cache
 def _m303_revision() -> ModeloRevision:
     return resources().modelos.get("303").revisions[_M303_REVISION_ID]
+
+
+@cache
+def _revision(modelo_id: str) -> ModeloRevision:
+    """The committed revision governing each modelo's IVA ledger bindings."""
+    revisions = resources().modelos.get(modelo_id).revisions
+    return revisions[_M303_REVISION_ID if modelo_id == "303" else "2010-y-siguientes"]
+
+
+def _row(category: IvaCategory) -> IvaLedgerObservation:
+    """One purchase row of ``category``, with the flow direction PRODUCTION derives.
+
+    ``derive_flow_for_classification`` routes every reverse-charge category to
+    ``INVERSION_SUJETO_PASIVO`` regardless of invoice direction. Hand-setting
+    ``SOPORTADO`` screens a shape the projection never emits and manufactures
+    findings from the fixture's own error — which is exactly what an earlier
+    probe of this residue did.
+    """
+    return IvaLedgerObservation(
+        ledger_id=f"residue-{category.value}",
+        transaction_date=date(2024, 6, 1),
+        category=category,
+        rate_kind=IvaRateKind.GENERAL,
+        flow_direction=derive_flow_for_classification(category=category, invoice_direction=InvoiceKind.RECEIVED),
+        cash_accounting_treatment=IvaCashAccountingTreatment.NONE,
+        base_amount=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+        recargo_amount=Decimal("0"),
+    )
 
 
 def _sale(
@@ -394,3 +429,79 @@ def test_an_ordinary_domestic_row_stays_silent_on_the_committed_revision() -> No
     """
     sale = _observations(_sale("dom-sale", base="1000.00", iva="210.00"))
     assert unrouted_ledger_iva_quantities(_m303_revision(), sale) == ()
+
+
+@pytest.mark.parametrize("modelo_id", ["303", "390"])
+def test_the_import_and_reverse_charge_base_residue_is_reported_on_both_modelos(modelo_id: str) -> None:
+    """The residue that survives a modelo declaring the fact, pinned on both.
+
+    Modelo 390 declared no ``base_amount_sum`` binding at all until the
+    annual-form campaign added its base boxes. Closing that gap is exactly what
+    would have BLINDED a screen keyed on the fact alone: ``base_amount_sum``
+    became "drawn" for M390, and the import and reverse-charge rows whose base
+    is still reached by nothing would have gone quiet.
+
+    Both modelos are asserted together because the residue is the same three
+    categories on each, and pinning only the modelo that happened to be broken
+    first is how this test would rot the next time a campaign lands.
+    """
+    revision = _revision(modelo_id)
+
+    reported = {
+        category: [entry.fact for entry in unrouted_ledger_iva_quantities(revision, [_row(category)])]
+        for category in (
+            IvaCategory.IMPORT_THIRD_COUNTRY,
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        )
+    }
+
+    assert all(facts == ["base_amount_sum"] for facts in reported.values()), reported
+    # The domestic tiers ARE covered on both modelos, so the screen must be
+    # silent there. Without this the test would pass on a screen that reports
+    # every row of every category.
+    assert unrouted_ledger_iva_quantities(revision, [_row(IvaCategory.DOMESTIC_GENERAL)]) == ()
+
+
+def test_the_advisory_names_the_categories_carrying_the_residue(tmp_path: Path) -> None:
+    """The residue must be attributable, not merely reported.
+
+    A fact can be drawn for some categories and undrawn for others: Modelo 390 and
+    Modelo 303 both draw ``base_amount_sum`` for the domestic tiers while import
+    and the two reverse-charge categories carry it undrawn. An advisory naming only
+    the fact tells an operator base is missing without saying where, so a partially
+    closed gap reads as wholly open -- and, once the domestic half lands, the same
+    message would read as wholly closed to anyone diffing it.
+
+    Naming the categories is what lets a later reader tell a genuine remainder from
+    a regression. Asserted against the COMMITTED Modelo 303 revision with no fact
+    stripped, so it is the live residue rather than a manufactured one.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        repository.save(TransactionCatalogue.from_transactions((_reverse_charge_purchase(),)))
+        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=_Q1_2025,
+                revision=_m303_revision(),
+            ),
+        )
+
+    advisories = [
+        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "unrouted_declarable_quantity"
+    ]
+    assert len(advisories) == 1, "the live reverse-charge base residue must surface exactly one advisory"
+    message = advisories[0].message
+    assert "base_amount_sum" in message
+    assert "intra_community_acquisition_reverse_charge" in message, (
+        "the advisory must NAME the category carrying the undrawn quantity; without it a reader "
+        "cannot tell which categories remain open from which are genuinely closed"
+    )
+    # Anti-vacuity: the covered domestic tiers must NOT appear. An advisory naming
+    # every category would satisfy the assertion above while telling a reader
+    # nothing, and would falsely implicate categories whose base IS drawn.
+    for covered in ("domestic_general", "domestic_reduced", "domestic_super_reduced"):
+        assert covered not in message, f"{covered} draws base on this revision and must not be blamed"
