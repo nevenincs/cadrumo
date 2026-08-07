@@ -65,6 +65,7 @@ __all__ = [
     "TabularNoticeCode",
     "TabularSourceError",
     "decode_tabular_bytes",
+    "detect_tabular_delimiter",
     "normalize_tabular_bytes",
     "normalize_tabular_text",
 ]
@@ -281,6 +282,42 @@ def _rectangle_score(parsed: list[tuple[int, list[str]]]) -> tuple[int, int]:
     return best_score, best_width
 
 
+def _best_delimiter_parse(
+    text: str,
+    quotechar: str,
+) -> tuple[int, int, str, list[tuple[int, list[str]]]] | None:
+    """Return ``(score, column_count, delimiter, parsed)`` for the winning delimiter.
+
+    ``None`` when no candidate produced a rectangle at all — a single-column
+    file, or one no candidate delimiter splits.
+    """
+    best: tuple[int, int, str, list[tuple[int, list[str]]]] | None = None
+    for delimiter in CANDIDATE_DELIMITERS:
+        parsed = _parse_with(text, delimiter, quotechar)
+        score, width = _rectangle_score(parsed)
+        if score == 0:
+            continue
+        if best is None or score > best[0]:
+            best = (score, width, delimiter, parsed)
+    return best
+
+
+def detect_tabular_delimiter(text: str, *, quotechar: str = '"') -> str | None:
+    """Return the delimiter that splits ``text`` into the most consistent rectangle.
+
+    Scored over the whole file rather than a leading sample window, so a
+    metadata preamble a sample-window sniffer would read as the table cannot
+    decide the delimiter for the data below it.
+
+    Returns:
+        The winning member of :data:`CANDIDATE_DELIMITERS`, or ``None`` when no
+        candidate produced a rectangle. A caller that must parse regardless
+        chooses its own fallback.
+    """
+    best = _best_delimiter_parse(text, quotechar)
+    return None if best is None else best[2]
+
+
 def _numeric_body(cell: str) -> str | None:
     """Return the digits-and-separators body of a printed amount, or ``None``.
 
@@ -419,14 +456,7 @@ def normalize_tabular_text(text: str, *, encoding: str, quotechar: str = '"') ->
             row in it reads as a header.
     """
     notices: list[TabularNotice] = []
-    best: tuple[int, int, str, list[tuple[int, list[str]]]] | None = None
-    for delimiter in CANDIDATE_DELIMITERS:
-        parsed = _parse_with(text, delimiter, quotechar)
-        score, width = _rectangle_score(parsed)
-        if score == 0:
-            continue
-        if best is None or score > best[0]:
-            best = (score, width, delimiter, parsed)
+    best = _best_delimiter_parse(text, quotechar)
     if best is None:
         raise TabularSourceError(
             f"tabular source carries no delimited rectangle under any of {CANDIDATE_DELIMITERS}",

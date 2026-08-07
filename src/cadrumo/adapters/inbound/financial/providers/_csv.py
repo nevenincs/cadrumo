@@ -27,11 +27,14 @@ from typing import Literal, override
 from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.config import load_settings
 from .....core.errors import CoreValidationError, resolve_error_message
-from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
+from .....core.tabular import (
+    TabularSourceError,
+    decode_tabular_bytes,
+    detect_tabular_delimiter,
+)
 from .....domain.transactions import SourceFormat, TransactionDirection
 from ._base import (
     FinancialProvider,
@@ -347,33 +350,24 @@ class CsvProvider(FinancialProvider):
         return rows, source_sha256, encoding, dialect
 
     def _decode_bytes(self, source_bytes: bytes) -> tuple[str, str]:
-        """Decode bytes using the configured preference order."""
-        preferred = load_settings().financial_default_csv_encoding.strip()
-        candidates = (preferred, *CSV_ENCODING_FALLBACK_CHAIN)
-        seen: set[str] = set()
-        for candidate in candidates:
-            normalized = candidate.lower()
-            if normalized in seen:
-                continue
-            seen.add(normalized)
-            try:
-                return source_bytes.decode(candidate), candidate
-            except (LookupError, UnicodeDecodeError) as decode_exc:
-                _logger.debug(
-                    "csv provider: encoding candidate %r rejected (%s); trying next",
-                    candidate,
-                    decode_exc,
-                )
-                continue
-        raise InvalidFinancialSourceError("CSV source could not be decoded as utf-8/cp1252/iso-8859-1")
+        """Decode bytes through the shared tabular codec chain."""
+        try:
+            text, encoding, _ = decode_tabular_bytes(source_bytes)
+        except TabularSourceError as exc:
+            raise InvalidFinancialSourceError(resolve_error_message(exc)) from exc
+        return text, encoding
 
     def _sniff_dialect(self, text: str) -> type[csv.Dialect]:
-        """Detect the CSV delimiter and quoting rules."""
-        sample = "\n".join(line for line in text.splitlines() if line.strip())[:4096]
-        try:
-            return csv.Sniffer().sniff(sample, delimiters=",;\t|")
-        except csv.Error:
+        """Detect the CSV delimiter through the shared whole-file dialect scorer."""
+        delimiter = detect_tabular_delimiter(text)
+        if delimiter is None:
             return csv.excel
+
+        class _DetectedDialect(csv.excel):
+            pass
+
+        _DetectedDialect.delimiter = delimiter
+        return _DetectedDialect
 
     def _locate_header(
         self,
