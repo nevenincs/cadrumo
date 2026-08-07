@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e47c1d5ffd0adacdd4ec5beab55032537ca68c2c40369ccdfd08b5498a7ac870'
+body_hash: 'sha256:8d9321678f97933fcac46058f869b3b42ee0a5c5850f75e1c73443006cb22d14'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-research]]"
 ---
@@ -108,13 +108,40 @@ This record governs the Reg. ordinario block. The four unmodelled régimen block
 inherit the same shape and are expected to follow this decision, but their box
 sets have not been measured.
 
+### Two vocabularies name the same slots, and nothing reconciles them
+
+Modelo 390 addresses its export slots by semantic casilla id (`iva.anual.*`)
+while the AEAT record design addresses them by official box number. The two sets
+do not intersect at all: the bundled 2024 design yields 311 distinct box numbers
+and the layout declares none of them. The correspondence exists only as a
+position — the offset a field occupies inside an export record — and resolving
+it requires also disambiguating which régimen segment the record belongs to,
+because every position in that design appears twice, once under Reg. ordinario
+and once under Recargo de equivalencia.
+
+This is a keying mismatch between two naming systems, not a coverage gap, and it
+has bitten from both directions already. Reading it from the casilla end, the
+absence of a box number was mistaken for the absence of any mapping, which made
+a live mis-declaration look latent. Reading it from the corpus end, a
+number-keyed cross-check of the layout against the official design matches
+nothing on this modelo and would report every one of its 311 boxes as missing.
+
+This record does not solve the mismatch. It narrows it, because every box-layer
+casilla it introduces carries its official box number explicitly rather than
+leaving the correspondence implied by position, extending the partial numeric
+layer that eight Modelo 390 casillas already carry. A consumer that needs the
+full mapping still cannot derive it from the registry alone, and should expect a
+bare-offset match to be ambiguous while looking conclusive.
+
 ## Implementation
 
 Each rate-specific official box gains its own casilla, bound by a selector that
-admits exactly that rate, and carrying the export reference that writes it to
-its position in the record design. These casillas are the box layer: they are
-populated only from evidence that determines the rate, and a row that does not
-determine one never reaches them.
+admits exactly that rate, carrying its official box number, and carrying the
+export reference that writes it to its position in the record design. These
+casillas are the box layer: they are populated only from evidence that
+determines the rate, and a row that does not determine one never reaches them.
+Stating the box number on the casilla is what keeps the mapping readable rather
+than implied, so a later consumer need not re-derive it from offsets.
 
 The existing tier casilla keeps its rate-blind binding and continues to feed the
 devengada total, but loses its export reference. It becomes the total layer,
@@ -188,3 +215,13 @@ case.
 Making the rate mandatory at source remains open, and until it lands the
 refusal at export is the only thing preventing an incomplete breakdown from
 being filed.
+
+A cross-check gate reading the bundled record designs is sequenced behind this
+work. Such a gate would close the export contract's blind spot, where the set of
+representable casillas derives entirely from the layout declaration with nothing
+confirming it against the official record. It is currently blocked on the
+vocabulary mismatch above: keyed by box number it matches nothing on Modelo 390
+and would report all 311 of its boxes as absent. Every box-layer casilla this
+record introduces states its official number, so each one is a slot that gate
+can reconcile. Four tiers is not the whole mapping, and the gate should not be
+built on the assumption that this record completes it.
