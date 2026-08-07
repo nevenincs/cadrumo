@@ -700,17 +700,23 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
     numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
     if numeric is not None:
         scale = int(numeric["scale"])
-        # A text amount is read through the canonical grammar under a cap, which
-        # is what refuses ``1.000`` on a euro-cent row: that text is either one
-        # euro or one thousand and no parser can tell, so it is refused rather
-        # than silently resolved one way. On a row AEAT declares with three
-        # decimals the same text is unambiguous and parses.
+        # A text amount is read through the canonical grammar, which refuses on
+        # two independent grounds and they are easy to confuse.
         #
-        # The cap is never below two, so it stays an ambiguity rule rather than
-        # becoming a precision rule. Capping an integer row at its own scale of
-        # zero would refuse ``1.6``, which is unambiguous input this renderer has
-        # always rounded; only a three-digit fraction can be mistaken for a
-        # thousands group.
+        # The CAP is precision: at most ``scale`` fractional digits, never below
+        # two. Capping an integer row at its own scale of zero would refuse
+        # ``1.6``, unambiguous input this renderer has always rounded.
+        #
+        # The AMBIGUITY guard is separate and the row's scale does not relax it.
+        # ``european_thousands_reading_is_ambiguous`` refuses a token that could
+        # equally be read as a Spanish thousands group -- a lead of one to three
+        # digits with no leading zero, then exactly three fractional digits. The
+        # scale disambiguates the FIELD, never the STRING: an operator writing
+        # one thousand types the same characters whatever the row declares, so
+        # ``1.000`` refuses on a three-decimal row exactly as it does on a
+        # euro-cent one. Tokens carrying their own evidence still parse at any
+        # scale -- ``0.239`` (a lead of zero was never grouped) and ``1234.239``
+        # (a four-digit lead would itself have been grouped).
         #
         # A value that already arrives typed carries no such ambiguity and skips
         # the text grammar entirely.
@@ -723,9 +729,14 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
             raise FilingExportValidationError(
                 f"amount for a {data_type} row could not be read: {value!r}. "
                 f"The accepted form is a dot decimal separator with at most {scale} "
-                "fractional digit(s) and no thousands grouping, e.g. 1234.56; the "
-                "Spanish shape 1.234,56 is refused because it cannot be told from "
-                "a three-decimal figure.",
+                "fractional digit(s) and no thousands grouping, e.g. 1234.56. A value "
+                "is also refused when its shape cannot be told from a Spanish thousands "
+                "group -- a lead of one to three digits with no leading zero, then "
+                "exactly three more, as in 1.000 or 100.000 -- because that text reads "
+                "as both one and one thousand and no parser can choose. This row's "
+                "declared scale does not settle it: the scale says what the field can "
+                "hold, not which reading was meant. Write the amount unambiguously "
+                "(1000 or 1.0) at the source.",
             )
         return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
     text = str(value).strip()

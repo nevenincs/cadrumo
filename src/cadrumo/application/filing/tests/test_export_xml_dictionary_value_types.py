@@ -217,18 +217,47 @@ def test_a_text_amount_that_could_be_a_thousands_group_is_refused() -> None:
         _format_xml_dictionary_value("P102", "1.000")
 
 
-def test_the_cap_is_an_ambiguity_rule_and_not_a_precision_rule() -> None:
-    """A row AEAT declares with three decimals reads ``1.000`` unambiguously.
+def test_the_cap_is_a_precision_rule_and_ambiguity_is_refused_separately() -> None:
+    """Two independent refusals, and the row's scale relaxes only one of them.
 
-    The cap tracks what could be mistaken for a thousands group, not the row's
-    own scale. Capping an integer row at its declared scale of zero would refuse
-    ``1.6`` -- unambiguous input this renderer has always rounded -- so the cap
-    never falls below two while still refusing the three-digit fraction.
+    The CAP is precision and never falls below two: capping an integer row at
+    its declared scale of zero would refuse ``1.6``, unambiguous input this
+    renderer has always rounded.
+
+    The AMBIGUITY guard is separate, and a row's declared scale does NOT relax
+    it. This test previously asserted that ``1.000`` parses on a three-decimal
+    row because such a row "reads it unambiguously". That premise is false: the
+    scale disambiguates the FIELD, never the STRING. An operator writing one
+    thousand types the same eight characters whatever the row declares, so the
+    token stays two-way readable and refuses on ``P083`` exactly as on the
+    euro-cent ``P102``. Resolving it either way would misstate a filed amount by
+    a factor of one thousand.
     """
-    assert _format_xml_dictionary_value("P083", "1.000") == "1.000"
     assert _format_xml_dictionary_value("P060", "1.6") == "2"
-    with pytest.raises(FilingExportValidationError):
-        _format_xml_dictionary_value("P060", "1.000")
+    for data_type in ("P060", "P083", "P102"):
+        with pytest.raises(FilingExportValidationError, match="could not be read"):
+            _format_xml_dictionary_value(data_type, "1.000")
+
+
+def test_the_ambiguity_guard_keys_on_shape_not_on_fraction_count() -> None:
+    """The actual contract, which nothing previously stated.
+
+    A token is refused when it could open a Spanish thousands run: a lead of one
+    to three digits with no leading zero, then exactly three more. Tokens that
+    carry their own evidence parse at the same scale -- a leading zero was never
+    grouped, and a four-digit lead would itself have been grouped.
+
+    Pinned because a pure fraction-digit cap would pass every assertion in the
+    test above while silently refusing ``0.239`` and admitting nothing extra: it
+    is the accepting half that distinguishes an ambiguity rule from a precision
+    rule, and only these cases exercise it.
+    """
+    assert _format_xml_dictionary_value("P083", "0.239") == "0.239"
+    assert _format_xml_dictionary_value("P083", "1234.239") == "1234.239"
+    assert _format_xml_dictionary_value("P083", "1000.000") == "1000.000"
+    for ambiguous in ("1.239", "123.000", "1.000"):
+        with pytest.raises(FilingExportValidationError, match="could not be read"):
+            _format_xml_dictionary_value("P083", ambiguous)
 
 
 def test_an_already_typed_amount_skips_the_text_grammar() -> None:
