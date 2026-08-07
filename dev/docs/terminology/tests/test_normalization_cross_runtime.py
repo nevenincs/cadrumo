@@ -71,10 +71,12 @@ _HARNESS = """
 const fs = require("fs");
 const src = fs.readFileSync(process.argv[2], "utf8");
 const tokenStmt = /RUNG2_TOKEN_PATTERN = new RegExp\\(.*?, "gu"\\);/.exec(src)[0];
-const markStmt = /RUNG2_MARK_PATTERN = new RegExp\\(.*?, "gu"\\);/.exec(src)[0];
-let RUNG2_TOKEN_PATTERN, RUNG2_MARK_PATTERN;
+/* The mark pattern exists only while the contract folds accents. Extract it
+ * when present so this harness reads whichever policy the reader ships. */
+const markMatch = /RUNG2_MARK_PATTERN = new RegExp\\(.*?, "gu"\\);/.exec(src);
+let RUNG2_TOKEN_PATTERN, RUNG2_MARK_PATTERN = null;
 eval(tokenStmt);
-eval(markStmt);
+if (markMatch) eval(markMatch[0]);
 const body = /function rung2Normalize\\(value\\) \\{([\\s\\S]*?)\\n  \\}/.exec(src)[1];
 const fn = new Function("value", "RUNG2_TOKEN_PATTERN", "RUNG2_MARK_PATTERN", body);
 const cases = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
@@ -141,9 +143,9 @@ def test_accent_sensitivity_is_the_same_on_both_sides(tmp_path: Path) -> None:
 
     assert browser["arányosítás"] == compiler["arányosítás"]
     assert browser["aranyositas"] == compiler["aranyositas"]
-    assert (browser["arányosítás"] == browser["aranyositas"]) == (
-        compiler["arányosítás"] == compiler["aranyositas"]
-    ), "the two runtimes disagree about whether an accented query matches its unaccented spelling"
+    assert (browser["arányosítás"] == browser["aranyositas"]) == (compiler["arányosítás"] == compiler["aranyositas"]), (
+        "the two runtimes disagree about whether an accented query matches its unaccented spelling"
+    )
 
 
 def test_the_reader_refuses_a_bundle_normalized_under_another_version(tmp_path: Path) -> None:
