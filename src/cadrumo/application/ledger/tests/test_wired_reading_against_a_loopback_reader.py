@@ -35,7 +35,7 @@ from typing import ClassVar, override
 import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome
-from ....core.config import override_settings
+from ....core.config import load_settings, override_settings
 from .._evidence_draft import _read_transcription_semantically
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
@@ -134,7 +134,13 @@ def _control_evidence() -> EvidenceInput:
 def _read_through_the_wired_path(chat_url: str):
     evidence = _control_evidence()
     with override_settings(cadrumo_llm_ollama_chat_url=chat_url):
-        return _read_transcription_semantically(evidence, transcribe_text_layer(evidence))
+        # ``settings`` is required rather than resolved internally, so the
+        # override above reaches the read instead of being silently bypassed.
+        return _read_transcription_semantically(
+            evidence,
+            transcribe_text_layer(evidence),
+            settings=load_settings(),
+        )
 
 
 def test_the_read_actually_reaches_the_loopback_endpoint(
