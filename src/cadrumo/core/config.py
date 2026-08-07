@@ -56,6 +56,7 @@ from ._config_support import (
     StorageRouteClassification,
     StorageRouteKind,  # noqa: F401 - public re-export from cadrumo.core.config
     TuiAppearance,
+    assert_canonical_protected_resource,  # noqa: F401 - public certificate route authority
     coerce_output_language_setting,
     unwrap_optional_secret,  # noqa: F401 - public re-export from cadrumo.core.config
 )
