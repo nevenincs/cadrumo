@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:df3326887cb340eb626a97063eb63862a680000fe25d02086649a764290bcca1'
+body_hash: 'sha256:540104787eee2b7e2c5d881572d3112f4846c7a3416048a614ce93e17b193448'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -312,6 +312,58 @@ an intra-community supply cannot record it. Left entirely alone, as re-grounding
 a rate table is a legal exercise owned by whoever performed it, and the fix is a
 decision about whether the zero SLOT and the temporary zero RATE are one record
 or two.
+
+### invoice-and-bank-paths-classify-differently | critical | Not fixed: two feeds of one binding source disagree, and the zero-cuota half is dropped
+
+Handed over by the invoice-IVA-category work and verified here at HEAD rather
+than taken on report. The finding is real, and the fix it appears to call for is
+not the fix.
+
+The invoice-to-Modelo-303 loop skips every line whose cuota is not positive, so
+an exempt, zero-rated or export line never becomes an observation. Axis-A
+declares all six of those categories base REQUIRED, cuota ZERO_BY_LAW,
+applicability ARISES, and the casilla 59 and 60 bindings exist and are live. So
+there is a real consumer waiting for a base that never arrives.
+
+What the report implies -- remove the guard -- delivers nothing. The loop builds
+observations through a helper that classifies from the RATE SLOT, not from the
+invoice's category, and that helper's own docstring says intra-community lines
+must be constructed directly instead. Measured: the exempt slot yields category
+domestic_exempt and rate kind exempt, while casilla 59 selects category
+intra_community_supply with rate kind zero, and casilla 60 the two export
+categories with rate kind zero. An exempt supply line misses on BOTH axes.
+Removing the guard turns a dropped line into an observation that matches neither
+binding: the casillas stay empty and the change looks like a fix while moving no
+money. It is at least not harmful -- no Modelo 303 binding selects
+domestic_exempt or domestic_zero, so the stray observations mis-route into
+nothing rather than into a wrong casilla.
+
+The root cause is an asymmetry between two feeds of ONE binding source. The
+bank-transaction path reads the declared category first and falls back to the
+rate-derived domestic category only when none is declared, and it gates an
+intracom or export claim on the counterparty. The invoice path does none of
+that: rate slot only, and zero-cuota lines dropped before classification. Two
+surfaces populating the same source with divergent logic is the shape the
+pull-equals-calculate discipline exists to prevent, and it is why one of them can
+route an intra-community supply to casilla 59 and the other cannot.
+
+The fix is therefore to make the invoice path read the invoice's own category the
+way the bank path reads the transaction's, including the counterparty gate, not
+to relax the cuota guard. That input is more available than it was: the confirm
+boundary now populates the category from a structured document's own code, and
+the codes for an intra-community supply and an export map to exactly the
+categories these selectors want.
+
+Left unfixed here for sequencing, not for doubt: the owning campaign holds the
+decision record for this axis, the change touches a gate with its own legal
+preconditions, and the correction above is what that campaign needed before
+acting.
+
+One consequence in the handover is explicitly NOT confirmed. Whether the dropped
+observations also feed the prorrata volumen-total denominator, and so inflate the
+deductible percentage, was not traced end to end by either party. It remains a
+hypothesis. Recording it as such here so that appearing in two documents does not
+later read as corroboration.
 
 ## Recommendations
 
