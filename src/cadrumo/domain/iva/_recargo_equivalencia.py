@@ -30,13 +30,18 @@ the four IVA tiers per LIVA art. 161:
 
 from __future__ import annotations
 
+import tomllib
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
+from functools import lru_cache
+from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaValidationError
 from ._schema import IvaRateKind
@@ -146,6 +151,14 @@ def load_recargo_rates() -> LivaArt161RecargoRates:
 def recargo_rate_for(rate_kind: IvaRateKind) -> Decimal | None:
     """Return the recargo de equivalencia rate aligned with ``rate_kind``.
 
+    SUPERSEDED by :func:`recargo_rate_for_applied_rate`, which answers the same
+    question on a key that can express the 2023-2024 transitional rates. A tier
+    stopped determining a recargo the moment a transitional rate coexisted with
+    its tier's ordinary one, so this function cannot distinguish the 1.4 % of a
+    10 % line from the 0.62 % of a 5 % line in the same window. It is retained
+    only because the ``ZERO`` behaviour below is under separate adjudication;
+    prefer the applied-rate lookup for new work.
+
     Args:
         rate_kind: The substrate IVA rate tier.
 
@@ -169,8 +182,168 @@ def recargo_rate_for(rate_kind: IvaRateKind) -> Decimal | None:
     return None
 
 
+class RecargoRateRecord(BaseModel):
+    """One recargo de equivalencia rate, paired with the IVA rate it accompanies.
+
+    Keyed on the accompanying IVA rate rather than on its tier. LIVA art. 161
+    pairs each recargo with a tier, and that was a sufficient key only while a
+    tier had exactly one rate. Between 2023-01-01 and 2024-09-30 the reduced
+    tier carried both its ordinary 10 % and the transitional 5 %, with different
+    recargos, so the tier no longer identifies the pairing and the rate does.
+
+    Attributes:
+        iva_rate: The IVA rate this recargo accompanies, as a fraction.
+        recargo_rate: The recargo rate itself, as a fraction. Zero is a
+            legitimate value and means a rate of zero, not an absent one.
+        effective_from: First date the pairing applies.
+        effective_until: Last date it applies, or ``None`` for open-ended.
+        legal_refs: Registry legal-reference identities establishing the value.
+        notes: Authoring note; carries no runtime meaning.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    iva_rate: Decimal = Field(ge=Decimal("0"), le=Decimal("1"))
+    recargo_rate: Decimal = Field(ge=Decimal("0"), lt=Decimal("1"))
+    effective_from: date
+    effective_until: date | None = None
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    notes: str = ""
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> RecargoRateRecord:
+        if self.effective_until is not None and self.effective_from > self.effective_until:
+            raise IvaValidationError(
+                f"RecargoRateRecord[iva_rate={self.iva_rate}]: "
+                f"effective_from {self.effective_from} is after effective_until {self.effective_until}",
+            )
+        return self
+
+    def covers(self, on_date: date) -> bool:
+        """Report whether this record's window contains ``on_date``."""
+        if on_date < self.effective_from:
+            return False
+        return self.effective_until is None or on_date <= self.effective_until
+
+
+def load_recargo_rate_table(path: Path | None = None) -> tuple[RecargoRateRecord, ...]:
+    """Load the windowed recargo de equivalencia rate table from the registry.
+
+    Resolves the bundled path on every call so ``bundled_path`` stays the single
+    resolution surface, mirroring the IVA rate table loader.
+
+    Returns:
+        Every :class:`RecargoRateRecord` in the committed table.
+
+    Raises:
+        IvaCatalogueError: If the table cannot be read.
+        IvaValidationError: If a record is malformed, or if two records claim
+            the same IVA rate over overlapping windows.
+    """
+    target = path if path is not None else bundled_path("registry", "aeat", "iva", "recargo-rates.toml")
+    resolved = target.resolve()
+    try:
+        fingerprint = path_stat_fingerprint(resolved)
+    except OSError as exc:
+        raise IvaCatalogueError(f"{resolved}: cannot stat recargo rate registry: {exc}") from exc
+    return _load_recargo_rate_table_cached(*fingerprint)
+
+
+@lru_cache(maxsize=16)
+def _load_recargo_rate_table_cached(path: str, byte_count: int, modified_ns: int) -> tuple[RecargoRateRecord, ...]:
+    del byte_count, modified_ns
+    target = Path(path)
+    try:
+        payload = tomllib.loads(target.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise IvaCatalogueError(f"{target}: cannot read recargo rate registry: {exc}") from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise IvaValidationError(f"{target}: malformed recargo rate registry: {exc}") from exc
+
+    rows = payload.get("recargo_rates", ())
+    try:
+        records = tuple(RecargoRateRecord.model_validate(_hydrate_row(row)) for row in rows)
+    except (ValueError, TypeError) as exc:
+        raise IvaValidationError(f"{target}: invalid recargo rate record: {exc}") from exc
+    _reject_overlapping_windows(records)
+    return records
+
+
+def _hydrate_row(row: Mapping[str, object]) -> dict[str, object]:
+    """Widen TOML scalars to the strict model's types at the load boundary.
+
+    The record model is strict, so the authoring tree's strings stay strings
+    until here. Rates are authored as strings rather than TOML floats because a
+    float cannot represent 0.0062 exactly and a recargo is money-bearing.
+    """
+    hydrated = dict(row)
+    for field in ("iva_rate", "recargo_rate"):
+        raw = hydrated.get(field)
+        if isinstance(raw, str):
+            hydrated[field] = Decimal(raw)
+    refs = hydrated.get("legal_refs")
+    if isinstance(refs, list):
+        hydrated["legal_refs"] = tuple(refs)
+    return hydrated
+
+
+def _reject_overlapping_windows(records: tuple[RecargoRateRecord, ...]) -> None:
+    """Refuse two records claiming one IVA rate over overlapping windows.
+
+    Without this a lookup would silently answer with whichever record happened
+    to be first, which is the failure mode that made the tier-keyed shape
+    unsafe in the first place -- an ambiguous key resolving to a plausible
+    answer rather than to a refusal.
+    """
+    open_ended = date.max
+    by_rate: dict[Decimal, list[RecargoRateRecord]] = {}
+    for record in records:
+        by_rate.setdefault(record.iva_rate, []).append(record)
+    for iva_rate, group in by_rate.items():
+        for index, first in enumerate(group):
+            for second in group[index + 1 :]:
+                first_end = first.effective_until or open_ended
+                second_end = second.effective_until or open_ended
+                if first.effective_from <= second_end and second.effective_from <= first_end:
+                    raise IvaValidationError(
+                        f"recargo rate registry: IVA rate {iva_rate} has overlapping windows "
+                        f"({first.effective_from}..{first.effective_until}) and "
+                        f"({second.effective_from}..{second.effective_until})",
+                    )
+
+
+def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decimal | None:
+    """Return the recargo rate paired with ``applied_rate`` on ``on_date``.
+
+    This is the lookup that can express the 2023-2024 transitional rates. Asked
+    for 10 % inside that window it answers 1.4 %; asked for 5 % on the same date
+    it answers 0.62 %. The tier-keyed :func:`recargo_rate_for` cannot separate
+    those, because both rates sat on the reduced tier at once.
+
+    Args:
+        applied_rate: The IVA rate the line actually carried, as a fraction.
+        on_date: The operation date, which selects among windowed pairings.
+
+    Returns:
+        The paired recargo rate, which may legitimately be zero. ``None`` when
+        the table models no pairing for that rate on that date -- an unmodelled
+        combination, which callers must not read as "no recargo applies".
+
+    The tobacco 1.75 % rate of art. 161 4.o is not reachable here: it attaches
+    to a product rather than to an accompanying IVA rate, and is read from
+    ``LIVA_ART_161_RECARGO.tabaco_rate``.
+    """
+    for record in load_recargo_rate_table():
+        if record.iva_rate == applied_rate and record.covers(on_date):
+            return record.recargo_rate
+    return None
+
+
 __all__ = [
     "LivaArt161RecargoRates",
+    "RecargoRateRecord",
+    "load_recargo_rate_table",
     "load_recargo_rates",
     "recargo_rate_for",
+    "recargo_rate_for_applied_rate",
 ]

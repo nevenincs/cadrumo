@@ -91,12 +91,12 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str], ...]] = (
         "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')",
     ),
     (
-        "extract_invoice_fields_from_images",
-        "extract_invoice_fields_from_images((MultimodalImageInput(base64_data='', media_type='image/png'),))",
+        "transcribe_document_images",
+        "transcribe_document_images(_PAGES, source_content_sha256='0' * 64)",
     ),
     (
         "extract_invoice_fields_from_text",
-        "extract_invoice_fields_from_text('factura')",
+        "extract_invoice_fields_from_text(_TRANSCRIPTION)",
     ),
     (
         "LocalVisionLLMClassifier",
@@ -323,14 +323,31 @@ def _drive_surfaces(work_dir: Path, venv_path: Path, calls: str, *, leaf: str) -
     code = f"""
 import json
 
-from cadrumo.core import MissingOptionalExtraError
+from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,
     LocalVisionLLMClassifier,
     MultimodalImageInput,
-    extract_invoice_fields_from_images,
     extract_invoice_fields_from_text,
     rasterise_pdf_pages_to_base64_png,
+    transcribe_document_images,
+)
+
+# Both surfaces take a TYPED argument, so the driver builds each one here rather
+# than inline in the call expression. That placement is the point: Python
+# evaluates arguments before the callee, so an argument that fails to construct
+# raises BEFORE the guarded surface is entered -- the entry would be classified
+# "other" and could never reach the refusal the lane asserts. Built outside the
+# try, a broken driver fails loudly as a driver rather than masquerading as a
+# surface outcome. Both constructions are core-only: typed models, no optional
+# dependency.
+_PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
+_TRANSCRIPTION = DocumentTranscription(
+    text="factura",
+    page_count=1,
+    source_content_sha256="0" * 64,
+    transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="smoke", revision="lane"),
 )
 
 outcomes = []
@@ -507,14 +524,31 @@ def _assert_inference_surfaces_refuse(work_dir: Path, venv_path: Path) -> None:
     code = f"""
 import json
 
-from cadrumo.core import MissingOptionalExtraError
+from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+from cadrumo.core import FieldOrigin, ImageMediaType, MissingOptionalExtraError
 from cadrumo.llm import (
     LocalTextLLMClassifier,
     LocalVisionLLMClassifier,
     MultimodalImageInput,
-    extract_invoice_fields_from_images,
     extract_invoice_fields_from_text,
     rasterise_pdf_pages_to_base64_png,
+    transcribe_document_images,
+)
+
+# Both surfaces take a TYPED argument, so the driver builds each one here rather
+# than inline in the call expression. That placement is the point: Python
+# evaluates arguments before the callee, so an argument that fails to construct
+# raises BEFORE the guarded surface is entered -- the entry would be classified
+# "other" and could never reach the refusal the lane asserts. Built outside the
+# try, a broken driver fails loudly as a driver rather than masquerading as a
+# surface outcome. Both constructions are core-only: typed models, no optional
+# dependency.
+_PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
+_TRANSCRIPTION = DocumentTranscription(
+    text="factura",
+    page_count=1,
+    source_content_sha256="0" * 64,
+    transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="smoke", revision="lane"),
 )
 
 outcomes = []

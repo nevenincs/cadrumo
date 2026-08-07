@@ -353,3 +353,127 @@ def test_modelo_registry_tests_use_public_record_design_dispatcher() -> None:
     ]
 
     assert private_imports == []
+
+
+def _record_design_corpus_paths(modelo_id: str) -> tuple[Path, ...]:
+    """Every record-design corpus path any revision of ``modelo_id`` cites.
+
+    Keyed on ``modelo.revisions`` rather than a pinned revision id. Modelo 390
+    carries one revision today and is being split into filing epochs; a fixed id
+    would silently stop covering anything the moment that lands, and would still
+    pass, which is the failure this helper exists to avoid.
+    """
+    modelos, catalogues = _committed_registry_tree()
+    modelo = next(item for item in modelos if item.id == modelo_id)
+    paths: list[Path] = []
+    for revision in modelo.revisions.values():
+        for ref in revision.source_refs:
+            source = catalogues.sources[ref]
+            if source.kind == "record_design":
+                paths.append(bundled_path() / source.corpus_path)
+    return tuple(dict.fromkeys(paths))
+
+
+def test_diseno_coverage_report_inventories_modelo_390_form_data() -> None:
+    """Modelo 390 reaches the advisory coverage inventory, as Modelo 200 does.
+
+    The full-Diseño coverage report existed and was exercised for Modelo 200
+    alone, so the annual IVA form -- the most under-modelled surface in the
+    registry -- was outside the one instrument that measures form-level
+    coverage. This extends the existing report rather than adding a second
+    mechanism.
+
+    ADVISORY, deliberately. The report inventories what AEAT declares; it does
+    NOT assert that every declared casilla is modelled, and must not. A modelo
+    not yet exhaustively backfilled is reported as a coverage gap, never failed
+    at load -- the load-blocking gate stays keyed on the bounded calculation
+    closure. Asserting coverage here would convert a recorded design decision
+    into its opposite.
+
+    ``multi_segment=False`` because Modelo 390 declares ``segmento`` nowhere:
+    every casilla carries ``None``, matching the bare-number registry contract.
+    A number recurring across sheets therefore collapses to one pair, which is
+    the intended single-segment behaviour and not a loss.
+
+    Counts here come from THIS extractor, which collects casilla tags from the
+    Diseño. They are not comparable with counts from any other extraction of
+    "the boxes in a design" -- a sibling gate counts bracketed ``[nnn]`` markers
+    and yields a different number for the same file. Never set one beside the
+    other without naming which produced each.
+    """
+    paths = _record_design_corpus_paths("390")
+    assert paths, "Modelo 390 cites no record-design corpus source; the assertions below would be vacuous"
+
+    covered: set[str] = set()
+    for path in paths:
+        assert path.is_file(), f"cited record design is absent from the corpus: {path}"
+        covered.update(casilla.number for casilla in derive_diseno_coverage_casillas(path, multi_segment=False))
+
+    assert covered, (
+        "the Modelo 390 record design yielded no casillas at all; an empty inventory "
+        "would make every coverage statement below vacuously true"
+    )
+
+
+def test_modelo_390_coverage_report_is_advisory_not_a_completeness_claim() -> None:
+    """The inventory must exceed what the registry models, and say nothing more.
+
+    This pins the report's POSTURE. Modelo 390 is substantially under-modelled
+    against its own form, so the inventory is expected to be far larger than the
+    registry's declared set. Were the two ever asserted equal, the advisory would
+    have become a load-blocking completeness gate by accident -- the exact
+    conversion the recorded decision forbids.
+    """
+    modelos, _ = _committed_registry_tree()
+    modelo = next(item for item in modelos if item.id == "390")
+    declared = {casilla.number for revision in modelo.revisions.values() for casilla in revision.casillas}
+    assert declared, "the registry declares no Modelo 390 casillas"
+
+    covered: set[str] = set()
+    for path in _record_design_corpus_paths("390"):
+        covered.update(casilla.number for casilla in derive_diseno_coverage_casillas(path, multi_segment=False))
+    assert covered, "empty inventory"
+
+    assert len(covered) > len(declared), (
+        "the advisory inventory should exceed the registry's declared set while the "
+        "annual form is under-modelled; if it no longer does, re-read this test rather "
+        "than relaxing it -- it is not a completeness assertion"
+    )
+
+
+def test_a_casilla_recording_its_box_in_form_number_counts_as_covered() -> None:
+    """The official box number is not always in ``number``, and coverage must follow it.
+
+    A casilla whose ``id`` is a domain name rather than a box number tends to
+    repeat that id in ``number`` and record the official box in ``form_number``.
+    Modelo 303's ``iva.resultado-regimen-general`` is exactly that: it IS box 46
+    on the form -- its own formula comment reads ``[64] = [46] + [58] + [76]``
+    and it exports to ``modelo-303-page-01-casilla-46`` -- while its ``number``
+    holds the id.
+
+    Keyed on ``number`` alone, the coverage report called box 46 an unauthored
+    Diseño casilla: a box the registry computes and exports, reported as
+    missing. This pins the fix in the direction that matters, and pins the
+    premise (the box lives in ``form_number``, not ``number``) so a later
+    normalisation of the two fields fails here rather than silently making the
+    fallback dead code.
+    """
+    modelos, catalogues = _committed_registry_tree()
+    modelo_303 = next(modelo for modelo in modelos if modelo.id == "303")
+    revision = next(rev for rev_id, rev in modelo_303.revisions.items() if "2023" in rev_id)
+
+    resultado = next(c for c in revision.casillas if c.id == "iva.resultado-regimen-general")
+    assert resultado.form_number == "46", "the premise: this casilla records its box in form_number"
+    assert resultado.number != "46", "if number now carries the box, this test's premise has moved"
+
+    source_ref = next(ref for ref in revision.source_refs if catalogues.sources[ref].kind == "record_design")
+    corpus_path = bundled_path() / catalogues.sources[source_ref].corpus_path
+    multi_segment = any(c.segmento for c in revision.casillas)
+
+    report = build_diseno_coverage_report(corpus_path, modelo_303.id, revision, multi_segment=multi_segment)
+
+    assert not report.extraction_found_no_casillas, "the Modelo 303 Diseño must be readable at all"
+    gap_numbers = {casilla.number for casilla in report.coverage_gap_casillas}
+    covered_numbers = {casilla.number for casilla in report.covered_casillas}
+    assert "46" in covered_numbers, "box 46 is computed and exported; it must not read as unauthored"
+    assert "46" not in gap_numbers

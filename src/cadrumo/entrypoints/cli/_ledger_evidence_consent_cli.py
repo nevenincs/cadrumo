@@ -25,9 +25,13 @@ import typer
 
 from ...application.ledger import (
     ConsentedDispatch,
+    DocumentTranscription,
+    InvoiceDraft,
+    OnHostReader,
     rederive_artefact_on_host,
     survey_cloud_consent,
 )
+from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _bad, _emit_envelope, _state, _tx_repo
@@ -76,7 +80,7 @@ def _register_consent_list_command() -> None:
     def consent_list(ctx: typer.Context) -> None:
         """List off-host dispatches and the artefacts derived from them."""
         bucket_id = _tx_repo(_state()).bucket_id
-        survey = survey_cloud_consent(bucket_id=bucket_id, settings=_state().settings)
+        survey = survey_cloud_consent(bucket_id=bucket_id, settings=load_settings())
         payload = {
             "bucket_id": bucket_id,
             "transmitted_bytes_are_unrecallable": survey.transmitted_bytes_are_unrecallable,
@@ -145,7 +149,7 @@ def _register_consent_rederive_command() -> None:
                 evidence_reference=evidence_reference,
                 source_content_sha256=content_address,
                 transcriber_cache_key=transcriber,
-                settings=_state().settings,
+                settings=load_settings(),
                 read_on_host=_on_host_reader(),
             )
         except ValueError as exc:
@@ -176,18 +180,24 @@ def _register_consent_rederive_command() -> None:
         )
 
 
-def _on_host_reader() -> object:
+def _on_host_reader() -> OnHostReader:
     """Resolve the on-host reader, deferred to keep the gated extra optional.
 
     Imported at call time rather than at module load so this CLI module stays
     importable on an install without the inference extra: the verb refuses with
     the extra's own instructive message, which is better than the whole ledger
     CLI failing to load.
+
+    Returns the PROTOCOL rather than ``object``. The weaker annotation is what
+    let this closure keep calling a signature that no longer existed: with the
+    return typed as ``object`` the checker could not see through to the call,
+    and this module carries no tests, so a re-derivation would have raised
+    ``TypeError`` in an operator's hands.
     """
     from ...llm import TextInvoiceFieldExtractor
 
-    def _read(transcribed_text: str, /) -> tuple[object, str]:
+    def _read(transcription: DocumentTranscription, /) -> tuple[InvoiceDraft, str]:
         extractor = TextInvoiceFieldExtractor()
-        return extractor.extract(evidence_text=transcribed_text), extractor.decided_by
+        return extractor.extract(transcription=transcription), extractor.decided_by
 
     return _read

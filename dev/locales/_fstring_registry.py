@@ -172,7 +172,7 @@ def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
 
     return (
         FStringKeyRegistration(
-            description="modelo.display.* (generated casilla-reference display copy)",
+            description="docs.casilla.* (generated casilla-reference display copy)",
             key_factory=lambda v: v,
             values=display_locale_keys(),
         ),

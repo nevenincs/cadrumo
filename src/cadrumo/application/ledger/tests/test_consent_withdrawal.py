@@ -19,10 +19,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._consent_withdrawal import (
-    LOCAL_TRANSPORT_SEGMENT,
     artefact_is_cloud_derived,
     provenance_stamp_transport,
     rederive_artefact_on_host,
@@ -54,12 +53,19 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield resolved
 
 
-def _seed_cloud_draft(profile: TestRuntimeProfile, *, reference: str = "ev-1", stamp: str = _CLOUD_STAMP) -> None:
+def _seed_cloud_draft(
+    profile: TestRuntimeProfile,
+    *,
+    reference: str = "ev-1",
+    stamp: str = _CLOUD_STAMP,
+    transports: tuple[str, ...] = ("openai",),
+) -> None:
     write_extraction_draft(
         bucket_id=profile.bucket_id,
         evidence_reference=reference,
         draft=InvoiceDraft(),
         extractor=stamp,
+        read_transports=transports,
         settings=profile.settings,
     )
 
@@ -83,25 +89,6 @@ def _local_reader(transcribed_text: str, /) -> tuple[InvoiceDraft, str]:
     return InvoiceDraft(), _LOCAL_STAMP
 
 
-def test_the_two_layers_agree_on_the_on_host_transport_token() -> None:
-    """The reader that WRITES the token and the survey that READS it must match.
-
-    The token is declared twice because the layers cannot share one: the
-    inference package writes it into a stamp, this layer reads it back out of a
-    persisted stamp, and this layer may not import that package. Two
-    declarations of one value drift silently, and the drift is not cosmetic --
-    if the writer stamped a token this survey did not recognise, every on-host
-    artefact would be classified cloud-derived and every withdrawal would ask
-    the operator to re-derive work that never left the machine.
-
-    Pinned here rather than in the writer's suite because this is the side that
-    would be wrong about the other.
-    """
-    from ....llm import LOCAL_TRANSPORT_LABEL
-
-    assert LOCAL_TRANSPORT_SEGMENT == LOCAL_TRANSPORT_LABEL
-
-
 # ── Reading a provenance stamp ───────────────────────────────────────────────
 
 
@@ -109,8 +96,8 @@ def test_the_two_layers_agree_on_the_on_host_transport_token() -> None:
     ("stamp", "expected"),
     [
         (_CLOUD_STAMP, "openai"),
-        (_LOCAL_STAMP, LOCAL_TRANSPORT_SEGMENT),
-        ("llm:local-vision:qwen2.5vl:3b:rates-x", LOCAL_TRANSPORT_SEGMENT),
+        (_LOCAL_STAMP, LOCAL_TRANSPORT_LABEL),
+        ("llm:local-vision:qwen2.5vl:3b:rates-x", LOCAL_TRANSPORT_LABEL),
         ("llm:gemini-vision:gemini-2.5-pro:rates-x", "gemini"),
         ("classified_by_manual", None),
         ("llm:noseparator:model", None),
@@ -130,9 +117,10 @@ def test_an_unreadable_stamp_is_surfaced_rather_than_assumed_clean() -> None:
     never fail in. The cost of the other direction is one extra document to
     look at.
     """
-    assert artefact_is_cloud_derived("classified_by_manual") is True
-    assert artefact_is_cloud_derived(_CLOUD_STAMP) is True
-    assert artefact_is_cloud_derived(_LOCAL_STAMP) is False
+    assert artefact_is_cloud_derived(()) is True, "an unestablished transport must be surfaced"
+    assert artefact_is_cloud_derived(("openai",)) is True
+    assert artefact_is_cloud_derived((LOCAL_TRANSPORT_LABEL, "openai")) is True, "any off-host field makes the document off-host"
+    assert artefact_is_cloud_derived((LOCAL_TRANSPORT_LABEL,)) is False
 
 
 # ── The survey ───────────────────────────────────────────────────────────────
@@ -157,7 +145,7 @@ def test_the_survey_leaves_an_on_host_artefact_alone(profile: TestRuntimeProfile
     every draft it finds, which would tell an operator that on-host reads need
     withdrawing too.
     """
-    _seed_cloud_draft(profile, reference="ev-local", stamp=_LOCAL_STAMP)
+    _seed_cloud_draft(profile, reference="ev-local", stamp=_LOCAL_STAMP, transports=(LOCAL_TRANSPORT_LABEL,))
 
     survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
 
@@ -215,6 +203,24 @@ def test_re_derivability_resolves_true_and_false_once_a_resolver_is_supplied(pro
         transcriber_cache_key=_TEXT_LAYER.cache_key,
     )
     assert unresolvable.cloud_derived_artefacts[0].rederivable_on_host is False
+
+
+def test_a_draft_with_no_recorded_transport_is_surfaced_not_assumed_local(
+    profile: TestRuntimeProfile,
+) -> None:
+    """An unestablished transport is surfaced, and the survey says it cannot name one.
+
+    This is the case a batch-driven gate cannot reach, because the batch always
+    records a transport -- so the "empty means unknown" branch would otherwise
+    be asserted nowhere and a change making it read as on-host would pass every
+    other test in the suite.
+    """
+    _seed_cloud_draft(profile, reference="ev-unknown", transports=())
+
+    survey = survey_cloud_consent(bucket_id=profile.bucket_id, settings=profile.settings)
+
+    assert [row.evidence_reference for row in survey.cloud_derived_artefacts] == ["ev-unknown"]
+    assert survey.cloud_derived_artefacts[0].transport is None
 
 
 # ── Re-derivation: the Step's gate ───────────────────────────────────────────

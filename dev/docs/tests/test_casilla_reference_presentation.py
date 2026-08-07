@@ -27,10 +27,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core import BindingSourceKind, Modelo
-from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.domain.calculations.registry import CasillaConstraints, InputKind
 
+from .._locale_chrome import DocsChromeError
 from ..casilla_reference import (
     EMPTY_SCHEMA,
     CasillaFacts,
@@ -192,26 +193,26 @@ def test_every_display_string_is_authored_in_every_language() -> None:
         if not _resolves(key, language)
     ]
     assert not missing, f"display strings absent from a catalogue: {missing[:20]}"
-    assert {f"modelo.display.binding_source.{member.value}" for member in BindingSourceKind} <= set(
+    assert {f"docs.casilla.binding_source.{member.value}" for member in BindingSourceKind} <= set(
         display_locale_keys(),
     )
 
 
 def _resolves(key: str, language: OutputLanguage) -> bool:
-    from ..casilla_reference import CasillaReferenceError
-
     try:
-        _text(key.removeprefix("modelo.display."), language)
-    except CasillaReferenceError:
+        _text(key.removeprefix("docs.casilla."), language)
+    except DocsChromeError:
         return False
     return True
 
 
 def test_a_missing_display_string_refuses_rather_than_rendering_a_fallback() -> None:
-    """An unauthored key is a build failure, never a humanised key fragment."""
-    from ..casilla_reference import CasillaReferenceError
+    """An unauthored key is a build failure, never a humanised key fragment.
 
-    with pytest.raises(CasillaReferenceError):
+    The refusal is the shared resolver's, not a second one this surface owns:
+    all three generated surfaces fail the same way on the same fault.
+    """
+    with pytest.raises(DocsChromeError):
         _text("chrome.no_such_string", OutputLanguage.ES)
 
 

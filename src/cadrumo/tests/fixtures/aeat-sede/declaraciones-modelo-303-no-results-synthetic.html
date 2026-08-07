@@ -1,0 +1,53 @@
+<!DOCTYPE html><html><head><title>Consulta de declaraciones</title></head><body>
+<!--
+SYNTHETIC - hand-built, not captured from AEAT. See the provenance sidecar
+(declaraciones-modelo-303-no-results-synthetic.json).
+
+What this fixture models: the register grid AEAT renders for a (modelo,
+ejercicio) pair the taxpayer never filed. The grid comes back fully formed -
+header row, column set, empty-body section - and carries ZERO z-listitem rows.
+The no-results sentence lives in the ZK "emptybody" tbody, which is NOT a
+z-listitem, so the row loop finds nothing to iterate rather than finding one
+sentinel row. There is no pager, so the grid declares no record total and
+nothing can fall short of one.
+
+That distinction is the whole point of the fixture. An empty answer here is a
+complete answer - the taxpayer filed nothing - and it must stay separable from
+the two shapes that ARE failures: a grid whose pager declares more records than
+it rendered, and markup with no grid at all. The inline no-results shape already
+covered elsewhere in this tree puts the sentence inside a single-cell
+z-listitem, which exercises a different branch than the markup AEAT actually
+serves.
+
+Class names and column order mirror the real sanitised capture
+(declaraciones-modelo-100-2022.html). The empty-body cell is rendered visible
+here, which is what a genuinely empty grid does.
+-->
+<div id="cRRD3z" class="z-listbox" tabindex="0" role="grid">
+  <div id="cRRD3z-head" class="z-listbox-header" role="none">
+    <table id="cRRD3z-headtbl" role="none">
+      <tbody id="cRRD3z-headrows" role="rowgroup">
+        <tr id="cRRD4z" class="tablascej z-listhead z-flex z-flex-row" role="row">
+          <th id="cRRD5z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Desistir</div></th>
+          <th id="cRRD6z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Tipo de solicitud</div></th>
+          <th id="cRRD7z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Observaciones</div></th>
+          <th id="cRRD8z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Expediente</div></th>
+          <th id="cRRD9z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Periodo</div></th>
+          <th id="cRRDaz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Estado</div></th>
+          <th id="cRRDbz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Fecha y Hora de presentaci&oacute;n</div></th>
+          <th id="cRRDcz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Obtenci&oacute;n de Justificante</div></th>
+          <th id="cRRDdz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Descarga fichero presentado</div></th>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div id="cRRD3z-body" class="z-listbox-body" role="none" style="overflow: auto;">
+    <table id="cRRD3z-cave" role="none">
+      <tbody id="cRRD3z-rows" role="rowgroup"></tbody>
+      <tbody class="z-listbox-emptybody">
+        <tr><td colspan="9"><div class="z-listbox-emptybody-content">No se han encontrado resultados para la consulta realizada.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body></html>

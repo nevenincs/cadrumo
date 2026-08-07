@@ -1,0 +1,178 @@
+"""Modelo 390 box [26]/[28] used to conflate two different LIVA hechos imponibles.
+
+Before this module's fix, ALL adquisiciones intracomunitarias (AIC) money --
+bienes and servicios, every rate -- was aggregated by the single rate-blind
+``iva.anual.autorepercutido.intracomunitaria`` casilla and exported to page 02
+offset 1492, the box the bundled Diseño de Registros itself labels "IVA
+deveng. invers. sujeto pasivo - Cuota [28]" -- the DOMESTIC reverse-charge
+line (LIVA art. 84.Uno.2), a different hecho imponible from AIC (LIVA art.
+13/85). Modelo 303 already files the identical AIC ledger categories on its
+own AIC-labelled boxes (11/13), so the two modelos disagreed about where the
+same money goes.
+
+This module pins the fix from the casilla and export-layout end: box [26]
+("Adquis. intracomunit. bienes - Tipo 21% - Cuota") is now fed by a
+rate-specific AIC casilla, box [28] is now fed by a genuine domestic-ISP
+casilla, and the original rate-blind AIC casilla keeps aggregating everything
+for the annual total but no longer carries an export reference at all.
+
+Real-behaviour: this loads the actual on-disk TOML fragments through the raw
+compiler (``load_registry_tree``), and separately resolves real ledger
+observations through the production ``resolve_ledger_iva_aggregation_binding_
+values`` resolver -- no mocks, stubs, skips or xfail. The mutation proof below
+reverts the export-layout repointing on an isolated scratch copy (never the
+tracked tree) and confirms the position assertions catch the reintroduced
+defect.
+"""
+
+from __future__ import annotations
+
+import shutil
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
+from .._loader import load_registry_tree
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REVISION_ID = "2010-y-siguientes"
+_CASILLA_BOX_26 = "iva.anual.aic.bienes.tipo-21.cuota"
+_CASILLA_BOX_28 = "iva.anual.autorepercutido.interior.cuota"
+_CASILLA_AIC_BLIND = "iva.anual.autorepercutido.intracomunitaria"
+
+
+def _m390_revision(root: Path):
+    modelos, _catalogues = load_registry_tree(root)
+    m390 = next(m for m in modelos if m.id == "390")
+    return m390.revisions[_REVISION_ID]
+
+
+def _bundled_registry_root() -> Path:
+    return Path(__file__).resolve().parents[4] / "_data" / "registry" / "aeat"
+
+
+def _export_field(revision, *, record_id: str, offset: int):
+    for layout in revision.export_layouts:
+        for record in layout.records:
+            if record.id != record_id:
+                continue
+            for field in record.fields:
+                if getattr(field, "offset", None) == offset:
+                    return field
+    raise AssertionError(f"no field at {record_id}:{offset}")
+
+
+def test_box_26_and_box_28_are_distinct_casillas_at_their_official_positions() -> None:
+    revision = _m390_revision(_bundled_registry_root())
+    casillas = {c.id: c for c in revision.casillas}
+
+    box_26 = casillas[_CASILLA_BOX_26]
+    box_28 = casillas[_CASILLA_BOX_28]
+    blind = casillas[_CASILLA_AIC_BLIND]
+
+    assert box_26.number == "26"
+    assert box_28.number == "28"
+    assert box_26.id != box_28.id
+
+    field_26 = _export_field(revision, record_id="modelo-390-page-02", offset=1220)
+    field_28 = _export_field(revision, record_id="modelo-390-page-02", offset=1492)
+
+    assert field_26.casilla_id == _CASILLA_BOX_26
+    assert field_28.casilla_id == _CASILLA_BOX_28
+
+    # The rate-blind AIC total layer keeps aggregating (for the annual total)
+    # but no longer owns any export position -- the two-layer shape mandated
+    # by the rate-box ADR.
+    assert blind.export_refs == ()
+
+
+def test_box_27_is_domestic_isp_base_not_aic() -> None:
+    revision = _m390_revision(_bundled_registry_root())
+    casillas = {c.id: c for c in revision.casillas}
+    box_27 = casillas["iva.anual.autorepercutido.interior.base"]
+    assert box_27.number == "27"
+
+    field_27 = _export_field(revision, record_id="modelo-390-page-02", offset=1475)
+    assert field_27.casilla_id == "iva.anual.autorepercutido.interior.base"
+
+
+def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> None:
+    """Real-behaviour proof: an AIC row and a domestic-ISP row never merge.
+
+    A row classified as ``intra_community_acquisition_reverse_charge`` at 21%
+    must resolve into the AIC box-layer binding and NOT into the domestic ISP
+    binding, and vice versa -- proving the split is real at the resolution
+    layer, not merely a casilla-naming exercise.
+    """
+    revision = _m390_revision(_bundled_registry_root())
+
+    aic_row = IvaLedgerObservation(
+        ledger_id="aic-bienes-21",
+        transaction_date=date(2025, 6, 15),
+        category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        rate_kind=IvaRateKind.GENERAL,
+        applied_rate=Decimal("0.21"),
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        base_amount=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    domestic_isp_row = IvaLedgerObservation(
+        ledger_id="domestic-isp",
+        transaction_date=date(2025, 6, 15),
+        category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        rate_kind=IvaRateKind.GENERAL,
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        base_amount=Decimal("500.00"),
+        iva_amount=Decimal("105.00"),
+    )
+
+    resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row, domestic_isp_row)))
+
+    assert resolved["modelo-390-iva-aic-bienes-tipo-21-base"] == Decimal("1000.00")
+    assert resolved["modelo-390-iva-aic-bienes-tipo-21-cuota"] == Decimal("210.00")
+    assert resolved["modelo-390-iva-autorepercutido-interior-base"] == Decimal("500.00")
+    assert resolved["modelo-390-iva-autorepercutido-interior-cuota"] == Decimal("105.00")
+
+    # Neither binding leaks the other row's money.
+    assert resolved["modelo-390-iva-aic-bienes-tipo-21-base"] != resolved["modelo-390-iva-autorepercutido-interior-base"]
+    assert resolved["modelo-390-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("210.00")
+
+
+def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_path: Path) -> None:
+    """Re-introduce the exact original defect on an isolated scratch copy of
+    the registry tree (never the tracked file) and confirm the position test
+    above would have caught it.
+    """
+    bundled_root = _bundled_registry_root()
+    scratch_root = tmp_path / "registry-mutant" / "aeat"
+    (scratch_root / "modelos").mkdir(parents=True)
+    shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
+    for catalogue_dir in ("apoderamientos", "authorization.d", "calendars", "categories", "iva", "legal", "topics", "treaties"):
+        source = bundled_root / catalogue_dir
+        if source.is_dir():
+            shutil.copytree(source, scratch_root / catalogue_dir)
+        elif source.exists():
+            shutil.copy2(source, scratch_root / catalogue_dir)
+
+    export_layout_path = (
+        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts" / "0001-export_layouts.toml"
+    )
+    original = export_layout_path.read_text(encoding="utf-8")
+    mutated = original.replace(
+        'casilla_id = "iva.anual.autorepercutido.interior.cuota"',
+        'casilla_id = "iva.anual.autorepercutido.intracomunitaria"',
+        1,
+    )
+    assert mutated != original, "the mutation target string was not found -- test is stale"
+    export_layout_path.write_text(mutated, encoding="utf-8")
+
+    mutated_revision = _m390_revision(scratch_root)
+    mutated_field_28 = _export_field(mutated_revision, record_id="modelo-390-page-02", offset=1492)
+
+    assert mutated_field_28.casilla_id != _CASILLA_BOX_28
+    assert mutated_field_28.casilla_id == _CASILLA_AIC_BLIND

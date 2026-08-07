@@ -217,6 +217,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.live._deudas.DeudasSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_DEUDAS_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_deudas_snapshot_not_found",
+            default_suggestion="aeat app live deudas list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.live._borrador_100.BorradorSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_BORRADOR_SNAPSHOT_NOT_FOUND",

@@ -1959,12 +1959,22 @@ cli:
             volt; most {current}. A korábbi olvasás felülírásra került, de nem törlődött.
           transcriber_help: Az újrafelhasználandó átirat gyorsítótárkulcsa.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
+        extract_acknowledge_off_host_help: Megerősítés arról, hogy a dokumentum ennél
+          az egy beolvasásnál elhagyja a gépet.
+        extract_acknowledge_without_provider: Az --acknowledge-off-host olyan továbbítást
+          erősít meg, amely nem történne meg. Adja meg az --off-host-provider kapcsolót
+          is, vagy hagyja el a megerősítést.
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
           adatokat ki kell nyerni (a --evidence-id alternatívája).
         extract_evidence_id_help: A beszerzési számla bizonylat azonosítója, amelyből
           az adatokat ki kell nyerni.
         extract_help: A számla PDF mezőinek helyi (on-host) beolvasása áttekinthető
           piszkozatba.
+        extract_off_host_provider_help: A dokumentum elküldése távoli modellnek a
+          helyi beolvasás helyett.
+        extract_off_host_provider_is_local: Az --off-host-provider local az alapértelmezés,
+          és semmit nem küld el a gépről. Hagyja el a kapcsolót, vagy adjon meg távoli
+          szolgáltatót.
         extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy
           --attachment-id.'
         extract_review_hint_message: Ez egy hozzávetőleges piszkozat; minden mezőt
@@ -2202,6 +2212,17 @@ cli:
         casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem
           összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett
           bevallások minden számszerű adata a szokásos módon bekerült.'
+        discover_help: Megjeleníti, mely modelo- és ejercicio-párokat járná be egy
+          előzményletöltés.
+        discover_no_profile_denominator: 'Ez a jelentés nem tartalmaz adózóspecifikus
+          nevezőt: hiányzik a profil vagy annak tevékenységkezdő dátuma, ezért a párok
+          száma nem méri a lefedettséget. Egészítse ki a profilt, és futtassa újra,
+          mielőtt teljes előzményként értelmezi ezt az eredményt.'
+        discover_register_scope_caveat: 'A nyilvántartás választéklistája azt mutatja,
+          mit ajánl az AEAT, nem pedig e NIF megerősített benyújtási előzményeit.
+          Nincs megerősítve, hogy a lista a hitelesített NIF-re szűkül, ezért csak
+          szélesíti a bejárást: egy hiányzó pár nem bizonyítja, hogy semmit sem nyújtottak
+          be.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
@@ -5477,6 +5498,111 @@ core:
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
 docs:
+  casilla:
+    binding_source:
+      atribucion_member: az atribución de rentas tagjaiból
+      bienes_inversion_regularizacion: a beruházási javak korrekciójából
+      borrador: az AEAT borrador tervezetéből
+      collectible_invoice: a kiállított számláiból
+      donativo_donor: a nyilvántartott adományozóiból
+      foreign_asset: a külföldi vagyonelemeiből
+      iva_compensation_annual_partition: az adóév IVA-kompenzációjából
+      iva_wallet_decision: az IVA-kompenzációs döntéséből
+      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételeiből
+      ledger_irnr_income_aggregation: az IRNR-bevételeiből
+      ledger_iva_aggregation: az IVA-tételeiből
+      ledger_oss_aggregation: az OSS-tételeiből
+      ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
+        szerinti költségeiből
+      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
+      ledger_renta_income_aggregation: a nyilvántartott bevételeiből
+      ledger_transaction: a nyilvántartott tételeiből
+      manual_input: az Ön által megadott értékből
+      payable_invoice: a befogadott számláiból
+      previous_filing: a korábbi bevallásából
+      profile: az adózói profiljából
+      prorrata_regularizacion: az arányosítás korrekciójából
+      purchase_invoice_evidence: a beszerzési számlák bizonylataiból
+      refund_operation: a visszatérítési ügyleteiből
+      related_party_operation: a kapcsolt ügyleteiből
+      relation_prefill: egy kapcsolódó modelo eredményéből
+      retenciones_aggregation: a nyilvántartott retenciones tételekből
+      withholding: a levont forrásadókból
+    cadence:
+      ad_hoc: Az esemény bekövetkezésekor benyújtandó
+      annual: Évente benyújtandó
+      monthly: Havonta benyújtandó
+      profile_based: A profilja szerint benyújtandó
+      quarterly: Negyedévente benyújtandó
+    chrome:
+      alternative_join: ', vagy'
+      binding: Adatkötés
+      casilla_count: '{casillas} casilla {sections} szakaszban'
+      casilla_id: Casilla-azonosító
+      derived_from: 'ebből:'
+      established_by: Jogszabályi alapja
+      formula: Képlet
+      general_section: Általános
+      index_intro: Modellónként egy oldal. Minden casilla megadja, hogyan töltődik
+        ki (Ön adja meg, más rovatokból számítjuk, vagy a nyilvántartásaiból töltjük
+        ki), hol szerepel a hivatalos nyomtatványon, és melyik jogszabály állapítja
+        meg.
+      index_title: Casilla-referencia
+      legal_basis: Jogalap
+      list_and: és
+      not_on_official_form: Nem szerepel a hivatalos nyomtatványon
+      record_design_number: Rekordterv szerinti szám
+      registry_identifiers: Nyilvántartási azonosítók
+      registry_section: Nyilvántartási szakasz
+      required: Kötelező
+      revisions: Változatok
+      sections_nav: A modelo szakaszai
+      segmento: '{segmento} szegmens'
+      semantic_role: Szemantikai szerep
+      sources: Források
+    data_type:
+      bic: BIC
+      boolean: Igen vagy nem
+      ccaa_code: Autonóm közösség kódja
+      country_code: Országkód
+      date: Dátum
+      decimal: Tizedes szám
+      iban: IBAN
+      integer: Egész szám
+      money: Összeg euróban
+      municipality_code: Településkód
+      name: Név
+      nif: NIF
+      nif_iva: Közösségi adószám (NIF-IVA)
+      period_code: Időszak
+      postal_code: Irányítószám
+      province_code: Provincia kódja
+      ratio: Százalék
+      text: Szöveg
+      year: Adóév
+    input_kind:
+      bound: Automatikusan kitöltve
+      computed: Automatikusan számítjuk
+      informational: Csak tájékoztató
+      manual: Ön adja meg
+    input_kind_count:
+      bound: a nyilvántartásaiból kitöltve
+      computed: számított
+      informational: csak tájékoztató
+      manual: amelyet Ön ad meg
+    legal_kind:
+      instruction: AEAT-útmutató
+    length:
+      at_least: Legalább {min} karakter
+      at_most: Legfeljebb {max} karakter
+      between: '{min} és {max} karakter között'
+    value_enum: 'Az alábbiak egyike: {values}'
+    value_range:
+      at_least: Legalább {min}
+      at_most: Legfeljebb {max}
+      between: '{min} és {max} között'
+      non_negative: Nulla vagy több
+      non_positive: Nulla vagy kevesebb
   glossary:
     entry:
       broader: Tágabb fogalom
@@ -7166,14 +7292,7 @@ modelo:
       informational: csak tájékoztató
       manual: amelyet Ön ad meg
     legal_kind:
-      dictionary: AEAT-adatszótár
-      form_spec: Hivatalos AEAT-nyomtatvány
       instruction: AEAT-útmutató
-      instructions: AEAT-útmutató
-      manual_pdf: AEAT-kézikönyv
-      record_design: AEAT-rekordterv
-      suppression_notice: AEAT-közlemény
-      xsd: AEAT XSD-séma
     length:
       at_least: Legalább {min} karakter
       at_most: Legfeljebb {max} karakter

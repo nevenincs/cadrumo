@@ -175,8 +175,16 @@ def test_annual_base_bindings_resolve_non_zero() -> None:
     resolved = _resolved()
     # Scoped to the four rate-blind total-layer bindings this module owns. The
     # rate-specific box layer also ends in "-base" and legitimately resolves zero
-    # for any rate absent from a given fixture.
-    base_bindings = {key: value for key, value in resolved.items() if key.endswith("-base") and "-tipo-" not in key}
+    # for any rate absent from a given fixture, and so does the AIC per-tier
+    # blind-base layer and the domestic-reverse-charge (ISP interior) base --
+    # this fixture carries no adquisiciones intracomunitarias or ISP interior
+    # rows at all, so every tier of those families is legitimately absent here.
+    _NEW_FAMILY_MARKERS = ("-aic-", "-autorepercutido-interior-")
+    base_bindings = {
+        key: value
+        for key, value in resolved.items()
+        if key.endswith("-base") and "-tipo-" not in key and not any(marker in key for marker in _NEW_FAMILY_MARKERS)
+    }
     assert base_bindings, "the annual revision declares no ledger base binding at all"
     assert all(value > 0 for value in base_bindings.values()), base_bindings
 

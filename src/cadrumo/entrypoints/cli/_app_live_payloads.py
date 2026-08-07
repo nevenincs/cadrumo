@@ -84,6 +84,22 @@ class FiledListingRowPayload(OutputSchema):
     has_justificante: bool
 
 
+class FiledHistoryDiscoveryPairPayload(OutputSchema):
+    """JSON projection of one :class:`FiledHistoryDiscoveryPair`.
+
+    ``signals`` is the load-bearing field and is deliberately NOT collapsed to a
+    boolean or dropped once the union is built: it is what tells a reader whether
+    an empty result for this pair means anything. ``zero_rows_is_an_anomaly``
+    carries the derived answer so a consumer of the JSON does not have to
+    reimplement the rule and possibly get it wrong.
+    """
+
+    modelo: str
+    ejercicio: int
+    signals: list[str]
+    zero_rows_is_an_anomaly: bool
+
+
 class FiledCaptureFailurePayload(OutputSchema):
     """JSON projection of one :class:`FiledDataCaptureFailureRow`."""
 
@@ -118,6 +134,44 @@ class FiledListResult(OutputSchema):
     failed_count: int = 0
     rows: list[FiledListingRowPayload]
     failures: list[FiledCaptureFailurePayload] = []
+
+
+@register_schema("app.live.filed.discover")
+class FiledDiscoverResult(OutputSchema):
+    """Discovery result: which ``(modelo, ejercicio)`` pairs a history pull would walk.
+
+    Mirrors :class:`FiledHistoryDiscoveryReport`. Read-only; nothing is captured
+    or persisted by the verb that emits this.
+
+    The two count fields are not decoration. ``profile_expected_count`` is the
+    only number in this payload that supports a completeness claim, because only
+    the profile signal is taxpayer-specific by construction;
+    ``register_options_only_count`` counts pairs offered by a list whose scoping
+    is unconfirmed, which widens the walk but proves nothing about this
+    taxpayer's history.
+
+    Attributes:
+        pairs: Every pair a history pull would walk, each tagged with the
+            signal(s) that nominated it.
+        pair_count: Total pairs in the walk grid.
+        profile_expected_count: Pairs the taxpayer's own declared facts expected.
+        register_options_only_count: Pairs offered ONLY by the register's option
+            list. A zero-row outcome for one of these is a plain negative.
+        profile_year_span_determined: Whether the profile declared the activity
+            start date the year axis needs. ``False`` means the profile signal
+            contributed nothing and this payload is NOT a coverage denominator.
+        register_options_read: Whether the register's option lists were read.
+        carries_a_taxpayer_specific_denominator: Whether any coverage claim can
+            rest on this report at all.
+    """
+
+    pairs: list[FiledHistoryDiscoveryPairPayload]
+    pair_count: int
+    profile_expected_count: int
+    register_options_only_count: int
+    profile_year_span_determined: bool
+    register_options_read: bool
+    carries_a_taxpayer_specific_denominator: bool
 
 
 @register_schema("app.live.filed.pull")

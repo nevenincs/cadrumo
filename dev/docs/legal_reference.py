@@ -689,29 +689,36 @@ def _catalogue_record_block(record: LegalProvisionRecord, language: OutputLangua
     it is what it actually is: the cataloguer's own note.
     """
 
-    def label(name: str) -> str:
-        return docs_chrome(f"docs.legal.record.{name}", language)
-
+    # Every key is spelled out at its call site rather than composed from a
+    # field name. A composed key is invisible to the locale scanner, which then
+    # reports the catalogue entry as one no code requests and prunes it.
     fields = [
-        f":{label('catalogue_id')}: {_rst_literal(record.legal_id)}",
-        f":{label('instrument_kind')}: {_rst_literal(record.kind)}",
-        f":{label('boe_document')}: {_rst_literal(record.document_id)}",
-        f":{label('bundled_corpus')}: {_rst_literal(record.corpus_ref)}",
+        f":{docs_chrome('docs.legal.record.catalogue_id', language)}: {_rst_literal(record.legal_id)}",
+        f":{docs_chrome('docs.legal.record.instrument_kind', language)}: {_rst_literal(record.kind)}",
+        f":{docs_chrome('docs.legal.record.boe_document', language)}: {_rst_literal(record.document_id)}",
+        f":{docs_chrome('docs.legal.record.bundled_corpus', language)}: {_rst_literal(record.corpus_ref)}",
     ]
     if record.authority is not None:
-        fields.append(f":{label('authority')}: {_rst_literal(record.authority)}")
+        fields.append(f":{docs_chrome('docs.legal.record.authority', language)}: {_rst_literal(record.authority)}")
     if record.evidence_tier is not None:
-        fields.append(f":{label('evidence_tier')}: {_rst_literal(record.evidence_tier)}")
+        fields.append(
+            f":{docs_chrome('docs.legal.record.evidence_tier', language)}: {_rst_literal(record.evidence_tier)}",
+        )
     if record.consolidated_as_of is not None:
-        fields.append(f":{label('consolidated_as_of')}: {record.consolidated_as_of.isoformat()}")
+        fields.append(
+            f":{docs_chrome('docs.legal.record.consolidated_as_of', language)}: "
+            f"{record.consolidated_as_of.isoformat()}",
+        )
     if record.review_status is not None:
-        fields.append(f":{label('review_status')}: {_rst_literal(record.review_status)}")
+        fields.append(
+            f":{docs_chrome('docs.legal.record.review_status', language)}: {_rst_literal(record.review_status)}",
+        )
     if record.reviewed_at is not None:
-        fields.append(f":{label('reviewed_at')}: {record.reviewed_at.isoformat()}")
+        fields.append(f":{docs_chrome('docs.legal.record.reviewed_at', language)}: {record.reviewed_at.isoformat()}")
     if record.reviewed_by is not None:
-        fields.append(f":{label('reviewed_by')}: {_rst_escape(record.reviewed_by)}")
+        fields.append(f":{docs_chrome('docs.legal.record.reviewed_by', language)}: {_rst_escape(record.reviewed_by)}")
     if record.notes is not None:
-        fields.append(f":{label('note')}: {_rst_escape(record.notes)}")
+        fields.append(f":{docs_chrome('docs.legal.record.note', language)}: {_rst_escape(record.notes)}")
     title = docs_chrome("docs.legal.record.title", language)
     return [".. container:: cadrumo-legal-record", "", f"   {title}", "", *(f"   {line}" for line in fields)]
 

@@ -179,14 +179,12 @@ if TYPE_CHECKING:
         write_confirmation_record,
     )
     from ._consent_withdrawal import (
-        LOCAL_TRANSPORT_SEGMENT,
         CloudDerivedArtefact,
         ConsentedDispatch,
         ConsentWithdrawalSurvey,
         LocalRederivation,
         OnHostReader,
         artefact_is_cloud_derived,
-        provenance_stamp_transport,
         rederive_artefact_on_host,
         survey_cloud_consent,
     )
@@ -341,14 +339,12 @@ if TYPE_CHECKING:
 
 #: Public name -> owning submodule, resolved on first attribute access.
 _LAZY_EXPORTS: dict[str, str] = {
-    "LOCAL_TRANSPORT_SEGMENT": "._consent_withdrawal",
     "CloudDerivedArtefact": "._consent_withdrawal",
     "ConsentWithdrawalSurvey": "._consent_withdrawal",
     "ConsentedDispatch": "._consent_withdrawal",
     "LocalRederivation": "._consent_withdrawal",
     "OnHostReader": "._consent_withdrawal",
     "artefact_is_cloud_derived": "._consent_withdrawal",
-    "provenance_stamp_transport": "._consent_withdrawal",
     "rederive_artefact_on_host": "._consent_withdrawal",
     "survey_cloud_consent": "._consent_withdrawal",
     "ApplyRulesAppliedRow": "._models",
@@ -582,7 +578,6 @@ __all__ = [
     "DEFAULT_LOW_CONFIDENCE_THRESHOLD",
     "GROUNDABLE_ORIGINS",
     "IDENTITY_FIELDS",
-    "LOCAL_TRANSPORT_SEGMENT",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "ROUNDING_ALLOWANCE_PER_TERM",
     "AeatRecordProjectionError",
@@ -737,7 +732,6 @@ __all__ = [
     "printed_excerpt_occurs",
     "printed_total_discrepancy",
     "project_aeat_record_counterparty",
-    "provenance_stamp_transport",
     "query_ledger_review_rows",
     "re_stamped_provenance",
     "read_confirmation_record",

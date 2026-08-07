@@ -59,6 +59,7 @@ Submodules
    cadrumo.core._credentials
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
+   cadrumo.core._deuda_direccion
    cadrumo.core._document_shape
    cadrumo.core._draft_discrepancy
    cadrumo.core._export_exemption_reason
@@ -67,6 +68,7 @@ Submodules
    cadrumo.core._field_grounding
    cadrumo.core._field_origin
    cadrumo.core._field_role
+   cadrumo.core._filed_history_discovery_signal
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._fts_query
@@ -82,6 +84,7 @@ Submodules
    cadrumo.core._modelo
    cadrumo.core._modelo_232_codigos
    cadrumo.core._models
+   cadrumo.core._objeto_tributario
    cadrumo.core._optional_extras
    cadrumo.core._period
    cadrumo.core._pid_liveness
@@ -89,6 +92,7 @@ Submodules
    cadrumo.core._profile_session
    cadrumo.core._prorrata_exclusions
    cadrumo.core._prorrata_register
+   cadrumo.core._provenance_stamp
    cadrumo.core._refund_election
    cadrumo.core._rescate_type
    cadrumo.core._result_disposition

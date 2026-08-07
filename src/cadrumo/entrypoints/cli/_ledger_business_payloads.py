@@ -428,6 +428,23 @@ class EvidenceExtractResult(OutputSchema):
     provenance: list[EvidenceFieldProvenancePayload] = []
     discrepancies: list[EvidenceDraftDiscrepancyPayload] = []
     raw_text_length: int = 0
+    # Recorded ONCE per read rather than per field, because consent is granted
+    # per invocation and not per value: every field of one read shares one
+    # transport, and a per-field copy would invite a reader to believe they
+    # could differ.
+    #
+    # ``None`` on the default on-host route, which is the overwhelming majority
+    # of reads -- an absent pair says "this never left the host", and saying it
+    # by absence rather than by the word "local" keeps the affirmative case the
+    # only one that carries a claim.
+    #
+    # What these record is the AUTHORISATION, not a confirmation that bytes
+    # reached a vendor: they are populated from a token that could not have been
+    # minted had the deployment posture, the profile bar or the acknowledgement
+    # refused. A dispatch can still fail after that, and this pair does not
+    # claim otherwise.
+    off_host_provider: str | None = None
+    off_host_acknowledged_surface: str | None = None
 
 
 @register_schema("ledger.evidence.confirm")

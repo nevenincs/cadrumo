@@ -63,14 +63,35 @@ def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
 #   off-load-path advisory coverage report that inventories form-level
 #   data coverage; it is NOT a load-blocking gate.
 
-_CASILLA_TAG_RE = re.compile(r"\[(\d{5})\]")
-"""Matches the five-digit casilla tag AEAT embeds in Diseño field text.
+_CASILLA_TAG_RE = re.compile(r"\[(\d{1,5})\]")
+"""Matches the bracketed casilla tag AEAT embeds in Diseño field text.
 
 The official AEAT Diseño de Registros workbooks annotate every casilla
-field with its five-digit casilla number in square brackets within the
-field description (e.g. ``Liquidación III - ... - Base imponible
-[00552]``). This regex extracts those tags so a derivation can enumerate
-the ``(segmento, number)`` casilla set.
+field with its casilla number in square brackets within the field
+description, validation or content text (e.g. ``Liquidación III - ... -
+Base imponible [00552]``). This regex extracts those tags so a derivation
+can enumerate the ``(segmento, number)`` casilla set.
+
+**The tag width is NOT five digits across AEAT.** It was written as
+``\\d{5}``, which is the Impuesto sobre Sociedades convention that Modelo
+200 and Modelo 220 use. Every other modelo family brackets its box number
+at its natural width -- Modelo 303 writes ``[01]`` and ``[150]``, Modelo
+390 ``[01]``, Modelo 036 two and three digits. A fixed five-digit pattern
+therefore matched nothing on them, and because a matchless sweep yields an
+empty Diseño set rather than an error, the coverage report said
+``0 casillas, 0 gap`` for 36 of the 38 revisions that bundle an official
+record design. Reading as fully covered is the worst available failure for
+an instrument whose whole job is to find what the registry has not
+authored.
+
+Widening it takes the population that extracts anything from 2 revisions
+to 24. The remaining 14 annotate their casillas outside bracketed field
+text entirely and are inventoried, not silently zeroed, by
+:func:`build_diseno_coverage_report`.
+
+Bounded at five digits rather than open-ended: an unbounded ``\\d+`` would
+admit amounts, NIF fragments and position offsets that appear bracketed in
+the same columns.
 """
 
 
@@ -501,6 +522,14 @@ class DisenoCoverageReport:
       the Diseño casillas the registry has backfilled.
     - ``coverage_gap_casillas`` is the subset the Diseño declares that
       the registry does not — the advisory follow-up inventory.
+
+    ``extraction_found_no_casillas`` separates the two states that
+    otherwise present identically. A revision whose registry covers the
+    whole form reports an empty gap; so does a revision whose Diseño could
+    not be read at all, because an unread source yields an empty set and
+    every count derived from it is zero. Only the first is good news, and
+    for 36 of 38 revisions it was the second one being reported. Consult
+    this flag before treating an empty gap as coverage.
     """
 
     modelo_id: str
@@ -508,6 +537,18 @@ class DisenoCoverageReport:
     diseno_casillas: tuple[DerivedDisenoCasilla, ...]
     covered_casillas: tuple[DerivedDisenoCasilla, ...]
     coverage_gap_casillas: tuple[DerivedDisenoCasilla, ...]
+
+    @property
+    def extraction_found_no_casillas(self) -> bool:
+        """Whether the Diseño source yielded no casillas at all.
+
+        ``True`` means this report carries no information about coverage:
+        the source was parsed but no casilla tag was recognised in it, so
+        the registry was compared against nothing. An official AEAT record
+        design always declares casillas, so this state is a limitation of
+        the extraction, never a property of the form.
+        """
+        return not self.diseno_casillas
 
     @property
     def diseno_casilla_count(self) -> int:
@@ -549,6 +590,22 @@ def build_diseno_coverage_report(
     enforced at load while full-Diseño coverage is inventoried
     off-load-path.
 
+    The registry side keys on ``form_number`` where a casilla declares
+    one, falling back to ``number``. Both fields carry a box number, and
+    which one holds it is not uniform: a casilla whose ``id`` is a domain
+    name rather than a box number tends to repeat that id in ``number``
+    and record the official box in ``form_number``. Modelo 303's
+    ``iva.resultado-regimen-general`` is the worked example -- it IS box
+    46, exports to box 46, and was reported as an unauthored Diseño
+    casilla purely because the comparison read ``number`` and found the id
+    there.
+
+    This rescues only the casillas that record their box number somewhere.
+    A casilla whose ``number`` repeats its id and which declares no
+    ``form_number`` records the official box number nowhere, so nothing
+    can match it to the form; those remain in the coverage gap, which is
+    the honest report of their state.
+
     For a ``multi_segment`` modelo the comparison is segment-aware: a
     Diseño casilla under segment ``S`` is "covered" only when the
     registry declares a casilla with the same ``(S, number)`` metadata. For
@@ -563,7 +620,9 @@ def build_diseno_coverage_report(
         multi_segment: Whether the modelo uses segment-qualified casilla ids.
     """
     diseno = derive_diseno_coverage_casillas(path, multi_segment=multi_segment)
-    declared_metadata = {(casilla.segmento, casilla.number) for casilla in revision.casillas}
+    declared_metadata = {
+        (casilla.segmento, casilla.form_number or casilla.number) for casilla in revision.casillas
+    }
     covered: list[DerivedDisenoCasilla] = []
     gap: list[DerivedDisenoCasilla] = []
     for casilla in diseno:

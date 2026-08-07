@@ -84,6 +84,7 @@ from ._declarations import (
     capture_filed_declaration_observation,
     capture_previous_filing_observations,
     capture_relation_source_observations,
+    discover_filed_declaration_availability,
     non_numeric_observed_casillas,
     open_declarations_register,
     registry_observation_from_filed_declaration,
@@ -93,6 +94,12 @@ from ._declarations import (
     walk_declarations_register,
 )
 from ._declarations_observations import observed_casillas_from_submitted_file
+from ._deudas import (
+    DEUDAS_READ_SURFACE,
+    Deuda,
+    assert_deudas_landing,
+    deudas_read_path_prefixes,
+)
 from ._errors import (
     BrowserAdapterTypeError,
     ExpedienteNotFoundError,
@@ -133,6 +140,8 @@ from ._schema import (
     Expediente,
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
+    FiledDeclarationAvailability,
+    FiledDeclarationAvailabilityReport,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
     JustificanteRef,
@@ -148,6 +157,7 @@ from ._walker import (
 )
 
 __all__ = [
+    "DEUDAS_READ_SURFACE",
     "IVA_COMPENSATION_WALLET_URL",
     "PRE303_PRESENTATION_SERVICE_URL",
     "BrowserAdapterTypeError",
@@ -156,11 +166,14 @@ __all__ = [
     "CensalIdentity",
     "Declaracion",
     "DeclaracionesRegisterSession",
+    "Deuda",
     "Expediente",
     "ExpedienteNotFoundError",
     "FiledDeclaracionArtefact",
     "FiledDeclaracionObservation",
     "FiledDeclaracionObservationStore",
+    "FiledDeclarationAvailability",
+    "FiledDeclarationAvailabilityReport",
     "GroiSedeDriver",
     "IvaCompensationWalletObservation",
     "IvaCompensationWalletRow",
@@ -177,6 +190,7 @@ __all__ = [
     "SedeFailureMode",
     "SedeNavigationError",
     "SedeParseError",
+    "assert_deudas_landing",
     "capture_declaration",
     "capture_filed_declaration_observation",
     "capture_justificante",
@@ -184,6 +198,8 @@ __all__ = [
     "capture_relation_source_observations",
     "censal_datos_url",
     "collect_renta_web_open_observation",
+    "deudas_read_path_prefixes",
+    "discover_filed_declaration_availability",
     "extract_renta_web_open_summary_value",
     "fetch_censal_datos",
     "fetch_iva_compensation_wallet",

@@ -1,14 +1,16 @@
 """Semantic invoice-field extraction from a document's TEXT representation.
 
-Reading a rendered document is two questions, not one, and the vision reader
-answers them together. :func:`.extract_invoice_fields_from_images` hands rasterised pages to a vision
-model, which collapses *reading the page* and *understanding the page* into one
-call -- when the result is wrong there is no way to tell a transcription error
-from a reasoning error, and a perfect transcription obtained by any other means
-has nowhere to go.
+Reading a rendered document is two questions, not one. The vision reader once
+answered them together, handing rasterised pages to a model and taking back
+typed fields in a single call -- so when the result was wrong there was no way
+to tell a transcription error from a reasoning error, and a perfect
+transcription obtained by any other means had nowhere to go.
 
-This module is the missing second stage: text in, grounded
-:class:`~application.ledger.InvoiceDraft` out. Splitting it out means the
+This module is the second stage that made splitting them possible: text in,
+grounded :class:`~application.ledger.InvoiceDraft` out. Both acquisition lanes
+now feed it -- the deterministic text-layer extractor and
+:class:`~llm.LocalVisionDocumentTranscriber`, which transcribes and interprets
+nothing. Splitting it out means the
 transcription stage can be swapped, measured or replaced independently of the
 understanding stage, and it makes any already-transcribed text -- a PDF text
 layer, an OCR result, an EN16931 payload rendered back to prose -- usable.
@@ -51,8 +53,10 @@ See Also:
         Typed draft this reader returns after grounded re-validation.
     :func:`~llm._invoice_field_grounding.ground_extracted_fields`
         Shared grounded re-validation this reader and the vision reader both use.
-    :func:`.extract_invoice_fields_from_images`
-        Sibling reader for evidence carrying no text at all.
+    :func:`~llm.transcribe_document_images`
+        Sibling ACQUISITION stage for evidence carrying no text layer at all.
+        It produces the transcription this reader consumes; it does not read
+        fields.
 """
 
 from __future__ import annotations
@@ -60,10 +64,10 @@ from __future__ import annotations
 import asyncio
 
 from ..application.ledger import DocumentTranscription, InvoiceDraft, PurchaseInvoiceEvidenceInputError
-from ..core import Period
+from ..core import Period, build_provenance_stamp
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
-from ._consent import EvidenceConsentToken, provenance_transport_label
+from ._consent import EvidenceConsentToken
 from ._errors import LLMConfigError
 from ._invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
@@ -202,9 +206,12 @@ class TextInvoiceFieldExtractor:
         omits it makes a withdrawal silently incomplete: the artefact that most
         needs re-deriving is the one the survey cannot see.
         """
-        transport = provenance_transport_label(self._provider)
-        model = self._model or "configured"
-        return f"llm:{transport}-text-extract:{model}:rates-{self._compiled_prompt().rate_provenance}"
+        return build_provenance_stamp(
+            provider=self._provider,
+            reader="text-extract",
+            model=self._model or "configured",
+            qualifier=f"rates-{self._compiled_prompt().rate_provenance}",
+        )
 
     def extract(self, *, transcription: DocumentTranscription) -> InvoiceDraft:
         """Read the acquisition-stage ``transcription`` and return the grounded draft.

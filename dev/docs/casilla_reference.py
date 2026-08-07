@@ -180,8 +180,10 @@ _RST_SPECIAL = "\\`*_|[]"
 #: The catalogue namespace holding every display string this surface renders.
 #: Nothing user-visible is authored as a Python literal: the vocabulary lives in
 #: the four shared catalogues, Spanish first as the authoritative source, and is
-#: resolved per build language through :func:`_text`.
-_DISPLAY_PREFIX: Final[str] = "modelo.display"
+#: resolved per build language through the shared
+#: :func:`~dev.docs._locale_chrome.docs_chrome` resolver the sibling generated
+#: surfaces use, so all three read chrome through one authority.
+_DISPLAY_PREFIX: Final[str] = "docs.casilla"
 
 #: The one exception, and it is not chrome: the official Spanish name of a legal
 #: instrument. AEAT and BOE publish "Ley 37/1992" and "Real Decreto 1624/1992"
@@ -236,22 +238,15 @@ _ACRONYMS: Final[frozenset[str]] = frozenset(
 def _text(key: str, language: OutputLanguage, /, **values: object) -> str:
     """Resolve one display string for the build language, refusing a gap.
 
-    A missing key, or one whose value is the scaffold's key-echo placeholder,
-    raises rather than rendering a fallback: ``tr`` would quietly return a
-    humanised fragment of the key, which reads like real copy and would ship a
-    page whose chrome silently degrades. Nothing here falls back to another
-    language - an unauthored string is a build failure, not a substitution.
+    A thin namespace-scoped adapter over the shared resolver: this surface names
+    its strings by their suffix (``chrome.legal_basis``), while
+    :func:`~dev.docs._locale_chrome.docs_chrome` owns the strictness contract -
+    a missing string raises rather than falling back to another language, which
+    is the whole point of the correction this vocabulary came from.
     """
-    from cadrumo.core.i18n import lookup_translation_entry
+    from ._locale_chrome import docs_chrome
 
-    full_key = f"{_DISPLAY_PREFIX}.{key}"
-    present, value = lookup_translation_entry(full_key, locale=language.value)
-    if not present or value is None:
-        raise CasillaReferenceError(
-            f"locale {language.value!r} has no value for {full_key!r}; "
-            f"author it with `python -m dev.locales set {language.value} {full_key} <value>`"
-        )
-    return value.format(**values) if values else value
+    return docs_chrome(f"{_DISPLAY_PREFIX}.{key}", language, **values)
 
 
 #: Display keys with no enumeration behind them: page chrome and the

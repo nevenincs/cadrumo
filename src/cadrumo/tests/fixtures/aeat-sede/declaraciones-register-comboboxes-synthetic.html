@@ -1,0 +1,53 @@
+<!DOCTYPE html><html><head><title>Consulta de declaraciones</title></head><body>
+<!--
+SYNTHETIC - hand-built, not captured from AEAT. See the provenance sidecar
+(declaraciones-register-comboboxes-synthetic.json) and the owning test module.
+
+Why this exists alongside the real capture: the real capture
+(declaraciones-modelo-100-2022.html) carries 174 combobox option texts, which
+is the right evidence for "does the classifier survive real markup" but the
+wrong shape for "does it return EXACTLY this list". This fixture carries a
+small, hand-authored option set so an exact-equality assertion is readable and
+so each awkward case is present on purpose rather than by luck.
+
+Markup mirrors the real capture verbatim in the parts the parser reads: a
+z-combobox-popup holding li.z-comboitem elements, each with a
+span.z-comboitem-image followed by a span.z-comboitem-text, and &nbsp;
+separators rather than plain spaces.
+
+Both popups are rendered into the one snapshot, exactly as the real capture
+does - that is the condition the shape-disjointness classification exists for.
+
+Deliberate cases in the modelo popup:
+  * "-- Seleccione --" placeholder, which is not a modelo;
+  * "174 -" with an EMPTY description, which a pattern requiring a following
+    character would silently drop;
+  * alpha codes (ATF, DT2, 14A) alongside numeric ones;
+  * a duplicate "303 - ..." entry, to pin first-seen dedup.
+Deliberate cases in the ejercicio popup:
+  * its own "-- Seleccione --" placeholder;
+  * years out of order, to pin the newest-first sort;
+  * "1999", below the supported range, which must be dropped.
+-->
+<div id="modeloBox" class="z-combobox-popup" role="listbox">
+  <ul id="modeloBox-items" role="none">
+    <li id="mb1" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">--&nbsp;Seleccione&nbsp;--&nbsp;</span></li>
+    <li id="mb2" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">ATF&nbsp;-&nbsp;ANEXO&nbsp;MODELO&nbsp;604&nbsp;&nbsp;</span></li>
+    <li id="mb3" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">DT2&nbsp;-&nbsp;S.&nbsp;DEVOLUCI&Oacute;N&nbsp;APORTACIONES&nbsp;MUTUALIDADES&nbsp;</span></li>
+    <li id="mb4" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">14A&nbsp;-&nbsp;SOLICITUD&nbsp;ABONO&nbsp;ANTICIPADO&nbsp;</span></li>
+    <li id="mb5" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">100&nbsp;-&nbsp;IRPF.&nbsp;DECLARACI&Oacute;N&nbsp;ANUAL&nbsp;</span></li>
+    <li id="mb6" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">174&nbsp;-&nbsp;</span></li>
+    <li id="mb7" class="z-comboitem z-comboitem-selected"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">303&nbsp;-&nbsp;IVA.&nbsp;AUTOLIQUIDACI&Oacute;N&nbsp;</span></li>
+    <li id="mb8" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">303&nbsp;-&nbsp;IVA.&nbsp;AUTOLIQUIDACI&Oacute;N&nbsp;</span></li>
+  </ul>
+</div>
+<div id="ejercicioBox" class="z-combobox-popup" role="listbox">
+  <ul id="ejercicioBox-items" role="none">
+    <li id="eb1" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">--&nbsp;Seleccione&nbsp;--&nbsp;</span></li>
+    <li id="eb2" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">2024</span></li>
+    <li id="eb3" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">2026</span></li>
+    <li id="eb4" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">1999</span></li>
+    <li id="eb5" class="z-comboitem"><span class="z-comboitem-image" aria-hidden="true"></span><span class="z-comboitem-text">2025</span></li>
+  </ul>
+</div>
+</body></html>

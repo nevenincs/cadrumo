@@ -60,7 +60,9 @@ behaviour observed so far.
 
 Public surface: :class:`Expediente`, :class:`JustificanteRef`,
 :class:`SedeCapture`, :class:`FiledDeclaracionArtefact`,
-:class:`ObservedCasillaValue`, :class:`FiledDeclaracionObservation`.
+:class:`ObservedCasillaValue`, :class:`FiledDeclaracionObservation`,
+:class:`FiledDeclarationAvailability`,
+:class:`FiledDeclarationAvailabilityReport`.
 """
 
 from __future__ import annotations
@@ -73,9 +75,10 @@ from typing import Final, Literal
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import CasillaValueKind, Modelo, Period
+from .....core import CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, Period
 from .....core.decimal import coerce_decimal_strict
 from .....core.identity import ContentDigest
+from .....core.time import UtcInstant
 from .....domain.calculations.registry import CasillaId
 from ._adapter_utils import is_aeat_csv
 from ._errors import SedeValidationError
@@ -366,6 +369,75 @@ class IvaCompensationWalletObservation(BaseModel):
     mode: Literal["read"] = "read"
 
 
+class FiledDeclarationAvailability(BaseModel):
+    """The ejercicios the declaraciones register OFFERS for one modelo.
+
+    Read from the register form's own combobox option lists, so this record
+    states what AEAT's UI put in front of the session — nothing more. Whether
+    those lists are scoped to the authenticated NIF or are a static universal
+    catalogue the form renders for every taxpayer is UNCONFIRMED; a reader must
+    not upgrade ``ejercicios`` into "the years this taxpayer filed", and an
+    ejercicio ABSENT from the tuple is not evidence that nothing was filed for
+    it. Provenance is pinned on the enclosing
+    :class:`FiledDeclarationAvailabilityReport`.
+
+    Attributes:
+        modelo: Modelo code as carried by the combobox option, e.g. ``"303"``.
+            Parsed off the leading ``"<modelo> -"`` segment of the option text.
+        ejercicios: Every ejercicio the register offered for ``modelo``,
+            newest-first so a caller walking the tuple reaches recent filings
+            before historical ones.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicios: tuple[int, ...] = ()
+    mode: Literal["read"] = "read"
+
+    @field_validator("ejercicios")
+    @classmethod
+    def _ejercicios_in_range(cls, value: tuple[int, ...]) -> tuple[int, ...]:
+        """Reject an ejercicio outside the range every other record in this module accepts."""
+        for ejercicio in value:
+            if not 2000 <= ejercicio <= 2099:
+                raise SedeValidationError(f"ejercicio outside the supported range: {ejercicio!r}")
+        return value
+
+
+class FiledDeclarationAvailabilityReport(BaseModel):
+    """What the declaraciones register offered across every modelo it listed.
+
+    The report is tagged
+    :attr:`~core.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS` and the tag
+    is a pinned :class:`~typing.Literal`, not a caller-supplied field, so this
+    record can never be passed off as the taxpayer-specific
+    :attr:`~core.FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY` signal. It
+    is read-only evidence of an offered option set and persists nothing.
+
+    Attributes:
+        items: One :class:`FiledDeclarationAvailability` per modelo option the
+            register listed, in the order the combobox rendered them.
+        discovered_at: When the option sets were read.
+        signal: Pinned provenance. Always
+            :attr:`~core.FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    items: tuple[FiledDeclarationAvailability, ...] = ()
+    discovered_at: UtcInstant
+    signal: Literal[FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS] = (
+        FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS
+    )
+    mode: Literal["read"] = "read"
+
+    @property
+    def offered_pairs(self) -> tuple[tuple[str, int], ...]:
+        """Return every offered ``(modelo, ejercicio)`` pair, in report order."""
+        return tuple((item.modelo, ejercicio) for item in self.items for ejercicio in item.ejercicios)
+
+
 class FiledDeclaracionObservation(BaseModel):
     """Normalized read-only observation of one filed AEAT declaration.
 
@@ -404,6 +476,8 @@ __all__ = [
     "Expediente",
     "FiledDeclaracionArtefact",
     "FiledDeclaracionObservation",
+    "FiledDeclarationAvailability",
+    "FiledDeclarationAvailabilityReport",
     "IvaCompensationWalletObservation",
     "IvaCompensationWalletRow",
     "JustificanteRef",

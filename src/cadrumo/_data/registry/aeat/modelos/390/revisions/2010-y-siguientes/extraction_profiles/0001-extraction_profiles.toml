@@ -18,8 +18,10 @@ target_casillas = [
     {casilla_id = "iva.anual.repercutido.super-reducido", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^02$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
     {casilla_id = "iva.anual.repercutido.reducido", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^04$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
     {casilla_id = "iva.anual.repercutido.general", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^06$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
-    # Adquisiciones intracomunitarias de bienes 21%: box 26 feeds autorepercutido.intracomunitaria.
-    {casilla_id = "iva.anual.autorepercutido.intracomunitaria", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^26$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
+    # Adquisiciones intracomunitarias de bienes 21%: box [26] is the AIC rate-box-layer
+    # cuota for this rung, not the rate-blind total (box 26 is rate-specific per the
+    # design's own "Tipo 21%" label; the rate-blind casilla no longer exports here).
+    {casilla_id = "iva.anual.aic.bienes.tipo-21.cuota", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^26$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
     # Total cuotas deducibles operaciones interiores corrientes: box 49 (deducible section, page 4).
     {casilla_id = "iva.anual.soportado.interiores", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^49$", value_offset = "right_of_number", anchor_x_min = 407.0, anchor_x_max = 425.0}},
     # Computed summary totals — extracted for corpus ground-truth comparison.
@@ -45,5 +47,5 @@ corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
 min_coverage = "0.4"
 failure_semantics = "fail_hard"
-legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

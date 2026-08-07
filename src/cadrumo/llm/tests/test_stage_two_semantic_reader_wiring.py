@@ -34,7 +34,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ...application.ledger import DocumentTranscription, TranscriberIdentity
-from ...core import FieldOrigin
+from ...core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ...core.config import load_settings
 from ...core.time import now
 from .._evidence_draft_text import TextInvoiceFieldExtractor
@@ -82,7 +82,7 @@ def _transcription(origin: FieldOrigin, *, name: str = "pdfplumber") -> Document
         text="FACTURA\nProveedor: EJEMPLO SL B12345674\nBase imponible 100,00 EUR",
         page_count=1,
         source_content_sha256="e" * 64,
-        transcriber=TranscriberIdentity(origin=origin, name=name, revision="wiring"),
+        transcriber=TranscriberIdentity(transport=LOCAL_TRANSPORT_LABEL, origin=origin, name=name, revision="wiring"),
     )
 
 

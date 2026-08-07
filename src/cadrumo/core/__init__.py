@@ -123,6 +123,7 @@ from ._descendant_relacion import (
     ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
+from ._deuda_direccion import DeudaDireccion
 from ._document_shape import (
     AEAT_RECORD_BATCH_SHAPES,
     PDF_CONTAINER_SHAPES,
@@ -136,6 +137,7 @@ from ._external_oracle_corpus import ExternalOracleCorpus
 from ._field_grounding import FieldGroundingOutcome
 from ._field_origin import FieldOrigin
 from ._field_role import FieldRole
+from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hardware import (
@@ -228,6 +230,12 @@ from ._prorrata_register import (
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
+)
+from ._provenance_stamp import (
+    LOCAL_TRANSPORT_LABEL,
+    build_provenance_stamp,
+    provenance_stamp_transport,
+    provenance_transport_label,
 )
 from ._refund_election import RefundElection
 from ._rescate_type import RescateType
@@ -367,6 +375,7 @@ __all__: list[str] = [
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
     "LLM_EXTRA",
+    "LOCAL_TRANSPORT_LABEL",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
@@ -417,6 +426,7 @@ __all__: list[str] = [
     "DeclaracionIdioma",
     "DeploymentLicencePosture",
     "DescendantRelacion",
+    "DeudaDireccion",
     "DocumentShape",
     "DraftDiscrepancyKind",
     "ElidedProse",
@@ -428,6 +438,7 @@ __all__: list[str] = [
     "FieldGroundingOutcome",
     "FieldOrigin",
     "FieldRole",
+    "FiledHistoryDiscoverySignal",
     "FilingPeriodCode",
     "FindingResolutionAction",
     "FingerprintParticipation",
@@ -498,6 +509,7 @@ __all__: list[str] = [
     "accepted_period_patterns",
     "assess_passphrase_strength",
     "bucket_scoped_storage_path",
+    "build_provenance_stamp",
     "candidates_for_role",
     "capture_pointer",
     "character_class_count",
@@ -538,6 +550,8 @@ __all__: list[str] = [
     "pointer_path",
     "post_filing_event_is_actionable",
     "project_m210_tipo_renta_code",
+    "provenance_stamp_transport",
+    "provenance_transport_label",
     "read_pointer",
     "read_toml",
     "registry_period_kind",

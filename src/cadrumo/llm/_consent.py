@@ -44,24 +44,14 @@ from ._errors import LLMConsentError
 
 __all__ = [
     "EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY",
-    "LOCAL_TRANSPORT_LABEL",
     "EvidenceConsentToken",
     "cloud_evidence_read_permitted",
     "mint_evidence_consent_token",
-    "provenance_transport_label",
     "provider_reads_off_host",
 ]
 
 EVIDENCE_CONSENT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.refused"
 """Locale key for the operator-facing refusal raised at the dispatch point."""
-
-LOCAL_TRANSPORT_LABEL = "local"
-"""Transport token an on-host read stamps.
-
-Mirrored by ``application.ledger.LOCAL_TRANSPORT_SEGMENT``, which reads it back
-out of a persisted stamp. The two cannot share a declaration -- that layer may
-not import this package -- so they are pinned equal by a test instead.
-"""
 
 _MINT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.mint_refused"
 
@@ -81,25 +71,6 @@ def provider_reads_off_host(provider: LLMProvider) -> bool:
     that the newest transport is the one missing from it.
     """
     return provider is not LLMProvider.LOCAL
-
-
-def provenance_transport_label(provider: LLMProvider) -> str:
-    """Return the transport token a reader stamps for ``provider``.
-
-    The label half of :func:`provider_reads_off_host`, declared once because
-    two readers had derived it with byte-identical inline ternaries. That
-    duplication is not cosmetic here: the consent-withdrawal survey classifies
-    artefacts BY this token, so a reader that computes it differently -- or, as
-    one still does, omits it -- becomes invisible to a withdrawal, and the
-    artefact it produced is exactly the one most needing re-derivation.
-
-    ``local`` rather than the enum value, because the token is operator-facing
-    provenance rather than a serialized enum: it answers "did this leave the
-    host", and the on-host case reads as the word.
-    """
-    if provider is LLMProvider.LOCAL:
-        return LOCAL_TRANSPORT_LABEL
-    return provider.value.lower()
 
 
 def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool, acknowledged: bool) -> bool:

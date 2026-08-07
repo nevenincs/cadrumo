@@ -934,9 +934,15 @@ reviewed_at = 2026-05-05
 reviewed_by = "operator"
 notes = "Operaciones vinculadas: definicion, valor de mercado, metodos de valoracion y deber de informacion (Modelo 232)."
 required_text = [
-    "Operaciones vinculadas",
-    "valor de mercado",
     "personas o entidades vinculadas",
+    # Apartado 6 (acuerdos previos de valoracion) and apartado 14, at 50% and
+    # 97% of the article. The three original phrases were the title and two
+    # terms from the FIRST sentence, all inside the first 220 characters, so
+    # any truncation of the 24,500-character article passed the evidence check.
+    # Verified against the live BOE consolidated text: art. 18 has 14 apartados
+    # and the bundled excerpt carries all 14.
+    "sin que pueda exceder de los 4 períodos impositivos siguientes",
+    "no producirá efectos respecto del valor de mercado de las operaciones entre personas o entidades vinculadas",
 ]
 
 [legal."rd-634-2015:art-13"]

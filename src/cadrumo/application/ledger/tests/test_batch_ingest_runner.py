@@ -30,7 +30,7 @@ from ....application.provisioning import (
     SystemMemoryReading,
     probe_hardware_profile,
 )
-from ....core import AcceleratorKind
+from ....core import LOCAL_TRANSPORT_LABEL, AcceleratorKind
 from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -176,6 +176,61 @@ def test_the_good_document_is_actually_persisted_not_merely_reported(
     drafts = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
     assert len(drafts) == 1, "exactly the readable document should have left a draft"
     assert drafts[0].draft.supplier_tax_id is not None
+
+
+def test_an_all_local_batch_ingest_surveys_as_on_host(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """A batch read that never left the host must not appear in a withdrawal.
+
+    Drives the REAL batch path rather than seeding the draft store, because the
+    defect this guards was invisible to a seeded test: the survey classified by
+    parsing the stored ``extractor`` label, the batch stores a function name
+    there by a deliberate rule, and every batch-ingested draft was therefore
+    reported cloud-derived. A test that wrote its own stored draft would have
+    chosen a parseable label and proved the selector rather than the path.
+
+    Fail-open noise is not caution on a confidentiality surface. A withdrawal
+    listing documents that never left the machine trains the operator to skim
+    it, and the one row that matters is then the one they skim past.
+    """
+    from .._consent_withdrawal import survey_cloud_consent
+
+    _run(runtime_profile, batch_dir)
+
+    stored = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
+    assert stored, "the batch must have written a draft for this gate to mean anything"
+
+    survey = survey_cloud_consent(bucket_id=_BUCKET_ID, settings=runtime_profile.settings)
+
+    assert survey.cloud_derived_artefacts == (), (
+        "an all-local batch ingest was reported as cloud-derived; the survey is classifying by "
+        f"something other than the recorded transports {[row.read_transports for row in stored]}"
+    )
+    assert survey.transmitted_bytes_are_unrecallable is True
+
+
+def test_a_batch_draft_records_the_transport_that_carried_it(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """The stored transport is populated, so the survey above is not passing on emptiness.
+
+    An empty ``read_transports`` is defined to mean UNKNOWN and is surfaced, so
+    a survey returning no rows cannot be explained by the field being unset --
+    but only if something asserts the field is actually written. Without this,
+    a regression that stopped recording transports would flip the gate above
+    from green to red rather than silently, which is the right direction, and
+    this case is what makes that true.
+    """
+    _run(runtime_profile, batch_dir)
+
+    stored = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
+    assert stored
+    for row in stored:
+        assert row.read_transports, f"{row.evidence_reference} recorded no transport at all"
+        assert all(transport == LOCAL_TRANSPORT_LABEL for transport in row.read_transports)
 
 
 def test_a_second_run_re_ingests_nothing_and_emits_no_second_event(

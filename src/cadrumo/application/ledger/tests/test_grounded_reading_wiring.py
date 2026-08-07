@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core.config import load_settings
 from ....llm import LLMProviderError
 from ....llm._invoice_field_grounding import (
     ground_extracted_fields,
@@ -332,7 +333,11 @@ def test_a_missing_reader_does_not_fall_through_to_the_vision_engine(
     monkeypatch.setattr(llm_module, "extract_invoice_fields_from_text", unavailable)
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
-        _read_transcription_semantically(_control_evidence(), _control_transcription())
+        _read_transcription_semantically(
+            _control_evidence(),
+            _control_transcription(),
+            settings=load_settings(),
+        )
 
     assert raised.value.suggestion == "aeat config provision pull"
 

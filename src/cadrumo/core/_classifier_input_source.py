@@ -35,10 +35,19 @@ class ClassifierInputSource(StrEnum):
         PROFILE_AUTHORITY: Supplied by the taxpayer's own registered profile.
             Authoritative for the filer's own status and carries no anchor,
             because there is no printed form on the document to point at.
+        OPERATOR_ASSERTION: Stated by the operator at confirm, for a fact
+            neither the document nor the profile settles. Carries no anchor --
+            there is no printed form, which is precisely why it had to be
+            asserted -- and no profile authority either, because the vouching
+            party is the operator themselves. It is a third kind of backing
+            rather than a variant of the other two: an auditor asking "why does
+            this record say the customer is a taxable person?" needs to be sent
+            to a person, not to a page or to the censo.
     """
 
     DOCUMENT_EVIDENCE = "document_evidence"
     PROFILE_AUTHORITY = "profile_authority"
+    OPERATOR_ASSERTION = "operator_assertion"
 
 
 class CounterpartyTaxablePersonStatus(StrEnum):

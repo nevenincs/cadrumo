@@ -373,8 +373,10 @@ from ._support_matrix import (
 from ._rate_box_partition import (
     RateBoxPartition,
     RateBoxShortfall,
+    RateBoxUnscreenedGroup,
     derive_rate_box_partitions,
     rate_box_coverage_shortfalls,
+    rate_box_unscreened_groups,
 )
 from ._record_design import (
     DerivedDisenoCasilla,
@@ -874,6 +876,7 @@ __all__ = [
     "ProfilePredicateDefinition",
     "RateBoxPartition",
     "RateBoxShortfall",
+    "RateBoxUnscreenedGroup",
     "RecordDesignField",
     "RecordDesignSheet",
     "RecordId",
@@ -1085,6 +1088,7 @@ __all__ = [
     "previous_filing_source_reference",
     "profile_condition_matches",
     "rate_box_coverage_shortfalls",
+    "rate_box_unscreened_groups",
     "read_parameter",
     "register_cross_domain_snapshot_check",
     "registry_scalar_value_type",

@@ -1,0 +1,124 @@
+<!DOCTYPE html><html><head><title>Consulta de declaraciones</title></head><body>
+<!--
+SYNTHETIC - hand-built, not captured from AEAT. See the provenance sidecar
+(declaraciones-modelo-303-duplicated-period-synthetic.json).
+
+What this fixture models, and why it had to be authored rather than captured:
+every declaraciones-register fixture in this tree renders exactly one row per
+period, so nothing here could exercise a period that carries MORE THAN ONE
+filing. A quarterly modelo can hold an original plus a later-presented
+amendment for the same quarter, each with its own expediente id and its own
+presentation timestamp, and both registered ALTA.
+
+The grid below renders six rows for one ejercicio: 1T, 2T, 3T and 4T once each,
+then a SECOND 3T and a SECOND 4T presented months after the originals. Ordinary
+single-filing periods sit alongside the duplicated ones deliberately, so a
+consumer cannot pass by collapsing everything.
+
+The "Tipo de solicitud" cells are populated on every row. AEAT's own wording for
+that column is not pinned down by this fixture: the strings here are plausible
+placeholders standing in for a NON-EMPTY request-type cell, which is the only
+property anything reads them for. Nothing downstream may treat these two
+particular strings as AEAT's verbatim vocabulary.
+
+Class names, column order and cell markup mirror the real sanitised capture
+(declaraciones-modelo-100-2022.html). No pager section is present: six rows is
+one page by construction, and whether AEAT ever paginates this grid is not
+settled - see the fixture that models a declared-total shortfall separately.
+Every identifier, name and timestamp below is invented.
+-->
+<div id="bQQD3z" class="z-listbox" tabindex="0" role="grid">
+  <div id="bQQD3z-head" class="z-listbox-header" role="none">
+    <table id="bQQD3z-headtbl" role="none">
+      <tbody id="bQQD3z-headrows" role="rowgroup">
+        <tr id="bQQD4z" class="tablascej z-listhead z-flex z-flex-row" role="row">
+          <th id="bQQD5z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Desistir</div></th>
+          <th id="bQQD6z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Tipo de solicitud</div></th>
+          <th id="bQQD7z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Observaciones</div></th>
+          <th id="bQQD8z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Expediente</div></th>
+          <th id="bQQD9z" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Periodo</div></th>
+          <th id="bQQDaz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Estado</div></th>
+          <th id="bQQDbz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Fecha y Hora de presentaci&oacute;n</div></th>
+          <th id="bQQDcz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Obtenci&oacute;n de Justificante</div></th>
+          <th id="bQQDdz" class="texto_cen_middle z-listheader z-flex-item" role="columnheader"><div class="z-listheader-content">Descarga fichero presentado</div></th>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div id="bQQD3z-body" class="z-listbox-body" role="none" style="overflow: auto;">
+    <table id="bQQD3z-cave" role="none">
+      <tbody id="bQQD3z-rows" role="rowgroup">
+        <tr id="bQQDs00" class="z-listitem" aria-selected="false" role="row">
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content"> <button type="button" style="display:none;" class="z-button">Dar de baja</button></div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">Autoliquidaci&oacute;n</div></td>
+          <td class="texto_cen_middle saltoLineaTD z-listcell z-listcell-hidden-header"><div class="z-listcell-content">&nbsp;</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">202430300000101A</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">1T</div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">ALTA</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <span class="z-label">22/04/2024 10:14:03</span></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button">Ver</button></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button" tabindex="0">Ver</button></div></td>
+        </tr>
+        <tr id="bQQDs01" class="z-listitem" aria-selected="false" role="row">
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content"> <button type="button" style="display:none;" class="z-button">Dar de baja</button></div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">Autoliquidaci&oacute;n</div></td>
+          <td class="texto_cen_middle saltoLineaTD z-listcell z-listcell-hidden-header"><div class="z-listcell-content">&nbsp;</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">202430300000202B</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">2T</div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">ALTA</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <span class="z-label">19/07/2024 09:31:47</span></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button">Ver</button></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button" tabindex="0">Ver</button></div></td>
+        </tr>
+        <tr id="bQQDs02" class="z-listitem" aria-selected="false" role="row">
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content"> <button type="button" style="display:none;" class="z-button">Dar de baja</button></div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">Autoliquidaci&oacute;n</div></td>
+          <td class="texto_cen_middle saltoLineaTD z-listcell z-listcell-hidden-header"><div class="z-listcell-content">&nbsp;</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">202430300000303C</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">3T</div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">ALTA</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <span class="z-label">18/10/2024 12:05:11</span></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button">Ver</button></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button" tabindex="0">Ver</button></div></td>
+        </tr>
+        <tr id="bQQDs03" class="z-listitem" aria-selected="false" role="row">
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content"> <button type="button" style="display:none;" class="z-button">Dar de baja</button></div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">Autoliquidaci&oacute;n</div></td>
+          <td class="texto_cen_middle saltoLineaTD z-listcell z-listcell-hidden-header"><div class="z-listcell-content">&nbsp;</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">202430300000404D</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">4T</div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">ALTA</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <span class="z-label">27/01/2025 16:42:58</span></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button">Ver</button></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button" tabindex="0">Ver</button></div></td>
+        </tr>
+        <tr id="bQQDs04" class="z-listitem" aria-selected="false" role="row">
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content"> <button type="button" style="display:none;" class="z-button">Dar de baja</button></div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">Autoliquidaci&oacute;n complementaria</div></td>
+          <td class="texto_cen_middle saltoLineaTD z-listcell z-listcell-hidden-header"><div class="z-listcell-content">&nbsp;</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">202430300000505E</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">3T</div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">ALTA</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <span class="z-label">14/03/2025 11:20:36</span></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button">Ver</button></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button" tabindex="0">Ver</button></div></td>
+        </tr>
+        <tr id="bQQDs05" class="z-listitem" aria-selected="false" role="row">
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content"> <button type="button" style="display:none;" class="z-button">Dar de baja</button></div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">Autoliquidaci&oacute;n complementaria</div></td>
+          <td class="texto_cen_middle saltoLineaTD z-listcell z-listcell-hidden-header"><div class="z-listcell-content">&nbsp;</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">202430300000606F</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content">4T</div></td>
+          <td class="texto_cen_middle z-listcell z-listcell-hidden-header"><div class="z-listcell-content">ALTA</div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <span class="z-label">14/03/2025 11:58:09</span></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button">Ver</button></div></td>
+          <td class="texto_cen_middle z-listcell"><div class="z-listcell-content"> <button type="button" class="z-button" tabindex="0">Ver</button></div></td>
+        </tr>
+      </tbody>
+      <tbody class="z-listbox-emptybody">
+        <tr><td style="display: none;" colspan="9"><div class="z-listbox-emptybody-content">No se han encontrado resultados para la consulta realizada.</div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</body></html>

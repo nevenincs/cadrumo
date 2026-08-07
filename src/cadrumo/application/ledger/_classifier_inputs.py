@@ -83,17 +83,32 @@ class ClassifierInputFact(BaseModel):
         """Refuse a fact backed the wrong way for its source.
 
         An anchor on a profile fact would claim the document printed something
-        it did not, and is the exact laundering the two-source split exists to
+        it did not, and is the exact laundering the source split exists to
         prevent. An authority on document evidence hides that a printed value
-        was read rather than vouched for. Both directions are refused, because
-        either one makes the envelope lie about what an auditor should go and
-        look at.
+        was read rather than vouched for. Every direction is refused, because
+        any one of them makes the envelope lie about what an auditor should go
+        and look at.
+
+        Exhaustive over the source set rather than an if/else pair. An operator
+        assertion reaching a two-branch check would fall to the document arm and
+        be allowed to carry an anchor -- which would state that the page printed
+        the very fact the operator had to supply BECAUSE the page did not.
         """
         if self.source is ClassifierInputSource.PROFILE_AUTHORITY:
             if self.anchor is not None:
                 raise ValueError(f"profile fact {self.name!r} must not carry a document anchor")
             if not self.authority:
                 raise ValueError(f"profile fact {self.name!r} must name the authority that vouches for it")
+        elif self.source is ClassifierInputSource.OPERATOR_ASSERTION:
+            if self.anchor is not None:
+                raise ValueError(
+                    f"operator assertion {self.name!r} must not carry a document anchor: "
+                    "it was asserted because the document did not state it",
+                )
+            if self.authority is not None:
+                raise ValueError(
+                    f"operator assertion {self.name!r} is vouched for by the operator, not a profile authority",
+                )
         elif self.authority is not None:
             raise ValueError(f"document evidence {self.name!r} is vouched for by its anchor, not an authority")
         return self

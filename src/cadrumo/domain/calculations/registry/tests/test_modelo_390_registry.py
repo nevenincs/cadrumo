@@ -120,9 +120,10 @@ _M390_RECONCILIATION_PREDICATES = (
 )
 _M390_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(
     {
+        "ley-37-1992:art-13",
         "ley-37-1992:art-69",
         "ley-37-1992:art-70",
-        "ley-37-1992:art-84",
+        "ley-37-1992:art-85",
         "ley-37-1992:art-88",
         "ley-37-1992:art-92",
         "ley-37-1992:art-99",
@@ -341,6 +342,59 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
         "modelo-390-iva-recargo-equivalencia-general-cuota",
         "modelo-390-iva-recargo-equivalencia-reducido-cuota",
         "modelo-390-iva-recargo-equivalencia-super-reducido-cuota",
+        "modelo-390-iva-recargo-equivalencia-tipo-5-2-cuota",
+        "modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota",
+        "modelo-390-iva-recargo-equivalencia-tipo-1-cuota",
+        "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota",
+        "modelo-390-iva-recargo-equivalencia-tipo-0-5-cuota",
+        "modelo-390-iva-recargo-equivalencia-tipo-0-26-cuota",
+        "modelo-390-volumen-entregas-intracomunitarias-base",
+        "modelo-390-volumen-exportaciones-exentas-base",
+        # AIC (adquisiciones intracomunitarias) rate-specific box layer -- see
+        # civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml.
+        "modelo-390-iva-aic-bienes-tipo-0-base",
+        "modelo-390-iva-aic-bienes-tipo-0-cuota",
+        "modelo-390-iva-aic-bienes-tipo-2-base",
+        "modelo-390-iva-aic-bienes-tipo-2-cuota",
+        "modelo-390-iva-aic-bienes-tipo-4-base",
+        "modelo-390-iva-aic-bienes-tipo-4-cuota",
+        "modelo-390-iva-aic-bienes-tipo-5-base",
+        "modelo-390-iva-aic-bienes-tipo-5-cuota",
+        "modelo-390-iva-aic-bienes-tipo-7-5-base",
+        "modelo-390-iva-aic-bienes-tipo-7-5-cuota",
+        "modelo-390-iva-aic-bienes-tipo-10-base",
+        "modelo-390-iva-aic-bienes-tipo-10-cuota",
+        "modelo-390-iva-aic-bienes-tipo-21-base",
+        "modelo-390-iva-aic-bienes-tipo-21-cuota",
+        "modelo-390-iva-aic-servicios-tipo-0-base",
+        "modelo-390-iva-aic-servicios-tipo-0-cuota",
+        "modelo-390-iva-aic-servicios-tipo-2-base",
+        "modelo-390-iva-aic-servicios-tipo-2-cuota",
+        "modelo-390-iva-aic-servicios-tipo-4-base",
+        "modelo-390-iva-aic-servicios-tipo-4-cuota",
+        "modelo-390-iva-aic-servicios-tipo-5-base",
+        "modelo-390-iva-aic-servicios-tipo-5-cuota",
+        "modelo-390-iva-aic-servicios-tipo-7-5-base",
+        "modelo-390-iva-aic-servicios-tipo-7-5-cuota",
+        "modelo-390-iva-aic-servicios-tipo-10-base",
+        "modelo-390-iva-aic-servicios-tipo-10-cuota",
+        "modelo-390-iva-aic-servicios-tipo-21-base",
+        "modelo-390-iva-aic-servicios-tipo-21-cuota",
+        # AIC rate-blind per-tier base bindings (the total layer for the box
+        # layer above, mirroring the domestic ordinario zero/general/reduced/
+        # super_reduced blind bindings).
+        "modelo-390-iva-aic-bienes-zero-blind-base",
+        "modelo-390-iva-aic-bienes-super-reduced-blind-base",
+        "modelo-390-iva-aic-bienes-reduced-blind-base",
+        "modelo-390-iva-aic-bienes-general-blind-base",
+        "modelo-390-iva-aic-servicios-zero-blind-base",
+        "modelo-390-iva-aic-servicios-super-reduced-blind-base",
+        "modelo-390-iva-aic-servicios-reduced-blind-base",
+        "modelo-390-iva-aic-servicios-general-blind-base",
+        # Domestic reverse-charge (ISP interior, LIVA art. 84.Uno.2) -- boxes
+        # [27]/[28], previously fed in error by the AIC blind binding above.
+        "modelo-390-iva-autorepercutido-interior-base",
+        "modelo-390-iva-autorepercutido-interior-cuota",
     }
 
 

@@ -548,11 +548,34 @@ class DescendantInfo(BaseModel):
         return stripped
 
     def age_at_year_end(self, filing_year: int) -> int:
-        """Return the descendant's age on 31 December of *filing_year*."""
-        year_end = date(filing_year, 12, 31)
-        age = year_end.year - self.birth_date.year
-        # Subtract one if the birthday has not yet occurred by year-end.
-        if (self.birth_date.month, self.birth_date.day) > (year_end.month, year_end.day):
+        """Return the descendant's age at the end of *filing_year*, or at death.
+
+        A descendant who died during the period is aged at their DEATH DATE, not
+        at 31 December, and that distinction is load-bearing rather than
+        pedantic. Aging them to year-end returns an age they never reached
+        whenever their birthday falls between the death and 31 December, and the
+        consequences are both silent and both against a bereaved filer: a child
+        who died at 24 reads as 25 and fails the Art. 58.1 age limb outright, so
+        the flat cuantía Art. 61 norma 4ª exists to grant is never reached; a
+        toddler who died at two reads as three and loses the menor-tres
+        increment this module's own aggregate promises them.
+
+        Norma 4ª exists BECAUSE the deceased is absent at the devengo, so
+        applying a 31-December test to someone the statute already treats as
+        dead defeats the provision's own premise. The AEAT manual cited at
+        :meth:`minimo_descendientes_estatal` grants the menor-tres increase to a
+        descendant who died during the period, which is the same reading.
+
+        A death in a PRIOR year is not aged here at all -- that descendant is
+        already excluded by :meth:`meets_non_income_conditions`, which fails on
+        ``death_date.year < filing_year`` before any age question is asked.
+        """
+        reference = date(filing_year, 12, 31)
+        if self.death_date is not None and self.death_date.year == filing_year:
+            reference = self.death_date
+        age = reference.year - self.birth_date.year
+        # Subtract one if the birthday has not yet occurred by the reference date.
+        if (self.birth_date.month, self.birth_date.day) > (reference.month, reference.day):
             age -= 1
         return age
 

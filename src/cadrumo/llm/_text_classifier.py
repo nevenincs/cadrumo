@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 
+from ..core import build_provenance_stamp
 from ..core.config import Settings, load_settings
 from ..domain.transactions import (
     LLMClassificationResponse,
@@ -92,7 +93,7 @@ class LocalTextLLMClassifier:
         Distinct from both the vision stamp and the retired cloud stamps, so a
         persisted record always says which on-host transport read it.
         """
-        return f"llm:local-text:{self._model}"
+        return build_provenance_stamp(provider=LLMProvider.LOCAL, reader="text", model=self._model)
 
     def classify(self, transaction: Transaction, *, evidence_text: str | None) -> LLMClassificationResponse:
         """Classify ``transaction``, reading any extracted evidence text on-host.
