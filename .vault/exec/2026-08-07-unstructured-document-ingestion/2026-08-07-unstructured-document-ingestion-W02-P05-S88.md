@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e819ad36013582035c8f721f52be76a88537a0edde11a5dfbcdae96efc707c4'
+body_hash: 'sha256:de561aa2643207fe7679b41bf8ebed8741f9754e0a4fae7ede05bebd9909093e'
 step_id: 'S88'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -67,6 +67,25 @@ The wiring into the draft assembly is deliberately not part of this change. The
 classifier's criteria record is constructed nowhere in production today, so a
 single wire here would have created a second, partial entry point into that
 problem; all wiring is tracked separately.
+
+### The row is wider than this record
+
+Recorded by the coordinator after two later lanes mapped the row and handed back
+on budget. This record covers the legend-derivation delivery only, and the Step
+it belongs to also carries the convergence itself: demoting the two live minting
+sites in `_evidence_draft.py` to comparators and routing supplied facts into the
+criteria assembly. That work is not delivered here, and the exclusion paragraph
+above should be read as scoping this change rather than the row.
+
+The mapping passes established one fact that reshapes the remaining work.
+`IvaInvoiceClassificationCriteria` has no category field and cannot have one,
+because the criteria produce a category. So the structured tax-category code
+cannot be re-routed as a supplied fact into the criteria, as the row's text
+proposes: it is structurally incapable of being an input. It becomes a
+corroboration check against the minted result instead. The supplied-fact channel
+is real, but it carries the criteria's genuine inputs — supply nature, customer
+tax status, territorial scopes — and its contribution is recording who
+established each one, which the flat asserted parameters cannot express.
 
 ## Verification
 
