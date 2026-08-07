@@ -5,70 +5,31 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:bc445e3b838b92e6fb718a1235fbcafac5db40e165328383290e0fc2969d5d11'
+body_hash: 'sha256:e09225955f995022c7e6c77682f6ae91d66a5f762af22aceb82f73b1026124c0'
 step_id: 'S03'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S03 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The SUPERSEDED, do not execute as written - the hardcoded backend-inputs redirect is deliberately KEPT rather than retired, made T-05 conformant by moving its constant to domain.renta and registering a CrossDomainSnapshotCheck that runs at every snapshot build, and retiring it would remove the routing the M130 retencion depends on and ## Scope
-
-- `src/cadrumo/domain/renta/_retenciones_routing_integrity.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# SUPERSEDED, do not execute as written - the hardcoded backend-inputs redirect is deliberately KEPT rather than retired, made T-05 conformant by moving its constant to domain.renta and registering a CrossDomainSnapshotCheck that runs at every snapshot build, and retiring it would remove the routing the M130 retencion depends on
-
-## Scope
-
-- `src/cadrumo/domain/renta/_retenciones_routing_integrity.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W01.P01.S03
 
 ## Outcome
 
-## Verification
+Closed by **supersession, not by execution.** The hardcoded redirect this Step would retire is deliberately kept, and retiring it would remove the routing the M130 retención depends on.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## Why the premise inverted
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+The Step is conditional on `S02`: retire the override *once the registry declares the destination*. The registry does not declare it, because that approach was implemented and reverted (see `W01.P01.S02`). With its precondition gone, executing the Step alone would delete `_m130_retenciones_backend_inputs` and leave the resolved retención with nowhere to report — a silent zero on casilla 06, which is the defect class this campaign exists to close.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## What the override became instead
 
-## Notes
+T-05 conformant rather than retired:
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+- its casilla constant moved to `domain/renta/_retenciones_routing_integrity.py`, the domain that owns the routing fact;
+- a `CrossDomainSnapshotCheck` validates it against every M130 revision at snapshot build;
+- the binding id that redirects onto it now lives beside it, so both halves of "this binding reports on that casilla" are one fact in one module rather than a constant here and an id there.
+
+That last move landed during this pass (`W02.P03`), and it is what let the cross-domain check become conditional on the binding rather than asserted for every modelo-130 revision.
+
+## Why the row is closed rather than left open
+
+"Retire the hardcoded backend-inputs override" is an actively dangerous instruction now that the override is the sanctioned mechanism. The row text carries a SUPERSEDED marker pointing at the module that holds the remedy, so a future reader meets the decision rather than the retired plan.

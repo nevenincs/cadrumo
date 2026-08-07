@@ -5,70 +5,34 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:cd76d2942ae5f6ddca2c5565224d78257e2403bca59a3901065d3d0278a82b59'
+body_hash: 'sha256:708438bc138595d6a016d215060c672534b5df80532fc426eaba155e6fba530b'
 step_id: 'S31'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S31 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Classify the serial-lane perf-budget miss against a quiet baseline, measured P95 3.906 CPU-s against a 3.0 budget on a box that ran a large agent fleet all night and ## Scope
-
-- `src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Classify the serial-lane perf-budget miss against a quiet baseline, measured P95 3.906 CPU-s against a 3.0 budget on a box that ran a large agent fleet all night
-
-## Scope
-
-- `src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W05.P07.S31
 
 ## Outcome
 
-## Verification
+Classified: **a load artefact, not a regression.** The same test fails inside the full serial lane and passes when run alone.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The measurement
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+- Inside `pytest src/cadrumo -m serial -n0`, running as the first of 54 tests on a box carrying the agent fleet: `test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget` **FAILED**.
+- Running `test_ledger_scale_benchmark.py` as its own module: the same test **PASSED**, alongside 6 of its 7 siblings.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+The budget is a P95 CPU-second bound, so it measures a quantity contention directly inflates. The Step's hypothesis — measured 3.906 CPU-s against a 3.0 budget on a box that ran a large agent fleet all night — is the shape confirmed here.
 
-## Notes
+## The caveat that keeps this honest
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+This is a confirming result for the prior, so it deserves a plausibility check rather than acceptance. The "isolated" run was **not** taken on a quiet box: the peer fleet was active throughout and this session had suites running minutes earlier. So the comparison is not loaded-versus-quiet, it is whole-lane-versus-single-module.
+
+That the budget is met even under residual load argues for real headroom rather than a marginal pass, which strengthens the classification. But a genuinely quiet baseline was not available, and this record should not be read as having established one. If the test fails again on a quiet box, this classification is wrong and the budget or the code is the problem.
+
+## Not actioned
+
+No budget was relaxed. Widening a threshold to accommodate contention is how a perf gate stops measuring anything, and the evidence here says the gate is right and the environment was loaded.
+
+## Incidental finding, not mine
+
+The sibling `test_modelo_calculate_reports_latency` fails on a peer's **uncommitted** working-tree edit to `_data/registry/cadrumo/user_profile/schema.toml`: a field description exceeds the 512-character schema bound, so `load_user_profile_schema` raises. HEAD's version loads cleanly. Left untouched per `uncommitted-wip-is-not-orphaned`, and reported rather than fixed.

@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:adb8316870543cc129f34c556ee03734054a2214706f3cc15da6d6c6ad721ad2'
+body_hash: 'sha256:477760ab8036f2cf65d8dcd6f3797b7d391024fa504368dd4d61192ba5ee0754'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -27,8 +27,8 @@ A binding must declare where its aggregate lands. The M130 retenciones binding's
 Give the renta-income binding family a real output-casilla declaration so the registry states where an aggregate lands, then retire the hardcoded application-layer write path.
 
 - [x] `W01.P01.S01` - Read the linkage-design-audit T-05 hard-coded-constants prior art before designing anything, it may already prescribe this fix; `.vault/reference/2026-05-15-linkage-design-audit-reference.md`.
-- [ ] `W01.P01.S02` - SUPERSEDED, do not execute as written - the registry output_casilla_id selector field was implemented and deliberately reverted in fc0d0353b2 because it reopens the cross-domain routing design T-05 governs, the shipped answer is T-05's own remedy of a domain-owned constant cross-checked against the snapshot, and the residual structural question is carried by the binding-output-casilla-declaration ADR; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `W01.P01.S03` - SUPERSEDED, do not execute as written - the hardcoded backend-inputs redirect is deliberately KEPT rather than retired, made T-05 conformant by moving its constant to domain.renta and registering a CrossDomainSnapshotCheck that runs at every snapshot build, and retiring it would remove the routing the M130 retencion depends on; `src/cadrumo/domain/renta/_retenciones_routing_integrity.py`.
+- [x] `W01.P01.S02` - SUPERSEDED, do not execute as written - the registry output_casilla_id selector field was implemented and deliberately reverted in fc0d0353b2 because it reopens the cross-domain routing design T-05 governs, the shipped answer is T-05's own remedy of a domain-owned constant cross-checked against the snapshot, and the residual structural question is carried by the binding-output-casilla-declaration ADR; `src/cadrumo/domain/calculations/registry/_ledger_bindings.py`.
+- [x] `W01.P01.S03` - SUPERSEDED, do not execute as written - the hardcoded backend-inputs redirect is deliberately KEPT rather than retired, made T-05 conformant by moving its constant to domain.renta and registering a CrossDomainSnapshotCheck that runs at every snapshot build, and retiring it would remove the routing the M130 retencion depends on; `src/cadrumo/domain/renta/_retenciones_routing_integrity.py`.
 - [x] `W01.P01.S04` - Prove the retencion still reaches casilla 06 end to end after the override is retired, asserting the value not merely the wiring; `src/cadrumo/application/aggregation/tests/`.
 - [x] `W01.P01.S19` - Confirm no peer holds the retencion backend-inputs function before the first edit, the live over-claim and this structural fix are the same code site; `src/cadrumo/application/aggregation/_modelo_bindings.py`.
 - [x] `W01.P01.S45` - Propose a superseding ADR if the registry should declare where an aggregate lands, the sweep found two opposite declaration conventions and the IVA families cannot express a match-output divergence at all, which is a gap the current pattern cannot close; `.vault/adr/`.
@@ -96,12 +96,12 @@ The first trustworthy full-surface measurement produced a 22-item candidate-genu
 Separate real defects from measurement artefacts with evidence, fixing anything this session's landings caused.
 
 - [x] `W05.P07.S16` - Classify each candidate-genuine suite failure as defect, environment artefact, or caused by this session's landings, with evidence; `src/cadrumo/`.
-- [ ] `W05.P07.S17` - Run the serial lane with workers disabled so the sixty held tests produce a result instead of an absence; `src/cadrumo/`.
+- [x] `W05.P07.S17` - Run the serial lane with workers disabled so the sixty held tests produce a result instead of an absence; `src/cadrumo/`.
 - [ ] `W05.P07.S20` - Fix the installed-console help path constructing Settings and reaching the former-product database refusal, help must never need database access and the refusal must route through the translated error boundary instead of leaking a traceback; `src/cadrumo/entrypoints/cli/`.
 - [ ] `W05.P07.S21` - Diagnose the ledger evidence-extract extra-forbidden regression on recargo_amount, lines, iva_breakdown and iva_category before fixing either side, getting the direction wrong would paper over a data-loss regression as test staleness; `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_extract_cli.py`.
 - [ ] `W05.P07.S22` - Land the mechanical ratchet and rationale-marker fixes confirmed new since the pre-tonight baseline, each completing an already-argued intent rather than making a new decision; `src/cadrumo/`.
 - [ ] `W05.P07.S23` - Rule whether the new einvoice XML parse error derives from the project error base or declares a bare-base rationale, a domain call not a mechanical fix; `src/cadrumo/adapters/inbound/einvoice/_xml.py`.
-- [ ] `W05.P07.S31` - Classify the serial-lane perf-budget miss against a quiet baseline, measured P95 3.906 CPU-s against a 3.0 budget on a box that ran a large agent fleet all night; `src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py`.
+- [x] `W05.P07.S31` - Classify the serial-lane perf-budget miss against a quiet baseline, measured P95 3.906 CPU-s against a 3.0 budget on a box that ran a large agent fleet all night; `src/cadrumo/application/aggregation/tests/test_ledger_scale_benchmark.py`.
 - [ ] `W05.P07.S32` - Classify the packaging cohort inventory drift, six errors share one root cause where a stray gitignore sits in the build output directory outside the declared manifest; `dev/packaging/`.
 
 ## Wave `W06` - Standing canonicalisation and dedup sweep
@@ -125,7 +125,7 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [x] `W06.P08.S41` - Refuse rather than guess when an intra-community supply carries no operation type, the fallback emits the one clave the official table expressly carves post-importation supplies out of and cannot distinguish them from the category it reads; `src/cadrumo/application/invoices/_source_resolver.py`.
 - [x] `W06.P08.S42` - Document the call-off stock claves as unreachable by scope from an invoice-sourced path so the next reader does not refile the subset as a defect; `src/cadrumo/application/invoices/_source_resolver.py`.
 - [x] `W06.P08.S43` - Add the second not-subject member to the cash-accounting exclusion set now the OSS scope refusal is confirmed correct, with a mutation proof since a set-membership edit that reddens nothing has not been shown to bite; `src/cadrumo/application/aggregation/_iva_ledger.py`.
-- [ ] `W06.P08.S44` - Require the intracom operation type at invoice creation where the operator holds the fact, rather than inferring a clave at calculate time where nobody does, closing the ambiguity upstream instead of screening it downstream; `src/cadrumo/application/invoices/_creation.py`.
+- [x] `W06.P08.S44` - Require the intracom operation type at invoice creation where the operator holds the fact, rather than inferring a clave at calculate time where nobody does, closing the ambiguity upstream instead of screening it downstream; `src/cadrumo/application/invoices/_creation.py`.
 - [ ] `W06.P08.S46` - Establish whether M390 modelling only twenty-two casillas with no counterpart for four categories the quarterly return carries is a registry-completeness gap or correct by the annual form's own design; `src/cadrumo/_data/registry/aeat/modelos/390/`.
 - [ ] `W06.P08.S47` - Scope the M390 annual under-modelling as its own campaign, the registry carries twenty-two casillas against three hundred and seventy-five official boxes and splits neither goods from services nor by rate tier where the diseno does both; `.vault/research/`.
 - [ ] `W06.P08.S49` - Refuted by measurement, do not widen the rate-kind enum - the fourteen M390 rate values are effective-dated values of the five existing semantic tiers, not new tiers, proven cross-year from the bundled layouts where the 2025 diseno zero-mandates the same casilla numbers the 2024 diseno carries live; `src/cadrumo/domain/iva/_schema.py`.

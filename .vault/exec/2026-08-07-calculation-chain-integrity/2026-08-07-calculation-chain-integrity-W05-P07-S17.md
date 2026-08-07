@@ -5,70 +5,33 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e9be6d9a26be528a8e498706c5b7ac174fbd6603f41fb915c37348bc5a74990'
+body_hash: 'sha256:29ef4eb49b06afa905c2e51a8ec8e96f4bee762d7f662d62c0bdaabe0bc38058'
 step_id: 'S17'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S17 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Run the serial lane with workers disabled so the sixty held tests produce a result instead of an absence and ## Scope
-
-- `src/cadrumo/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Run the serial lane with workers disabled so the sixty held tests produce a result instead of an absence
-
-## Scope
-
-- `src/cadrumo/`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W05.P07.S17
 
 ## Outcome
 
-## Verification
+Ran, and the lane produced a result instead of an absence — for two thirds of it. The remaining third is blocked by something other than workers, which is the finding.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## What ran
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+`pytest src/cadrumo -m serial -n0` selects **54** tests. **36 produced a verdict: 35 passed, 1 failed.** The other 18 never started.
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+## Two blockers, neither of them xdist
 
-## Notes
+**A peer collection error stopped the first attempt at one test.** `src/cadrumo/tests/test_ledger_corpus_llm_classification.py` fails to import — `cannot import name 'build_claude_classifier' from 'cadrumo.domain.transactions'` — from the in-flight `llm-package-split` relocation. Pytest aborts the whole session on a collection error, so the lane reported `1 tests ran; 24352 were DESELECTED` and produced nothing at all. Re-running with that one module ignored is what let the lane report.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+**A subprocess-spawning test exhausts the global timeout.** After 36 verdicts the run hangs inside `dev/packaging/_smoke_common.py::run_checked`, waiting on `subprocess.communicate`, and the faulthandler timeout fires with the reader threads still blocked. Everything ordered after it never runs.
+
+So the Step's premise — that disabling workers is what the held tests needed — is only half right. Workers were one reason; the lane still cannot complete because one serial test spawns a long-running subprocess with no per-test bound, and one unrelated module cannot be imported at all.
+
+## The verdicts obtained
+
+The single failure is `test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget`, which is `W05.P07.S31`'s subject and is classified there.
+
+## What this leaves open
+
+Eighteen serial tests still have no verdict, and the honest statement is that this run did not produce one for them rather than that they pass. Bounding the packaging smoke test (a per-test timeout, or moving it out of the lane that other tests queue behind) is what would let the lane complete; that is a change to the packaging surface and is not made here.
