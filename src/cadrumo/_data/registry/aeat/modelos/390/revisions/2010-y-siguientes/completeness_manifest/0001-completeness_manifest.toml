@@ -3,10 +3,12 @@ source_ref = "aeat-dr-390-2025"
 legal_refs = [
     "ley-37-1992:art-115",
     "ley-37-1992:art-116",
+    "ley-37-1992:art-13",
     "ley-37-1992:art-17",
     "ley-37-1992:art-69",
     "ley-37-1992:art-70",
     "ley-37-1992:art-84",
+    "ley-37-1992:art-85",
     "ley-37-1992:art-88",
     "ley-37-1992:art-90",
     "ley-37-1992:art-91",
@@ -222,3 +224,153 @@ number = "103"
 [[revisions."2010-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "iva.anual.volumen.exportaciones-exentas"
 number = "104"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-0.base"
+number = "716"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-0.cuota"
+number = "717"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-2.base"
+number = "683"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-2.cuota"
+number = "684"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-4.base"
+number = "21"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-4.cuota"
+number = "22"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-5.base"
+number = "718"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-5.cuota"
+number = "719"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-7-5.base"
+number = "685"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota"
+number = "686"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-10.base"
+number = "23"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-10.cuota"
+number = "24"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-21.base"
+number = "25"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-21.cuota"
+number = "26"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-0.base"
+number = "720"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-0.cuota"
+number = "721"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-2.base"
+number = "687"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-2.cuota"
+number = "688"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-4.base"
+number = "545"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-4.cuota"
+number = "546"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-5.base"
+number = "722"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-5.cuota"
+number = "723"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-7-5.base"
+number = "689"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota"
+number = "690"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-10.base"
+number = "547"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-10.cuota"
+number = "548"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-21.base"
+number = "551"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-21.cuota"
+number = "552"
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.base"
+number = "27"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.cuota"
+number = "28"
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.zero.base"
+number = "iva.anual.aic.bienes.zero.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.super_reduced.base"
+number = "iva.anual.aic.bienes.super_reduced.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.reduced.base"
+number = "iva.anual.aic.bienes.reduced.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.general.base"
+number = "iva.anual.aic.bienes.general.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.zero.base"
+number = "iva.anual.aic.servicios.zero.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.super_reduced.base"
+number = "iva.anual.aic.servicios.super_reduced.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.reduced.base"
+number = "iva.anual.aic.servicios.reduced.base"
+
+[[revisions."2010-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.general.base"
+number = "iva.anual.aic.servicios.general.base"

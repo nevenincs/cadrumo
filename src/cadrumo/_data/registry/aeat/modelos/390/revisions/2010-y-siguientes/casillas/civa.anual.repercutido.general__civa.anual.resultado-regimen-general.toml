@@ -90,6 +90,16 @@ legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 export_refs = ["modelo-390-page-04-casilla-63"]
 
+# Rate-blind AIC TOTAL layer, feeding the annual devengada total formula
+# (modelo-390-iva-anual-cuota-devengada-total) so an AIC row whose rate was
+# never recorded is still counted. NO LONGER EXPORTED: it previously carried
+# export_refs pointing at the ISP (inversion del sujeto pasivo) box [28],
+# which was the defect -- AIC and domestic ISP are different LIVA hechos
+# imponibles (art. 13/85 vs art. 84) and the design gives them different
+# boxes. The rate-specific box layer for this quantity lives in
+# civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml,
+# and the domestic ISP boxes [27]/[28] now have their own casillas in
+# civa.anual.autorepercutido.interior.base__civa.anual.autorepercutido.interior.cuota.toml.
 [[revisions."2010-y-siguientes".casillas]]
 id = "iva.anual.autorepercutido.intracomunitaria"
 number = "iva.anual.autorepercutido.intracomunitaria"
@@ -99,9 +109,8 @@ semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
-legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
-export_refs = ["modelo-390-page-02-casilla-autorepercutido-intracomunitaria"]
 
 # Recargo de equivalencia cuota devengada - anual (LIVA art. 161). Mirrors the
 # M303 casillas 21/24 so the annual devengada total includes the recargo a
