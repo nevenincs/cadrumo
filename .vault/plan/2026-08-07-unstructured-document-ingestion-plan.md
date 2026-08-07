@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:94f6bd51862e168399a16c2443c22bd86994f9f2d25cc4c19db116b4bae52ade'
+body_hash: 'sha256:008aa270ff1ab0e26b21b2bf3bec0993f4a77b2a121fa42a6d1367fae009a226'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -72,7 +72,7 @@ Delivers stages S1 through S4 for documents: deterministic and vision transcript
 
 Produces the faithful transcription from text-layer and vision sources.
 
-- [ ] `W02.P04.S11` - Produce the deterministic text-layer transcription into DocumentTranscription with reading order and printed forms preserved, gated by fixture tests asserting byte-faithful printed forms; `src/cadrumo/application/ledger`.
+- [x] `W02.P04.S11` - Produce the deterministic text-layer transcription into DocumentTranscription with reading order and printed forms preserved, gated by fixture tests asserting byte-faithful printed forms; `src/cadrumo/application/ledger`.
 - [ ] `W02.P04.S12` - Refit the vision path to a transcription-only role emitting DocumentTranscription with no field interpretation in S1, gated by schema-refusal tests that need no model, accuracy owned by the W04 measured lane; `src/cadrumo/llm/_evidence_draft_vision.py`.
 
 ### Phase `W02.P05` - S2 semantic extraction
