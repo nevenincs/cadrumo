@@ -515,8 +515,9 @@ def test_year_n_plus_1_cuentas_delta_exceeds_redeclaration_threshold(tmp_path: P
 
     The application advisory helper is tested separately below because it also needs
     the current declaration row set to prove the grown category is absent. This is
-    advisory-layer coverage only; the registry `previous_filing` binding requested
-    by the multiyear plan remains a separate open implementation step.
+    advisory-layer coverage only; the registry `previous_filing` bindings are live
+    registry data resolved by test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grown_cuentas
+    below.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()

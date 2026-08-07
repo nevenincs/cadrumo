@@ -30,8 +30,8 @@ consent window. The sidecar is the provenance record reviewers inspect when a
 private L2 fixture is proposed.
 
 The library is **never invoked at runtime** from production code — only
-from contributor-local workflows (``just scrub-from-drive``) and
-``src/cadrumo/adapters/inbound/pdf/test_scrub.py`` tests.
+from contributor-local workflows and
+``src/cadrumo/adapters/inbound/pdf/tests/test_scrub.py`` tests.
 """
 
 from __future__ import annotations
