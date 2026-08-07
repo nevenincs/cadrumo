@@ -5,70 +5,50 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:df8dc5e62c6897aa7cea575bd3d9ee678e581c5de9515be5f11e2b208c42ec58'
+body_hash: 'sha256:c8e510c32c6d0032d425df83bcca7fd2cafd3483b7e5ed765f90e8de6dfc9fd6'
 step_id: 'S49'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace calculation-chain-integrity with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S49 and 2026-08-07-calculation-chain-integrity-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Refuted by measurement, do not widen the rate-kind enum - the fourteen M390 rate values are effective-dated values of the five existing semantic tiers, not new tiers, proven cross-year from the bundled layouts where the 2025 diseno zero-mandates the same casilla numbers the 2024 diseno carries live and ## Scope
-
-- `src/cadrumo/domain/iva/_schema.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# Refuted by measurement, do not widen the rate-kind enum - the fourteen M390 rate values are effective-dated values of the five existing semantic tiers, not new tiers, proven cross-year from the bundled layouts where the 2025 diseno zero-mandates the same casilla numbers the 2024 diseno carries live
-
-## Scope
-
-- `src/cadrumo/domain/iva/_schema.py`
-
-## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+# `calculation-chain-integrity` exec W06.P08.S49
 
 ## Outcome
 
-## Verification
+**Refutation confirmed by independent measurement.** `IvaRateKind` is not widened, and the enum is untouched.
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
+## The claim, re-measured rather than accepted
 
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
+The Step asserts the M390 rate values are effective-dated values of the five existing semantic tiers rather than new tiers, "proven cross-year from the bundled layouts where the 2025 diseño zero-mandates the same casilla numbers the 2024 diseño carries live."
 
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+That is a checkable claim about bundled artefacts, so it was checked against the workbooks directly.
 
-## Notes
+## The measurement
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Both the 2024 and 2025 M390 diseños carry the same seven rate tokens: `0, 2, 4, 5, 7,5, 10, 21`. `IvaRateKind` declares five members: `GENERAL`, `REDUCED`, `SUPER_REDUCED`, `ZERO`, `EXEMPT`.
+
+The cross-year comparison is the decisive part. The same casilla numbers appear in both years with different mandates:
+
+| casilla | 2024 diseño | 2025 diseño |
+|---|---|---|
+| `[667]` Tipo 2% — Base imponible | `15 enteros 2 decimales` | `Nota 2` |
+| `[668]` Tipo 2% — Cuota | `15 enteros 2 decimales` | `Nota 2` |
+| `[669]` Tipo 7,5% — Base imponible | `15 enteros 2 decimales` | `Nota 2` |
+| `[670]` Tipo 7,5% — Cuota | `15 enteros 2 decimales` | `Nota 2` |
+
+And `Nota 2` resolves, on five separate sheets of the 2025 workbook, to:
+
+> **Nota 2: estas casillas deben estar rellenas a 0**
+
+So AEAT kept the box numbers and mandated zero into them. That is the signature of a *window that closed*, not of a tier that exists.
+
+## Why this refutes widening the enum
+
+`IvaRateKind` names semantic tiers — the statutory bands a supply falls in. The 2% and 7.5% boxes are the temporary food rates: real values, effective-dated, and demonstrably switched off for 2025 while their casilla numbers persist.
+
+Adding members for them would encode a closed window as a permanent tier, and every consumer that reasons over `IvaRateKind` would carry two bands that no longer exist. The right carrier for an effective-dated value is the rate VALUE axis, which is exactly what `S54` and `S55` landed: `applied_rate` on the observation and `applied_rates` on the selector, both alongside `rate_kind` rather than instead of it.
+
+So the refutation and the accepted design are the same argument seen from two ends: values are dated, tiers are not.
+
+## Scope note
+
+`src/cadrumo/domain/iva/_schema.py` is the Step's scope and is deliberately unchanged. The outcome of this Step is that nothing is edited there, and the reason is now recorded so the same widening is not proposed again from the same fourteen values.
