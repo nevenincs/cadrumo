@@ -149,6 +149,14 @@ _M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS: tuple[BindingId, ...] = (
     "modelo-303-iva-repercutido-reducido-cuota",
     "modelo-303-iva-repercutido-super-reducido-cuota",
     "modelo-303-iva-soportado-interiores-cuota",
+    # The recargo de equivalencia tiers (LIVA art. 161). A supplier to a
+    # recargo-regime retailer charges it ON TOP of the cuota, so an invoice
+    # carrying one and a ledger missing it under-declare by exactly the
+    # surcharge -- the same silent shortfall the cuota bindings above screen
+    # for, on a figure the screen previously did not look at.
+    "modelo-303-recargo-equivalencia-general-cuota",
+    "modelo-303-recargo-equivalencia-reducido-cuota",
+    "modelo-303-recargo-equivalencia-super-reducido-cuota",
 )
 _M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
 
@@ -1110,6 +1118,7 @@ def _m303_standard_domestic_invoice_iva_observations(
         # The date the observation carries must be the date it was SELECTED on,
         # or the record would state one quarter while being declared in another.
         devengo = resolve_invoice_devengo(invoice)
+        recargo_line_index = _sole_recargo_bearing_line_index(invoice)
         contributed = False
         for line_index, line in enumerate(invoice.lines):
             if line.iva_amount <= Decimal("0"):
@@ -1122,6 +1131,9 @@ def _m303_standard_domestic_invoice_iva_observations(
                     iva_rate=line.iva_rate,
                     base_amount=line.subtotal,
                     iva_amount=line.iva_amount,
+                    recargo_amount=(
+                        invoice.recargo_amount or Decimal("0") if line_index == recargo_line_index else Decimal("0")
+                    ),
                 ),
             )
             invoice_ids.add(invoice.invoice_id)
@@ -1131,16 +1143,63 @@ def _m303_standard_domestic_invoice_iva_observations(
     return tuple(observations), tuple(invoice_ids), tuple(compared_invoices)
 
 
+def _sole_recargo_bearing_line_index(invoice: Invoice) -> int | None:
+    """Which line the invoice-level recargo belongs to, or ``None`` if unknowable.
+
+    The recargo is recorded once on the invoice while the M303 recargo casillas
+    are per rate TIER, so attributing it needs a tier. When every cuota-bearing
+    line sits at the same rate the tier is unambiguous and the recargo lands
+    there.
+
+    When the invoice spans several tiers the invoice-level field cannot say how
+    the surcharge divides, and this returns ``None`` rather than guessing.
+    Picking a tier would place a real amount in the wrong casilla, which is
+    worse than the screen not seeing it: a mis-tiered recargo is a wrong figure
+    declared confidently, where an unscreened one is only an unscreened one.
+    That gap is a limit of the invoice-level field, not of this screen.
+    """
+    if not invoice.recargo_amount:
+        return None
+    cuota_lines = [index for index, line in enumerate(invoice.lines) if line.iva_amount > Decimal("0")]
+    if not cuota_lines:
+        return None
+    tiers = {invoice.lines[index].iva_rate for index in cuota_lines}
+    if len(tiers) != 1:
+        return None
+    return cuota_lines[0]
+
+
 def _m303_standard_domestic_invoice_in_period(
     invoice: Invoice,
     *,
     context: CalculationSourceContext,
     period: Period,
 ) -> bool:
-    return (
-        invoice.bucket_id == context.bucket_id
-        and invoice_devengo_in_period(invoice, period=period)
-        and invoice.counterparty_country.strip().upper() == "ES"
+    """Whether this invoice's IVA belongs in the screen's ledger comparison.
+
+    The counterparty's COUNTRY is deliberately not consulted. It was serving as
+    a proxy for "carries Spanish IVA", and it is a poor one in both directions:
+    an invoice to a foreign customer can carry ordinary Spanish cuota -- goods
+    that never leave the país, a service localised here, a non-established
+    consumer -- and those were silently exempt from the screen, which is the
+    under-declaration it exists to catch. Meanwhile an exempt entrega
+    intracomunitaria to an EU customer carries no cuota at all, so including it
+    costs nothing.
+
+    The property the screen actually needs is "does this line carry a positive
+    cuota", and the caller already tests exactly that per line. Removing the
+    country proxy therefore widens the screen without widening what it
+    compares: a zero-cuota invoice contributes no observation whatever its
+    counterparty's country, so no false refusal is introduced.
+
+    Bucket attribution follows the same rule the invoice source resolver uses:
+    only a POPULATED, mismatching bucket excludes. An unattributed invoice
+    belongs to the store it was loaded from, and comparing on the bucket id
+    alone dropped it from the screen silently -- the same shape, in the guard
+    rather than in the projection.
+    """
+    return (invoice.bucket_id is None or invoice.bucket_id == context.bucket_id) and invoice_devengo_in_period(
+        invoice, period=period
     )
 
 

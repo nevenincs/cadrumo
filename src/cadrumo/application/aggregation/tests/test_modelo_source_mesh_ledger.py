@@ -205,6 +205,8 @@ def _domestic_iva_invoice(
     bucket_id: str = _BUCKET_ID,
     linked_transaction_ids: tuple[str, ...] = (),
     operation_date: date | None = None,
+    counterparty_country: str = "ES",
+    counterparty_tax_id: str = "B12345674",
 ) -> Invoice:
     line = InvoiceLine(
         description="Operacion interior con IVA",
@@ -221,8 +223,8 @@ def _domestic_iva_invoice(
             "invoice_number": invoice_number,
             "issued_at": issued_at,
             "counterparty_name": "Cliente ES" if kind is CatalogueInvoiceKind.ISSUED else "Proveedor ES",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
+            "counterparty_tax_id": counterparty_tax_id,
+            "counterparty_country": counterparty_country,
             "base_total": taxable_base,
             "iva_total": iva_amount,
             "grand_total": taxable_base + iva_amount,
@@ -238,6 +240,41 @@ def _domestic_iva_invoice(
                     "operation_date_role": InvoiceOperationDateRole.OPERATION_PERFORMED,
                 }
             ),
+        },
+    )
+
+
+def _exempt_intracommunity_invoice(
+    invoice_number: str,
+    *,
+    kind: CatalogueInvoiceKind,
+    issued_at: date,
+    taxable_base: Decimal,
+) -> Invoice:
+    """An entrega intracomunitaria exenta: a real base, and no cuota at all."""
+    line = InvoiceLine(
+        description="Entrega intracomunitaria exenta",
+        quantity=Decimal("1"),
+        unit_price=taxable_base,
+        subtotal=taxable_base,
+        iva_rate=IvaRate.RATE_0,
+        iva_amount=Decimal("0"),
+    )
+    return Invoice.model_validate(
+        {
+            "bucket_id": _BUCKET_ID,
+            "kind": kind,
+            "invoice_number": invoice_number,
+            "issued_at": issued_at,
+            "counterparty_name": "Kunde GmbH",
+            "counterparty_tax_id": "DE345678901",
+            "counterparty_country": "DE",
+            "base_total": taxable_base,
+            "iva_total": Decimal("0"),
+            "grand_total": taxable_base,
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
         },
     )
 
@@ -967,3 +1004,227 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
     # The advisory is non-blocking: the resolution still resolves the (zero) DE
     # binding value and records the candidate so calculate succeeds.
     assert resolution.binding_values.get("modelo-369-union-de-services-21pct") == Decimal("0")
+
+
+def test_the_screen_now_catches_a_non_es_invoice_carrying_spanish_cuota(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A foreign counterparty does not mean the operation carried no Spanish IVA.
+
+    The screen filtered on the counterparty's COUNTRY, which was standing in
+    for "carries Spanish IVA" and is a poor proxy for it. An invoice to a
+    foreign customer can carry ordinary domestic cuota -- goods that never
+    leave the país, a service localised here, a non-established consumer --
+    and every one of those was exempt from the screen, which is precisely the
+    under-declaration the screen exists to catch.
+
+    Same figures as the domestic refusal case above; only the counterparty's
+    country differs. Before this, changing that one field was enough to walk
+    the invoice past the guard.
+    """
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice = _domestic_iva_invoice(
+        "DE-1T-SALE",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        counterparty_country="DE",
+        counterparty_tax_id="DE345678901",
+    )
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        LedgerIvaAggregationSourceResolver(
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision=revision,
+            ),
+        )
+
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["reason"] == "invoice_domestic_iva_not_in_transaction_ledger"
+
+
+def test_an_exempt_intracommunity_invoice_does_not_trip_the_widened_screen(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Positive control: widening the screen must not refuse the ordinary EU case.
+
+    An entrega intracomunitaria exenta is the commonest non-ES invoice there
+    is, and it carries no cuota at all. Dropping the country filter must not
+    start refusing those, or the widening would block correct filings far more
+    often than it catches wrong ones.
+
+    It passes for a structural reason rather than by luck: the screen compares
+    only lines carrying a positive cuota, so a zero-cuota invoice contributes
+    no observation whatever its counterparty's country. That is why removing
+    the country proxy widens WHICH invoices are considered without widening
+    what is actually compared.
+    """
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    exempt = _exempt_intracommunity_invoice(
+        "DE-1T-EXEMPT",
+        kind=CatalogueInvoiceKind.ISSUED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("10000.00"),
+    )
+    invoice_repo.save(InvoiceCatalogue.from_invoices((exempt,)))
+
+    resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.resolver_id == "ledger_iva_aggregation"
+
+
+def _recargo_invoice(invoice_number: str, *, issued_at: date, taxable_base: Decimal) -> Invoice:
+    """A repercutido sale to a recargo-regime retailer: cuota plus surcharge."""
+    iva_amount = (taxable_base * Decimal("0.21")).quantize(Decimal("0.01"))
+    recargo_amount = (taxable_base * Decimal("0.052")).quantize(Decimal("0.01"))
+    line = InvoiceLine(
+        description="Venta a minorista en recargo",
+        quantity=Decimal("1"),
+        unit_price=taxable_base,
+        subtotal=taxable_base,
+        iva_rate=IvaRate.RATE_21,
+        iva_amount=iva_amount,
+    )
+    return Invoice.model_validate(
+        {
+            "bucket_id": _BUCKET_ID,
+            "kind": CatalogueInvoiceKind.ISSUED,
+            "invoice_number": invoice_number,
+            "issued_at": issued_at,
+            "counterparty_name": "Minorista Recargo SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": taxable_base,
+            "iva_total": iva_amount,
+            "recargo_amount": recargo_amount,
+            "grand_total": taxable_base + iva_amount + recargo_amount,
+            "currency": "EUR",
+            "lines": (line,),
+            "payment_status": PaymentStatus.PAID,
+        },
+    )
+
+
+def test_the_screen_now_catches_a_recargo_absent_from_the_ledger(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A recargo the ledger does not carry is an under-declaration too.
+
+    The screened set covered the four cuota bindings and stopped there, so an
+    invoice charging recargo de equivalencia could diverge from the ledger by
+    exactly the surcharge and pass. A supplier to a recargo-regime retailer
+    charges it ON TOP of the cuota (LIVA art. 161), so the shortfall is real
+    money owed, not a presentation detail.
+
+    Extending the screened set alone would have been vacuous: the screen builds
+    its observations from LINE metadata, and an invoice's recargo is an
+    invoice-level field, so the comparison would have found zero against zero
+    and never fired. The surcharge had to be carried onto the observation
+    first, through the same canonical bridge the ledger path uses rather than a
+    second construction site.
+    """
+    revision = _revision("303", "2023-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo.save(
+        InvoiceCatalogue.from_invoices(
+            (_recargo_invoice("RECARGO-1T", issued_at=date(2025, 2, 10), taxable_base=Decimal("10000.00")),),
+        ),
+    )
+
+    with pytest.raises(AggregationValidationError) as exc_info:
+        LedgerIvaAggregationSourceResolver(
+            transaction_repository=tx_repo,
+            invoice_repository=invoice_repo,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="303",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "1T"),
+                revision=revision,
+            ),
+        )
+
+    excess = exc_info.value.context["invoice_domestic_iva_excess_by_binding"]
+    assert isinstance(excess, dict)
+    # The recargo tier is named specifically, so the refusal tells the operator
+    # which figure is missing rather than only that something is.
+    assert "modelo-303-recargo-equivalencia-general-cuota" in excess
+
+
+def test_a_multi_tier_recargo_is_not_attributed_to_a_guessed_tier() -> None:
+    """An ambiguous attribution is skipped, not guessed.
+
+    The recargo is recorded once on the invoice while the M303 casillas are per
+    rate tier. When the invoice spans several tiers the invoice-level field
+    cannot say how the surcharge divides.
+
+    Placing a real amount in the wrong casilla is worse than the screen not
+    seeing it: a mis-tiered recargo is a wrong figure declared confidently,
+    where an unscreened one is only unscreened. That gap is a limit of the
+    invoice-level field, not of this screen.
+    """
+    from .._modelo_bindings import _sole_recargo_bearing_line_index
+
+    mixed = Invoice.model_validate(
+        {
+            "bucket_id": _BUCKET_ID,
+            "kind": CatalogueInvoiceKind.ISSUED,
+            "invoice_number": "RECARGO-MIXED",
+            "issued_at": date(2025, 2, 10),
+            "counterparty_name": "Minorista Recargo SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("1500.00"),
+            "iva_total": Decimal("260.00"),
+            "recargo_amount": Decimal("60.00"),
+            "grand_total": Decimal("1820.00"),
+            "currency": "EUR",
+            "lines": (
+                InvoiceLine(
+                    description="General",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("1000.00"),
+                    subtotal=Decimal("1000.00"),
+                    iva_rate=IvaRate.RATE_21,
+                    iva_amount=Decimal("210.00"),
+                ),
+                InvoiceLine(
+                    description="Reducido",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("500.00"),
+                    subtotal=Decimal("500.00"),
+                    iva_rate=IvaRate.RATE_10,
+                    iva_amount=Decimal("50.00"),
+                ),
+            ),
+            "payment_status": PaymentStatus.PAID,
+        },
+    )
+
+    assert _sole_recargo_bearing_line_index(mixed) is None
