@@ -60,6 +60,7 @@ from ...domain.iva_compensation import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
     derive_iva_compensation_year_end_carry_partition,
+    derive_m303_compensation_available_from_casillas,
     iva_compensation_period_sort_key,
 )
 from ._errors import IvaCompensationModeloError
@@ -71,9 +72,6 @@ from ._iva_compensation_casillas import (
 )
 from ._iva_compensation_casillas import (
     M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from ._iva_compensation_casillas import (
-    M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
 )
 from ._iva_compensation_casillas import (
     M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
@@ -378,6 +376,12 @@ def iva_compensation_state_from_filed_observation(
             f"303:{observation.ejercicio}:{observation.period.registry_token}:{observation.expediente_id}"
         ),
         source_artefact_sha256=source_artefact_sha256,
+        # An AEAT-fetched filing carries no disposition signal: Modelo 303
+        # declares no devolución casilla, so the election lives only in the
+        # fichero header the fetch never sees. False states that assumption
+        # rather than inheriting it, and is where a signal lands if one
+        # ever reaches this path.
+        refunded=False,
     )
 
 
@@ -420,6 +424,12 @@ def iva_compensation_state_from_registry_observation(
         presented_at=presented_at,
         source_observation_key=key,
         source_artefact_sha256=source_artefact_sha256,
+        # An AEAT-fetched filing carries no disposition signal: Modelo 303
+        # declares no devolución casilla, so the election lives only in the
+        # fichero header the fetch never sees. False states that assumption
+        # rather than inheriting it, and is where a signal lands if one
+        # ever reaches this path.
+        refunded=False,
     )
 
 
@@ -537,17 +547,30 @@ def _iva_compensation_state_from_values(
     presented_at: datetime,
     source_observation_key: str,
     source_artefact_sha256: ContentDigest | None,
+    refunded: bool,
 ) -> IvaCompensationPeriodState:
     result = _resolve_casilla_value(values, _M303_RESULTADO_CASILLA)
     posterior = _resolve_casilla_value(values, _M303_POSTERIOR_CASILLA)
-    generated = _resolve_casilla_value(values, _M303_GENERADA_CASILLA)
-    if generated is None:
-        generated = max(_ZERO, -result) if result is not None else _ZERO
+    # `refunded` is required rather than defaulted, and that is the point. Both
+    # fields below depend on the disposition, and they are written into ONE
+    # state by one constructor -- so a caller that inherits the answer from a
+    # signature instead of stating it can leave the two disagreeing: an
+    # available amount that excludes a refunded credit beside a generated
+    # amount that still carries it. A defaulted flag is exactly how the sibling
+    # derivation came to carry a refunded credit into the next period.
+    derivation = derive_m303_compensation_available_from_casillas(values, refunded=refunded)
+    if derivation is not None:
+        generated = derivation.generated
+        available = derivation.available
+    else:
+        generated = _ZERO
+        available = posterior or _ZERO
     # Semantic-only casilla (no numeric AEAT box), so it was never an inline-number
-    # routing literal — looked up directly by its registry id, behaviour-preserving.
-    available = _casilla_value(values, _M303_DISPONIBLE_CASILLA)
-    if available is None:
-        available = (posterior or _ZERO) + generated
+    # routing literal — looked up directly by its registry id. A directly filed
+    # value still wins: it is what the filing actually declared.
+    filed_available = _casilla_value(values, _M303_DISPONIBLE_CASILLA)
+    if filed_available is not None:
+        available = filed_available
     return IvaCompensationPeriodState(
         taxpayer_nif=taxpayer_nif,
         filing_year=filing_year,
