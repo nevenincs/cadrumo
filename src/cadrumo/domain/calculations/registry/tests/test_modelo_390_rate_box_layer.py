@@ -5,11 +5,15 @@ AEAT box, so a 10 % and a 7,5 % sale merged into box [04] while [670] stayed
 empty. Splitting a tier's roles gives each official box its own casilla, bound
 to exactly one rate.
 
-The layer is deliberately NOT exported yet. The rate-blind tier casillas still
-write offsets 98/200/234, and flipping those fields onto this layer is only safe
-alongside the gate that refuses a return whose rate boxes sum below its declared
-total. Until that lands, a declared-but-unpopulated money field would render
-``0,00`` rather than a blank, turning a silence into a false nil.
+This layer now owns the official boxes: all fourteen carry ``export_refs`` and
+the rate-blind tier casillas carry none, so no casilla both totals and asserts a
+rate. That flip was safe only alongside the gate refusing a return whose rate
+boxes sum below its declared total, because a declared-but-unpopulated money
+field renders ``0,00`` rather than a blank, turning a silence into a false nil.
+
+What this module pins is the RESOLUTION -- which rows reach which casilla. The
+byte positions those casillas then occupy are pinned separately, against the
+Diseño de Registro, in the filing suite's rate-box offset tests.
 
 Real-behaviour: the committed revision through the real registry authority,
 resolved by the real ``ledger_iva_aggregation`` resolver over real
