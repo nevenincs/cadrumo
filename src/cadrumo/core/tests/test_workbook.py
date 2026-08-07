@@ -15,13 +15,18 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook, load_workbook
 
-from ..workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
+from ..workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _rows_of(tmp_path: Path, values: list[list[object]], *, read_only: bool) -> list[list[object]]:
-    """Save *values* as a real workbook and read its rows back as cells."""
+def _rows_of(tmp_path: Path, values: list[list[object]], *, read_only: bool) -> list[list[WorkbookCell]]:
+    """Save *values* as a real workbook and read its rows back as cells.
+
+    Returned as the ``WorkbookCell`` protocol the predicate accepts rather
+    than as ``object``: the three cell classes openpyxl yields across read
+    modes all satisfy it, and that is precisely what these cases assert.
+    """
     path = tmp_path / f"cells-{read_only}.xlsx"
     workbook = Workbook()
     sheet = workbook.active

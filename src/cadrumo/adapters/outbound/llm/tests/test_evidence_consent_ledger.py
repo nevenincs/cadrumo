@@ -33,6 +33,7 @@ from __future__ import annotations
 import asyncio
 import json
 from collections.abc import Iterator
+from typing import override
 
 import pytest
 
@@ -65,6 +66,7 @@ class _RecordingAdapter(_ProviderAdapter):
     def __init__(self) -> None:
         self.dispatched: list[ProviderRequest] = []
 
+    @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:
         self.dispatched.append(request)
         return ProviderCompletion(text=_COMPLETION_TEXT, model=request.model, input_tokens=11, output_tokens=7)
@@ -73,10 +75,23 @@ class _RecordingAdapter(_ProviderAdapter):
 class _RecordingClient(LLMClient):
     """``LLMClient`` with only the vendor call replaced."""
 
-    def __init__(self, **kwargs: object) -> None:
-        super().__init__(**kwargs)  # type: ignore[arg-type]
+    def __init__(
+        self,
+        *,
+        settings: Settings | None = None,
+        consent_ledger: EvidenceConsentLedger | None = None,
+    ) -> None:
+        """Forward the two dependencies the cases here vary.
+
+        Named rather than forwarded through ``**kwargs: object``, which erased
+        every argument and needed a suppression to reach the base constructor
+        at all -- so nothing checked that these tests were configuring the
+        client the way production does.
+        """
+        super().__init__(settings=settings, consent_ledger=consent_ledger)
         self.adapter = _RecordingAdapter()
 
+    @override
     def _build_adapter(self, provider: LLMProvider) -> _ProviderAdapter:
         return self.adapter
 
@@ -174,7 +189,15 @@ def test_a_failed_append_refuses_the_dispatch_and_the_adapter_is_never_reached(
 class _FailingLedger(EvidenceConsentLedger):
     """A ledger whose append fails the way a storage fault makes it fail."""
 
-    def append(self, **kwargs: str) -> EvidenceConsentLedgerEntry:
+    @override
+    def append(
+        self,
+        *,
+        evidence_content_address: str,
+        provider: str,
+        model: str,
+        surface: str,
+    ) -> EvidenceConsentLedgerEntry:
         msg = "Failed to record the off-host evidence-consent entry; the dispatch is refused."
         raise LLMConsentError(msg)
 
