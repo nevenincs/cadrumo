@@ -5,72 +5,53 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:4477c49eea04408ce8b27efe2b114a6e6e3b0bcc3d8a97aca019080a99a674ff'
+body_hash: 'sha256:d655b2f058b20141b863df1b6d9ac69e442d9c5e8d30a88188f7ea382349d56e'
 step_id: 'S28'
 related:
   - "[[2026-08-07-history-onboarding-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace history-onboarding with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S28 and 2026-08-07-history-onboarding-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The author a synthetic no-results declaraciones-register fixture in the AEAT empty-body grid shape, verified by a listbox parser test asserting the page parses to zero rows and reports itself not truncated so a clean empty register answer stays distinguishable from a short read and ## Scope
-
-- `src/cadrumo/tests/fixtures/aeat-sede`
-- `src/cadrumo/adapters/outbound/aeat/sede/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# author a synthetic no-results declaraciones-register fixture in the AEAT empty-body grid shape, verified by a listbox parser test asserting the page parses to zero rows and reports itself not truncated so a clean empty register answer stays distinguishable from a short read
-
-## Scope
-
-- `src/cadrumo/tests/fixtures/aeat-sede`
-- `src/cadrumo/adapters/outbound/aeat/sede/tests`
-
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+Querying a modelo the taxpayer never filed returned zero rows cleanly against the
+real register: no error, no failure row, a fully formed grid with nothing in it.
+That outcome must stay distinguishable from the two shapes that genuinely are
+failures -- a grid whose pager declares more records than it rendered, and markup
+carrying no grid at all -- because an empty answer read as an error makes "you
+filed nothing" indistinguishable from "the read broke".
+
+The tree already carried an inline no-results shape, but it puts the sentence
+inside a single-cell grid row, which exercises a different parse branch than the
+markup the portal actually serves: the sentence lives in the grid's empty-body
+section, which is not a row at all, so the row loop finds nothing to iterate
+rather than finding a sentinel.
 
 ## Outcome
 
+Files added:
+
+- `src/cadrumo/tests/fixtures/aeat-sede/declaraciones-modelo-303-no-results-synthetic.html`
+- `src/cadrumo/tests/fixtures/aeat-sede/declaraciones-modelo-303-no-results-synthetic.json`
+
+The test lives in the module the sibling multiplicity Step introduced. The sidecar
+declares `synthetic_generated` with the digest and byte size computed from the
+fixture's own bytes.
+
+`test_empty_register_grid_reads_as_a_complete_answer_not_a_short_one` asserts the
+fixture renders zero rows, still carries the no-results sentence, and that the
+sentence is NOT inside a grid row -- that last check is what keeps the fixture
+from silently degenerating into the inline sentinel shape it exists to
+distinguish. It then asserts the parse yields no rows, declares no record total,
+reports itself not truncated, and that the register read returns the empty tuple
+rather than raising.
+
 ## Verification
 
-<!-- Where the evidence is that something RAN, quote the instrument rather than
-     summarising it: the invocation, then the runner's verbatim summary line.
-
-         uv run --no-sync pytest <paths> -m integration -n 0
-         15 passed in 10.35s
-
-     The invocation shows the selection (marker expression and path scope); the
-     summary line shows what that selection produced. A run that selected nothing
-     exits zero and reads as green, so a paraphrase such as "the tests pass"
-     discards exactly the part a reader needs. Quote, do not summarise. -->
+The test passes. Proven to bite by a runtime mutation that treats a row-less grid
+as a short read. The register read then raises
+`SedeParseError: ... rendered 0 row(s) but its pager declares None in total`,
+which is precisely the confusion the test guards against.
 
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+The fixture carries no pager section. Whether the register ever paginates is
+unsettled and nothing here asserts either way.
