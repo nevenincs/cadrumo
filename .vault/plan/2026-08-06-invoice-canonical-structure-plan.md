@@ -4,7 +4,7 @@ tags:
   - '#invoice-canonical-structure'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:1d2e809df4aacf749e6b67c261343cf7808b7b39161e377eaa6762cb5977caf8'
+body_hash: 'sha256:ed77c5629c678ad9a8736dbcfa5cf3618e1b2440f5997100b30719068f8efbcb'
 tier: L2
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
@@ -92,7 +92,7 @@ Move the operator CRUD surface onto the canonical aggregate, then remove the sli
 Delete the dead second Invoice writer, rename the misleading category token, add the confirm-boundary plausibility gate, and retire the two duplicate direction types over the canonical source-kind strings. Independent of the fold. The bare Invoice and InvoiceCatalogue names are deliberately not renamed, because the duplication causes the ambiguity and retiring the duplicate removes it by construction.
 
 - [x] `P04.S17` - Delete the dead second Invoice writer and its tests outright rather than routing it, because the live bulk importer already routes canonically and routing would create a third import surface; `src/cadrumo/application/invoices/_importing.py`.
-- [ ] `P04.S18` - Rename InvoiceLine.category_id to state what it is, first confirming whether the preflight site using category_id with the spending-taxonomy meaning shares a serialised key with it or is unrelated, and sweeping data consumers as well as callers; `src/cadrumo/domain/invoices/_models.py`.
+- [x] `P04.S18` - Rename InvoiceLine.category_id to state what it is, first confirming whether the preflight site using category_id with the spending-taxonomy meaning shares a serialised key with it or is unrelated, and sweeping data consumers as well as callers; `src/cadrumo/domain/invoices/_models.py`.
 - [ ] `P04.S19` - Add the plausibility gate at the confirm boundary refusing a document confirmed as ISSUED that was not plausibly issued by this taxpayer, mirroring the hard gate that already refuses an ISSUED invoice as purchase evidence; `src/cadrumo/application/ledger/_evidence_draft.py`.
 - [ ] `P04.S20` - Retire InvoiceKindOption and type the CLI kind option directly on InvoiceKind, in one atomic explicit-path commit across all thirteen sites; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
 - [ ] `P04.S21` - Relocate InvoiceKind from the iva domain to the invoices domain keeping its name, as one atomic explicit-path commit tagged relocation carrying every consumer, fixture and __all__ update plus a regenerated apidocs scaffold; `src/cadrumo/domain/iva/_classification.py`.

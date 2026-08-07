@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:df8d4ce325120a72717873f3e5ed2f893e759db4af9b8f2acf1fe72c45e58502'
+body_hash: 'sha256:50f17a6a1851b0b4806f932c60b441ba0110dd3d5344248a22dcf79c7c9ebc26'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -33,6 +33,7 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-P03-S12]]'
   - '[[2026-08-06-invoice-canonical-structure-P03-S38]]'
   - '[[2026-08-06-invoice-canonical-structure-P04-S17]]'
+  - '[[2026-08-06-invoice-canonical-structure-P04-S18]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-audit]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
@@ -82,6 +83,7 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 - `2026-08-06-invoice-canonical-structure-P03-S12` - Record the lane-partition decision explicitly, whether the slim store's per-source-kind document partition is reproduced on the canonical home or consciously dropped in favour of the existing per-consumer gates, naming those gates and what each still guarantees
 - `2026-08-06-invoice-canonical-structure-P03-S38` - Build the canonical invoice update operation before the bare verbs are repointed, because the canonical surface has create, view, list and remove but NO update, so repointing the five bare verbs would silently drop the operator's only way to correct a persisted invoice and deleting the slim store would remove the sole update surface with nothing named to replace it
 - `2026-08-06-invoice-canonical-structure-P04-S17` - Delete the dead second Invoice writer and its tests outright rather than routing it, because the live bulk importer already routes canonically and routing would create a third import surface
+- `2026-08-06-invoice-canonical-structure-P04-S18` - Rename InvoiceLine.category_id to state what it is, first confirming whether the preflight site using category_id with the spending-taxonomy meaning shares a serialised key with it or is unrelated, and sweeping data consumers as well as callers
 
 ### plan
 
