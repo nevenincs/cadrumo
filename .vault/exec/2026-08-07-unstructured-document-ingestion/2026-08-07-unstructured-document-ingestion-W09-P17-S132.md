@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd6955b1a617c936323fe2007d1cc9affe3a7b4c9a8e1e451b0c3452bb2c5423'
+body_hash: 'sha256:82efe8edaca4a0e1fcc39d1762f6744f6961d165e1ff3b7243a005cae81b82aa'
 step_id: 'S132'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -104,6 +104,38 @@ repository, each confirmed by its banner before the result was read:
 The four mutations covering the customer-status work in the preceding Step were
 re-run against this change and still bite, so the two sets of gates do not mask
 each other.
+
+An independent review supplied the input that turns the country gate from
+prudent into necessary, and it is now carried as a gate. The five-digit shape
+discriminates nothing, because Spain, France, Germany and Italy all use
+five-digit postal codes, and the Spanish resolver is named for its precondition
+rather than checking it. Measured directly against the resolver:
+
+    75001 (Paris)             -> es_mainland
+    10115 (Berlin)            -> es_mainland
+    00170 (Rome)              -> es_mainland
+    51001 (Ceuta / Reims)     -> es_ceuta_melilla
+    35001 (Las Palmas/Rennes) -> es_canarias
+
+So the earlier gate proved the guard using codes that happen to read as Spanish,
+which demonstrated less than it appeared to. A parametrised case now drives the
+join with an unambiguously foreign code and asserts the refusal, and the ungated
+mutation was confirmed to produce the exact hazard rather than merely a failure:
+
+    uv run --no-sync pytest .../test_classification_assembly.py -n0 -q
+    32 passed in 4.60s
+
+    with the country gate removed  -> 7 failed, 25 passed
+    AssertionError: a Paris postal code was accepted as Spanish establishment evidence
+    UNGATED: Paris issuer resolved to -> es_mainland
+
+The composition is what makes the unsafe shape the natural one. The country half
+returns nothing for a Spanish code BY DESIGN and also for an absent or malformed
+one, so a consumer written the obvious way -- country first, else postal --
+treats a French party whose country was unreadable exactly like a Spanish one.
+Each half is fail-closed and the pair composes fail-open, which is why the gate
+is on the country evidence POSITIVELY naming Spain and why telling the three
+outcomes apart is load-bearing rather than cosmetic.
 
 ## Notes
 
