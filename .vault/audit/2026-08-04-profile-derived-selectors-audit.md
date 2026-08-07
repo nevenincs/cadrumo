@@ -2,10 +2,10 @@
 tags:
   - '#audit'
   - '#profile-derived-selectors'
-date: '2026-08-04'
-modified: '2026-08-04'
+date: '2026-08-07'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:b10aebba0f79ef158e3d00f63921f2c8ea7d59966778bb06e492627f21354afc'
+body_hash: 'sha256:89959abef3206d5315c647c1971f57aa3c00afc3cb104417ad334c1f5d5140d1'
 related:
   - "[[2026-08-04-profile-derived-selectors-adr]]"
   - "[[2026-08-04-profile-derived-selectors-plan]]"
@@ -251,6 +251,25 @@ derived path. And the `--descendiente` flag help string is already stale against
 parser, which accepts three keys the help does not list, so that follow-up should treat
 discoverability as part of the work rather than assume a parser that accepts a key is a
 surface that offers it.
+
+### CORRECTION to the Carve-Out Finding: the field IS in the schema and renders via build_profile_overview (2026-08-07)
+
+The finding states that `renta_family.cotizaciones_ss_madre_2024` has "no way for an operator to enter it" and supports this with a grep of `entrypoints/` and `application/wizard/` that found no hardcoded field name. This premise is **false at HEAD**, disproven by execution, not by rereading. A second pass measured the document against the code and the measurement uncovered the failure in the grep-based reasoning.
+
+**The measurement:**
+
+- The field **IS declared** in the schema: `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml` line 15 carries `key = "cotizaciones_ss_madre_2024"` in the `renta_family` section.
+
+- The field **IS rendered** by the profile manager: `build_profile_overview(record, schema=load_user_profile_schema())` (line 505 in `src/cadrumo/application/user_profile/_overview.py`) explicitly walks the schema and renders every declared field as an editable row whether or not a value exists. Its own docstring (line 517) states: "every declared field yields a row whether or not the profile has a value for it. A fact-driven walk would render only what is already filled in, which is precisely the information the operator does not need."
+
+- The field **IS writable**: Testing `profile_field_value_refusal("renta_family.cotizaciones_ss_madre_2024", "150.00")` returns `None`, confirming the write is accepted.
+
+**Why the grep failed:** Data-driven UIs cannot be discovered by text search. The field name lives in schema TOML data, not in Python string literals. No `entrypoints/` module needs to hardcode the field name; the profile manager generates the UI from the schema. Grep measures the absence of a hardcoded string and concludes falsely that the surface does not exist.
+
+**What this finding really discovered:** The audit correctly identified that only one test mentions the field by name (`entrypoints/cli/tests/test_modelo_source_mesh_calculate.py:261`), which hand-seeds it with `Decimal("0")`. The audit interpreted this to mean the field has no entry surface and the test compensates for the absence. That reading is backwards. The test populates a fact the *real* entry surface (the profile manager) would have created. The test exists to supply a value the real surface should accept. An operator using the profile manager UI can enter this fact; the test simply pre-populates it to avoid blocking the calculate path.
+
+**What remains valid:** The audit's core concern stands—that this is now a one-way-unresolvable operand in casilla 0613. The field IS settable through the profile manager, but (1) the operator may not know to set it, and (2) the formula consequences of leaving it blank are not documented. Those issues belong in the entry-surface and discoverability work the audit already names. The residual is real, but the premise—that no entry surface exists—was disproven by running the schema-driven generator rather than grepping for strings.
+
 ## Recommendations
 
 Earlier findings state their remedies inline, including the ones deliberately not taken and
