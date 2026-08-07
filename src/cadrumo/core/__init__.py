@@ -137,6 +137,7 @@ from ._external_oracle_corpus import ExternalOracleCorpus
 from ._field_grounding import FieldGroundingOutcome
 from ._field_origin import FieldOrigin
 from ._field_role import FieldRole
+from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hardware import (
@@ -430,6 +431,7 @@ __all__: list[str] = [
     "FieldGroundingOutcome",
     "FieldOrigin",
     "FieldRole",
+    "FiledHistoryDiscoverySignal",
     "FilingPeriodCode",
     "FindingResolutionAction",
     "FingerprintParticipation",
