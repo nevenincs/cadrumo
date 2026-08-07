@@ -199,6 +199,43 @@ so the substitution is not the one-line swap it appears to be. Left for someone 
 the modelo context, since a wrong consolidation here changes what the CLI refuses on a
 real filing surface.
 
+### semgrep-rules-and-codebase-convention-disagree-on-form | high | An unenforced gate and a parallel convention collided the first time the gate ran
+
+Clearing the typecheck gate let the full lane reach its semgrep step, which had never
+executed. It reports thirty-eight blocking findings under two rules: casts in the
+domain and application layers, and type-checker suppressions without an inline
+justification.
+
+Thirty-seven of the thirty-eight are not undocumented. They carry a formal convention -
+a rationale block directly above the line, tagged with a marker naming the case, for
+instance a cast rationale explaining that an isinstance check narrows a mapping but
+cannot check its type parameters. The convention is in active use: a peer commit added
+another instance during this session.
+
+So the gate's intent is already satisfied and its form is not. The suppression rule
+wants the rationale on the same line as the directive; the codebase puts it in a block
+above. The cast rule bans casts in those layers outright, while the architecture rules
+permit a documented third-party boundary cast and ask only that it be justified inline.
+The semgrep rule is therefore stricter than the architecture rule it enforces, which is
+the same shape as a type checker reporting intra-package private reaches that the
+import rules explicitly allow.
+
+The reason this surfaced only now is that the step had never run. The rules were
+committed but unenforced, and the codebase developed its convention in parallel without
+either side learning of the other.
+
+This needs a ruling rather than a repair, and it is genuinely two-sided. Reformatting
+thirty-seven documented sites to carry a second, inline copy of a rationale already
+stated above them duplicates the documentation and lengthens lines that already carry
+three suppressions. Teaching the rules to accept the established marker convention
+keeps one home for the rationale, but relaxes a gate on the strength of what the code
+already does, which is the reasoning that lets real debt through.
+
+The four findings this campaign introduced were fixed rather than deferred, so the
+count is thirty-eight rather than forty-two. Those four were genuine: two were casts
+placed in a layer that bans them, added without checking whether the layer permitted
+them.
+
 ## Recommendations
 
 <!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
@@ -305,6 +342,43 @@ and the call site also binds the intermediate official code that other fields co
 so the substitution is not the one-line swap it appears to be. Left for someone with
 the modelo context, since a wrong consolidation here changes what the CLI refuses on a
 real filing surface.
+
+### semgrep-rules-and-codebase-convention-disagree-on-form | high | An unenforced gate and a parallel convention collided the first time the gate ran
+
+Clearing the typecheck gate let the full lane reach its semgrep step, which had never
+executed. It reports thirty-eight blocking findings under two rules: casts in the
+domain and application layers, and type-checker suppressions without an inline
+justification.
+
+Thirty-seven of the thirty-eight are not undocumented. They carry a formal convention -
+a rationale block directly above the line, tagged with a marker naming the case, for
+instance a cast rationale explaining that an isinstance check narrows a mapping but
+cannot check its type parameters. The convention is in active use: a peer commit added
+another instance during this session.
+
+So the gate's intent is already satisfied and its form is not. The suppression rule
+wants the rationale on the same line as the directive; the codebase puts it in a block
+above. The cast rule bans casts in those layers outright, while the architecture rules
+permit a documented third-party boundary cast and ask only that it be justified inline.
+The semgrep rule is therefore stricter than the architecture rule it enforces, which is
+the same shape as a type checker reporting intra-package private reaches that the
+import rules explicitly allow.
+
+The reason this surfaced only now is that the step had never run. The rules were
+committed but unenforced, and the codebase developed its convention in parallel without
+either side learning of the other.
+
+This needs a ruling rather than a repair, and it is genuinely two-sided. Reformatting
+thirty-seven documented sites to carry a second, inline copy of a rationale already
+stated above them duplicates the documentation and lengthens lines that already carry
+three suppressions. Teaching the rules to accept the established marker convention
+keeps one home for the rationale, but relaxes a gate on the strength of what the code
+already does, which is the reasoning that lets real debt through.
+
+The four findings this campaign introduced were fixed rather than deferred, so the
+count is thirty-eight rather than forty-two. Those four were genuine: two were casts
+placed in a layer that bans them, added without checking whether the layer permitted
+them.
 
 ## Recommendations
 
