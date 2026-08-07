@@ -69,6 +69,19 @@ if TYPE_CHECKING:
 _OVER_CAP_PROBE = "diagnostic detail word " * 400
 
 
+def _parsed_call(source: str) -> ast.Call:
+    """Parse *source* as a single call expression and return it narrowed.
+
+    The tests below read ``.keywords`` off the parsed node, which only a call
+    carries. Asserting the shape here narrows the type for the checker and, more
+    usefully, makes a malformed fixture fail loudly at the point it is written
+    rather than as a missing attribute several lines later.
+    """
+    node = ast.parse(source, mode="eval").body
+    assert isinstance(node, ast.Call), f"fixture is not a call expression: {source!r}"
+    return node
+
+
 def _declared_cap(field: FieldInfo) -> int | None:
     """Return the ``max_length`` a field declares, or ``None``."""
     for meta in getattr(field, "metadata", []) or []:
@@ -157,7 +170,10 @@ def _elides(field: FieldInfo) -> bool:
     model -- most of these carriers have several other required fields, and a
     gate that had to satisfy them would be testing its own fixtures.
     """
-    adapter = TypeAdapter(Annotated[tuple([field.annotation, *field.metadata])])
+    # Built at runtime from a field's own annotation and metadata, so the
+    # subscript is not a static type expression and no checker can follow it.
+    # The construction is the point: it reproduces the field exactly.
+    adapter = TypeAdapter(Annotated[tuple([field.annotation, *field.metadata])])  # ty: ignore[invalid-type-form]
     try:
         adapter.validate_python(_OVER_CAP_PROBE)
     except ValidationError:
@@ -266,7 +282,10 @@ class _PlainCapped(BaseModel):
 class _ElidingCapped(BaseModel):
     """The same field declared through the canonical elider."""
 
-    message: elided_prose(64)  # type: ignore[valid-type]
+    # Declared through the factory deliberately: this class exists to prove the
+    # factory form still elides. Rewriting it to the literal annotation would
+    # delete the thing under test.
+    message: elided_prose(64)  # ty: ignore[invalid-type-form]
 
 
 def test_the_elision_probe_reports_false_for_a_field_that_refuses() -> None:
@@ -290,8 +309,8 @@ def test_the_discriminator_recognises_interpolated_prose() -> None:
     advisory prose is normally written as adjacent literals and a predicate
     that saw only the first fragment would misclassify most of the tree.
     """
-    interpolated = ast.parse('Issue(detail=f"row {row_id} was excluded")', mode="eval").body
-    concatenated = ast.parse('Issue(detail="row " + f"{row_id} excluded")', mode="eval").body
+    interpolated = _parsed_call('Issue(detail=f"row {row_id} was excluded")')
+    concatenated = _parsed_call('Issue(detail="row " + f"{row_id} excluded")')
 
     assert _builds_from_an_fstring(interpolated.keywords[0].value) is True
     assert _builds_from_an_fstring(concatenated.keywords[0].value) is True
@@ -304,9 +323,9 @@ def test_the_discriminator_rejects_prose_it_did_not_compose() -> None:
     call site did not assemble, so none of them is evidence that the field
     carries interpolated taxpayer data.
     """
-    literal = ast.parse('Command(note="fixed text")', mode="eval").body
-    passed_through = ast.parse("Command(note=note)", mode="eval").body
-    called = ast.parse('Entry(description=tr("some.locale.key"))', mode="eval").body
+    literal = _parsed_call('Command(note="fixed text")')
+    passed_through = _parsed_call("Command(note=note)")
+    called = _parsed_call('Entry(description=tr("some.locale.key"))')
 
     assert _builds_from_an_fstring(literal.keywords[0].value) is False
     assert _builds_from_an_fstring(passed_through.keywords[0].value) is False
