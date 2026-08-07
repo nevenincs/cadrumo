@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5a748b7c3a768063c12bd54434ccfac66296010d8a1d256ad5b4d818e75361d2'
+body_hash: 'sha256:14fd47418d0689ca1715b9aadf247c289d5ba2de859be58edc962c3bd4f03d34'
 related:
   - '[[2026-08-06-invoice-canonical-structure-P01-S01]]'
   - '[[2026-08-06-invoice-canonical-structure-P01-S02]]'
@@ -56,6 +56,7 @@ related:
   - '[[2026-08-07-invoice-canonical-structure-decision-coverage-map-audit]]'
   - '[[2026-08-07-invoice-canonical-structure-fragmentation-sweep-audit]]'
   - '[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-adr]]'
+  - '[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-research]]'
 ---
 
 # `invoice-canonical-structure` feature index
@@ -129,3 +130,4 @@ Auto-generated index of all documents tagged with `#invoice-canonical-structure`
 
 - `2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research` - `invoice-canonical-structure` research: `Source discovery sweep: tangles, gaps and the joint scope`
 - `2026-08-06-invoice-canonical-structure-research` - `invoice-canonical-structure` research: `Two invoice aggregates, one operator noun: canonicalisation scope`
+- `2026-08-07-invoice-canonical-structure-iva-treatment-axis-research` - `invoice-canonical-structure` research: `Measured consumer set of the invoice IVA category, and the prorrata denominator trace`

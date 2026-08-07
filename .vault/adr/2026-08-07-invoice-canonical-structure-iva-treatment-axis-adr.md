@@ -5,13 +5,14 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4faa2f997258f002b21af0f1c6916fd9e44e21c13d892c85852363eec75af55'
+body_hash: 'sha256:eed6d08726ef2fd3862796ef528ff6f7ebc11433fdb5c1f3815e819802fce8ab'
 related:
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-lane-discovery-sweep-research]]'
   - '[[2026-08-06-invoice-canonical-structure-research]]'
   - '[[2026-08-07-unstructured-document-ingestion-confirm-boundary-under-declaration-audit]]'
   - '[[2026-07-06-cross-domain-continuity-adr]]'
+  - '[[2026-08-07-invoice-canonical-structure-iva-treatment-axis-research]]'
 ---
 # `invoice-canonical-structure` adr: `Where the IVA treatment axis lives on a multi-operation factura` | (**status:** `proposed`)
 
@@ -164,9 +165,18 @@ imprecision is invisible to every filing surface and visible only to the operato
   nowhere rather than into a wrong casilla. Delivering that base to casillas 59 and 60
   requires constructing the observation from the invoice's own category, the direct
   construction the helper's own docstring points at, which is a second and independent
-  reason the treatment axis matters. Tracked separately from this record. The
-  prorrata-denominator consequence remains unquantified and is confirmed by no
-  investigator.
+  reason the treatment axis matters. Tracked separately from this record.
+
+  The prorrata-denominator consequence this record first raised is REFUTED, traced end
+  to end in the research of the same stem: both prorrata volume casillas are manual
+  inputs that no binding populates, and the percentage is computed from them, so the
+  observation rollup never fed the deductible percentage and losing observations could
+  not inflate it. What the omission actually broke was the divergence DETECTOR, and in
+  the direction that matters - an operator who under-declared exempt volume matched an
+  equally understated rollup and the detector stayed silent. Restoring the lines closes
+  that. It also newly mis-routes an exempt-slot intra-community supply into the
+  sin-derecho bucket, which is the same rate-slot-versus-category root cause and is
+  recorded there.
 - The record gains a treatment for the common mixed-rate document, so the decomposition
   grounds it and the renta path stops substituting bank cash for ingresos integros.
 - The stored category becomes, for this one construction, a treatment assertion carried on
