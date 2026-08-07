@@ -5,14 +5,36 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:0ea6d2814945f97d03ffad1f4eb187433beb839a8b0cd2e8e2fa33ad24b73392'
+body_hash: 'sha256:e2b0cab7ccd11be057cf3df46e7417ed064fd82dc9a57f2b43d3d9d006b8fbcd'
 related:
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
+  - '[[2026-08-07-code-dedup-sweep-status-header-audit]]'
 ---
 
 # `code-dedup-sweep` audit: `D1-1 dual binding-validator convention: refuted`
 
-## Scope
+## Status: SUPERSEDED
+
+This note is superseded by the parent document itself. A full read of
+`2026-07-25-code-dedup-sweep-rag-inventory-audit` (754 lines, not the ~200-line
+sample this note was written against) found the same conclusion already recorded
+there, in more detail, at heading `refuted-2-dual-binding-validator-convention` —
+written before this note, independently. That entry additionally names two real
+follow-on defects this note does not: false "defence-in-depth" docstrings on the
+raise-style bodies, and inconsistent public/private visibility of the delegate
+across binding families.
+
+This note is kept, not deleted, as a record of independent corroboration and of
+the miss that produced it: the parent document is not a stale worklist but an
+actively-maintained rolling log where an early finding's resolution is recorded
+as a *later* addendum, often hundreds of lines below the finding it resolves. A
+reader who samples the head of the document — as this note's author did — sees
+only the open claim and never reaches the resolution. That findability gap, not
+document staleness, is the durable finding; see
+`2026-08-07-code-dedup-sweep-status-header-audit` for the remediation (a status
+index prepended to the parent document).
+
+## Scope (as originally written; retained for the record)
 
 Confirming pass over finding D1-1 of the standing `2026-07-25-code-dedup-sweep-rag-inventory-audit`
 document, which the audit's own text flags as "RAG-reported and UNCONFIRMED against
@@ -60,18 +82,20 @@ exactly this blind spot; this note is that pass, and it refutes the finding.
 
 ## Recommendations
 
-Close D1-1 in `2026-07-25-code-dedup-sweep-rag-inventory-audit.md` as refuted, with a
-pointer to this note as the confirming evidence. No code change is warranted: deleting
-or "unifying" the raise-style bodies would remove the load-bearing implementation the
-registered accumulator wraps, breaking all four (five) binding families.
+No action against D1-1 or the parent document from this note: it is already closed
+there at `refuted-2-dual-binding-validator-convention`. Do not delete or "unify" the
+raise-style bodies — they are the load-bearing implementation the registered
+accumulator wraps, and the parent document's entry already says so.
 
-Cross-reference this note from the standing dedup campaign rather than folding it into
-a second parallel inventory — the campaign already owns `2026-07-25-code-dedup-sweep-rag-inventory-audit`
-and is the right place for other agents to see confirmed-vs-raw status on the remaining
-28 searchers.
+Read `2026-08-07-code-dedup-sweep-status-header-audit` for the actioned remediation
+(a status index prepended to the parent document) rather than treating this note as
+the current word on D1-1.
 
-General lesson for the parent document: semantic (RAG) results are discovery input,
-never proof. A finding phrased as "two functions with the shape of a dual convention"
-requires a call-graph confirming pass — same discipline as
+General lesson, still valid despite the retraction: semantic (RAG) results are
+discovery input, never proof. A finding phrased as "two functions with the shape of
+a dual convention" requires a call-graph confirming pass — same discipline as
 `independence-of-agent-is-not-independence-of-method` (agreement without a differing
 instrument is not corroboration) applied to a single searcher's own shape-only match.
+That discipline caught the original D1-1 finding's error; it did not, on its own,
+catch that the parent document had already caught it too — that required reading the
+whole document, not just re-deriving the same conclusion from the code.

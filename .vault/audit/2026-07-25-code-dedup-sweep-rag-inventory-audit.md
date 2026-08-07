@@ -3,12 +3,94 @@ tags:
   - '#audit'
   - '#code-dedup-sweep'
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:9752d225136275f82a5c4b3d6e367707604e53d9e61b0a9386098bb7654dca49'
-related: []
+modified: '2026-08-07'
+body_hash: 'sha256:262d220c001598c0769262af0d46643ae5ab833be9fe8781591d2fb2f7667452'
+related:
+  - '[[2026-08-07-code-dedup-sweep-status-header-audit]]'
+  - '[[2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit]]'
 ---
 
 # `code-dedup-sweep` audit: `semantic duplication sweep: 29-searcher RAG inventory`
+
+## Status header (prepended 2026-08-07; body below untouched)
+
+This document is 750+ lines and actively maintained: most early findings carry a
+LATER addendum, often hundreds of lines below, recording their resolution or
+refutation with a commit SHA. A reader who samples the head of the document sees
+only the original inventory and the open early addenda, and can easily miss a
+resolution recorded further down — this happened three times in one afternoon to
+independent readers of this document (`2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit`
+records the fourth). This header is an INDEX of what the document already says,
+not a new judgement — every status below cites the heading that already recorded
+it. Do not treat OPEN as "unimportant"; several OPEN items are rated high/critical
+by the document itself.
+
+| Original finding | Status | Recorded at |
+|---|---|---|
+| Tier 1 (1) schema-version ceiling → ceiling superset | REFUTED | `refuted-3-schema-version-ceiling-vs-equality` — layer-2 canonical is equality, not a ceiling; the two layers were conflated |
+| Tier 1 (2)/(6) `_parse_iso_date` bare `date.fromisoformat` | RESOLVED | `resolved-gate-blind-spots-alias-aware` — call site already fixed (commit `57f8711287`); the alias-blind gate is now fixed too |
+| Tier 1 (3) lazy-Typer-subcommand materialiser hand-rolled 3x | OPEN | not addressed anywhere later in this document |
+| Tier 1 (4) `_money_round` 3x / quantize mode anomaly | RESOLVED | `resolved-rounding-duplication-and-mode-anomaly` — commit `961485c7c6ff`, also fixed a live wrong-mode trap in test expected values |
+| Tier 1 (5) `_storage_state_sha256` | RESOLVED | `resolved-canonical-json-sha256-duplication` — commit `921a78ce6d` |
+| Tier 2: decimal-string parsing | RESOLVED | `resolved-decimal-parsing-cluster` (four commits) + `coordinator-ruling-decimal-parsing-canonical-home`; one residual OPEN item below |
+| Tier 2: decimal parsing residual — `_calculate_input.py::_decimal` on the `--set` path | OPEN, flagged priority | `coordinator-ruling-decimal-parsing-canonical-home` — "STILL OPEN AND STILL THE PRIORITY" |
+| Tier 2: explicit-or-active bucket-id resolver | RESOLVED (mostly) | `bucket-id-resolver-cluster-landed` — commit `58c02ee8e7`; one residual divergence named and left, see the entry |
+| Tier 2: bucket-event emission cluster | RESOLVED | `resolved-emit-bucket-event-relocation` (commit `89e271325a`) + `resolved-emit-modelo-bucket-event-rename` (commit `dc616bdfac`); see `bucket-event-emission-cluster-corrected-inventory` for the corrected 22-site count and the payload-version hazard this averted |
+| Tier 2: FX rate resolution 4x | OPEN | not addressed anywhere later in this document |
+| Tier 2: fixed-width field encoders 3x | REFUTED | `refuted-5-fixed-width-export-encoders` — consolidation proven unsafe on the surface that writes filed bytes; one real latent pad-axis bug found instead, see `land-the-pad-axis-registry-validator` (OPEN recommendation) |
+| Tier 2: committed-TOML reader bypassed by 4 loaders | RESOLVED, no edits needed | `toml-cluster-resolved` / `toml-cluster-closure-confirmed` — each bypass has a documented reason not to convert |
+| Tier 2: registry-tree fingerprint 2x + snapshot cache | RESOLVED (partially) | `registry-caching-defect-and-three-refutations` — commit `31ce3018bf`, one real defect fixed, three sharper-rated sibling claims refuted |
+| Tier 2: scalar-parameter resolver 3x (M100/M131/M210) | OPEN | not addressed anywhere later in this document |
+| Tier 2: sensitive-key redaction predicate 4x | OPEN | not addressed anywhere later in this document |
+| Tier 2: accent-fold 4x | OPEN | not addressed anywhere later in this document |
+| Tier 2: `_renta_ledger::_casilla_aggregation` hand-rolled fold | OPEN | not addressed anywhere later in this document |
+| Tier 2: evidence-covers-snapshot contributor-coverage guard 3x | OPEN | not addressed anywhere later in this document |
+| Tier 3: two filing-readiness pipelines | REFUTED | `refuted-7-two-filing-readiness-pipelines` — nested, not parallel; neither model can absorb the other |
+| Tier 3: two parallel per-transaction evidence systems | REFUTED, one real follow-up | `refuted-6-two-parallel-evidence-systems` (commit `cd14309ddbc`) + `resolve-the-polymorphic-purchase-invoice-evidence-id-space` (OPEN, HIGH — a real silently-dropped-deduction defect) |
+| Tier 3: cross-period not-applicable suppression derived twice | REFUTED + one real third route, resolved | `refuted-1-cross-period-suppression-derived-twice` (composition, not duplication) + `pagos-fraccionados-third-route-not-yet-actioned` → `resolved-pagos-fraccionados-applicability-route` (commit `feb71e30e6`); two follow-ups remain OPEN: `land-the-approved-applicability-relocation` (blocked on peer files) and `land-the-persona-divergence-verdict-change` |
+| Tier 3: `_formats/__init__.py` superseded, `_serialise()` still ships | RESOLVED verdict (DEAD), retirement OPEN | `refuted-5-fixed-width-export-encoders` establishes the package is unreachable and safe to delete; `retire-the-dead-formats-package` is the OPEN execution step |
+| Tier 3: terminology lifecycle value set in non-shippable dev/docs | RESOLVED (mostly) | `progress-concept-lifecycle-relocation` — commit `db28b65b0907`; two adjacent axes (`TermStatus`, `ConceptDomain`) deliberately left OPEN, same defect class |
+| Tier 3: two parallel synthetic-PDF generator families | OPEN | not addressed anywhere later in this document |
+| Tier 3: grimp runtime import-graph audit axis never built | OPEN | not addressed anywhere later in this document |
+| Tier 3: `ledger_transaction_review_payload` no call site | OPEN | not addressed anywhere later in this document |
+| Confirmed-clean surfaces (sheets/workbook, four retry policies, help/manifest/risk-classifier, `UnsecuredMasterKeyProvider`, jscpd runner) | CONFIRMED CLEAN, still holds | `confirmed-clean-surfaces` — no later entry in this document contradicts any of these |
+| Confirmed-clean: prompter singularity (blind spot noted) | RESOLVED, upgraded from clean-with-caveat | `resolved-gate-blind-spots-alias-aware` — the noted blind spot (indirect re-export) is now closed, commit `a5d21ced8a` |
+| D1-1: dual binding-validator convention | REFUTED | `refuted-2-dual-binding-validator-convention`; two real follow-on defects at `refutation-2-followup-false-docstrings-and-visibility` — docstring fix appears landed at `resolved-validator-prose-corrections` (commit `e3e84f3db8`, unverified by this header pass which entries it covers); visibility demotion is OPEN at `demote-the-four-public-binding-invariant-delegates-and-fix-the-false-docstrings` |
+| D1-2: English/Spanish stem pair on ledger sources | RESOLVED | `resolved-expense-gasto-rename-sweep` — commit `04ca5436f6`, 81 files, one atomic commit |
+| Revision/period resolution surface | CONFIRMED CLEAN, still holds | `revision-period-resolution-clean-positive` — no later entry contradicts it |
+| Gate blind spots (alias evasion, indirect re-export) | RESOLVED | `resolved-gate-blind-spots-alias-aware` — commit `a5d21ced8a`; a further blind-gate class (literal-token-list guards) is named OPEN at `resolved-emit-modelo-bucket-event-rename`'s own "GUARD QUESTION" paragraph |
+| RAG index self-destruction incident | RESOLVED (procedural) | `incident-rag-index-destroyed-itself` — dispatch paused, watcher left to settle; `registry-load-window-closed` and `index-is-not-a-hold` record two related process near-misses, both concluded non-issues |
+
+Sixteen further items live only in the untriaged RECOMMENDATIONS tail (lines ~691
+onward as of this header): each already names its own status and blocker inline
+(`retire-the-dead-formats-package`, `land-the-pad-axis-registry-validator`,
+`widen-the-decimal-quantize-gate-and-clear-the-45-sites`,
+`land-the-approved-applicability-relocation`,
+`land-the-persona-divergence-verdict-change`,
+`execute-the-expense-gasto-rename-sweep` — NOTE: this one is STALE, superseded by
+`resolved-expense-gasto-rename-sweep` above; the tail was not swept when that
+commit landed —, `demote-the-four-public-binding-invariant-delegates-and-fix-the-false-docstrings`,
+`resolve-the-polymorphic-purchase-invoice-evidence-id-space`,
+`enrol-a-version-gate-on-the-bucket-manifest-schema-version`,
+`tighten-the-inner-envelope-layer-2-checks-from-greater-than-to-not-equal`,
+`assess-the-third-canonical-json-sha256-fingerprint-site`,
+`correct-or-enrol-the-false-toml-sole-surface-adr-premise`,
+`execute-the-emit-bucket-event-fix-forward-plan` — ALSO STALE, superseded by
+`resolved-emit-bucket-event-relocation`, verified 2026-08-07 by running
+`test_profile_bound_command_populates_active_profile_label` at HEAD with markers
+cleared: 1 passed —, `allocate-distinct-feature-tags-or-serialise-adr-scaffolding`,
+`add-the-is-finite-guard-to-the-oracle-and-advisory-decimal-parsers`,
+`repair-the-orphaned-ledger-period-grammar-test`). The recommendations tail is
+itself the least-accurate section of the document for exactly the reason this
+header exists: it is the section an agent looking for work reads first, and it is
+not updated when the document's own later sections resolve one of its items.
+
+Full detail for every "why" above lives at the cited heading; this header only
+indexes, it does not re-argue. See `2026-08-07-code-dedup-sweep-status-header-audit`
+for the process note on why this header was added and what it does not cover
+(the ten OPEN items above were confirmed absent from later sections by direct
+grep, not re-investigated against HEAD — they are exactly as verified/unverified
+as this document already left them).
 
 ## Scope
 
