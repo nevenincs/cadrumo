@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff14e985fe56cfb3a056e41789a217be9244287d9d6c3e6bc5bf3f3bf4e34569'
+body_hash: 'sha256:5fe95473691e393bd004f38b9c3944a1168fd23f4c45c177379634576a482631'
 step_id: 'S89'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -55,14 +55,21 @@ exempt invoice may legitimately print zeroes to show that no tax was charged, an
 treating that as tax charged would fire on exactly the documents this check
 exists to respect -- a check that looks strict and is simply wrong.
 
-Only one contradiction shape is reachable. A contradiction requires a mention
-that declares a category, and the statutory table carries exactly one; the other
-six declare nothing to contradict, and the exempt case fixes no phrase to match
-at all. The reachable shape is covered and the unreachable ones are named in the
-module rather than padded out with refusal cases over branches no document can
-reach. A premise test pins the count, so a second declaring row would make this
-suite report that it has stopped covering the reachable set instead of continuing
-to read as complete.
+The two contradiction shapes the Step names collapse into one reachable check,
+and the collapse is measured rather than assumed. Printing all seven rows shows
+the sole mention that declares a category is also the sole row declaring that it
+expects no repercutido line. So "a reverse-charge mention beside a charged line"
+and "a mention the rate pattern belies" are the same row, checked in the only
+direction it can fail. The other six mentions declare nothing to contradict, and
+the exempt case fixes no phrase to match at all.
+
+The second direction becomes reachable only when a row declares a category while
+expecting a repercutido line -- a mention whose regime DOES expect Spanish IVA,
+contradicted by a document printing none. No such row exists, so a refusal case
+for it would exercise a branch no legend can reach. The condition is named in the
+test module and asserted directly, which is worth more than a test that cannot
+fail, and it means the suite reports that its scope claim has expired rather than
+continuing to read as complete.
 
 ## Verification
 
@@ -100,6 +107,17 @@ module under test:
     PROBE: mutation reached the module under test = True
     producer made to NEVER fire   ->  3 failed, 17 passed
     producer made to ALWAYS fire  ->  9 failed, 11 passed
+
+A third mutation proves the scope claim itself, since a newly-added assertion is
+exactly the kind that can hold vacuously. A synthetic row declaring a category
+while expecting a repercutido line was added to the statutory table:
+
+    PROBE: declaring rows the suite sees = 2 (unmutated is 1)
+    1 failed, 19 passed
+
+Only the premise test reds. The nineteen behavioural cases stay green, which is
+the intended reading: the covered behaviour did not break, the suite's claim
+about what it covers did.
 
 The never-fire direction reds the refusal cases; the always-fire direction reds
 the coherent reverse-charge document, the zero-rate presentation, all six silent
