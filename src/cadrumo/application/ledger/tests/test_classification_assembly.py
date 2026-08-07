@@ -426,3 +426,139 @@ def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
     assert assembly.criteria.rate_tier is IvaRateKind.GENERAL
+
+
+def _domestic(**overrides: object):
+    """An ES-to-ES operation, which is the shape the customer-status demand blocked."""
+    kwargs: dict[str, object] = {
+        "customer_country_code": None,
+        "asserted_issuer_scope": IvaTerritorialScope.ES_MAINLAND,
+        "asserted_customer_scope": IvaTerritorialScope.ES_MAINLAND,
+        "rate_tier": IvaRateKind.GENERAL,
+    }
+    kwargs.update(overrides)
+    return _complete(**kwargs)
+
+
+def test_an_ordinary_domestic_invoice_is_never_asked_for_the_customer_status() -> None:
+    """The payoff. A demand with no consequence blocked the commonest document there is.
+
+    The domestic rule reads the customer's status ONLY to route the three
+    reverse-charge kinds and the exempt immovable supply, and a printed
+    goods-or-services reading produces none of them. So every status reaches the
+    same category and the question could not have mattered.
+    """
+    assembly = _domestic(asserted_customer_tax_status=None, supply_nature=None)
+
+    assert "customer_tax_status" not in {m.field for m in assembly.missing}
+    assert assembly.assembled, [m.field for m in assembly.missing]
+
+
+def test_the_undetermined_status_placeholder_never_changes_the_outcome() -> None:
+    """Asserting it assembled leaves the placeholder unguarded.
+
+    A value that quietly selected a reverse-charge or exempt branch would still
+    assemble and would still be wrong, so the placeholder's verdict is compared
+    against every substantive status the customer could actually have.
+    """
+    placeholder = classify_from_assembled_criteria(_domestic(asserted_customer_tax_status=None, supply_nature=None))
+
+    assert placeholder is not None
+    for status in CustomerTaxStatus:
+        if status is CustomerTaxStatus.UNKNOWN:
+            continue
+        stated = classify_from_assembled_criteria(_domestic(asserted_customer_tax_status=status, supply_nature=None))
+        assert stated is not None
+        assert placeholder.category is stated.category, (
+            f"the undetermined-status placeholder changed the outcome under {status}: "
+            f"{placeholder.category} vs {stated.category}"
+        )
+
+
+def test_an_intra_community_operation_still_demands_the_customer_status() -> None:
+    """The expensive refusal must survive the laziness, on a PLACED operation.
+
+    The art. 25 exemption turns on the registered status, so skipping the demand
+    here would zero-rate a taxable sale on evidence nobody verified. This is the
+    positive control for the laziness above: without it, a producer that simply
+    stopped asking would pass every domestic assertion in this file.
+    """
+    assembly = _complete(asserted_customer_tax_status=None)
+
+    assert not assembly.assembled
+    gap = next(m for m in assembly.missing if m.field == "customer_tax_status")
+    assert "not a valid registration" in gap.reason
+    assert "VIES" in gap.settled_by
+
+
+def test_an_unplaced_operation_is_not_certified_indifferent() -> None:
+    """Identical-because-unplaced must not read as identical-because-it-cannot-matter.
+
+    A DE-to-FR pair matches no rule at all, so all five statuses agree on the
+    fallthrough sentinel. That agreement says nothing whatever about the status
+    mattering, and a probe reading it as indifference would assemble an operation
+    the table never placed and stamp a sentinel category onto a filing.
+    """
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=_inputs(),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code="DE",
+        customer_country_code="FR",
+    )
+
+    assert not assembly.assembled
+    assert "customer_tax_status" in {m.field for m in assembly.missing}
+
+
+def test_the_undetermined_status_can_only_ride_status_blind_rules() -> None:
+    """The safety asymmetry, asserted structurally rather than left to the probe.
+
+    ``UNKNOWN`` is supplied where nobody established a status, so it must never
+    be what TRIGGERS a rule. Sweeping the table: wherever ``UNKNOWN`` matches a
+    real rule, every other status must match that same rule -- meaning the rule
+    does not read the status at all. Anywhere the status does matter, ``UNKNOWN``
+    may only reach the no-rule-matched fallthrough.
+
+    Stronger than the indifference probe, which certifies one operation at a
+    time. This reds if anyone ever admits ``UNKNOWN`` into a substantive rule's
+    accepted set, whether or not the assembly happens to reach that rule today.
+    """
+    from ....domain.iva import EUMemberState, IvaInvoiceClassificationCriteria, classify_iva
+
+    fallthrough = "R99_fallthrough"
+    reachable_kinds = (TransactionKind.GOODS, TransactionKind.SERVICES_GENERAL)
+    checked = 0
+
+    def _rule(status: CustomerTaxStatus, issuer, customer, kind, direction) -> str:
+        return classify_iva(
+            IvaInvoiceClassificationCriteria(
+                transaction_date=_DATE,
+                issuer_residency=issuer,
+                customer_residency=customer,
+                customer_tax_status=status,
+                kind=kind,
+                direction=direction,
+                issuer_member_state=EUMemberState.DE if issuer is IvaTerritorialScope.EU_MEMBER else None,
+                customer_member_state=EUMemberState.FR if customer is IvaTerritorialScope.EU_MEMBER else None,
+                rate_tier=IvaRateKind.GENERAL,
+            ),
+        ).matched_rule_id
+
+    for issuer in IvaTerritorialScope:
+        for customer in IvaTerritorialScope:
+            for kind in reachable_kinds:
+                for direction in InvoiceKind:
+                    shape = (issuer, customer, kind, direction)
+                    matched = _rule(CustomerTaxStatus.UNKNOWN, *shape)
+                    checked += 1
+                    if matched == fallthrough:
+                        continue
+                    for status in CustomerTaxStatus:
+                        assert _rule(status, *shape) == matched, (
+                            f"UNKNOWN matched {matched} on {shape} but {status} does not: "
+                            "the rule reads the customer status, so UNKNOWN triggered it"
+                        )
+
+    assert checked == len(IvaTerritorialScope) ** 2 * len(reachable_kinds) * len(InvoiceKind)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from bs4 import BeautifulSoup
 
 from .....core.hashing import sha256_hex
 from .._playwright import PlaywrightError
@@ -47,7 +46,7 @@ def declarations_page_shape_context(
     """
     from bs4 import Tag
 
-    soup = BeautifulSoup(html, "html.parser")
+    soup = parse_html(html)
     normalized_text = normalize_response_text(soup.get_text(" ", strip=True))
     buttons = tuple(bounded_text(button.get_text(" ", strip=True)) for button in soup.find_all("button")[:12])
     headers = tuple(

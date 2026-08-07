@@ -26,7 +26,6 @@ from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import urlsplit
 from uuid import uuid4
 
-from bs4 import BeautifulSoup
 
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import UTF_8_ENCODING
@@ -607,7 +606,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         if content is None:
             return False
         html = await content()
-        soup = BeautifulSoup(html, "html.parser")
+        soup = parse_html(html)
         own_name = soup.select_one(pre303.representation_own_name_selector)
         representative = soup.select_one(pre303.representation_representative_selector)
         if representative is not None and _html_input_checked(representative):

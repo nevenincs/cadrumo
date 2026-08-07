@@ -78,7 +78,7 @@ def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:
             authenticated session likely expired).
     """
     try:
-        soup = BeautifulSoup(html, "lxml")
+        soup = parse_html(html)
     except Exception as exc:
         raise SedeParseError(f"failed to parse ResumenVlt HTML: {exc}") from exc
 

@@ -6,7 +6,6 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from bs4 import BeautifulSoup
 from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -86,7 +85,7 @@ def _parse_listbox(
         from a rendered-page-only one.
     """
     try:
-        soup = BeautifulSoup(html, "html.parser")
+        soup = parse_html(html)
     except Exception as exc:
         raise SedeParseError(
             f"failed to parse declaraciones HTML: {exc}",

@@ -20,6 +20,15 @@ valid — and the registered status is what triggers the intra-community supply
 exemption. Inferring it from a printed number would zero-rate a taxable sale on
 evidence nobody verified.
 
+That refusal is real, and it is also **lazy**: it is only raised where the
+answer could change the verdict. The domestic rule consults the customer's
+status ONLY to route the three reverse-charge kinds and the exempt immovable
+supply, none of which a printed goods-or-services reading can produce — so on an
+ordinary domestic invoice every status reaches the identical category, and
+demanding one asked the operator a question with no consequence on the commonest
+document there is. The same table that judges the supply nature judges this,
+by the same means and under the same fail-toward-asking rule.
+
 **Spanish territorial scope needs sub-national evidence.** A country code names
 the State while the IVA territory inside it stays undetermined, and Spain holds
 three that the law treats differently. So a domestic pair contributes nothing
@@ -123,11 +132,30 @@ class ClassificationAssembly(BaseModel):
         return self.criteria is not None
 
 
-def _customer_tax_status(
-    inputs: ClassifierInputs,
-    asserted: CustomerTaxStatus | None,
-) -> tuple[CustomerTaxStatus | None, MissingClassifierInput | None]:
-    """Resolve the customer's IVA status, or say why the evidence cannot.
+#: Every status the customer could actually turn out to have.
+#:
+#: The probe ranges over the WHOLE enum rather than a curated subset, because a
+#: subset would be a second judgement about which statuses are plausible — and
+#: the point of the probe is to decide indifference without judging the customer
+#: at all. Deriving it from the enum also means a new member joins the sweep on
+#: the day it is declared instead of the day someone remembers this list.
+_STATUS_CANDIDATES: tuple[CustomerTaxStatus, ...] = tuple(CustomerTaxStatus)
+
+
+#: The status supplied on a branch whose treatment cannot turn on it.
+#:
+#: ``UNKNOWN`` and not a substantive member, and this is the safety asymmetry
+#: rather than a naming preference. Every status predicate in the rule table
+#: tests for a substantive member, so ``UNKNOWN`` satisfies none of them and
+#: cannot trigger a rule on evidence nobody supplied — where a substantive
+#: placeholder would rest entirely on the probe having been right. It is also
+#: simply true: the enum documents this member as "counterparty status
+#: unresolved", which is exactly what happened.
+_UNDETERMINED_STATUS: CustomerTaxStatus = CustomerTaxStatus.UNKNOWN
+
+
+def _customer_tax_status_gap(inputs: ClassifierInputs) -> MissingClassifierInput:
+    """Say why the evidence could not settle the customer's IVA status.
 
     The printed identifier is deliberately NOT consulted as a source of the
     registered status. It establishes a taxable person; ``B2B_IVA_REGISTERED``
@@ -135,8 +163,6 @@ def _customer_tax_status(
     supply exemption, so bridging the two would let an unverified number
     zero-rate a taxable sale.
     """
-    if asserted is not None:
-        return asserted, None
     established = inputs.counterparty_taxable_person
     reason = (
         "the document printed a counterparty tax identifier, which establishes a taxable person "
@@ -144,7 +170,7 @@ def _customer_tax_status(
         if established is CounterpartyTaxablePersonStatus.TAXABLE_PERSON
         else "the document printed no counterparty tax identifier, so nothing was established"
     )
-    return None, MissingClassifierInput(
+    return MissingClassifierInput(
         field="customer_tax_status",
         reason=reason,
         settled_by="a VIES verification, or an explicit operator assertion of the customer's IVA status",
@@ -219,14 +245,25 @@ def _member_state(
 _NATURE_INDIFFERENT_KIND: TransactionKind = TransactionKind.GOODS
 
 
-def _nature_forks_the_law(probe: Callable[[TransactionKind], IvaCategory]) -> bool:
-    """Whether the supply's nature can change THIS operation's treatment.
+def _axis_forks_the_law(
+    probe: Callable[[CustomerTaxStatus, TransactionKind], IvaCategory],
+    *,
+    slices: list[tuple[tuple[CustomerTaxStatus, ...], tuple[TransactionKind, ...]]],
+) -> bool:
+    """Whether ONE undetermined axis can change THIS operation's treatment.
 
     Asks the rule table about itself: classify the same operation under each
-    kind a printed nature can produce and compare the verdicts. Identical
-    verdicts mean the answer could not have mattered, so demanding it would ask
-    the operator a question with no consequence — which is what put a blocking
-    gap on every domestic invoice.
+    value the axis could take and compare the verdicts. Identical verdicts mean
+    the answer could not have mattered, so demanding it would ask the operator a
+    question with no consequence — which is what put a blocking gap on every
+    domestic invoice, first for the supply nature and then for the customer's
+    status.
+
+    Each entry in ``slices`` holds the OTHER undetermined axes fixed and ranges
+    over the axis under test. Judging one axis at a time is what makes the
+    verdict attributable: a single sweep over the product would fork whenever
+    *anything* mattered, and would then demand an answer the law does not turn
+    on because a different axis did.
 
     **This is not a second copy of the laziness rule.** A hand-written branch on
     the territorial scopes would have been exactly that, and would have drifted
@@ -239,15 +276,26 @@ def _nature_forks_the_law(probe: Callable[[TransactionKind], IvaCategory]) -> bo
     agree on every category this probe can reach, so a change to either is
     caught rather than silently forked.
 
-    Fails toward asking: a probe that cannot classify at all forks, because an
-    operation that could not be placed may still land on a branch needing the
-    answer.
+    Fails toward asking, on both shapes of not-knowing:
+
+    * A probe that cannot classify at all forks, because an operation that could
+      not be placed may still land on a branch needing the answer.
+    * **A verdict of** :attr:`~domain.iva.IvaCategory.UNKNOWN` **forks**, because
+      that is the table's no-rule-matched sentinel rather than a treatment.
+      Without this, an operation no rule places would agree with itself across
+      every candidate and be certified indifferent on the strength of that
+      agreement — identical-because-unplaced read as identical-because-it-cannot-
+      matter. A measured EU-to-EU pair does exactly that: all five statuses reach
+      the fallthrough, which says nothing whatever about the status mattering.
     """
-    try:
-        verdicts = {probe(kind) for kind in _NATURE_TO_KIND.values()}
-    except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
-        return True
-    return len(verdicts) > 1
+    for statuses, kinds in slices:
+        try:
+            verdicts = {probe(status, kind) for status in statuses for kind in kinds}
+        except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
+            return True
+        if len(verdicts) > 1 or IvaCategory.UNKNOWN in verdicts:
+            return True
+    return False
 
 
 class DeclaredFact[T](BaseModel):
@@ -344,10 +392,7 @@ def assemble_classification_criteria(
     missing: list[MissingClassifierInput] = []
 
     supply_nature = _value_of(declared.supply_nature)
-
-    status, status_gap = _customer_tax_status(inputs, _value_of(declared.customer_tax_status))
-    if status_gap is not None:
-        missing.append(status_gap)
+    status = _value_of(declared.customer_tax_status)
 
     issuer_scope, issuer_gap = _scope(
         issuer_country_code,
@@ -392,10 +437,12 @@ def assemble_classification_criteria(
 
     if missing:
         # The probe needs otherwise-complete criteria, and this operation does
-        # not have them -- so the nature question cannot be decided here. It is
+        # not have them -- so neither lazy question can be decided here. Both are
         # still REPORTED, because failing toward asking is the rule and because
-        # dropping it would cost the accumulate-at-once property: an operator
+        # dropping them would cost the accumulate-at-once property: an operator
         # resolving the other gaps would re-run only to meet a new one.
+        if status is None:
+            missing.append(_customer_tax_status_gap(inputs))
         if supply_nature is None:
             missing.append(
                 MissingClassifierInput(
@@ -413,18 +460,17 @@ def assemble_classification_criteria(
             )
         return ClassificationAssembly(missing=tuple(missing))
 
-    assert status is not None  # narrowed: a gap would have been recorded
-    assert issuer_scope is not None
+    assert issuer_scope is not None  # narrowed: a gap would have been recorded
     assert customer_scope is not None
     assert transaction_date is not None
 
-    def _probe(kind: TransactionKind) -> IvaCategory:
+    def _probe(status_candidate: CustomerTaxStatus, kind: TransactionKind) -> IvaCategory:
         return classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=transaction_date,
                 issuer_residency=issuer_scope,
                 customer_residency=customer_scope,
-                customer_tax_status=status,
+                customer_tax_status=status_candidate,
                 kind=kind,
                 direction=direction,
                 issuer_member_state=issuer_state,
@@ -433,26 +479,40 @@ def assemble_classification_criteria(
             ),
         ).category
 
-    if supply_nature is None and _nature_forks_the_law(_probe):
-        return ClassificationAssembly(
-            missing=(
-                MissingClassifierInput(
-                    field="kind",
-                    reason=(
-                        "no statutory citation on the document established whether it supplies goods "
-                        "or services, and this operation's treatment differs between them"
-                    ),
-                    settled_by="a printed statutory citation, or an explicit operator assertion of the supply nature",
+    # What each axis could still be. An established axis contributes its one
+    # value, so it holds genuinely fixed while the other is judged.
+    status_candidates = (status,) if status is not None else _STATUS_CANDIDATES
+    kind_candidates = (
+        (_NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_NATURE_TO_KIND.values())
+    )
+
+    if status is None and _axis_forks_the_law(_probe, slices=[(_STATUS_CANDIDATES, (kind,)) for kind in kind_candidates]):
+        missing.append(_customer_tax_status_gap(inputs))
+
+    if supply_nature is None and _axis_forks_the_law(
+        _probe,
+        slices=[((candidate,), kind_candidates) for candidate in status_candidates],
+    ):
+        missing.append(
+            MissingClassifierInput(
+                field="kind",
+                reason=(
+                    "no statutory citation on the document established whether it supplies goods "
+                    "or services, and this operation's treatment differs between them"
                 ),
+                settled_by="a printed statutory citation, or an explicit operator assertion of the supply nature",
             ),
         )
+
+    if missing:
+        return ClassificationAssembly(missing=tuple(missing))
 
     return ClassificationAssembly(
         criteria=IvaInvoiceClassificationCriteria(
             transaction_date=transaction_date,
             issuer_residency=issuer_scope,
             customer_residency=customer_scope,
-            customer_tax_status=status,
+            customer_tax_status=status if status is not None else _UNDETERMINED_STATUS,
             kind=_NATURE_TO_KIND[supply_nature] if supply_nature is not None else _NATURE_INDIFFERENT_KIND,
             direction=direction,
             issuer_member_state=issuer_state,

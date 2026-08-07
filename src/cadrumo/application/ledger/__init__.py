@@ -219,7 +219,7 @@ if TYPE_CHECKING:
         printed_total_discrepancy,
     )
     from ._evidence_input import EvidenceInput
-    from ._evidence_textlayer import transcribe_text_layer
+    from ._evidence_textlayer import text_layer_transcriber_identity, transcribe_text_layer
     from ._extraction_draft_store import (
         ExtractionDraftDocument,
         ExtractionDraftRepository,
@@ -539,6 +539,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "suggest_evidence_split": "._llm_classification",
     "suggest_llm_classification": "._llm_classification",
     "summarize_manual_transactions": "._actions_manual",
+    "text_layer_transcriber_identity": "._evidence_textlayer",
     "transcribe_text_layer": "._evidence_textlayer",
     "unset_usage_ratio": "._ratios",
     "update_manual_transaction": "._actions_manual",
@@ -772,6 +773,7 @@ __all__ = [
     "summarise_batch",
     "summarize_manual_transactions",
     "survey_cloud_consent",
+    "text_layer_transcriber_identity",
     "transcribe_text_layer",
     "unset_usage_ratio",
     "update_manual_transaction",

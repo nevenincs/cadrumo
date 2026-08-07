@@ -34,7 +34,6 @@ from collections.abc import Awaitable, Callable
 from typing import Any, Protocol, TypeGuard, runtime_checkable
 from urllib.parse import parse_qs, urlencode, urlsplit
 
-from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
 from .....core import is_aeat_csv as _is_aeat_csv
@@ -272,7 +271,7 @@ def _response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str
     if final.path != _VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query:
         return False
 
-    soup = BeautifulSoup(body, "html.parser")
+    soup = parse_html(body)
     viewer = soup.find("iframe", id="iframe-visualiza")
     if viewer is None:
         return False

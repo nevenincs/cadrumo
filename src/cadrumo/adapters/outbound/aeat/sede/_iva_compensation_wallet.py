@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import quote, urljoin, urlsplit
 
-from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
 from .....core import Period
@@ -731,7 +730,7 @@ async def _wait_for_wallet_execute_initial_shape(
             "no-wallet-execute-submit",
         }:
             return html, status
-        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(BeautifulSoup(html, "html.parser")):
+        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(parse_html(html)):
             return html, status
         await asyncio.sleep(0.5)
     return last_html, last_status
@@ -749,7 +748,7 @@ async def _wait_for_wallet_execute_terminal_shape(
     while now().timestamp() < deadline:
         html = await content()
         last_html = html
-        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(BeautifulSoup(html, "html.parser")):
+        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(parse_html(html)):
             return html
         if _wallet_execute_gate_status(html, expected_path=expected_path) != "wallet-execute-submit-present":
             return html

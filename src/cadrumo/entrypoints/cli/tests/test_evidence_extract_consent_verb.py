@@ -40,7 +40,7 @@ from pydantic import SecretStr
 
 from ....adapters.outbound.llm import LLMCache, UsageRecorder
 from ....application.ledger import DocumentTranscription, TranscriberIdentity
-from ....core import FieldOrigin
+from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....core.config import override_settings
 from ....llm import (
     LLMConsentError,
@@ -147,7 +147,12 @@ def _transcription() -> DocumentTranscription:
         text="FACTURA Base imponible 100,00 EUR",
         page_count=1,
         source_content_sha256=_CONTENT_ADDRESS,
-        transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
+        transcriber=TranscriberIdentity(
+            origin=FieldOrigin.TEXT_LAYER,
+            name="pdfplumber",
+            transport=LOCAL_TRANSPORT_LABEL,
+            revision="gate",
+        ),
     )
 
 

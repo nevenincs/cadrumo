@@ -332,7 +332,7 @@ def parse_censal_datos(html: str, *, source_url: str) -> CensalDatosResult:
             no censal data table.
     """
     try:
-        soup = BeautifulSoup(html, "lxml")
+        soup = parse_html(html)
     except Exception as exc:  # pragma: no cover — lxml always available
         raise SedeParseError(f"failed to parse censal HTML: {exc}") from exc
     for tag in soup(["script", "style"]):

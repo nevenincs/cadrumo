@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-
 from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante_bytes
@@ -1041,6 +1040,49 @@ def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_i
     )
 
 
+_SYNTHETIC_REQUEST_TYPE = "SYNTHETIC-REQUEST-TYPE"
+
+
+def _filed_130_observation_carrying_a_request_type() -> FiledDeclaracionObservation:
+    """Build one active filed Modelo 130 observation whose metadata states a request type.
+
+    The metadata mapping mirrors what the live capture path writes off the
+    register row. Modelo 130 keeps this out of the IVA compensation machinery,
+    so the persistence boundary is exercised on its own.
+    """
+    body = b"130-2026-1T-submitted-file"
+    artefact = FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/BUCV-JDIT/AvisoLegal"),
+        content_type="application/octet-stream",
+        byte_count=len(body),
+        sha256=hashlib.sha256(body).hexdigest(),
+        captured_at=_CAPTURED_AT,
+    )
+    return FiledDeclaracionObservation(
+        modelo="130",
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        expediente_id="202613000000101A",
+        status="ALTA",
+        presented_at=_CAPTURED_AT,
+        authenticated_identity=_SYNTHETIC_PROFILE_ID,
+        artefacts=(artefact,),
+        casillas=(
+            ObservedCasillaValue(
+                casilla_id=validated_casilla_id("01", surface="filed request-type observation"),
+                value="1000.00",
+                value_kind=CasillaValueKind.NUMERIC,
+                source_artefact_kind="submitted_file",
+                source_locator="submitted-file:01",
+                confidence=1.0,
+            ),
+        ),
+        extraction_coverage={"submitted_file": 1.0},
+        metadata={"tipo_solicitud": _SYNTHETIC_REQUEST_TYPE, "observaciones": ""},
+    )
+
+
 def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_path: Path) -> None:
     """AEAT's own request-type signal reaches the observation and is lost at persistence.
 
@@ -1055,27 +1097,24 @@ def test_persisted_source_metadata_drops_the_register_request_type_signal(tmp_pa
     an amendment-aware election should key on is an open decision, and a silent
     half-fix would be worse than a visible gap. REVERSE THIS TEST when the
     request-type signal is carried through -- assert the persisted metadata
-    carries it, and this assertion becomes the one to delete.
+    carries it, and the two absence assertions below become the ones to delete.
     """
-    request_type = "SYNTHETIC-REQUEST-TYPE"
-    observation = _prior_303_observation(pending_compensation=Decimal("1200.00")).model_copy(
-        update={"metadata": {"tipo_solicitud": request_type, "observaciones": ""}},
-    )
-    assert observation.metadata["tipo_solicitud"] == request_type, (
+    observation = _filed_130_observation_carrying_a_request_type()
+    assert observation.metadata["tipo_solicitud"] == _SYNTHETIC_REQUEST_TYPE, (
         "the raw observation does not carry the signal, so this test cannot show it being dropped"
     )
 
     with _secure_backend(tmp_path):
         persist_filed_calculation_observation(observation, repository=CalculationObservationRepository())
-        loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
+        loaded = CalculationObservationRepository().load_observation("130", Period.from_year_and_code(2026, "1T"))
 
     assert loaded is not None
-    assert "tipo_solicitud" not in loaded.source_metadata
-    assert request_type not in loaded.source_metadata.values(), (
-        "the request type reached persistence under some other key; this test must name that key instead"
-    )
     assert "aeat_expediente_id" in loaded.source_metadata, (
-        "the expediente id is gone too, so the metadata was not built -- the absence above proves nothing"
+        "the metadata was not built at all, so the absences below would prove nothing"
+    )
+    assert "tipo_solicitud" not in loaded.source_metadata
+    assert _SYNTHETIC_REQUEST_TYPE not in loaded.source_metadata.values(), (
+        "the request type reached persistence under some other key; this test must name that key instead"
     )
 
 
@@ -1172,6 +1211,7 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
 
         with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
             resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
+
 
 def _filed_130_observation(
     *,

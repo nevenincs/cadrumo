@@ -218,6 +218,41 @@ CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
     },
 )
 
+# Per-modelo (M303) categories genuinely out of scope for the structural
+# unrouted-BASE screen (``structurally_unroutable_iva_base_categories``).
+#
+# This is NOT a re-export of CUOTA_LESS_M303_IVA_CATEGORIES, and reusing that
+# set here would be wrong rather than merely redundant. CUOTA_LESS answers
+# "does this category produce a cuota?" -- the new screen asks a different
+# question, "does this category's BASE reach some casilla?", and several
+# by-law cuota-less categories DO carry a real base by law (DOMESTIC_ZERO is
+# the clearest instance: zero cuota by definition, but the taxable operation
+# still has a real base). Suppressing every CUOTA_LESS member here would
+# silence exactly the population the screen exists to surface.
+#
+# Only four members are genuinely out of scope for a LEDGER-driven base
+# screen, because for these the concept of "an independent ledger base this
+# mechanism should route" does not apply at all:
+#
+# - RECARGO_EQUIVALENCIA: the recargo surcharge is levied on the SAME base
+#   already reported under the transaction's ordinary general/reduced/
+#   super-reducido tier (Ley 37/1992 art. 161); it is not a second,
+#   independent taxable amount this screen could find undeclared.
+# - REGIMEN_SIMPLIFICADO: settled from módulos, never from ledger rows at
+#   all -- a ledger-routing screen has nothing to say about a mechanism the
+#   ledger never feeds.
+# - ERRONEOUS_INVOICE / UNKNOWN: data-quality sentinels for a row the
+#   classifier could not place, not declared economic operations carrying a
+#   taxable base of their own.
+M303_BASE_OUT_OF_SCOPE_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
+    {
+        IvaCategory.RECARGO_EQUIVALENCIA,
+        IvaCategory.REGIMEN_SIMPLIFICADO,
+        IvaCategory.ERRONEOUS_INVOICE,
+        IvaCategory.UNKNOWN,
+    },
+)
+
 # IVA categories that never bear a deductible (input) or devengada (output)
 # cuota a binding would route, so a missing-evidence advisory on them would be
 # noise. Extends the by-law cuota-less set with the non-declarable sentinels
