@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#ledger-invoice-decomposition'
 date: '2026-08-05'
-modified: '2026-08-06'
-body_hash: 'sha256:904c4d73be10e3289b5b4ecca2e03dc4e3ebfb76bc3bfe8a602f6ce50eeb6940'
+modified: '2026-08-07'
+body_hash: 'sha256:fe93f0e739ea6d0442d54a0679008982d8981c89b8128b4460009f2d5c0110eb'
 tier: L2
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
@@ -58,7 +58,7 @@ Let exempt invoices recover their retencion by relaxing the inference preconditi
 
 Escalate the missing-substrate advisory to a verify-stage refusal only where the under-declaration direction is certain, on operator ratification.
 
-- [ ] `P04.S14` - Escalate the advisory to a verify-stage refusal only for a row declaring a cuota-less category with no taxable base, pending operator ratification; `src/cadrumo/application/modelo`.
+- [x] `P04.S14` - Escalate the advisory to a verify-stage refusal only for a row declaring a cuota-less category with no taxable base, pending operator ratification; `src/cadrumo/application/modelo`.
 - [x] `P04.S36` - Decide whether the external-grounding gate admits bound casillas, since a bound value is as oracle-checkable as a computed one, before amending the S15 and S16 Step texts; `.vault/adr`.
 
 ### Phase `P05` - Oracle grounding and roundtrip coverage
@@ -100,7 +100,7 @@ The record has been extended field by field as each defect surfaced, and four fi
 - [x] `P06.S51` - Bundle RD 1619/2012 art. 4 and refuse a factura simplificada for an entrega intracomunitaria exenta (art. 4.4.a), declaring the amount-threshold and sector-list eligibility axis unverified pending an ADR amendment; `src/cadrumo/_data/corpus/normatives/html, src/cadrumo/domain/invoices/_models.py, src/cadrumo/domain/invoices/tests`.
 - [x] `P06.S52` - Carry recargo de equivalencia inside the ledger transaction totals identity, so the substrate Modelo 303 and 130 actually read stops refusing the truthful row and accepting the falsified one; `src/cadrumo/domain/transactions/_models.py, src/cadrumo/domain/transactions/tests/test_gross_invariant.py`.
 - [x] `P06.S53` - Refuse a missing --total-amount on the slim invoice add CLI verb instead of silently defaulting the total to zero, since the total drives whether a counterparty is declared at all under the RD 1065/2007 art. 31 Modelo 347 threshold; `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [ ] `P06.S55` - Wire simplificada_requires_tax_id_for_domestic_issuer to an operator-facing Notice, since it is exported and tested with zero production callers, and create_catalogue_invoice does not yet accept invoice_class or an optional tax id at all, so the state it evaluates cannot even be created through the CLI create flow today, sequenced after P06.S46 whose consumer wiring likely serves both; `src/cadrumo/application/invoices, src/cadrumo/entrypoints/cli`.
+- [x] `P06.S55` - Wire simplificada_requires_tax_id_for_domestic_issuer to an operator-facing Notice, since it is exported and tested with zero production callers, and create_catalogue_invoice does not yet accept invoice_class or an optional tax id at all, so the state it evaluates cannot even be created through the CLI create flow today, sequenced after P06.S46 whose consumer wiring likely serves both; `src/cadrumo/application/invoices, src/cadrumo/entrypoints/cli`.
 - [x] `P06.S56` - Join the non-deductible share of a fact's input IVA to the IRPF-deductible cost basis via a new RentaDeductibilityContext.iva_deduction_ratio axis, grounded on the AEAT Manual practico Renta 2024 medico radiologo nota 7 worked example (activity exempt from IVA, no right to deduct), leaving the axis unwired from any production taxpayer-fact source as a named follow-up; `src/cadrumo/domain/renta/_ledger_expenses.py, src/cadrumo/domain/renta/tests/test_ledger_expenses.py`.
 - [x] `P06.S57` - Wire RentaDeductibilityContext.iva_deduction_ratio to a real producer: a wholly EXENTO iva.regime profile fact resolves to zero, otherwise the bucket's ProrrataRegister whole-entity entry contributes its in-force provisional percentage, mirroring the resolution the M303 side already applies; `src/cadrumo/application/aggregation/_renta_ledger.py, src/cadrumo/application/aggregation/tests/test_renta_ledger.py, src/cadrumo/domain/renta/_ledger_expenses.py`.
 - [x] `P06.S58` - Extend the iva_deduction_ratio wiring to the M130 quarterly gasto path: aggregate_renta_gasto_ledger_from_repositories now resolves the same ratio through the shared _resolve_iva_deduction_ratio, for the same ejercicio, so M130 and M100 cannot diverge on it; `src/cadrumo/application/aggregation/_renta_gasto_ledger.py, src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`.

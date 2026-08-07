@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a818c4c6e356ddd2485eb5ffcde7009b38cc2c15db0bd027e76854ad7e2d1f5c'
+body_hash: 'sha256:6df0e3d03c9f2ec10f255eca7153bb4b663e4ca58ee90ff74f36e5fb46ed6f2d'
 related:
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S01]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P01-S02]]'
@@ -61,6 +61,7 @@ related:
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S51]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S52]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S53]]'
+  - '[[2026-08-05-ledger-invoice-decomposition-P06-S55]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S56]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S57]]'
   - '[[2026-08-05-ledger-invoice-decomposition-P06-S58]]'
@@ -110,7 +111,7 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 - `2026-08-05-ledger-invoice-decomposition-P03-S12` - Add the invoice retencion consistency validator, holding retencion outside the grand total
 - `2026-08-05-ledger-invoice-decomposition-P03-S13` - Add the partial-invoice decomposition contract so an ungrounded record is excluded but visible rather than silently dropped
 - `2026-08-05-ledger-invoice-decomposition-P03-S20` - Route received-invoice retencion into the existing per-perceptor store behind retenciones_aggregation, never a second parallel retencion path
-- `2026-08-05-ledger-invoice-decomposition-P04-S14` - Escalate the advisory to a verify-stage refusal only for a row declaring a cuota-less category with no taxable base, pending operator ratification
+- `2026-08-05-ledger-invoice-decomposition-P04-S14` - Escalate the advisory to a verify-stage refusal only for a row declaring a cuota-less category with no taxable base
 - `2026-08-05-ledger-invoice-decomposition-P05-S15` - Ground the chain on an AEAT worked example carrying retencion, asserting against the published figure and never against the formula under test
 - `2026-08-05-ledger-invoice-decomposition-P05-S16` - Ground the chain on an exempt-services example proving the under-declaration direction is closed
 - `2026-08-05-ledger-invoice-decomposition-P05-S17` - Add strict roundtrip coverage for every new persisted field, with an anti-tautology proof that a deleted field is refused on load
@@ -150,6 +151,7 @@ Auto-generated index of all documents tagged with `#ledger-invoice-decomposition
 - `2026-08-05-ledger-invoice-decomposition-P06-S58` - Extend the iva_deduction_ratio wiring to the M130 quarterly gasto path: aggregate_renta_gasto_ledger_from_repositories now resolves the same ratio through the shared _resolve_iva_deduction_ratio, for the same ejercicio, so M130 and M100 cannot diverge on it
 - `2026-08-05-ledger-invoice-decomposition-P06-S60` - Reground telefonia_fija to LIRPF art. 30.2.5.b's own suministros enumeration (agua, gas, electricidad, telefonia e Internet), moving it into HOME_OFFICE_SUMINISTROS with the statutory 0.30 multiplier it was missing, since it previously deducted at the raw home-area ratio with no censo-consistency guard
 - `2026-08-05-ledger-invoice-decomposition-P06-S61` - Move arrendamiento_vivienda_afecto from PREMISES into HOME_OFFICE_OWNERSHIP as the renter's parallel to amortizacion/ibi/comunidad_vivienda_afecto, correcting its citation from the suministros-only art. 30.2.5.b to the general art. 29.2 partial-affectation doctrine plus art. 28.1, and dropping its stray default_ratio so it now requires an explicit operator ratio like its true siblings
+- `2026-08-05-ledger-invoice-decomposition-P06-S55` - Wire simplificada_requires_tax_id_for_domestic_issuer to an operator-facing Notice
 
 ### plan
 
