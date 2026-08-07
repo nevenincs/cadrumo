@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:fdd44c123f0e2d9d51cc6b35b31a01e68af410600ac07249070a42c9b15e69f2'
+body_hash: 'sha256:b57c5e89c29b35253dbce80662b91cf8417555ee29f3e6bba375026889190e97'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -61,6 +61,7 @@ Establish which of the profile field, the per-transaction marker, and the regist
 
 - [x] `W03.P04.S09` - Reconcile the three existing candidate placements for the activity-type axis rather than adding a fourth, naming which is canonical; `src/cadrumo/domain/transactions/_models.py`.
 - [x] `W03.P04.S10` - Record the placement ruling against the accepted silent-zero-base-aggregation ADR that already defers on this axis; `.vault/adr/`.
+- [x] `W03.P04.S36` - Ground whether the AEAT tipo-de-actividad code set discriminates at the granularity art 95 needs including the one-percent engorde de porcino y avicultura carve-out, and if it does not, require the mapping to live in the registry rather than be inferred in code; `src/cadrumo/_data/corpus/aeat_official/`.
 
 ### Phase `W03.P05` - Land the axis and its dependents
 
@@ -113,6 +114,6 @@ Run the sweep over the surfaces this campaign touches, where three parallel-auth
 - [ ] `W06.P08.S27` - Record each sweep as a near-neighbour proven not to cover the case or a fragmented authority named, never as a bare no-duplicates-found; `.vault/audit/`.
 - [ ] `W06.P08.S28` - Collapse the three hand-maintained rate-to-IVA-category tables onto one canonical rate-kind table plus the existing accessor, after the adjacent retencion work clears the shared module; `src/cadrumo/domain/iva/_classification.py`.
 - [ ] `W06.P08.S29` - Promote the canonical rate-kind mapping or an accessor onto the domain iva facade before any application-layer consumer reads it, it is private today and cross-package code must not dot into it; `src/cadrumo/domain/iva/__init__.py`.
-- [ ] `W06.P08.S33` - Rule whether the cash-accounting exclusion set is scoped by the LIVA art 163 duodecies Uno territorial clause or enumerates only its Dos carve-outs, six members are Dos letters and one is a Uno scope case with nothing distinguishing them; ``src/cadrumo/application/aggregation/_iva_ledger.py``.
-- [ ] `W06.P08.S34` - Check the OSS declaration path before adding the second not-subject member to the cash-accounting exclusion, doing so newly refuses OSS rows for a taxpayer who also uses cash accounting and that combination is live; ``src/cadrumo/application/aggregation/``.
-- [ ] `W06.P08.S35` - Answer whether an invoice with no declared operation type can legitimately need the five claves the category fallback cannot emit, if not the fallback is correct by scope and must say so; ``src/cadrumo/application/invoices/_source_resolver.py``.
+- [ ] `W06.P08.S33` - Rule whether the cash-accounting exclusion set is scoped by the LIVA art 163 duodecies Uno territorial clause or enumerates only its Dos carve-outs, six members are Dos letters and one is a Uno scope case with nothing distinguishing them; `src/cadrumo/application/aggregation/_iva_ledger.py`.
+- [ ] `W06.P08.S34` - Check the OSS declaration path before adding the second not-subject member to the cash-accounting exclusion, doing so newly refuses OSS rows for a taxpayer who also uses cash accounting and that combination is live; `src/cadrumo/application/aggregation/`.
+- [ ] `W06.P08.S35` - Answer whether an invoice with no declared operation type can legitimately need the five claves the category fallback cannot emit, if not the fallback is correct by scope and must say so; `src/cadrumo/application/invoices/_source_resolver.py`.
