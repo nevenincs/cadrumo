@@ -1,0 +1,35 @@
+{
+  "oracle_kind": "place_of_supply_worked_example",
+  "note": "Not a modelo/casilla oracle. The filename deliberately avoids the 'modelo-' prefix the casilla-oracle loader globs, because this payload carries a categorical localisation outcome rather than expected figures keyed by casilla id.",
+  "source": {
+    "corpus": "aeat_manual_worked_example",
+    "manual_id": "iva",
+    "year": 2025,
+    "title": "Manual practico IVA 2025",
+    "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf",
+    "source_pdf_sha256": "e4f800972e06466ac39f893ed6a4118bf9594b0bad52301bc763eacb92db18a3",
+    "relative_pdf_path": "corpus/manuals/iva/2025/source.pdf",
+    "page": 38,
+    "section": "Capitulo 3. Hecho imponible y Exenciones - Lugar de realizacion de las entregas de bienes"
+  },
+  "raw_evidence": {
+    "quoted_text": "Empresa española que vende productos a una empresa francesa no establecida entregándolos\ndirectamente a los clientes de la empresa francesa en Francia.\nLas entregas de bienes de la empresa española a la francesa están sujetas al IVA español por\nhaberse iniciado el transporte en la Península o islas Baleares (sin perjuicio de la posible exención por\ndestinarse los bienes a otro Estado miembro de la Unión Europea).",
+    "extraction": "pdfplumber text layer, page 38, verbatim substring"
+  },
+  "operation": {
+    "description_es": "Empresa espanola que vende bienes a una empresa francesa, con transporte iniciado en la Peninsula y entrega en Francia.",
+    "issuer_residency": "es_mainland",
+    "customer_residency": "eu_member",
+    "customer_member_state": "fr",
+    "customer_tax_status": "b2b_iva_registered",
+    "transaction_kind": "goods",
+    "direction": "issued"
+  },
+  "expected": {
+    "supply_nature": "goods",
+    "iva_category": "intra_community_supply",
+    "located_by": "ley-37-1992:art-68",
+    "treatment_established_by": "ley-37-1992:art-25",
+    "reasoning_es": "El manual situa la entrega en el TAI por haberse iniciado el transporte en la Peninsula o islas Baleares (art. 68), y senala expresamente la posible exencion por destinarse los bienes a otro Estado miembro (art. 25). Los dos pasos, en ese orden, son el par que esta prueba reproduce."
+  }
+}
