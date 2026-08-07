@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:94512d132a79f0e711e1bcb3d5e9974c23c84c64a43c29dfcd868c809e90824c'
+body_hash: 'sha256:a16cff466697297c439fb445786fadb70eec62616c2dd863b73eaabd7df1e162'
 related:
   - "[[2026-08-07-justificante-identity-matching-reference]]"
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
@@ -183,90 +183,124 @@ per `no-silent-under-declaration` and `sensitive-financial-data-secure-storage-o
 
 ## Implementation
 
-`Justificante.matches_filing_target` keeps its current contract and signature:
-`presentation_id` continues to mean "a value in the receipt's own printed
-namespace" and continues to reject on disagreement when the receipt carries
-one. What changes is exclusively the call sites, plus one clarifying rename at
-the domain boundary so the contract cannot be silently re-conflated:
+`Justificante.matches_filing_target` DROPS its `presentation_id` parameter
+entirely (Option 5). Every caller instead performs its own `csv == csv`
+equality check before calling the narrowed predicate on `modelo`,
+`filing_year`, `period`, and `tax_id` only:
 
-- `_justificante_matches_filed_observation`
-  (`_filed_observation_persistence.py`) and `_justificante_matches_capture_axis`
-  (`_justificante.py`) stop passing `presentation_id=observation.expediente_id`
-  / `presentation_id=snapshot.expediente_id`. Neither call site has an
-  independently-known receipt-namespace value to supply, and the
-  `expediente_id` they hold is already enforced structurally (download-link
-  scoping plus manifest byte-count/sha256 verification precede the parse).
-  They keep matching on `modelo`, `filing_year`, `period`, and `tax_id`.
-- `register_capture_as_filing_evidence` (`_justificante.py`) drops the
-  redundant `presentation_id=snapshot.expediente_id` argument from its call
-  into `_justificante_matches_filing_record`; its pre-existing
-  `justificante.csv == snapshot.csv` check already performs the genuine
-  receipt-namespace identity comparison this call site needs, unchanged.
-- The domain predicate's keyword itself is left named `presentation_id` (it is
-  correct and doing its job); the corrective discipline is a docstring
-  strengthening on `matches_filing_target` making explicit, in the parameter's
-  own doc line, that a caller MUST supply a value from the receipt's own
-  namespace (`csv` or a captured "Número de justificante") and MUST NOT supply
-  a register/expediente-sourced identifier — turning the class of defect this
-  ADR fixes into a documented misuse a future author can self-check against,
-  short of the type-level enforcement Option 4 named as future hardening.
-- Observability: `_parse_matching_filed_justificante` distinguishes its four
+- `register_capture_as_filing_evidence` (`_justificante.py`) keeps its
+  pre-existing `justificante.csv == snapshot.csv` check (`:673-676`)
+  unchanged and drops the now-signature-invalid `presentation_id=
+  snapshot.expediente_id` argument from its call into
+  `_justificante_matches_filing_record`.
+- `register_capture_justificante_metadata` (`_justificante.py`) keeps its
+  pre-existing `justificante.csv == snapshot.csv` check (`:549-552`)
+  unchanged and drops the same now-signature-invalid argument from its call
+  into `_justificante_matches_capture_axis`.
+- `extract_csv_from_url` (`_declarations_remote.py`) is promoted into the
+  sede package's public facade (`__all__` in
+  `adapters/outbound/aeat/sede/__init__.py`) as a precondition, per
+  `aeat-architecture-boundaries` — WHERE the symbol lives changes, not WHEN
+  it executes; the function itself is unchanged.
+- `_parse_matching_filed_justificante`
+  (`_filed_observation_persistence.py`) GAINS a `csv == csv` check it did not
+  have: recover the CSV from the `justificante_pdf` artefact's
+  `source_url` via the promoted `extract_csv_from_url`, compare against the
+  freshly parsed `justificante.csv`, and treat a mismatch as a fifth swallowed
+  outcome alongside the four already tracked (see Observability, below) —
+  never a hard exception that would crash the enrollment call, matching the
+  existing swallow-and-report shape of its sibling failure modes. The
+  now-signature-invalid `presentation_id=observation.expediente_id` argument
+  is dropped from its call into `_justificante_matches_filed_observation` in
+  the SAME change that adds the CSV check — never a separate landing that
+  would leave this site checked-then-unchecked in between.
+- `_justificante_matches_filed_observation`,
+  `_justificante_matches_capture_axis`, and `_justificante_matches_filing_record`
+  all lose their now-dead `presentation_id` parameter and argument, following
+  the predicate's narrowed signature.
+- Observability: `_parse_matching_filed_justificante` distinguishes its five
   swallowed outcomes (unreadable artefact, manifest mismatch, unparsable PDF,
-  predicate rejection) and the two enrollment call sites surface a non-blocking
-  `Notice` (via the shared `cadrumo.core.json_contract.Notice` channel, per
-  `aeat-cli-contract`) when a justificante artefact was present but produced no
-  saved evidence, naming which of the four reasons applies. This does not
-  invent a bespoke advisory field; it routes through the existing typed
-  channel.
+  CSV-resolution failure from a malformed `source_url`, CSV mismatch) and the
+  two enrollment call sites surface a non-blocking `Notice` (via the shared
+  `cadrumo.core.json_contract.Notice` channel, per `aeat-cli-contract`) when a
+  justificante artefact was present but produced no saved evidence, naming
+  which of the five reasons applies. This does not invent a bespoke advisory
+  field; it routes through the existing typed channel.
 
 ## Rationale
 
-Option 1 (scoped removal) wins on the knockout criterion this ADR is bound by:
-it is not a relaxation of a working guard, because the guard being removed
-never validly compared like-for-like at these two sites — reference,
-"No independently-known receipt-namespace identifier exists at the
-register-reconciliation call sites". What replaces it is not "nothing" but the
-pre-existing structural binding (download-link scoping, manifest verification)
-plus the surviving four-field match (`modelo`, `filing_year`, `period`,
-`tax_id`), which the reference's empirical grounding shows already agreed on
-both real captured receipts. Option 3 was rejected because it is the exact
+Option 4 (differentiate by site) wins on the knockout criterion this ADR is
+bound by — every intermediate and final state stays at least as strict as
+HEAD — because it is grounded in what each site actually has, verified per
+site rather than assumed uniform: two sites already run a genuine `csv ==
+csv` check (reference, "Two of the three sites already have a correct,
+independent CSV check"), so dropping their redundant wrong-namespace argument
+is strictly subtractive. The third site is not check-less by necessity; its
+CSV is computed during capture and thrown away, recoverable from a field
+already on disk with zero schema change (reference, "The third site's CSV is
+independently resolved during capture and then discarded"). An earlier
+draft of this decision proposed dropping the argument uniformly at all
+"register-reconciliation" sites on the premise that none had an
+independently-known identifier — that premise was wrong for two of the three
+sites once their actual callers were read, and this record corrects it rather
+than shipping it. Option 3 was rejected because it is the exact
 silent-under-declaration shape `no-silent-under-declaration` exists to catch,
 just relocated to the evidence-stamping surface instead of a calculation
 casilla. Option 2 was rejected for lacking any grounding — inventing an
 identifier transform is fabrication, the same failure mode
-`aeat-calculation-grounding` names for legal semantics. Option 5 is deferred
-because it would require extending `Declaracion` with a new field never
-observed on real register HTML in this campaign's grounding; forcing it in now
-would be design work the reference does not support. At the one call site that
-already had a correct independent check (`register_capture_as_filing_evidence`),
-the fix is strictly subtractive — deleting a redundant, wrong-namespace
-argument next to a check that already does the real job — which is the
-strongest possible case for "this was never a valid comparison."
+`aeat-calculation-grounding` names for legal semantics. Option 7 (a new
+persisted CSV field) was rejected in favor of Option 4's zero-schema-change
+recovery once `source_url` was confirmed to already carry the CSV — adding a
+field to duplicate data already on disk is a persistence-boundary change with
+no offsetting benefit.
+
+Option 5 (remove `presentation_id` from the signature, superseding an
+earlier docstring-only proposal) answers the standing design question this
+ADR raised directly: SHOULD a parameter no caller can ever correctly populate
+still exist? Once Option 4 lands, `presentation_id` has zero valid call
+shapes anywhere in the tree — not "usually misused," structurally unusable
+correctly, because the receipt-namespace verification is now uniformly a
+caller-owned CSV comparison performed before the predicate runs, never an
+argument threaded through it. A docstring warning documents a temptation;
+removing the parameter converts the temptation into a `TypeError` a linter
+and a reviewer both catch for free, which is strictly stronger and does not
+require inventing a new typed-namespace-marker concept (Option 6) to police a
+parameter that need not exist at all.
 
 ## Consequences
 
 **Gains:** live-captured M303 justificante evidence (and every other modelo
 reachable through these three call sites) can auto-stamp local filing records
-again; the `live-justificante-reconcile` and `live-filing-data-capture` ADRs'
-stated purpose stops being silently inert; an operator gets a visible `Notice`
-distinguishing "nothing to capture" from "capture rejected" instead of an
-unexplained zero.
+again, with a genuine receipt-namespace CSV check at all three sites — the
+register-reconciliation site ends this decision STRICTER than it started,
+not merely unblocked. The two-filings-per-period hazard (a period carrying
+both an original and a complementaria, sharing `modelo`/`ejercicio`/`period`/
+`tax_id`) is exactly what the added CSV check discriminates that the four-field
+match alone cannot. The `live-justificante-reconcile` and
+`live-filing-data-capture` ADRs' stated purpose stops being silently inert; an
+operator gets a visible `Notice` distinguishing "nothing to capture" from
+"capture rejected" from "CSV mismatch" instead of an unexplained zero.
+`matches_filing_target` loses a parameter no caller could ever populate
+correctly, closing the recurrence risk structurally rather than by
+convention.
 
-**Difficulties:** the two register-reconciliation sites now rely more heavily
-on the four-field match plus structural artefact binding, with no
-receipt-content cross-check at all; if AEAT's download-link scoping is ever
-found to be spoofable or reused across expedientes, this decision's
-"structurally trustworthy" premise needs re-grounding, not just a parameter
-tweak.
+**Difficulties:** `extract_csv_from_url` raises `SedeParseError` on a
+malformed or CSV-less URL, which `_parse_matching_filed_justificante` must
+now catch and fold into its existing swallow-and-report shape rather than let
+propagate; a missed case there degrades to an unhandled exception instead of
+a reported non-match, which the mutation-proof coverage in the plan must
+specifically probe. Promoting `extract_csv_from_url` to the sede facade
+widens its public surface; any future change to its shape or error contract
+now has an application-layer consumer to consider, not only outbound-adapter
+ones.
 
-**Pathway opened:** Option 5 (a genuine register-sourced CSV captured
-alongside `expediente_id`) becomes the natural follow-up if a future capture
-enhancement adds it — at which point the register-reconciliation sites would
-gain a real receipt-namespace check via `csv`, matching the pattern already
-proven correct at `register_capture_as_filing_evidence`.
+**Pathway opened:** the parallel canonical typed-identifier-system effort has
+a concrete worked example in this decision — `core._aeat_csv`'s shape
+contract and `JustificanteCsv`'s narrower one diverge, flagged but not
+reconciled here (Considerations, Constraints).
 
-**Pitfall guarded against:** a future author re-adding
-`presentation_id=<anything>.expediente_id` at any of these sites, or at a new
-call site, reintroduces this exact defect; the strengthened
-`matches_filing_target` docstring and the corrected unit test are the durable
-guard against that recurrence.
+**Pitfall guarded against:** a future author re-adding a
+`presentation_id`-shaped argument at any of these sites, or at a new call
+site, cannot compile against the narrowed predicate signature — the removed
+parameter is itself the durable guard against that recurrence, backed by the
+corrected unit test.

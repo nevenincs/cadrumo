@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:d8c9b376e826ca763d1765189911aac35ae77db443a7a382cab3e2c38b674d23'
+body_hash: 'sha256:1e748a06ebbe739447d6b13c725c84b4275deb66e2583e65059b041d6fba5f29'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -323,8 +323,20 @@ docstring's ambition; the two duplicate hex-64 declarations collapse to one
 primitive; the sede/iva_compensation expediente-id divergence closes under
 one bound; `matches_filing_target` gains the type-level guard its own
 sibling ADR named as future work, without touching that ADR's already-
-accepted subtractive fix; and a ratchet gate keeps the enrollment from
-silently decaying as the codebase grows past this plan's closing commit.
+accepted subtractive fix; a ratchet gate keeps the enrollment from silently
+decaying as the codebase grows past this plan's closing commit; the storage
+layer's key-composition inconsistency (raw versus pre-hashed PII fold-ins)
+gets a deliberate, recorded answer instead of an unexplained split; and the
+MCP `output_schema` surface starts advertising real shape constraints to
+every consuming agent instead of bare `"string"`, once pinned.
+
+**Cost, named rather than discovered later:** discarding and re-deriving
+Cadrumo's own profile database (where a namespace's storage shape changes)
+destroys the real Cl@ve-authenticated captures — filings, justificante
+artefacts, an IVA-wallet observation — already sitting in that profile.
+Re-acquiring them requires the operator to re-authenticate with Cl@ve Móvil
+on their own phone; this is a human step the plan must call out as an
+OPERATOR action, never something an agent automates or works around.
 
 **Difficulties:** staged enrollment means the taxonomy is genuinely
 incomplete at every point before the last Step lands — a reader consulting
@@ -347,3 +359,245 @@ to retype in one pass. A future author re-conflating a namespace at a new
 `matches_filing_target`-shaped call site is caught at the type checker
 once Step 4 lands, closing the exact recurrence the sibling ADR's docstring-
 only guard could not.
+
+## Amendment (2026-08-07): schema-rewrite authorisation, wire measurement, and refined census
+
+Landed same-day, before any implementing Step started, on new operator
+authorisation and two completed measurement passes (a wire/MCP census and a
+full classification of the 589-field surface). No Step from the original
+Implementation section had executed, so this amends the same record rather
+than opening a second one.
+
+### Operator authorisation and its exact bound
+
+The operator has authorised discarding and re-deriving Cadrumo's OWN
+persisted data — the encrypted secure-object stores and profile databases —
+where the correct identifier design differs from the current stored shape.
+**This authorisation is bounded to Cadrumo's own data only**: it does not
+extend to the operating system, the OS keychain, any path outside the app's
+own data directory, or any other repository. And it is bounded to
+MECHANISM: "discard the data" means routing through the application's own
+teardown and re-provisioning authority — `start_config_reset` /
+`resume_config_reset` (`application/config_reset.py`) and
+`BucketMaintenanceService.delete` (`application/bucket_maintenance/_service.py`)
+are the existing sanctioned authorities and this taxonomy work extends them,
+never a second teardown path. **A recursive force delete of any directory
+remains prohibited with no exception**; a plan row needing records removed
+names the bounded target and the app's own path, never a filesystem-level
+delete, and never mutates an OS keychain entry.
+
+This releases the storage-key-orphaning trap the original Implementation
+section treated as blocking (`W02.P03.S12`'s enumeration is now informational
+for the redesign, not a gate on it): **object key composition may now be
+DESIGNED CORRECTLY rather than preserved.** The canonical authority for key
+composition is `SecureObjectNamespaceDefinition.object_key_grammar` in
+`adapters/persistence/storage/_namespace_registry.py` — every namespace's
+grammar is declared there, and this taxonomy work extends that one registry
+rather than introducing a second key-composition path. The registry already
+shows the exact inconsistency to settle deliberately: one namespace's
+grammar folds `{member_nif}` raw (`_namespace_registry.py` line 397) while
+sibling namespaces fold `{sha256(perceptor_nif)}` / `{sha256(perceptor_tax_id)}`
+(lines 417, 431). The underlying SQL `object_key` column is itself a
+`HashedLookup` (deterministic HMAC-SHA256 under a master-key-derived
+sub-key) applied to the grammar's rendered string before it reaches the row,
+so plaintext was never recoverable from a key either way — this is an
+unexplained layering inconsistency to resolve once, not an exposure to
+remediate. The resolution (uniform pre-hash of PII-shaped fold-ins, or a
+documented reason some grammars carry the value raw beneath the outer hash)
+is a Constraint below, decided by the plan's key-composition Step rather
+than assumed here.
+
+**One real cost, to record rather than discover later:** a live
+Cl@ve-authenticated smoke test already captured real filings, justificante
+artefacts, and an IVA-wallet observation into the profile this teardown
+would discard. Re-acquiring them is a human step — the operator
+re-authenticating with Cl@ve Móvil on their phone — not an automated
+re-run. Recorded in Consequences.
+
+### The retype is an external contract change (MCP), not merely internal
+
+A completed wire census establishes that `entrypoints/mcp/_tools.py`
+generates every advertised MCP tool `output_schema` by calling
+`model_json_schema()` on the SAME registered `OutputSchema` classes the CLI
+JSON envelope uses — there is no separate hand-maintained MCP schema.
+`Field`/`Annotated` constraints (`pattern`, `minLength`, `maxLength`) render
+as real JSON Schema keywords in what is advertised to every MCP client. The
+existing `test_json_schema_conformance.py` gate is, in its own words, a
+"structural-shape gate, not a value gate" — it asserts schema KEY parity
+against the Typer command tree, never per-field type or constraint content,
+so a retype (looser or stricter) passes that gate silently either direction
+with no other coverage found in the CLI or MCP test trees. **This taxonomy
+enrollment therefore changes a published external contract**, and the ADR
+records that as fact rather than treating enrollment as a pure internal
+refactor. Read positively: advertising a real `pattern` teaches every MCP
+client the identifier's actual shape instead of "string" — a genuine
+improvement, contingent on it being deliberate and pinned (Implementation,
+golden-schema Step).
+
+### The 589-field denominator refined, and shown to be a floor
+
+A full classification of the 589-field surface splits it: **302 fields are
+APP-DERIVED** and need only mechanical adoption of aliases that ALREADY
+EXIST elsewhere in the tree (`TransactionId`, `BucketId`, `InvoiceId`, and
+`BucketEventId` — the last confirmed declared as `Hex64Str` in
+`domain/buckets/_event.py` and already consumed at several call sites, so
+its pattern is proof this alias-adoption tranche is mechanical, not
+speculative). **62 fields across 24 names are genuinely AEAT-issued** and
+need new namespace types. The remainder splits into 128 undetermined, 72
+non-identifiers, and 25 deliberately free text.
+
+**The 589 count is a FLOOR, not a ceiling — confirmed, not merely
+suspected.** `clave_liquidacion` (already a named namespace in this ADR's
+original Implementation) does not appear in the 589 at all: the AST
+heuristic matched identifier-suffix patterns (`_id`, `_ref`, `_code`,
+`_key`, `_number`, `_csv`) and `clave_liquidacion` is a plain Spanish noun
+with no such suffix, yet its docstring is unambiguously AEAT-issued
+identifier prose. A second-pass sweep on a noun-vocabulary heuristic
+(`identificador`, `clave`, `número`, `referencia` in field docstrings,
+independent of suffix) is therefore a required plan row, not optional
+polish — enrolling exactly 589 and calling the surface closed would
+reproduce the exact "artefact present, work absent" failure this campaign
+is designed to avoid.
+
+**Two traps in the app-derived tranche that a blanket rule would mis-type:**
+
+- **`revision_id` (12 bare sites) is itself a live multi-namespace
+  conflation.** `registry_snapshot_id_for()`'s own signature shows
+  `revision_id: str` there means the REGISTRY `ModeloRevision.id` — a short
+  human-authored version tag — never the hex-64
+  `CalculationRevisionId` this ADR's Wave `W01` relocates. The twelve sites
+  need per-site adjudication against their actual producer, never a
+  blanket "alias every `revision_id` to `CalculationRevisionId`" rule; that
+  blanket rule would silently coerce registry and profile-snapshot
+  revisions into the wrong namespace, which is a worse regression than
+  leaving them bare `str` a while longer.
+- **Truncated display ids are not their full-length counterparts.**
+  `short_work_unit_id` (3 sites) and `short_calculation_revision_id` (2
+  sites) are truncated DISPLAY forms; typing them as `WorkUnitId` /
+  `CalculationRevisionId` would reject real data immediately. The existing
+  `core._hex.Hex16Str` (already declared, already used for
+  `ModeloDraftContentAddress` in `domain/filing/_schema.py`) is the correct
+  alias — no new primitive needed.
+
+### Additional namespaces surfaced
+
+**App-derived, no existing alias:** `registry_snapshot_id` (3 sites) is a
+composite `modelo:revision_id:filing_year:period` string — explicitly NOT
+`core.identity.SnapshotId`, whose own docstring disclaims non-hex minters
+(reference, `core/identity/__init__.py` lines 73-76). `registry_revision_id`
+is the human-authored registry version tag from the previous paragraph.
+Both need their own new `IdentifierNamespace` members and aliases; neither
+is hex-64-shaped so neither can alias `Hex64Str` or `Hex16Str`.
+
+**AEAT-issued, new:** `certificado_id` on `RemoteNotification` (docstring:
+"Nº de certificado, 13-digit or longer"); AEAT-printed box/form numbers
+(`display_number`, `form_number`, `from_number`, `to_number`) which are
+distinct from the registry's own `CasillaId` concept and must not be
+conflated with it.
+
+**Closed-set codes, StrEnum rather than identifier namespace, per the
+typed-constant-axis rule:** M210's `official_tipo_renta_code` (5 sites) and
+M720's `operation_kind_code` / `asset_class_code`. These are NOT part of
+the `IdentifierNamespace` taxonomy — they are closed AEAT-published
+vocabularies and belong in `core/` as `StrEnum`s. The plan must first check
+whether the M210 catalogue is already enumerated in registry TOML and
+locate it there rather than re-declaring the values in Python if so.
+
+### Tax-identity split, decided here
+
+27 tax-identity-shaped sites split by whose identity they carry, and this
+ADR decides the split explicitly rather than leaving it as an open note:
+**self/profile-owned fields** (`tax_id`, `profile_tax_id`, `spouse_tax_id`)
+are `SubjectTaxId` — checksum-enforced, Spanish-NIF-shaped, because the
+filer and their declared family members are presumptively Spanish tax
+subjects. **Counterparty-facing fields** (`supplier_tax_id`,
+`customer_tax_id`, `party_tax_id`, `counterparty_tax_id`, `donor_tax_id`,
+`member_tax_id`) are `TaxIdIdentityToken` — checksum-free, because the
+bearer may be a non-resident counterparty. Both types already exist in
+`core/identity` and neither is used at any of the 27 sites today. Getting
+this split backwards would either reject a legitimate foreign counterparty
+(over-applying `SubjectTaxId`) or stop validating the filer's own NIF
+(over-applying `TaxIdIdentityToken`); the plan enrolls the two groups as
+separate Steps so a reviewer can check the split per site.
+
+### Free text is three distinct sub-populations, not one
+
+Conflating them would misrepresent all three, so the taxonomy names them
+separately and enrolls none of them as `IdentifierNamespace` members:
+
+1. **AEAT-bounded prose this app neither controls nor can enumerate**
+   (`Declaracion.estado`, `Deuda.situacion`) — unchanged from the original
+   Implementation; still explicitly excluded.
+2. **Counterparty-issued document numbers** (`invoice_number`) — free text
+   the app cannot enumerate because a third party mints it, but NOT
+   AEAT-controlled prose; distinct category from (1).
+3. **Externally-controlled identifiers from non-AEAT issuing authorities**
+   — Google (`file_id`, `spreadsheet_id`, `folder_id`), PKI (`serial_number`,
+   an X.509 certificate serial), `spdx_id`, and possibly `finca_identifier`
+   (a Catastro referencia catastral, a THIRD external authority, not yet
+   confirmed). None of these are AEAT's namespace; none belong in
+   `IdentifierNamespace`'s `AEAT_*` group. If any warrant typing at all, it
+   is a separate, explicitly out-of-scope decision for a future record.
+
+### Confirmed-clean surfaces (drop from constraint list)
+
+Worksheet and Sheets export carries no identifier cells at all — the
+calc-sheet transport exports casilla numbers and formulas, not taxpayer
+identity — so a retype cannot reach it structurally; the export constraint
+from the original Constraints section is narrowed to fixed-width
+fichero-BOE only. The locale catalogues are clean: every tax-id reference
+found is prose ABOUT an identifier, never a format declaration. `src/cadrumo/llm/`
+is confirmed well-governed, not a leak: LLM-extracted identifiers land in
+an unvalidated draft model first, `_agreed_counterparty_tax_id()` REFUSES
+confirmation when operator-supplied and extracted NIFs disagree, and the
+persisted path runs `validate_spanish_tax_id()` / `validate_iva_number()`
+before anything is written — a deliberate two-stage design, not a defect to
+enroll.
+
+### Still unsettled, unchanged by this amendment
+
+CSV's canonical shape remains empirically open (Constraints, unchanged) —
+and now carries higher stakes: the sibling `justificante-identity-matching`
+campaign's correct fix for its own open defect (two filings can exist per
+period; the current fix has no way to pick the right one's receipt) depends
+on a cotejo-derived CSV field this taxonomy's CSV type gates. The CSV Phase
+(`W02.P03` in the plan) is reprioritised ahead of namespace work that does
+not block a live defect fix, without changing its evidence-first order
+internally. `expediente_id`'s pattern stays permissive by design. `Declaracion.estado`
+and `Deuda.situacion` stay un-enumed. Fixed-width fichero-BOE tax-id width
+is explicitly OUT of scope: a separate investigation found the Modelo 200
+anomaly is a content-misattribution defect (the filer's own NIF bound into
+a slot AEAT reserves for a group parent's foreign TIN), not a width
+question, and it is getting its own ADR — this record's plan must not touch
+`profile_tax_id` width. Registry TOML is architecturally clean (no AEAT
+runtime identifier lives in compile-time TOML) but has no measured
+denominator equivalent to the Python census; stated as a constraint, not
+assumed complete.
+
+### Constraints added by this amendment
+
+- Any row discarding or re-deriving Cadrumo's own persisted records MUST
+  name the bounded target and route through `start_config_reset` /
+  `resume_config_reset` or `BucketMaintenanceService.delete`, never a
+  filesystem-level recursive delete and never a new teardown path.
+- No row may mutate an OS keychain entry; a re-login or re-provisioning
+  consequence is recorded as a human OPERATOR step, never automated.
+- Every identifier-bearing `OutputSchema` class touched by enrollment gets
+  a golden-schema pinning test capturing its advertised `model_json_schema()`
+  output (both the CLI envelope and, where the class backs an MCP tool, the
+  MCP `output_schema`) before and after the retype, so a constraint change
+  is a visible, reviewed diff.
+- `revision_id` sites are adjudicated per-site against their producer
+  before any alias is applied; no blanket `revision_id -> CalculationRevisionId`
+  rule.
+- Truncated display ids alias `Hex16Str`, never a full-length alias.
+- M210 `official_tipo_renta_code` and M720 `operation_kind_code` /
+  `asset_class_code` are StrEnums in `core/`, checked against registry TOML
+  for an existing catalogue first, never `IdentifierNamespace` members.
+- The object-key-grammar pre-hash inconsistency is resolved once, in
+  `_namespace_registry.py`, with the reason recorded in that Step's record;
+  it is not silently left split.
+- A second-pass sweep on a suffix-independent noun heuristic runs before
+  the ratchet gate is considered to describe the full surface; the ratchet
+  gate itself still gates on the property, not a count, per the original
+  Implementation.
