@@ -14,6 +14,7 @@ legal metadata.
 
 from __future__ import annotations
 
+import os
 import re
 import tomllib
 import unicodedata
@@ -23,6 +24,11 @@ from html import escape
 from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlsplit
+
+from cadrumo.core.external_constants import OutputLanguage
+
+from ._locale_chrome import docs_chrome
+from .build import docs_build_language
 
 __all__ = [
     "LEGAL_CATALOGUE_RELPATH",
@@ -100,17 +106,6 @@ _RENDERED_TEXT_FIELDS: Final[tuple[str, ...]] = (
 )
 _GENERATED_INDEX_SLUG: Final[str] = "index"
 _UNSAFE_LINK_CHARS: Final[frozenset[str]] = frozenset({"<", ">", '"', "'", "`", "\\"})
-
-#: The language of this surface's page chrome.  Every generated page under
-#: ``docs/_generated`` is an English build product: the tree is excluded from
-#: the documentation gettext surface, and the four locale catalogues cannot
-#: carry these strings because the catalogue scaffold scans only
-#: ``src/cadrumo`` and prunes any key it does not find there.  The constant is
-#: declared so the chrome is marked for what it is instead of silently passing
-#: as localized, and so a later localization has one place to attach.
-_CHROME_LANG: Final[str] = "en"
-
-_OFFICIAL_WORDING_LABEL: Final[str] = "Official text, in extract (Spanish)"
 
 #: The authored id stem shape a citation can be derived from: an instrument
 #: prefix, the instrument number, and the four-digit year.
@@ -616,27 +611,40 @@ def _rst_heading(text: str, underline: str) -> str:
     return f"{text}\n{underline * max(len(text), 3)}\n"
 
 
-def _in_force_sentence(record: LegalProvisionRecord) -> str | None:
-    """Render the authored effectivity dates as one reader-facing sentence."""
+def _in_force_sentence(record: LegalProvisionRecord, language: OutputLanguage) -> str | None:
+    """Render the authored effectivity dates as one reader-facing sentence.
+
+    Dates stay ISO in every language: they are data, and an ISO date is read
+    the same way by every reader without a per-language format to maintain.
+    """
     if record.effective_from is not None and record.effective_to is not None:
-        span = f"In force from {record.effective_from.isoformat()} to {record.effective_to.isoformat()}"
+        span = docs_chrome(
+            "docs.legal.provision.in_force_between",
+            language,
+            start=record.effective_from.isoformat(),
+            end=record.effective_to.isoformat(),
+        )
     elif record.effective_from is not None:
-        span = f"In force from {record.effective_from.isoformat()}"
+        span = docs_chrome("docs.legal.provision.in_force_from", language, start=record.effective_from.isoformat())
     elif record.effective_to is not None:
-        span = f"In force until {record.effective_to.isoformat()}"
+        span = docs_chrome("docs.legal.provision.in_force_until", language, end=record.effective_to.isoformat())
     else:
         span = ""
-    published = f"published {record.published_at.isoformat()}" if record.published_at is not None else ""
+    published = (
+        docs_chrome("docs.legal.provision.published", language, date=record.published_at.isoformat())
+        if record.published_at is not None
+        else ""
+    )
     if span and published:
         return f"{span} ({published})."
     if span:
         return f"{span}."
     if published:
-        return f"Published {record.published_at.isoformat() if record.published_at else ''}."
+        return f"{published[:1].upper()}{published[1:]}."
     return None
 
 
-def _official_wording_block(required_text: tuple[str, ...]) -> list[str]:
+def _official_wording_block(required_text: tuple[str, ...], language: OutputLanguage) -> list[str]:
     """Render the authored extracts of the official text, marked as Spanish.
 
     Emitted as raw HTML rather than RST for two reasons that both protect the
@@ -652,18 +660,19 @@ def _official_wording_block(required_text: tuple[str, ...]) -> list[str]:
     continuous piece of statutory wording that the provision does not contain.
     """
     quoted = "".join(f"<p>{escape(item.rstrip())}</p>" for item in required_text)
+    label = escape(docs_chrome("docs.legal.provision.official_wording", language))
     return [
         ".. raw:: html",
         "",
         '   <div class="cadrumo-legal-wording">',
-        f'     <p class="cadrumo-legal-wording-label" lang="{_CHROME_LANG}">{_OFFICIAL_WORDING_LABEL}</p>',
+        f'     <p class="cadrumo-legal-wording-label" lang="{language.value}">{label}</p>',
         f'     <blockquote lang="es">{quoted}</blockquote>',
         "   </div>",
         "",
     ]
 
 
-def _catalogue_record_block(record: LegalProvisionRecord) -> list[str]:
+def _catalogue_record_block(record: LegalProvisionRecord, language: OutputLanguage) -> list[str]:
     """The demoted provenance panel: the identifiers and the review trail.
 
     Everything a reader does not need in order to understand the provision, but
@@ -679,27 +688,32 @@ def _catalogue_record_block(record: LegalProvisionRecord) -> list[str]:
     where a reader expects the answer.  As provenance beside the review stamp
     it is what it actually is: the cataloguer's own note.
     """
+
+    def label(name: str) -> str:
+        return docs_chrome(f"docs.legal.record.{name}", language)
+
     fields = [
-        f":Catalogue id: {_rst_literal(record.legal_id)}",
-        f":Instrument kind: {_rst_literal(record.kind)}",
-        f":BOE document: {_rst_literal(record.document_id)}",
-        f":Bundled corpus: {_rst_literal(record.corpus_ref)}",
+        f":{label('catalogue_id')}: {_rst_literal(record.legal_id)}",
+        f":{label('instrument_kind')}: {_rst_literal(record.kind)}",
+        f":{label('boe_document')}: {_rst_literal(record.document_id)}",
+        f":{label('bundled_corpus')}: {_rst_literal(record.corpus_ref)}",
     ]
     if record.authority is not None:
-        fields.append(f":Authority: {_rst_literal(record.authority)}")
+        fields.append(f":{label('authority')}: {_rst_literal(record.authority)}")
     if record.evidence_tier is not None:
-        fields.append(f":Evidence tier: {_rst_literal(record.evidence_tier)}")
+        fields.append(f":{label('evidence_tier')}: {_rst_literal(record.evidence_tier)}")
     if record.consolidated_as_of is not None:
-        fields.append(f":Consolidated as of: {record.consolidated_as_of.isoformat()}")
+        fields.append(f":{label('consolidated_as_of')}: {record.consolidated_as_of.isoformat()}")
     if record.review_status is not None:
-        fields.append(f":Review status: {_rst_literal(record.review_status)}")
+        fields.append(f":{label('review_status')}: {_rst_literal(record.review_status)}")
     if record.reviewed_at is not None:
-        fields.append(f":Reviewed at: {record.reviewed_at.isoformat()}")
+        fields.append(f":{label('reviewed_at')}: {record.reviewed_at.isoformat()}")
     if record.reviewed_by is not None:
-        fields.append(f":Reviewed by: {_rst_escape(record.reviewed_by)}")
+        fields.append(f":{label('reviewed_by')}: {_rst_escape(record.reviewed_by)}")
     if record.notes is not None:
-        fields.append(f":Cataloguer's note: {_rst_escape(record.notes)}")
-    return [".. container:: cadrumo-legal-record", "", "   Catalogue record", "", *(f"   {line}" for line in fields)]
+        fields.append(f":{label('note')}: {_rst_escape(record.notes)}")
+    title = docs_chrome("docs.legal.record.title", language)
+    return [".. container:: cadrumo-legal-record", "", f"   {title}", "", *(f"   {line}" for line in fields)]
 
 
 def _headings_by_id(records: tuple[LegalProvisionRecord, ...], instrument: str) -> dict[str, str]:
@@ -739,7 +753,7 @@ def _headings_by_id(records: tuple[LegalProvisionRecord, ...], instrument: str) 
     return headings
 
 
-def _render_entry(record: LegalProvisionRecord, heading: str) -> tuple[str, str | None, str]:
+def _render_entry(record: LegalProvisionRecord, heading: str, language: OutputLanguage) -> tuple[str, str | None, str]:
     """Render one provision: what it says first, where it came from last."""
     anchor = legal_provision_anchor(
         record.legal_id,
@@ -752,43 +766,44 @@ def _render_entry(record: LegalProvisionRecord, heading: str) -> tuple[str, str 
     if anchor is not None:
         lines.extend([".. raw:: html", "", f'   <span id="{anchor}"></span>', ""])
     designation = legal_provision_designation(record)
+    read_label = docs_chrome("docs.legal.provision.read_on_boe", language, citation=designation)
     lines.extend([_rst_heading(_rst_escape(heading), "-").rstrip("\n"), ""])
 
-    in_force = _in_force_sentence(record)
+    in_force = _in_force_sentence(record, language)
     if in_force is not None:
         lines.extend([".. container:: cadrumo-legal-force", "", f"   {in_force}", ""])
 
     if record.required_text:
-        lines.extend(_official_wording_block(record.required_text))
+        lines.extend(_official_wording_block(record.required_text, language))
 
     lines.extend(
         [
             ".. container:: cadrumo-legal-official",
             "",
-            f"   `Read {_rst_escape(designation)} on the BOE <{record.permalink}>`__",
+            f"   `{_rst_escape(read_label)} <{record.permalink}>`__",
             "",
-            "   The Boletin Oficial del Estado consolidated text is the official wording.",
+            f"   {_rst_escape(docs_chrome('docs.legal.provision.boe_is_official', language))}",
             "",
         ],
     )
-    lines.extend(_catalogue_record_block(record))
+    lines.extend(_catalogue_record_block(record, language))
     lines.append("")
     return "\n".join(lines), anchor, record.permalink
 
 
-def _render_document_page(document_id: str, records: tuple[LegalProvisionRecord, ...]) -> LegalPage:
+def _render_document_page(
+    document_id: str,
+    records: tuple[LegalProvisionRecord, ...],
+    language: OutputLanguage,
+) -> LegalPage:
     header = (
         "..\n"
         "   Generated by dev/docs/legal_reference.py from the registry legal\n"
         "   catalogue. Do not edit by hand; regenerate.\n\n"
     )
     instrument = legal_instrument_designation(records[0].legal_id, records[0].kind) if records else document_id
-    count = len(records)
-    provisions = "provision" if count == 1 else "provisions"
-    intro = (
-        f"Published in the Boletin Oficial del Estado as {_rst_escape(document_id)}. "
-        f"Cadrumo's calculations cite {count} {provisions} of this text; each one below links "
-        "to its official wording on the BOE."
+    intro = _rst_escape(
+        docs_chrome("docs.legal.page.intro", language, document=document_id, count=len(records)),
     )
     blocks: list[str] = [header + _rst_heading(_rst_escape(instrument), "="), intro + "\n"]
     anchors: list[str] = []
@@ -798,7 +813,7 @@ def _render_document_page(document_id: str, records: tuple[LegalProvisionRecord,
     seen_anchors: dict[str, str] = {}
     headings = _headings_by_id(records, instrument)
     for record in records:
-        entry, anchor, permalink = _render_entry(record, headings[record.legal_id])
+        entry, anchor, permalink = _render_entry(record, headings[record.legal_id], language)
         if anchor is not None:
             previous = seen_anchors.get(anchor)
             if previous is not None:
@@ -833,7 +848,7 @@ def _render_document_page(document_id: str, records: tuple[LegalProvisionRecord,
     )
 
 
-def _render_index(pages: tuple[LegalPage, ...]) -> str:
+def _render_index(pages: tuple[LegalPage, ...], language: OutputLanguage) -> str:
     header = "..\n   Generated by dev/docs/legal_reference.py. Do not edit by hand; regenerate.\n\n"
     lines = [
         header + _rst_heading("Legal reference", "=").rstrip("\n"),
@@ -855,8 +870,15 @@ def _render_index(pages: tuple[LegalPage, ...]) -> str:
 def render_legal_reference(
     repo_root: Path,
     records: tuple[LegalProvisionRecord, ...] | None = None,
+    language: OutputLanguage | None = None,
 ) -> LegalReferenceResult:
-    """Render the legal reference in memory and return its inventories."""
+    """Render the legal reference in memory and return its inventories.
+
+    ``language`` selects the page chrome. It defaults to the language this docs
+    root is being built for, so a Spanish root writes Spanish headings and
+    labels around the Spanish legal text it may not translate.
+    """
+    resolved_language = language if language is not None else docs_build_language(os.environ)
     resolved = records if records is not None else load_legal_provisions(repo_root)
     ordered = tuple(
         sorted(
@@ -874,7 +896,10 @@ def render_legal_reference(
     grouped: dict[str, list[LegalProvisionRecord]] = {}
     for record in ordered:
         grouped.setdefault(record.document_id, []).append(record)
-    pages = tuple(_render_document_page(document_id, tuple(grouped[document_id])) for document_id in sorted(grouped))
+    pages = tuple(
+        _render_document_page(document_id, tuple(grouped[document_id]), resolved_language)
+        for document_id in sorted(grouped)
+    )
     targets = {legal_id: target for page in pages for legal_id, target in page.targets.items()}
     anchors = {legal_id: anchor for page in pages for legal_id, anchor in page.anchor_by_id.items()}
     grounding_count = sum(len(page.grounding_by_id) for page in pages)
@@ -893,6 +918,7 @@ def generate_legal_reference(
     docs_root: Path,
     *,
     repo_root: Path | None = None,
+    language: OutputLanguage | None = None,
 ) -> LegalReferenceResult:
     """Materialise legal pages from the authoritative repo into ``docs_root``.
 
@@ -900,9 +926,10 @@ def generate_legal_reference(
     source repository must be independently selectable. The default retains
     the historical adjacent-root behavior for direct callers.
     """
+    resolved_language = language if language is not None else docs_build_language(os.environ)
     docs_root = docs_root.resolve()
     source_root = (repo_root if repo_root is not None else docs_root.parent).resolve()
-    result = render_legal_reference(source_root)
+    result = render_legal_reference(source_root, language=language)
     out_dir = _validated_output_dir(docs_root)
     output_paths = [out_dir / "index.rst"]
     for page in result.pages:
@@ -913,7 +940,7 @@ def generate_legal_reference(
     if len(set(output_paths)) != len(output_paths):
         raise LegalReferenceError("generated legal output paths collide")
     _remove_generated_rst(out_dir)
-    _write_if_changed(output_paths[0], _render_index(result.pages))
+    _write_if_changed(output_paths[0], _render_index(result.pages, resolved_language))
     for page, path in zip(result.pages, output_paths[1:], strict=True):
         _write_if_changed(path, page.rst)
     return result

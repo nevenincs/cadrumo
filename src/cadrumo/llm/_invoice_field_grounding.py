@@ -58,6 +58,7 @@ from ..core.parsing import normalise_iso_4217_currency, parse_date
 from ._invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
+    ROLE_EVIDENCE_KEY_SUFFIX,
     InvoiceFieldForm,
     contract_for_field,
 )
@@ -66,6 +67,7 @@ __all__ = [
     "ExtractedFieldAnchors",
     "ExtractedInvoiceFields",
     "ExtractedInvoiceResponse",
+    "ExtractedRoleEvidence",
     "ground_extracted_fields",
     "parse_invoice_extraction_response",
 ]
@@ -136,23 +138,58 @@ class ExtractedFieldAnchors(BaseModel):
     currency: str | None = Field(default=None)
 
 
+class ExtractedRoleEvidence(BaseModel):
+    """The printed context assigning each identity value to a party role.
+
+    A THIRD kind of claim, kept in its own model for the reason the anchors are:
+    :class:`ExtractedInvoiceFields` holds *what the identifier is*,
+    :class:`ExtractedFieldAnchors` holds *where on the page it was printed*, and
+    this holds *what on the page says it belongs to that party*. An invoice
+    prints two identifiers of identical shape, so the printed form of one is no
+    evidence at all about whose it is -- which is exactly the question the
+    counterparty role turns on.
+
+    Only the identity fields appear here, and their set is
+    :func:`~llm._invoice_field_contract.identity_field_names`, asserted by the
+    parity gate rather than maintained twice. Every attribute is an optional
+    string on the same terms as the other two halves: nothing is rejected or
+    rewritten here, because the check that matters needs the document and this
+    schema does not have it. A value that does not occur in the transcription is
+    dropped by :func:`~application.ledger.printed_excerpt_occurs` at the
+    grounding stage, so an invented role evidence cannot promote an identity.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    supplier_tax_id: str | None = Field(default=None)
+    customer_tax_id: str | None = Field(default=None)
+
+
 class ExtractedInvoiceResponse(BaseModel):
     """One reading model's complete reply: every value beside its printed anchor.
 
-    The parser's single return type. Splitting the reply into two models but
+    The parser's single return type. Splitting the reply into models but
     returning them as one object keeps the pairing structural -- a caller cannot
     hold values without the anchors that justify them, which is exactly the
-    separation that let a value travel to a filing with nothing to point at.
+    separation that let a value travel to a filing with nothing to point at. The
+    role-evidence half is bound in the same way and for a sharper version of the
+    same reason: an identity carried without it is a party name nothing on the
+    document assigns.
 
     Attributes:
         fields: The transcribed values, before grounded re-validation.
         anchors: The printed form each value was read from.
+        role_evidence: The printed context assigning each identity value to its
+            party role. Defaults to an all-``None`` record, so a reply that
+            offers none parses cleanly and simply evidences no role -- the
+            fail-safe direction, since an unevidenced identity refuses.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     fields: ExtractedInvoiceFields
     anchors: ExtractedFieldAnchors
+    role_evidence: ExtractedRoleEvidence = Field(default_factory=ExtractedRoleEvidence)
 
 
 def _extract_json_object(text: str) -> str | None:
@@ -164,24 +201,29 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
     """Parse a reading model's raw completion text into values and their anchors.
 
     The prompt asks for one flat object carrying each field beside its
-    ``<field>_anchor`` sibling, so the flat reply is split here into the two
-    typed halves. Splitting on the declared suffix rather than on a second
+    ``<field>_anchor`` sibling, and each IDENTITY field beside its
+    ``<field>_role_evidence`` sibling too, so the flat reply is split here into
+    its typed halves. Splitting on the declared suffixes rather than on a second
     hand-written key list means the prompt and the parser cannot ask for and
     read different keys.
 
-    A model that returns only the value keys parses cleanly with empty anchors:
-    that is a reply with nothing to point at, which the grounding stage records
-    honestly rather than a malformed one to reject. A key matching neither a
-    declared field nor a declared anchor IS rejected -- an unrecognised key is a
-    model inventing structure, and tolerating it here would let a fabricated
-    field ride along unnoticed.
+    A model that returns only the value keys parses cleanly with empty anchors
+    and no role evidence: that is a reply with nothing to point at and nothing
+    assigning its identities to a party, which the grounding stage records
+    honestly rather than a malformed one to reject -- and an unevidenced
+    identity refuses downstream, so the tolerant parse costs no safety. A key
+    matching neither a declared field nor a declared anchor nor a declared
+    role-evidence key IS rejected -- an unrecognised key is a model inventing
+    structure, and tolerating it here would let a fabricated field ride along
+    unnoticed.
 
     Args:
         text: Raw completion text from the reading model.
 
     Returns:
         :class:`ExtractedInvoiceResponse`: The parsed (but not yet grounded)
-        values and the printed anchors they were read from.
+        values, the printed anchors they were read from, and the printed role
+        evidence assigning each identity to a party.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: When no JSON object is present, the
@@ -208,8 +250,15 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
 
     values: dict[str, object] = {}
     anchors: dict[str, object] = {}
+    role_evidence: dict[str, object] = {}
     for key, value in raw.items():
-        if key.endswith(ANCHOR_KEY_SUFFIX):
+        # Role evidence is tested FIRST because the two suffixes are independent
+        # strings a later edit could make overlap; ordering the more specific
+        # test ahead means such an overlap misroutes nothing silently, and the
+        # suffix-parity gate still catches the declaration itself.
+        if key.endswith(ROLE_EVIDENCE_KEY_SUFFIX):
+            role_evidence[key[: -len(ROLE_EVIDENCE_KEY_SUFFIX)]] = value
+        elif key.endswith(ANCHOR_KEY_SUFFIX):
             anchors[key[: -len(ANCHOR_KEY_SUFFIX)]] = value
         else:
             values[key] = value
@@ -218,6 +267,7 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
         return ExtractedInvoiceResponse(
             fields=ExtractedInvoiceFields.model_validate(values),
             anchors=ExtractedFieldAnchors.model_validate(anchors),
+            role_evidence=ExtractedRoleEvidence.model_validate(role_evidence),
         )
     except ValueError as exc:
         raise PurchaseInvoiceEvidenceInputError(
@@ -439,6 +489,7 @@ def _read_provenance(
     field_name: str,
     value: str | Decimal | None,
     anchor: str | None,
+    role_evidence: str | None,
     origin: FieldOrigin,
 ) -> FieldProvenance | None:
     """Return the envelope recording how ``field_name`` was read, or ``None``.
@@ -466,11 +517,17 @@ def _read_provenance(
     if value is None:
         return None
     claimed = anchor.strip() if anchor is not None else ""
+    claimed_role = role_evidence.strip() if role_evidence is not None else ""
     return FieldProvenance(
         field=field_name,
         origin=origin,
         grounding=FieldGroundingOutcome.UNANCHORED,
         anchor=claimed or None,
+        # Recorded as the model REPORTED it, unchecked, exactly like the anchor
+        # beside it. The check needs the transcription this stage does not hold
+        # and runs at the grounding stage, which drops an excerpt the document
+        # does not contain rather than trusting it.
+        role_evidence=claimed_role or None,
         note=(
             f"the reading model reported {claimed!r} as the printed form; not yet checked against the document"
             if claimed
@@ -554,6 +611,14 @@ def ground_extracted_fields(
                 field_name=contract.field_name,
                 value=grounded[contract.field_name],
                 anchor=getattr(response.anchors, contract.field_name),
+                # Keyed off the contract's own declaration rather than a second
+                # membership test, so a field that does not name a party cannot
+                # acquire role evidence by an attribute happening to exist.
+                role_evidence=(
+                    getattr(response.role_evidence, contract.field_name, None)
+                    if contract.carries_role_evidence
+                    else None
+                ),
                 origin=origin,
             )
         )

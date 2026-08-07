@@ -1,91 +1,165 @@
-"""On-host vision fallback for invoice-field extraction from a scan-only PDF or image.
+"""On-host VISION TRANSCRIPTION of a scan-only PDF or image: stage one, and only stage one.
 
-:func:`~application.ledger.transcribe_text_layer` reads a PDF's embedded text
-layer for the semantic text reader. A scan-only or image-only invoice has no text
-layer at all, so that primitive raises. This module supplies the on-host fallback: rasterise the PDF
-(or use an image directly) into in-memory base64 PNG pages
-(:func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`) and read them
-with the same LOCAL Ollama vision model the classification path already uses
-(:class:`~llm._vision_classifier.LocalVisionLLMClassifier`), fully on-host
-(``sensitive-financial-data-secure-storage-only``). Nothing is written to disk and
-nothing leaves the machine; this needs no cloud consent gate.
+This module reads pixels into text. It does not read pixels into fields, and the
+difference is the whole reason it was refitted.
 
-The vision model's role here is strictly *transcription*, never *derivation*: the
-prompt instructs it to copy each field's printed value verbatim (or emit ``null``
-when a field is not visibly printed) and forbids it from computing, inferring, or
-estimating any figure. Every field the model returns is re-validated through the
-exact same grounded heuristics the text-layer path uses --
-:func:`~core.identity.validate_spanish_tax_id`,
-:func:`~core.parsing.parse_date`, and :class:`~decimal.Decimal` parsing via
-:func:`~core.decimal.normalize_decimal_separators` -- so a malformed or
-hallucinated value is rejected (left ``None``) rather than trusted. This mirrors the
-document-printed-value semantics
-:func:`.extract_invoice_fields_from_text` already has for text-native PDFs:
-both paths recover what is *printed on the
-document*, never a registry-derived or model-computed tax figure
-(``evidence-read-never-emits-regulated-numbers`` in spirit -- the persisted
-:class:`~domain.invoices.Invoice` this draft eventually confirms into still goes
-through the operator review step before anything is minted).
+**What it used to do, and why that could not stand.** One call handed rasterised
+pages to a vision model and took back typed invoice fields with their anchors.
+Two questions were answered together -- *what does this page say* and *what does
+that mean* -- so a wrong result could not be attributed to either: a
+transcription error and a reasoning error arrived in the same shape. Worse, the
+anchors came back from the same call that produced the values, so there was
+nothing independent to check them against. The provenance record had to say so
+(:attr:`~application.ledger.FieldProvenance.anchor_self_reported`), and a
+self-reported anchor can never read as verified, because a fabricating model is
+self-consistent too. The vision lane was therefore structurally incapable of
+earning the grounding the text lane earned for free.
 
-Gated by :attr:`~core.ServiceCapability.LLM_VISION`: an operator who has opted
-out of on-host vision reading gets a typed refusal naming the capability toggle,
-never a silent empty draft.
+**What it does now.** It emits a
+:class:`~application.ledger.DocumentTranscription` -- reading-order text with
+printed forms preserved verbatim -- and stops. The semantic stage
+(:func:`~llm.extract_invoice_fields_from_text`) then reads that text in a
+SEPARATE call, and the anchor check runs against the transcription this module
+produced. Two readers, two calls, one external check: exactly the shape the text
+lane already had, now reachable for a document that has no text layer at all.
+
+**Faithfulness is the only job, and an explicit unknown is a legitimate result.**
+A vision model reading a creased receipt genuinely cannot always resolve a glyph.
+The prompt therefore asks it to transcribe what it can see and to mark what it
+cannot, rather than to produce a clean-looking page by filling the gap. An
+illegible character reported as illegible costs one field; an invented one that
+happens to parse costs a filing, silently, because a plausible figure passes
+every downstream check that is not the anchor check -- and it would pass that
+one too, since the fabrication would be in the transcription the check runs
+against.
+
+**On-host by default, and the default is stated rather than inherited.** The
+shipped provider default is a cloud vendor, so a reader that took whatever the
+environment resolved would send a taxpayer's document off-host by configuration
+alone. Naming another provider requires naming its model too, which makes an
+off-host read a deliberate act at the call site. That is a floor, not the gate:
+the gate is the client's per-invocation evidence-consent check, and every
+request built here is marked evidence-derived unless the caller names the
+public, synthetic measurement corpus.
 
 See Also:
-    :class:`~application.ledger.InvoiceDraft`
-        Typed draft this vision path returns after grounded re-validation.
-    :func:`~llm._invoice_field_grounding.ground_extracted_fields`
-        Transport-neutral response schema, parser and grounded re-validation
-        this module shares with the text reader; only the prompt and the
-        request payload differ between the two.
-    :func:`.extract_invoice_fields_from_text`
-        Semantic text reader this module complements for scan-only or
-        image-only evidence.
-    :func:`~application.ledger.extract_invoice_draft_from_evidence`
-        Orchestration layer that falls back to this on-host reader.
-    :class:`~llm._vision_classifier.LocalVisionLLMClassifier`
-        Sibling local Ollama vision transport used for classification and
-        split suggestions.
+    :class:`~application.ledger.DocumentTranscription`
+        The typed stage-one artefact this module produces.
+    :func:`~application.ledger.transcribe_text_layer`
+        The deterministic sibling for a document that HAS a text layer.
+    :func:`~llm.extract_invoice_fields_from_text`
+        The stage-two semantic reader that consumes what this produces.
 """
 
 from __future__ import annotations
 
 import asyncio
+from typing import Final
 
-from ..application.ledger import InvoiceDraft
-from ..core import FieldOrigin, Period
+from ..application.ledger import (
+    DocumentTranscription,
+    PurchaseInvoiceEvidenceInputError,
+    TranscriberIdentity,
+)
+from ..core import FieldOrigin
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
 from ._errors import LLMConfigError
-from ._invoice_extraction_prompt import (
-    CompiledInvoiceExtractionPrompt,
-    build_invoice_extraction_prompt,
-    default_extraction_period,
-)
-from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
-from ._models import LLMProvider, LLMRequest, MultimodalImageInput
+from ._models import LLMProvider, LLMRequest, MultimodalImageInput, PromptDefinition, PromptRegistry
 
 __all__ = [
-    "LocalVisionInvoiceFieldExtractor",
-    "extract_invoice_fields_from_images",
+    "VISION_TRANSCRIPTION_PROMPT",
+    "VISION_TRANSCRIPTION_PROMPT_ID",
+    "VISION_TRANSCRIPTION_PROMPT_VERSION",
+    "LocalVisionDocumentTranscriber",
+    "transcribe_document_images",
+    "vision_transcription_prompt_registry",
 ]
 
+VISION_TRANSCRIPTION_PROMPT_ID: Final[str] = "ledger-document-vision-transcription"
+"""Registry id of the transcription-only vision prompt."""
 
-class LocalVisionInvoiceFieldExtractor:
-    """Read an invoice image on-host with a local Ollama vision model into an :class:`InvoiceDraft`.
+VISION_TRANSCRIPTION_PROMPT_VERSION: Final[int] = 1
+"""Version of the transcription prompt.
 
-    Mirrors :class:`~llm._vision_classifier.LocalVisionLLMClassifier`'s transport
-    (a local Ollama vision model fed in-memory base64 images) but for field
-    transcription instead of category classification. Every returned field is
-    re-validated through the grounded heuristics
-    :func:`.extract_invoice_fields_from_text` uses for the text-native path,
-    so a hallucinated or malformed value never reaches the operator as a
-    fabricated fact.
+Part of the transcriber's recorded revision, so a prompt change re-keys the
+transcription cache. Two prompts produce two different readings of the same
+pixels, and a cache that could not tell them apart would serve one document's
+text for another document's question.
+"""
+
+VISION_TRANSCRIPTION_PROMPT: Final[str] = """\
+Transcribe this document. Write out the text you can see, in reading order.
+
+Rules:
+- Copy every character EXACTLY as printed. Keep the document's own spelling, \
+capitalisation, punctuation, spacing, separators and symbols.
+- Keep numbers exactly as written. Do not convert, round, reformat or normalise \
+any figure, date or amount.
+- Keep every heading and label. They are part of the document.
+- Transcribe in reading order, one line per printed line.
+- Where you cannot read a character or a word, write [?] in its place. Never \
+guess what it might have been and never leave it out silently.
+- Do not summarise, explain, translate, correct or comment. Return the \
+document's text and nothing else.
+"""
+"""The transcription instruction: read the page, do not interpret it.
+
+Every rule here exists to protect a downstream check. Printed forms survive
+verbatim because the anchor check searches this text for the form a value claims
+to have been read from, so normalising a separator here deletes the evidence
+that check runs against. Headings and labels survive because they are what
+assigns an identifier to a party, and an identity with no role evidence does not
+resolve. The illegible marker exists because an invented character is
+indistinguishable from a read one once it is in the transcription -- it would
+anchor perfectly against itself.
+
+The prompt names no invoice field, and that absence is load-bearing rather than
+incidental: a model told what to look for finds it, and this stage must not
+decide what the document is before the stage that decides has run.
+"""
+
+_TRANSCRIBER_NAME_PREFIX: Final[str] = "vision"
+
+
+def vision_transcription_prompt_registry() -> PromptRegistry:
+    """Return the registry holding the transcription prompt.
+
+    Registered rather than reachable only as a module constant, so the id and
+    version travel with the artefact the way the extraction template's do.
+
+    Returns:
+        :class:`~adapters.outbound.llm.PromptRegistry`: A registry carrying the
+        transcription prompt at :data:`VISION_TRANSCRIPTION_PROMPT_VERSION`.
+    """
+    registry = PromptRegistry()
+    registry.register(
+        PromptDefinition(
+            id=VISION_TRANSCRIPTION_PROMPT_ID,
+            version=VISION_TRANSCRIPTION_PROMPT_VERSION,
+            template=VISION_TRANSCRIPTION_PROMPT,
+            expected_output_schema=None,
+            description="Transcribe a rendered document page into reading-order text, interpreting nothing.",
+        ),
+    )
+    return registry
+
+
+class LocalVisionDocumentTranscriber:
+    """Transcribe rendered document pages on-host with a local vision model.
+
+    Stage one of the reading pipeline for evidence that carries no text layer.
+    It produces text and nothing else; every judgement about what that text
+    MEANS belongs to the semantic stage, which runs separately over what this
+    returns.
 
     Args:
-        model: Local Ollama vision model identifier; defaults to
-            ``Settings.cadrumo_llm_ollama_vision_model``.
+        model: Vision model identifier; ``None`` uses the configured LOCAL
+            vision model. Required when ``provider`` is not LOCAL, because the
+            only default that exists names a local model no vendor serves.
+        provider: Which provider carries the read. Defaults to LOCAL so a
+            taxpayer's document does not leave the host by default.
         client: Injected :class:`~adapters.outbound.llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
@@ -107,7 +181,6 @@ class LocalVisionInvoiceFieldExtractor:
         provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
         settings: Settings | None = None,
-        period: Period | None = None,
         consent_token: EvidenceConsentToken | None = None,
         public_corpus: bool = False,
     ) -> None:
@@ -115,9 +188,7 @@ class LocalVisionInvoiceFieldExtractor:
         self._provider = provider
         self._consent_token = consent_token
         self._public_corpus = public_corpus
-        self._prompt: CompiledInvoiceExtractionPrompt = build_invoice_extraction_prompt(
-            period=period if period is not None else default_extraction_period(),
-        )
+        self._prompt = vision_transcription_prompt_registry().get(VISION_TRANSCRIPTION_PROMPT_ID)
         if provider is LLMProvider.LOCAL:
             self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_vision_model
         elif model is None:
@@ -138,35 +209,43 @@ class LocalVisionInvoiceFieldExtractor:
             if client is not None
             else LLMClient(
                 settings=vision_settings,
-                caller="cadrumo.application.ledger.evidence_draft_vision",
-                prompt_id="ledger-invoice-vision-extract",
+                caller="cadrumo.llm.evidence_vision_transcription",
+                prompt_id=VISION_TRANSCRIPTION_PROMPT_ID,
             )
         )
 
     @property
-    def decided_by(self) -> str:
-        """Provenance stamp: transport, model, AND the rates the prompt was compiled from.
+    def transcriber_identity(self) -> TranscriberIdentity:
+        """Return the provenance stamp for this reader.
 
-        The transport half is DERIVED from the provider actually used, never
-        written as a constant. A stamp is the only durable record of how a
-        figure was reached, so one that says ``local`` for a read served
-        off-host is worse than no stamp at all: it answers the audit question
-        confidently and wrongly.
+        The revision folds the prompt version because the prompt is half of what
+        produced the text: the same model under different instructions returns a
+        different reading of the same pixels, and the transcription cache keys
+        on this identity. A revision naming only the model would let one
+        prompt's output be served for another prompt's question.
 
-        The same reasoning extends the stamp past the model. Now that the prompt
-        enumerates registry-resolved rates, two reads by the same model under
-        different filing periods are different reads, and a stamp naming only
-        the model cannot answer "under which rates was this figure read?". The
-        trailing
-        :attr:`~llm._invoice_extraction_prompt.CompiledInvoiceExtractionPrompt.rate_provenance`
-        token carries the resolved period and the compiled prompt's content
-        fingerprint, so a registry change that moves a rate moves the stamp.
+        The name folds the TRANSPORT for a different reason, and it is not
+        tidiness. A transcription is a durable artefact derived from the
+        document, so if it was produced off-host it is one of the artefacts a
+        consent withdrawal must enumerate -- and a model identifier reveals the
+        vendor only to a reader who already knows the catalogue. Recorded this
+        way, the artefact that most needs re-deriving is not the one the survey
+        cannot see.
         """
         transport = "local" if self._provider is LLMProvider.LOCAL else self._provider.value.lower()
-        return f"llm:{transport}-vision:{self._model}:rates-{self._prompt.rate_provenance}"
+        return TranscriberIdentity(
+            origin=FieldOrigin.VISION,
+            name=f"{_TRANSCRIBER_NAME_PREFIX}-{transport}:{self._model}",
+            revision=f"prompt-v{self._prompt.version}",
+        )
 
-    def extract(self, *, evidence_images: tuple[MultimodalImageInput, ...]) -> InvoiceDraft:
-        """Read ``evidence_images`` with the local vision model and return a grounded draft.
+    def transcribe(
+        self,
+        *,
+        evidence_images: tuple[MultimodalImageInput, ...],
+        source_content_sha256: str,
+    ) -> DocumentTranscription:
+        """Transcribe ``evidence_images`` into the acquisition-stage record.
 
         Args:
             evidence_images: In-memory page/image renders of the evidence, each
@@ -174,13 +253,30 @@ class LocalVisionInvoiceFieldExtractor:
                 :func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`
                 for a scan-only PDF, or from the raw bytes of an image
                 attachment).
+            source_content_sha256: Content address of the SOURCE bytes. Supplied
+                by the caller rather than computed here, because the address
+                must identify the document -- the same document rasterised at a
+                different resolution is one document, and hashing the renders
+                would make it two.
 
         Returns:
-            :class:`InvoiceDraft`: Every field the model transcribed AND that
-            passed grounded re-validation; everything else is ``None``.
+            :class:`~application.ledger.DocumentTranscription`: The reading-order
+            text with printed forms intact.
+
+        Raises:
+            PurchaseInvoiceEvidenceInputError: When no pages were supplied, or
+                the model returned no text. An empty transcription is a failed
+                read, never an empty success: passed on it would tell the
+                semantic stage the document is blank, which is a fact about the
+                reader being reported as a fact about the document.
         """
+        if not evidence_images:
+            raise PurchaseInvoiceEvidenceInputError(
+                "vision transcription was given no pages to read",
+                suggestion="aeat app ledger evidence list",
+            )
         request = LLMRequest(
-            prompt=self._prompt.text,
+            prompt=self._prompt.template,
             provider_override=self._provider,
             model_override=self._model,
             images=evidence_images,
@@ -188,47 +284,43 @@ class LocalVisionInvoiceFieldExtractor:
             consent_token=self._consent_token,
         )
         response = asyncio.run(self._client.complete(request))
-        parsed = parse_invoice_extraction_response(response.text)
-        # `raw_text_length` on the vision path reports the length of the model's
-        # own transcription text, mirroring the text-layer path's semantics of
-        # "how much source material did the reader have to work with" -- here
-        # that is the model's read-out rather than a pdfplumber page dump.
-        #
-        # VISION is the strongest origin this path may claim: image in, fields
-        # out, in one call. There is no separately-acquired text behind the
-        # values, so nothing here can be checked against the document without
-        # reading it again.
-        return ground_extracted_fields(
-            parsed,
-            raw_text_length=len(response.text),
-            origin=FieldOrigin.VISION,
+        text = response.text.strip()
+        if not text:
+            raise PurchaseInvoiceEvidenceInputError(
+                "the vision model returned no text for this document, so it was not read and nothing "
+                "was guessed from it",
+                suggestion="aeat config provision pull",
+            )
+        return DocumentTranscription(
+            text=text,
+            page_count=len(evidence_images),
+            source_content_sha256=source_content_sha256,
+            transcriber=self.transcriber_identity,
         )
 
 
-def extract_invoice_fields_from_images(
+def transcribe_document_images(
     evidence_images: tuple[MultimodalImageInput, ...],
     *,
+    source_content_sha256: str,
     model: str | None = None,
     provider: LLMProvider = LLMProvider.LOCAL,
     settings: Settings | None = None,
-    period: Period | None = None,
-) -> InvoiceDraft:
-    """Convenience wrapper: build a :class:`LocalVisionInvoiceFieldExtractor` and extract.
+) -> DocumentTranscription:
+    """Convenience wrapper: build a :class:`LocalVisionDocumentTranscriber` and transcribe.
 
     Args:
-        evidence_images: In-memory page/image renders of the evidence, each
-            carrying its declared media type.
+        evidence_images: In-memory page/image renders of the evidence.
+        source_content_sha256: Content address of the source bytes.
         model: Optional vision model override.
         provider: Transport serving the read. Defaults to
             :attr:`~adapters.outbound.llm.LLMProvider.LOCAL`, so the production
             route stays on-host; naming another provider is the caller's
             explicit, per-invocation decision to read off-host.
         settings: Optional resolved settings override.
-        period: Optional filing period whose registry-resolved rates the prompt
-            enumerates; defaults to the current annual period.
 
     Returns:
-        :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
+        :class:`~application.ledger.DocumentTranscription`: The transcription.
     """
-    extractor = LocalVisionInvoiceFieldExtractor(model=model, provider=provider, settings=settings, period=period)
-    return extractor.extract(evidence_images=evidence_images)
+    transcriber = LocalVisionDocumentTranscriber(model=model, provider=provider, settings=settings)
+    return transcriber.transcribe(evidence_images=evidence_images, source_content_sha256=source_content_sha256)

@@ -5563,6 +5563,50 @@ core:
       registration_duplicate_callable: La implementación de respuestas de proyecto
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
+docs:
+  glossary:
+    entry:
+      broader: Término genérico
+      domain: Ámbito
+      legal_basis: Base legal
+      related: Relacionado
+      undefined: Todavía no hay definición disponible en este idioma.
+    intro: Términos fiscales españoles utilizados en la documentación. Cada término
+      enlaza con su base legal cuando existe. Busque un término; la definición es
+      la misma allí donde se le haga referencia.
+    title: Glosario
+  legal:
+    index:
+      intro: Las leyes, reales decretos y órdenes ministeriales españolas en las que
+        se fundamentan los cálculos de Cadrumo. Cada página recoge las disposiciones
+        citadas de un texto y enlaza cada una con su redacción oficial en el BOE.
+      title: Referencia legal
+    page:
+      intro: Publicado en el Boletín Oficial del Estado como {document}. Los cálculos
+        de Cadrumo citan {count} disposiciones de este texto; cada una enlaza más
+        abajo con su redacción oficial en el BOE.
+    provision:
+      boe_is_official: El texto consolidado del Boletín Oficial del Estado es la redacción
+        oficial.
+      in_force_between: En vigor desde {start} hasta {end}
+      in_force_from: En vigor desde {start}
+      in_force_until: En vigor hasta {end}
+      official_wording: Texto oficial, en extracto (en español)
+      published: publicado el {date}
+      read_on_boe: Leer {citation} en el BOE
+    record:
+      authority: Autoridad
+      boe_document: Documento del BOE
+      bundled_corpus: Corpus incluido
+      catalogue_id: Identificador del catálogo
+      consolidated_as_of: Consolidado a fecha de
+      evidence_tier: Nivel de evidencia
+      instrument_kind: Tipo de norma
+      note: Nota del catalogador
+      review_status: Estado de revisión
+      reviewed_at: Fecha de revisión
+      reviewed_by: Revisado por
+      title: Ficha del catálogo
 entries:
   portal_calendario_contribuyente:
     label: Calendario del contribuyente
@@ -7175,6 +7219,118 @@ mcp:
       el runtime en caliente estaba {reason}; el resultado es idéntico, solo más lento.
       El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 modelo:
+  display:
+    binding_source:
+      atribucion_member: desde los miembros en atribución de rentas
+      bienes_inversion_regularizacion: desde la regularización de bienes de inversión
+      borrador: desde el borrador de la AEAT
+      collectible_invoice: desde las facturas emitidas
+      donativo_donor: desde los donantes registrados
+      foreign_asset: desde sus bienes en el extranjero
+      iva_compensation_annual_partition: desde la compensación de IVA del ejercicio
+      iva_wallet_decision: desde su decisión de compensación de IVA
+      ledger_impatriado_income_aggregation: desde sus ingresos del régimen de impatriados
+      ledger_irnr_income_aggregation: desde sus ingresos de IRNR
+      ledger_iva_aggregation: desde sus apuntes de IVA
+      ledger_oss_aggregation: desde sus apuntes de OSS
+      ledger_renta_gastos_estimacion_directa_aggregation: desde sus gastos en estimación
+        directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: desde sus gastos del pago
+        fraccionado
+      ledger_renta_income_aggregation: desde sus ingresos registrados
+      ledger_transaction: desde sus movimientos registrados
+      manual_input: desde un valor que usted aporta
+      payable_invoice: desde las facturas recibidas
+      previous_filing: desde su declaración anterior
+      profile: desde su perfil de contribuyente
+      prorrata_regularizacion: desde la regularización de prorrata
+      purchase_invoice_evidence: desde los justificantes de sus facturas de compra
+      refund_operation: desde sus operaciones de devolución
+      related_party_operation: desde sus operaciones vinculadas
+      relation_prefill: desde el resultado de un modelo relacionado
+      retenciones_aggregation: desde las retenciones registradas
+      withholding: desde las retenciones soportadas
+    cadence:
+      ad_hoc: Se presenta cuando ocurre el hecho
+      annual: Se presenta anualmente
+      monthly: Se presenta mensualmente
+      profile_based: Se presenta según su perfil
+      quarterly: Se presenta trimestralmente
+    chrome:
+      alternative_join: ', o'
+      binding: Vínculo de datos
+      casilla_count: '{casillas} casillas en {sections} secciones'
+      casilla_id: Identificador de casilla
+      derived_from: a partir de
+      established_by: Establecido por
+      formula: Fórmula
+      general_section: General
+      index_intro: Una página por modelo. Cada casilla indica cómo se rellena (la
+        introduce usted, se calcula a partir de otras casillas o se rellena desde
+        sus registros), dónde figura en el modelo oficial y qué norma la establece.
+      index_title: Referencia de casillas
+      legal_basis: Base legal
+      list_and: y
+      not_on_official_form: No figura en el modelo oficial
+      record_design_number: Número del diseño de registro
+      registry_identifiers: Identificadores del registro
+      registry_section: Sección del registro
+      required: Obligatoria
+      revisions: Revisiones
+      sections_nav: Secciones de este modelo
+      segmento: Segmento {segmento}
+      semantic_role: Rol semántico
+      sources: Fuentes
+    data_type:
+      bic: BIC
+      boolean: Sí o no
+      ccaa_code: Código de comunidad autónoma
+      country_code: Código de país
+      date: Fecha
+      decimal: Número decimal
+      iban: IBAN
+      integer: Número entero
+      money: Importe en euros
+      municipality_code: Código de municipio
+      name: Nombre
+      nif: NIF
+      nif_iva: NIF-IVA
+      period_code: Periodo
+      postal_code: Código postal
+      province_code: Código de provincia
+      ratio: Porcentaje
+      text: Texto
+      year: Ejercicio
+    input_kind:
+      bound: Se rellena automáticamente
+      computed: Se calcula automáticamente
+      informational: Solo informativa
+      manual: Lo introduce usted
+    input_kind_count:
+      bound: rellenadas desde sus registros
+      computed: calculadas
+      informational: solo informativas
+      manual: que introduce usted
+    legal_kind:
+      dictionary: Diccionario de datos AEAT
+      form_spec: Modelo oficial AEAT
+      instruction: Instrucciones AEAT
+      instructions: Instrucciones AEAT
+      manual_pdf: Manual AEAT
+      record_design: Diseño de registro AEAT
+      suppression_notice: Nota AEAT
+      xsd: Esquema XSD AEAT
+    length:
+      at_least: Al menos {min} caracteres
+      at_most: Como máximo {max} caracteres
+      between: De {min} a {max} caracteres
+    value_enum: 'Uno de: {values}'
+    value_range:
+      at_least: Al menos {min}
+      at_most: Como máximo {max}
+      between: Entre {min} y {max}
+      non_negative: Cero o más
+      non_positive: Cero o menos
   schema:
     '036':
       field:

@@ -156,15 +156,22 @@ class StrictUniqueKeyLoader(yaml.SafeLoader):
 class LocaleManager:
     """API for managing locale files, scaffolding, and structural health."""
 
-    def __init__(self, src_dir: Path, locales_dir: Path):
+    def __init__(self, src_dir: Path, locales_dir: Path, extra_src_dirs: tuple[Path, ...] = ()):
         """Initialise the manager with the source tree and locale file directory.
 
         Args:
             src_dir: Root directory of the Python source tree to scan for translation keys.
             locales_dir: Directory containing ``*.yml`` locale files.
+            extra_src_dirs: Further roots outside the package that reference
+                catalogue keys. Empty by default so a caller scanning an
+                isolated fixture tree never picks up the live checkout; the CLI
+                and the parity gate pass the documentation generators' root,
+                whose keys would otherwise read as extra keys absent from the
+                codebase.
         """
         self.src_dir = src_dir
         self.locales_dir = locales_dir
+        self.extra_src_dirs = tuple(d for d in extra_src_dirs if d.is_dir())
         self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\'](\w+(?:\.\w+)+)["\']', re.UNICODE)
 
     def get_codebase_keys(self) -> set[str]:
@@ -200,17 +207,18 @@ class LocaleManager:
         from ._fstring_registry import get_registered_keys
 
         keys: set[str] = set()
-        for py_file in self.src_dir.rglob("*.py"):
-            if _is_test_module(py_file):
-                continue
-            try:
-                content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
-            except OSError as exc:
-                _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
-                continue
-            for match in self.pattern.finditer(content):
-                keys.add(match.group(1))
-        keys.update(scan_source_tree(self.src_dir))
+        for root in (self.src_dir, *self.extra_src_dirs):
+            for py_file in root.rglob("*.py"):
+                if _is_test_module(py_file):
+                    continue
+                try:
+                    content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
+                except OSError as exc:
+                    _log.debug("locale key scan: skipping %s (%s)", py_file, exc)
+                    continue
+                for match in self.pattern.finditer(content):
+                    keys.add(match.group(1))
+            keys.update(scan_source_tree(root))
         keys.update(get_registered_keys())
         keys.update(scan_registry_keys())
         keys.update(scan_profile_schema_keys())

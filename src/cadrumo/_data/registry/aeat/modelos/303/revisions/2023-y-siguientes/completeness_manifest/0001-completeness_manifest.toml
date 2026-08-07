@@ -397,3 +397,13 @@ number = "170"
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "26"
 number = "26"
+
+# Joined the closure when total cuota devengada was completed to enumerate every
+# term AEAT prints: [15] modificacion de bases y cuotas, [152] the 0 % rung cuota.
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "15"
+number = "15"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "152"
+number = "152"

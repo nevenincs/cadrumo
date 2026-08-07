@@ -89,6 +89,28 @@ casilla_id = "170"
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla_id = "26"
 
+# [15] modificacion de bases y cuotas (LIVA art. 80: impagados, devoluciones,
+# alteraciones de precio). Operator-entered, exported to its own box, and printed
+# by AEAT inside [27] in every design this revision spans -- but it was reaching
+# no total, the same shape as [158]. It carries a SIGN, so omitting it does not
+# fail in one direction: a negative art. 80 adjustment left out over-states the
+# cuota owed, which is the direction little else here watches.
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "15"
+
+# [152] is the 0 % rung's cuota, arithmetically zero by construction. Summed
+# anyway so this aggregate enumerates exactly what AEAT prints, rather than
+# relying on a reader to know which omissions are harmless.
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla_id = "152"
+
+# NOT summed, deliberately: [11]. It projects
+# iva.autorepercutido.intracomunitaria.devengado, an official-box PARITY casilla,
+# while iva.autorepercutido.intracomunitaria already books that same cuota into
+# this total. AEAT prints [11] in its formula because its boxes decompose the
+# figure; adding it here would count the AIC cuota twice. The rationale is on the
+# casilla definitions themselves.
+
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-autoconsumo-promotor-cuota"
 target_casilla_id = "iva.autoconsumo.promotor.cuota"

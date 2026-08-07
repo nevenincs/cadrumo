@@ -410,3 +410,48 @@ def test_total_cuota_devengada_enumerates_every_recargo_rung_aeat_sums() -> None
         f"recargo rungs AEAT sums into [27] but this total omits: "
         f"{sorted(recargo_rungs_aeat_sums - summed)}"
     )
+
+
+#: Every term AEAT prints inside casilla [27] in the 2025 diseno. [11] is the one
+#: deliberate exclusion: it projects the AIC official-box PARITY casilla, while
+#: iva.autorepercutido.intracomunitaria already books that same cuota into the
+#: total, so summing it would count the AIC cuota twice. Declared here with its
+#: reason rather than silently absent, because an undeclared gap in this list is
+#: indistinguishable from the omission the test exists to catch.
+_AEAT_TOTAL_TERMS = ("152", "167", "03", "155", "06", "09", "11", "13", "15", "158", "170", "18", "21", "24", "26")
+_DELIBERATELY_EXCLUDED = {"11": "AIC parity box; iva.autorepercutido.intracomunitaria already books the cuota"}
+
+
+def test_total_cuota_devengada_covers_every_term_aeat_prints() -> None:
+    """Each printed term must be reachable, directly or through its projection.
+
+    A term can be covered indirectly: [03] is a projection of
+    iva.repercutido.super-reducido, so summing the carrier covers the box. This
+    resolves each term to whatever actually feeds it rather than matching ids,
+    which is what makes it safe to compare a semantic-layer total against a
+    box-layer formula.
+
+    Non-tautology: the projection map is derived from the loaded revision, not
+    restated here, so dropping either a summed carrier or the projection that
+    links a box to it fails this.
+    """
+    revision = _revision()
+    total = next(f for f in revision.formulas if f.target_casilla_id == "iva.cuota-devengada-total")
+    summed = {str(arg.casilla_id) for arg in total.expression.args if arg.casilla_id is not None}
+
+    projects: dict[str, str] = {}
+    for formula in revision.formulas:
+        target = str(formula.target_casilla_id) if formula.target_casilla_id else None
+        operands = [str(a.casilla_id) for a in formula.expression.args if a.casilla_id is not None]
+        source = getattr(formula.expression, "casilla_id", None)
+        if target and source is not None and not operands:
+            projects[target] = str(source)
+
+    uncovered = [
+        term
+        for term in _AEAT_TOTAL_TERMS
+        if term not in _DELIBERATELY_EXCLUDED
+        and term not in summed
+        and projects.get(term) not in summed
+    ]
+    assert not uncovered, f"terms AEAT prints in [27] that this total cannot reach: {uncovered}"

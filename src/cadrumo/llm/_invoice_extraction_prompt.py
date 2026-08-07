@@ -42,6 +42,14 @@ parse of the anchor -- a value with no anchor can only be taken on trust. Where
 the two would be byte-identical the check is weaker, so the contract deliberately
 keeps them distinct: ``IVA (21%)`` yields the value ``21`` and the anchor ``21%``.
 
+**An identity field is asked for a third time: what assigns it to a party.** Two
+tax identifiers on one invoice have the same shape, so an anchor -- which says
+only where a number was printed -- cannot say whose it is. The role-evidence key
+carries the printed heading or label instead, and it is checked against the
+transcription exactly as an anchor is, so a heading the document does not show
+is dropped and the identity stays unresolved rather than being assigned on the
+reader's own say-so.
+
 **The enumeration is a hint, never a constraint.** Documents in scope are
 international; a German invoice prints 19 %, which is not a Spanish registered
 rate. The rate line therefore says what Spain registers *and* that a foreign
@@ -70,7 +78,10 @@ from ..core.hashing import sha256_hex
 from ._invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
+    ROLE_EVIDENCE_KEY_SUFFIX,
+    InvoiceFieldContract,
     anchor_key_for_field,
+    role_evidence_key_for_field,
 )
 from ._models import PromptDefinition, PromptRegistry
 
@@ -94,7 +105,7 @@ _FINGERPRINT_LENGTH: Final[int] = 12
 INVOICE_EXTRACTION_PROMPT_ID: Final[str] = "ledger-invoice-extraction"
 """Registry id of the pre-substitution extraction template."""
 
-INVOICE_EXTRACTION_PROMPT_VERSION: Final[int] = 1
+INVOICE_EXTRACTION_PROMPT_VERSION: Final[int] = 2
 """Version of the registered template.
 
 Bumped when the template's INSTRUCTIONS change -- a new field, a changed rule, a
@@ -136,6 +147,15 @@ field's own rule told you to drop.
 - The field carries the value; its anchor carries the printed form. When a field is \
 null its anchor is null too.
 - Never write an anchor that does not appear in the document.
+
+Whose identifier is whose:
+- An invoice prints two tax identifiers that look alike, so the number itself \
+never says which party it belongs to. For each identity field below, return a \
+third key named after it with the suffix "{role_evidence_suffix}".
+{role_evidence_lines}
+- Copy that text EXACTLY as printed. Never write what you decided; write what the \
+document shows. If the document shows nothing that assigns the identifier to that \
+party, the key is null -- which is always better than a guess.
 
 Rates:
 - VAT/IVA rates registered in Spain for this period: {iva_rates}.
@@ -397,6 +417,20 @@ def _field_lines() -> str:
     )
 
 
+def _role_evidence_lines() -> str:
+    """Return the per-identity-field role-evidence guidance, one line each.
+
+    Derived from the contract declaration like :func:`_field_lines`, so the set
+    of fields asked to evidence a role is the set the payload schema and the
+    grounding stage agree on, never a third hand-maintained list.
+    """
+    return "\n".join(
+        f"- {role_evidence_key_for_field(contract.field_name)}: {contract.role_evidence_instruction}."
+        for contract in INVOICE_FIELD_CONTRACTS
+        if contract.carries_role_evidence
+    )
+
+
 def _json_skeleton() -> str:
     # Terse by design: every field's meaning and form is already stated once in
     # the Fields block above, and restating it inside the skeleton doubles the
@@ -409,11 +443,21 @@ def _json_skeleton() -> str:
     # hold a flat string. A nested `{"value": ..., "anchor": ...}` moves the one
     # relationship that must not drift behind a level of structure that small
     # models routinely flatten or drop.
-    body = ",\n".join(
-        f'  "{contract.field_name}": <string or null>,\n'
-        f'  "{anchor_key_for_field(contract.field_name)}": <string or null>'
-        for contract in INVOICE_FIELD_CONTRACTS
-    )
+    #
+    # An identity field's role-evidence key sits third in the same adjacent run,
+    # for the same reason: the value, where it was printed, and what assigns it
+    # to a party are one thought about one field, and a small model keeps them
+    # together when they are written together.
+    def _keys(contract: InvoiceFieldContract) -> str:
+        lines = [
+            f'  "{contract.field_name}": <string or null>',
+            f'  "{anchor_key_for_field(contract.field_name)}": <string or null>',
+        ]
+        if contract.carries_role_evidence:
+            lines.append(f'  "{role_evidence_key_for_field(contract.field_name)}": <string or null>')
+        return ",\n".join(lines)
+
+    body = ",\n".join(_keys(contract) for contract in INVOICE_FIELD_CONTRACTS)
     return "{\n" + body + "\n}"
 
 
@@ -440,6 +484,8 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
     text = definition.template.format(
         anchor_suffix=ANCHOR_KEY_SUFFIX,
         field_lines=_field_lines(),
+        role_evidence_suffix=ROLE_EVIDENCE_KEY_SUFFIX,
+        role_evidence_lines=_role_evidence_lines(),
         iva_rates=_join_pcts(iva_rate_pcts),
         retencion_rates=_join_pcts(retencion_rate_pcts),
         zero_cuota_reasons=_zero_cuota_reasons(),

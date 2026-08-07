@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import inspect
+import json
 from decimal import Decimal
 from pathlib import Path
 
@@ -24,8 +25,13 @@ import pytest
 
 from ....core import DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
 from ....llm import LLMProviderError
+from ....llm._invoice_field_grounding import (
+    ground_extracted_fields,
+    parse_invoice_extraction_response,
+)
 from .. import _evidence_draft as _router_module
 from .._evidence import PurchaseInvoiceEvidenceInputError
+from .._document_transcription import DocumentTranscription, TranscriberIdentity
 from .._evidence_draft import FieldProvenance, InvoiceDraft
 from .._evidence_input import EvidenceInput
 from .._evidence_textlayer import transcribe_text_layer
@@ -36,6 +42,20 @@ from .._grounded_reading import (
     verified_provenance,
 )
 from .._identity_roles import IdentityCandidate, resolve_counterparty_identity
+
+_DOCUMENT_TEXT = (
+    "FACTURA 2026-0142\n"
+    "Proveedor: EJEMPLO SL B12345674\n"
+    "Cliente: OTRA SL A82645177\n"
+    "Base imponible 100,00 EUR\n"
+    "TOTAL 121,00 EUR\n"
+)
+"""A transcription printing BOTH party headings, so a heading claim can be true or false.
+
+A fixture printing no heading at all would make every dropped-evidence
+assertion pass for the wrong reason -- nothing could ever be found, so the
+check would look decisive while testing nothing.
+"""
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -196,12 +216,19 @@ def test_role_resolution_is_skipped_when_the_filer_is_unknown() -> None:
     assert DraftDiscrepancyKind.ROLE_UNRESOLVED not in kinds
 
 
-def test_a_vision_envelope_is_never_upgraded_by_a_text_transcription() -> None:
-    """The anchor-strength split survives the wiring.
+def test_a_self_reported_anchor_is_never_upgraded_by_any_transcription() -> None:
+    """The anchor-strength split survives the wiring, and it keys on the FLAG.
 
     A self-reported anchor has nothing independent behind it. Upgrading it
     against some other lane's transcription would manufacture exactly the
     verified-looking record the split exists to prevent.
+
+    The guard is the ``anchor_self_reported`` flag, checked before and
+    independently of the groundable-origin set. That independence is the whole
+    point of asserting it here: ``VISION`` is now a groundable origin, because
+    the vision lane transcribes and interprets in separate calls and its anchors
+    are checked against the transcription stage one produced. A guard that had
+    keyed on the origin instead would have silently opened at that moment.
     """
     self_reported = FieldProvenance(
         field="taxable_base",
@@ -216,7 +243,10 @@ def test_a_vision_envelope_is_never_upgraded_by_a_text_transcription() -> None:
 
     assert upgraded[0].grounding is FieldGroundingOutcome.UNANCHORED
     assert upgraded[0].anchor_self_reported is True
-    assert FieldOrigin.VISION not in GROUNDABLE_ORIGINS
+    assert FieldOrigin.VISION in GROUNDABLE_ORIGINS, (
+        "the two-call vision lane produces an independent transcription, so its anchors are "
+        "checkable; if this ever reverts, the refusal above must be re-derived rather than assumed"
+    )
 
 
 def test_the_router_text_path_runs_the_whole_chain() -> None:
@@ -233,6 +263,11 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
     assert "transcribe_text_layer(evidence_input)" in source
     assert "extract_invoice_fields_from_text" in source
     assert "ground_draft_against_transcription" in source
+    # And the vision lane runs the SAME chain: transcribe with the vision model,
+    # then hand the transcription to the one semantic-read-and-ground path. A
+    # second, vision-specific field reader is the collapse this refit removed.
+    assert "transcribe_document_images" in source
+    assert "extract_invoice_fields_from_images" not in source
 
 
 # The companion property -- that the label-regex family is not merely unreached
@@ -379,7 +414,7 @@ def test_the_refusals_provision_verb_survives_to_the_error_envelope() -> None:
     assert get_error_suggestion(raised.value) == "aeat config provision pull"
 
 
-class TestTheReadingPathSuppliesNoManufacturedRoleEvidence:
+class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
     """The positive-role-evidence filter must be able to refuse on this path.
 
     The resolver grounds an identity only on positive role evidence, never on
@@ -392,14 +427,57 @@ class TestTheReadingPathSuppliesNoManufacturedRoleEvidence:
     <field>`` -- a restatement of the reader's own assignment rather than
     anything the document says about the party. The resulting note read as
     positive evidence, which is what made it worse than supplying none.
+
+    The reading stage now carries real role evidence: the printed heading or
+    label the reader copied, per identity field. What makes it real rather than
+    longer is that it can be WRONG, so every case below turns on the same
+    distinction -- evidence the document prints is admitted, evidence it does
+    not print is dropped, and an unevidenced identity still refuses.
     """
 
     @staticmethod
-    def _candidates(**values: str) -> tuple[IdentityCandidate, ...]:
-        draft = InvoiceDraft(**values)
-        return _identity_candidates(draft=draft, envelopes=())
+    def _transcription(text: str = _DOCUMENT_TEXT) -> DocumentTranscription:
+        return DocumentTranscription(
+            text=text,
+            page_count=1,
+            source_content_sha256="c" * 64,
+            transcriber=TranscriberIdentity(
+                origin=FieldOrigin.TEXT_LAYER,
+                name="pdfplumber",
+                revision="gate",
+            ),
+        )
 
-    def test_no_candidate_arrives_carrying_evidence(self) -> None:
+    @classmethod
+    def _candidates(
+        cls,
+        *,
+        role_evidence: dict[str, str] | None = None,
+        text: str = _DOCUMENT_TEXT,
+        **values: str,
+    ) -> tuple[IdentityCandidate, ...]:
+        claimed = role_evidence or {}
+        draft = InvoiceDraft(
+            **values,
+            provenance=tuple(
+                FieldProvenance(
+                    field=field,
+                    origin=FieldOrigin.TEXT_LAYER,
+                    grounding=FieldGroundingOutcome.UNANCHORED,
+                    anchor=value,
+                    role_evidence=claimed.get(field),
+                )
+                for field, value in values.items()
+            ),
+        )
+        return _identity_candidates(
+            draft=draft,
+            envelopes=draft.provenance,
+            transcription=cls._transcription(text),
+        )
+
+    def test_no_candidate_arrives_carrying_evidence_the_reader_merely_asserted(self) -> None:
+        """With nothing printed to copy, the reader supplies nothing at all."""
         candidates = self._candidates(supplier_tax_id="B12345674", customer_tax_id="A82645177")
 
         assert candidates, "the fixture must produce candidates, or this passes vacuously"
@@ -461,4 +539,123 @@ class TestTheReadingPathSuppliesNoManufacturedRoleEvidence:
         assert all(
             candidate.note == "no role evidence distinguishes this identifier"
             for candidate in resolution.provenance.candidates
+        )
+
+    def test_role_evidence_the_document_prints_reaches_the_resolver(self) -> None:
+        """The half with teeth: a printed heading is admitted and promotes.
+
+        Rows two and three of the measured table -- an ordinary invoice with one
+        or two readable identifiers -- refused outright while nothing carried
+        role evidence. This is what turns counterparty auto-fill back on, and it
+        turns it on only for a document that actually says whose identifier is
+        whose.
+        """
+        candidates = self._candidates(
+            supplier_tax_id="B12345674",
+            customer_tax_id="A82645177",
+            role_evidence={"supplier_tax_id": "Proveedor:"},
+        )
+
+        evidenced = [candidate for candidate in candidates if candidate.role_evidence]
+        assert [candidate.value for candidate in evidenced] == ["B12345674"]
+
+        resolution = resolve_counterparty_identity(
+            field="supplier_tax_id",
+            candidates=candidates,
+            taxpayer_tax_id=None,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
+
+        assert resolution.resolved == "B12345674"
+        assert resolution.provenance.grounding is FieldGroundingOutcome.ANCHORED
+        assert resolution.provenance.role_evidence is None or "Proveedor" in str(resolution.provenance.note)
+
+    def test_role_evidence_the_document_does_not_print_is_dropped(self) -> None:
+        """A reader that invents a heading loses its evidence and its identity.
+
+        This is the assertion that distinguishes the new payload field from the
+        synthesised string it replaces. The synthesised string was true by
+        construction on every document; this one is checked against the page,
+        so an invented heading cannot promote anything.
+
+        Mutation that must trip this: drop the ``printed_excerpt_occurs`` guard
+        in ``_identity_candidates`` and pass the claim through unchecked.
+        """
+        candidates = self._candidates(
+            supplier_tax_id="B12345674",
+            customer_tax_id="A82645177",
+            role_evidence={"supplier_tax_id": "Lieferant:"},
+        )
+
+        assert candidates, "the fixture must produce candidates, or this passes vacuously"
+        assert all(not candidate.role_evidence for candidate in candidates), (
+            "role evidence the document does not print must never reach the resolver"
+        )
+
+        resolution = resolve_counterparty_identity(
+            field="supplier_tax_id",
+            candidates=candidates,
+            taxpayer_tax_id=None,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
+
+        assert resolution.resolved is None
+        assert resolution.provenance.grounding is not FieldGroundingOutcome.ANCHORED
+
+    def test_two_printed_headings_compete_rather_than_one_winning(self) -> None:
+        """Real evidence on both sides is ambiguity, not a ranking.
+
+        The bound on the previous test: admitting printed evidence must not
+        become "the first evidenced candidate wins", which would reintroduce
+        first-match selection with a heading attached to it.
+        """
+        candidates = self._candidates(
+            supplier_tax_id="B12345674",
+            customer_tax_id="A82645177",
+            role_evidence={"supplier_tax_id": "Proveedor:", "customer_tax_id": "Cliente:"},
+        )
+
+        assert all(candidate.role_evidence for candidate in candidates)
+
+        resolution = resolve_counterparty_identity(
+            field="supplier_tax_id",
+            candidates=candidates,
+            taxpayer_tax_id=None,
+            origin=FieldOrigin.TEXT_LAYER,
+        )
+
+        assert resolution.resolved is None
+        assert resolution.provenance.grounding is FieldGroundingOutcome.AMBIGUOUS
+
+    def test_the_reading_stage_records_the_claim_unchecked_and_the_grounding_stage_checks_it(self) -> None:
+        """The two stages must not be collapsed, and each must do only its own half.
+
+        The reading stage holds no transcription, so it records what the model
+        claimed without verdict -- exactly as it does for an anchor. The check
+        belongs to the stage that has the document. Collapsing them either
+        stamps a verdict nobody ran or discards the claim before an operator
+        can see it.
+        """
+        response = parse_invoice_extraction_response(
+            json.dumps(
+                {
+                    "supplier_tax_id": "B12345674",
+                    "supplier_tax_id_anchor": "B12345674",
+                    "supplier_tax_id_role_evidence": "Lieferant:",
+                },
+            ),
+        )
+        draft = ground_extracted_fields(response, raw_text_length=64, origin=FieldOrigin.TEXT_LAYER)
+
+        recorded = next(e for e in draft.provenance if e.field == "supplier_tax_id")
+        assert recorded.role_evidence == "Lieferant:", "the reading stage must record the claim verbatim"
+        assert recorded.grounding is FieldGroundingOutcome.UNANCHORED, "and must pass no verdict on it"
+
+        candidates = _identity_candidates(
+            draft=draft,
+            envelopes=draft.provenance,
+            transcription=self._transcription(),
+        )
+        assert all(not candidate.role_evidence for candidate in candidates), (
+            "the grounding stage must drop a claim the document does not carry"
         )

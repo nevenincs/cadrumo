@@ -50,6 +50,7 @@ from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
 
 from .build import docs_build_language
+from ._locale_chrome import docs_chrome
 from .legal_reference import LEGAL_CATALOGUE_RELPATH, legal_citation
 from .terminology_handbook import load_terminology_handbook
 from .terminology_handbook._enums import TermStatus
@@ -63,10 +64,6 @@ _UTF_8 = "utf-8"
 #: ``docs/glossary.md`` stays in place until the cutover step swaps to this.
 _GENERATED_RELPATH = Path("_generated") / "glossary.rst"
 
-#: Body text for a concept with no definition authored in the build language.
-#: It states the absence rather than borrowing another language's prose, which
-#: would put text on the page that the reader of this build cannot read.
-_UNDEFINED_IN_BUILD_LANGUAGE = "No definition is available in this language yet."
 
 
 @dataclass(frozen=True)
@@ -212,6 +209,7 @@ def _related_lines(
     concept: ConceptRecord,
     headwords: dict[str, str],
     body_indent: str,
+    language: OutputLanguage,
 ) -> list[str]:
     """Render the concept's broader/related SKOS relations as ``:term:`` links.
 
@@ -228,7 +226,8 @@ def _related_lines(
     the exact surface the glossary entry claims.
     """
     relation_lines: list[str] = []
-    for label, ids in (("Broader", concept.broader), ("Related", concept.related)):
+    for name, ids in (("broader", concept.broader), ("related", concept.related)):
+        label = docs_chrome(f"docs.glossary.entry.{name}", language)
         refs = [f":term:`{headwords[ref]}`" for ref in ids if ref != concept.concept_id and ref in headwords]
         if refs:
             relation_lines.append(f"{body_indent}* {label}: {', '.join(refs)}")
@@ -272,11 +271,13 @@ def _render_entry(
     # compiled record, which is language-safe: the domain, the legal grounding
     # and the concept relations are structure, not prose, and stay true in
     # every build language.
-    block = [*lines, f"{body_indent}{body}" if body else f"{body_indent}{_UNDEFINED_IN_BUILD_LANGUAGE}"]
+    undefined = docs_chrome("docs.glossary.entry.undefined", language)
+    block = [*lines, f"{body_indent}{body}" if body else f"{body_indent}{undefined}"]
     legal_count = 0
     grounding: list[str] = []
     if not body:
-        grounding.append(f"{body_indent}* Domain: {concept.domain.value}")
+        domain_label = docs_chrome("docs.glossary.entry.domain", language)
+        grounding.append(f"{body_indent}* {domain_label}: {concept.domain.value}")
     for ref in concept.legal_refs:
         resolved = permalinks.get(ref)
         if resolved:
@@ -284,9 +285,10 @@ def _render_entry(
             # catalogue id stays visible behind it so the grounding remains
             # traceable to the exact row it came from.
             citation = legal_citation(ref, resolved.kind, article=resolved.article, section=resolved.section)
-            grounding.append(f"{body_indent}* Legal basis: `{citation} <{resolved.permalink}>`__ (``{ref}``)")
+            basis = docs_chrome("docs.glossary.entry.legal_basis", language)
+            grounding.append(f"{body_indent}* {basis}: `{citation} <{resolved.permalink}>`__ (``{ref}``)")
             legal_count += 1
-    grounding.extend(_related_lines(concept, headwords, body_indent))
+    grounding.extend(_related_lines(concept, headwords, body_indent, language))
     if grounding:
         block.append("")
         block.extend(grounding)

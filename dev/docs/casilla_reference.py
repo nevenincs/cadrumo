@@ -177,26 +177,26 @@ class _LegalLink:
 #: bodies are raw HTML and are HTML-escaped instead.
 _RST_SPECIAL = "\\`*_|[]"
 
-#: Official Spanish naming for each authored catalogue ``kind``. AEAT publishes
-#: these instruments under their Spanish names, so the display stays Spanish in
-#: every build language (the domain-naming rule) - only the surrounding chrome
-#: is English.
-_LEGAL_KIND_DISPLAY: Final[dict[str, str]] = {
+#: The catalogue namespace holding every display string this surface renders.
+#: Nothing user-visible is authored as a Python literal: the vocabulary lives in
+#: the four shared catalogues, Spanish first as the authoritative source, and is
+#: resolved per build language through :func:`_text`.
+_DISPLAY_PREFIX: Final[str] = "modelo.display"
+
+#: The one exception, and it is not chrome: the official Spanish name of a legal
+#: instrument. AEAT and BOE publish "Ley 37/1992" and "Real Decreto 1624/1992"
+#: under those names in every language, exactly as a modelo's official name
+#: stays Spanish, so translating them would name a norm that does not exist. The
+#: DESCRIPTIVE kinds - AEAT's own dictionaries, manuals, record designs - are
+#: not instrument names and live in the catalogue under ``legal_kind.*``.
+_LEGAL_INSTRUMENT_NAMES: Final[dict[str, str]] = {
     "acuerdo_internacional": "Convenio",
-    "dictionary": "Diccionario de datos AEAT",
-    "form_spec": "Modelo oficial AEAT",
-    "instruction": "Instrucciones AEAT",
-    "instructions": "Instrucciones AEAT",
     "ley": "Ley",
-    "manual_pdf": "Manual AEAT",
     "orden": "Orden",
     "real_decreto": "Real Decreto",
     "real_decreto_legislativo": "Real Decreto Legislativo",
     "real_decreto_ley": "Real Decreto-ley",
-    "record_design": "Diseño de registro AEAT",
     "reglamento": "Reglamento",
-    "suppression_notice": "Nota AEAT",
-    "xsd": "Esquema XSD AEAT",
 }
 
 #: Id tokens that merely restate the authored ``kind`` and are dropped from the
@@ -232,93 +232,26 @@ _ACRONYMS: Final[frozenset[str]] = frozenset(
     {"aeat", "cif", "iae", "irnr", "irpf", "is", "isp", "iva", "nif", "oss", "ue"},
 )
 
-#: What the filer actually has to type, per registry ``data_type``.
-_DATA_TYPE_DISPLAY: Final[dict[str, str]] = {
-    "bic": "BIC",
-    "boolean": "Yes or no",
-    "ccaa_code": "Autonomous-community code",
-    "country_code": "Country code",
-    "date": "Date",
-    "decimal": "Decimal number",
-    "iban": "IBAN",
-    "integer": "Whole number",
-    "money": "Amount in euros",
-    "municipality_code": "Municipality code",
-    "name": "Name",
-    "nif": "NIF",
-    "nif_iva": "VAT-registered NIF",
-    "period_code": "Period",
-    "postal_code": "Postcode",
-    "province_code": "Province code",
-    "ratio": "Percentage",
-    "text": "Text",
-    "year": "Year",
-}
 
-#: The headline answer to "how does this box get filled", per ``input_kind``.
-_INPUT_KIND_DISPLAY: Final[dict[str, str]] = {
-    "bound": "Filled automatically",
-    "computed": "Calculated for you",
-    "informational": "Reference only",
-    "manual": "You enter this",
-}
+def _text(key: str, language: OutputLanguage, /, **values: object) -> str:
+    """Resolve one display string for the build language, refusing a gap.
 
-#: The same axis counted on the modelo overview, where the phrase follows a
-#: number and so reads as a noun rather than as a sentence about one box.
-_INPUT_KIND_COUNT_DISPLAY: Final[dict[str, str]] = {
-    "bound": "filled from your records",
-    "computed": "calculated",
-    "informational": "reference only",
-    "manual": "you enter",
-}
+    A missing key, or one whose value is the scaffold's key-echo placeholder,
+    raises rather than rendering a fallback: ``tr`` would quietly return a
+    humanised fragment of the key, which reads like real copy and would ship a
+    page whose chrome silently degrades. Nothing here falls back to another
+    language - an unauthored string is a build failure, not a substitution.
+    """
+    from cadrumo.core.i18n import lookup_translation_entry
 
-#: WHICH source fills a bound casilla, per :class:`~cadrumo.core.BindingSourceKind`.
-#: Complete over the enum by contract - a new kind with no phrase here is a gate
-#: failure, never a silently blank explanation.
-_BINDING_SOURCE_DISPLAY: Final[dict[str, str]] = {
-    "atribucion_member": "from the atribución de rentas members you recorded",
-    "bienes_inversion_regularizacion": "from your bienes de inversión regularisation",
-    "borrador": "from the AEAT borrador",
-    "collectible_invoice": "from the invoices you issued",
-    "donativo_donor": "from the donativo donor records",
-    "foreign_asset": "from your foreign-asset records",
-    "iva_compensation_annual_partition": "from the IVA compensación carried across the year",
-    "iva_wallet_decision": "from your IVA compensación decision",
-    "ledger_impatriado_income_aggregation": "from your ledger income under the impatriado regime",
-    "ledger_irnr_income_aggregation": "from your ledger IRNR income",
-    "ledger_iva_aggregation": "from your IVA ledger entries",
-    "ledger_oss_aggregation": "from your OSS ledger entries",
-    "ledger_renta_gastos_estimacion_directa_aggregation": "from your ledger expenses under estimación directa",
-    "ledger_renta_gastos_pago_fraccionado_aggregation": "from your ledger expenses for the pago fraccionado",
-    "ledger_renta_income_aggregation": "from your ledger income",
-    "ledger_transaction": "from your ledger transactions",
-    "manual_input": "from a value you supply",
-    "payable_invoice": "from the invoices you received",
-    "previous_filing": "from your previous filing",
-    "profile": "from your taxpayer profile",
-    "prorrata_regularizacion": "from your prorrata regularisation",
-    "purchase_invoice_evidence": "from your purchase-invoice evidence",
-    "refund_operation": "from your refund operations",
-    "related_party_operation": "from your related-party operations",
-    "relation_prefill": "from a related modelo's result",
-    "retenciones_aggregation": "from the retenciones you recorded",
-    "withholding": "from the withholdings you recorded",
-}
-
-#: When the modelo is filed, per registry ``cadence``.
-_CADENCE_DISPLAY: Final[dict[str, str]] = {
-    "ad_hoc": "Filed when the event occurs",
-    "annual": "Filed annually",
-    "monthly": "Filed monthly",
-    "profile_based": "Filed when your profile requires it",
-    "quarterly": "Filed quarterly",
-}
-
-#: How a value range reads, per registry ``constraints.sign``.
-_SIGN_DISPLAY: Final[dict[str, str]] = {
-    "non_negative": "Zero or more",
-    "non_positive": "Zero or less",
-}
+    full_key = f"{_DISPLAY_PREFIX}.{key}"
+    present, value = lookup_translation_entry(full_key, locale=language.value)
+    if not present or value is None:
+        raise CasillaReferenceError(
+            f"locale {language.value!r} has no value for {full_key!r}; "
+            f"author it with `python -m dev.locales set {language.value} {full_key} <value>`"
+        )
+    return value.format(**values) if values else value
 
 
 def _rst_escape(text: str) -> str:
@@ -347,9 +280,9 @@ def _token_display(token: str) -> str:
     return token.upper() if token.lower() in _ACRONYMS else _humanise_token(token)
 
 
-def _section_display(section: tuple[str, ...]) -> str:
+def _section_display(section: tuple[str, ...], language: OutputLanguage) -> str:
     """The human display for a registry section path, token by token."""
-    return " › ".join(_token_display(part) for part in section if part) or "General"
+    return " › ".join(_token_display(part) for part in section if part) or _text("chrome.general_section", language)
 
 
 def _section_anchor(section: tuple[str, ...]) -> str:
@@ -376,7 +309,7 @@ def _legal_numeral(tokens: list[str]) -> tuple[str | None, list[str]]:
     return None, tokens
 
 
-def _legal_provision_display(legal_id: str, provision: LegalProvisionRecord) -> str:
+def _legal_provision_display(legal_id: str, provision: LegalProvisionRecord, language: OutputLanguage) -> str:
     """Read one catalogue provision as its official Spanish name plus its article.
 
     Built only from authored fields (``kind``, ``article``, ``section``) and the
@@ -391,7 +324,8 @@ def _legal_provision_display(legal_id: str, provision: LegalProvisionRecord) -> 
     separator = "/" if numeral else "-"
     qualifier = separator.join(token.upper() if len(token) <= 4 else _humanise_token(token) for token in remainder)
 
-    kind_display = _LEGAL_KIND_DISPLAY.get(provision.kind, _humanise_token(provision.kind))
+    instrument = _LEGAL_INSTRUMENT_NAMES.get(provision.kind)
+    kind_display = instrument if instrument is not None else _text(f"legal_kind.{provision.kind}", language)
     name = " ".join(part for part in (kind_display, qualifier) if part)
     if numeral:
         name = f"{name}{separator if qualifier else ' '}{numeral}"
@@ -412,8 +346,8 @@ def _legal_provision_display(legal_id: str, provision: LegalProvisionRecord) -> 
     return name
 
 
-@lru_cache(maxsize=4)
-def _legal_links(repo_root: Path) -> dict[str, _LegalLink]:
+@lru_cache(maxsize=8)
+def _legal_links(repo_root: Path, language: OutputLanguage) -> dict[str, _LegalLink]:
     """Map every catalogue provision id to its display name and generated destination.
 
     The destination is the generated legal-reference page the sibling generator
@@ -432,7 +366,7 @@ def _legal_links(repo_root: Path) -> dict[str, _LegalLink]:
             permalink=provision.permalink,
         )
         links[provision.legal_id] = _LegalLink(
-            label=_legal_provision_display(provision.legal_id, provision),
+            label=_legal_provision_display(provision.legal_id, provision, language),
             target=_relative_to_casilla_page(target),
         )
     return links
@@ -621,17 +555,18 @@ def _localised(record: CasillaSearchRecord, language: OutputLanguage) -> tuple[s
     return _clean(record.descriptions.get(language)), _clean(record.localized_help.get(language.value))
 
 
-def _join_references(references: list[str]) -> str:
+def _join_references(references: list[str], language: OutputLanguage) -> str:
     """Join rendered box links as a readable list ("01, 02 and 05")."""
     if len(references) <= 1:
         return "".join(references)
-    return ", ".join(references[:-1]) + " and " + references[-1]
+    return f"{', '.join(references[:-1])} {_text('chrome.list_and', language)} {references[-1]}"
 
 
 def _fill_explanation(
     record: CasillaSearchRecord,
     facts: CasillaFacts | None,
     numbers_by_id: Mapping[str, str],
+    language: OutputLanguage,
 ) -> list[str]:
     """Render the "how this box gets filled" answer, the substance of an entry.
 
@@ -640,7 +575,7 @@ def _fill_explanation(
     schema can give. Bound casillas name the source that fills them.
     """
     input_kind = record.input_kind.value
-    headline = _INPUT_KIND_DISPLAY.get(input_kind, _humanise_token(input_kind))
+    headline = _text(f"input_kind.{input_kind}", language)
     lines = [
         f'<div class="casilla-fill casilla-fill--{html.escape(input_kind, quote=True)}">',
         f'<span class="casilla-fill__kind">{html.escape(headline)}</span>',
@@ -648,8 +583,9 @@ def _fill_explanation(
 
     detail: str | None = None
     if facts is not None and facts.binding_sources:
-        phrases = [_BINDING_SOURCE_DISPLAY.get(source, _humanise_token(source)) for source in facts.binding_sources]
-        detail = phrases[0] if len(phrases) == 1 else f"{phrases[0]}, or {' or '.join(phrases[1:])}"
+        phrases = [_text(f"binding_source.{source}", language) for source in facts.binding_sources]
+        alternative = _text("chrome.alternative_join", language)
+        detail = phrases[0] if len(phrases) == 1 else alternative.join(phrases)
     if detail is not None:
         lines.append(f'<span class="casilla-fill__detail">{html.escape(detail)}</span>')
 
@@ -663,8 +599,9 @@ def _fill_explanation(
                 f'<a class="casilla-derives-from__ref" href="#{html.escape(anchor, quote=True)}"'
                 f' title="{html.escape(casilla_id, quote=True)}">{html.escape(text)}</a>',
             )
-        lines.append('<span class="casilla-fill__detail">from</span>')
-        lines.append(f'<span class="casilla-derives-from">{_join_references(references)}</span>')
+        derived = _text("chrome.derived_from", language)
+        lines.append(f'<span class="casilla-fill__detail">{html.escape(derived)}</span>')
+        lines.append(f'<span class="casilla-derives-from">{_join_references(references, language)}</span>')
     lines.append("</div>")
     return lines
 
@@ -682,72 +619,79 @@ def _box_number(record: CasillaSearchRecord, facts: CasillaFacts | None) -> str:
     return record.number
 
 
-def _constraint_phrases(constraints: CasillaConstraints | None) -> list[str]:
+def _constraint_phrases(constraints: CasillaConstraints | None, language: OutputLanguage) -> list[str]:
     """Read the authored value constraints as what a filer may enter."""
     if constraints is None:
         return []
     phrases: list[str] = []
     minimum, maximum = constraints.min_value, constraints.max_value
     if minimum is not None and maximum is not None:
-        phrases.append(f"Between {minimum} and {maximum}")
+        phrases.append(_text("value_range.between", language, min=minimum, max=maximum))
     elif minimum is not None:
-        phrases.append(f"At least {minimum}")
+        phrases.append(_text("value_range.at_least", language, min=minimum))
     elif maximum is not None:
-        phrases.append(f"At most {maximum}")
-    elif constraints.sign in _SIGN_DISPLAY:
-        phrases.append(_SIGN_DISPLAY[constraints.sign])
+        phrases.append(_text("value_range.at_most", language, max=maximum))
+    elif constraints.sign != "any":
+        phrases.append(_text(f"value_range.{constraints.sign}", language))
 
     if constraints.min_length is not None and constraints.max_length is not None:
-        phrases.append(f"{constraints.min_length} to {constraints.max_length} characters")
+        phrases.append(_text("length.between", language, min=constraints.min_length, max=constraints.max_length))
     elif constraints.max_length is not None:
-        phrases.append(f"Up to {constraints.max_length} characters")
+        phrases.append(_text("length.at_most", language, max=constraints.max_length))
     elif constraints.min_length is not None:
-        phrases.append(f"At least {constraints.min_length} characters")
+        phrases.append(_text("length.at_least", language, min=constraints.min_length))
 
     if constraints.enum:
-        phrases.append("One of: " + ", ".join(str(value) for value in constraints.enum))
+        phrases.append(_text("value_enum", language, values=", ".join(str(value) for value in constraints.enum)))
     return phrases
 
 
-def _fact_chips(record: CasillaSearchRecord, facts: CasillaFacts | None) -> list[str]:
+def _fact_chips(record: CasillaSearchRecord, facts: CasillaFacts | None, language: OutputLanguage) -> list[str]:
     """The scannable filing facts: what to type, whether it is required, where it sits."""
     chips: list[str] = []
-    data_type = _DATA_TYPE_DISPLAY.get(record.data_type, _humanise_token(record.data_type))
-    chips.append(f'<li class="casilla-fact">{html.escape(data_type)}</li>')
+    chips.append(f'<li class="casilla-fact">{html.escape(_text(f"data_type.{record.data_type}", language))}</li>')
     if record.required:
-        chips.append('<li class="casilla-fact casilla-fact--required">Required</li>')
-    for phrase in _constraint_phrases(facts.constraints if facts else None):
+        required = _text("chrome.required", language)
+        chips.append(f'<li class="casilla-fact casilla-fact--required">{html.escape(required)}</li>')
+    for phrase in _constraint_phrases(facts.constraints if facts else None, language):
         chips.append(f'<li class="casilla-fact">{html.escape(phrase)}</li>')
     if record.segmento:
-        chips.append(f'<li class="casilla-fact">Segmento {html.escape(record.segmento)}</li>')
+        segmento = _text("chrome.segmento", language, segmento=record.segmento)
+        chips.append(f'<li class="casilla-fact">{html.escape(segmento)}</li>')
     if facts is not None and facts.internal_only:
-        chips.append('<li class="casilla-fact casilla-fact--internal">Not on the official form</li>')
+        internal = _text("chrome.not_on_official_form", language)
+        chips.append(f'<li class="casilla-fact casilla-fact--internal">{html.escape(internal)}</li>')
     return chips
 
 
-def _internals_block(record: CasillaSearchRecord, box_number: str) -> list[str]:
+def _internals_block(record: CasillaSearchRecord, box_number: str, language: OutputLanguage) -> list[str]:
     """The registry's own identifiers, demoted into a collapsed disclosure.
 
     Machine vocabulary a taxpayer never reads, kept on the page because an
     operator debugging a value needs the exact ids the registry carries.
     """
-    rows: list[tuple[str, str]] = [("Casilla id", f"<code>{html.escape(str(record.casilla_id))}</code>")]
+    rows: list[tuple[str, str]] = [
+        (_text("chrome.casilla_id", language), f"<code>{html.escape(str(record.casilla_id))}</code>"),
+    ]
     if record.number != box_number:
-        rows.append(("Record-design number", f"<code>{html.escape(record.number)}</code>"))
+        rows.append((_text("chrome.record_design_number", language), f"<code>{html.escape(record.number)}</code>"))
     if record.semantic_role:
-        rows.append(("Semantic role", f"<code>{html.escape(record.semantic_role)}</code>"))
+        rows.append((_text("chrome.semantic_role", language), f"<code>{html.escape(record.semantic_role)}</code>"))
     if record.binding is not None:
-        rows.append(("Binding", f"<code>{html.escape(str(record.binding))}</code>"))
+        rows.append((_text("chrome.binding", language), f"<code>{html.escape(str(record.binding))}</code>"))
     if record.formula_id is not None:
-        rows.append(("Formula", f"<code>{html.escape(str(record.formula_id))}</code>"))
-    rows.append(("Registry section", f"<code>{html.escape('.'.join(record.section) or 'general')}</code>"))
+        rows.append((_text("chrome.formula", language), f"<code>{html.escape(str(record.formula_id))}</code>"))
+    registry_section = ".".join(record.section) or "general"
+    rows.append((_text("chrome.registry_section", language), f"<code>{html.escape(registry_section)}</code>"))
     if record.source_refs:
-        rows.append(("Sources", " ".join(f"<code>{html.escape(ref)}</code>" for ref in record.source_refs)))
+        joined = " ".join(f"<code>{html.escape(ref)}</code>" for ref in record.source_refs)
+        rows.append((_text("chrome.sources", language), joined))
     if record.source_revisions:
-        rows.append(("Revisions", " ".join(f"<code>{html.escape(rev)}</code>" for rev in record.source_revisions)))
+        joined = " ".join(f"<code>{html.escape(rev)}</code>" for rev in record.source_revisions)
+        rows.append((_text("chrome.revisions", language), joined))
     lines = [
         '<details class="casilla-card__internals">',
-        "<summary>Registry identifiers</summary>",
+        f"<summary>{html.escape(_text('chrome.registry_identifiers', language))}</summary>",
         '<dl class="casilla-internals">',
     ]
     lines.extend(f"<dt>{html.escape(term)}</dt><dd>{value}</dd>" for term, value in rows)
@@ -780,15 +724,19 @@ def _render_entry(
     lines.append("</header>")
     if help_text:
         lines.append(f'<p class="casilla-card__help">{html.escape(help_text)}</p>')
-    lines.extend(_fill_explanation(record, facts, numbers_by_id))
-    chips = _fact_chips(record, facts)
+    lines.extend(_fill_explanation(record, facts, numbers_by_id, language))
+    chips = _fact_chips(record, facts, language)
     if chips:
         lines.append('<ul class="casilla-card__facts">')
         lines.extend(chips)
         lines.append("</ul>")
-    legal_lines, resolved = ([], 0) if not record.legal_refs else _legal_list(record.legal_refs, links, "Legal basis")
+    legal_lines, resolved = (
+        ([], 0)
+        if not record.legal_refs
+        else _legal_list(record.legal_refs, links, _text("chrome.legal_basis", language))
+    )
     lines.extend(legal_lines)
-    lines.extend(_internals_block(record, box_number))
+    lines.extend(_internals_block(record, box_number, language))
     lines.append("</article>")
     return _raw_html(lines), anchor, tuple(record.legal_refs), resolved
 
@@ -802,6 +750,7 @@ def _page_header(
     records: tuple[CasillaSearchRecord, ...],
     sections: list[tuple[tuple[str, ...], int]],
     links: dict[str, _LegalLink],
+    language: OutputLanguage,
 ) -> tuple[str, int]:
     """Render what this modelo IS, then the jump list over its sections."""
     lines = ['<div class="modelo-overview">']
@@ -817,28 +766,27 @@ def _page_header(
     facts: list[str] = []
     if overview is not None:
         facts.append(_token_display(overview.tax_domain))
-        facts.append(_CADENCE_DISPLAY.get(overview.cadence, _humanise_token(overview.cadence)))
-    facts.append(f"{len(records)} casillas in {len(sections)} sections")
-    facts.extend(
-        f"{count} {_INPUT_KIND_COUNT_DISPLAY.get(kind, _humanise_token(kind).lower())}"
-        for kind, count in sorted(counted.items())
-    )
+        facts.append(_text(f"cadence.{overview.cadence}", language))
+    facts.append(_text("chrome.casilla_count", language, casillas=len(records), sections=len(sections)))
+    facts.extend(f"{count} {_text(f'input_kind_count.{kind}', language)}" for kind, count in sorted(counted.items()))
     lines.append('<ul class="modelo-overview__facts">')
     lines.extend(f'<li class="casilla-fact">{html.escape(fact)}</li>' for fact in facts)
     lines.append("</ul>")
 
     if overview is not None and overview.legal_refs:
-        legal_lines, resolved = _legal_list(overview.legal_refs, links, "Established by")
+        legal_lines, resolved = _legal_list(overview.legal_refs, links, _text("chrome.established_by", language))
         lines.extend(legal_lines)
     lines.append("</div>")
 
     if len(sections) > 1:
-        lines.append('<nav class="casilla-section-nav" aria-label="Sections of this modelo">')
+        nav_label = html.escape(_text("chrome.sections_nav", language), quote=True)
+        lines.append(f'<nav class="casilla-section-nav" aria-label="{nav_label}">')
         lines.append("<ul>")
         for section, count in sections:
             lines.append(
                 f'<li><a href="#{html.escape(_section_anchor(section), quote=True)}">'
-                f'{html.escape(_section_display(section))}<span class="casilla-section-nav__count">{count}</span>'
+                f"{html.escape(_section_display(section, language))}"
+                f'<span class="casilla-section-nav__count">{count}</span>'
                 "</a></li>",
             )
         lines.extend(["</ul>", "</nav>"])
@@ -883,13 +831,13 @@ def _render_modelo_page(
         str(record.casilla_id): _box_number(record, schema.casillas.get((modelo, str(record.casilla_id))))
         for record in records
     }
-    page_header, legal_links = _page_header(modelo, overview, records, section_counts, links)
+    page_header, legal_links = _page_header(modelo, overview, records, section_counts, links, language)
     blocks: list[str] = [header + title, page_header]
     anchors: list[str] = []
     seen: set[str] = set()
     rendered_legal_refs: dict[str, tuple[str, ...]] = {}
     for section, section_records in grouped.items():
-        blocks.append(_rst_heading(_rst_escape(_section_display(section)), "-"))
+        blocks.append(_rst_heading(_rst_escape(_section_display(section, language)), "-"))
         blocks.append(_raw_html([f'<span class="casilla-section-anchor" id="{_section_anchor(section)}"></span>']))
         for record in section_records:
             facts = schema.casillas.get((modelo, str(record.casilla_id)))
@@ -916,15 +864,11 @@ def _render_modelo_page(
     return page, legal_links
 
 
-def _render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema) -> str:
+def _render_index(pages: tuple[CasillaPage, ...], schema: CompiledSchema, language: OutputLanguage) -> str:
     """Render the casilla reference toctree index over the per-modelo pages."""
     header = "..\n   Generated by dev/docs/casilla_reference.py. Do not edit by hand; regenerate.\n\n"
-    title = _rst_heading("Casilla reference", "=")
-    intro = (
-        "One page per modelo. Every casilla says how it is filled - you enter it,\n"
-        "it is calculated from other boxes, or it is filled from your records -\n"
-        "where it sits on the official form, and the law that establishes it.\n\n"
-    )
+    title = _rst_heading(_rst_escape(_text("chrome.index_title", language)), "=")
+    intro = _rst_escape(_text("chrome.index_intro", language)) + "\n\n"
     lines = [".. toctree::", "   :maxdepth: 1", ""]
     for page in pages:
         overview = schema.modelos.get(page.modelo)
@@ -957,9 +901,9 @@ def render_casilla_reference(
         A :class:`CasillaReferenceResult` with one :class:`CasillaPage` per
         modelo, the index page path, and the render counts.
     """
-    links = _legal_links(repo_root.resolve())
-    resolved = records if records is not None else project_casilla_search_records()[0]
     resolved_language = language if language is not None else _display_language()
+    links = _legal_links(repo_root.resolve(), resolved_language)
+    resolved = records if records is not None else project_casilla_search_records()[0]
     resolved_schema = schema if schema is not None else compile_schema(resolved, resolved_language)
 
     by_modelo: OrderedDict[str, list[CasillaSearchRecord]] = OrderedDict()
@@ -1012,7 +956,7 @@ def generate_casilla_reference(docs_root: Path) -> CasillaReferenceResult:
     result = render_casilla_reference(repo_root, records=records, language=language, schema=schema)
     out_dir = docs_root / CASILLA_REFERENCE_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
-    _write_if_changed(out_dir / "index.rst", _render_index(result.pages, schema))
+    _write_if_changed(out_dir / "index.rst", _render_index(result.pages, schema, language))
     for page in result.pages:
         _write_if_changed(docs_root / page.output_relpath, page.rst)
     return result

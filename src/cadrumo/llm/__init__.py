@@ -52,7 +52,10 @@ if TYPE_CHECKING:
         build_text_field_extraction_prompt,
         extract_invoice_fields_from_text,
     )
-    from ._evidence_draft_vision import extract_invoice_fields_from_images
+    from ._evidence_draft_vision import (
+        LocalVisionDocumentTranscriber,
+        transcribe_document_images,
+    )
     from ._suggestions import (
         ExtractionPayload,
         ExtractionProducer,
@@ -150,6 +153,7 @@ __all__ = [
     "PromptRegistry",
     "RejectedRoleProposal",
     "SemanticColumnRoleMapper",
+    "LocalVisionDocumentTranscriber",
     "TextInvoiceFieldExtractor",
     "Translation",
     "UnknownColumnClaim",
@@ -158,7 +162,6 @@ __all__ = [
     "build_column_role_mapping_prompt",
     "build_text_field_extraction_prompt",
     "cloud_evidence_read_permitted",
-    "extract_invoice_fields_from_images",
     "extract_invoice_fields_from_text",
     "map_column_roles",
     "mint_evidence_consent_token",
@@ -166,6 +169,7 @@ __all__ = [
     "permitted_column_roles",
     "rasterise_pdf_pages_to_base64_png",
     "select_retention_removal_keys",
+    "transcribe_document_images",
 ]
 
 
@@ -188,6 +192,21 @@ They live HERE rather than in the ledger because every LLM definition belongs
 to this package; the ledger consumes them. Lazy because the DTO module reaches
 back into ``application.ledger`` for one result type, so an eager binding would
 close the loop at import time.
+"""
+
+
+_VISION_TRANSCRIPTION_EXPORTS = frozenset(
+    {
+        "LocalVisionDocumentTranscriber",
+        "transcribe_document_images",
+    }
+)
+"""Vision transcription surface resolved lazily from :mod:`._evidence_draft_vision`.
+
+Lazy for the reason the text reader beside it is: the module imports
+``application.ledger`` for the transcription shape it returns, while the
+ledger's own paths import this package, so an eager binding would close that
+loop at import time.
 """
 
 
@@ -226,10 +245,10 @@ def __getattr__(name: str) -> object:
         from ._vision_classifier import LocalVisionLLMClassifier
 
         return LocalVisionLLMClassifier
-    if name == "extract_invoice_fields_from_images":
-        from ._evidence_draft_vision import extract_invoice_fields_from_images
+    if name in _VISION_TRANSCRIPTION_EXPORTS:
+        from . import _evidence_draft_vision
 
-        return extract_invoice_fields_from_images
+        return getattr(_evidence_draft_vision, name)
     if name in _TEXT_EXTRACTION_EXPORTS:
         from . import _evidence_draft_text
 

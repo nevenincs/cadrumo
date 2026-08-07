@@ -5168,6 +5168,50 @@ core:
         code in text form.
       registration_duplicate_callable: Project answers implementation registered twice
         with different callables; it must be registered exactly once.
+docs:
+  glossary:
+    entry:
+      broader: Broader term
+      domain: Domain
+      legal_basis: Legal basis
+      related: Related
+      undefined: No definition is available in this language yet.
+    intro: Spanish tax terms used across the documentation. Each term links to its
+      legal basis where one applies. Look a term up; the definition is the same wherever
+      the term is referenced.
+    title: Glossary
+  legal:
+    index:
+      intro: The Spanish leyes, reales decretos and órdenes ministeriales that Cadrumo's
+        calculations are grounded in. Each page lists the provisions cited from one
+        text and links every one of them to its official wording in the BOE.
+      title: Legal reference
+    page:
+      intro: Published in the Boletín Oficial del Estado as {document}. Cadrumo's
+        calculations cite {count} provisions of this text; each one links below to
+        its official wording in the BOE.
+    provision:
+      boe_is_official: The consolidated text in the Boletín Oficial del Estado is
+        the official wording.
+      in_force_between: In force from {start} to {end}
+      in_force_from: In force from {start}
+      in_force_until: In force until {end}
+      official_wording: Official text, in extract (in Spanish)
+      published: published on {date}
+      read_on_boe: Read {citation} in the BOE
+    record:
+      authority: Authority
+      boe_document: BOE document
+      bundled_corpus: Bundled corpus
+      catalogue_id: Catalogue identifier
+      consolidated_as_of: Consolidated as of
+      evidence_tier: Evidence tier
+      instrument_kind: Kind of instrument
+      note: Cataloguer's note
+      review_status: Review status
+      reviewed_at: Date reviewed
+      reviewed_by: Reviewed by
+      title: Catalogue record
 entries:
   portal_calendario_contribuyente:
     label: Taxpayer Calendar
@@ -6684,6 +6728,120 @@ mcp:
       the warm in-process runtime was {reason}; the result is identical, only slower.
       Warm serving resumes once the slow call clears.'
 modelo:
+  display:
+    binding_source:
+      atribucion_member: from the atribución de rentas members you recorded
+      bienes_inversion_regularizacion: from your bienes de inversión regularisation
+      borrador: from the AEAT borrador
+      collectible_invoice: from the invoices you issued
+      donativo_donor: from the donativo donor records
+      foreign_asset: from your foreign-asset records
+      iva_compensation_annual_partition: from the IVA compensación carried across
+        the year
+      iva_wallet_decision: from your IVA compensación decision
+      ledger_impatriado_income_aggregation: from your ledger income under the impatriado
+        regime
+      ledger_irnr_income_aggregation: from your ledger IRNR income
+      ledger_iva_aggregation: from your IVA ledger entries
+      ledger_oss_aggregation: from your OSS ledger entries
+      ledger_renta_gastos_estimacion_directa_aggregation: from your ledger expenses
+        under estimación directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: from your ledger expenses
+        for the pago fraccionado
+      ledger_renta_income_aggregation: from your ledger income
+      ledger_transaction: from your ledger transactions
+      manual_input: from a value you supply
+      payable_invoice: from the invoices you received
+      previous_filing: from your previous filing
+      profile: from your taxpayer profile
+      prorrata_regularizacion: from your prorrata regularisation
+      purchase_invoice_evidence: from your purchase-invoice evidence
+      refund_operation: from your refund operations
+      related_party_operation: from your related-party operations
+      relation_prefill: from a related modelo's result
+      retenciones_aggregation: from the retenciones you recorded
+      withholding: from the withholdings you recorded
+    cadence:
+      ad_hoc: Filed when the event occurs
+      annual: Filed annually
+      monthly: Filed monthly
+      profile_based: Filed when your profile requires it
+      quarterly: Filed quarterly
+    chrome:
+      alternative_join: ', or'
+      binding: Binding
+      casilla_count: '{casillas} casillas in {sections} sections'
+      casilla_id: Casilla id
+      derived_from: from
+      established_by: Established by
+      formula: Formula
+      general_section: General
+      index_intro: One page per modelo. Every casilla says how it is filled (you enter
+        it, it is calculated from other boxes, or it is filled from your records),
+        where it sits on the official form, and the law that establishes it.
+      index_title: Casilla reference
+      legal_basis: Legal basis
+      list_and: and
+      not_on_official_form: Not on the official form
+      record_design_number: Record-design number
+      registry_identifiers: Registry identifiers
+      registry_section: Registry section
+      required: Required
+      revisions: Revisions
+      sections_nav: Sections of this modelo
+      segmento: Segmento {segmento}
+      semantic_role: Semantic role
+      sources: Sources
+    data_type:
+      bic: BIC
+      boolean: Yes or no
+      ccaa_code: Autonomous-community code
+      country_code: Country code
+      date: Date
+      decimal: Decimal number
+      iban: IBAN
+      integer: Whole number
+      money: Amount in euros
+      municipality_code: Municipality code
+      name: Name
+      nif: NIF
+      nif_iva: VAT-registered NIF
+      period_code: Period
+      postal_code: Postcode
+      province_code: Province code
+      ratio: Percentage
+      text: Text
+      year: Year
+    input_kind:
+      bound: Filled automatically
+      computed: Calculated for you
+      informational: Reference only
+      manual: You enter this
+    input_kind_count:
+      bound: filled from your records
+      computed: calculated
+      informational: reference only
+      manual: you enter
+    legal_kind:
+      dictionary: AEAT data dictionary
+      form_spec: Official AEAT form
+      instruction: AEAT instructions
+      instructions: AEAT instructions
+      manual_pdf: AEAT manual
+      record_design: AEAT record design
+      suppression_notice: AEAT notice
+      xsd: AEAT XSD schema
+    length:
+      at_least: At least {min} characters
+      at_most: Up to {max} characters
+      between: '{min} to {max} characters'
+    value_enum: 'One of: {values}'
+    value_range:
+      at_least: At least {min}
+      at_most: At most {max}
+      between: Between {min} and {max}
+      non_negative: Zero or more
+      non_positive: Zero or less
   schema:
     '036':
       field:

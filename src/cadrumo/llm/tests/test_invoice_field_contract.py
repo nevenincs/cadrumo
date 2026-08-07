@@ -48,6 +48,7 @@ from .._invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
     InvoiceFieldForm,
     anchor_key_for_field,
+    role_evidence_key_for_field,
 )
 from .._invoice_field_grounding import (
     _NUMERIC_GROUNDING_BY_FORM,
@@ -346,7 +347,16 @@ class TestContractParityAcrossBothDerivations:
         assert json.loads(as_json) == dict.fromkeys(
             key
             for contract in INVOICE_FIELD_CONTRACTS
-            for key in (contract.field_name, anchor_key_for_field(contract.field_name))
+            for key in (
+                contract.field_name,
+                anchor_key_for_field(contract.field_name),
+                # Present on exactly the identity fields, derived from the same
+                # declaration the prompt renders from. A key asked for but not
+                # declared, or declared but not asked for, fails here rather
+                # than arriving as an unrecognised key the parser rejects at
+                # read time -- when a real document is in the operator's hands.
+                *((role_evidence_key_for_field(contract.field_name),) if contract.carries_role_evidence else ()),
+            )
         )
 
     def test_every_declared_form_has_exactly_one_grounding_validator(self) -> None:

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import Declaracion
+from ....adapters.outbound.aeat.sede import Declaracion, SedeParseError
 from ....core import Period
 from .. import (
     BulkFiledDataCaptureReport,
@@ -163,3 +163,38 @@ def test_bulk_listing_reports_registry_unsupported_modelos_as_local_boundaries()
     assert failures["721"].year == 2024
     assert failures["721"].error_type == "LiveApplicationInputError"
     assert "does not offer modelo '721'" in failures["721"].message
+
+
+def test_truncated_register_read_reuses_the_per_pair_failure_taxonomy() -> None:
+    """A refused short register read becomes an ordinary per-pair failure row, not a new channel.
+
+    The bulk sweep's walk arm folds any walk exception into a
+    :class:`FiledDataCaptureFailureRow` and moves to the next pair, so a
+    register read that refuses because the grid declared more records than it
+    rendered needs no bulk-level mechanism of its own -- it only needs to be a
+    plain exception the arm already catches, mapped with its type and its
+    operator-facing reason intact. Both halves are asserted here: that the
+    refusal is catchable by that arm at all, and that nothing about it is lost
+    on the way into the report -- the row's message is length-bounded, so a
+    refusal wording that pushed its counts past the bound would arrive with the
+    only actionable part cut off.
+    """
+    assert issubclass(SedeParseError, Exception), "the bulk walk arm catches Exception; a refusal outside it escapes"
+
+    refusal = SedeParseError(
+        "declaraciones register modelo 100 ejercicio 2026 rendered 3 row(s) but its pager "
+        "declares 8 in total; refusing an under-reported filing history",
+        context={"modelo": "100", "ejercicio": 2026, "rendered_count": 3, "declared_total": 8},
+    )
+
+    row = filed_data_capture_failure_row(modelo="100", year=2026, error=refusal)
+
+    assert row.modelo == "100"
+    assert row.year == 2026
+    assert row.period is None
+    assert row.expediente_id is None
+    assert row.error_type == "SedeParseError"
+    assert "rendered 3 row(s)" in row.message
+    assert "declares 8 in total" in row.message
+    assert "under-reported filing history" in row.message
+    assert not row.message.endswith("…"), "the refusal wording overran the row's message bound and lost its tail"

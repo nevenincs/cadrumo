@@ -1,4 +1,4 @@
-"""Real-behaviour tests for the on-host vision fallback invoice-field extractor.
+"""Real-behaviour tests for the on-host vision TRANSCRIBER and the shared grounding it feeds.
 
 Covers the parsing/grounding primitives directly (adversarial JSON, hallucinated
 tax ids, unparsable dates/amounts) and the full transport against a real loopback
@@ -6,8 +6,14 @@ Ollama HTTP server (no mocks) -- exactly the harness
 ``_llm_vision_evidence_support._run_against_loopback_ollama`` already uses for the
 classification vision path.
 
+The vision reader's own tests assert what it must NOT do as much as what it
+does. It is stage one: pixels to text. A test proving it returns fields would be
+proving the collapse this refit removed, so the assertions here are that it
+emits a transcription, that its prompt names no invoice field, and that its
+module reaches no field-grounding symbol at all.
+
 See Also:
-    :class:`~llm._evidence_draft_vision.LocalVisionInvoiceFieldExtractor`
+    :class:`~llm._evidence_draft_vision.LocalVisionDocumentTranscriber`
         On-host Ollama transport exercised through the loopback server.
     :func:`~llm._invoice_field_grounding.parse_invoice_extraction_response`
         JSON-object recovery and strict schema boundary covered by adversarial
@@ -22,14 +28,17 @@ See Also:
 
 from __future__ import annotations
 
+import ast
 import base64
+import importlib
 import json
+import pathlib
 import re
 from decimal import Decimal
 
 import pytest
 
-from ...application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
+from ...application.ledger import DocumentTranscription, PurchaseInvoiceEvidenceInputError
 from ...application.ledger.tests._llm_vision_evidence_support import (
     _json_array,
     _json_object,
@@ -42,15 +51,17 @@ from ...core.config import load_settings
 from ...core.decimal import coerce_finite_european_decimal
 from ...tests.secure_sql import TestRuntimeProfile
 from .._evidence_draft_vision import (
-    LocalVisionInvoiceFieldExtractor,
-    extract_invoice_fields_from_images,
+    VISION_TRANSCRIPTION_PROMPT,
+    LocalVisionDocumentTranscriber,
+    transcribe_document_images,
 )
 from .._invoice_extraction_prompt import build_invoice_extraction_prompt, default_extraction_period
-from .._invoice_field_contract import anchor_key_for_field
+from .._invoice_field_contract import anchor_key_for_field, role_evidence_key_for_field
 from .._invoice_field_grounding import (
     ExtractedFieldAnchors,
     ExtractedInvoiceFields,
     ExtractedInvoiceResponse,
+    ExtractedRoleEvidence,
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
@@ -62,6 +73,19 @@ __all__ = ["profile"]
 # A real Spanish CIF (AEAT-checksum-valid: leading letter B, 7 digits, computed
 # control character), mirroring the fixture used by the text-layer draft tests.
 _SUPPLIER_CIF = "B12345674"
+
+#: Content address of the SOURCE bytes a transcription is keyed by.
+_SOURCE_SHA = "b" * 64
+
+#: A page as a transcription-only reader returns it: printed forms intact,
+#: headings kept, no JSON and no field names.
+_TRANSCRIBED_PAGE = """FACTURA 2026-0142
+Proveedor: EJEMPLO SL B12345674
+Fecha: 10/03/2026
+Base imponible 100,00 EUR
+IVA (21%) 21,00 EUR
+TOTAL 121,00 EUR
+"""
 
 
 def _extraction_json(**overrides: str | None) -> str:
@@ -251,26 +275,28 @@ class TestGroundExtractedFields:
         assert draft.currency is None
 
 
-class TestLocalVisionInvoiceFieldExtractor:
+class TestLocalVisionDocumentTranscriber:
     """Real-behaviour tests against a loopback Ollama HTTP server. No mocks."""
 
-    def test_extracts_grounded_fields_from_a_real_vision_response(self, profile: TestRuntimeProfile) -> None:
+    def test_transcribes_a_real_vision_response_into_the_stage_one_artefact(
+        self,
+        profile: TestRuntimeProfile,
+    ) -> None:
+        """Text in, text out, stamped with the reader that produced it."""
         _ = profile
         images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
 
-        def _call() -> InvoiceDraft:
-            extractor = LocalVisionInvoiceFieldExtractor(model="qwen-test")
-            return extractor.extract(evidence_images=images)
+        def _call() -> DocumentTranscription:
+            transcriber = LocalVisionDocumentTranscriber(model="qwen-test")
+            return transcriber.transcribe(evidence_images=images, source_content_sha256=_SOURCE_SHA)
 
-        observed, draft = _run_against_loopback_ollama(_extraction_json(), _call)
+        observed, transcription = _run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
 
-        assert draft.supplier_tax_id == _SUPPLIER_CIF
-        assert draft.invoice_number == "2026-0142"
-        assert draft.invoice_date == "2026-03-10"
-        assert draft.taxable_base == 100
-        assert draft.iva_rate == 21
-        assert draft.iva_amount == 21
-        assert draft.grand_total == 121
+        assert transcription.text == _TRANSCRIBED_PAGE.strip()
+        assert transcription.page_count == 1
+        assert transcription.source_content_sha256 == _SOURCE_SHA
+        assert transcription.transcriber.origin is FieldOrigin.VISION
+        assert "qwen-test" in transcription.transcriber.name
 
         # The base64 image genuinely rode the Ollama request payload.
         body = _json_object(observed["body"])
@@ -278,35 +304,126 @@ class TestLocalVisionInvoiceFieldExtractor:
         user_message = _json_object(messages[-1])
         assert user_message["images"] == [image.base64_data for image in images]
 
-    def test_decided_by_names_the_model(self) -> None:
-        """The transport and model halves survive the rate-provenance extension."""
-        extractor = LocalVisionInvoiceFieldExtractor(model="qwen2.5vl:3b", settings=load_settings())
-        assert extractor.decided_by.startswith("llm:local-vision:qwen2.5vl:3b:")
+    def test_the_prompt_that_rode_the_request_asks_for_no_invoice_field(
+        self,
+        profile: TestRuntimeProfile,
+    ) -> None:
+        """Stage one must not be told what to look for.
 
-    def test_partial_fields_ground_and_missing_fields_stay_none(self, profile: TestRuntimeProfile) -> None:
-        """A real vision response that only reads some fields never fabricates the rest."""
+        Asserted on the payload that actually left the process rather than on
+        the constant, because the constant proves what was written and this
+        proves what was sent. A model handed field names finds them, and a
+        transcription steered toward an expected answer is no longer an
+        independent reading for the anchor check to run against.
+        """
         _ = profile
         images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
-        partial = json.dumps(
-            {
-                "supplier_tax_id": None,
-                "invoice_number": None,
-                "invoice_date": None,
-                "taxable_base": "250,00",
-                "iva_rate": None,
-                "iva_amount": None,
-                "grand_total": "250,00",
-            },
+
+        def _call() -> DocumentTranscription:
+            return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
+
+        observed, _transcription = _run_against_loopback_ollama(_TRANSCRIBED_PAGE, _call)
+        sent = observed["body"]
+
+        for field_name in ExtractedInvoiceFields.model_fields:
+            assert field_name not in sent, f"the transcription prompt names the invoice field {field_name!r}"
+        assert anchor_key_for_field("taxable_base") not in sent
+
+    def test_an_empty_model_reply_refuses_rather_than_reporting_a_blank_document(
+        self,
+        profile: TestRuntimeProfile,
+    ) -> None:
+        """A reader that returned nothing is not a document that says nothing.
+
+        Passing an empty transcription on would hand the semantic stage a
+        document it would honestly report as carrying no fields, converting a
+        reader failure into a confident statement about the taxpayer's paper.
+        """
+        _ = profile
+        images = (MultimodalImageInput.from_base64(base64.b64encode(_png_image()).decode("ascii"), ImageMediaType.PNG),)
+
+        def _call() -> DocumentTranscription:
+            return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
+
+        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="returned no text"):
+            _run_against_loopback_ollama("   \n  ", _call)
+
+    def test_no_pages_refuses_without_dispatching(self) -> None:
+        """Model-free: an empty page tuple is caught before any transport."""
+        transcriber = LocalVisionDocumentTranscriber(model="qwen-test", settings=load_settings())
+
+        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no pages"):
+            transcriber.transcribe(evidence_images=(), source_content_sha256=_SOURCE_SHA)
+
+    def test_the_transcriber_identity_folds_the_prompt_version(self) -> None:
+        """Two prompts are two readings of the same pixels, so the cache must tell them apart."""
+        transcriber = LocalVisionDocumentTranscriber(model="qwen2.5vl:3b", settings=load_settings())
+        identity = transcriber.transcriber_identity
+
+        assert identity.origin is FieldOrigin.VISION
+        assert identity.name.endswith("qwen2.5vl:3b")
+        assert identity.revision.startswith("prompt-v")
+
+
+class TestTheVisionStageInterpretsNothing:
+    """Stage one performs NO field interpretation, asserted structurally and model-free."""
+
+    def test_the_transcription_module_reaches_no_field_grounding_symbol(self) -> None:
+        """Walk the module's AST for any name the interpretation stage owns.
+
+        AST rather than a substring scan of the source: this module's own prose
+        discusses the interpretation stage it no longer performs, so a text
+        search would match its docstring and report a violation that is not
+        there -- and, tuned to avoid that, would just as easily miss a real one.
+        The walk sees imported and referenced NAMES, never prose.
+        """
+        module = importlib.import_module("cadrumo.llm._evidence_draft_vision")
+        source = pathlib.Path(str(module.__file__)).read_text(encoding="utf-8")
+        tree = ast.parse(source)
+
+        forbidden = {
+            "ground_extracted_fields",
+            "parse_invoice_extraction_response",
+            "ExtractedInvoiceResponse",
+            "ExtractedInvoiceFields",
+            "INVOICE_FIELD_CONTRACTS",
+            "build_invoice_extraction_prompt",
+            "InvoiceDraft",
+        }
+        referenced = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        referenced |= {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                referenced |= {alias.name for alias in node.names}
+
+        offending = sorted(forbidden & referenced)
+        assert not offending, (
+            "the vision stage must transcribe and interpret nothing; it reaches the field-"
+            f"interpretation symbols {offending}"
         )
 
-        def _call() -> InvoiceDraft:
-            return extract_invoice_fields_from_images(images, model="qwen-test")
+    def test_the_transcription_prompt_names_no_field_and_asks_for_no_json(self) -> None:
+        """Model-free property of the prompt constant itself."""
+        for field_name in ExtractedInvoiceFields.model_fields:
+            assert field_name not in VISION_TRANSCRIPTION_PROMPT
 
-        _observed, draft = _run_against_loopback_ollama(partial, _call)
-        assert draft.taxable_base == 250
-        assert draft.grand_total == 250
-        assert draft.supplier_tax_id is None
-        assert draft.invoice_number is None
+        assert "JSON" not in VISION_TRANSCRIPTION_PROMPT
+        assert "{" not in VISION_TRANSCRIPTION_PROMPT
+
+    def test_the_transcription_prompt_demands_verbatim_printed_forms(self) -> None:
+        """The rules the downstream anchor check depends on are actually stated.
+
+        Each of these protects a specific downstream property: verbatim
+        characters keep the anchor searchable, unmodified numbers keep the
+        printed separator that decides a decimal reading, headings keep the role
+        evidence an identity resolves on, and the illegible marker keeps an
+        unreadable glyph from being replaced by a plausible one that would
+        anchor perfectly against itself.
+        """
+        assert "EXACTLY as printed" in VISION_TRANSCRIPTION_PROMPT
+        assert "Do not convert, round, reformat or normalise" in VISION_TRANSCRIPTION_PROMPT
+        assert "Keep every heading and label" in VISION_TRANSCRIPTION_PROMPT
+        assert "[?]" in VISION_TRANSCRIPTION_PROMPT
 
 
 class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
@@ -404,7 +521,18 @@ class TestFieldExtractionPromptShowsWellFormedJson:
         assert json.loads(skeleton) == dict.fromkeys(
             key
             for field_name in ExtractedInvoiceFields.model_fields
-            for key in (field_name, anchor_key_for_field(field_name))
+            for key in (
+                field_name,
+                anchor_key_for_field(field_name),
+                # An identity field is asked a third question -- what assigns
+                # it to a party -- because two identifiers on one invoice have
+                # the same printed shape and an anchor cannot tell them apart.
+                *(
+                    (role_evidence_key_for_field(field_name),)
+                    if field_name in ExtractedRoleEvidence.model_fields
+                    else ()
+                ),
+            )
         )
 
     def test_prompt_carries_no_doubled_brace(self) -> None:

@@ -5518,6 +5518,50 @@ core:
       registration_duplicate_callable: La implementació de respostes del projecte
         s'ha registrat dues vegades amb invocables distintos; s'ha de registrar exactament
         una vegada.
+docs:
+  glossary:
+    entry:
+      broader: Terme genèric
+      domain: Àmbit
+      legal_basis: Base legal
+      related: Relacionat
+      undefined: Encara no hi ha cap definició disponible en aquesta llengua.
+    intro: Termes fiscals espanyols utilitzats a la documentació. Cada terme enllaça
+      amb la seva base legal quan n'hi ha. Cerqueu un terme; la definició és la mateixa
+      allà on s'hi faci referència.
+    title: Glossari
+  legal:
+    index:
+      intro: Les lleis, reials decrets i ordres ministerials espanyoles en què es
+        fonamenten els càlculs de Cadrumo. Cada pàgina recull les disposicions citades
+        d'un text i enllaça cadascuna amb la seva redacció oficial al BOE.
+      title: Referència legal
+    page:
+      intro: Publicat al Butlletí Oficial de l'Estat com a {document}. Els càlculs
+        de Cadrumo citen {count} disposicions d'aquest text; cadascuna enllaça més
+        avall amb la seva redacció oficial al BOE.
+    provision:
+      boe_is_official: El text consolidat del Butlletí Oficial de l'Estat és la redacció
+        oficial.
+      in_force_between: En vigor des de {start} fins a {end}
+      in_force_from: En vigor des de {start}
+      in_force_until: En vigor fins a {end}
+      official_wording: Text oficial, en extracte (en espanyol)
+      published: publicat el {date}
+      read_on_boe: Llegir {citation} al BOE
+    record:
+      authority: Autoritat
+      boe_document: Document del BOE
+      bundled_corpus: Corpus inclòs
+      catalogue_id: Identificador del catàleg
+      consolidated_as_of: Consolidat a data de
+      evidence_tier: Nivell d'evidència
+      instrument_kind: Tipus de norma
+      note: Nota del catalogador
+      review_status: Estat de revisió
+      reviewed_at: Data de revisió
+      reviewed_by: Revisat per
+      title: Fitxa del catàleg
 entries:
   portal_calendario_contribuyente:
     label: Calendari del contribuent
@@ -7132,6 +7176,118 @@ mcp:
       runtime en calent estava {reason}; el resultat és idèntic, només més lent. El
       servei en calent es reprèn quan s''allibera la crida lenta.'
 modelo:
+  display:
+    binding_source:
+      atribucion_member: des dels membres en atribució de rendes
+      bienes_inversion_regularizacion: des de la regularització de béns d'inversió
+      borrador: des de l'esborrany de l'AEAT
+      collectible_invoice: des de les factures emeses
+      donativo_donor: des dels donants registrats
+      foreign_asset: des dels seus béns a l'estranger
+      iva_compensation_annual_partition: des de la compensació d'IVA de l'exercici
+      iva_wallet_decision: des de la seva decisió de compensació d'IVA
+      ledger_impatriado_income_aggregation: des dels seus ingressos del règim d'impatriats
+      ledger_irnr_income_aggregation: des dels seus ingressos d'IRNR
+      ledger_iva_aggregation: des dels seus apunts d'IVA
+      ledger_oss_aggregation: des dels seus apunts d'OSS
+      ledger_renta_gastos_estimacion_directa_aggregation: des de les seves despeses
+        en estimació directa
+      ledger_renta_gastos_pago_fraccionado_aggregation: des de les seves despeses
+        del pagament fraccionat
+      ledger_renta_income_aggregation: des dels seus ingressos registrats
+      ledger_transaction: des dels seus moviments registrats
+      manual_input: des d'un valor que vostè aporta
+      payable_invoice: des de les factures rebudes
+      previous_filing: des de la seva declaració anterior
+      profile: des del seu perfil de contribuent
+      prorrata_regularizacion: des de la regularització de prorrata
+      purchase_invoice_evidence: des dels justificants de les seves factures de compra
+      refund_operation: des de les seves operacions de devolució
+      related_party_operation: des de les seves operacions vinculades
+      relation_prefill: des del resultat d'un model relacionat
+      retenciones_aggregation: des de les retencions registrades
+      withholding: des de les retencions suportades
+    cadence:
+      ad_hoc: Es presenta quan es produeix el fet
+      annual: Es presenta anualment
+      monthly: Es presenta mensualment
+      profile_based: Es presenta segons el seu perfil
+      quarterly: Es presenta trimestralment
+    chrome:
+      alternative_join: ', o'
+      binding: Vincle de dades
+      casilla_count: '{casillas} caselles en {sections} seccions'
+      casilla_id: Identificador de casella
+      derived_from: a partir de
+      established_by: Establert per
+      formula: Fórmula
+      general_section: General
+      index_intro: Una pàgina per model. Cada casella indica com s'omple (la introdueix
+        vostè, es calcula a partir d'altres caselles o s'omple des dels seus registres),
+        on figura en el model oficial i quina norma l'estableix.
+      index_title: Referència de caselles
+      legal_basis: Base legal
+      list_and: i
+      not_on_official_form: No figura en el model oficial
+      record_design_number: Número del disseny de registre
+      registry_identifiers: Identificadors del registre
+      registry_section: Secció del registre
+      required: Obligatòria
+      revisions: Revisions
+      sections_nav: Seccions d'aquest model
+      segmento: Segment {segmento}
+      semantic_role: Rol semàntic
+      sources: Fonts
+    data_type:
+      bic: BIC
+      boolean: Sí o no
+      ccaa_code: Codi de comunitat autònoma
+      country_code: Codi de país
+      date: Data
+      decimal: Nombre decimal
+      iban: IBAN
+      integer: Nombre enter
+      money: Import en euros
+      municipality_code: Codi de municipi
+      name: Nom
+      nif: NIF
+      nif_iva: NIF-IVA
+      period_code: Període
+      postal_code: Codi postal
+      province_code: Codi de província
+      ratio: Percentatge
+      text: Text
+      year: Exercici
+    input_kind:
+      bound: S'omple automàticament
+      computed: Es calcula automàticament
+      informational: Només informativa
+      manual: Ho introdueix vostè
+    input_kind_count:
+      bound: omplertes des dels seus registres
+      computed: calculades
+      informational: només informatives
+      manual: que introdueix vostè
+    legal_kind:
+      dictionary: Diccionari de dades de l'AEAT
+      form_spec: Model oficial de l'AEAT
+      instruction: Instruccions de l'AEAT
+      instructions: Instruccions de l'AEAT
+      manual_pdf: Manual de l'AEAT
+      record_design: Disseny de registre de l'AEAT
+      suppression_notice: Nota de l'AEAT
+      xsd: Esquema XSD de l'AEAT
+    length:
+      at_least: Com a mínim {min} caràcters
+      at_most: Com a màxim {max} caràcters
+      between: De {min} a {max} caràcters
+    value_enum: 'Un de: {values}'
+    value_range:
+      at_least: Com a mínim {min}
+      at_most: Com a màxim {max}
+      between: Entre {min} i {max}
+      non_negative: Zero o més
+      non_positive: Zero o menys
   schema:
     '036':
       field:

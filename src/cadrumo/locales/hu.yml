@@ -5476,6 +5476,51 @@ core:
         lennie szöveges formában.
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
+docs:
+  glossary:
+    entry:
+      broader: Tágabb fogalom
+      domain: Terület
+      legal_basis: Jogalap
+      related: Kapcsolódó
+      undefined: Ezen a nyelven még nincs elérhető meghatározás.
+    intro: A dokumentációban használt spanyol adózási szakkifejezések. Minden kifejezés
+      a jogalapjára mutat, ha van ilyen. Keressen rá egy kifejezésre; a meghatározás
+      mindenütt ugyanaz, ahol a kifejezés előfordul.
+    title: Szójegyzék
+  legal:
+    index:
+      intro: Azok a spanyol törvények, királyi rendeletek és miniszteri rendeletek,
+        amelyeken a Cadrumo számításai alapulnak. Minden oldal egyetlen jogszabály
+        hivatkozott rendelkezéseit sorolja fel, és mindegyiket összekapcsolja a BOE-ban
+        közzétett hivatalos szöveggel.
+      title: Jogszabályi hivatkozások
+    page:
+      intro: A Boletín Oficial del Estado hivatalos lapban {document} számon jelent
+        meg. A Cadrumo számításai e jogszabály {count} rendelkezésére hivatkoznak;
+        mindegyik alább a BOE hivatalos szövegére mutat.
+    provision:
+      boe_is_official: A Boletín Oficial del Estado egységes szerkezetbe foglalt szövege
+        a hivatalos szöveg.
+      in_force_between: Hatályos {start} és {end} között
+      in_force_from: 'Hatályos ettől: {start}'
+      in_force_until: 'Hatályos eddig: {end}'
+      official_wording: Hivatalos szöveg, részlet (spanyolul)
+      published: 'közzétéve: {date}'
+      read_on_boe: '{citation} elolvasása a BOE-ban'
+    record:
+      authority: Kibocsátó hatóság
+      boe_document: BOE-dokumentum
+      bundled_corpus: Mellékelt korpusz
+      catalogue_id: Katalógusazonosító
+      consolidated_as_of: Egységes szerkezet dátuma
+      evidence_tier: Bizonyítéki szint
+      instrument_kind: Jogszabály típusa
+      note: Katalogizáló megjegyzése
+      review_status: Ellenőrzés állapota
+      reviewed_at: Ellenőrzés dátuma
+      reviewed_by: Ellenőrizte
+      title: Katalógusbejegyzés
 entries:
   portal_calendario_contribuyente:
     label: Adófizetői naptár
@@ -7028,6 +7073,118 @@ mcp:
       mert a meleg futtatókörnyezet {reason} volt; az eredmény azonos, csak lassabb.
       A meleg kiszolgálás folytatódik, amint a lassú hívás befejeződik.
 modelo:
+  display:
+    binding_source:
+      atribucion_member: az atribución de rentas tagjaiból
+      bienes_inversion_regularizacion: a beruházási javak korrekciójából
+      borrador: az AEAT borrador tervezetéből
+      collectible_invoice: a kiállított számláiból
+      donativo_donor: a nyilvántartott adományozóiból
+      foreign_asset: a külföldi vagyonelemeiből
+      iva_compensation_annual_partition: az adóév IVA-kompenzációjából
+      iva_wallet_decision: az IVA-kompenzációs döntéséből
+      ledger_impatriado_income_aggregation: az impatriado-rendszer szerinti bevételeiből
+      ledger_irnr_income_aggregation: az IRNR-bevételeiből
+      ledger_iva_aggregation: az IVA-tételeiből
+      ledger_oss_aggregation: az OSS-tételeiből
+      ledger_renta_gastos_estimacion_directa_aggregation: a közvetlen megállapítás
+        szerinti költségeiből
+      ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
+      ledger_renta_income_aggregation: a nyilvántartott bevételeiből
+      ledger_transaction: a nyilvántartott tételeiből
+      manual_input: az Ön által megadott értékből
+      payable_invoice: a befogadott számláiból
+      previous_filing: a korábbi bevallásából
+      profile: az adózói profiljából
+      prorrata_regularizacion: az arányosítás korrekciójából
+      purchase_invoice_evidence: a beszerzési számlák bizonylataiból
+      refund_operation: a visszatérítési ügyleteiből
+      related_party_operation: a kapcsolt ügyleteiből
+      relation_prefill: egy kapcsolódó modelo eredményéből
+      retenciones_aggregation: a nyilvántartott retenciones tételekből
+      withholding: a levont forrásadókból
+    cadence:
+      ad_hoc: Az esemény bekövetkezésekor benyújtandó
+      annual: Évente benyújtandó
+      monthly: Havonta benyújtandó
+      profile_based: A profilja szerint benyújtandó
+      quarterly: Negyedévente benyújtandó
+    chrome:
+      alternative_join: ', vagy'
+      binding: Adatkötés
+      casilla_count: '{casillas} casilla {sections} szakaszban'
+      casilla_id: Casilla-azonosító
+      derived_from: 'ebből:'
+      established_by: Jogszabályi alapja
+      formula: Képlet
+      general_section: Általános
+      index_intro: Modellónként egy oldal. Minden casilla megadja, hogyan töltődik
+        ki (Ön adja meg, más rovatokból számítjuk, vagy a nyilvántartásaiból töltjük
+        ki), hol szerepel a hivatalos nyomtatványon, és melyik jogszabály állapítja
+        meg.
+      index_title: Casilla-referencia
+      legal_basis: Jogalap
+      list_and: és
+      not_on_official_form: Nem szerepel a hivatalos nyomtatványon
+      record_design_number: Rekordterv szerinti szám
+      registry_identifiers: Nyilvántartási azonosítók
+      registry_section: Nyilvántartási szakasz
+      required: Kötelező
+      revisions: Változatok
+      sections_nav: A modelo szakaszai
+      segmento: '{segmento} szegmens'
+      semantic_role: Szemantikai szerep
+      sources: Források
+    data_type:
+      bic: BIC
+      boolean: Igen vagy nem
+      ccaa_code: Autonóm közösség kódja
+      country_code: Országkód
+      date: Dátum
+      decimal: Tizedes szám
+      iban: IBAN
+      integer: Egész szám
+      money: Összeg euróban
+      municipality_code: Településkód
+      name: Név
+      nif: NIF
+      nif_iva: Közösségi adószám (NIF-IVA)
+      period_code: Időszak
+      postal_code: Irányítószám
+      province_code: Provincia kódja
+      ratio: Százalék
+      text: Szöveg
+      year: Adóév
+    input_kind:
+      bound: Automatikusan kitöltve
+      computed: Automatikusan számítjuk
+      informational: Csak tájékoztató
+      manual: Ön adja meg
+    input_kind_count:
+      bound: a nyilvántartásaiból kitöltve
+      computed: számított
+      informational: csak tájékoztató
+      manual: amelyet Ön ad meg
+    legal_kind:
+      dictionary: AEAT-adatszótár
+      form_spec: Hivatalos AEAT-nyomtatvány
+      instruction: AEAT-útmutató
+      instructions: AEAT-útmutató
+      manual_pdf: AEAT-kézikönyv
+      record_design: AEAT-rekordterv
+      suppression_notice: AEAT-közlemény
+      xsd: AEAT XSD-séma
+    length:
+      at_least: Legalább {min} karakter
+      at_most: Legfeljebb {max} karakter
+      between: '{min} és {max} karakter között'
+    value_enum: 'Az alábbiak egyike: {values}'
+    value_range:
+      at_least: Legalább {min}
+      at_most: Legfeljebb {max}
+      between: '{min} és {max} között'
+      non_negative: Nulla vagy több
+      non_positive: Nulla vagy kevesebb
   schema:
     '036':
       field:

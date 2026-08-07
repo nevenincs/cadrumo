@@ -19,3 +19,16 @@ from typing import Final
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 SRC_DIR: Final[Path] = REPO_ROOT / "src" / "cadrumo"
 LOCALES_DIR: Final[Path] = SRC_DIR / "locales"
+
+#: Roots outside the package that legitimately reference catalogue keys.
+#:
+#: The documentation generators render taxpayer-facing prose -- the chrome
+#: around a casilla card, a legal provision and a glossary term -- so their
+#: strings are product text and belong in the one catalogue authority, not in a
+#: second store. They live under ``dev/`` only because the generators are build
+#: tooling, and a scan that stopped at the package would report every one of
+#: their keys as an extra key absent from the codebase.
+#:
+#: Scoped to ``dev/docs`` rather than ``dev``: the rest of the harness is
+#: developer-facing, and its strings have no business in a catalogue that ships.
+DOCS_SRC_DIR: Final[Path] = REPO_ROOT / "dev" / "docs"

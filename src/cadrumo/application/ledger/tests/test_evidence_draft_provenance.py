@@ -102,6 +102,10 @@ def _fully_populated_draft() -> InvoiceDraft:
                     FieldAmbiguityCandidate(value="B12345674", anchor="B-12345674", note="issuer block"),
                     FieldAmbiguityCandidate(value="X1234567L", anchor="X-1234567-L", note="footer block"),
                 ),
+                # Populated non-default so the projection gate exercises a real
+                # value rather than agreeing that two ``None``s match: a
+                # save-drops-field regression is invisible over a defaulted one.
+                role_evidence="Proveedor:",
                 note="two identifiers, neither uniquely role-evidenced",
             ),
             FieldProvenance(

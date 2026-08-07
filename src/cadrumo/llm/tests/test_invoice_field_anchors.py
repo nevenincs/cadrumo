@@ -57,6 +57,7 @@ from .._invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
     anchor_key_for_field,
+    role_evidence_key_for_field,
 )
 from .._invoice_field_grounding import (
     ExtractedFieldAnchors,
@@ -138,6 +139,15 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
     """The contract the model is held to must actually request the anchor."""
 
     def test_the_skeleton_asks_for_a_value_key_and_an_anchor_key_per_field(self) -> None:
+        """And a role-evidence key on exactly the fields whose contract declares one.
+
+        Derived from the contract rows rather than listed, so a new identity
+        field is covered the moment it is declared. Asserting the ORDER as well
+        as the set is deliberate: the three keys for one field must stay
+        adjacent, because the design target is a small model that pairs a value
+        with its anchor and its role evidence most reliably when they are
+        written together.
+        """
         text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
         skeleton = text[text.index("{") : text.rindex("}") + 1]
 
@@ -145,7 +155,11 @@ class TestThePromptAsksForEveryValueAndItsAnchor:
         expected = [
             key
             for contract in INVOICE_FIELD_CONTRACTS
-            for key in (contract.field_name, anchor_key_for_field(contract.field_name))
+            for key in (
+                contract.field_name,
+                anchor_key_for_field(contract.field_name),
+                *((role_evidence_key_for_field(contract.field_name),) if contract.carries_role_evidence else ()),
+            )
         ]
 
         assert list(json.loads(as_json)) == expected

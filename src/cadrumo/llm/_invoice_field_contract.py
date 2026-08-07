@@ -40,19 +40,22 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final
+from typing import Final, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..core import STRICT_FROZEN_CONFIG
 
 __all__ = [
     "ANCHOR_KEY_SUFFIX",
     "INVOICE_FIELD_CONTRACTS",
+    "ROLE_EVIDENCE_KEY_SUFFIX",
     "InvoiceFieldContract",
     "InvoiceFieldForm",
     "anchor_key_for_field",
     "contract_for_field",
+    "identity_field_names",
+    "role_evidence_key_for_field",
 ]
 
 ANCHOR_KEY_SUFFIX: Final[str] = "_anchor"
@@ -78,6 +81,39 @@ def anchor_key_for_field(field_name: str) -> str:
         The anchor key, e.g. ``"iva_rate_anchor"``.
     """
     return f"{field_name}{ANCHOR_KEY_SUFFIX}"
+
+
+ROLE_EVIDENCE_KEY_SUFFIX: Final[str] = "_role_evidence"
+"""Suffix naming an identity field's role-evidence key in the model's JSON response.
+
+Declared beside :data:`ANCHOR_KEY_SUFFIX` and for the same reason: the compiled
+prompt renders the key it asks for, the parser reads the key it receives, and a
+suffix spelled twice drifts silently, because a key the parser does not
+recognise is indistinguishable from a model that returned nothing.
+
+**This is a second anchor, not a second note.** An anchor answers *where on the
+page did this value come from*; role evidence answers *what on the page assigns
+that value to THIS party*. Both are printed excerpts, both are checked against
+the transcription, and neither is the reader's own account of what it did. That
+distinction is the whole point of the key existing: the reading stage previously
+manufactured ``"the reader assigned this identifier to supplier_tax_id"``, which
+is a restatement of the assignment rather than evidence for it, and being
+always truthy it permanently satisfied the guard that exists to refuse an
+unevidenced identity.
+"""
+
+
+def role_evidence_key_for_field(field_name: str) -> str:
+    """Return the JSON key carrying ``field_name``'s printed role evidence.
+
+    Args:
+        field_name: Attribute name of an identity field on
+            :class:`~llm._invoice_field_grounding.ExtractedInvoiceFields`.
+
+    Returns:
+        The role-evidence key, e.g. ``"supplier_tax_id_role_evidence"``.
+    """
+    return f"{field_name}{ROLE_EVIDENCE_KEY_SUFFIX}"
 
 
 class InvoiceFieldForm(StrEnum):
@@ -123,6 +159,10 @@ class InvoiceFieldContract(BaseModel):
         form_instruction: The per-field micro-guidance line rendered into the
             compiled prompt. Kept short: the design target is a lowest-bound
             vision model with a very small context budget.
+        role_evidence_instruction: How to answer "what on the page assigns this
+            value to THIS party". Present exactly on the identity fields and
+            absent everywhere else, which the validator below enforces in both
+            directions rather than leaving to the author.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -131,6 +171,39 @@ class InvoiceFieldContract(BaseModel):
     form: InvoiceFieldForm
     concept: str = Field(min_length=1)
     form_instruction: str = Field(min_length=1)
+    role_evidence_instruction: str | None = Field(default=None, min_length=1)
+
+    @property
+    def carries_role_evidence(self) -> bool:
+        """Whether this field is an identity field and so must evidence its role.
+
+        Derived from the declared FORM rather than from a hand-listed field set.
+        A tax identifier is the only kind of value on an invoice that names a
+        PARTY, so "which party is this" is a question only this form raises --
+        and deriving it means a fourth identity field added to the table asks
+        for role evidence by construction instead of by remembering.
+        """
+        return self.form is InvoiceFieldForm.TAX_IDENTIFIER
+
+    @model_validator(mode="after")
+    def _only_an_identity_field_evidences_a_role(self) -> Self:
+        """Tie the role-evidence instruction to the form that needs one.
+
+        Enforced in both directions. An identity field without the instruction
+        would be asked for an identifier and never for what assigns it to a
+        party, which is the exact gap that let a lone survivor be promoted; and
+        the instruction on a monetary or date field would ask a model to
+        evidence a role that value does not have, inviting it to invent one.
+        """
+        if self.carries_role_evidence and self.role_evidence_instruction is None:
+            raise ValueError(
+                f"{self.field_name!r} is an identity field, so it must declare how its role is evidenced",
+            )
+        if not self.carries_role_evidence and self.role_evidence_instruction is not None:
+            raise ValueError(
+                f"role evidence is only meaningful for an identity field; got form={self.form.value!r}",
+            )
+        return self
 
 
 INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
@@ -148,6 +221,10 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
             "copy the identifier as printed, including any country prefix; no spaces; "
             "this is the issuer's own identifier, not the identifier of the party being billed"
         ),
+        role_evidence_instruction=(
+            "copy the printed heading, label or line that shows this identifier belongs to the ISSUER, "
+            "exactly as it appears; null if the document shows nothing that does"
+        ),
     ),
     InvoiceFieldContract(
         field_name="customer_tax_id",
@@ -156,6 +233,10 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
         form_instruction=(
             "copy the identifier as printed, including any country prefix; no spaces; "
             "leave empty unless the document prints a second identifier for the party being billed"
+        ),
+        role_evidence_instruction=(
+            "copy the printed heading, label or line that shows this identifier belongs to the party "
+            "BEING BILLED, exactly as it appears; null if the document shows nothing that does"
         ),
     ),
     InvoiceFieldContract(
@@ -226,6 +307,21 @@ Adding a field here without adding it to
 :class:`~llm._invoice_field_grounding.ExtractedInvoiceFields` (or the reverse)
 fails that gate, which is the whole reason the tuple exists.
 """
+
+
+def identity_field_names() -> tuple[str, ...]:
+    """Return the declared fields that name a party and so must evidence a role.
+
+    Derived from :data:`INVOICE_FIELD_CONTRACTS` rather than restated, so the
+    payload schema, the prompt and the grounding stage cannot disagree about
+    which fields carry role evidence. A hand-listed set is how a family ends up
+    half-covered: the collection describes the enrolled set while enforcing
+    nothing about it.
+
+    Returns:
+        The identity field names, in declaration order.
+    """
+    return tuple(contract.field_name for contract in INVOICE_FIELD_CONTRACTS if contract.carries_role_evidence)
 
 
 def contract_for_field(field_name: str) -> InvoiceFieldContract:

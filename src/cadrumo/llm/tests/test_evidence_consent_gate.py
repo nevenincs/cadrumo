@@ -34,6 +34,8 @@ from pydantic import BaseModel, SecretStr
 from pydantic_core import PydanticSerializationError
 
 from ...adapters.outbound.llm import LLMCache, UsageRecorder
+from ...application.ledger import DocumentTranscription, TranscriberIdentity
+from ...core import FieldOrigin
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from .. import (
@@ -50,6 +52,21 @@ from .._client import LLMClient as _ClientUnderInspection
 from .._consent import provider_reads_off_host
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+def _transcription() -> DocumentTranscription:
+    """Return a minimal stage-one transcription for the reader to consume.
+
+    The gate under test is about TRANSPORT, so the content only has to be a
+    valid transcription; what matters is that the request built from it is
+    marked evidence-derived unless the caller names the public corpus.
+    """
+    return DocumentTranscription(
+        text="Factura 2026-001 Base imponible 100,00 EUR",
+        page_count=1,
+        source_content_sha256="d" * 64,
+        transcriber=TranscriberIdentity(origin=FieldOrigin.TEXT_LAYER, name="pdfplumber", revision="gate"),
+    )
+
 
 _CONSENTED = EvidenceConsentToken(
     surface="aeat app ledger evidence extract",
@@ -220,7 +237,7 @@ def test_the_unpinned_text_reader_cannot_reach_around_the_gate(tmp_path: Path) -
             client=_client(settings),
         )
         with pytest.raises(LLMConsentError):
-            extractor.extract(evidence_text="Factura 2026-001\nBase imponible 100,00 EUR")
+            extractor.extract(transcription=_transcription())
 
     assert bodies.qsize() == 0
 
@@ -308,7 +325,7 @@ def test_the_public_corpus_escape_reaches_the_provider_through_the_reader(tmp_pa
             client=_client(settings),
             public_corpus=True,
         )
-        extractor.extract(evidence_text="Factura 2026-001\nBase imponible 100,00 EUR")
+        extractor.extract(transcription=_transcription())
 
     assert bodies.qsize() == 1
 

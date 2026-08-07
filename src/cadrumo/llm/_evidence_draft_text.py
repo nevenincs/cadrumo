@@ -59,8 +59,8 @@ from __future__ import annotations
 
 import asyncio
 
-from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
-from ..core import FieldOrigin, Period
+from ..application.ledger import DocumentTranscription, InvoiceDraft, PurchaseInvoiceEvidenceInputError
+from ..core import Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
@@ -206,31 +206,42 @@ class TextInvoiceFieldExtractor:
         model = self._model or "configured"
         return f"llm:{transport}-text-extract:{model}:rates-{self._compiled_prompt().rate_provenance}"
 
-    def extract(self, *, evidence_text: str) -> InvoiceDraft:
-        """Read ``evidence_text`` and return the grounded draft.
+    def extract(self, *, transcription: DocumentTranscription) -> InvoiceDraft:
+        """Read the acquisition-stage ``transcription`` and return the grounded draft.
+
+        Takes the typed stage-1 artefact rather than a bare string, which is
+        what makes this the second stage of a pipeline instead of a helper that
+        happens to accept text. A string carries no answer to "who read these
+        characters off the document", and that answer is not decoration: it is
+        the ORIGIN stamped on every value this reader proposes, and the record
+        of whether an independent reader produced the text its anchors are
+        later checked against.
 
         Args:
-            evidence_text: The document's text representation.
+            transcription: The acquisition-stage transcription, printed forms
+                intact.
 
         Returns:
             :class:`InvoiceDraft`: Every field the model reported AND that passed
             grounded re-validation; everything else is ``None``.
         """
-        response = asyncio.run(self._client.complete(self._build_request(evidence_text)))
+        response = asyncio.run(self._client.complete(self._build_request(transcription.text)))
         parsed = parse_invoice_extraction_response(response.text)
         # `raw_text_length` reports how much source material the reader had to
-        # work with, matching the text-layer heuristic path's semantics -- here
-        # that is the document text handed in, not the model's reply.
+        # work with -- the transcription handed in, not the model's reply.
         #
-        # TEXT_LAYER, not VISION: a model read the MEANING here, but it read it
-        # off text some earlier stage had already extracted, so the characters
-        # behind every value came from the document rather than from a
-        # rasterised page. Claiming VISION would overstate how the bytes were
-        # acquired; the probabilistic step is recorded by the grounding outcome.
+        # The origin is the TRANSCRIBER'S, read off the artefact rather than
+        # asserted here. This stage reads MEANING; it never touches the
+        # document, so it has nothing to say about how the characters were
+        # acquired and must not overwrite the stage that does. Hardcoding
+        # TEXT_LAYER was defensible while a text layer was the only thing that
+        # could reach this reader; once a vision transcription can, it would
+        # launder a rasterised read into an exact-looking one -- the precise
+        # distinction `FieldOrigin` exists to keep.
         return ground_extracted_fields(
             parsed,
-            raw_text_length=len(evidence_text),
-            origin=FieldOrigin.TEXT_LAYER,
+            raw_text_length=len(transcription.text),
+            origin=transcription.transcriber.origin,
         )
 
     def _build_request(self, evidence_text: str) -> LLMRequest:
@@ -268,7 +279,7 @@ class TextInvoiceFieldExtractor:
 
 
 def extract_invoice_fields_from_text(
-    evidence_text: str,
+    transcription: DocumentTranscription,
     *,
     model: str | None = None,
     settings: Settings | None = None,
@@ -292,7 +303,7 @@ def extract_invoice_fields_from_text(
     refusal lives below this function, not in it.
 
     Args:
-        evidence_text: The document's text representation.
+        transcription: The acquisition-stage transcription to read.
         model: Optional model override.
         settings: Optional resolved settings override.
 
@@ -300,4 +311,4 @@ def extract_invoice_fields_from_text(
         :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
     """
     extractor = TextInvoiceFieldExtractor(model=model, settings=settings, provider=LLMProvider.LOCAL)
-    return extractor.extract(evidence_text=evidence_text)
+    return extractor.extract(transcription=transcription)
