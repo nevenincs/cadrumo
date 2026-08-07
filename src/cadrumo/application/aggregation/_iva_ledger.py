@@ -120,6 +120,14 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     UNSUPPORTED_IVA_RATE = "unsupported_iva_rate"
+    # The transaction's DATE falls outside every rate record the table holds,
+    # so no tier could match whatever rate the row carries. Distinct from
+    # UNSUPPORTED_IVA_RATE, which means the date is covered and the rate still
+    # matched no tier: there the operator's rate is what needs looking at, here
+    # it is the year. Collapsing the two tells a taxpayer filing an
+    # out-of-coverage year that their rate is wrong, sending them to correct a
+    # figure that was right.
+    IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE = "iva_rate_date_outside_table_coverage"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
@@ -1201,11 +1209,25 @@ def _classify_iva_transaction(
     assert transaction.iva_rate is not None
     rate_kind = _iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
     if rate_kind is None:
+        covered = _rate_table_covers(operation_date)
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
-                reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
-                detail=f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate",
+                reason=(
+                    IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+                    if covered
+                    else IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE
+                ),
+                detail=(
+                    f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate"
+                    if covered
+                    else (
+                        f"no IVA rate is on record for {operation_date.isoformat()}: the rate table holds "
+                        f"current rates only, so a transaction dated before its earliest record cannot be "
+                        f"classified whatever rate it carries. The rate {transaction.iva_rate} is not what "
+                        f"needs correcting -- the filing year is outside the supported window"
+                    )
+                ),
             ),
         )
     base_amount = transaction.taxable_base * proportionality
@@ -1606,6 +1628,27 @@ def _prorrata_reference_for(
             reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
             detail=str(exc),
         )
+
+
+def _rate_table_covers(on_date: date) -> bool:
+    """Return whether ANY Spanish rate record covers ``on_date``.
+
+    Separates the two ways :func:`_iva_rate_kind_for` returns ``None``. The
+    rate table is a CURRENT-rates table refreshed in bulk, not a historical
+    one -- no record for any member state starts before 2024 -- so a
+    transaction dated earlier cannot be classified whatever rate it carries,
+    and telling its filer that their rate is unsupported sends them to correct
+    a figure that was right. Reads the same table
+    :func:`_iva_rate_kind_for` reads rather than a duplicated floor constant,
+    so the two cannot disagree about what is covered.
+    """
+    for kind in domestic_categories_by_rate_kind():
+        try:
+            lookup_rate(EUMemberState.ES, kind, on_date)
+        except IvaRateNotFoundError:
+            continue
+        return True
+    return False
 
 
 def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
