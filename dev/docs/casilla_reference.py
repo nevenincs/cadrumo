@@ -254,6 +254,93 @@ def _text(key: str, language: OutputLanguage, /, **values: object) -> str:
     return value.format(**values) if values else value
 
 
+#: Display keys with no enumeration behind them: page chrome and the
+#: constraint phrasings. Everything else is derived from the schema's own closed
+#: value sets by :func:`display_locale_keys`, so a new enum member surfaces as a
+#: missing-string failure rather than as silently absent copy.
+_UNENUMERATED_DISPLAY_KEYS: Final[tuple[str, ...]] = (
+    "value_range.between",
+    "value_range.at_least",
+    "value_range.at_most",
+    "length.between",
+    "length.at_least",
+    "length.at_most",
+    "value_enum",
+    "chrome.legal_basis",
+    "chrome.established_by",
+    "chrome.registry_identifiers",
+    "chrome.required",
+    "chrome.segmento",
+    "chrome.not_on_official_form",
+    "chrome.derived_from",
+    "chrome.sections_nav",
+    "chrome.casilla_id",
+    "chrome.record_design_number",
+    "chrome.semantic_role",
+    "chrome.binding",
+    "chrome.formula",
+    "chrome.registry_section",
+    "chrome.sources",
+    "chrome.revisions",
+    "chrome.casilla_count",
+    "chrome.alternative_join",
+    "chrome.list_and",
+    "chrome.general_section",
+    "chrome.index_title",
+    "chrome.index_intro",
+)
+
+
+def display_locale_keys() -> tuple[str, ...]:
+    """Every catalogue key this surface can render, fully qualified.
+
+    One derivation serving two consumers: the gate that proves each key resolves
+    in all four languages, and the locale scaffold's registration (the AST key
+    scan walks ``src/cadrumo`` only, so keys this dev-side surface consumes are
+    invisible to it and would be pruned as stale without an explicit
+    registration).
+
+    The enum-backed families are read from the schema's own closed value sets
+    rather than listed, so adding a ``BindingSourceKind`` member or a
+    ``data_type`` immediately demands its string instead of rendering nothing.
+    """
+    from typing import get_args
+
+    from cadrumo.core import BindingSourceKind
+    from cadrumo.domain.calculations.registry import (
+        CasillaConstraints,
+        CasillaDefinition,
+        InputKind,
+        ModeloDefinition,
+    )
+
+    from .legal_reference import load_legal_provisions
+
+    def _literal_values(model: type, field: str) -> tuple[str, ...]:
+        return tuple(str(value) for value in get_args(model.model_fields[field].annotation))
+
+    keys: list[str] = [f"{_DISPLAY_PREFIX}.{suffix}" for suffix in _UNENUMERATED_DISPLAY_KEYS]
+    for member in InputKind:
+        keys.append(f"{_DISPLAY_PREFIX}.input_kind.{member.value}")
+        keys.append(f"{_DISPLAY_PREFIX}.input_kind_count.{member.value}")
+    keys.extend(f"{_DISPLAY_PREFIX}.binding_source.{member.value}" for member in BindingSourceKind)
+    keys.extend(f"{_DISPLAY_PREFIX}.data_type.{value}" for value in _literal_values(CasillaDefinition, "data_type"))
+    keys.extend(f"{_DISPLAY_PREFIX}.cadence.{value}" for value in _literal_values(ModeloDefinition, "cadence"))
+    keys.extend(
+        f"{_DISPLAY_PREFIX}.value_range.{value}"
+        for value in _literal_values(CasillaConstraints, "sign")
+        if value != "any"
+    )
+    kinds = {provision.kind for provision in load_legal_provisions(_repo_root())}
+    keys.extend(f"{_DISPLAY_PREFIX}.legal_kind.{kind}" for kind in sorted(kinds) if kind not in _LEGAL_INSTRUMENT_NAMES)
+    return tuple(dict.fromkeys(keys))
+
+
+def _repo_root() -> Path:
+    """The repository checkout this dev-side module lives in."""
+    return Path(__file__).resolve().parents[2]
+
+
 def _rst_escape(text: str) -> str:
     """Backslash-escape RST inline-markup characters in arbitrary free text."""
     return "".join(f"\\{ch}" if ch in _RST_SPECIAL else ch for ch in text)
