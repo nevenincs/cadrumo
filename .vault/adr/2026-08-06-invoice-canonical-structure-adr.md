@@ -14,9 +14,9 @@ related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
 supersedes:
   - '2026-06-10-ledger-invoice-unification-adr'
-modified: '2026-08-06'
+modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1d6ee4c2bc70b47ed6c624db33742d87f549fb7cfaac56cbd654b9d475969c71'
+body_hash: 'sha256:3c54873ffb815b87939530c240ddfa7fc85576905834fd7e5b8e9eb956cc1be7'
 ---
 # `invoice-canonical-structure` adr: `One canonical invoice aggregate; delete the slim store` | (**status:** `accepted`)
 
@@ -238,9 +238,45 @@ or a regime in.
 
 ## Constraints
 
-- The canonical aggregate MUST remain the encrypted bucket-scoped secure object
-  it is today; no plaintext sidecar, no parallel write path
-  (`composition-service-no-parallel-write-path`).
+- The canonical aggregate MUST remain an encrypted secure object with no
+  plaintext sidecar and no parallel write path
+  (`composition-service-no-parallel-write-path`,
+  `sensitive-financial-data-secure-storage-only`).
+
+  **Storage scope, corrected.** An earlier form of this constraint asserted the
+  canonical aggregate is "bucket-scoped". It is not, and the sentence described
+  the store being *deleted*. The two stores differ on scope, and the fold moves
+  records across that difference:
+
+  | | slim (`LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE`, deleted) | canonical (`INVOICE_CATALOGUE_NAMESPACE`, survives) |
+  |---|---|---|
+  | namespace scope | `BUCKET_LOCAL` | `PROFILE_LOCAL` |
+  | object-key grammar | `{bucket_id}:{source_kind}` | `catalogue` — one document per profile |
+  | `bucket_id` on the record | required, and a key component | `BucketId \| None`, an optional field |
+
+  Both are `FINANCIAL` sensitivity and `STRUCTURED_CUSTODY`
+  (`adapters/persistence/storage/_namespace_registry.py`). The consequence the
+  fold must own is therefore **not** a confidentiality downgrade but an
+  *attribution* one: bucket identity stops being a structural key component that
+  the store cannot represent a record without, and becomes an optional field a
+  writer may omit. Nothing in the storage layer refuses the omission.
+
+  This is why `P01.S35` exists and why it is a precondition of the fold rather
+  than a cleanup: the fold is the event that widens the producer set onto the
+  permissive model. It is resolved in favour of **declaring** an unattributed
+  invoice rather than refusing it — the projection admits it, and
+  `InvoiceCatalogueRepository` still refuses a row naming a *different* bucket,
+  so cross-bucket isolation is unchanged. Silently dropping such a record from
+  M347/M349 was the failure mode, and it is closed.
+
+  Custody carry is unaffected, and was checked rather than assumed:
+  `application/user_profile/_custody_carry.py` registers an explicit
+  natural-key resolver for both slim namespaces and none for the canonical one,
+  but the canonical namespace declares `default_object_key`, so the carry
+  supplies a fixed resolver for it; a populated carried namespace with no
+  resolver raises fail-closed rather than dropping silently. Deleting the slim
+  namespaces removes two resolver registrations that will then have no
+  namespaces to serve.
 - M347 and M349 MUST continue to be sourced correctly across the transition. No
   step may leave a window in which invoices reaching those modelos today reach
   them no longer.
