@@ -1,5 +1,5 @@
 @step Record an issued invoice to manage.
-@setup aeat --format json app ledger invoice add --kind issued --counterparty-nif B12345678 --counterparty-name "Cliente SL" --invoice-number FAC-2026-050 --invoice-date 2026-02-15 --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --total-amount 1210
+@setup aeat --format json app ledger invoice add --kind issued --counterparty-nif B12345674 --country-code ES --counterparty-name "Cliente SL" --invoice-number FAC-2026-050 --invoice-date 2026-02-15 --taxable-base 1000 --iva-rate 21
 @capture invoice_id result.invoice_id
 @step List every invoice, both kinds.
 aeat app ledger invoice list
