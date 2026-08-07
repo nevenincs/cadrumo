@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from urllib.parse import urlsplit
-
 from bs4 import BeautifulSoup
 
 from .....core.hashing import sha256_hex
 from .._playwright import PlaywrightError
-from ._adapter_utils import normalize_response_text
+from ._adapter_utils import bounded_text, normalize_response_text, redacted_url
 from ._declarations_listbox import _NO_RESULTS_TEXT, _has_class
 
 
@@ -44,13 +42,13 @@ def declarations_page_shape_context(
 
     soup = BeautifulSoup(html, "html.parser")
     normalized_text = normalize_response_text(soup.get_text(" ", strip=True))
-    buttons = tuple(_bounded_text(button.get_text(" ", strip=True)) for button in soup.find_all("button")[:12])
+    buttons = tuple(bounded_text(button.get_text(" ", strip=True)) for button in soup.find_all("button")[:12])
     headers = tuple(
-        _bounded_text(header.get_text(" ", strip=True))
+        bounded_text(header.get_text(" ", strip=True))
         for header in soup.find_all(class_=_has_class("z-listheader"))[:12]
     )
     _title_tag = soup.find("title")
-    _title_text = _bounded_text(_title_tag.get_text(" ", strip=True)) if isinstance(_title_tag, Tag) else ""
+    _title_text = bounded_text(_title_tag.get_text(" ", strip=True)) if isinstance(_title_tag, Tag) else ""
     return {
         "stage": stage,
         "modelo": modelo,
@@ -72,30 +70,7 @@ def declarations_page_shape_context(
     }
 
 
-def redacted_url(value: object) -> str | None:
-    if value is None:
-        return None
-    text = str(value)
-    if not text:
-        return ""
-    try:
-        parsed = urlsplit(text)
-    except ValueError:
-        return ""
-    if not parsed.scheme and not parsed.netloc:
-        return parsed.path
-    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-
-
-def _bounded_text(value: object, *, max_length: int = 120) -> str:
-    text = " ".join(str(value).replace("\xa0", " ").split())
-    if len(text) <= max_length:
-        return text
-    return f"{text[: max_length - 1]}..."
-
-
 __all__ = [
     "declarations_page_shape_context",
     "declarations_page_shape_context_from_page",
-    "redacted_url",
 ]

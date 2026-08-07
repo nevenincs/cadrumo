@@ -442,6 +442,52 @@ def normalize_display_text(text: str) -> str:
     return " ".join(text.replace("\xa0", " ").split())
 
 
+def bounded_text(value: object, *, max_length: int = 120) -> str:
+    """Return ``value`` as tidy text, truncated to at most ``max_length`` characters.
+
+    What a page-shape diagnostic records for an attribute it does not interpret,
+    so a pathological page cannot put an unbounded string into a dump file or an
+    error context.
+
+    The ellipsis is one character rather than three dots for an arithmetic
+    reason: the truncation keeps ``max_length - 1`` characters, so a one-character
+    marker lands exactly on the bound while ``"..."`` overshoots it by two. The
+    wallet and declarations shape readers each carried a copy of this and had
+    already drifted onto different markers, which is how the overshooting one
+    survived.
+    """
+    text = normalize_display_text(str(value))
+    if len(text) <= max_length:
+        return text
+    return f"{text[: max_length - 1]}…"
+
+
+def redacted_url(value: object) -> str | None:
+    """Return ``value`` with its query string and fragment removed.
+
+    Everything identifying rides in the query on a sede URL — the NIF, the
+    expediente reference, the session token — so a URL bound for a log line, an
+    error context or a diagnostic dump goes through here first. Scheme, host and
+    path survive, which is what makes the record diagnosable.
+
+    Distinct from ``application.auth`` ``_redacted_url_summary``, which keeps the
+    query KEY names and drops the scheme; that one answers "which parameters did
+    this request carry", not "where did it go".
+    """
+    if value is None:
+        return None
+    text = str(value)
+    if not text:
+        return ""
+    try:
+        parsed = urlsplit(text)
+    except ValueError:
+        return ""
+    if not parsed.scheme and not parsed.netloc:
+        return parsed.path
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+
 SPANISH_NEGATIVE_VERDICT_MARKERS: tuple[str, ...] = (
     "no consta",
     "no valido",
@@ -621,6 +667,7 @@ __all__ = [
     "assert_query_browser_action_for",
     "assert_read_http_for",
     "assert_read_landing",
+    "bounded_text",
     "extract_marker_verdict",
     "first_visible_locator",
     "landed_origin",
@@ -628,6 +675,7 @@ __all__ = [
     "nif_check_operation_tail",
     "normalize_display_text",
     "normalize_response_text",
+    "redacted_url",
     "registry_failure_message",
     "require_playwright_page",
     "response_media_type",

@@ -34,7 +34,7 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
-from ._adapter_utils import normalize_display_text, normalize_response_text
+from ._adapter_utils import bounded_text, normalize_display_text, normalize_response_text, redacted_url
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
@@ -338,22 +338,22 @@ def _representation_gate_context(html: str, *, landing_url: str) -> dict[str, ob
     soup = BeautifulSoup(html, "html.parser")
     forms = tuple(
         {
-            "id": _bounded_text(form.get("id", "")),
-            "method": _bounded_text(form.get("method", "")),
+            "id": bounded_text(form.get("id", "")),
+            "method": bounded_text(form.get("method", "")),
             "action_path": urlsplit(str(form.get("action", ""))).path,
         }
         for form in soup.find_all("form")[:8]
     )
     inputs = tuple(
         {
-            "id": _bounded_text(input_node.get("id", "")),
-            "name": _bounded_text(input_node.get("name", "")),
-            "type": _bounded_text(input_node.get("type", "")),
+            "id": bounded_text(input_node.get("id", "")),
+            "name": bounded_text(input_node.get("name", "")),
+            "type": bounded_text(input_node.get("type", "")),
             "checked": _input_checked(input_node),
         }
         for input_node in soup.find_all("input")[:20]
     )
-    return {"landing_url": _redacted_url(landing_url), "forms": forms, "inputs": inputs}
+    return {"landing_url": redacted_url(landing_url), "forms": forms, "inputs": inputs}
 
 
 def _input_checked(node: object) -> bool:
@@ -436,23 +436,23 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageSha
     )
     forms: tuple[_WalletFormShape, ...] = tuple(
         _WalletFormShape(
-            id=_bounded_text(form.get("id", "")),
-            name=_bounded_text(form.get("name", "")),
-            method=_bounded_text(form.get("method", "")),
+            id=bounded_text(form.get("id", "")),
+            name=bounded_text(form.get("name", "")),
+            method=bounded_text(form.get("method", "")),
             action_path=urlsplit(str(form.get("action", ""))).path,
         )
         for form in soup.find_all("form")[:8]
     )
     inputs: tuple[_WalletInputShape, ...] = tuple(
         _WalletInputShape(
-            id=_bounded_text(input_node.get("id", "")),
-            name=_bounded_text(input_node.get("name", "")),
-            type=_bounded_text(input_node.get("type", "")),
+            id=bounded_text(input_node.get("id", "")),
+            name=bounded_text(input_node.get("name", "")),
+            type=bounded_text(input_node.get("type", "")),
         )
         for input_node in soup.find_all("input")[:20]
     )
     return _WalletPageShape(
-        landing_url=_redacted_url(landing_url),
+        landing_url=redacted_url(landing_url),
         wallet_executed_empty_shape=_looks_like_executed_empty_wallet_page(soup),
         heading_count=len(soup.find_all(["h1", "h2", "h3"])),
         table_count=len(soup.find_all("table")),
@@ -463,21 +463,6 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageSha
         inputs=inputs,
         raw_sha256=sha256_hex(html.encode("utf-8")),
     )
-
-
-def _redacted_url(value: object) -> str | None:
-    if value is None:
-        return None
-    text = str(value)
-    if not text:
-        return ""
-    try:
-        parsed = urlsplit(text)
-    except ValueError:
-        return ""
-    if not parsed.scheme and not parsed.netloc:
-        return parsed.path
-    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
 
 def _absolute_audited_wallet_url(raw_url: str, *, base_url: str) -> str | None:
@@ -535,14 +520,7 @@ def _wallet_read_url_allowed(url: str, *, method: str) -> bool:
 
 def _normalised_title(soup: BeautifulSoup) -> str:
     title = soup.find("title")
-    return _bounded_text(title.get_text(" ")) if title is not None else ""
-
-
-def _bounded_text(value: object, *, max_length: int = 120) -> str:
-    text = " ".join(str(value).replace("\xa0", " ").split())
-    if len(text) <= max_length:
-        return text
-    return f"{text[: max_length - 1]}…"
+    return bounded_text(title.get_text(" ")) if title is not None else ""
 
 
 def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
