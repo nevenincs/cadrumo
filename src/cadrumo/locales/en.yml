@@ -66177,9 +66177,11 @@ modelo:
               help: Declare the 0.5 % equivalence surcharge charged on sales to retailers
                 under the surcharge regime, on supplies taxed at the 4 % VAT rate
                 (LIVA art. 161.3). Reported in box 36.
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8.label
+              label: Equivalence surcharge at 0.5 % - annual output amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjcchecdqmut31.help
+              help: Declare the 0.62 % equivalence surcharge charged on sales to retailers
+                under the surcharge regime, on supplies taxed at the 5 % VAT rate
+                (RDL 4/2024 art. 1). Reported in box 666.
               label: Equivalence surcharge at 0.62 % - annual output amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
               help: Declare the 1.4 % equivalence surcharge charged on sales to retailers
@@ -66187,8 +66189,10 @@ modelo:
                 (LIVA art. 161.2). Reported in box 600.
               label: Equivalence surcharge at 1.4 % - annual output amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.label
+              help: Declare the 1 % equivalence surcharge charged on sales to retailers
+                under the surcharge regime, on supplies taxed at the 7.5 % VAT rate
+                (RDL 4/2024 art. 1). Reported in box 694.
+              label: Equivalence surcharge at 1 % - annual output amount
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
               help: Declare the 5.2 % equivalence surcharge charged on sales to retailers
                 under the surcharge regime, on supplies taxed at the 21 % VAT rate
@@ -66297,11 +66301,16 @@ modelo:
                 excluding recargo de equivalencia (box 47).
               label: Total IVA bases and cuotas - Cuota (Reg. ordinario) - annual
             x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spbeehp6apr1ecmmirjke9gm6rrdeln6it31e9km2so.help
+              help: 'Value of goods supplied to another Member State, exempt under
+                article 25 of the Spanish VAT Act. Do not include services supplied
+                to EU businesses: those fall outside Spanish VAT and are declared
+                as non-subject operations.'
               label: Intra-Community supplies of goods
             x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.help
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.label
+              help: Value of exports of goods exempt under article 21 of the Spanish
+                VAT Act, together with operations treated as exports and exempt under
+                article 22.
+              label: Exports and other exempt operations carrying a right to deduct
           construct:
             modelo-390-iva-resumen-anual:
               field:

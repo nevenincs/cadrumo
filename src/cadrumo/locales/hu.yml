@@ -66721,7 +66721,9 @@ modelo:
               help: null
               label: 0,5%-os egyenértékűségi pótlék - éves keletkezett ÁFA
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31:
-              help: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mj4dhecdqmut31.help
+              help: A felár hatálya alá tartozó kiskereskedőknek történő, 2 %-os áfakulccsal
+                adózó értékesítésekre felszámított 0.26 %-os egyenértékűségi felár
+                összege (RDL 4/2024 art. 1). A(z) 692. rovatban kell bevallani.
               label: Egyenértékűségi felár, 0.26 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
               help: A felár hatálya alá tartozó kiskereskedőknek történő, 4 %-os áfakulccsal
@@ -66742,7 +66744,7 @@ modelo:
               help: A felár hatálya alá tartozó kiskereskedőknek történő, 7.5 %-os
                 áfakulccsal adózó értékesítésekre felszámított 1 %-os egyenértékűségi
                 felár összege (RDL 4/2024 art. 1). A(z) 694. rovatban kell bevallani.
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64n66tbfehgg.label
+              label: Egyenértékűségi felár, 1 %-os kulcs - éves fizetendő összeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
               help: A felár hatálya alá tartozó kiskereskedőknek történő, 21 %-os
                 áfakulccsal adózó értékesítésekre felszámított 5.2 %-os egyenértékűségi
@@ -66880,10 +66882,10 @@ modelo:
                 unios vallalkozasoknak nyujtott szolgaltatasokat.
               label: Közösségen belüli termékértékesítés
             x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so:
-              help: A spanyol afatorveny 21. cikke alapjan adomentes termekexport
-                es a 22. cikk alapjan adomentes, exporttal egy tekintet ala eso ugyletek
-                osszege.
-              label: modelo.schema.390.revision.2010-y-siguientes.casilla.x-d5r62bj1dpqm2r1eepnmotbdcln2spboe1nn4t31cdkmurj5ecmmau35dpq62so.label
+              help: A spanyol áfatörvény 21. cikke alapján adómentes termékexport,
+                valamint a 22. cikk alapján adómentes, exporttal egy tekintet alá
+                eső ügyletek összege.
+              label: Export és egyéb, levonási joggal járó adómentes ügyletek
           construct:
             modelo-390-iva-resumen-anual:
               field:
