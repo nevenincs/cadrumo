@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:4b9550e1d00002b408ecc2fe2083a6193de7a9f9b95655a5d984d5c607e05d10'
+body_hash: 'sha256:fc682e186bc3d2bc26391bab3222c9819420100123f04860cefadd3ad93ac04d'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -128,7 +128,7 @@ Delivers the two measurement lanes the ADR D9 mandates: the in-repo CI gate lane
 
 Bundles the licence-clean fixtures and lands the injection regression gate and the mutation-proof pass.
 
-- [ ] `W04.P09.S31` - Bundle the licence-clean fixture subset with provenance sidecars, including both COM-2026-0005 entries, gated by the fixture-provenance gate cross-checking sidecar against physical evidence; `src/cadrumo/application/ledger/tests`.
+- [x] `W04.P09.S31` - Bundle the licence-clean fixture subset with provenance sidecars, including both COM-2026-0005 entries, gated by the fixture-provenance gate cross-checking sidecar against physical evidence; `src/cadrumo/application/ledger/tests`.
 - [ ] `W04.P09.S32` - Add the injection regression gate: an instruction-shaped transcription must cross the S2-S3 boundary with no unanchored value and no out-of-schema key, proven by mutation; `src/cadrumo/llm/tests`.
 - [ ] `W04.P09.S33` - Run the mutation-proof pass over every W01 through W03 gate, breaking from outside the repo, observing red, restoring, and recording each red signature; `src/cadrumo`.
 
