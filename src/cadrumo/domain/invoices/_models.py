@@ -23,10 +23,12 @@ from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_vali
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import IntracomOperationType
 from ...core.decimal import coerce_decimal
+from ...core.errors import CoreValidationError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.money import round_to_cents
+from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from .. import canonical_decimal_string
 from ..iva import (
@@ -318,10 +320,10 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
 
 def _normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]:
     if "currency" in payload and isinstance(payload["currency"], str):
-        currency_value = payload["currency"].strip().upper()
-        if len(currency_value) != 3 or not currency_value.isalpha():
-            raise InvoiceValidationError("currency must be a three-letter ISO 4217 code")
-        payload["currency"] = currency_value
+        try:
+            payload["currency"] = normalise_iso_4217_currency(payload["currency"])
+        except CoreValidationError as exc:
+            raise InvoiceValidationError(str(exc)) from exc
     return payload
 
 

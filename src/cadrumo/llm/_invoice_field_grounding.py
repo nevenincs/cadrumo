@@ -47,13 +47,14 @@ from ..application.ledger import (
 )
 from ..core import STRICT_FROZEN_CONFIG, FieldGroundingOutcome, FieldOrigin
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
+from ..core.errors import CoreValidationError
 from ..core.identity import (
     IdentityError,
     nif_iva_format_for_country,
     normalise_nif_iva,
     validate_spanish_tax_id,
 )
-from ..core.parsing import parse_date
+from ..core.parsing import normalise_iso_4217_currency, parse_date
 from ._invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
@@ -384,10 +385,10 @@ def _grounded_currency(raw: str | None) -> str | None:
     """
     if raw is None:
         return None
-    candidate = raw.strip().upper()
-    if len(candidate) != 3 or not candidate.isalpha():
+    try:
+        return normalise_iso_4217_currency(raw)
+    except CoreValidationError:
         return None
-    return candidate
 
 
 _TEXT_GROUNDING_BY_FORM: Mapping[InvoiceFieldForm, Callable[[str | None], str | None]] = {

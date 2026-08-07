@@ -48,7 +48,7 @@ from ...core import IntracomOperationType
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CoreValidationError, resolve_error_message
 from ...core.identity import IdentityError, validate_spanish_tax_id
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import normalise_iso_4217_currency, parse_iso8601_date
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogueRepositoryProtocol,
@@ -275,10 +275,10 @@ def _validate_country_code(raw: str) -> str:
 
 
 def _validate_currency(raw: str) -> str:
-    stripped = raw.strip().upper()
-    if len(stripped) != 3 or not stripped.isalpha():
-        raise _WizardFieldError(field="currency", reason="must be a three-letter ISO 4217 code")
-    return stripped
+    try:
+        return normalise_iso_4217_currency(raw)
+    except CoreValidationError as exc:
+        raise _WizardFieldError(field="currency", reason=resolve_error_message(exc)) from exc
 
 
 def create_invoice_via_wizard(
