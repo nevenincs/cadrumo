@@ -158,8 +158,11 @@ from ._prorrata import (
 from ._rates import load_iva_rate_table
 from ._recargo_equivalencia import (
     LivaArt161RecargoRates,
+    RecargoRateRecord,
+    load_recargo_rate_table,
     load_recargo_rates,
     recargo_rate_for,
+    recargo_rate_for_applied_rate,
 )
 from ._refund_eligibility import (
     LAST_FILING_PERIOD_TOKENS,
@@ -268,6 +271,7 @@ __all__ = [
     "LegendDerivation",
     "LegendDerivationOutcome",
     "LivaArt161RecargoRates",
+    "RecargoRateRecord",
     "OssIossRegime",
     "ProrrataError",
     "ProrrataInputDeduction",
@@ -320,6 +324,7 @@ __all__ = [
     "load_iva_rate_table",
     "load_iva_rules_from_manual",
     "load_place_of_supply_rules",
+    "load_recargo_rate_table",
     "load_recargo_rates",
     "lookup_rate",
     "m303_annual_settlement_order_key",
@@ -331,6 +336,7 @@ __all__ = [
     "rate_kind_for_domestic_category",
     "rate_kinds_for_declared_rate",
     "recargo_rate_for",
+    "recargo_rate_for_applied_rate",
     "refund_disposition_available",
     "refund_eligibility_reason",
     "regime_allows_deduction",

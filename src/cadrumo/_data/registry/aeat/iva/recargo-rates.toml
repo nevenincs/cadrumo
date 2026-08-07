@@ -1,0 +1,79 @@
+# Recargo de equivalencia rates, keyed by the IVA rate the recargo accompanies
+# and by the window in which that pairing was in force.
+#
+# WHY KEYED ON THE RATE AND NOT THE TIER. LIVA art. 161 pairs each recargo with
+# an IVA tier, and for thirty years the tier determined the rate because each
+# tier had exactly one. The 2023-2024 foodstuffs measures ended that: between
+# 2023-01-01 and 2024-09-30 the reducido tier carried BOTH its ordinary 10 %
+# (recargo 1,4 %) and the transitional 5 % (recargo 0,62 %) at the same time. A
+# tier-keyed lookup cannot answer which recargo applies to a given line; the
+# rate can. This is the same correction the Modelo 303 devengado rungs needed
+# when the identical transitional rates landed on their tiers.
+#
+# TABACO IS NOT HERE, DELIBERATELY. The 1,75 % rate of art. 161 4.o attaches to
+# a PRODUCT (labores del tabaco), not to the accompanying IVA rate, so it is not
+# expressible on this axis and stays a legal parameter read directly.
+#
+# The three ordinary records carry the same values as the reviewed
+# [parameters."liva-art-161:*"] entries in the legal catalogue, which remain the
+# operator-reviewed grounding record. A consistency test asserts the two agree,
+# so this operational table cannot drift from the reviewed one.
+
+# --- Ordinary LIVA art. 161 rates, in force since the regime's introduction.
+
+[[recargo_rates]]
+iva_rate = "0.21"
+recargo_rate = "0.052"
+effective_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-161"]
+notes = "Art. 161 1.o: tipo general."
+
+[[recargo_rates]]
+iva_rate = "0.10"
+recargo_rate = "0.014"
+effective_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-161"]
+notes = "Art. 161 2.o: tipo reducido, entregas del art. 91 uno."
+
+[[recargo_rates]]
+iva_rate = "0.04"
+recargo_rate = "0.005"
+effective_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-161"]
+notes = "Art. 161 3.o: tipo super-reducido, entregas del art. 91 dos."
+
+# --- Transitional foodstuffs rates. RDL 20/2022 art. 72 opened the window on
+# --- 2023-01-01 and RDL 4/2024 art. 1 carried the same pair to 2024-09-30
+# --- before stepping the rates up for the final quarter of 2024.
+
+[[recargo_rates]]
+iva_rate = "0.05"
+recargo_rate = "0.0062"
+effective_from = 2023-01-01
+effective_until = 2024-09-30
+legal_refs = ["real-decreto-ley-20-2022:art-72", "real-decreto-ley-4-2024:art-1"]
+notes = "Aceites y pastas al 5 %: recargo 0,62 %. Coexiste con el 1,4 % ordinario del mismo tramo reducido, que es la razon por la que esta tabla se indexa por tipo y no por tramo."
+
+[[recargo_rates]]
+iva_rate = "0.00"
+recargo_rate = "0.00"
+effective_from = 2023-01-01
+effective_until = 2024-09-30
+legal_refs = ["real-decreto-ley-20-2022:art-72", "real-decreto-ley-4-2024:art-1"]
+notes = "Alimentos basicos al 0 %: recargo del 0 %. Es un tipo de cero, no una inaplicacion del regimen: la entrega sigue dentro del recargo de equivalencia con obligacion a tipo cero."
+
+[[recargo_rates]]
+iva_rate = "0.075"
+recargo_rate = "0.01"
+effective_from = 2024-10-01
+effective_until = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+notes = "Aceites y pastas al 7,5 % desde el 1 de octubre de 2024: recargo 1 %."
+
+[[recargo_rates]]
+iva_rate = "0.02"
+recargo_rate = "0.0026"
+effective_from = 2024-10-01
+effective_until = 2024-12-31
+legal_refs = ["real-decreto-ley-4-2024:art-1"]
+notes = "Alimentos basicos al 2 % desde el 1 de octubre de 2024: recargo 0,26 %."
