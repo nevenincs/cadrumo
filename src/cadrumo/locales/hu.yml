@@ -4442,9 +4442,6 @@ cli:
       llm_failed: 'Az LLM osztályozás sikertelen: {reason}'
       llm_help: A gepen futo helyi olvasoval osztalyozza a tranzakciot; alapertelmezetten
         elonezet, --apply kapcsoloval menti.
-      llm_provider_unavailable: 'A(z) ''{provider}'' LLM-szolgáltató nem érhető el:
-        a CLI-je nincs a PATH-on. Telepítse a(z) ''{provider}'' CLI-t, és győződjön
-        meg róla, hogy a PATH-on van.'
       llm_reason_label: indok
       llm_rejected_label: elutasítva
       llm_rejected_message: A modell javaslata elutasítva és rögzítve. A tranzakció

@@ -188,9 +188,7 @@ def _facturae_party_name(party: Element) -> str | None:
     if corporate:
         return corporate
     for individual in _find_all(party, "Individual"):
-        parts = [
-            _direct_child_text(individual, part) for part in ("Name", "FirstSurname", "SecondSurname")
-        ]
+        parts = [_direct_child_text(individual, part) for part in ("Name", "FirstSurname", "SecondSurname")]
         joined = " ".join(part for part in parts if part)
         if joined:
             return joined

@@ -4526,9 +4526,6 @@ cli:
       llm_failed: 'La clasificación por LLM falló: {reason}'
       llm_help: Pide al lector local on-host que clasifique la transacción; vista
         previa por defecto, persiste con --apply.
-      llm_provider_unavailable: 'El proveedor LLM ''{provider}'' no está disponible:
-        su CLI no está en el PATH. Instala el CLI de ''{provider}'' y asegúrate de
-        que esté en el PATH.'
       llm_reason_label: motivo
       llm_rejected_label: rechazada
       llm_rejected_message: Sugerencia del modelo rechazada y registrada. La transacción

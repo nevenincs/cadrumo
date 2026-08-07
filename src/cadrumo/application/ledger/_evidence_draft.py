@@ -264,8 +264,19 @@ class InvoiceDraft(BaseModel):
     Attributes:
         supplier_tax_id: Canonical Spanish NIF / NIE / CIF recovered from the
             text, or ``None`` when no valid tax identifier was found.
+        supplier_name: The issuing party's stated name, or ``None``.
+        customer_tax_id: The receiving party's tax identifier, or ``None``.
+            Populated only by a structured reader, which is the only one that
+            can tell the two parties apart; a text or vision reader recovers a
+            single identifier and cannot say whose it is.
+        customer_name: The receiving party's stated name, or ``None``.
         invoice_number: Invoice number recovered from a labelled line, or
             ``None``.
+        invoice_series: The series half of the invoice's identity, stated
+            separately by Facturae as ``InvoiceSeriesCode``, or ``None``. Kept
+            beside the number rather than concatenated into it: composing the
+            printed reference from the two is always possible, while splitting a
+            composed string back into them is not.
         invoice_date: Day-first invoice date recovered from the text, or
             ``None``.
         taxable_base: Labelled "base imponible" amount, or ``None``.
@@ -290,7 +301,11 @@ class InvoiceDraft(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     supplier_tax_id: str | None = None
+    supplier_name: str | None = None
+    customer_tax_id: str | None = None
+    customer_name: str | None = None
     invoice_number: str | None = None
+    invoice_series: str | None = None
     invoice_date: str | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
@@ -529,7 +544,11 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     parsed = parse_einvoice_document(evidence.data)
     return InvoiceDraft(
         supplier_tax_id=parsed.supplier_tax_id,
+        supplier_name=parsed.supplier_name,
+        customer_tax_id=parsed.customer_tax_id,
+        customer_name=parsed.customer_name,
         invoice_number=parsed.invoice_number,
+        invoice_series=parsed.invoice_series,
         invoice_date=parsed.invoice_date,
         taxable_base=parsed.taxable_base,
         iva_amount=parsed.iva_amount,
@@ -1043,8 +1062,21 @@ def confirm_invoice_draft_from_evidence(
         settings=resolved_settings,
     )
 
+    # WHICH party is the counterparty depends on the direction of the document,
+    # so the side is selected by `kind` rather than assumed to be the supplier.
+    # On an invoice the filer ISSUED, the counterparty is the customer; taking
+    # the supplier there names the filer as their own counterparty, and that
+    # value reaches the Modelo 347 / 349 totals AEAT reconciles against the
+    # other party's own declaration. Only a structured reader distinguishes the
+    # two, so the text and vision paths leave the customer side unset and fall
+    # back to the single identifier they can recover.
+    extracted_counterparty_tax_id = draft.supplier_tax_id
+    extracted_counterparty_name = draft.supplier_name
+    if kind is InvoiceKind.ISSUED and draft.customer_tax_id is not None:
+        extracted_counterparty_tax_id = draft.customer_tax_id
+        extracted_counterparty_name = draft.customer_name
     resolved_counterparty_tax_id = _require_confirmed_field(
-        _agreed_counterparty_tax_id(supplied=counterparty_tax_id, extracted=draft.supplier_tax_id),
+        _agreed_counterparty_tax_id(supplied=counterparty_tax_id, extracted=extracted_counterparty_tax_id),
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
@@ -1070,11 +1102,11 @@ def confirm_invoice_draft_from_evidence(
     # else euro. Preferring the extracted code over the euro default is what
     # stops a foreign-currency invoice being minted at its face value in euro.
     resolved_currency = (currency or draft.currency or DEFAULT_CURRENCY).strip().upper()
-    resolved_counterparty_name = (counterparty_name or "").strip()
+    resolved_counterparty_name = (counterparty_name or extracted_counterparty_name or "").strip()
     if not resolved_counterparty_name:
         raise PurchaseInvoiceEvidenceInputError(
-            "cannot confirm an invoice: counterparty_name has no extraction heuristic yet and "
-            "no --counterparty-name override was supplied",
+            "cannot confirm an invoice: the document states no counterparty name and no "
+            "--counterparty-name override was supplied",
             suggestion="aeat app ledger evidence extract --evidence-id <id>",
         )
 

@@ -4490,9 +4490,6 @@ cli:
       llm_failed: 'La classificació per LLM ha fallat: {reason}'
       llm_help: Demana al lector local on-host que classifiqui la transacció; vista
         prèvia per defecte, persisteix amb --apply.
-      llm_provider_unavailable: 'El proveïdor LLM ''{provider}'' no està disponible:
-        el seu CLI no és al PATH. Instal·la el CLI de ''{provider}'' i assegura''t
-        que sigui al PATH.'
       llm_reason_label: motiu
       llm_rejected_label: rebutjada
       llm_rejected_message: Suggeriment del model rebutjat i registrat. La transacció

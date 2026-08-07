@@ -300,3 +300,107 @@ def test_the_facturae_fixture_reads_recargo_and_does_not_double_count_its_taxes(
     rate, base, cuota = parsed.iva_breakdown[0]
     assert (rate, base, cuota) == (Decimal("21.00"), Decimal("100.00"), Decimal("21.00"))
     assert base == parsed.taxable_base
+
+
+def test_the_facturae_reader_keeps_the_invoice_series_beside_the_number() -> None:
+    """Facturae states the invoice's identity in TWO header elements, not one.
+
+    ``InvoiceSeriesCode`` is the other half of the reference a Facturae document
+    carries, so a reader taking ``InvoiceNumber`` alone reports an identity the
+    document does not state -- which then keys deduplication and the
+    counterparty reconciliation a Modelo 347 declaration is checked on. The
+    series assertion is what fails if that element stops being read.
+
+    The fixture's header also restates both elements inside a ``Corrective``
+    block, for the invoice being rectified. That block is NOT what these
+    assertions discriminate: Facturae fixes element order, so the header's own
+    values always precede the corrective ones and a descendant walk reaches the
+    right value on any schema-valid document. The reader scopes to the header's
+    own children anyway, as defence against an input whose order is not
+    guaranteed, but the scoping is deliberately not claimed as a gate here --
+    a mutation reverting it changes nothing observable, so asserting it would
+    pass vacuously.
+    """
+    parsed = parse_einvoice_document(_read("facturae_32_series_and_parties_invoice.xml"))
+
+    assert parsed.shape is DocumentShape.XML_FACTURAE
+    assert parsed.invoice_number == "0031"
+    assert parsed.invoice_series == "R-2026", "the series half of the identity, dropped entirely before this"
+
+
+def test_the_facturae_reader_names_both_parties_and_not_their_administrative_contact() -> None:
+    """A party's stated name is read for both sides, from either naming block.
+
+    Facturae names a party in one of two mutually exclusive blocks:
+    ``LegalEntity/CorporateName`` for a company, or ``Individual`` split across
+    a given name and two surnames for a natural person. Reading neither forced
+    the operator to retype a name the document states, because the domain
+    invoice requires a counterparty name and the reader supplied none.
+
+    The seller here also carries an ``AdministrativeCentres`` contact whose
+    ``Name`` and ``FirstSurname`` elements share their local names with the
+    party's own. A reader that walks descendants for ``Name`` reports that
+    contact -- a real Facturae document in the wild is shaped exactly this way --
+    so the assertion is that the administrative contact is NOT what comes back.
+    """
+    parsed = parse_einvoice_document(_read("facturae_32_series_and_parties_invoice.xml"))
+
+    assert parsed.supplier_name == "Marta Iglesias Ferrer", "the Individual block, joined across both surnames"
+    assert parsed.supplier_name is not None
+    assert "Ruth" not in parsed.supplier_name, "the AdministrativeCentre contact is not the party"
+    assert "Decoy" not in parsed.supplier_name
+    assert parsed.customer_name == "Talleres Berrocal, S.A.", "the LegalEntity CorporateName block"
+
+
+def test_the_facturae_reader_carries_both_parties_tax_ids_not_only_the_supplier() -> None:
+    """Both sides of the invoice are read, so a caller can pick the counterparty.
+
+    Which party is the counterparty depends on the direction of the invoice: on
+    an invoice the taxpayer issued it is the customer, on one they received it
+    is the supplier. A reader that carries only the supplier side leaves a
+    caller on the issued direction with the taxpayer's OWN identifier where the
+    counterparty belongs, and that value reaches the counterparty totals AEAT
+    reconciles against the other party's own filing.
+    """
+    parsed = parse_einvoice_document(_read("facturae_32_series_and_parties_invoice.xml"))
+
+    assert parsed.supplier_tax_id == "45821337R"
+    assert parsed.customer_tax_id == "A82645177"
+    assert parsed.supplier_tax_id != parsed.customer_tax_id
+
+
+def test_the_structured_draft_carries_both_parties_rather_than_discarding_the_customer() -> None:
+    """The draft keeps everything the reader recovered, both sides included.
+
+    The reader parsed both parties correctly all along; the projection into the
+    draft mapped only the supplier, so the customer side was read and then
+    dropped one layer later. On an invoice the filer issued, that left the
+    taxpayer's OWN identifier standing where the counterparty belongs.
+
+    Which side is the counterparty is deliberately NOT decided here -- the draft
+    is pre-direction data and the projection has no ``kind`` to decide with.
+    Confirm selects the side, so the draft's contract is simply to lose nothing.
+    """
+    from hashlib import sha256
+
+    from .._evidence import MediaKind
+    from .._evidence_draft import _extract_invoice_fields_from_structured_record
+    from .._evidence_input import EvidenceInput
+
+    data = _read("facturae_32_series_and_parties_invoice.xml")
+    evidence = EvidenceInput(
+        media_kind=MediaKind.PDF,
+        mime_type="application/xml",
+        data=data,
+        content_sha256=sha256(data).hexdigest(),
+        evidence_id="ev-facturae-parties",
+        attachment_id=None,
+    )
+
+    draft = _extract_invoice_fields_from_structured_record(evidence)
+
+    assert draft.supplier_tax_id == "45821337R"
+    assert draft.customer_tax_id == "A82645177", "read by the parser, discarded by the projection before this"
+    assert draft.supplier_name == "Marta Iglesias Ferrer"
+    assert draft.customer_name == "Talleres Berrocal, S.A."
+    assert draft.invoice_series == "R-2026"

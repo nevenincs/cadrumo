@@ -21,7 +21,7 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
-from ....core.atomic_write import atomic_write_hardened_bytes, atomic_write_text
+from ....core.atomic_write import DurableWriteBatch, atomic_write_hardened_bytes, atomic_write_text
 from ....core.errors import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
@@ -261,8 +261,17 @@ class LocalFileSystemProvider:
         *,
         content_hash: str,
         label: str,
+        batch: DurableWriteBatch | None = None,
     ) -> ProviderObjectMetadata:
         """Atomically write the object and its sidecar, returning :class:`ProviderObjectMetadata`.
+
+        ``batch`` opts this write into a :class:`DurableWriteBatch`, deferring
+        its fsyncs to the batch commit. Sound here specifically because the
+        store is content-addressed: ``content_hash`` names the payload, so a
+        crash mid-batch yields a file that fails its own digest check on read
+        and whose source document is still available to re-import. A bulk
+        evidence ingest passes one batch for the whole run; a single ``put``
+        passes nothing and keeps per-file durability.
 
         Atomicity guarantee: the payload file is written through
         :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes` (the
@@ -320,7 +329,7 @@ class LocalFileSystemProvider:
         sidecar_path = namespace_dir / _sidecar_filename(hmac_clean, label_clean)
 
         try:
-            atomic_write_hardened_bytes(target_path, payload)
+            atomic_write_hardened_bytes(target_path, payload, batch=batch)
         except PermissionError as exc:
             raise OutboundStoragePermissionError(
                 f"cannot write object payload to {target_path}: {exc}",
