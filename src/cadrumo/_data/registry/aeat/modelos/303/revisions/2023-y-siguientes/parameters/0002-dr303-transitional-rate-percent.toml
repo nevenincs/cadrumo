@@ -1,0 +1,86 @@
+# Tipo % (rate) values for the two RD-ley 4/2024 transitional rungs of the
+# régimen general devengado block, boxes [154] (reducido transitorio) and
+# [166] (super-reducido transitorio). AEAT mandates each rung's rate as a
+# design `Constante`, never an operator declaration (see
+# bindings/0006-transitional-rate-rungs.part-001.toml for the full account of
+# why these two rungs exist and why the split of this revision must not
+# separate 5 % from 7,5 %).
+#
+# Nota 8 of the bundled diseño changes [154]'s mandated constant AT the
+# 10/4T 2024 filing-period boundary (00500 -> 00750); Nota 10 gates [166] to
+# periods from 10/4T 2024 (before that, and again from the 2025 design
+# onward, both constants read 00000). date_axis "filing_period" resolves to
+# `calculation_filing_date(period)` — the period's own END DATE for every
+# ordinary quarter (Q3 2024 -> 2024-09-30, Q4 2024 -> 2024-12-31), confirmed
+# by reading application/modelo/_calculation_preparation.py's production
+# default (`filing_period_date or calculation_filing_date(work_unit.period)`)
+# rather than assumed from the parameter mechanism alone -- a filing DEADLINE
+# semantics here would have misclassified an October-filed Q3 return into
+# the Q4 window and printed 7,5 % where the law states 5 %.
+#
+# GROUNDING GAP, DECLARED NOT ASSUMED: the DESIGN authority for every window
+# boundary and constant below is solid (aeat-dr-303-2025, the same bundled
+# Diseño de Registros the four stable rungs already cite). The LEGAL
+# authority for the 5 % rate's own 2023 -> 09/3T-2024 span is NOT fully
+# grounded here: real-decreto-ley-4-2024:art-1 covers only the 7,5 %/2 %/0 %
+# follow-on step from 10/4T 2024, and the instrument that actually opened the
+# original 5 % window in January 2023 (a 2022/2023 measure -- candidates
+# investigated but not confirmed: RDL 20/2022, RDL 18/2022, RDL 5/2023) is
+# NOT yet bundled in the legal corpus. The 5 % windows below rest on the
+# design constant alone until that citation is added.
+
+[[revisions.2023-y-siguientes.parameters]]
+id = "m303-dr303-154-transitional-rate-percent"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.parameters.values]]
+value = "5.00"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2024-09-30
+
+[[revisions.2023-y-siguientes.parameters.values]]
+value = "7.50"
+date_axis = "filing_period"
+valid_from = 2024-10-01
+valid_to = 2024-12-31
+
+[[revisions.2023-y-siguientes.parameters.values]]
+value = "0.00"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions.2023-y-siguientes.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2023-y-siguientes.parameters]]
+id = "m303-dr303-166-transitional-rate-percent"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.parameters.values]]
+value = "0.00"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2024-09-30
+
+[[revisions.2023-y-siguientes.parameters.values]]
+value = "2.00"
+date_axis = "filing_period"
+valid_from = 2024-10-01
+valid_to = 2024-12-31
+
+[[revisions.2023-y-siguientes.parameters.values]]
+value = "0.00"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions.2023-y-siguientes.parameters.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]

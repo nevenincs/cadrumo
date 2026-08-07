@@ -360,12 +360,20 @@ casilla_id = "153"
 number = "153"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "154"
+number = "154"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "155"
 number = "155"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "165"
 number = "165"
+
+[[revisions.2023-y-siguientes.completeness_manifest.casillas]]
+casilla_id = "166"
+number = "166"
 
 [[revisions.2023-y-siguientes.completeness_manifest.casillas]]
 casilla_id = "167"
