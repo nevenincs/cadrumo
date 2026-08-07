@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f798c3405621f942acba4b1b6401408905281d44d70dd691360a04593aa1b88'
+body_hash: 'sha256:f61d45de739bcfe761a2d5bb0fd1583e596259896b9046b56336fa34a7b7db38'
 related:
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-research]]"
@@ -201,6 +201,14 @@ selector cannot express one epoch crossing the year boundary), then 2024-late,
 construction, which is the accepted cost of not adding a schema axis; the pair is
 a duplicate of layout, not of decision, and each revision still declares its own
 `source_refs` naming the specific AEAT design it encodes.
+
+The revision count of five is unchanged from this record's first, wrong
+three-epoch pass, and that is a coincidence rather than corroboration. Under three
+epochs the five arose as two layout-identical pairs; under four it arises as one
+pair plus a distinct 2024-late epoch. A reader who re-derives four epochs and
+expects the count to have moved should not read its stability as a sign the
+correction was cosmetic, and a reader comparing this record against its own
+earlier revision should not read the unchanged number as a sign nothing changed.
 
 Selection then needs no code change on the period-scoped path, since the
 production selector already resolves each token to exactly one revision. The
