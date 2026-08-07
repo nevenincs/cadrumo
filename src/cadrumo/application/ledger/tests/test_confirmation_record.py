@@ -277,21 +277,31 @@ def test_the_derived_id_is_clock_free() -> None:
     account of one decision, which is the shape that lets it be counted twice.
     """
     draft = _read_draft()
-    kwargs = {
-        "bucket_id": _BUCKET_ID,
-        "invoice_id": "inv-0001",
-        "evidence_reference": "ev-structured-001",
-        "evidence_sha256": _EVIDENCE_SHA,
-        "draft": draft,
-        "extractor": "exact_structured",
-        "confirmed_by": "gestor@example.test",
-        "overrides": {"taxable_base": Decimal("150.00")},
-    }
-    first = build_confirmation_record(**kwargs)
-    second = build_confirmation_record(**kwargs)
+
+    def _record(taxable_base: str) -> InvoiceConfirmationRecord:
+        """Build the record, varying only the one override the case turns on.
+
+        A factory rather than a shared kwargs dict splatted in: an inferred
+        dict widens every value to the union of all of them, so the splat
+        checked each parameter against `str | InvoiceDraft | dict[str, Decimal]`
+        -- which none of them accept -- and verified nothing about the call.
+        """
+        return build_confirmation_record(
+            bucket_id=_BUCKET_ID,
+            invoice_id="inv-0001",
+            evidence_reference="ev-structured-001",
+            evidence_sha256=_EVIDENCE_SHA,
+            draft=draft,
+            extractor="exact_structured",
+            confirmed_by="gestor@example.test",
+            overrides={"taxable_base": Decimal(taxable_base)},
+        )
+
+    first = _record("150.00")
+    second = _record("150.00")
 
     assert first.confirmation_id == second.confirmation_id
-    differing = build_confirmation_record(**{**kwargs, "overrides": {"taxable_base": Decimal("175.00")}})
+    differing = _record("175.00")
     assert differing.confirmation_id != first.confirmation_id
 
 

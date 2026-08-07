@@ -19,7 +19,7 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from decimal import Decimal
 from pathlib import Path
 
@@ -121,15 +121,34 @@ def _json_result(args: list[str]) -> dict[str, object]:
     return body
 
 
+def _objects(payload: Mapping[str, object], key: str) -> list[dict[str, object]]:
+    """Return a decoded payload's list-of-objects member, asserting its shape.
+
+    A JSON envelope decodes to ``dict[str, object]``, so every member reads as
+    ``object`` and the comprehensions below iterated values nothing had
+    established were iterable. Narrowed once here, and a payload that stops
+    carrying a list says so by name rather than failing mid-comprehension.
+    """
+    value = payload[key]
+    assert isinstance(value, list), f"{key} decoded to {type(value).__name__}, not a list"
+    rows: list[dict[str, object]] = []
+    for entry in value:
+        assert isinstance(entry, dict), f"a {key} member decoded to {type(entry).__name__}, not an object"
+        rows.append(entry)
+    return rows
+
+
 def test_review_list_reports_both_pending_drafts_with_their_blocking_reasons(seeded_queue: None) -> None:
     """The queue names what is pending and, per row, why it cannot be confirmed."""
     body = _json_result(["app", "ledger", "evidence", "review", "list"])
 
-    rows = {row["evidence_reference"]: row for row in body["rows"]}
+    rows = {row["evidence_reference"]: row for row in _objects(body, "rows")}
     assert set(rows) == {_CLEAN_REFERENCE, _BLOCKED_REFERENCE}
     assert rows[_CLEAN_REFERENCE]["blocking_count"] == 0
     assert rows[_CLEAN_REFERENCE]["reasons"] == []
-    assert set(rows[_BLOCKED_REFERENCE]["reasons"]) == {"unresolved_direction", "ambiguous_identity"}
+    blocked_reasons = rows[_BLOCKED_REFERENCE]["reasons"]
+    assert isinstance(blocked_reasons, list)
+    assert set(blocked_reasons) == {"unresolved_direction", "ambiguous_identity"}
 
 
 def test_review_list_filters_narrow_the_queue(seeded_queue: None) -> None:
@@ -139,17 +158,17 @@ def test_review_list_filters_narrow_the_queue(seeded_queue: None) -> None:
     identical to one that filtered correctly.
     """
     blocking = _json_result(["app", "ledger", "evidence", "review", "list", "--blocking"])
-    assert [row["evidence_reference"] for row in blocking["rows"]] == [_BLOCKED_REFERENCE]
+    assert [row["evidence_reference"] for row in _objects(blocking, "rows")] == [_BLOCKED_REFERENCE]
 
     by_reason = _json_result(
         ["app", "ledger", "evidence", "review", "list", "--reason", "ambiguous_identity"],
     )
-    assert [row["evidence_reference"] for row in by_reason["rows"]] == [_BLOCKED_REFERENCE]
+    assert [row["evidence_reference"] for row in _objects(by_reason, "rows")] == [_BLOCKED_REFERENCE]
 
     by_finding = _json_result(
         ["app", "ledger", "evidence", "review", "list", "--finding", "role_unresolved"],
     )
-    assert [row["evidence_reference"] for row in by_finding["rows"]] == [_BLOCKED_REFERENCE]
+    assert [row["evidence_reference"] for row in _objects(by_finding, "rows")] == [_BLOCKED_REFERENCE]
 
     unmatched = _json_result(
         ["app", "ledger", "evidence", "review", "list", "--finding", "arithmetic_closure"],
@@ -166,20 +185,20 @@ def test_review_show_carries_value_origin_anchor_grounding_and_candidates(seeded
     """
     body = _json_result(["app", "ledger", "evidence", "review", "show", _BLOCKED_REFERENCE])
 
-    fields = {row["field"]: row for row in body["fields"]}
+    fields = {row["field"]: row for row in _objects(body, "fields")}
     identity = fields["supplier_tax_id"]
     assert identity["origin"] == "text_layer"
     assert identity["grounding"] == "ambiguous"
-    assert [candidate["value"] for candidate in identity["candidates"]] == ["ESB12345674", "ESX1234567L"]
+    assert [candidate["value"] for candidate in _objects(identity, "candidates")] == ["ESB12345674", "ESX1234567L"]
     # A field with no envelope is still surfaced, with its axes null rather than
     # dropped: an absent reading is the field an operator most needs to see.
     assert "grand_total" in fields
     assert fields["grand_total"]["origin"] is None
 
-    assert [finding["kind"] for finding in body["discrepancies"]] == ["role_unresolved"]
-    reasons = {blocker["reason"] for blocker in body["blockers"]}
+    assert [finding["kind"] for finding in _objects(body, "discrepancies")] == ["role_unresolved"]
+    reasons = {blocker["reason"] for blocker in _objects(body, "blockers")}
     assert reasons == {"unresolved_direction", "ambiguous_identity"}
-    assert all(len(blocker["blocker_id"]) == 16 for blocker in body["blockers"])
+    assert all(len(str(blocker["blocker_id"])) == 16 for blocker in _objects(body, "blockers"))
 
 
 def test_review_show_of_a_clean_draft_reports_no_blockers(seeded_queue: None) -> None:
