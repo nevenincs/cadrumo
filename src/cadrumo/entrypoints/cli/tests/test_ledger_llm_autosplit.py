@@ -112,7 +112,7 @@ def test_split_recommendation_notice_is_info_with_exact_runnable_action() -> Non
     assert notice.severity is NoticeSeverity.INFO
     assert notice.code == "ledger.classify.split_recommended"
     assert notice.suggestion == (
-        f"aeat app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply --llm claude"
+        f"aeat app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply"
     )
     assert notice.context == {"transaction_id": transaction_id, "source": "evidence_read"}
 

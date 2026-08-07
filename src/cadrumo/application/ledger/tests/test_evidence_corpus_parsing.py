@@ -369,6 +369,77 @@ def test_the_facturae_reader_carries_both_parties_tax_ids_not_only_the_supplier(
     assert parsed.supplier_tax_id != parsed.customer_tax_id
 
 
+def test_an_unrecognised_xml_refuses_rather_than_reaching_the_vision_model() -> None:
+    """XML must never fall through to the text-layer or vision readers.
+
+    Admitting ``.xml`` at the evidence gate opened a path that could not exist
+    before it: an XML document carrying no recognised invoice syntax -- an AEAT
+    SII or VERI*FACTU submission record, a TicketBAI record, any XML at all --
+    is not a structured shape, is not an image, and so reached the PDF branch,
+    failed to yield a text layer, and fell through to the ON-HOST VISION MODEL,
+    whose capability is enabled by default.
+
+    That is incoherent (rasterising markup to read it with a model) and costly
+    (a model load per unreadable file). The refusal fires BEFORE either fallback
+    and names the syntaxes that are read.
+
+    The specimen is a well-formed SII record rather than arbitrary bytes,
+    because arbitrary bytes would fail the XML parse for an unrelated reason and
+    the case would pass without exercising the routing at all.
+    """
+    from hashlib import sha256
+
+    from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError
+    from .._evidence_draft import _refuse_an_unrecognised_xml_document
+    from .._evidence_input import EvidenceInput
+
+    sii_record = (
+        b'<?xml version="1.0" encoding="UTF-8"?>'
+        b'<sii:SuministroLRFacturasEmitidas xmlns:sii="https://www2.agenciatributaria.gob.es/'
+        b'static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/SuministroLR.xsd">'
+        b"<sii:Cabecera/></sii:SuministroLRFacturasEmitidas>"
+    )
+    evidence = EvidenceInput(
+        media_kind=MediaKind.PDF,
+        mime_type="application/xml",
+        data=sii_record,
+        content_sha256=sha256(sii_record).hexdigest(),
+        evidence_id="ev-sii-record",
+        attachment_id=None,
+    )
+
+    assert evidence.document_shape not in STRUCTURED_DOCUMENT_SHAPES, "not a recognised invoice syntax"
+    with pytest.raises(PurchaseInvoiceEvidenceInputError, match="Facturae"):
+        _refuse_an_unrecognised_xml_document(evidence)
+
+
+def test_a_recognised_structured_xml_is_not_caught_by_the_unrecognised_xml_refusal() -> None:
+    """The refusal must not fire on the documents the reader DOES handle.
+
+    Without this, a guard that refused every XML would pass the test above while
+    breaking Facturae, CII and UBL entirely -- the refusal would look correct
+    and remove the capability it was written to protect.
+    """
+    from hashlib import sha256
+
+    from .._evidence import MediaKind
+    from .._evidence_draft import _refuse_an_unrecognised_xml_document
+    from .._evidence_input import EvidenceInput
+
+    data = _read("facturae_32_series_and_parties_invoice.xml")
+    evidence = EvidenceInput(
+        media_kind=MediaKind.PDF,
+        mime_type="application/xml",
+        data=data,
+        content_sha256=sha256(data).hexdigest(),
+        evidence_id="ev-facturae",
+        attachment_id=None,
+    )
+
+    assert evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES
+    _refuse_an_unrecognised_xml_document(evidence)  # must not raise
+
+
 def test_the_structured_draft_carries_both_parties_rather_than_discarding_the_customer() -> None:
     """The draft keeps everything the reader recovered, both sides included.
 

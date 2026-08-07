@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:be3b3b48053fb334dc27e43df337de5df4c414610be05c9d3e9efe847b04bd32'
+body_hash: 'sha256:1858c16c9f8f3b20e4e2441cac46d7565ac2fd43324336fe0d6cab240780e0d1'
 related: []
 ---
 
@@ -42,10 +42,17 @@ so flagged `-df-unica` files whose path plainly isolates. A third variant omitte
 never a measurement disagreement — it was two guesses at a judgement.
 
 **Pass three — "320 unchecked."** Drop the heuristic, call every single-unit cite
-unchecked. Defensible, re-derivable, and still an over-count: **single-unit does
-not imply unchecked**, because the title-match path refuses when nothing matches.
-A single unit whose title does not match a bogus anchor still refuses it. The
-structural property is a lossy proxy for the behavioural one.
+unchecked. Defensible, re-derivable, and still an over-count **by 229**, because
+the single-unit branch is GUARDED rather than unconditional. Measured split of
+the 320:
+
+* **229** cite a single unit that carries a canonical anchor — **all 229 refuse a
+  bogus anchor.** Checked.
+* **91** cite a single unit carrying none — **all 91 admit a bogus anchor.**
+  Unchecked.
+
+Worked example: `orden-hap-2250-2015-art-1.html#a1` is single-unit and refuses
+garbage. Pass three counts it unchecked; behaviourally it is not.
 
 **Pass four — measure behaviour, not structure.** For each cite, resolve its real
 anchor, then resolve a deliberately invalid one. Enforced means the real anchor
@@ -67,9 +74,18 @@ The reason passes one to three kept mis-counting.
    `apartado` a stripped-numeral match. It raises on ambiguity rather than
    choosing, through two separate guards: one for a duplicated anchor, one for an
    ambiguous match.
-3. **Single-unit fallback.** Where a sidecar holds exactly one unit, that unit is
-   returned for any non-empty anchor **without consulting the title matcher**.
-   Only the empty string is refused. This is the entire defect.
+3. **Single-unit fallback, and it is GUARDED.** Where a sidecar holds exactly one
+   unit, that unit is returned only when the unit carries **no** canonical anchor,
+   or when its anchor genuinely covers the cited subsection — an article unit
+   `#a25` covering a request for `#a25-1-a`. The code says so in its own comment:
+   *"A different article remains a missing anchor."* Anything else **falls through
+   to the title matcher**, which refuses when nothing matches.
+
+   So the defect is narrower than "single-unit": it is
+   **`len(units) == 1` AND the sole unit carries no anchor**. That is the only
+   shape where an arbitrary string resolves, and it accounts for exactly the 91.
+   Note the exact-anchor check runs FIRST, so a single-unit file whose anchor
+   matches never reaches this branch at all.
 
 ### the-measurement | medium | 91 unchecked cites across 58 files, and nothing is broken
 
@@ -136,11 +152,12 @@ while leaving a `corpus_ref` aimed at a rendering that regenerates:
 
 ## Recommendations
 
-Make the single-unit fallback fall through to the title matcher instead of
-returning the sole unit unconditionally. The matcher already exists and is
-careful; the fallback bypasses it. That converts the 91 silent assertions into
-checked ones and touches neither the 504 that work nor the extraction pipeline —
-one branch, not a corpus campaign.
+Tighten one condition on one branch. The single-unit branch already falls through
+to the title matcher when the sole unit carries an anchor that does not cover the
+request; it returns unconditionally only when the unit carries **no** anchor. That
+one arm — `not _canonical_anchor(unit_anchor)` — is what admits the 91. Making it
+fall through as the guarded arm already does converts 91 silent assertions into
+checked ones and touches neither the 504 that work nor the extraction pipeline.
 
 Re-extract the 58 files behind those 91 so their units carry real anchors. Do not
 re-extract more broadly: the enforced cites are working through two mechanisms

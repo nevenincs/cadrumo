@@ -106,10 +106,10 @@ from ...core import STRICT_FROZEN_CONFIG, STRUCTURED_DOCUMENT_SHAPES, MissingOpt
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import coerce_finite_european_decimal
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import IdentityError, tax_id_identity_token, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
-from ...domain.attachments import link_attachment_invoice
+from ...domain.attachments import link_attachment_invoice, normalize_media_type
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol, InvoiceClass, InvoiceLine, IvaRate
 from ...domain.iva import InvoiceKind, IvaCategory
 from ...llm import LLMPdfRasterisationError, LLMProviderError, rasterise_pdf_pages_to_base64_png
@@ -524,6 +524,7 @@ def extract_invoice_draft_from_evidence(
             # partial one; fall through so a document whose embedded payload is
             # broken can still be read by the text or vision path.
             pass
+    _refuse_an_unrecognised_xml_document(evidence_input)
     if evidence_input.media_kind is MediaKind.PDF:
         try:
             return extract_invoice_fields(evidence_input)
@@ -531,6 +532,44 @@ def extract_invoice_draft_from_evidence(
             # No usable text layer (scan-only / XFA) -> on-host vision fallback below.
             pass
     return _extract_invoice_fields_via_vision(evidence_input, settings=resolved_settings)
+
+
+def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
+    """Refuse an XML document whose syntax no structured reader recognises.
+
+    XML must never reach the text-layer or vision fallbacks. Those exist for
+    documents whose content is RENDERED -- a PDF's text layer, a photograph of a
+    receipt -- and an XML file is neither: extracting prose from markup yields
+    tag soup, and rasterising it to read with a vision model is incoherent as
+    well as expensive.
+
+    This became reachable only when ``.xml`` was admitted at the evidence gate.
+    Before that a structured document could not be ingested at all, so the
+    fallback chain was never handed one. Admitting the extension without closing
+    the chain would route every unrecognised XML -- a SII or VERI*FACTU record,
+    a TicketBAI record, any XML at all -- to the on-host vision model, whose
+    capability is ON by default.
+
+    The refusal names the syntaxes that ARE read, so an operator holding a
+    document we do not support learns which ones we do rather than watching a
+    model fail to read their markup.
+    """
+    if normalize_media_type(evidence.mime_type) != XML_MIME_TYPE:
+        return
+    if evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES:
+        # Self-contained rather than relying on call position. Today the
+        # structured branch returns before reaching here, so this is
+        # unreachable in the live routing -- which is precisely why it is
+        # asserted: a later refactor that moves this call earlier would
+        # otherwise refuse every Facturae, CII and UBL document, and the guard
+        # would look correct while removing the capability it protects.
+        return
+    raise PurchaseInvoiceEvidenceInputError(
+        "this XML document carries no invoice record in a syntax this reader knows. Recognised "
+        "structured syntaxes are Facturae 3.2.x, EN16931 Cross Industry Invoice (CII) and EN16931 "
+        "UBL. AEAT SII and VERI*FACTU submission records are not read as invoice evidence.",
+        suggestion="aeat app ledger evidence list",
+    )
 
 
 def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> InvoiceDraft:
