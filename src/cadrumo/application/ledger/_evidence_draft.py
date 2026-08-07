@@ -94,7 +94,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from pydantic import BaseModel
 
@@ -367,14 +367,21 @@ def _parse_labelled_amount(pattern: re.Pattern[str], text: str) -> Decimal | Non
 
 
 def _find_iva_rate(text: str) -> Decimal | None:
+    """Return the IVA rate captured from the text layer, or ``None``.
+
+    Routes through the same finite European-decimal authority as
+    :func:`_parse_labelled_amount` above. This previously hand-rolled the
+    comma-to-dot swap, which agreed with the authority only because
+    :data:`_IVA_RATE_RE` caps its capture at two digits and a two-digit
+    fraction -- no thousands separator or non-finite token could reach it. That
+    made the regex load-bearing for the parse's correctness, silently: widening
+    the pattern would have diverged two extractors eight lines apart, and a
+    wrong IVA rate surfaces on a filed form rather than at the parse.
+    """
     match = _IVA_RATE_RE.search(text)
     if match is None:
         return None
-    normalized = match.group(1).replace(",", ".")
-    try:
-        return Decimal(normalized)
-    except InvalidOperation:
-        return None
+    return coerce_finite_european_decimal(match.group(1))
 
 
 def extract_invoice_fields(evidence: EvidenceInput) -> InvoiceDraft:
