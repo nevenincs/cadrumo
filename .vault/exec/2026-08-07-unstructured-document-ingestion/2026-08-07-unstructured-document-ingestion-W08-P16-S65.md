@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a91dd98ed4d9ec593a5c27d68f736499ac2b692efc5a6f79698ee5cebd3959dd'
+body_hash: 'sha256:284a4a42771e959a32e7e46b356ed0d6c960266a94fd76b199354841ddb97bed'
 step_id: 'S65'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -65,11 +65,10 @@ The unit-lane primitives this runner is built on, at HEAD:
 
 Twelve collected, twelve ran, none deselected.
 
-The runner's own integration lane, twelve tests including both no-spool proofs,
-run immediately before the tree broke (see Notes):
+The runner's own integration lane, twelve tests including both no-spool proofs:
 
     uv run --no-sync pytest src/cadrumo/application/ledger/tests/test_batch_ingest_runner.py -m integration -p no:randomly
-    12 passed in 22.06s
+    12 passed in 22.44s
 
 The default marker expression is worth recording, because the first run of this
 file selected **nothing**: the lane is `unit` by default and these tests are
@@ -89,31 +88,43 @@ The first reddens both the row-ordering and the source-ordering tests; the
 second and third are the paired stability and non-collapse properties of the
 identity key.
 
+The three that matter most for THIS Step target the integration lane, with their
+blast radii recorded rather than summarised as "it failed":
+
+    abort_on_first_failure  -> 9 failed, 3 passed
+    rerun_double_writes     -> 1 failed, 11 passed
+    spool_to_disk           -> 3 failed, 9 passed
+
+The wide first radius is the finding, not noise: letting one item's failure
+escape destroys the run, so nearly every property collapses at once — which is
+exactly the cost the design exists to avoid. The second is surgical, reddening
+only the idempotency gate. The third reddens both no-spool proofs and, honestly,
+the idempotency gate too: a spool file written beside the inputs becomes a batch
+input on the next run, so a spool does not merely leak, it corrupts the item set.
+
 ## Notes
 
-**This Step is left open, and the reason is the mutation proof rather than the
-code.** The three mutations above exercise the unit lane. The three that matter
-most for THIS Step — abort-on-first-failure, a re-run that double-writes, and a
-spool written to disk — target the integration lane, and that lane has been
-uncollectable since shortly after its green run above. An uncommitted peer
-change declares `LLMConsentError` with no ErrorCode registry entry, so
-`bind_error_code` raises on every import of `cadrumo.llm`, which
-`_extraction_draft_store` pulls in transitively. The plugin was rewritten to
-import only the batch module, which does settle its own imports, but the test
-file itself cannot be collected.
+The byte-identical assertion is worth recording as a defect this Step authored
+and caught. It was written while the tree was uncollectable, committed unrun
+with that status stated, and was **wrong**: it compared run two against run one,
+and those legitimately differ, because the item run one ingested is a no-op by
+run two. The gate asserted the design was broken. Running it was what found
+that; reasoning about it had not. Runs two and three are the pair that must be
+identical, and the corrected form is now mutation-proven rather than argued.
 
-So the no-spool gate has run green and has **not** been proven to bite. A gate
-that has never been seen to fail is worth much less than one that has, and this
-is the Step where that distinction carries the weight. Marking it complete on an
-unrun mutation proof would be exactly the "checked but not done" state the
-campaign discipline exists to prevent.
+The tree was uncollectable for roughly seven minutes in the middle of this work:
+an uncommitted peer change declared `LLMConsentError` with no ErrorCode registry
+entry, so `bind_error_code` raised on every import of `cadrumo.llm`, which
+`_extraction_draft_store` pulls in transitively. It cleared on its own and the
+lane was re-run in full afterwards; nothing here rests on a pre-break result.
 
-One assertion in the integration file — comparing re-run rows byte-identically
-rather than by content address — was written after the break and has never been
-executed. It was committed rather than left in the working tree, with its unrun
-status stated in the commit message, because an untracked or uncommitted change
-in this tree is both invisible to discovery and liable to be swept into an
-unrelated commit; recording it honestly was preferable to either.
+Three mutation results were **voided and re-run**. The mutation plugin was
+written to the shared scratchpad under a generic name, and a concurrent
+teammate's script overwrote it mid-flight, so those three runs exercised
+someone else's file and exited non-zero for an unrelated reason. A non-zero exit
+from a mutation run reads as success — the gate reddened — which is precisely
+why that was worth catching rather than accepting. The plugin was renamed to a
+lane-specific name and every mutation above re-run.
 
 No model was loaded, pulled, or contacted. The corpus documents used are the
 bundled synthetic fixtures, and the deterministic structured-record reader is a
@@ -125,3 +136,11 @@ designed behaviour.
 The consent gate is not yet built, and this runner does not route around it: no
 per-item call site was invented for a gate that does not exist, and nothing here
 acquires consent once for a run.
+
+S63, the batch-wide inference pacing, is **not started** and is not covered by
+this record. The admission primitive has no production caller anywhere yet, and
+the routing decision that would say which items are inference-bearing lives
+inside the extractor. Pacing therefore needs either a duplicate of that routing
+— the fragmentation the discovery mandate exists to prevent — or a seam
+extracted from it, and a concurrent lane was actively rewriting that same
+reading chain. Deferred rather than half-built.
