@@ -24,13 +24,14 @@ into a one-sided inconsistency (``verify_link_consistency``).
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
+from ...core.time import now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices import (
     Invoice,
@@ -256,7 +257,7 @@ def update_catalogue_invoice(
     # the reconciliation authority, and an update that dropped them would sever
     # a bidirectional binding the operator never asked to break.
     payload["linked_transaction_ids"] = existing.linked_transaction_ids
-    payload["updated_at"] = occurred_at or datetime.now(UTC)
+    payload["updated_at"] = occurred_at or now()
     corrected = Invoice.model_validate(payload)
 
     updated = dict(catalogue.invoices)
@@ -268,7 +269,7 @@ def update_catalogue_invoice(
         bucket_id=bucket_id,
         slot=1,
         event_repository=event_repository,
-        occurred_at=occurred_at or datetime.now(UTC),
+        occurred_at=occurred_at or now(),
         actor=actor,
     )
     return CatalogueInvoiceUpdateResult(

@@ -61,11 +61,15 @@ def _m130_renta_income_binding(
     *,
     fact: str,
     legal_refs: tuple[str, ...],
+    output_casilla_id: str | None = None,
 ) -> DataBindingDefinition:
+    selector = {"modelo": "130", "target_casilla_id": "01", "fact": fact}
+    if output_casilla_id is not None:
+        selector["output_casilla_id"] = output_casilla_id
     return DataBindingDefinition(
         id=binding_id,
         source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-        selector={"modelo": "130", "target_casilla_id": "01", "fact": fact},
+        selector=selector,
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=legal_refs,
         source_refs=_M130_INCOME_SOURCE_REFS,
@@ -90,6 +94,13 @@ def _m130_2026_q1_revision() -> ModeloRevision:
                 _M130_RETENCIONES_BINDING,
                 fact="withheld_amount_sum",
                 legal_refs=_M130_RETENCIONES_LEGAL_REFS,
+                # Mirrors the committed registry declaration: this fact matches
+                # casilla 01 income rows but reports on casilla 06 (see
+                # _RentaLedgerIncomeSelector's docstring). Omitting this here
+                # would silently zero bound_inputs_by_casilla_id["06"] now that
+                # the resolver reads the registry's declaration instead of a
+                # hardcoded Python override.
+                output_casilla_id=_M130_RETENCIONES_CASILLA,
             ),
         ),
     )

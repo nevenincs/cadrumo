@@ -28,7 +28,7 @@ add->link gap without collapsing the two stores.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
@@ -39,6 +39,7 @@ from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
 from ...core.parsing import normalise_iso_4217_currency
+from ...core.time import now
 from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
@@ -462,7 +463,7 @@ def create_catalogue_invoice(
         bucket_id=bucket_id,
         slot=0,
         event_repository=event_repository,
-        occurred_at=occurred_at or datetime.now(UTC),
+        occurred_at=occurred_at or now(),
         actor=actor,
     )
     return CatalogueInvoiceCreateResult(

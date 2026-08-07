@@ -41,7 +41,6 @@ __all__ = [
     "probe_optional_extra",
     "probe_optional_extras",
     "probe_playwright_browser",
-    "probe_subprocess_providers",
 ]
 
 _OLLAMA_PROBE_TIMEOUT_S = 2.0
@@ -139,35 +138,6 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
         available=True,
         detail=f"Ollama is reachable and {model!r} is pulled",
     )
-
-
-def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
-    """Probe each subprocess LLM CLI provider on ``PATH``.
-
-    Delegates provider discovery to the ledger classification surface and adapts
-    each availability row into the common :class:`DependencyStatus` shape. The
-    probe resolves binaries only; it does not spawn provider processes.
-    ``aeat config check`` combines these rows with
-    :class:`~cadrumo.core.ServiceCapability` decisions to flag opted-in cloud
-    evidence uploads that lack a provider CLI.
-    """
-    from .ledger import available_llm_providers
-
-    statuses: list[DependencyStatus] = []
-    for listing in available_llm_providers():
-        statuses.append(
-            DependencyStatus(
-                service=f"llm-provider:{listing.provider.value}",
-                available=listing.available,
-                detail=(
-                    f"{listing.cli_binary} resolved at {listing.resolved_path}"
-                    if listing.available
-                    else f"{listing.cli_binary} not found on PATH"
-                ),
-                remediation="" if listing.available else f"install the {listing.cli_binary!r} CLI and put it on PATH",
-            ),
-        )
-    return tuple(statuses)
 
 
 PLAYWRIGHT_BROWSERS_ROOT_ROLE = ExternalPathRole.THIRD_PARTY_CACHE

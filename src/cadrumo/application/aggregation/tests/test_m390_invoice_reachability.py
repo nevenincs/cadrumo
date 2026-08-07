@@ -10,8 +10,11 @@ so it reddens if any of the three facts that make it true stops holding.
 
 Three facts, together sufficient:
 
-1. The existing invoice-versus-ledger screen is scoped to M303 and returns
-   immediately for every other modelo. There is no M390 equivalent.
+1. The invoice-versus-ledger screen was scoped to M303 and returned
+   immediately for every other modelo, leaving M390 unguarded. **P05.S25
+   closed that**, and the first assertion below now pins the screen as
+   covering M390 rather than skipping it -- this module reddened when the gap
+   was closed, which is what encoding the answer as a test is for.
 2. M390 declares no invoice-sourced binding at all, so a bucket's invoices
    contribute nothing to its values and their absence cannot show up there.
 3. Both sides of the `390`-to-`303` reconciliation BLOCKING_RULE root in the
@@ -37,7 +40,7 @@ import pytest
 from ....core import Modelo, Period
 from ....core.resources import resources
 from .. import CalculationSourceContext
-from .._modelo_bindings import _raise_if_m303_invoice_domestic_iva_would_be_silent
+from .._modelo_bindings import _INVOICE_LEDGER_SCREEN_BINDINGS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,31 +53,38 @@ def _revision(modelo_id: str, period: str):
     return resources().modelos.authority.snapshot(modelo_id, filing_year=2026, period=period).revision
 
 
-def test_the_invoice_versus_ledger_screen_does_not_apply_to_m390() -> None:
-    """Fact 1: the screen is M303-scoped, so M390 has no equivalent guard.
+def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:
+    """Fact 1, as closed by P05.S25: M390 is screened, not skipped.
 
-    Called with an M390 context and no invoice repository at all. The screen
-    returns empty before it reaches anything it could fail on, which is the
-    early return that makes M390 unguarded rather than an accident of this
-    call's arguments.
+    This assertion is the inverse of the one this module first carried. It
+    asserted the screen returned immediately for M390 -- the gap that made the
+    reachability answer yes. Closing that gap reddened this test, which is the
+    behaviour an encoded answer is supposed to have: the fact changed, so the
+    test that stated it failed rather than quietly staying green.
+
+    Asserted against the screened-binding table rather than by calling the
+    screen, because what matters is that M390 has an ENTRY -- a screen that ran
+    but compared an empty binding set would pass this call and guard nothing.
     """
-    context = CalculationSourceContext(
-        bucket_id=_BUCKET_ID,
-        modelo=Modelo.M390.value,
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "0A"),
-        revision=_revision("390", "0A"),
-    )
+    assert Modelo.M390.value in _INVOICE_LEDGER_SCREEN_BINDINGS
+    assert _INVOICE_LEDGER_SCREEN_BINDINGS[Modelo.M390.value]
 
-    compared = _raise_if_m303_invoice_domestic_iva_would_be_silent(
-        context=context,
-        period=Period.from_year_and_code(2026, "0A"),
-        transaction_binding_values={},
-        invoice_repository=None,
-        prorrata_apportionment=None,
-    )
 
-    assert compared == ()
+def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
+    """One screen, one comparison: the two entries must not drift apart.
+
+    M390 declares the same seven cuota concepts M303 does under its own id
+    prefix. Comparing the tables with the prefix stripped is what makes a
+    widening applied to one and not the other fail here rather than surface as
+    a wrong filing -- which is how the ES-only counterparty filter and the
+    missing recargo tiers survived on the M303 side for as long as they did.
+    """
+    stripped = {
+        modelo: sorted(str(binding).removeprefix(f"modelo-{modelo}-").removeprefix("iva-") for binding in bindings)
+        for modelo, bindings in _INVOICE_LEDGER_SCREEN_BINDINGS.items()
+    }
+
+    assert stripped[Modelo.M303.value] == stripped[Modelo.M390.value]
 
 
 def test_m390_declares_no_invoice_sourced_binding() -> None:

@@ -47,6 +47,7 @@ from ...domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,
     UngroundedRentaIncome,
+    renta_income_binding_output_casilla_values,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     resolve_ledger_irnr_income_aggregation_binding_values,
     resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values,
@@ -137,27 +138,40 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
     },
 )
-_M130_RETENCIONES_BINDING_ID: BindingId = "modelo-130-actividad-economica-retenciones-cumulative"
-_M130_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("06", surface="_M130_RETENCIONES_CASILLA")
 _M210_RENDIMIENTOS_INTEGROS_CASILLA: CasillaId = validated_casilla_id(
     "rendimientos_integros",
     surface="_M210_RENDIMIENTOS_INTEGROS_CASILLA",
 )
 
-_M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS: tuple[BindingId, ...] = (
-    "modelo-303-iva-repercutido-general-cuota",
-    "modelo-303-iva-repercutido-reducido-cuota",
-    "modelo-303-iva-repercutido-super-reducido-cuota",
-    "modelo-303-iva-soportado-interiores-cuota",
-    # The recargo de equivalencia tiers (LIVA art. 161). A supplier to a
-    # recargo-regime retailer charges it ON TOP of the cuota, so an invoice
-    # carrying one and a ledger missing it under-declare by exactly the
-    # surcharge -- the same silent shortfall the cuota bindings above screen
-    # for, on a figure the screen previously did not look at.
-    "modelo-303-recargo-equivalencia-general-cuota",
-    "modelo-303-recargo-equivalencia-reducido-cuota",
-    "modelo-303-recargo-equivalencia-super-reducido-cuota",
-)
+_INVOICE_LEDGER_SCREEN_BINDINGS: dict[str, tuple[BindingId, ...]] = {
+    # ONE screen, a binding set per modelo -- deliberately not a second
+    # screen per modelo. M390 declares the same seven concepts M303 does,
+    # differing only in the id prefix, so a parallel function would be two
+    # implementations of one comparison free to drift: a widening applied to
+    # one and not the other is invisible until a filing is wrong.
+    Modelo.M303.value: (
+        "modelo-303-iva-repercutido-general-cuota",
+        "modelo-303-iva-repercutido-reducido-cuota",
+        "modelo-303-iva-repercutido-super-reducido-cuota",
+        "modelo-303-iva-soportado-interiores-cuota",
+        # The recargo de equivalencia tiers (LIVA art. 161). A supplier to a
+        # recargo-regime retailer charges it ON TOP of the cuota, so an invoice
+        # carrying one and a ledger missing it under-declare by exactly the
+        # surcharge.
+        "modelo-303-recargo-equivalencia-general-cuota",
+        "modelo-303-recargo-equivalencia-reducido-cuota",
+        "modelo-303-recargo-equivalencia-super-reducido-cuota",
+    ),
+    Modelo.M390.value: (
+        "modelo-390-iva-repercutido-general-cuota",
+        "modelo-390-iva-repercutido-reducido-cuota",
+        "modelo-390-iva-repercutido-super-reducido-cuota",
+        "modelo-390-iva-soportado-interiores-cuota",
+        "modelo-390-iva-recargo-equivalencia-general-cuota",
+        "modelo-390-iva-recargo-equivalencia-reducido-cuota",
+        "modelo-390-iva-recargo-equivalencia-super-reducido-cuota",
+    ),
+}
 _M303_INVOICE_EVIDENCE_SAMPLE_LIMIT = 5
 
 
@@ -210,7 +224,7 @@ class LedgerIvaAggregationSourceResolver:
             aggregation.observations,
             prorrata_apportionment=aggregation.prorrata_apportionment,
         )
-        devengo_compared_invoices = _raise_if_m303_invoice_domestic_iva_would_be_silent(
+        devengo_compared_invoices = _raise_if_invoice_iva_would_be_silent(
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
@@ -458,7 +472,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            bound_inputs_by_casilla_id=_m130_retenciones_backend_inputs(context, binding_values),
+            bound_inputs_by_casilla_id=renta_income_binding_output_casilla_values(context.revision, binding_values),
             source_transaction_ids=tuple(
                 sorted(observation.transaction_id for observation in aggregation.observations),
             ),
@@ -674,32 +688,6 @@ def _fitted_id_list(identifiers: Sequence[str], *, budget: int) -> str:
             return candidate
     fallback = f"{total} transaction(s), ids omitted to fit the diagnostic length limit"
     return fallback if len(fallback) <= budget else ""
-
-
-def _m130_retenciones_backend_inputs(
-    context: CalculationSourceContext,
-    binding_values: Mapping[BindingId, Decimal],
-) -> dict[CasillaId, Decimal]:
-    """Redirect the retenciones binding's resolved value to casilla 06.
-
-    This is the OUTPUT half of a fact that is declared with
-    `target_casilla_id = "01"` in the registry (see the comment on the
-    `modelo-130-actividad-economica-retenciones-cumulative` binding in
-    `_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/bindings/
-    0003-m130-income-cumulative.toml`). That selector field is the
-    OBSERVATION-MATCH key -- it must stay "01" for the aggregation to see any
-    rows at all -- not a declaration of where the aggregate lands. Casilla 06
-    is hardcoded here because this binding family has no schema field to
-    express "match on X's observations, output to Y's casilla" honestly; do
-    not "fix" the selector to "06" without reading that TOML comment first,
-    since doing so silently zeroes this value instead of redirecting it.
-    """
-    if str(context.modelo) != Modelo.M130.value:
-        return {}
-    value = binding_values.get(_M130_RETENCIONES_BINDING_ID)
-    if value is None:
-        return {}
-    return {_M130_RETENCIONES_CASILLA: value}
 
 
 class LedgerImpatriadoIncomeAggregationSourceResolver:
@@ -1031,7 +1019,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         )
 
 
-def _raise_if_m303_invoice_domestic_iva_would_be_silent(
+def _raise_if_invoice_iva_would_be_silent(
     *,
     context: CalculationSourceContext,
     period: Period,
@@ -1039,25 +1027,40 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
 ) -> tuple[Invoice, ...]:
-    """Refuse M303 when domestic invoice IVA would be absent from ledger totals.
+    """Refuse a filing whose invoice IVA would be absent from its ledger totals.
 
-    Modelo 303's domestic IVA boxes are sourced from ``ledger_iva_aggregation``:
-    the transaction ledger is the filing authority. A bucket can also carry real
-    invoice catalogue evidence, but there is no domestic-IVA invoice binding
-    family for M303. If positive Spanish invoice IVA exists for the same period
-    and its standard domestic cuota would exceed the transaction-ledger cuota
-    that the filing is about to use, calculating a zero/subtotal filing would
-    silently under-declare. Refuse and require the operator to link/classify the
-    transactions that feed the canonical ledger path.
+    The IVA cuota boxes are sourced from ``ledger_iva_aggregation``: the
+    transaction ledger is the filing authority. A bucket can also carry real
+    invoice catalogue evidence, and there is no invoice binding family for
+    these boxes. If invoice IVA exists for the period and would exceed the
+    transaction-ledger cuota the filing is about to use, calculating a
+    zero/subtotal filing would silently under-declare. Refuse, and require the
+    operator to link and classify the transactions that feed the canonical
+    ledger path.
+
+    **Applies to every modelo in the screened-binding table, by design.** M390
+    declares the same seven concepts M303 does under its own id prefix, so it
+    is an entry in that table rather than a second screen. Two implementations
+    of one comparison would be free to drift, and a widening applied to one and
+    not the other is invisible until a filing is wrong -- which is exactly how
+    the ES-only counterparty filter and the missing recargo tiers survived on
+    the M303 side.
+
+    The annual modelo needs this more than the quarterly one, not less. Its
+    390-to-303 reconciliation BLOCKING_RULE compares two figures that both root
+    in the same ledger, so it detects a transaction booked into the wrong
+    quarter and cannot detect one that was never recorded at all: both sides
+    are equally short and the rule passes.
 
     Returns:
-        The invoices whose domestic IVA was compared against the ledger, so the
-        caller can disclose how their period placement was arrived at. Empty
-        when the screen does not apply or found nothing to compare.
+        The invoices whose IVA was compared against the ledger, so the caller
+        can disclose how their period placement was arrived at. Empty when the
+        modelo is not screened or there was nothing to compare.
     """
-    if str(context.modelo) != Modelo.M303.value:
+    screened_bindings = _INVOICE_LEDGER_SCREEN_BINDINGS.get(str(context.modelo))
+    if screened_bindings is None:
         return ()
-    invoice_observations, invoice_ids, compared_invoices = _m303_standard_domestic_invoice_iva_observations(
+    invoice_observations, invoice_ids, compared_invoices = _screened_invoice_iva_observations(
         context=context,
         period=period,
         invoice_repository=invoice_repository,
@@ -1071,7 +1074,7 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     )
     missing_binding_values = {
         binding_id: invoice_value - transaction_value
-        for binding_id in _M303_STANDARD_DOMESTIC_IVA_CUOTA_BINDINGS
+        for binding_id in screened_bindings
         if (invoice_value := invoice_binding_values.get(binding_id, Decimal("0")))
         > (transaction_value := transaction_binding_values.get(binding_id, Decimal("0")))
     }
@@ -1098,7 +1101,7 @@ def _raise_if_m303_invoice_domestic_iva_would_be_silent(
     )
 
 
-def _m303_standard_domestic_invoice_iva_observations(
+def _screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
     period: Period,
@@ -1113,7 +1116,7 @@ def _m303_standard_domestic_invoice_iva_observations(
     invoice_ids: set[str] = set()
     compared_invoices: list[Invoice] = []
     for invoice in catalogue.values():
-        if not _m303_standard_domestic_invoice_in_period(invoice, context=context, period=period):
+        if not _screened_invoice_in_period(invoice, context=context, period=period):
             continue
         # The date the observation carries must be the date it was SELECTED on,
         # or the record would state one quarter while being declared in another.
@@ -1169,7 +1172,7 @@ def _sole_recargo_bearing_line_index(invoice: Invoice) -> int | None:
     return cuota_lines[0]
 
 
-def _m303_standard_domestic_invoice_in_period(
+def _screened_invoice_in_period(
     invoice: Invoice,
     *,
     context: CalculationSourceContext,
