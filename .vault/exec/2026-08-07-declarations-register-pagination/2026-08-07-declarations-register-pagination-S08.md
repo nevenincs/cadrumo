@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:68dd3ed566e9a14fe6e2a28a9bf7ef9a8b5a72906e54539ead628defcf8eca89'
+body_hash: 'sha256:3e101a682d355743ea8aa79cd39afd1f9261e1b4543a912e6a2360669e82370e'
 step_id: 'S08'
 related:
   - "[[2026-08-07-declarations-register-pagination-plan]]"
@@ -62,3 +62,19 @@ clause, so the refusal still reached the absorber and the test still passed. A
 mutation that does not flip the result has not proven the gate — it has only
 proven the mutation missed. Worth recording because a green mutation run reads
 exactly like a passing test.
+
+## Xdist vacuity check
+
+`addopts` injects `-n auto --dist=loadfile`, so the runs above were parallel
+without the flag appearing in the command, and a mutation confined to the
+controlling process would have produced a vacuous green. Re-run with `-n0`: the
+narrowed-absorb-clause mutation reds identically, 1 failed, and the baseline
+passes. Not vacuous.
+
+The near-miss recorded above gains a discriminating control from this. The
+mutation that missed was re-run under `-n0` too and still passes green, which
+separates the two explanations for a green mutation run: had its green been xdist
+vacuity it would have reded once serialised, and it did not. So its green was
+genuinely the wrong-layer diagnosis, as recorded, and not parallelism hiding the
+mutation. Two different causes produce the same green, and only a serialised
+re-run tells them apart.
