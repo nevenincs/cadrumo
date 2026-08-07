@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:9811a23b606e41ad739024636acc2f0337bab6d2d8b62a4d91e457f954e7c30f'
+body_hash: 'sha256:c1497ea6c6a27b2b481668c747cf8bc73c534a7b59b68f17c26d75c71266cd10'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -301,7 +301,11 @@ exactly that, and the operator's kind decides. Class and category are
 closed-set selections from registry-grounded allow-lists under the accepted
 suggest/review/apply contract — the document proposes, the operator disposes.
 The extraction stage never invents a category and the classification stage
-never touches an amount.
+never touches an amount. For `IvaCategory` specifically this is refined by
+the D8b classification ruling: the category is produced by a deterministic
+model-free classifier over transcribed evidence (the printed regime legend,
+rate presence, establishment, direction), or asserted by the operator — a
+model emits it on no path in this pipeline.
 
 **Why these seams.** S0/S1 is the exactness boundary (decided by the peer
 ADR). S1/S2 is the reading/reasoning boundary — placed exactly where the
@@ -546,8 +550,11 @@ narrated.
 **The extraction prompt is a compiled artefact, never a string literal.**
 The template carries no numeric rate literal; permitted IVA and retención
 rates are resolved at compile time from `ValidatedRegistryAuthority` for
-the document's filing year and period, and permitted categories from the
-`IvaCategory` StrEnum. This is `aeat-registry-authority-flow` applied, not
+the document's filing year and period. (An earlier form of this decision
+also compiled "permitted categories from the `IvaCategory` StrEnum" into
+the extraction prompt; that clause is struck by the classification ruling
+below — the extraction stage never emits a category, so its prompt has no
+business enumerating one.) This is `aeat-registry-authority-flow` applied, not
 a preference: a hardcoded `21` inside a prompt is a registry value inlined
 in the least-audited location in the codebase, and it silently reads one
 year's document under another year's rates. The enumeration is also the
@@ -593,6 +600,59 @@ directions on a host that can run no model.
 model extracts better over fewer fields per call than all fields at once.
 It has architectural consequences for S2's call shape and is resolved by
 the D9 harness at the design-target tier, never by assertion.
+
+**Ruling (amendment): classification never enters stage 2.** The build
+surfaced a genuine contradiction inside this decision: an `IvaCategory` is
+a classification derived from the parties' establishment, the printed
+regime legend and the presence or absence of a repercutido line — its enum
+tokens are printed on no invoice, so a model asked for one has nothing to
+copy and must infer, inside the stage whose whole guarantee is that values
+are copied and never computed. The build also measured the underlying gap:
+a set correct as a tax-outcome classification
+(`CUOTA_LESS_M303_IVA_CATEGORIES`) was wrong as a description of what the
+paper shows, diverging exactly on the reverse-charge family, where the
+supplier repercutes nothing and RD 1619/2012 art. 6.1.m obliges the
+invoice to say so in words. The taxonomy and the paper do not correspond
+one to one, and only the paper is transcribable. The ruling, refining
+D1's S4 sentence for `IvaCategory` specifically:
+
+- **Stage 2 emits only anchorable printed evidence.** A new transcriptive
+  field carries the printed regime legend verbatim ("inversión del sujeto
+  pasivo", "exenta art. 20", "Reverse charge"), anchored like every other
+  field. The compiled prompt may enumerate the statutory legend vocabulary
+  as a recognition aid — that set is grounded in the mentions RD 1619/2012
+  art. 6.1 itself mandates, a closed legal vocabulary and not a layout
+  enumeration, and the instruction stays "copy it verbatim if printed",
+  never "choose one". This *lowers* the low-context burden: one more copy
+  field replaces a taxonomy the model had to reason over.
+- **A deterministic, model-free classifier downstream of S3 owns
+  `IvaCategory`.** Its inputs are recorded per invocation: the transcribed
+  legend and its anchor, the per-rate breakdown (a repercutido line
+  present or absent), the resolved counterparty identity and its
+  establishment signal, and the direction. Its mapping from statutory
+  legend plus signals to category is registry-and-law-grounded data, not
+  prose heuristics, and it is fully testable on a host running no model.
+  Establishment is consumed under whatever the still-open domestic
+  discriminator ruling decides; until then an unstated counterparty
+  country reads as UNKNOWN here, never as domestic — a wrong category is
+  worse than an absent one.
+- **Three category states exist, and "maybe" is not one of them.**
+  Derived, with a `DERIVED` provenance origin whose envelope records the
+  input set in place of an anchor; operator-asserted, re-stamped
+  `OPERATOR` through the review gate's allow-list selection; or absent.
+  When the legend is missing and the remaining signals are not decisive,
+  the category stays absent with a visible advisory and the review gate
+  surfaces it as a resolvable item. When the signals *contradict* — a
+  reverse-charge legend beside a repercutido line, a legend the rate
+  pattern belies — the classifier emits a blocking finding the review
+  gate refuses to confirm past, per the operations record's D2. The
+  classifier never guesses, and no numeric confidence is minted, per D5.
+- **Scope of this ruling.** It governs the ingestion pipeline's category
+  axis only. The accepted ledger-classification contract (the transaction
+  classify surface, where a model selects from a registry allow-list
+  under suggest-review-apply) is untouched; that surface classifies a
+  transaction with operator review as the gate, not a transcription stage
+  claiming exactness.
 
 ### D9 — Stage-by-stage measurement: the map from stage to oracle
 
