@@ -1210,3 +1210,65 @@ def test_the_invoice_stores_contribute_nothing_to_m303_or_m390(modelo_id: str, p
         f"modelo {modelo_id} now declares invoice-sourced bindings; "
         "extend the capability-parity proof before relying on it"
     )
+
+
+def test_an_explicit_operation_type_resolves_a_clave_without_any_iva_category() -> None:
+    """The measured ground for M349 absence being non-disqualifying.
+
+    This is the executable form of the justification in
+    ``_m349_incoherent_verdict``. An absent IVA category does not mean the
+    operation was inexpressible; it usually means the clave came from the
+    explicitly declared operation type, which is consulted first and returns
+    without ever reading the category.
+
+    Treating absence as disqualifying would therefore drop exactly the records
+    whose clave the operator stated most directly. If this ever fails, that
+    justification is void and the guard must be re-decided rather than
+    re-explained.
+    """
+    invoice = _invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="EXPLICIT-CLAVE-001",
+        issued_at=date(2026, 2, 1),
+        counterparty_tax_id="DE345678901",
+        counterparty_country="DE",
+        base_total=Decimal("100.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    ).model_copy(update={"iva_category": None, "operation_type": IntracomOperationType.E})
+
+    assert invoice.iva_category is None
+    assert _intracommunity_clave(invoice) == "E"
+
+
+def test_the_intra_community_service_categories_exist_and_map_to_their_claves() -> None:
+    """Pins the premise that refuted the previous justification.
+
+    The retired reasoning asserted that intra-community services mapped to no
+    IVA category member at all. Both members exist and both resolve to their
+    own clave -- kept distinct from the goods claves, because a service
+    declared as an entrega would be filed as an entrega de bienes.
+    """
+    supply = _invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        invoice_number="SERV-S-001",
+        issued_at=date(2026, 2, 1),
+        counterparty_tax_id="DE345678901",
+        counterparty_country="DE",
+        base_total=Decimal("100.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
+    )
+    acquisition = _invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="SERV-I-001",
+        issued_at=date(2026, 2, 1),
+        counterparty_tax_id="DE345678901",
+        counterparty_country="DE",
+        base_total=Decimal("100.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+    )
+
+    assert _intracommunity_clave(supply) == "S"
+    assert _intracommunity_clave(acquisition) == "I"

@@ -270,16 +270,37 @@ def _m349_incoherent_verdict(
 
     Within Modelo 349 the check is narrowed again, to the defects where the
     record CONTRADICTS ITSELF. Absence is deliberately not disqualifying, and
-    the reason is measured rather than cautious: ``IntracomOperationType.S``
-    and ``I`` -- an ordinary prestacion or adquisicion de servicios
-    intracomunitaria -- map to no :class:`~cadrumo.domain.iva.IvaCategory`
-    member at all, because the enum names goods, acquisitions and
-    triangulation but not services. Treating an absent category as
-    disqualifying therefore drops an entire lawful operation class out of the
-    recapitulativa, which is a far larger under-declaration than the
-    contradiction the check exists to catch. ``FX_UNRESOLVED`` is likewise
-    excluded here because the unconverted-foreign gate upstream already
-    withholds those records.
+    the reason is structural: **an absent category does not mean the operation
+    was inexpressible, it usually means the clave came from somewhere else.**
+    :func:`_intracommunity_clave` consults an explicit
+    :attr:`~cadrumo.domain.invoices.Invoice.operation_type` FIRST and returns
+    without ever reading ``iva_category``, so a record carrying a directly
+    declared clave legitimately carries no category at all. Since this check
+    runs only after the clave is settled, treating absence as disqualifying
+    would drop exactly the records whose clave the operator stated most
+    explicitly -- the least ambiguous rows in the store.
+
+    That reasoning is deliberately independent of what the category enum
+    happens to contain, because the previous justification was not and went
+    stale. It asserted that an ordinary prestacion or adquisicion de servicios
+    intracomunitaria "maps to no :class:`~cadrumo.domain.iva.IvaCategory`
+    member at all, because the enum names goods, acquisitions and triangulation
+    but not services". The enum has since gained
+    ``INTRA_COMMUNITY_SERVICE_SUPPLY`` and
+    ``INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE``, and
+    :func:`_intracommunity_clave` maps both to their claves a hundred-odd lines
+    below -- so the stated ground for weakening a filing-path guard was refuted
+    by the same module that stated it.
+
+    The behaviour is unchanged, and that is a decision rather than an
+    omission: making absence disqualifying would alter filed M349 output, which
+    needs its own evidence and its own ruling, not a docstring correction.
+    Services now being expressible only strengthens the conclusion -- a
+    services invoice can reach its clave through either route, so absence is
+    even weaker evidence of an unrepresentable operation than before.
+
+    ``FX_UNRESOLVED`` is likewise excluded here because the unconverted-foreign
+    gate upstream already withholds those records.
     """
     if context.modelo != Modelo.M349.value:
         return None
