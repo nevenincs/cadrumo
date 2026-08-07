@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e2a116f5e23e7abd384a5eb63816391009e4deb0c4c6b0d7bfafb249b29c749'
+body_hash: 'sha256:55316bfd80e1d7e8ca4cd6139559a3b2232d233d3ba68247d3f05f0a110496ad'
 related:
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S01]]'
   - '[[2026-08-07-calculation-chain-integrity-W01-P01-S02]]'
@@ -23,7 +23,9 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W03-P04-S09]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P04-S10]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P04-S36]]'
+  - '[[2026-08-07-calculation-chain-integrity-W03-P05-S11]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P05-S12]]'
+  - '[[2026-08-07-calculation-chain-integrity-W03-P05-S13]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P05-S37]]'
   - '[[2026-08-07-calculation-chain-integrity-W03-P05-S38]]'
   - '[[2026-08-07-calculation-chain-integrity-W04-P06-S14]]'
@@ -50,6 +52,7 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S42]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S43]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S46]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S47]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S48]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S49]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S50]]'
@@ -58,6 +61,7 @@ related:
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S53]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S54]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S55]]'
+  - '[[2026-08-07-calculation-chain-integrity-W06-P08-S56]]'
   - '[[2026-08-07-calculation-chain-integrity-W06-P08-S57]]'
   - '[[2026-08-07-calculation-chain-integrity-activity-type-placement-adr]]'
   - '[[2026-08-07-calculation-chain-integrity-adr]]'
@@ -103,7 +107,9 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W03-P04-S09` - `calculation-chain-integrity` exec `W03-P04-S09`: Reconcile the candidate placements for the activity-type axis
 - `2026-08-07-calculation-chain-integrity-W03-P04-S10` - `calculation-chain-integrity` exec `W03-P04-S10`: Record the placement ruling against the deferring ADR
 - `2026-08-07-calculation-chain-integrity-W03-P04-S36` - `calculation-chain-integrity` exec `W03-P04-S36`: Ground the tipo-de-actividad code-set granularity
+- `2026-08-07-calculation-chain-integrity-W03-P05-S11` - `calculation-chain-integrity` exec W03.P05.S11
 - `2026-08-07-calculation-chain-integrity-W03-P05-S12` - `calculation-chain-integrity` exec W03.P05.S12
+- `2026-08-07-calculation-chain-integrity-W03-P05-S13` - `calculation-chain-integrity` exec W03.P05.S13
 - `2026-08-07-calculation-chain-integrity-W03-P05-S37` - `calculation-chain-integrity` exec W03.P05.S37
 - `2026-08-07-calculation-chain-integrity-W03-P05-S38` - `calculation-chain-integrity` exec W03.P05.S38
 - `2026-08-07-calculation-chain-integrity-W04-P06-S14` - `calculation-chain-integrity` exec W04.P06.S14
@@ -130,6 +136,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W06-P08-S42` - `calculation-chain-integrity` exec W06.P08.S42
 - `2026-08-07-calculation-chain-integrity-W06-P08-S43` - `calculation-chain-integrity` exec W06.P08.S43
 - `2026-08-07-calculation-chain-integrity-W06-P08-S46` - `calculation-chain-integrity` exec W06.P08.S46
+- `2026-08-07-calculation-chain-integrity-W06-P08-S47` - `calculation-chain-integrity` exec W06.P08.S47
 - `2026-08-07-calculation-chain-integrity-W06-P08-S48` - `calculation-chain-integrity` exec W06.P08.S48
 - `2026-08-07-calculation-chain-integrity-W06-P08-S49` - `calculation-chain-integrity` exec W06.P08.S49
 - `2026-08-07-calculation-chain-integrity-W06-P08-S50` - `calculation-chain-integrity` exec W06.P08.S50
@@ -138,6 +145,7 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 - `2026-08-07-calculation-chain-integrity-W06-P08-S53` - Add the effective-dated temporary food rates to the Spanish rate table goods-blind, on the measured ground that neither the M390 nor M303 diseno carries any goods axis so a goods distinction would encode information no AEAT box can receive
 - `2026-08-07-calculation-chain-integrity-W06-P08-S54` - `calculation-chain-integrity` exec W06.P08.S54
 - `2026-08-07-calculation-chain-integrity-W06-P08-S55` - `calculation-chain-integrity` exec W06.P08.S55
+- `2026-08-07-calculation-chain-integrity-W06-P08-S56` - `calculation-chain-integrity` exec W06.P08.S56
 - `2026-08-07-calculation-chain-integrity-W06-P08-S57` - `calculation-chain-integrity` exec W06.P08.S57
 
 ### plan
@@ -146,5 +154,5 @@ Auto-generated index of all documents tagged with `#calculation-chain-integrity`
 
 ### research
 
-- `2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research` - `calculation-chain-integrity` research: `Scoping the Modelo 390 annual under-modelling as its own campaign`
+- `2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research` - `calculation-chain-integrity` research: scoping the Modelo 390 annual under-modelling
 - `2026-08-07-calculation-chain-integrity-research` - `calculation-chain-integrity` research: `Silent-zero and silent-overclaim defects measured across the ledger-calculation-declaration chain`
