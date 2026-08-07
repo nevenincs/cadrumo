@@ -415,6 +415,15 @@ PDF_MIME_TYPE: Final[str] = "application/pdf"
 #: PDF file-extension string (lower-case, dot-prefixed).
 PDF_EXTENSION: Final[str] = ".pdf"
 
+#: IANA-registered MIME type for XML document payloads (RFC 7303 prefers this
+#: over the discouraged ``text/xml``). Deliberately the GENERIC container type:
+#: a structured e-invoice may be Facturae, EN16931 CII or UBL, and which one it
+#: is can only be settled by probing the bytes. Storing a syntax-specific type
+#: would restate as a declared fact the very claim the document-shape probe
+#: exists to derive -- the mistake that once routed a ZUGFeRD invoice, whose
+#: declared type said "PDF", down the prose-extraction path.
+XML_MIME_TYPE: Final[str] = "application/xml"
+
 #: Legacy binary Excel workbook file-extension string (lower-case, dot-prefixed).
 XLS_EXTENSION: Final[Literal[".xls"]] = ".xls"
 
