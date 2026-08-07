@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import override
 
 from .....core import FieldRole
-from .....core.errors import CoreValidationError, resolve_error_message
+from .....core.errors import CadrumoError, CoreValidationError, resolve_error_message
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
 from .....domain.transactions import SourceFormat
@@ -84,15 +84,61 @@ class _MappedRowFields:
     external_id: str | None
 
 
+def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | None:
+    """Establish ``table``'s column roles with the semantic column-role mapper.
+
+    The import is deferred to call time for two reasons: ``cadrumo.llm`` is an
+    optional extra, and it is a SIBLING of this package in the layering
+    contract rather than an inner tier. Reaching it here, only once a file has
+    actually arrived at this lane, keeps a host without the extra able to
+    detect and parse every exact-layout file as before.
+
+    A host that cannot map resolves to ``None``, which the lane already reports
+    as "column roles could not be established". That is the same
+    operator-facing outcome as before this binding existed, so installing it
+    can only add capability.
+
+    The guard is the project error base rather than the LLM family alone,
+    because reaching a model is not the only way this can decline: the client
+    consults its response cache first, and the cache is profile-bound, so an
+    operator who has not unlocked a profile gets a storage refusal well before
+    any request is built. Detecting a file must not depend on being logged in.
+    A genuine programming fault still raises.
+    """
+    try:
+        from .....llm import SemanticColumnRoleMapper
+    except ImportError:
+        _logger.debug("semantic column-role mapping is unavailable: the llm extra is not installed")
+        return None
+    try:
+        proposal = SemanticColumnRoleMapper().map(table.headers)
+    except CadrumoError:
+        _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
+        return None
+    for rejected in proposal.rejected_role_proposals:
+        # The positional mapping carries roles only, so a token the allow-list
+        # refused would otherwise vanish between here and the operator, who
+        # sees the column reported unmapped but not what was proposed for it.
+        _logger.warning(
+            "column %d %r was proposed the role %r, which is not a permitted role",
+            rejected.column_index,
+            rejected.header,
+            rejected.proposed_role,
+        )
+    return ColumnRoleMapping(roles=proposal.roles)
+
+
 def default_tabular_mapping_resolver() -> TabularMappingResolver | None:
     """Return the mapping resolver detection uses, or ``None`` when none is installed.
 
     The single wiring point between this lane and whatever establishes column
-    roles. It returns ``None`` today, so a file reaching the lane is reported
-    as unmappable rather than guessed at; the semantic column-role mapper binds
-    here when it lands, and nothing else in this module changes.
+    roles. It resolves to the semantic column-role mapper, which decides one
+    role per column from the file's header vocabulary alone, once per file.
+    Every cell is still copied by :mod:`._tabular_projection` under that
+    mapping, so nothing about how values reach a row changed when this stopped
+    returning ``None``.
     """
-    return None
+    return _resolve_roles_semantically
 
 
 class MappedTabularProvider(FinancialProvider):

@@ -147,15 +147,42 @@ def test_unmapped_columns_are_reported_rather_than_refusing_the_file() -> None:
     assert any("exchange_rate" in warning for warning in unmapped)
 
 
-def test_lane_without_an_installed_resolver_reports_rather_than_guesses() -> None:
-    """With no mapping available the lane declines and says why; it never invents roles."""
-    assert default_tabular_mapping_resolver() is None
+def test_lane_reports_when_roles_cannot_be_established() -> None:
+    """A host that cannot map declines and says why; it never invents roles.
+
+    The mapping may be unavailable for several reasons — no resolver wired, the
+    optional extra absent, no model configured, an unusable reply — and every
+    one of them arrives here as "no mapping". The lane must report that and
+    refuse, rather than fall back to guessing column meanings.
+    """
+    lane = MappedTabularProvider(mapping_resolver=lambda table: None)
+    validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
+    assert not validation.is_valid
+    assert any("column roles could not be established" in warning for warning in validation.warnings)
+    with pytest.raises(InvalidFinancialSourceError, match="column roles could not be established"):
+        list(lane.ingest(_UNKNOWN_FORMAT_FIXTURE))
+
+
+def test_lane_with_no_resolver_at_all_reports_rather_than_guesses() -> None:
+    """The unwired case is distinct from the unmappable one and names itself."""
     lane = MappedTabularProvider()
+    lane.mapping_resolver = None
     validation = lane.validate_source(_UNKNOWN_FORMAT_FIXTURE)
     assert not validation.is_valid
     assert any("no column-role mapping resolver" in warning for warning in validation.warnings)
     with pytest.raises(InvalidFinancialSourceError, match="no column-role mapping resolver"):
         list(lane.ingest(_UNKNOWN_FORMAT_FIXTURE))
+
+
+def test_the_wiring_point_is_the_lanes_only_production_mapping_source() -> None:
+    """Whatever supplies roles in production arrives through the one wiring point.
+
+    Asserted as identity against that function rather than against a particular
+    resolver, so binding or unbinding the semantic mapper does not make this
+    test fail for saying nothing. What must not happen is a second mapping
+    source appearing beside it.
+    """
+    assert MappedTabularProvider().mapping_resolver == default_tabular_mapping_resolver()
 
 
 def test_a_mapping_missing_a_required_role_is_refused_with_the_role_named() -> None:

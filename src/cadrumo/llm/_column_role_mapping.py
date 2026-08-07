@@ -229,11 +229,7 @@ def _role_descriptions() -> Mapping[str, str]:
     descriptions: dict[str, str] = {}
     pending_token: str | None = None
     for node in class_definition.body:
-        if (
-            isinstance(node, ast.Assign)
-            and isinstance(node.value, ast.Constant)
-            and isinstance(node.value.value, str)
-        ):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
             pending_token = node.value.value
             continue
         if (

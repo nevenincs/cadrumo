@@ -398,6 +398,13 @@ ignore_imports =
     # per origin rather than by widening the contract, so a NEW production
     # edge that is not a DTO consumer still fails loudly.
     cadrumo.application.ledger._llm_review_workflow -> cadrumo.llm
+    # The tabular fallback lane reaches the gated subpackage for the one
+    # judgement it cannot make deterministically: what a file's own header
+    # vocabulary means. Deferred inside the resolver, and pinned here because
+    # cadrumo.llm is a SIBLING of cadrumo.adapters on the adapter tier rather
+    # than an inner one, so this is a peer edge and not an inward reach. Values
+    # never cross it -- only headers out, roles back.
+    cadrumo.adapters.inbound.financial.providers._mapped_tabular -> cadrumo.llm
     cadrumo.application.ledger.tests.test_extraction_interchange -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split -> cadrumo.llm
     cadrumo.application.ledger.tests.test_llm_evidence_split_apply -> cadrumo.llm

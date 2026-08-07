@@ -29,7 +29,7 @@ from typing import override
 import pytest
 
 from ...core import FieldRole
-from ...core.config import LLMProvider
+from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from .. import (
     LLMClient,
@@ -82,8 +82,12 @@ def _distinctive_cell_values() -> set[str]:
     dates, invoice numbers, counterparty names, NIFs and every decimal amount --
     appears nowhere but this file.
     """
+    minimum_distinctive_length = 5
     return {
-        cell.strip() for row in _libro_registro_rows()[1:] for cell in row if len(cell.strip()) >= 5  # noqa: PLR2004
+        cell.strip()
+        for row in _libro_registro_rows()[1:]
+        for cell in row
+        if len(cell.strip()) >= minimum_distinctive_length
     }
 
 
@@ -341,8 +345,15 @@ def _serve_ollama(reply_text: str) -> Iterator[tuple[str, Queue[dict[str, object
         thread.join(timeout=3)
 
 
-def _mapper(tmp_path: Path, endpoint: str) -> SemanticColumnRoleMapper:
-    """Build a mapper bound to the production client over a loopback provider."""
+@contextmanager
+def _mapper(tmp_path: Path, endpoint: str) -> Iterator[SemanticColumnRoleMapper]:
+    """Yield a mapper bound to the production client over a loopback provider.
+
+    The endpoint is set through ``override_settings`` as well as on the injected
+    settings: the local adapter resolves its chat URL from the process-wide
+    settings rather than from the client's injected ones, so injection alone
+    would send the request to a real Ollama host that is not running here.
+    """
     settings = EnvFileFreeSettings(
         cadrumo_llm_provider=LLMProvider.LOCAL,
         cadrumo_llm_model="gpt-oss",
@@ -351,7 +362,8 @@ def _mapper(tmp_path: Path, endpoint: str) -> SemanticColumnRoleMapper:
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
     )
-    return SemanticColumnRoleMapper(client=LLMClient(settings=settings), settings=settings)
+    with override_settings(cadrumo_llm_ollama_chat_url=endpoint):
+        yield SemanticColumnRoleMapper(client=LLMClient(settings=settings), settings=settings)
 
 
 def test_the_libro_registro_headers_map_over_the_real_client(tmp_path: Path) -> None:
@@ -361,8 +373,8 @@ def test_the_libro_registro_headers_map_over_the_real_client(tmp_path: Path) -> 
     a reply into a proposal -- not that a model produces this reply.
     """
     headers = _libro_registro_headers()
-    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events):
-        proposal = _mapper(tmp_path, endpoint).map(headers)
+    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events), _mapper(tmp_path, endpoint) as mapper:
+        proposal = mapper.map(headers)
 
     assert proposal.roles[headers.index("base_imponible")] is FieldRole.TAXABLE_BASE
     assert proposal.roles[headers.index("importe_retencion")] is FieldRole.RETENCION_AMOUNT
@@ -374,8 +386,8 @@ def test_the_libro_registro_headers_map_over_the_real_client(tmp_path: Path) -> 
 def test_the_dispatched_prompt_carries_no_cell_value(tmp_path: Path) -> None:
     """What crosses the wire is headers and role tokens; no data value goes out."""
     rows = _libro_registro_rows()
-    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events):
-        _mapper(tmp_path, endpoint).map(tuple(rows[0]))
+    with _serve_ollama(_full_libro_registro_reply()) as (endpoint, events), _mapper(tmp_path, endpoint) as mapper:
+        mapper.map(tuple(rows[0]))
 
     body = events.get_nowait()["body"]
     assert isinstance(body, dict)
@@ -386,20 +398,20 @@ def test_the_dispatched_prompt_carries_no_cell_value(tmp_path: Path) -> None:
 
 def test_an_unusable_reply_from_the_real_transport_raises(tmp_path: Path) -> None:
     """A reply carrying no object surfaces as a typed refusal rather than a silent blank."""
-    with _serve_ollama("I am not able to label these columns.") as (endpoint, _events):
-        mapper = _mapper(tmp_path, endpoint)
-        with pytest.raises(LLMValidationError):
-            mapper.map(_libro_registro_headers())
+    with (
+        _serve_ollama("I am not able to label these columns.") as (endpoint, _events),
+        _mapper(tmp_path, endpoint) as mapper,
+        pytest.raises(LLMValidationError),
+    ):
+        mapper.map(_libro_registro_headers())
 
 
 def test_an_out_of_allow_list_reply_from_the_real_transport_still_imports(tmp_path: Path) -> None:
     """Across the real transport too, one bad token costs its column and not the file."""
     headers = _libro_registro_headers()
-    reply = _reply(
-        [(0, FieldRole.INVOICE_DATE.value), (4, "totally_invented_role"), (9, FieldRole.GRAND_TOTAL.value)]
-    )
-    with _serve_ollama(reply) as (endpoint, _events):
-        proposal = _mapper(tmp_path, endpoint).map(headers)
+    reply = _reply([(0, FieldRole.INVOICE_DATE.value), (4, "totally_invented_role"), (9, FieldRole.GRAND_TOTAL.value)])
+    with _serve_ollama(reply) as (endpoint, _events), _mapper(tmp_path, endpoint) as mapper:
+        proposal = mapper.map(headers)
 
     assert [item.proposed_role for item in proposal.rejected_role_proposals] == ["totally_invented_role"]
     assert proposal.roles[4] is FieldRole.UNMAPPED
