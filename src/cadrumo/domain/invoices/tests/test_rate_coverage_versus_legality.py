@@ -25,7 +25,12 @@ import pytest
 
 from cadrumo.application.aggregation._iva_ledger import _rate_table_covers
 from cadrumo.domain.invoices import IvaRate, iva_rate_percentage
-from cadrumo.domain.iva import EUMemberState, IvaRateNotFoundError, rate_table_covers
+from cadrumo.domain.iva import (
+    EUMemberState,
+    IvaRateKind,
+    IvaRateNotFoundError,
+    rate_table_covers,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,10 +40,22 @@ _COVERED = date(2024, 6, 1)
 _UNCOVERED = date(2023, 6, 1)
 
 
-def test_the_table_does_not_reach_2023_but_does_reach_2024() -> None:
-    """The premise every other test here rests on, asserted rather than assumed."""
-    assert rate_table_covers(EUMemberState.ES, _COVERED)
-    assert not rate_table_covers(EUMemberState.ES, _UNCOVERED)
+def test_coverage_is_asked_per_tier_not_per_date() -> None:
+    """The premise every other test here rests on, asserted rather than assumed.
+
+    Coverage must be asked PER TIER. The registry holds zero-tier and 5 % food
+    records reaching back to 2023 while the general tier starts in 2024, so a
+    date-only question answers "covered" for a 21 % line the table cannot price
+    -- routing it back to the false legality message. This asserts the
+    discrimination directly, because it is what broke when the 2023 food rows
+    landed and it is invisible from any single-tier probe.
+    """
+    assert rate_table_covers(EUMemberState.ES, _COVERED, IvaRateKind.GENERAL)
+    assert not rate_table_covers(EUMemberState.ES, _UNCOVERED, IvaRateKind.GENERAL)
+    # The zero tier DOES reach 2023, which is exactly why "any tier" is the
+    # wrong question for a general-rate caller.
+    assert rate_table_covers(EUMemberState.ES, _UNCOVERED, IvaRateKind.ZERO)
+    assert rate_table_covers(EUMemberState.ES, _UNCOVERED)
 
 
 @pytest.mark.parametrize("rate", (IvaRate.RATE_21, IvaRate.RATE_10, IvaRate.RATE_4))
@@ -84,10 +101,19 @@ def test_both_layers_answer_coverage_from_one_predicate() -> None:
     same date, which is exactly how this asymmetry arose. Comparing them across
     a span that crosses the coverage edge catches a reimplementation that agrees
     on the easy cases.
+
+    The ledger asks a NARROWER question than the bare date form: it only reaches
+    this branch for a positive declared rate, so it scopes coverage to the tiers
+    bearing a positive ordinary rate. Comparing against that scoped reading
+    rather than the any-tier one is the honest equivalence -- the earlier
+    date-only comparison passed for the wrong reason once the zero tier gained
+    2023 records, since both sides then said "covered" about different tiers.
     """
+    positive_tiers = (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
     for year in (2022, 2023, 2024, 2025, 2026):
         for month in (1, 6, 12):
             probe = date(year, month, 1)
-            assert _rate_table_covers(probe) == rate_table_covers(EUMemberState.ES, probe), (
+            expected = any(rate_table_covers(EUMemberState.ES, probe, kind) for kind in positive_tiers)
+            assert _rate_table_covers(probe) == expected, (
                 f"the ledger and domain coverage answers disagree on {probe.isoformat()}"
             )

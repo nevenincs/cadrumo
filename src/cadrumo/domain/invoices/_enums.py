@@ -327,7 +327,7 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
         # 21 % has stood since 2012. Saying "not in force" there sends a filer
         # to correct a figure that was right, and invites widening the table
         # with a guessed value rather than an authored, corpus-backed one.
-        if not rate_table_covers(EUMemberState.ES, effective_date):
+        if not rate_table_covers(EUMemberState.ES, effective_date, kind):
             raise IvaRateNotFoundError(
                 f"no IVA rate is on record for {effective_date.isoformat()}: the rate registry "
                 f"carries no rates for Spain on that date, so IVA rate slot {rate.name} "

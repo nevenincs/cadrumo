@@ -1758,8 +1758,19 @@ def _rate_table_covers(on_date: date) -> bool:
     lives beside the table it reads and answers the same question for the
     invoice path -- one authority consulted from both layers, rather than two
     predicates that can drift into disagreeing about the same date.
+
+    Asks only about the tiers bearing a POSITIVE ordinary rate. A declared zero
+    always classifies through the zero-tier exemption, so this branch is only
+    reached for a positive rate, and the zero tier's own coverage says nothing
+    about whether such a rate could have been priced. Counting it made a 2023
+    date look covered the moment the RDL 20/2022 food rows landed -- which
+    would have restored the "unsupported rate" message this function exists to
+    replace, on exactly the dates it was written for.
     """
-    return rate_table_covers(EUMemberState.ES, on_date)
+    return any(
+        rate_table_covers(EUMemberState.ES, on_date, kind)
+        for kind in (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
+    )
 
 
 def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:

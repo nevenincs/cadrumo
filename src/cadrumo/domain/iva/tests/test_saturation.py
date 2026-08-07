@@ -229,12 +229,30 @@ def test_ambiguity_refusal_is_scoped_to_the_window_and_the_moved_tiers() -> None
         assert general.derivable is True
         assert general.rate == Decimal("0.21")
 
-    # Before the temporary rates start and after they lapse, both tiers resolve.
-    for on_date in (date(2024, 3, 1), date(2025, 6, 1)):
-        for category, expected in (
-            (IvaCategory.DOMESTIC_SUPER_REDUCED, Decimal("0.04")),
-            (IvaCategory.DOMESTIC_REDUCED, Decimal("0.10")),
-        ):
-            resolution = resolve_category_rate(category, on_date=on_date)
-            assert resolution.derivable is True, (category, on_date)
-            assert resolution.rate == expected, (category, on_date)
+    # After every temporary window lapses, both tiers resolve again.
+    for category, expected in (
+        (IvaCategory.DOMESTIC_SUPER_REDUCED, Decimal("0.04")),
+        (IvaCategory.DOMESTIC_REDUCED, Decimal("0.10")),
+    ):
+        resolution = resolve_category_rate(category, on_date=date(2025, 6, 1))
+        assert resolution.derivable is True, category
+        assert resolution.rate == expected, category
+
+    # The tiers moved on DIFFERENT dates, so "inside the window" is per tier.
+    # Super-reducido only ever coexisted Oct-Dec 2024 (RD-ley 4/2024's 2 %), so
+    # it still resolves in March 2024.
+    super_reduced = resolve_category_rate(IvaCategory.DOMESTIC_SUPER_REDUCED, on_date=date(2024, 3, 1))
+    assert super_reduced.derivable is True
+    assert super_reduced.rate == Decimal("0.04")
+
+    # Reducido is different, and this test previously asserted otherwise on a
+    # false premise. RDL 20/2022 art. 72 put seed oils and pasta at 5 % from
+    # 2023-01-01 to 2024-06-30 while the rest of the tier stayed at 10 %, so
+    # March 2024 is INSIDE a coexistence window, not before one. The earlier
+    # assertion only held because those rate rows were absent from the registry;
+    # the tier was ambiguous in law the whole time and the table could not say so.
+    reduced = resolve_category_rate(IvaCategory.DOMESTIC_REDUCED, on_date=date(2024, 3, 1))
+    assert reduced.derivable is False, (
+        "reducido cannot be derived in March 2024: 5 % and 10 % both applied, to "
+        "different goods, and no bundled surface carries the goods axis"
+    )
