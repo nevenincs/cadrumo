@@ -14,3 +14,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.llm._evidence_draft_vision
+   cadrumo.llm._vision_classifier

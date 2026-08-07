@@ -334,6 +334,7 @@ ignore_imports =
     # (llm -> application.ledger, for the draft shape it produces) needs no pin,
     # being a legal inner reach, and resolves through the ledger's public facade.
     cadrumo.application.ledger._evidence_draft -> cadrumo.llm
+    cadrumo.application.ledger._llm_classification -> cadrumo.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.**
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**
@@ -369,7 +370,6 @@ ignore_imports =
     cadrumo.application.modelo._external_import_actions -> cadrumo.adapters.persistence.profile.justificante
     cadrumo.application.ledger._review_projection -> cadrumo.adapters.**
     cadrumo.application.ledger._rule_repository -> cadrumo.adapters.**
-    cadrumo.application.ledger._vision_classifier -> cadrumo.adapters.**
     cadrumo.application.live -> cadrumo.adapters.**
     cadrumo.application.live._borrador_100 -> cadrumo.adapters.**
     cadrumo.application.live._errors -> cadrumo.adapters.**

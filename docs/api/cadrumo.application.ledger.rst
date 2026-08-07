@@ -40,4 +40,3 @@ Submodules
    cadrumo.application.ledger._ratios
    cadrumo.application.ledger._review_projection
    cadrumo.application.ledger._rule_repository
-   cadrumo.application.ledger._vision_classifier

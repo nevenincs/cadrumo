@@ -29,7 +29,7 @@ A scan-only PDF (no embedded text layer) or an image attachment has nothing for
 :func:`~application.ledger.extract_invoice_draft_from_evidence` falls back to the
 on-host LOCAL vision reader (:mod:`~llm._evidence_draft_vision`)
 -- the same rasterise-then-read-with-Ollama transport
-:class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier` already
+:class:`~llm._vision_classifier.LocalVisionLLMClassifier` already
 uses for classification, gated by :attr:`~core.ServiceCapability.LLM_VISION` and
 never a cloud call. When on-host vision reading is disabled for the profile, or
 the local Ollama runtime is unreachable, the caller gets a typed, instructive

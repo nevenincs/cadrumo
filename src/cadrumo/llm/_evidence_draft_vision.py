@@ -6,7 +6,7 @@ primitive raises. This module supplies the on-host fallback: rasterise the PDF
 (or use an image directly) into in-memory base64 PNG pages
 (:func:`~adapters.outbound.llm.rasterise_pdf_pages_to_base64_png`) and read them
 with the same LOCAL Ollama vision model the classification path already uses
-(:class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`), fully on-host
+(:class:`~llm._vision_classifier.LocalVisionLLMClassifier`), fully on-host
 (``sensitive-financial-data-secure-storage-only``). Nothing is written to disk and
 nothing leaves the machine; this needs no cloud consent gate.
 
@@ -39,7 +39,7 @@ See Also:
         or image-only evidence.
     :func:`~application.ledger.extract_invoice_draft_from_evidence`
         Orchestration layer that falls back to this on-host reader.
-    :class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`
+    :class:`~llm._vision_classifier.LocalVisionLLMClassifier`
         Sibling local Ollama vision transport used for classification and
         split suggestions.
 """
@@ -265,7 +265,7 @@ def _ground_extracted_fields(fields: _VisionExtractedFields, *, raw_text_length:
 class LocalVisionInvoiceFieldExtractor:
     """Read an invoice image on-host with a local Ollama vision model into an :class:`InvoiceDraft`.
 
-    Mirrors :class:`~application.ledger._vision_classifier.LocalVisionLLMClassifier`'s transport
+    Mirrors :class:`~llm._vision_classifier.LocalVisionLLMClassifier`'s transport
     (a local Ollama vision model fed in-memory base64 images) but for field
     transcription instead of category classification. Every returned field is
     re-validated through the grounded heuristics

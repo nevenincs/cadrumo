@@ -37,7 +37,7 @@ inward past its own tier.
 
 from __future__ import annotations
 
-__all__ = ["extract_invoice_fields_from_images"]
+__all__ = ["LocalVisionLLMClassifier", "extract_invoice_fields_from_images"]
 
 
 def __getattr__(name: str) -> object:
@@ -50,6 +50,10 @@ def __getattr__(name: str) -> object:
     symbol and one import path for consumers, which is what the ownership rule
     requires; it governs WHERE a symbol lives, never WHEN its module executes.
     """
+    if name == "LocalVisionLLMClassifier":
+        from ._vision_classifier import LocalVisionLLMClassifier
+
+        return LocalVisionLLMClassifier
     if name == "extract_invoice_fields_from_images":
         from ._evidence_draft_vision import extract_invoice_fields_from_images
 

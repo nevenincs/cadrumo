@@ -116,7 +116,7 @@ from ._llm_suggestions import (
     OperatorIvaDerivationResult,
 )
 from ._models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
-from ._vision_classifier import LocalVisionLLMClassifier
+from ...llm import LocalVisionLLMClassifier
 
 _logger = get_logger(__name__)
 

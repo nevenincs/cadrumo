@@ -7,26 +7,26 @@ import json
 
 import pytest
 
-from ....core.config import load_settings
-from ....domain.categories import SpendingCategory
-from ....domain.iva import IvaCategory
-from ....domain.transactions import (
+from ...core.config import load_settings
+from ...domain.categories import SpendingCategory
+from ...domain.iva import IvaCategory
+from ...domain.transactions import (
     BusinessClassification,
     LLMClassificationResponse,
     TransactionValidationError,
     prompt_spec_with_saturation_fields,
 )
-from ....tests.secure_sql import TestRuntimeProfile
-from .._llm_classification import _classify_with_evidence, _ResolvedEvidence
+from ...tests.secure_sql import TestRuntimeProfile
+from ...application.ledger._llm_classification import _classify_with_evidence, _ResolvedEvidence
 from .._vision_classifier import LocalVisionLLMClassifier
-from ._llm_vision_evidence_support import (
+from ...application.ledger.tests._llm_vision_evidence_support import (
     _json_array,
     _json_object,
     _png_image,
     _run_against_loopback_ollama,
     _transaction,
 )
-from ._llm_vision_evidence_support import (
+from ...application.ledger.tests._llm_vision_evidence_support import (
     profile as profile,
 )
 
@@ -116,7 +116,7 @@ def test_text_or_no_evidence_without_provider_refuses_instructively() -> None:
 
 def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestRuntimeProfile) -> None:
     """A down/unreachable Ollama is converted to LLMClassifierError, not a raw traceback."""
-    from ....domain.transactions import LLMClassifierError
+    from ...domain.transactions import LLMClassifierError
 
     _ = profile
     evidence = _ResolvedEvidence(
