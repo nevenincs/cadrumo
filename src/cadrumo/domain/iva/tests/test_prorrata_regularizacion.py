@@ -13,7 +13,7 @@ delta from the statutory procedure, not from a synthetic formula authored here.
 
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
@@ -30,8 +30,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _deduccion(cuotas: Decimal, pct: Decimal) -> Decimal:
-    """Independent cuota × percentage step (the art-105 deduction at a percentage)."""
-    return (cuotas * pct / Decimal("100")).quantize(Decimal("0.01"))
+    """Independent cuota × percentage step (the art-105 deduction at a percentage).
+
+    The rounding mode is stated explicitly rather than inherited. A bare
+    ``.quantize()`` takes the ambient decimal context, which is
+    ``ROUND_HALF_EVEN`` -- banker's rounding, the mode ``core.money`` says
+    "must never" be used at the euro-cent boundary for a filed value, while
+    production rounds half-up. This oracle is only independent of production's
+    *arithmetic*; leaving the mode ambient made it silently dependent on a
+    convention production deliberately rejects. Current parameters miss the
+    ``.005`` boundary so the two agreed, which is exactly why the divergence
+    would first appear as a mystifying failure when someone parametrised a
+    boundary value -- and would most likely be "fixed" by loosening the test.
+    """
+    return (cuotas * pct / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def test_definitiva_percentage_comes_from_the_full_year_art104_substrate() -> None:

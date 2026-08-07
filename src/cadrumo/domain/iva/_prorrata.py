@@ -287,9 +287,16 @@ class ProrrataInputDeduction(_ProrrataStrictFrozen):
     Used to enumerate every input IVA amount classified under art. 106.Uno
     LIVA and the resulting deductible portion. The ``deductible_amount``
     field equals ``input_iva_amount * deductible_percentage / 100``,
-    rounded to two decimals using banker's rounding (the default Decimal
-    quantizer); the caller's modelo binding provider is responsible for
-    further rounding if the registry casilla requires whole euros.
+    rounded to two decimals half-up via :func:`~cadrumo.core.money.round_to_cents`;
+    the caller's modelo binding provider is responsible for further rounding if
+    the registry casilla requires whole euros.
+
+    The rounding mode is load-bearing and this docstring previously named the
+    opposite one. ``core.money`` states that banker's rounding "does NOT match
+    AEAT and must never be used at the euro-cent boundary for any
+    operator-facing or filed value", and the implementation has always used
+    half-up; only this description was wrong -- in the exact register an
+    auditor reads to check a filed deduction.
     """
 
     classification: InputClassification

@@ -358,8 +358,17 @@ class ClassificationHistoryEntry(BaseModel):
 
     @field_validator("category_id")
     @classmethod
-    def _validate_category_id(cls, value: str | None) -> str | None:
-        """Trim optional foreign key while rejecting blank strings."""
+    def _normalize_category_id(cls, value: str | None) -> str | None:
+        """Trim the optional foreign key while rejecting blank strings.
+
+        Named for what it does, deliberately. Two CLI-boundary helpers are
+        called ``_validate_category_id`` and check ``SpendingCategory``
+        membership; this one only trims. Sharing their name made the weaker
+        behaviour read as the stronger one, so a reader who grepped the
+        validating name and landed here would conclude the field is checked
+        against the taxonomy when it is not -- defeating the very search that
+        would have found the gap.
+        """
         if value is None:
             return None
         trimmed = value.strip()
