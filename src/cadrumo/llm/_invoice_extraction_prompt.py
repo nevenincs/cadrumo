@@ -21,7 +21,7 @@ Where each number comes from:
   rate the period's documents genuinely print.
 * Retención rates: :func:`~domain.transactions.statutory_activity_retencion_rates`,
   the RIRPF art. 95 parameters under ``registry/aeat/legal/``.
-* The zero-cuota vocabulary: :data:`~domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES`,
+* The no-printed-tax vocabulary: :data:`~domain.iva.NO_PRINTED_TAX_IVA_CATEGORIES`,
   derived from the canonical :class:`~domain.iva.IvaCategory` closed set.
 
 **Shape is a design constraint.** The target is the lowest-bound vision-capable
@@ -133,7 +133,9 @@ null its anchor is null too.
 
 Rates:
 - VAT/IVA rates registered in Spain for this period: {iva_rates}.
-- Withholding (retencion) rates fixed by Spanish law: {retencion_rates}.
+- Withholding (retencion) rates fixed by Spanish law: {retencion_rates}. Most \
+invoices withhold nothing; then both retencion fields are null. It is printed as \
+a deduction, so it may appear negative or in parentheses.
 - A document issued outside Spain may print a rate on neither list. Copy the \
 printed rate; never move it onto a listed one.
 - Some documents carry no tax at all ({zero_cuota_reasons}). Then the rate and \
@@ -312,15 +314,21 @@ def _retencion_rate_pcts() -> tuple[Decimal, ...]:
 
 
 def _zero_cuota_reasons() -> str:
-    """Return the cuota-less category tokens as one comma-joined line.
+    """Return the no-printed-tax category tokens as one comma-joined line.
 
-    Derived from :data:`~domain.iva.CUOTA_LESS_M303_IVA_CATEGORIES` rather than
-    listed here, so a category the law moves in or out of the cuota-less set
-    moves in the prompt too.
+    Derived from :data:`~domain.iva.NO_PRINTED_TAX_IVA_CATEGORIES` rather than
+    listed here, so a category the law moves in or out of the set moves in the
+    prompt too.
+
+    Reading this line off the M303 cuota-less set instead would be the closest
+    available answer and the wrong one: that set excludes the received side of
+    inversión del sujeto pasivo *because* it bears a self-assessed 303 cuota,
+    while the invoice for it repercutes nothing at all. The question the prompt
+    asks is about the paper, so it takes the paper's authority.
     """
-    from ..domain.iva import CUOTA_LESS_M303_IVA_CATEGORIES
+    from ..domain.iva import NO_PRINTED_TAX_IVA_CATEGORIES
 
-    return ", ".join(sorted(category.value.replace("_", " ") for category in CUOTA_LESS_M303_IVA_CATEGORIES))
+    return ", ".join(sorted(category.value.replace("_", " ") for category in NO_PRINTED_TAX_IVA_CATEGORIES))
 
 
 def _field_lines() -> str:

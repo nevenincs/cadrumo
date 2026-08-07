@@ -171,6 +171,18 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
         form_instruction="digits only, keeping the printed decimal separator; no currency sign",
     ),
     InvoiceFieldContract(
+        field_name="retencion_rate",
+        form=InvoiceFieldForm.PERCENTAGE_RATE,
+        concept="the income-tax withholding percentage the issuer deducted, if any",
+        form_instruction="the bare number, without a percent sign or a minus sign",
+    ),
+    InvoiceFieldContract(
+        field_name="retencion_amount",
+        form=InvoiceFieldForm.MONETARY_AMOUNT,
+        concept="the income-tax amount withheld and deducted from the total",
+        form_instruction="digits only, keeping the printed decimal separator; no currency or minus sign",
+    ),
+    InvoiceFieldContract(
         field_name="grand_total",
         form=InvoiceFieldForm.MONETARY_AMOUNT,
         concept="the total payable amount",

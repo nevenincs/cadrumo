@@ -233,6 +233,32 @@ EVIDENCE_EXEMPT_IVA_CATEGORIES: frozenset[IvaCategory] = CUOTA_LESS_M303_IVA_CAT
     },
 )
 
+# IVA categories under which the INVOICE ITSELF is printed with no repercutido
+# rate and no repercutido cuota on its face.
+#
+# This answers a different question from CUOTA_LESS_M303_IVA_CATEGORIES, and the
+# difference is load-bearing rather than incidental. That set answers "does this
+# category produce a cuota on the 303?"; this one answers "does the paper carry a
+# tax line?". The two agree everywhere except the reverse-charge family, and they
+# disagree there in opposite directions: under inversión del sujeto pasivo the
+# recipient self-assesses a real 303 cuota (art. 84.Uno.2.o), which is exactly why
+# the received side is deliberately EXCLUDED from the cuota-less set above — while
+# the supplier's invoice repercutes nothing and RD 1619/2012 art. 6.1.m requires it
+# to say so instead. Reading the 303 set as an answer to the printed question
+# therefore omits precisely the highest-frequency no-IVA invoice a Spanish
+# autónomo receives, and a reader told such an invoice cannot exist is a reader
+# pushed toward supplying the rate it expected to find.
+#
+# Derived from the closed enum rather than hand-listed, so a category the law
+# moves in or out of the printed-tax-bearing set moves here with it.
+NO_PRINTED_TAX_IVA_CATEGORIES: frozenset[IvaCategory] = CUOTA_LESS_M303_IVA_CATEGORIES | frozenset(
+    {
+        IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+    },
+)
+
 
 class IvaExemptionArticle(StrEnum):
     """Closed catalogue of Ley 37/1992 Art. 20 sub-articles.
