@@ -36,8 +36,12 @@ WHAT THIS DOES NOT CHECK, so its silence is not read as coverage:
 
 Casillas carrying no official box number are invisible to it. That is not an
 oversight but the same vocabulary mismatch this modelo has billed for repeatedly
--- casillas are addressed semantically, the design numerically, and where a
-casilla states no number nothing can decide which box it feeds. Six such fields
+-- casillas are addressed semantically, the design numerically. The export
+layout can in principle decide it by offset, but not while one revision spans
+several designs: page 03 offset 234 resolves to [606], [610], [727] or [49]
+depending on the design year, all inside the single revision this modelo
+declares. So the blindness is caused by the span, and lifts when the span is
+split -- it is not an absence of any means of identification. Six such fields
 exist on Modelo 390's export layout alone.
 
 It also cannot see a box whose narrowing axis does not exist. Where the design
