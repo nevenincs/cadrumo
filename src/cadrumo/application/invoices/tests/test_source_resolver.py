@@ -1272,3 +1272,137 @@ def test_the_intra_community_service_categories_exist_and_map_to_their_claves() 
 
     assert _intracommunity_clave(supply) == "S"
     assert _intracommunity_clave(acquisition) == "I"
+
+
+# ---------------------------------------------------------------------------
+# Decomposition parity across the fold (invoice-canonical-structure P01.S33)
+#
+# The decomposition contract is calc-facing and has only ever seen natively
+# rich records. The fold routes a new population into it, so what happens to a
+# record carrying the economic facts a slim record could hold -- and nothing
+# more -- has to be stated rather than discovered later.
+#
+# The one axis that actually diverges is the IVA category: the slim model
+# cannot hold one at all. Everything else the slim record lacks (recargo,
+# suplido, retencion, the line set) is read through a zero default by the
+# contract, so a record lacking those decomposes cleanly and a test asserting
+# divergence there would be GREEN FOR THE WRONG REASON.
+# ---------------------------------------------------------------------------
+
+
+def _same_facts_invoice(*, with_category: bool):
+    """One economic record, expressed with and without an IVA category."""
+    from ....domain.invoices import derive_invoice_id
+
+    kind = InvoiceKind.ISSUED
+    number = "PARITY-2026-001"
+    issued = date(2026, 4, 2)
+    tax_id = "B12345674"
+    return Invoice(
+        invoice_id=derive_invoice_id(
+            kind=kind,
+            invoice_number=number,
+            issued_at=issued,
+            counterparty_tax_id=tax_id,
+            currency="EUR",
+            grand_total=Decimal("4840.00"),
+        ),
+        bucket_id=_BUCKET_ID,
+        kind=kind,
+        invoice_number=number,
+        issued_at=issued,
+        counterparty_name="Cliente Paridad SL",
+        counterparty_tax_id=tax_id,
+        counterparty_country="ES",
+        base_total=Decimal("4000.00"),
+        iva_total=Decimal("840.00"),
+        grand_total=Decimal("4840.00"),
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Servicio",
+                quantity=Decimal("1"),
+                unit_price=Decimal("4000.00"),
+                subtotal=Decimal("4000.00"),
+                iva_rate=IvaRate.RATE_21,
+                iva_amount=Decimal("840.00"),
+            ),
+        ),
+        payment_status=PaymentStatus.PENDING,
+        iva_category=IvaCategory.DOMESTIC_GENERAL_21 if with_category else None,
+    )
+
+
+def test_the_only_decomposition_divergence_across_the_fold_is_the_iva_category() -> None:
+    """Identical economic facts diverge on exactly one axis, and it is named.
+
+    The record lacking an IVA category is the shape a slim record could hold,
+    since the slim model has no category field at all. Its rich twin carries
+    the same base, cuota, total and line, and differs only in that declaration.
+
+    The divergence is real and it is reported as a NAMED defect rather than as
+    a silent exclusion, which is what makes it actionable: the operator is told
+    to declare the treatment, not left with a record that quietly contributes
+    nothing.
+    """
+    from ....domain.invoices import InvoiceDecompositionDefect, decompose_invoice
+
+    grounded = decompose_invoice(_same_facts_invoice(with_category=True))
+    ungrounded = decompose_invoice(_same_facts_invoice(with_category=False))
+
+    assert grounded.is_grounded
+    assert not ungrounded.is_grounded
+    assert InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED in ungrounded.defects
+
+
+def test_the_informativas_are_unaffected_by_that_divergence(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """M347 declares the ex-slim record identically. This is the important half.
+
+    The campaign record warns that a test asserting an ex-slim record is
+    DROPPED from M347 or M349 by decomposition would be red for a defect that
+    does not exist: M347 is deliberately unchecked by the contract, and M349
+    excludes absence deliberately. So the proof aims where a loss could really
+    occur, and pins that no loss occurs here.
+
+    Asserted as an equality between the two records' declared figures rather
+    than as a bare non-zero, so a projection that silently degraded the
+    uncategorised record would fail rather than pass.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices((_same_facts_invoice(with_category=False),)))
+    context = CalculationSourceContext(
+        bucket_id=_BUCKET_ID,
+        modelo="347",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "0A"),
+        revision=_modelo_revision("347", "2008-y-siguientes"),
+    )
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(context)
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4840.00")
+
+
+def test_the_renta_lane_is_where_the_divergence_actually_bites() -> None:
+    """The income lane refuses the uncategorised record, and does so visibly.
+
+    This is the lane that loses capability, and the loss is bounded: the
+    refusal carries the typed defect naming what is missing, and the
+    remediation text tells the operator to declare the treatment. A record that
+    cannot be grounded is withheld from the income calculation rather than
+    contributing an unclassified figure to it -- which is the correct
+    behaviour, since an untagged operation cannot be told apart from an exempt
+    one.
+    """
+    from ....domain.invoices import InvoiceDecompositionDefect, decompose_invoice
+
+    verdict = decompose_invoice(_same_facts_invoice(with_category=False))
+
+    assert not verdict.is_grounded
+    assert not verdict.components
+    # Named, not anonymous: the operator fix for an absent category differs
+    # from the fix for a contradictory one, so the two must stay separable.
+    assert verdict.defects == (InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED,)
