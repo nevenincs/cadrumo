@@ -33,8 +33,9 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Sequence
+from collections.abc import Awaitable, Mapping, Sequence
 from dataclasses import dataclass, field
+from decimal import InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
@@ -52,9 +53,15 @@ from ...adapters.outbound.aeat.sede import (
     shared_playwright,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, require_active_bucket_id
+from ...core import (
+    CasillaValueKind,
+    FiledHistoryDiscoverySignal,
+    Period,
+    RegisterScopingSignal,
+    require_active_bucket_id,
+)
 from ...core.resources import bundled_path, resources
-from ...domain.calculations.registry import ValidatedRegistryAuthority
+from ...domain.calculations.registry import RegistryModeloObservation, ValidatedRegistryAuthority
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ._filed_data import (
@@ -942,6 +949,165 @@ def expected_filed_declaration_grid(
     )
 
 
+class FiledPeriodSelectionRow(BaseModel):
+    """How many register rows one period offered, versus the one that was kept.
+
+    The register can carry several filings for a single period -- an original and
+    its later amendments -- and exactly one is promoted to calculation history by
+    the shared selection authority. That collapse is correct and is not reported
+    anywhere today, so an operator seeing one persisted observation cannot tell
+    whether AEAT held one filing or four.
+
+    Computed from the tuples the sweep already holds before finalisation, so it
+    touches no persistence boundary and adds no read.
+
+    Attributes:
+        modelo: Modelo code.
+        ejercicio: Filing year.
+        period: Registry period token.
+        raw_row_count: Rows the register returned for the period.
+        selected_count: Observations actually captured from them.
+        winning_expediente_id: The expediente whose filing was kept, when known.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    ejercicio: int = Field(ge=2000, le=2099)
+    period: str = Field(min_length=1, max_length=8)
+    raw_row_count: int = Field(ge=0)
+    selected_count: int = Field(ge=0)
+    winning_expediente_id: str | None = Field(default=None, min_length=1, max_length=32)
+
+    @property
+    def held_more_than_one_filing(self) -> bool:
+        """Whether the register itself offered more than one filing for this period.
+
+        Keyed on the RAW count alone, deliberately. Deriving it from
+        ``raw_row_count - selected_count`` conflates two different facts: a period
+        AEAT held several filings for, and a period whose single filing was not
+        captured (a per-row failure, or a ``limit`` cut). The second is not
+        supersession, and reporting it as such would tell the operator their
+        filing was superseded by one that never existed.
+        """
+        return self.raw_row_count > 1
+
+    @property
+    def superseded_count(self) -> int:
+        """Return how many of the period's filings the kept one displaced.
+
+        Zero when nothing was captured: with no winner, no filing was superseded
+        — the rows are simply unaccounted for, which the count mismatch between
+        :attr:`raw_row_count` and :attr:`selected_count` already shows.
+        """
+        if self.selected_count == 0:
+            return 0
+        return max(self.raw_row_count - self.selected_count, 0)
+
+    @property
+    def rows_not_accounted_for(self) -> int:
+        """Return rows the register returned that produced no observation at all.
+
+        Distinct from :attr:`superseded_count`: this is the count that needs
+        explaining, not the count the selection authority deliberately collapsed.
+        """
+        return max(self.raw_row_count - self.selected_count, 0) if self.selected_count == 0 else 0
+
+
+def filed_period_selection_rows(
+    declarations_by_pair: Mapping[tuple[str, int], tuple[Declaracion, ...]],
+    selected: tuple[FiledDeclaracionObservation, ...],
+) -> tuple[FiledPeriodSelectionRow, ...]:
+    """Project raw register rows against the observations actually captured.
+
+    Keyed on ``(modelo, ejercicio, period)`` because the collapse the sweep
+    performs is per PERIOD, not per pair: one ``(modelo, ejercicio)`` query can
+    return several periods, each with its own duplicate count.
+
+    Args:
+        declarations_by_pair: The register rows each walked pair returned.
+        selected: The observations captured from them.
+
+    Returns:
+        One row per period the register returned rows for, in modelo then
+        descending-ejercicio then period order.
+    """
+    raw: dict[tuple[str, int, str], int] = {}
+    for (modelo, ejercicio), declarations in declarations_by_pair.items():
+        for declaration in declarations:
+            raw[(modelo, ejercicio, declaration.period.registry_token)] = (
+                raw.get((modelo, ejercicio, declaration.period.registry_token), 0) + 1
+            )
+    kept: dict[tuple[str, int, str], list[FiledDeclaracionObservation]] = {}
+    for observation in selected:
+        kept.setdefault(
+            (observation.modelo, observation.ejercicio, observation.period.registry_token),
+            [],
+        ).append(observation)
+
+    return tuple(
+        FiledPeriodSelectionRow(
+            modelo=modelo,
+            ejercicio=ejercicio,
+            period=period,
+            raw_row_count=count,
+            selected_count=len(kept.get((modelo, ejercicio, period), ())),
+            winning_expediente_id=(
+                kept[(modelo, ejercicio, period)][0].expediente_id if (modelo, ejercicio, period) in kept else None
+            ),
+        )
+        for (modelo, ejercicio, period), count in sorted(
+            raw.items(), key=lambda item: (item[0][0], -item[0][1], item[0][2])
+        )
+    )
+
+
+def casillas_a_recapture_would_change(
+    fresh: FiledDeclaracionObservation,
+    stored: RegistryModeloObservation,
+) -> tuple[str, ...]:
+    """Return every casilla whose freshly captured value disagrees with the stored one.
+
+    Derived from the observed casilla set rather than from a hand-listed field
+    list, for the same reason the invoice reconfirm diff is: the failure this
+    exists to catch is a comparison that OMITS a casilla, and a hand-listed set is
+    precisely how that omission arrives. A newly-extracted casilla is compared the
+    moment it is captured.
+
+    Only casillas present on BOTH sides are compared. A casilla the fresh capture
+    read and the stored revision never held is not a changed value -- it is a
+    wider extraction -- and reporting it as a divergence would fire the advisory
+    on every extraction improvement.
+
+    Args:
+        fresh: The newly captured observation.
+        stored: The prior stamped registry observation for the same key.
+
+    Returns:
+        The changed casilla ids, sorted, so the notice text is deterministic.
+    """
+    stored_values = {str(observation.casilla_id): observation.value for observation in stored.observations}
+    changed: set[str] = set()
+    for observed in fresh.casillas:
+        casilla_id = str(observed.casilla_id)
+        if casilla_id not in stored_values:
+            continue
+        if observed.value_kind is not CasillaValueKind.NUMERIC:
+            continue
+        try:
+            fresh_value = observed.decimal_value()
+        except InvalidOperation:
+            # An unreadable fresh token is not evidence of a CHANGED value, and
+            # claiming one would put a false amendment in front of the operator.
+            # The kind check above is what makes InvalidOperation the only
+            # reachable failure here: a non-numeric casilla never reaches the
+            # conversion, so its own refusal cannot arrive.
+            continue
+        if fresh_value != stored_values[casilla_id]:
+            changed.add(casilla_id)
+    return tuple(sorted(changed))
+
+
 def classify_register_scoping_signal(
     profile: TaxpayerProfile,
     availability: FiledDeclarationAvailabilityReport,
@@ -1050,15 +1216,18 @@ __all__ = [
     "ExpectedFiledDeclarationGrid",
     "FiledHistoryDiscoveryPair",
     "FiledHistoryDiscoveryReport",
+    "FiledPeriodSelectionRow",
     "capture_filed_data",
     "capture_filed_data_bulk",
     "capture_report_path",
     "capture_source_filed_data",
+    "casillas_a_recapture_would_change",
     "classify_register_scoping_signal",
     "discover_filed_history",
     "expected_filed_declaration_grid",
     "filed_data_capture_failure_row",
     "filed_history_discovery_report",
+    "filed_period_selection_rows",
     "list_filed_data",
     "list_filed_data_bulk",
 ]
