@@ -36,7 +36,7 @@ resolver that feeds Modelo 303. No mocks, stubs, skips or xfail.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
@@ -44,22 +44,25 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices import InvoiceCatalogueSourceResolver, create_catalogue_invoice
 from ....core import STRUCTURED_DOCUMENT_SHAPES, BindingSourceKind, Period
+from ....domain.attachments import AttachmentKind, AttachmentSource, add_attachment
 from ....domain.calculations.registry import INVOICE_BINDING_SOURCE_KINDS, bundled_authority
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._closure_findings import closure_findings
 from .._evidence import MediaKind
 from .._evidence_draft import _extract_invoice_fields_from_structured_record
-from .._evidence_input import EvidenceInput
+from .._evidence_input import EvidenceInput, resolve_attachment_evidence_input
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "_evidence_corpus"
 _FIXTURE = _CORPUS / "facturae_32_recargo_invoice.xml"
 _BUCKET_ID = "40404040-4040-4040-8040-404040404040"
+_CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 #: The facts this document states, as the document states them. This is the
 #: census every hop is accounted against: a hop that drops one of these is the
@@ -104,15 +107,53 @@ def _evidence() -> EvidenceInput:
 
 
 class TestHop1Ingest:
-    """Bytes enter; a typed carrier leaves, content-addressed to those bytes."""
+    """The real ingest path: encrypted store in, typed in-memory carrier out.
 
-    def test_the_carrier_is_addressed_to_the_bytes_that_entered(self) -> None:
-        data = _FIXTURE.read_bytes()
+    Driven through the production resolver over a real attachment store in a
+    real encrypted bucket, rather than by constructing the carrier here. A test
+    that builds the carrier from bytes it just read asserts its own arithmetic:
+    nothing production-side sits between the two, so no mutation can break it
+    and the hop is accounted in name only.
+    """
 
-        evidence = _evidence()
+    @staticmethod
+    def _stored_attachment(tmp_path: Path) -> str:
+        source = tmp_path / "waist-invoice.xml"
+        source.write_bytes(_FIXTURE.read_bytes())
+        return add_attachment(
+            AttachmentStore(),
+            path=source,
+            kind=AttachmentKind.OTHER,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference="waist-gate",
+            mime_type="application/xml",
+            captured_at=_CAPTURED_AT,
+        ).attachment_id
 
-        assert evidence.data == data, "hop 1 ingest: the bytes must not be transformed"
-        assert evidence.content_sha256 == sha256(data).hexdigest(), "hop 1 ingest: content address"
+    def test_the_bytes_come_back_out_of_the_encrypted_store_unchanged(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        attachment_id = self._stored_attachment(tmp_path)
+
+        evidence = resolve_attachment_evidence_input(attachment_id, store=AttachmentStore())
+
+        assert evidence.data == _FIXTURE.read_bytes(), "hop 1 ingest: the stored bytes must survive the round trip"
+        assert evidence.content_sha256 == sha256(_FIXTURE.read_bytes()).hexdigest(), "hop 1 ingest: content address"
+
+    def test_the_resolved_carrier_still_routes_as_a_structured_record(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """The join to hop 2: bytes out of the store must reach the same routing."""
+        attachment_id = self._stored_attachment(tmp_path)
+
+        evidence = resolve_attachment_evidence_input(attachment_id, store=AttachmentStore())
+
+        assert evidence.document_shape in STRUCTURED_DOCUMENT_SHAPES
+        assert evidence.attachment_id == attachment_id, "hop 1 ingest: provenance back to the stored blob"
 
 
 class TestHop2RoutingBypassesTranscriptionAndTheModel:
