@@ -510,6 +510,84 @@ def test_a_postal_code_alone_never_establishes_a_spanish_territory() -> None:
     assert all("no country code" in m.reason for m in assembly.missing)
 
 
+#: A checksum-valid Spanish company identifier, as an ordinary domestic invoice prints it.
+#:
+#: Real rather than a placeholder because the whole point of the fixture below is
+#: that this identifier is genuinely, verifiably Spanish and still establishes
+#: nothing about establishment. A malformed value would be refused for the wrong
+#: reason and would prove nothing.
+_DOMESTIC_B_CIF = "B84333723"
+
+
+def test_a_bare_spanish_company_identifier_never_reaches_the_peninsula() -> None:
+    """The ordinary domestic invoice: valid Spanish CIF, no country, no postal code.
+
+    This is the document the whole read path is aimed at, and it must refuse
+    rather than resolve. The identifier passes the AEAT checksum, so the tempting
+    reading is that a Spanish CIF makes a Spanish party -- and it is false. The
+    non-resident company leader, the K/L/M identifiers issued to Spaniards abroad
+    and to non-residents, and the whole NIE series are all checksum-valid Spanish
+    identifiers belonging to parties not established in Spain. Establishment for
+    IVA is the sede de actividad, not tax registration.
+
+    **It would have tested green**, which is why this is a gate rather than a
+    comment: most Spanish identifiers do belong to resident parties, so the
+    inference is right often enough to survive casual testing and wrong exactly
+    where a wrong domestic placement drops a reverse charge.
+
+    Asserts the absence of the mainland specifically, not merely that something
+    was missing. A refusal for some unrelated reason would satisfy a bare
+    "not assembled" check while the peninsula default sat live underneath it.
+    """
+    draft = InvoiceDraft(supplier_tax_id=_DOMESTIC_B_CIF, customer_tax_id=_DOMESTIC_B_CIF)
+    assembly = _assemble_with_declared(
+        transaction_date=_DATE,
+        direction=InvoiceKind.ISSUED,
+        inputs=collect_classifier_inputs(draft),
+        supply_nature=SupplyNature.GOODS,
+        issuer_country_code=None,
+        issuer_postal_code=None,
+        customer_country_code=None,
+        customer_postal_code=None,
+        asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+    )
+
+    assert not assembly.assembled
+    assert assembly.criteria is None
+    assert {m.field for m in assembly.missing} == {"issuer_residency", "customer_residency"}
+    assert all("no country code" in m.reason for m in assembly.missing)
+
+
+def test_no_reachable_evidence_shape_ever_defaults_a_residency_to_the_peninsula() -> None:
+    """Sweep the shapes a domestic document can present, and require none to default.
+
+    One fixture proves one document. The peninsula default is dangerous because
+    it is invisible, so the claim worth gating is over the whole space of
+    evidence a domestic invoice can carry: identifier present or absent, postal
+    code present or absent, and neither carrying country evidence. Every one must
+    refuse.
+
+    The postal-bearing rows are the sharp ones. A Spanish-looking code with no
+    country evidence must NOT resolve, because the five-digit shape is shared
+    with France, Germany and Italy and so establishes nothing on its own.
+    """
+    for tax_id in (None, _DOMESTIC_B_CIF):
+        for postal in (None, "", "   ", "28013", "35001"):
+            assembly = _assemble_with_declared(
+                transaction_date=_DATE,
+                direction=InvoiceKind.ISSUED,
+                inputs=collect_classifier_inputs(InvoiceDraft(supplier_tax_id=tax_id)),
+                supply_nature=SupplyNature.GOODS,
+                issuer_country_code=None,
+                issuer_postal_code=postal,
+                customer_country_code="FR",
+                asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+            )
+
+            assert assembly.criteria is None, (tax_id, postal)
+            assert "issuer_residency" in {m.field for m in assembly.missing}, (tax_id, postal)
+
+
 @pytest.mark.parametrize(
     ("postal_code", "city"),
     [("75001", "Paris"), ("10115", "Berlin"), ("00170", "Rome"), ("51001", "Reims")],
