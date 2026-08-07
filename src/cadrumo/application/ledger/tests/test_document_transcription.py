@@ -191,7 +191,7 @@ def test_a_non_acquisition_origin_is_refused(origin: FieldOrigin) -> None:
 def test_a_transcriber_identity_cannot_be_built_without_naming_its_reader() -> None:
     """No default fills in the producer, and neither half may be blank.
 
-    The failure this forecloses is a real one from this campaign: a provenance
+    The failure this forecloses is a real one seen in this codebase: a provenance
     stamp that hardcoded `local` would have claimed a cloud read was on-host.
     A required field with no default cannot lie by omission.
     """

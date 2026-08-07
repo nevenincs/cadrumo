@@ -35,10 +35,10 @@ from .. import logging as _logging_mod
 from ..config import override_settings
 from ..logging import configure_logging
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PNG_PAYLOAD = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"CONFIDENTIAL-INVOICE-PIXELS" * 40).decode()
 _JPEG_PAYLOAD = base64.b64encode(b"\xff\xd8\xff\xe0\x00\x10JFIF" + b"CONFIDENTIAL-STATEMENT" * 40).decode()

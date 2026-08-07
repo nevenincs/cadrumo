@@ -185,43 +185,54 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # The SEALED cohort is the single source of published bytes for EVERY
-          # channel including PyPI (its python/ subdir). Evidence tags are
-          # DERIVED from the run-id inputs (the run is the identity anchor);
-          # verify layers run identity (Actions API), release<->run binding
-          # (target_commitish + sealed manifest claims), and per-asset sha256
-          # over every downloaded byte. Aggregate all eleven rows: 3 python
-          # (smoke draft), 1 scoop, 3 homebrew, and the operator's 4 claude-*
+          # channel including PyPI (its python/ subdir). Payloads ride the
+          # producing run's own artifacts, so the run IS the container: an
+          # artifact cannot be attached to a run that did not produce it, which
+          # is the binding the old release-asset manifest had to reconstruct.
+          # verify therefore pins run identity against the Actions API and then
+          # pulls that run's artifacts. Aggregate all eleven rows: 3 python
+          # (smoke run), 1 scoop, 3 homebrew, and the operator's 4 claude-*
           # rows from the pre-uploaded evidence release (no backing run).
           mkdir -p "$EVIDENCE_DOWNLOAD/rows" "$EVIDENCE_DOWNLOAD/rows-raw"
-          verify() {  # tag, run-id, workflow-path, dest
-            uv run --frozen python -m dev.packaging.evidence_release verify \
-              --tag "$1" --expect-run-id "$2" --expect-workflow "$3" \
-              --download-dir "$4"
+          verify() {  # run-id, workflow-path, dest
+            identity="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$1" \
+              --jq '"\(.path)|\(.conclusion)"')"
+            if [ "$identity" != "$2|success" ]; then
+              echo "refusing run $1: expected $2 concluding success, got $identity" >&2
+              exit 1
+            fi
+            mkdir -p "$3"
+            gh run download "$1" --dir "$3"
           }
-          verify "evidence-smoke-$PACKAGING_RUN_ID"    "$PACKAGING_RUN_ID" \
+          verify "$PACKAGING_RUN_ID" \
             ".github/workflows/packaging-smoke.yml"    "$EVIDENCE_DOWNLOAD/rows-raw/packaging"
           # Each optional source is aggregated when supplied. Skipping an absent
           # one cannot smuggle a channel past the gate: the readiness gate below
           # derives its required rows from the claimed channels, so an unclaimed
           # channel demands no row and a claimed one was already refused above.
           if [ -n "$SCOOP_RUN_ID" ]; then
-            verify "evidence-scoop-$SCOOP_RUN_ID"      "$SCOOP_RUN_ID" \
+            verify "$SCOOP_RUN_ID" \
               ".github/workflows/packaging-scoop.yml"  "$EVIDENCE_DOWNLOAD/rows-raw/scoop"
           fi
           if [ -n "$HOMEBREW_RUN_ID" ]; then
-            verify "evidence-homebrew-$HOMEBREW_RUN_ID"  "$HOMEBREW_RUN_ID" \
+            verify "$HOMEBREW_RUN_ID" \
               ".github/workflows/packaging-homebrew.yml" "$EVIDENCE_DOWNLOAD/rows-raw/homebrew"
           fi
           if [ -n "$CLAUDE_EVIDENCE_RELEASE" ]; then
+            # The operator's own locally-minted evidence release: no backing
+            # run, so it stays a release download.
             gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
               --dir "$EVIDENCE_DOWNLOAD/rows-raw/claude"
           fi
           mkdir -p "$RELEASE_COHORT_DIR"
-          tar -xzf "$EVIDENCE_DOWNLOAD/rows-raw/packaging/cadrumo-release-cohort.tar.gz" \
-            -C "$RELEASE_COHORT_DIR"
+          # gh run download nests each artifact under its own directory name.
+          cohort_archive="$(find "$EVIDENCE_DOWNLOAD/rows-raw/packaging" \
+            -name cadrumo-release-cohort.tar.gz -print -quit)"
+          test -n "$cohort_archive"
+          tar -xzf "$cohort_archive" -C "$RELEASE_COHORT_DIR"
           # debug-* assets are failure diagnostics, never rows; a promoted run
-          # is green, but a re-run attempt's draft may retain attempt-1 debris.
-          find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' ! -name 'evidence-manifest.json' \
+          # is green, but a re-run attempt may retain attempt-1 debris.
+          find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' \
             ! -name 'debug-*' -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
 
       - name: Emit the sealed cohort's version for the publish job
@@ -289,6 +300,9 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
     environment: release
     permissions:
+      # actions:read lets the promotion pull the producing runs' artifacts;
+      # contents:write is for the one real v* release this gate creates.
+      actions: read
       id-token: write
       contents: write
     env:
@@ -316,45 +330,48 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          uv run --frozen python -m dev.packaging.evidence_release verify \
-            --tag "evidence-smoke-$PACKAGING_RUN_ID" \
-            --expect-run-id "$PACKAGING_RUN_ID" \
-            --expect-workflow ".github/workflows/packaging-smoke.yml" \
-            --pattern "cadrumo-release-cohort.tar.gz" \
-            --download-dir var/promotion/download
+          identity="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PACKAGING_RUN_ID}" \
+            --jq '"\(.path)|\(.conclusion)"')"
+          if [ "$identity" != ".github/workflows/packaging-smoke.yml|success" ]; then
+            echo "refusing packaging run ${PACKAGING_RUN_ID}: got ${identity}" >&2
+            exit 1
+          fi
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort \
+            --dir var/promotion/download
           mkdir -p "$RELEASE_COHORT_DIR"
           tar -xzf var/promotion/download/cadrumo-release-cohort.tar.gz -C "$RELEASE_COHORT_DIR"
 
       # D8: the published release is self-evidencing — it also carries the
-      # eleven verified rows and the three sealed evidence manifests, so draft
-      # GC can never orphan a shipped version's audit trail. Rows re-download
-      # through the same verify (hash-checked); manifests are renamed per lane
-      # to keep the duplicate-basename guard honest.
+      # eleven verified rows, so a shipped version's audit trail outlives the
+      # producing runs' artifact retention. Rows re-download from the same
+      # identity-verified runs.
       - name: Re-download and verify the evidence rows for the self-evidencing release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p "$EVIDENCE_FINAL_DIR/attach"
-          verify_rows() {  # tag, run-id, workflow-path, lane
-            uv run --frozen python -m dev.packaging.evidence_release verify \
-              --tag "$1" --expect-run-id "$2" --expect-workflow "$3" \
-              --pattern '*.json' \
-              --download-dir "$EVIDENCE_FINAL_DIR/$4"
-            find "$EVIDENCE_FINAL_DIR/$4" -name '*.json' ! -name 'evidence-manifest.json' \
+          verify_rows() {  # run-id, workflow-path, lane
+            identity="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$1" \
+              --jq '"\(.path)|\(.conclusion)"')"
+            if [ "$identity" != "$2|success" ]; then
+              echo "refusing run $1: expected $2 concluding success, got $identity" >&2
+              exit 1
+            fi
+            mkdir -p "$EVIDENCE_FINAL_DIR/$3"
+            gh run download "$1" --dir "$EVIDENCE_FINAL_DIR/$3"
+            find "$EVIDENCE_FINAL_DIR/$3" -name '*.json' \
               ! -name 'debug-*' -exec cp {} "$EVIDENCE_FINAL_DIR/attach/" \;
-            cp "$EVIDENCE_FINAL_DIR/$4/evidence-manifest.json" \
-              "$EVIDENCE_FINAL_DIR/attach/evidence-manifest-$4.json"
           }
-          verify_rows "evidence-smoke-$PACKAGING_RUN_ID"   "$PACKAGING_RUN_ID" \
+          verify_rows "$PACKAGING_RUN_ID" \
             ".github/workflows/packaging-smoke.yml"    packaging
           # Optional sources: supplied for every channel this release claims
           # (Gate 2 refused otherwise), absent only for channels it does not.
           if [ -n "$SCOOP_RUN_ID" ]; then
-            verify_rows "evidence-scoop-$SCOOP_RUN_ID"     "$SCOOP_RUN_ID" \
+            verify_rows "$SCOOP_RUN_ID" \
               ".github/workflows/packaging-scoop.yml"  scoop
           fi
           if [ -n "$HOMEBREW_RUN_ID" ]; then
-            verify_rows "evidence-homebrew-$HOMEBREW_RUN_ID" "$HOMEBREW_RUN_ID" \
+            verify_rows "$HOMEBREW_RUN_ID" \
               ".github/workflows/packaging-homebrew.yml" homebrew
           fi
           if [ -n "$CLAUDE_EVIDENCE_RELEASE" ]; then

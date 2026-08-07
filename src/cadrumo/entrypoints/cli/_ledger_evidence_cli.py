@@ -5,6 +5,8 @@ from __future__ import annotations
 import typer
 
 from ...application.ledger import (
+    ConfirmationBlockedError,
+    FindingResolution,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
@@ -29,6 +31,7 @@ from ._common import (
 )
 from ._evidence_field_notices import field_degradation_notices
 from ._ledger_business_invoice_cli import _catalogue_invoice_shared_fields
+from ._ledger_evidence_review_cli import parse_finding_resolution, register_evidence_review_commands
 from ._ledger_payloads import (
     EvidenceAddResult,
     EvidenceConfirmResult,
@@ -59,6 +62,7 @@ def register_evidence_commands(app: typer.Typer) -> None:
     _register_evidence_remove_command()
     _register_evidence_extract_command()
     _register_evidence_confirm_command()
+    register_evidence_review_commands(evidence_app)
 
 
 def _register_evidence_add_command() -> None:
@@ -550,6 +554,17 @@ def _register_evidence_confirm_command() -> None:
             "--notes",
             help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes."),
         ),
+        resolve: list[str] = typer.Option(
+            [],
+            "--resolve",
+            help=tr(
+                "cli.app.ledger.evidence.confirm_resolve_help",
+                default=(
+                    "Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>. "
+                    "Repeat once per finding; there is no bulk flag."
+                ),
+            ),
+        ),
     ) -> None:
         """Non-interactively confirm a reviewed evidence extraction into an Invoice.
 
@@ -574,6 +589,7 @@ def _register_evidence_confirm_command() -> None:
             country_code=country_code,
             currency=currency,
             notes=notes,
+            resolve=resolve,
         )
 
 
@@ -592,6 +608,7 @@ def _run_evidence_confirm(
     country_code: str,
     currency: str | None,
     notes: str,
+    resolve: list[str],
 ) -> None:
     if (evidence_id is None) == (attachment_id is None):
         raise _bad(
@@ -602,6 +619,7 @@ def _run_evidence_confirm(
         )
     transaction_repository = _tx_repo(_state())
     bucket_id = transaction_repository.bucket_id
+    resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
     try:
         result = confirm_invoice_draft_from_evidence(
             bucket_id=bucket_id,
@@ -617,7 +635,10 @@ def _run_evidence_confirm(
             iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
             currency=currency,
             notes=notes,
+            resolutions=resolutions,
         )
+    except ConfirmationBlockedError as exc:
+        raise _bad(str(exc)) from exc
     except (PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError) as exc:
         raise _bad(str(exc)) from exc
     except InvoiceValidationError as exc:
@@ -636,6 +657,11 @@ def _run_evidence_confirm(
         # exactly the thing the provenance describes.
         "provenance": [envelope.model_dump(mode="json") for envelope in result.draft.provenance],
         "discrepancies": [finding.model_dump(mode="json") for finding in result.draft.discrepancies],
+        # The confirmed view, beside the document's own. An operator-asserted
+        # field reads OPERATOR here while `provenance` still shows what the
+        # document said, which is the pairing the confirmation record persists.
+        "confirmed_provenance": [envelope.model_dump(mode="json") for envelope in result.confirmed_provenance],
+        "confirmation_id": result.confirmation_id,
     }
     lines = [
         f"bucket_id\t{bucket_id}",

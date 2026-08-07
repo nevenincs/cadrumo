@@ -23,6 +23,8 @@ Submodules
    cadrumo.application.ledger._aeat_record_projection
    cadrumo.application.ledger._batch_ingest
    cadrumo.application.ledger._closure_findings
+   cadrumo.application.ledger._confirmation_gate
+   cadrumo.application.ledger._confirmation_record
    cadrumo.application.ledger._document_transcription
    cadrumo.application.ledger._evidence
    cadrumo.application.ledger._evidence_advisory

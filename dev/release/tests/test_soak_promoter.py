@@ -344,7 +344,7 @@ def test_a_hotfix_still_faces_the_full_readiness_gate() -> None:
     The policy allows an emergency to shorten elapsed time only with every
     applicable gate still green, so a hotfix whose readiness reds is
     invalidated exactly like an ordinary candidate. A carve-out that also
-    skipped the gate would be the weakening this Step exists to avoid.
+    skipped the gate would be the weakening this test exists to avoid.
     """
     candidate = _hotfix_candidate()
     dispatched: list[ReleaseCandidate] = []
@@ -489,8 +489,8 @@ def test_an_invalidated_candidate_exits_non_zero_so_the_alert_fires() -> None:
 
     The promoter's alert step is failure-guarded, so a zero exit means the
     alert never fires. Returning zero for an invalidated candidate therefore
-    reported a refused release to nobody - the exact silence this campaign
-    exists to remove.
+    reported a refused release to nobody - the exact silence this test exists
+    to remove.
     """
     decision = PromotionDecision(None, "invalidated", invalidated=True)
 

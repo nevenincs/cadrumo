@@ -294,8 +294,8 @@ class TestReclaimCannotReachOutsideItsOwnDirectory:
         """Positive control for the assertion above.
 
         "No deletion escaped" is also what a broken comparison reports, and a
-        containment claim that cannot fail is the failure mode this campaign
-        keeps finding. Mutating production to prove otherwise is not available
+        containment claim that cannot fail is the failure mode a vacuous check
+        always produces. Mutating production to prove otherwise is not available
         here -- the service carries another agent's uncommitted work -- so this
         mutates the *permitted set* instead, exactly as the sibling class's
         nesting control does: withhold one genuinely accepted directory, and the

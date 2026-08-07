@@ -238,6 +238,7 @@ ignore_imports =
     cadrumo.llm.tests.test_client -> cadrumo.adapters.outbound.llm
     cadrumo.llm.tests.test_invoice_prompt_cache_binding -> cadrumo.adapters.outbound.llm
     cadrumo.llm.tests.test_injection_regression -> cadrumo.adapters.outbound.llm
+    cadrumo.llm.tests.test_evidence_consent_gate -> cadrumo.adapters.outbound.llm
     # ── One PRODUCTION edge, sanctioned and worth stating precisely ────────
     # LLMClient default-constructs the three core-side stores, which do resolve
     # secure storage. So the subpackage reaches persistence TRANSITIVELY even

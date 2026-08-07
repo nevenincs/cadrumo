@@ -187,13 +187,13 @@ def test_the_behavioural_proof_runs_on_the_reference_form_and_nowhere_else() -> 
     """The installed oracle is lane-level: exactly one FORM carries it.
 
     This is the only invariant class that legitimately collapses — it proves a
-    property of the PRODUCT, so running it once per form was the triplication
-    this campaign found (core, split, and the serial oracles pass, against one
+    property of the PRODUCT, so running it once per form was a real
+    triplication (core, split, and the serial oracles pass, against one
     cohort and one target). Install-level invariants are deliberately not
     collapsed this way: the installed virtualenv is what a form produces, so
     asserting those once would leave the other installers unproven.
 
-    "Lane-level" does NOT mean once per campaign. The oracle still runs twice:
+    "Lane-level" does NOT mean once per run. The oracle still runs twice:
     here at the reference form, and again in the serial installed-oracles pass.
     That is the intended end state — the audit dropped split's copy and kept
     those two — and the serial pass is not a form, so this pin neither covers

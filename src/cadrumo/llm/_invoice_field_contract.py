@@ -134,11 +134,29 @@ class InvoiceFieldContract(BaseModel):
 
 
 INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
+    # An invoice prints TWO parties, and which one a downstream informativa needs
+    # depends on the document's direction, which the reader does not know. So both
+    # are asked for, separately and by role. Asking for one identifier and letting
+    # the caller decide whose it was is what made the two indistinguishable: the
+    # single recovered value landed on the issuer side regardless of which party
+    # it actually named.
     InvoiceFieldContract(
         field_name="supplier_tax_id",
         form=InvoiceFieldForm.TAX_IDENTIFIER,
-        concept="the issuing party's tax identification number",
-        form_instruction="copy the identifier as printed, including any country prefix; no spaces",
+        concept="the tax identification number of the party who ISSUED the invoice and is owed the money",
+        form_instruction=(
+            "copy the identifier as printed, including any country prefix; no spaces; "
+            "this is the issuer's own identifier, not the identifier of the party being billed"
+        ),
+    ),
+    InvoiceFieldContract(
+        field_name="customer_tax_id",
+        form=InvoiceFieldForm.TAX_IDENTIFIER,
+        concept="the tax identification number of the party BILLED by the invoice, who owes the money",
+        form_instruction=(
+            "copy the identifier as printed, including any country prefix; no spaces; "
+            "leave empty unless the document prints a second identifier for the party being billed"
+        ),
     ),
     InvoiceFieldContract(
         field_name="invoice_number",

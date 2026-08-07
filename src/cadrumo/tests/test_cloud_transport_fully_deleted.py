@@ -2,7 +2,7 @@
 
 The cloud read path was deleted rather than left behind a disabled flag,
 because `no-legacy-compatibility` forbids keeping a retired surface as a
-bridge and because a dormant off-host transport is the one thing this campaign
+bridge and because a dormant off-host transport is the one thing this gate
 exists to remove. A retained-but-unreachable path is a failed outcome, not a
 partial success: the next change that re-enables a flag re-enables the
 transport with it.
@@ -12,6 +12,16 @@ whole discipline this gate encodes. Narrowing a pattern until it returns clean
 is indistinguishable from cleaning the tree if only the final result is
 reported, so the symbol set is fixed in source, reviewable in a diff, and any
 future edit to it is a visible decision rather than an invisible one.
+
+**Three names left the deleted set, and that is such a decision.** Off-host
+reading of taxpayer evidence was re-sanctioned behind a reinstated consent
+gate over the in-memory HTTP providers -- never the subprocess family, which
+stays deleted permanently. ``cloud_evidence_read_permitted`` and the two
+deployment settings behind it therefore moved to
+``_REINSTATED_CONSENT_SYMBOLS``, where they are asserted PRESENT and WIRED
+rather than absent. The move is only honest because the destination has teeth:
+a symbol removed from the sweep and merely forgotten would leave this file
+reading like a decision while the tree lost a guarantee.
 
 **The set is symbols, never the word ``subprocess``.** ``entrypoints/mcp/
 _call_runtime.py`` shells the deterministic CLI for every MCP tool call: it is
@@ -44,14 +54,20 @@ _DELETED_CLOUD_SYMBOLS = (
     "is_llm_provider_available",
     "LLMProviderAvailability",
     "probe_subprocess_providers",
-    # The consent gate and the settings behind it.
-    "cloud_evidence_read_permitted",
+    # The per-profile capability the gate once resolved through. Still deleted:
+    # the reinstated gate reads the deployment posture directly, and the
+    # per-profile eligibility bar is a separate, not-yet-built decision.
     "CLOUD_EVIDENCE_UPLOAD",
-    "cadrumo_evidence_gestor_mode",
-    "cadrumo_evidence_cloud_upload_permitted",
-    # The operator-facing surfaces.
+    # The operator-facing surfaces. Still deleted: nothing mints a token yet, so
+    # no CLI surface asks the operator for one.
     "evidence_acknowledged",
     "evidence-acknowledged",
+)
+
+_REINSTATED_CONSENT_SYMBOLS = (
+    "cloud_evidence_read_permitted",
+    "cadrumo_evidence_cloud_upload_permitted",
+    "cadrumo_evidence_gestor_mode",
 )
 
 _NEIGHBOURING_TRANSPORTS_THAT_MUST_SURVIVE = (SRC_CADRUMO / "entrypoints" / "mcp" / "_call_runtime.py",)
@@ -109,9 +125,56 @@ def test_the_declared_symbol_set_is_not_silently_emptied() -> None:
     empties or guts the symbol tuple would make the sweep pass over nothing
     while looking exactly like a green run.
     """
-    assert len(_DELETED_CLOUD_SYMBOLS) >= 15
+    assert len(_DELETED_CLOUD_SYMBOLS) >= 13
     assert "SubprocessLLMClassifier" in _DELETED_CLOUD_SYMBOLS
     assert "CLOUD_EVIDENCE_UPLOAD" in _DELETED_CLOUD_SYMBOLS
+
+
+def test_the_reinstated_consent_apparatus_exists_and_is_wired_at_the_choke_point() -> None:
+    """The three consent symbols that RETURNED must exist and be reachable.
+
+    The counterpart to the sweep above, and the reason this module's symbol set
+    could be edited at all. Off-host reading of taxpayer evidence was
+    re-sanctioned behind a consent gate, so three names moved out of the deleted
+    set -- and a name moved out with nothing put back would leave the tree
+    weaker than before while both this file and its diff read like a decision.
+
+    Presence alone is insufficient: a gate that exists and is never called is
+    the dormancy this module was written against, pointed the other way. The
+    wiring assertion walks the dispatch's AST for the call.
+    """
+    import ast
+    import inspect
+    import textwrap
+
+    from ..llm import cloud_evidence_read_permitted
+    from ..llm._client import LLMClient
+
+    settings_fields = set(_settings_model_fields())
+    for symbol in _REINSTATED_CONSENT_SYMBOLS:
+        if symbol.startswith("cadrumo_"):
+            assert symbol in settings_fields, f"{symbol} is claimed reinstated but Settings does not declare it"
+    assert callable(cloud_evidence_read_permitted)
+
+    tree = ast.parse(textwrap.dedent(inspect.getsource(LLMClient.complete)))
+    called = {
+        node.func.attr for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+    assert "_require_evidence_consent" in called, (
+        "the consent gate exists but the dispatch choke point does not call it; a gate no request "
+        "crosses is the dormant surface this module forbids"
+    )
+
+
+def _settings_model_fields() -> tuple[str, ...]:
+    """Return the live Settings field names.
+
+    Read from the model rather than from source text, so a field renamed
+    without this gate's knowledge fails here instead of passing on a substring.
+    """
+    from ..core.config import Settings
+
+    return tuple(Settings.model_fields)
 
 
 def test_every_provenance_stamp_a_reader_can_mint_names_a_local_transport() -> None:

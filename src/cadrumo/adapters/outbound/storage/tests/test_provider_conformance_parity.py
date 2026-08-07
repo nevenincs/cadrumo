@@ -44,10 +44,10 @@ from .._key_validation import assert_admissible_object_key_hmac
 from .._local import LocalFileSystemProvider
 from .._protocol import StorageProvider
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 #: The Protocol's own method set, named once so a method added to the contract
 #: without being added here cannot pass unnoticed -- the count assertion below

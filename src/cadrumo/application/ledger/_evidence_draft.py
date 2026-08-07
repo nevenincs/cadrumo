@@ -99,9 +99,10 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import NoReturn, Self
+from typing import TYPE_CHECKING, NoReturn, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -159,6 +160,9 @@ from ._evidence_reference import (
 )
 from ._evidence_textlayer import transcribe_text_layer
 
+if TYPE_CHECKING:
+    from ._confirmation_gate import FindingResolution
+
 __all__ = [
     "DraftDiscrepancyFinding",
     "FieldAmbiguityCandidate",
@@ -172,6 +176,7 @@ __all__ = [
     "extract_invoice_draft_from_evidence",
     "printed_total_discrepancy",
 ]
+
 
 class InvoiceDraftLine(BaseModel):
     """One line item recovered from a structured invoice document.
@@ -971,6 +976,21 @@ class InvoiceConfirmationResult(BaseModel):
             surfacing. ``None`` when they agree or no total was readable. The
             field rides the RESULT rather than being recomputed by each caller
             so a consumer cannot silently omit the check.
+        confirmation_id: Derived address of the persisted
+            :class:`~application.ledger.InvoiceConfirmationRecord` this confirm
+            wrote -- who confirmed, when, which fields they asserted values for
+            with the prior value and origin retained, which findings they
+            answered and how, and the evidence and transcription content
+            addresses it was taken against. The id rather than the record
+            itself: the record is the durable answer and lives in the encrypted
+            store, and a copy riding a transient result is a second account of
+            one decision that can disagree with the first.
+        confirmed_provenance: The draft's envelopes with every operator-asserted
+            field re-stamped :attr:`~core.FieldOrigin.OPERATOR`. Carried BESIDE
+            ``draft`` rather than replacing its envelopes, because a correction
+            is an assertion and not an edit: ``draft.provenance`` stays the
+            document's own account of itself, this is the confirmed view, and
+            the confirmation record holds the pairing of the two.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -979,6 +999,8 @@ class InvoiceConfirmationResult(BaseModel):
     draft: InvoiceDraft
     created: bool
     total_discrepancy: PrintedTotalDiscrepancy | None = None
+    confirmation_id: str | None = Field(default=None, min_length=16, max_length=16)
+    confirmed_provenance: tuple[FieldProvenance, ...] = ()
 
 
 def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) -> str | None:
@@ -1195,6 +1217,8 @@ def confirm_invoice_draft_from_evidence(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     notes: str = "",
+    resolutions: Sequence[FindingResolution] = (),
+    confirmed_by: str = "operator",
     settings: Settings | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
 ) -> InvoiceConfirmationResult:
@@ -1258,6 +1282,11 @@ def confirm_invoice_draft_from_evidence(
         rectifies_invoice_number: Number of the invoice a rectificativa
             corrects.
         notes: Free-text operator notes carried onto the invoice.
+        resolutions: One explicit answer per blocking finding the document
+            raises. A document with findings cannot be confirmed until every
+            one is answered individually; there is no bulk flag, deliberately.
+        confirmed_by: Who is confirming, recorded in the confirmation
+            provenance record.
         settings: Resolved ``Settings``; ``load_settings()`` when ``None``.
         invoice_repository: Optional injected
             :class:`InvoiceCatalogueRepositoryProtocol` (testing seam).
@@ -1276,7 +1305,16 @@ def confirm_invoice_draft_from_evidence(
             operator supplied no override).
         InvoiceValidationError: When the resolved fields fail invoice-model
             validation (e.g. an invalid counterparty tax id or IVA rate).
+        ConfirmationBlockedError: When the document raises a blocking finding
+            that carries no explicit per-finding resolution.
     """
+    # Imported inside the call, not at module scope: the review gate and the
+    # confirmation record are both built ON the draft models declared here, so a
+    # module-level import would close a cycle. The direction is one-way at
+    # import time and the runtime edge is deliberate.
+    from ._confirmation_gate import resolved_blockers
+    from ._confirmation_record import build_confirmation_record, re_stamped_provenance, write_confirmation_record
+
     resolved_settings = settings or _load_settings()
     draft = extract_invoice_draft_from_evidence(
         bucket_id=bucket_id,
@@ -1284,6 +1322,10 @@ def confirm_invoice_draft_from_evidence(
         attachment_id=attachment_id,
         settings=resolved_settings,
     )
+    # The gate runs BEFORE any resolution work and before the writer is
+    # reached: a draft whose findings are unanswered must not have produced a
+    # partially-resolved identity, an attachment link, or a catalogue lookup.
+    blockers = resolved_blockers(draft=draft, resolutions=resolutions)
     resolved_attachment_id = _resolve_evidence_attachment_id(
         bucket_id=bucket_id,
         evidence_id=evidence_id,
@@ -1292,18 +1334,51 @@ def confirm_invoice_draft_from_evidence(
     )
 
     # WHICH party is the counterparty depends on the direction of the document,
-    # so the side is selected by `kind` rather than assumed to be the supplier.
-    # On an invoice the filer ISSUED, the counterparty is the customer; taking
-    # the supplier there names the filer as their own counterparty, and that
-    # value reaches the Modelo 347 / 349 totals AEAT reconciles against the
-    # other party's own declaration. Only a structured reader distinguishes the
-    # two, so the text and vision paths leave the customer side unset and fall
-    # back to the single identifier they can recover.
-    extracted_counterparty_tax_id = draft.supplier_tax_id
-    extracted_counterparty_name = draft.supplier_name
-    if kind is InvoiceKind.ISSUED and draft.customer_tax_id is not None:
+    # so the side is selected by `kind`. On an invoice the filer ISSUED the
+    # counterparty is the customer; on one they RECEIVED it is the supplier.
+    #
+    # The selection is total, with no fall-back to the other side. That is the
+    # load-bearing part. This previously read the customer side "if it is set,
+    # otherwise the supplier", and because the text and vision readers could not
+    # populate a customer at all, every issued document silently resolved to the
+    # supplier -- who, on a document the filer issued, IS the filer. The value is
+    # checksum-valid, so every identity check downstream passes it, and it is
+    # bound for the Modelo 347 / 349 totals AEAT reconciles against the other
+    # party's own declaration.
+    #
+    # Two guards below do catch that today, but both load the taxpayer profile
+    # and both return without refusing when it carries no tax id, so the
+    # protection was only ever as present as the profile. Selecting one side and
+    # stopping makes the property structural instead: an unread counterparty
+    # stays None and is refused as a missing field, naming the override that
+    # supplies it, which is the same outcome an operator already gets for any
+    # other field the reader could not recover.
+    if kind is InvoiceKind.ISSUED:
         extracted_counterparty_tax_id = draft.customer_tax_id
         extracted_counterparty_name = draft.customer_name
+        counterparty_tax_id_field = "customer_tax_id"
+        counterparty_name_field = "customer_name"
+    else:
+        extracted_counterparty_tax_id = draft.supplier_tax_id
+        extracted_counterparty_name = draft.supplier_name
+        counterparty_tax_id_field = "supplier_tax_id"
+        counterparty_name_field = "supplier_name"
+    # Keyed by the DRAFT field each option overrides, so the assertion record
+    # pairs the operator's value with the reading it displaced rather than with
+    # whichever field happens to share the option's name.
+    operator_overrides: dict[str, object | None] = {
+        counterparty_tax_id_field: counterparty_tax_id,
+        counterparty_name_field: counterparty_name,
+        "invoice_number": invoice_number,
+        "invoice_date": invoice_date,
+        "taxable_base": taxable_base,
+        "iva_rate": iva_rate,
+        "iva_amount": iva_amount,
+        "currency": currency,
+        "recargo_amount": recargo_amount,
+        "retencion_rate": retention_rate,
+        "retencion_amount": retention_amount,
+    }
     resolved_counterparty_tax_id = _require_confirmed_field(
         _agreed_counterparty_tax_id(supplied=counterparty_tax_id, extracted=extracted_counterparty_tax_id),
         field="counterparty_tax_id",
@@ -1418,10 +1493,34 @@ def confirm_invoice_draft_from_evidence(
         # `link_attachment_invoice` dedups) so a re-confirm never regresses the
         # provenance link even if it was never wired for this evidence before.
         link_attachment_invoice(attachment_store, attachment_id=resolved_attachment_id, invoice_id=existing.invoice_id)
+        existing_record = write_confirmation_record(
+            record=build_confirmation_record(
+                bucket_id=bucket_id,
+                invoice_id=existing.invoice_id,
+                evidence_reference=evidence_id or resolved_attachment_id,
+                evidence_sha256=_evidence_content_address(
+                    bucket_id=bucket_id,
+                    evidence_id=evidence_id,
+                    settings=resolved_settings,
+                ),
+                draft=draft,
+                extractor=_confirmed_extractor(draft),
+                confirmed_by=confirmed_by,
+                overrides=operator_overrides,
+                blockers=blockers,
+                resolutions=resolutions,
+            ),
+            settings=resolved_settings,
+        )
         return InvoiceConfirmationResult(
             invoice=existing,
             draft=draft,
             created=False,
+            confirmation_id=existing_record.confirmation_id,
+            confirmed_provenance=re_stamped_provenance(
+                draft=draft,
+                assertions=existing_record.assertions,
+            ),
             # Re-asserted on the guarded no-op for the same reason the provenance
             # link is: a retry must not silently drop a discrepancy the first
             # confirm surfaced, or the alert becomes something a re-run clears.
@@ -1463,12 +1562,65 @@ def confirm_invoice_draft_from_evidence(
         attachment_id=resolved_attachment_id,
         invoice_id=result.invoice.invoice_id,
     )
+    confirmation_record = write_confirmation_record(
+        record=build_confirmation_record(
+            bucket_id=bucket_id,
+            invoice_id=result.invoice.invoice_id,
+            evidence_reference=evidence_id or resolved_attachment_id,
+            evidence_sha256=_evidence_content_address(
+                bucket_id=bucket_id,
+                evidence_id=evidence_id,
+                settings=resolved_settings,
+            ),
+            draft=draft,
+            extractor=_confirmed_extractor(draft),
+            confirmed_by=confirmed_by,
+            overrides=operator_overrides,
+            blockers=blockers,
+            resolutions=resolutions,
+        ),
+        settings=resolved_settings,
+    )
     return InvoiceConfirmationResult(
         invoice=result.invoice,
         draft=draft,
         created=True,
         total_discrepancy=printed_total_discrepancy(draft=draft, invoice=result.invoice),
+        confirmation_id=confirmation_record.confirmation_id,
+        confirmed_provenance=re_stamped_provenance(draft=draft, assertions=confirmation_record.assertions),
     )
+
+
+def _confirmed_extractor(draft: InvoiceDraft) -> str:
+    """Return which reading lane produced *draft*, for the confirmation record.
+
+    Read off the origins the draft's own envelopes carry rather than passed in
+    by the caller: the caller does not know which lane ran, and a lane label a
+    caller supplies is a claim rather than an observation. A draft carrying no
+    envelope at all names the lane honestly as unrecorded instead of guessing
+    the most likely one.
+    """
+    origins = sorted({envelope.origin.value for envelope in draft.provenance})
+    return "+".join(origins) if origins else "unrecorded"
+
+
+def _evidence_content_address(*, bucket_id: str, evidence_id: str | None, settings: Settings) -> str | None:
+    """Return the content address of the confirmed evidence bytes, when known.
+
+    Resolved from the ``purchase_invoice_evidence`` record's own
+    ``source_sha256``. A confirm taken directly against an attachment id has no
+    such record, and the address stays ``None`` rather than being invented from
+    the id -- an id is a name for the bytes, not a fingerprint of them, and
+    recording one as the other would let a later re-derivation believe it had
+    proved something it never checked.
+    """
+    if evidence_id is None:
+        return None
+    record = find_bytes_bearing_evidence_record(
+        evidence_id,
+        evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
+    )
+    return record.source_sha256 if record is not None else None
 
 
 def _domestic_category_from_the_declared_rate(draft: InvoiceDraft, *, invoice_date: date) -> IvaCategory | None:

@@ -13,14 +13,28 @@ transcription stage can be swapped, measured or replaced independently of the
 understanding stage, and it makes any already-transcribed text -- a PDF text
 layer, an OCR result, an EN16931 payload rendered back to prose -- usable.
 
-**No provider pin.** Unlike the vision reader, which hard-pins
-:attr:`~adapters.outbound.llm.LLMProvider.LOCAL` because a rasterised invoice
-page is raw evidence that must never leave the host, this reader runs on
-whatever provider the caller has configured. That is deliberate: the extractor
-itself makes no persistence and no transport decision, and the sensitive-data
-posture governing whether a given text may be sent anywhere is owned by the
-calling flow's consent gate, not by this primitive. Callers handling
-undisclosed evidence keep passing a LOCAL-configured client.
+**Defaults to LOCAL, like the vision reader.** This paragraph previously said
+the opposite -- that the reader took whatever provider the caller had
+configured, because "the sensitive-data posture is owned by the calling flow's
+consent gate, not by this primitive". That reasoning was sound and the premise
+was false: no such consent gate had been built, while the shipped provider
+default is a cloud vendor. The two together meant reading a taxpayer's invoice
+sent the document's text off-host by configuration alone, with nothing at the
+call site expressing that choice.
+
+The default is therefore stated here rather than inherited. An off-host read
+stays possible -- the measurement corpus is public, synthetic and explicitly
+sanctioned for it -- but requires naming BOTH the provider and the model, which
+makes it a deliberate act at the call site instead of a property of the
+environment. A named provider with no model refuses, mirroring the vision
+reader's guard.
+
+This is a floor, not the consent gate. The gate itself is
+:meth:`~adapters.outbound.llm.LLMClient._require_evidence_consent`, applied at
+the client's dispatch choke point where no caller can reach around it by
+constructing a request directly: this reader marks every request it builds as
+evidence-derived unless the caller names the public corpus, and an off-host
+dispatch of a marked request without a per-invocation consent token refuses.
 
 **Language-neutral by design.** The vision prompt opens "a scanned Spanish
 invoice"; invoices reaching this path are international, in arbitrary languages
@@ -49,13 +63,15 @@ from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
 from ..core import FieldOrigin, Period
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
+from ._consent import EvidenceConsentToken
+from ._errors import LLMConfigError
 from ._invoice_extraction_prompt import (
     CompiledInvoiceExtractionPrompt,
     build_invoice_extraction_prompt,
     default_extraction_period,
 )
 from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
-from ._models import LLMRequest
+from ._models import LLMProvider, LLMRequest
 
 __all__ = [
     "TextInvoiceFieldExtractor",
@@ -103,26 +119,56 @@ class TextInvoiceFieldExtractor:
     """Read an invoice's text with a language model into a grounded :class:`InvoiceDraft`.
 
     Args:
-        model: Optional model identifier override; ``None`` uses the configured
-            model for whichever provider is active.
+        model: Optional model identifier; ``None`` uses the configured LOCAL
+            text model. Required when ``provider`` is not LOCAL, because the
+            only default that exists names a local model no vendor serves.
+        provider: Which provider carries the read. Defaults to LOCAL so a
+            taxpayer's document does not leave the host by default; naming a
+            cloud provider is a deliberate call-site act.
         client: Injected :class:`~adapters.outbound.llm.LLMClient` (dependency
             injection for tests); default-constructed against the resolved
             settings otherwise.
         settings: Injected settings; defaults to ``load_settings()``.
         period: Filing period whose registry-resolved rates the compiled prompt
             enumerates; defaults to the current annual period.
+        consent_token: Per-invocation off-host consent proof, minted through
+            :func:`~llm._consent.mint_evidence_consent_token`. Required only for
+            an off-host read of real evidence; ``None`` is correct for every
+            on-host read.
+        public_corpus: Whether the text handed to this reader comes from the
+            public, synthetic measurement corpus rather than from a taxpayer's
+            document. Defaults to ``False`` -- the fail-closed direction, so a
+            caller that says nothing gets the gate. Naming the corpus is the
+            deliberate act, not naming the evidence.
     """
 
     def __init__(
         self,
         *,
         model: str | None = None,
+        provider: LLMProvider = LLMProvider.LOCAL,
         client: LLMClient | None = None,
         settings: Settings | None = None,
         period: Period | None = None,
+        consent_token: EvidenceConsentToken | None = None,
+        public_corpus: bool = False,
     ) -> None:
         resolved_settings = settings if settings is not None else load_settings()
-        self._model = model
+        self._provider = provider
+        self._consent_token = consent_token
+        self._public_corpus = public_corpus
+        if provider is LLMProvider.LOCAL:
+            self._model = model if model is not None else resolved_settings.cadrumo_llm_ollama_text_model
+        elif model is None:
+            # Mirrors the vision reader's guard, and closes the same hole from
+            # the other side. The only default that exists is the local text
+            # model, so forwarding that identifier to a vendor asks for a model
+            # it does not serve -- and doing so SILENTLY is what let a
+            # taxpayer's document reach a cloud provider by configuration alone.
+            msg = f"a text model must be named explicitly for provider {provider.value!r}; no default exists for it"
+            raise LLMConfigError(msg, suggestion="pass model=<vendor text model id>")
+        else:
+            self._model = model
         self._period = period if period is not None else default_extraction_period()
         self._client = (
             client
@@ -179,13 +225,26 @@ class TextInvoiceFieldExtractor:
     def _build_request(self, evidence_text: str) -> LLMRequest:
         """Build the completion request for ``evidence_text``.
 
-        Carries no ``provider_override``: the active provider is whatever the
-        caller configured, which is what lets this reader run against a hosted
-        model on a host with no inference capacity of its own.
+        Carries an EXPLICIT ``provider_override``. It previously carried none,
+        so the provider was whatever the settings resolved to -- and the shipped
+        default is a cloud vendor, which meant reading a taxpayer's invoice sent
+        the document's text off-host by configuration alone, with nothing at the
+        call site saying so.
+
+        The default is now :attr:`~adapters.outbound.llm.LLMProvider.LOCAL` and
+        it is stated here rather than inherited, because the confidentiality
+        guarantee is that sensitive financial data stays on the host. Running
+        this reader against a hosted model remains possible, but only by naming
+        both the provider and the model, which makes the off-host read a
+        deliberate act at the call site instead of a property of the
+        environment.
         """
         return LLMRequest(
             prompt=build_text_field_extraction_prompt(evidence_text, period=self._period),
+            provider_override=self._provider,
             model_override=self._model,
+            evidence_derived=not self._public_corpus,
+            consent_token=self._consent_token,
         )
 
     def _compiled_prompt(self) -> CompiledInvoiceExtractionPrompt:

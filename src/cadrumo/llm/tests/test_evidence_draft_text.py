@@ -25,6 +25,7 @@ import pytest
 from ...application.ledger import PurchaseInvoiceEvidenceInputError
 from ...core import FieldOrigin
 from ...core.config import load_settings
+from .._errors import LLMConfigError
 from .._evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
@@ -36,6 +37,7 @@ from .._invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
+from .._models import LLMProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -294,23 +296,86 @@ class TestFabricatedValuesAreDroppedRatherThanTrusted:
 class TestExtractorRequestShape:
     """The built request, asserted without dispatching it."""
 
-    def test_the_request_pins_no_provider(self) -> None:
-        """Unlike the vision reader, this one runs on whatever provider is configured."""
-        extractor = TextInvoiceFieldExtractor(settings=load_settings())
-
-        request = extractor._build_request("Invoice 42\nTotal 121,00")
-
-        assert request.provider_override is None
-        assert request.images == ()
-        assert "Invoice 42" in request.prompt
-
     def test_an_explicit_model_rides_the_request_and_the_provenance_stamp(self) -> None:
         extractor = TextInvoiceFieldExtractor(model="some-text-model", settings=load_settings())
 
         assert extractor._build_request("Invoice 42").model_override == "some-text-model"
         assert extractor.decided_by.startswith("llm:text-extract:some-text-model:")
 
-    def test_an_unpinned_model_says_so_rather_than_naming_one(self) -> None:
+
+class TestExtractorPinsTheHostByDefault:
+    """The reader pins LOCAL rather than inheriting whatever is configured.
+
+    This class replaces two assertions that stated the OPPOSITE, and the
+    inversion is the point rather than a tidy-up. They were
+    ``test_the_request_pins_no_provider`` -- asserting
+    ``request.provider_override is None`` -- and
+    ``test_an_unpinned_model_says_so_rather_than_naming_one``, which asserted the
+    provenance stamp read ``configured`` because no model was pinned.
+
+    Both were written when carrying no override looked like neutrality. It is
+    not neutral: ``cadrumo_llm_provider`` defaults to a cloud vendor, so pinning
+    NOTHING meant a taxpayer's invoice text left the host by default, with no
+    consent gate, no default-off posture, and nothing at the call site saying
+    so. The tests asserted exactly the property that produced that exposure, and
+    would have gone green again the moment anyone reverted the fix.
+
+    They are inverted rather than deleted for that reason: a test that once
+    forbade the right behaviour is worth keeping as a guard against its return.
+
+    Split into its own class rather than renamed in place so the sibling
+    heading stays honest -- the remaining case in
+    :class:`TestExtractorRequestShape` really is about request shape, while
+    these are about the host boundary.
+    """
+
+    def test_the_request_pins_the_local_provider(self) -> None:
+        """Was: "pins no provider". Now: pins LOCAL, explicitly."""
         extractor = TextInvoiceFieldExtractor(settings=load_settings())
 
-        assert extractor.decided_by.startswith("llm:text-extract:configured:")
+        request = extractor._build_request("Invoice 42\nTotal 121,00")
+
+        assert request.provider_override is LLMProvider.LOCAL
+        assert request.images == ()
+        assert "Invoice 42" in request.prompt
+
+    def test_the_default_read_names_its_local_model_rather_than_deferring(self) -> None:
+        """Was: the stamp read ``configured`` because nothing was pinned.
+
+        A stamp saying ``configured`` recorded that the reader did not know
+        which model had read the document -- which is precisely the state that
+        made the off-host default invisible in provenance.
+        """
+        extractor = TextInvoiceFieldExtractor(settings=load_settings())
+
+        assert extractor._build_request("Invoice 42").model_override is not None
+        assert not extractor.decided_by.startswith("llm:text-extract:configured:")
+
+    def test_a_cloud_provider_naming_no_model_is_refused(self) -> None:
+        """A refusal, not merely a default, so configuration cannot silently bypass it.
+
+        Mirrors the vision reader's guard. A pin can be overridden; a refusal
+        cannot be reached around by setting an environment variable, which is
+        what makes this the stronger half of the fix.
+        """
+        with pytest.raises(LLMConfigError, match="must be named explicitly"):
+            TextInvoiceFieldExtractor(provider=LLMProvider.ANTHROPIC, settings=load_settings())
+
+    def test_an_explicitly_named_cloud_provider_and_model_is_still_honoured(self) -> None:
+        """Positive control, and it protects a sanctioned route.
+
+        The measurement corpus is public, synthetic and explicitly cleared for a
+        cloud engine. A fix that made every off-host read impossible would break
+        that, and a refusal-only suite would not notice -- a reader that refused
+        everything satisfies the case above.
+        """
+        extractor = TextInvoiceFieldExtractor(
+            provider=LLMProvider.ANTHROPIC,
+            model="claude-test-model",
+            settings=load_settings(),
+        )
+
+        request = extractor._build_request("Invoice 42")
+
+        assert request.provider_override is LLMProvider.ANTHROPIC
+        assert request.model_override == "claude-test-model"

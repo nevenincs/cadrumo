@@ -3,7 +3,7 @@
 The warm in-process transport serialises on a single stdout-capture lock (the CLI
 writes to the process-global ``sys.stdout``). A verb that hung while holding that
 capture would wedge the WHOLE warm transport - a worse blast radius than the
-per-call subprocess model this campaign exists to eliminate. So a warm-eligible
+per-call subprocess model the warm transport exists to eliminate. So a warm-eligible
 call fails fast: if a prior worker has held the capture past the wedge threshold
 the transport is declared wedged and the call degrades to the proven supervised
 subprocess transport, carrying a warning Notice that names the wedge; when the

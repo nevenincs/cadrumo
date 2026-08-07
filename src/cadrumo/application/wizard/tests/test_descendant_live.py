@@ -51,7 +51,7 @@ _DESCENDANTS_CANONICAL: dict[str, str] = {
     # NON-cohabiting, which is what makes the dependency page reachable at all:
     # it is gated on this answer, so a cohabiting canonical set would traverse
     # past it and leave the assimilation unexercised end to end -- the exact
-    # zero-answered-coverage shape this campaign's audit found for three
+    # zero-answered-coverage shape a prior audit found for three
     # earlier pages.
     "descendientes#0.convivencia": "false",
     "descendientes#0.dependencia-economica": "true",

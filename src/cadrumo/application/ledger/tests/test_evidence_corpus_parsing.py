@@ -392,6 +392,15 @@ def test_the_facturae_fixture_reads_recargo_and_does_not_double_count_its_taxes(
     rate, base, cuota = parsed.iva_breakdown[0]
     assert (rate, base, cuota) == (Decimal("21.00"), Decimal("100.00"), Decimal("21.00"))
     assert base == parsed.taxable_base
+    # The band-sum identity every sibling corpus test above asserts, and which
+    # this one alone lacked. Its absence is exactly how the scalar came to carry
+    # cuota PLUS recargo (26,20) while the breakdown correctly stated the cuota:
+    # nothing compared the two, so the surcharge rode into a term that means the
+    # cuota and the printed total then failed to close by precisely the recargo.
+    assert cuota == parsed.iva_amount
+    assert parsed.taxable_base is not None
+    assert parsed.iva_amount is not None
+    assert parsed.taxable_base + parsed.iva_amount + parsed.recargo_amount == parsed.grand_total
 
 
 def test_the_facturae_reader_keeps_the_invoice_series_beside_the_number() -> None:

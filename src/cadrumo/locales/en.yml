@@ -1838,6 +1838,8 @@ cli:
           taxable base and the IVA rate, so a difference means the document carries
           an amount this record does not, such as a recargo de equivalencia, or a
           figure was misread. Check the document.
+        confirm_resolve_help: 'Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>.
+          Repeat once per finding; there is no bulk flag.'
         confirm_taxable_base_help: Override the extracted taxable base.
         evidence_id_help: Evidence id (exact match)
         extract_attachment_id_help: Linked attachment id to extract from (alternative
@@ -1847,6 +1849,19 @@ cli:
         extract_reference_required: Supply exactly one of --evidence-id or --attachment-id.
         extract_review_hint_message: This is a best-effort draft; confirm every field
           before minting an invoice.
+        field_ambiguous: '{field}: several readings competed and none could be decided
+          between ({candidates}). Choose one rather than accepting the draft as read.'
+        field_anchor_not_found: '{field}: the reader points at ''{anchor}'', which
+          does not occur in the document''s transcription. A normalised value can
+          fail this search legitimately, so check the field rather than assuming it
+          was corroborated.'
+        field_anchor_self_reported: '{field}: the reader reports having read this
+          from ''{anchor}'', but that claim came from the same reader that produced
+          the value, so nothing independent has confirmed it.'
+        field_contradicted: '{field}: the document reads ''{anchor}'', which does
+          not agree with the value recorded for this field. {detail}'
+        field_no_anchor: '{field}: the reader offered nothing in the document to point
+          at, so there is no printed form to check this value against.'
         group_help: Purchase invoice evidence in PDF or image form
         invoice_date_help: Invoice issue date in ISO 8601 (YYYY-MM-DD), e.g. 2026-01-15.
         invoice_number_help: Supplier invoice number
@@ -1855,6 +1870,27 @@ cli:
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         remove_help: Delete purchase invoice evidence
+        review:
+          blocked_message: This document cannot be confirmed until every finding below
+            is answered individually. Each answer names one finding by its id.
+          blocked_pending_message: Some pending documents carry findings that must
+            each be answered before they can be confirmed. Inspect one with `review
+            show`.
+          blocking_help: Show only drafts that cannot be confirmed until a finding
+            is answered.
+          finding_help: Show only drafts whose document failed this deterministic
+            check.
+          group_help: Review pending extraction drafts before confirming them into
+            invoices.
+          list_help: List pending extraction drafts awaiting human review.
+          reason_help: Show only drafts blocked for this reason.
+          reference_help: Evidence or attachment reference the pending draft was read
+            from.
+          resolve_action: Unknown resolution action.
+          resolve_shape: Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>.
+          show_help: Show one pending draft field by field, with its findings and
+            blockers.
+          unknown_reference: No pending draft for that reference.
         source_path_help: Path to the invoice PDF or image
         supplier_help: Supplier name
         taxable_base_help: Invoice taxable base
@@ -1862,11 +1898,6 @@ cli:
         view_help: Show purchase invoice evidence
         yes_help: Confirm deleting the evidence
         yes_required: Pass --yes to delete evidence
-        field_contradicted: '{field}: the document reads ''{anchor}'', which does not agree with the value recorded for this field. {detail}'
-        field_ambiguous: '{field}: several readings competed and none could be decided between ({candidates}). Choose one rather than accepting the draft as read.'
-        field_anchor_self_reported: '{field}: the reader reports having read this from ''{anchor}'', but that claim came from the same reader that produced the value, so nothing independent has confirmed it.'
-        field_anchor_not_found: '{field}: the reader points at ''{anchor}'', which does not occur in the document''s transcription. A normalised value can fail this search legitimately, so check the field rather than assuming it was corroborated.'
-        field_no_anchor: '{field}: the reader offered nothing in the document to point at, so there is no printed form to check this value against.'
       inventory:
         actividad_id_help: Economic activity identifier
         create_help: Create an inventory ledger for one activity and tax year
@@ -1894,6 +1925,7 @@ cli:
         group_help: Business invoice records (issued or received)
         import_all_refused: 'bulk invoice import failed: every row was refused; no
           invoices were created'
+        import_column_role_not_applied: 'a proposed column role was not applied: {detail}'
         import_file_help: Path to a CSV or XLSX file of invoice rows (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, and optional
           iva_rate/currency/country_code/notes).
@@ -1936,7 +1968,6 @@ cli:
           exists (%{invoice_id}); nothing was created.'
         yes_help: Confirm deleting the invoice
         yes_required: Pass --yes to delete an invoice
-        import_column_role_not_applied: 'a proposed column role was not applied: {detail}'
       prorrata:
         activity_code_help: CNAE / IAE activity code grouped into this sector (repeatable,
           at least one).
@@ -4317,6 +4348,7 @@ cli:
       include_split_siblings_help: Expand the chain to include events for every split
         sibling that shares a split_group_id with this transaction
     import:
+      all_files_refused: 'No statement file could be imported: {detail}'
       all_rows_skipped: 'No new entries were imported: all {skipped} parsed row(s)
         already exist in the ledger (duplicate transaction ids).'
       dry_run_help: Run the import in dry-run mode (without saving)
@@ -4324,6 +4356,7 @@ cli:
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
       file_help: Path to the bank statement file or directory
+      file_refused: '{path} was not imported: {reason}'
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
         already in the ledger but have a different description - a likely duplicate
@@ -6088,6 +6121,8 @@ errors:
       the accepted range.'
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
       violate a required invariant. Check the wallet age configuration and retry.
+    refused_ledger_confirmation_blocked: This document has findings a human must answer
+      before it can be confirmed.
     refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
       contract. Correct the input and try again.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the
@@ -6104,6 +6139,8 @@ errors:
     refused_live_verify_observation_not_found: No verification observation exists
       with the identifier provided.
     refused_llm_config: The language-model client configuration is invalid or incomplete.
+    refused_llm_consent: Reading this document off-host was refused because consent
+      for off-host transmission was not granted.
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.
@@ -6544,6 +6581,18 @@ live:
     target_period_year_mismatch: The target year does not match the target period's
       filing year.
     year_range_invalid: From-year must be less than or equal to to-year.
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Refused: this request reads a taxpayer document and would
+        send it to the off-host provider %{provider} without a per-invocation consent
+        acknowledgement.'
+      mint_refused: 'Refused: off-host reading of taxpayer evidence is not permitted
+        for this invocation.'
+      refused: Read the document on this host by routing it at the LOCAL provider,
+        or, if an off-host read is intended, set CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=true
+        and acknowledge this specific read. A gestor deployment (CADRUMO_EVIDENCE_GESTOR_MODE=true)
+        cannot be acknowledged at all.
 mcp:
   call:
     timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was

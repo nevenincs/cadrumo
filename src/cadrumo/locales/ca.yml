@@ -1971,6 +1971,8 @@ cli:
           i del tipus d'IVA, de manera que una diferència significa que el document
           inclou un import que aquest registre no recull, com ara un recàrrec d'equivalència,
           o que s'ha llegit malament alguna xifra. Reviseu el document.
+        confirm_resolve_help: 'Respongueu una troballa blocant: <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
+          Repetiu-ho per cada troballa; no hi ha cap opcio massiva.'
         confirm_taxable_base_help: Sobreescriu la base imposable extreta.
         evidence_id_help: Identificador del justificant (coincidència exacta)
         extract_attachment_id_help: Identificador de l'adjunt vinculat del qual extreure
@@ -1982,6 +1984,20 @@ cli:
         extract_reference_required: Indiqueu exactament un de --evidence-id o --attachment-id.
         extract_review_hint_message: Aquest és un esborrany aproximat; confirmeu cada
           camp abans de crear una factura.
+        field_ambiguous: '{field}: diverses lectures van competir i no s''ha pogut
+          decidir entre ({candidates}). Trieu-ne una en lloc d''acceptar l''esborrany
+          tal com és.'
+        field_anchor_not_found: '{field}: el lector assenyala ''{anchor}'', que no
+          apareix en la transcripció del document. Un valor normalitzat pot fallar
+          aquesta cerca legítimament, així que reviseu el camp en lloc de suposar
+          que va ser corroborat.'
+        field_anchor_self_reported: '{field}: el lector afirma haver-ho llegit de
+          ''{anchor}'', però aquesta afirmació prové del mateix lector que va produir
+          el valor, així que res independent no ho ha confirmat.'
+        field_contradicted: '{field}: el document indica ''{anchor}'', que no coincideix
+          amb el valor registrat per a aquest camp. {detail}'
+        field_no_anchor: '{field}: el lector no va oferir res en el document a què
+          assenyalar, així que no hi ha forma impresa amb què contrastar aquest valor.'
         group_help: Justificants de factures de compra en PDF o imatge
         invoice_date_help: Data d'emissió de la factura en ISO 8601 (AAAA-MM-DD),
           p. ex. 2026-01-15.
@@ -1991,6 +2007,27 @@ cli:
         list_help: Llista els justificants de factures de compra registrats
         notes_help: Notes internes sobre el justificant
         remove_help: Elimina un justificant de factura de compra
+        review:
+          blocked_message: Aquest document no es pot confirmar fins que es respongui
+            individualment cada troballa. Cada resposta anomena una troballa pel seu
+            identificador.
+          blocked_pending_message: Alguns documents pendents tenen troballes que cal
+            respondre abans de confirmar-los. Inspeccioneu-ne un amb `review show`.
+          blocking_help: Mostreu nomes els esborranys que no es poden confirmar fins
+            que es respongui una troballa.
+          finding_help: Mostreu nomes els esborranys el document dels quals no ha
+            superat aquesta comprovacio determinista.
+          group_help: Reviseu els esborranys d'extraccio pendents abans de confirmar-los
+            com a factures.
+          list_help: Llisteu els esborranys d'extraccio pendents de revisio humana.
+          reason_help: Mostreu nomes els esborranys blocats per aquest motiu.
+          reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
+            pendent.
+          resolve_action: Accio de resolucio desconeguda.
+          resolve_shape: Cada --resolve es <id-troballa>=<choose|supply|attest>:<valor-o-motiu>.
+          show_help: Mostreu un esborrany pendent camp per camp, amb les seves troballes
+            i blocatges.
+          unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
         source_path_help: Ruta al PDF o imatge de la factura
         supplier_help: Nom del proveïdor
         taxable_base_help: Base imposable de la factura
@@ -1998,11 +2035,6 @@ cli:
         view_help: Mostra un justificant de factura de compra
         yes_help: Confirma l'eliminació del justificant
         yes_required: Has de passar --yes per eliminar un justificant
-        field_contradicted: '{field}: el document indica ''{anchor}'', que no coincideix amb el valor registrat per a aquest camp. {detail}'
-        field_ambiguous: '{field}: diverses lectures van competir i no s''ha pogut decidir entre ({candidates}). Trieu-ne una en lloc d''acceptar l''esborrany tal com és.'
-        field_anchor_self_reported: '{field}: el lector afirma haver-ho llegit de ''{anchor}'', però aquesta afirmació prové del mateix lector que va produir el valor, així que res independent no ho ha confirmat.'
-        field_anchor_not_found: '{field}: el lector assenyala ''{anchor}'', que no apareix en la transcripció del document. Un valor normalitzat pot fallar aquesta cerca legítimament, així que reviseu el camp en lloc de suposar que va ser corroborat.'
-        field_no_anchor: '{field}: el lector no va oferir res en el document a què assenyalar, així que no hi ha forma impresa amb què contrastar aquest valor.'
       inventory:
         actividad_id_help: Identificador de l'activitat econòmica
         create_help: Crea un llibre d'existències per a una activitat i exercici
@@ -4630,6 +4662,7 @@ cli:
       include_split_siblings_help: Inclou transaccions germanes del mateix grup de
         divisió
     import:
+      all_files_refused: 'No s''ha pogut importar cap fitxer d''extracte: {detail}'
       all_rows_skipped: 'No s''ha importat cap entrada nova: les {skipped} fila(es)
         analitzades ja existeixen al llibre (ids de transacció duplicats).'
       dry_run_help: Executar la importació en mode de prova (sense desar)
@@ -4638,6 +4671,7 @@ cli:
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
+      file_refused: '{path} no s''ha importat: {reason}'
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
         amb una transacció que ja és al llibre però tenen una descripció diferent:
@@ -6511,6 +6545,8 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
       d'antiguitat de la cartera i torneu-ho a intentar.
+    refused_ledger_confirmation_blocked: Aquest document té troballes que una persona
+      ha de resoldre abans de poder-lo confirmar.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
@@ -6529,6 +6565,8 @@ errors:
       amb l'identificador indicat.
     refused_llm_config: La configuració del client de model de llenguatge no és vàlida
       o està incompleta.
+    refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
+      no s'ha atorgat el consentiment per a la transmissió externa.
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.
     refused_modelo_100_borrador_binding: Els valors de l'esborrany del Model 100 no
       es poden fer servir per al càlcul.
@@ -6982,6 +7020,18 @@ live:
     target_period_year_mismatch: L'any objectiu no coincideix amb l'exercici del període
       objectiu.
     year_range_invalid: El rang d'exercicis indicat no és vàlid.
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Rebutjat: aquesta sol·licitud llegeix un document del contribuent
+        i l''enviaria al proveïdor extern %{provider} sense una autorització de consentiment
+        per a aquesta invocació.'
+      mint_refused: 'Rebutjat: la lectura externa de documents del contribuent no
+        està permesa per a aquesta invocació.'
+      refused: Llegiu el document en aquest equip dirigint-lo al proveïdor LOCAL o,
+        si voleu una lectura externa, establiu CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=true
+        i autoritzeu aquesta lectura concreta. Una instal·lació de gestoria (CADRUMO_EVIDENCE_GESTOR_MODE=true)
+        no admet cap autorització.
 mcp:
   call:
     timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)

@@ -398,3 +398,100 @@ class EvidenceConfirmResult(OutputSchema):
     # exact-looking one).
     provenance: list[EvidenceFieldProvenancePayload] = []
     discrepancies: list[EvidenceDraftDiscrepancyPayload] = []
+    # The same envelopes with every operator-asserted field re-stamped OPERATOR.
+    # Carried BESIDE `provenance` rather than replacing it: a correction is an
+    # assertion, so the record must still answer what the document said.
+    confirmed_provenance: list[EvidenceFieldProvenancePayload] = []
+    # Address of the persisted confirmation provenance record -- who confirmed,
+    # which fields they asserted, which findings they answered and how.
+    confirmation_id: str | None = None
+
+
+class EvidenceReviewFieldPayload(OutputSchema):
+    """One reviewable field: what was read, how, from where, and how sure.
+
+    The review row the human review gate is built around. A field row that
+    showed only the value would make an exactly-parsed structured figure and a
+    vision model's guess look identical at exactly the moment a person is
+    deciding whether to accept it.
+
+    ``value`` is the reading as printed, and ``anchor`` is the verbatim form it
+    was read from -- ``"1.234,56 EUR"`` against a ``1234.56`` value. A field with
+    no anchor and an ``unanchored`` outcome is the anti-fabrication signal
+    reaching the operator intact: nobody can point at it in the document.
+    """
+
+    field: str
+    value: str | None = None
+    origin: str | None = None
+    grounding: str | None = None
+    anchor: str | None = None
+    anchor_self_reported: bool = False
+    candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
+    note: str = ""
+
+
+class EvidenceReviewBlockerPayload(OutputSchema):
+    """One finding that must be answered before this document may be confirmed.
+
+    ``blocker_id`` is the address a resolution names. It is derived from what
+    the blocker IS and never from the clock, so an operator can read a listing,
+    inspect the document, and resolve the finding later against ids that have
+    not moved.
+    """
+
+    blocker_id: str
+    reason: str
+    field: str | None = None
+    detail: str = ""
+    candidates: list[EvidenceFieldAmbiguityCandidatePayload] = []
+
+
+class EvidenceReviewRowPayload(OutputSchema):
+    """One pending draft in the review queue."""
+
+    evidence_reference: str
+    extractor: str
+    drafted_at: str
+    blocking_count: int = 0
+    reasons: list[str] = []
+
+
+@register_schema("ledger.evidence.review.list")
+class EvidenceReviewListResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence review list``.
+
+    The queue, never a confirmation surface. Every row is a document a person
+    still has to look at; the filters narrow which ones, and narrowing to zero
+    is an honest empty queue rather than a claim that nothing is pending.
+    """
+
+    bucket_id: str
+    filters: list[str] = []
+    rows: list[EvidenceReviewRowPayload] = []
+
+
+@register_schema("ledger.evidence.review.show")
+class EvidenceReviewShowResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger evidence review show``.
+
+    Everything the review gate requires a person to have in front of them for
+    one document: every field with its value, origin, verbatim anchor, grounding
+    outcome and any competing candidates; every deterministic finding; the
+    direction the reading path SUGGESTS with the basis it read that from; and
+    the blocking findings that must each be answered before confirm.
+
+    The typed lists are the contract. The flat ``fields`` view is for
+    readability and is never the thing a consumer should parse for provenance.
+    """
+
+    bucket_id: str
+    evidence_reference: str
+    extractor: str
+    drafted_at: str
+    transcription_sha256: str | None = None
+    suggested_kind: str | None = None
+    suggested_kind_basis: str = ""
+    fields: list[EvidenceReviewFieldPayload] = []
+    discrepancies: list[EvidenceDraftDiscrepancyPayload] = []
+    blockers: list[EvidenceReviewBlockerPayload] = []

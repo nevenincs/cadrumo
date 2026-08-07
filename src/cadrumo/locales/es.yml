@@ -1981,6 +1981,8 @@ cli:
           imponible y del tipo de IVA, por lo que una diferencia significa que el
           documento incluye un importe que este registro no recoge, como un recargo
           de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.
+        confirm_resolve_help: 'Responda un hallazgo bloqueante: <id-hallazgo>=<choose|supply|attest>:<valor-o-motivo>.
+          Repita por cada hallazgo; no existe una opcion masiva.'
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
         evidence_id_help: Identificador del justificante (coincidencia exacta)
         extract_attachment_id_help: Identificador del adjunto vinculado del que extraer
@@ -1992,6 +1994,19 @@ cli:
         extract_reference_required: Indique exactamente uno de --evidence-id o --attachment-id.
         extract_review_hint_message: Este es un borrador aproximado; confirme cada
           campo antes de crear una factura.
+        field_ambiguous: '{field}: varias lecturas compitieron y no se pudo decidir
+          entre ({candidates}). Elija una en lugar de aceptar el borrador tal cual.'
+        field_anchor_not_found: '{field}: el lector señala ''{anchor}'', que no aparece
+          en la transcripción del documento. Un valor normalizado puede fallar esta
+          búsqueda legítimamente, así que revise el campo en lugar de suponer que
+          fue corroborado.'
+        field_anchor_self_reported: '{field}: el lector afirma haberlo leído de ''{anchor}'',
+          pero esa afirmación proviene del mismo lector que produjo el valor, así
+          que nada independiente lo ha confirmado.'
+        field_contradicted: '{field}: el documento indica ''{anchor}'', que no coincide
+          con el valor registrado para este campo. {detail}'
+        field_no_anchor: '{field}: el lector no ofreció nada en el documento a lo
+          que señalar, así que no hay forma impresa con la que contrastar este valor.'
         group_help: Justificantes de facturas de compra en PDF o imagen
         invoice_date_help: Fecha de emisión de la factura en ISO 8601 (AAAA-MM-DD),
           p. ej. 2026-01-15.
@@ -2001,6 +2016,27 @@ cli:
         list_help: Lista los justificantes de facturas de compra registrados
         notes_help: Notas internas sobre el justificante
         remove_help: Elimina un justificante de factura de compra
+        review:
+          blocked_message: Este documento no puede confirmarse hasta responder individualmente
+            cada hallazgo. Cada respuesta nombra un hallazgo por su identificador.
+          blocked_pending_message: Algunos documentos pendientes tienen hallazgos
+            que deben responderse antes de confirmarlos. Inspeccione uno con `review
+            show`.
+          blocking_help: Muestre solo los borradores que no pueden confirmarse hasta
+            responder un hallazgo.
+          finding_help: Muestre solo los borradores cuyo documento no supero esta
+            comprobacion determinista.
+          group_help: Revise los borradores de extraccion pendientes antes de confirmarlos
+            como facturas.
+          list_help: Liste los borradores de extraccion pendientes de revision humana.
+          reason_help: Muestre solo los borradores bloqueados por este motivo.
+          reference_help: Referencia de evidencia o adjunto de la que se leyo el borrador
+            pendiente.
+          resolve_action: Accion de resolucion desconocida.
+          resolve_shape: Cada --resolve es <id-hallazgo>=<choose|supply|attest>:<valor-o-motivo>.
+          show_help: Muestre un borrador pendiente campo por campo, con sus hallazgos
+            y bloqueos.
+          unknown_reference: No hay ningun borrador pendiente para esa referencia.
         source_path_help: Ruta al PDF o imagen de la factura
         supplier_help: Nombre del proveedor
         taxable_base_help: Base imponible de la factura
@@ -2008,11 +2044,6 @@ cli:
         view_help: Muestra un justificante de factura de compra
         yes_help: Confirma la eliminación del justificante
         yes_required: Debes pasar --yes para eliminar un justificante
-        field_contradicted: '{field}: el documento indica ''{anchor}'', que no coincide con el valor registrado para este campo. {detail}'
-        field_ambiguous: '{field}: varias lecturas compitieron y no se pudo decidir entre ({candidates}). Elija una en lugar de aceptar el borrador tal cual.'
-        field_anchor_self_reported: '{field}: el lector afirma haberlo leído de ''{anchor}'', pero esa afirmación proviene del mismo lector que produjo el valor, así que nada independiente lo ha confirmado.'
-        field_anchor_not_found: '{field}: el lector señala ''{anchor}'', que no aparece en la transcripción del documento. Un valor normalizado puede fallar esta búsqueda legítimamente, así que revise el campo en lugar de suponer que fue corroborado.'
-        field_no_anchor: '{field}: el lector no ofreció nada en el documento a lo que señalar, así que no hay forma impresa con la que contrastar este valor.'
       inventory:
         actividad_id_help: Identificador de la actividad económica
         create_help: Crea un libro de existencias para una actividad y ejercicio
@@ -2040,6 +2071,8 @@ cli:
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         import_all_refused: 'importación masiva de facturas fallida: se rechazaron
           todas las filas; no se creó ninguna factura'
+        import_column_role_not_applied: 'no se aplicó un rol de columna propuesto:
+          {detail}'
         import_file_help: Ruta a un archivo CSV o XLSX con filas de facturas (counterparty_nif,
           counterparty_name, invoice_number, invoice_date, taxable_base, y opcionalmente
           iva_rate/currency/country_code/notes).
@@ -2085,7 +2118,6 @@ cli:
           con esta identidad (%{invoice_id}); no se creó nada.'
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
-        import_column_role_not_applied: 'no se aplicó un rol de columna propuesto: {detail}'
       prorrata:
         activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).
@@ -4664,6 +4696,7 @@ cli:
       include_split_siblings_help: Incluye transacciones hermanas del mismo grupo
         de división
     import:
+      all_files_refused: 'No se pudo importar ningún fichero de extracto: {detail}'
       all_rows_skipped: 'No se importó ninguna entrada nueva: las {skipped} fila(s)
         analizadas ya existen en el libro (ids de transacción duplicados).'
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
@@ -4672,6 +4705,7 @@ cli:
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
       file_help: Ruta al archivo del extracto bancario o directorio
+      file_refused: '{path} no se importó: {reason}'
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción que ya está en el libro pero tienen una descripción distinta:
@@ -6551,6 +6585,8 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
       de antigüedad de la cartera y vuelva a intentarlo.
+    refused_ledger_confirmation_blocked: Este documento tiene hallazgos que una persona
+      debe resolver antes de poder confirmarlo.
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
@@ -6569,6 +6605,8 @@ errors:
       con el identificador indicado.
     refused_llm_config: La configuración del cliente de modelo de lenguaje no es válida
       o está incompleta.
+    refused_llm_consent: Se ha rechazado la lectura del documento fuera del equipo
+      porque no se ha otorgado el consentimiento para la transmisión externa.
     refused_llm_validation: Un objeto del modelo de lenguaje no superó la validación.
     refused_modelo_100_borrador_binding: Los valores del borrador de Modelo 100 no
       se pueden usar para el cálculo.
@@ -7024,6 +7062,18 @@ live:
     target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
       periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Rechazado: esta solicitud lee un documento del contribuyente
+        y lo enviaría al proveedor externo %{provider} sin una autorización de consentimiento
+        para esta invocación.'
+      mint_refused: 'Rechazado: la lectura externa de documentos del contribuyente
+        no está permitida para esta invocación.'
+      refused: Lea el documento en este equipo dirigiéndolo al proveedor LOCAL o,
+        si desea una lectura externa, establezca CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=true
+        y autorice esta lectura concreta. Una instalación de gestoría (CADRUMO_EVIDENCE_GESTOR_MODE=true)
+        no admite ninguna autorización.
 mcp:
   call:
     timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)

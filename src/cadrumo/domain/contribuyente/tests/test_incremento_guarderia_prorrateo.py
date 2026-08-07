@@ -8,7 +8,7 @@ than read back from the method under test:
 * ``(1.000 euros ÷ 12 meses x 6 meses) = 500``
 
 Two things beyond the oracles are asserted, because reproducing the manual's own
-cases would not catch either defect this Step removes. The cap must be applied
+cases would not catch either defect these tests remove. The cap must be applied
 PER CHILD rather than over the household, and it must be PRORATED rather than
 flat — and the flat form reproduces both oracles' households incorrectly only in
 the total, which is exactly why it survived.
@@ -85,7 +85,7 @@ class TestManualWorkedOracles:
         The retired form applied ``count × 1.000`` with no month term, so the
         two-month child above was granted 1.000 against a correct 166,67 — an
         over-grant of 833,33 € reachable through the documented entry surface.
-        Asserting the delta pins what this Step removed, so a regression to a
+        Asserting the delta pins what was removed, so a regression to a
         flat cap fails with the figure that motivated the fix.
         """
         child = _child(date(2022, 3, 1), mensual="5:1145;6:1145", meses_madre=4)

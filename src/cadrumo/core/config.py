@@ -745,16 +745,41 @@ class Settings(CadrumoMcpServingSettings):
         ),
     )
 
+    # ── Off-host evidence reading: opt-in consent posture ───────────────────
+    # The two flags a cloud read of a taxpayer's document must clear before the
+    # per-invocation acknowledgement is even consulted. Both default to the
+    # refusing value, so a deployment that configures nothing at all cannot
+    # transmit evidence: the permitted flag is False and no acknowledgement can
+    # rescue a gestor deployment. They are settings rather than a runtime
+    # argument because the posture is a property of the DEPLOYMENT -- an
+    # operator's per-call acknowledgement narrows it and can never widen it
+    # (sensitive-financial-data-secure-storage-only).
+    cadrumo_evidence_cloud_upload_permitted: bool = Field(
+        default=False,
+        description=(
+            "Whether this deployment permits reading taxpayer evidence at an off-host model at all. "
+            "Default off: every evidence read stays on the host. When True, an explicit per-invocation "
+            "operator acknowledgement is still required for each read, and gestor deployments stay barred."
+        ),
+    )
+    cadrumo_evidence_gestor_mode: bool = Field(
+        default=False,
+        description=(
+            "Gestor/professional deployment flag for evidence reading. When True, an off-host evidence "
+            "read is categorically refused regardless of cadrumo_evidence_cloud_upload_permitted or any "
+            "per-invocation acknowledgement."
+        ),
+    )
+
     # ── Remote telemetry: opt-in consent posture ────────────────────────────
     # Default and only-acceptable-for-serious-use posture is fully local: every
     # existing telemetry primitive (LLM run-timing, MCP session trajectory) is
     # written to encrypted secure storage or a local JSONL file and never
     # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
-    # opt-in exception, and it is now the ONLY off-host consent posture in the
-    # settings: the evidence cloud-upload and gestor-mode flags it used to be
-    # modelled on were deleted with the cloud read path they gated
-    # (sensitive-financial-data-secure-storage-only). No transport reads these
-    # fields yet; the gate and the allowlisted payload schema are built first.
+    # opt-in exception. It shares the evidence gate's shape above -- gestor bar
+    # first and absolutely, then the deployment opt-in, then the per-invocation
+    # acknowledgement -- so the codebase's off-host consent postures stay
+    # uniform and comparable, with the tier as this posture's only extra axis.
     cadrumo_telemetry_opt_in: bool = Field(
         default=False,
         description=(

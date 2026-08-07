@@ -71,7 +71,7 @@ def test_category_hints_carry_resolved_translations_not_key_fallbacks() -> None:
 
     Two catalogues that both fail to resolve a key return the same humanised
     fallback, so the equality test would pass vacuously on unauthored content —
-    which is exactly the state this campaign started from. Require that the
+    which is exactly the starting state this guards against. Require that the
     hints actually resolve, without asserting what they say.
     """
     with _output_language("hu"):

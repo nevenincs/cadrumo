@@ -46,8 +46,7 @@ _SANCTIONED_HOME: Final[tuple[str, str, str]] = (
 )
 
 _REMEDY: Final[str] = (
-    "A Modelo 036 tipo de actividad is now stored in more than one place. Per "
-    "2026-08-07-calculation-chain-integrity-activity-type-placement-adr the value "
+    "A Modelo 036 tipo de actividad is now stored in more than one place. The value "
     "belongs to the per-activity profile row and the transaction should carry a "
     "REFERENCE to the activity slot, not a copy of its type. Collapse "
     "Transaction.tipo_actividad to that reference and repoint its readers "

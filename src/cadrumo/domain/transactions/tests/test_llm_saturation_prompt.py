@@ -190,7 +190,6 @@ def test_parse_rejects_iva_category_when_spec_did_not_ask() -> None:
         parse_response(stdout, spec=default_prompt_spec())
 
 
-@pytest.mark.unit
 def test_every_iva_category_carries_a_curated_hint() -> None:
     """No category may fall back to its auto-derived hint.
 

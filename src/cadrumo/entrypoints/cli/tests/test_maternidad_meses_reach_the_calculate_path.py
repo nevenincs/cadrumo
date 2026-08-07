@@ -317,7 +317,7 @@ def test_the_art_81_1_entry_window_reaches_the_casilla_for_a_child_over_three(
 def test_no_month_before_the_adoption_reaches_the_casilla(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
-    """The over-grant this Step removes, driven through the surface an operator uses.
+    """The over-grant this test removes, driven through the surface an operator uses.
 
     Born January 2024 and adopted in October. The under-three limb runs from the
     BIRTH month for every relacion, so unioning the two limbs granted January to
@@ -365,7 +365,7 @@ def test_the_calculate_time_flag_no_longer_exists(runtime_profile: TestRuntimePr
     The flag was a second, unvalidated authority over casilla 0611: a
     free-form hijo id no descendant record answered to, never checked against
     cohabitation, the rentas ceiling, or the Art. 61 norma 2ª own-return rule
-    the profile path applies. The prior Step made the two channels mutually
+    the profile path applies. An earlier guard made the two channels mutually
     refuse each other; this one removes the second channel, because a
     refusal still CONTAINS a two-authority hazard rather than eliminating it.
     Supplying the retired flag must fail Click's own option parsing -- an

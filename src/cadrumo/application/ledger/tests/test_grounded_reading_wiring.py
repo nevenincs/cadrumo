@@ -1,6 +1,6 @@
 """The router reaches the grounding stages, and the upgrade actually happens.
 
-Every stage this campaign built was correct, gated and reached by nothing. These
+Every grounding stage was correct, gated and reached by nothing. These
 cases gate the connection itself: that the router's text path runs
 transcribe → extract → ground, and that the grounding stage converts a reader's
 unverified claim into a checked verdict.

@@ -443,7 +443,7 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
     ``calculate_registry_snapshot``, never ``relation_values``. That gap is
     pre-existing and orthogonal to R1 (verification grounding-tier
     transparency); widening ``verify_declaracion``'s public signature to
-    close it is out of this Step's scope.
+    close it is out of this test's scope.
 
     This test instead exercises the exact computation ``verify_declaracion``
     performs once ``status``/``coverage`` are finalised -

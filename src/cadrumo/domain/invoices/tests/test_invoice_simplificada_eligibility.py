@@ -88,7 +88,7 @@ def _invoice(**overrides: Any) -> Invoice:
 
 
 def test_a_simplificada_entrega_intracomunitaria_is_refused_regardless_of_tax_id() -> None:
-    """The falsified case this Step exists to close.
+    """The falsified case this guard exists to close.
 
     A valid foreign tax id is present -- the content relief question is
     already moot -- and the document is STILL refused, because art. 4.4.a)

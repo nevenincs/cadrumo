@@ -92,10 +92,33 @@ CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
     # ``Plan de empleo`` is a real LIRPF pension concept, so the uppercase-letter
     # tail is what separates the process noun from the domain one.
     PatternCase(re.compile(r"\bPla" + r"n\s+[A-Z]\b"), ("fall back to Plan B",), ("Plan de empleo reduccion",)),
-    PatternCase(re.compile(r"\bwave\b", re.IGNORECASE), ("the second wave landed",), ("waveform analysis",)),
+    # ``wave`` is a process container here, but it is also an ordinary English
+    # verb, and the bare word could not tell them apart: it fired on "a loosened
+    # check would wave through" in a positive-control docstring, which names no
+    # campaign container at all. The process sense is always a NOUN, so it is
+    # either numbered ("wave 2") or referred back to by a determiner ("the
+    # second wave"), exactly as the bare-``Step`` entry below is anchored. The
+    # verb takes neither, and ``waveform`` and ``microwave`` are untouched.
+    PatternCase(
+        re.compile(r"\b[Ww]ave\s+\d+\b|\b(?:[Tt]his|[Tt]he)(?:\s+\w+(?:-\w+)*){0,2}\s+[Ww]ave\b"),
+        ("the second wave landed", "carried in wave 2", "this wave closes the gap"),
+        ("waveform analysis", "the one a loosened check would wave through", "microwave heating"),
+    ),
     PatternCase(re.compile(r"\bAD" + r"R\b"), ("recorded in the ADR",), ("address parsing",)),
     PatternCase(re.compile(r"\bP" + r"R\b"), ("landed in PR",), ("PRINT mode",)),
-    PatternCase(re.compile(r"\b[Pp]hase[- ][A-Za-z0-9]"), ("phase-2 rollout",), ("phases of the moon",)),
+    # Narrowed to a numbered or lettered phase. The letter class this entry
+    # started with accepted any following word, so it fired on ``RD-ley 4/2024
+    # phase-out`` -- a Spanish tax-law term this domain owns and must be able to
+    # write. The same over-reach is why this family is test-scoped rather than
+    # production-scoped (see :class:`MarkerScanScope`); the tax term reaches test
+    # docstrings too, so the narrowing belongs on the pattern. A campaign phase
+    # is identified, never merely described, so ``phase-2`` and ``Phase B`` stay
+    # caught while ``phase-out``, ``phase-in`` and ``two-phase custody`` do not.
+    PatternCase(
+        re.compile(r"\b[Pp]hase[- ](?:\d|[A-Z]\b)"),
+        ("phase-2 rollout", "Phase B carried it"),
+        ("phases of the moon", "the RD-ley 4/2024 phase-out rates", "a phase-in period", "two-phase custody"),
+    ),
     # Originally only ``.vault/adr`` -- a real audit citation under
     # ``.vault/reference/`` shipped in a test-module docstring and passed this
     # gate clean, because the pattern covered one of the vault's seven

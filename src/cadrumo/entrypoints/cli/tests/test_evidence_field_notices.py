@@ -120,7 +120,7 @@ def test_every_degraded_field_produces_exactly_one_notice() -> None:
 
 
 def test_an_unchecked_anchor_is_never_reported_as_a_failed_check() -> None:
-    """The distinction this Step exists to protect.
+    """The distinction this gate exists to protect.
 
     A text-lane ``UNANCHORED`` is a check that RAN against an independently
     produced transcription and did not pass. A self-reported anchor is a check

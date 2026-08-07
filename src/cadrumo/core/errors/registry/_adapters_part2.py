@@ -184,6 +184,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.llm._errors.LLMConsentError",
+        ErrorCode(
+            code="REFUSED_LLM_CONSENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_llm_consent",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.llm._errors.LLMValidationError",
         ErrorCode(
             code="REFUSED_LLM_VALIDATION",

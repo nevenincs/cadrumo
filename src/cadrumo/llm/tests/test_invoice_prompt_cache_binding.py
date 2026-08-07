@@ -47,7 +47,7 @@ class TestTheCompiledPromptAlreadyParticipatesInTheCacheKey:
     """No new key component was added: ``build_key`` already hashes ``request.prompt``.
 
     Duplicating it would have produced a second, redundant path to the same
-    guarantee -- the fragmentation this campaign exists to close -- so the
+    guarantee -- the fragmentation this binding exists to close -- so the
     correct action was to PROVE the existing binding rather than add to it. The
     binding is load-bearing precisely because it is invisible: nothing in the
     prompt-compilation code names the cache.

@@ -59,7 +59,7 @@ def _subpackage_modules() -> list[Path]:
     """Return every non-test module in the subpackage.
 
     Fails loudly on an empty result. The whole point of the enumerated-surface
-    lesson this campaign learned is that a check over nothing reports success
+    lesson learned is that a check over nothing reports success
     identically to a check over clean code -- so a rename or relocation that
     empties this path must break these tests rather than silently pass them.
     """

@@ -1,6 +1,6 @@
 """Structural gate: every ``tr(CONSTANT)`` call site's constant is scanner-visible.
 
-The fourth concealment-layer class this campaign's honesty themes named: a
+The fourth concealment-layer class the honesty themes named: a
 ``tr(CONSTANT)`` call site where ``CONSTANT`` is a bare, ALL-CAPS module- or
 class-level constant reference escapes both AST resolvers in
 :mod:`locales._ast_scanner` — it is not a literal string (so

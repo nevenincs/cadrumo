@@ -1909,6 +1909,8 @@ cli:
           olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
           felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
           került. Ellenőrizze a dokumentumot.
+        confirm_resolve_help: 'Valaszoljon meg egy blokkolo eszrevetelt: <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
+          Eszrevetelenkent ismetelje; tomeges kapcsolo nincs.'
         confirm_taxable_base_help: Felülírja a kinyert adóalapot.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
@@ -1921,6 +1923,20 @@ cli:
           --attachment-id.'
         extract_review_hint_message: Ez egy hozzávetőleges piszkozat; minden mezőt
           erősítsen meg, mielőtt számlát hoz létre belőle.
+        field_ambiguous: '{field}: több olvasat versengett, és nem lehetett dönteni
+          közülük ({candidates}). Válasszon egyet ahelyett, hogy a piszkozatot változatlanul
+          elfogadná.'
+        field_anchor_not_found: '{field}: az olvasó a(z) ''{anchor}'' elemre mutat,
+          amely nem szerepel a dokumentum átiratában. Egy normalizált érték jogosan
+          megbukhat ezen a keresésen, ezért ellenőrizze a mezőt ahelyett, hogy megerősítettnek
+          tekintené.'
+        field_anchor_self_reported: '{field}: az olvasó szerint ezt a(z) ''{anchor}''
+          helyről olvasta, de ezt az állítást ugyanaz az olvasó tette, amely az értéket
+          előállította, így semmi független nem erősítette meg.'
+        field_contradicted: '{field}: a dokumentumban ''{anchor}'' szerepel, ami nem
+          egyezik a mezőhöz rögzített értékkel. {detail}'
+        field_no_anchor: '{field}: az olvasó semmit nem jelölt meg a dokumentumban,
+          így nincs nyomtatott alak, amelyhez ez az érték ellenőrizhető lenne.'
         group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
         invoice_date_help: A számla kiállításának dátuma ISO 8601 szerint (ÉÉÉÉ-HH-NN),
           pl. 2026-01-15.
@@ -1930,6 +1946,28 @@ cli:
         list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
         remove_help: Vásárlásiszámla-bizonyíték törlése.
+        review:
+          blocked_message: Ez a dokumentum addig nem erositheto meg, amig minden alabbi
+            eszrevetelt egyenkent meg nem valaszolja. Minden valasz egy eszrevetelt
+            nevez meg az azonositojaval.
+          blocked_pending_message: Nehany fuggo dokumentum olyan eszreveteleket hordoz,
+            amelyeket a megerosites elott meg kell valaszolni. Vizsgaljon meg egyet
+            a `review show` paranccsal.
+          blocking_help: Csak azokat a piszkozatokat jelenitse meg, amelyek eszrevetel
+            megvalaszolasaig nem erositehetok meg.
+          finding_help: Csak azokat a piszkozatokat jelenitse meg, amelyek dokumentuma
+            megbukott ezen a determinisztikus ellenorzesen.
+          group_help: Tekintse at a fuggoben levo kivonatolasi piszkozatokat, mielott
+            szamlava erositi oket.
+          list_help: Listazza az emberi ellenorzesre varo kivonatolasi piszkozatokat.
+          reason_help: Csak az ezen okbol blokkolt piszkozatokat jelenitse meg.
+          reference_help: A fuggo piszkozat forrasakent szolgalo bizonyitek- vagy
+            mellekletazonosito.
+          resolve_action: Ismeretlen feloldasi muvelet.
+          resolve_shape: Minden --resolve alakja <eszrevetel-azonosito>=<choose|supply|attest>:<ertek-vagy-indok>.
+          show_help: Jelenitsen meg egy fuggo piszkozatot mezonkent, eszrevetelekkel
+            es akadalyokkal.
+          unknown_reference: Nincs fuggo piszkozat ehhez az azonositohoz.
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.
@@ -1937,11 +1975,6 @@ cli:
         view_help: Vásárlásiszámla-bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót a bizonyíték törléséhez.
-        field_contradicted: '{field}: a dokumentumban ''{anchor}'' szerepel, ami nem egyezik a mezőhöz rögzített értékkel. {detail}'
-        field_ambiguous: '{field}: több olvasat versengett, és nem lehetett dönteni közülük ({candidates}). Válasszon egyet ahelyett, hogy a piszkozatot változatlanul elfogadná.'
-        field_anchor_self_reported: '{field}: az olvasó szerint ezt a(z) ''{anchor}'' helyről olvasta, de ezt az állítást ugyanaz az olvasó tette, amely az értéket előállította, így semmi független nem erősítette meg.'
-        field_anchor_not_found: '{field}: az olvasó a(z) ''{anchor}'' elemre mutat, amely nem szerepel a dokumentum átiratában. Egy normalizált érték jogosan megbukhat ezen a keresésen, ezért ellenőrizze a mezőt ahelyett, hogy megerősítettnek tekintené.'
-        field_no_anchor: '{field}: az olvasó semmit nem jelölt meg a dokumentumban, így nincs nyomtatott alak, amelyhez ez az érték ellenőrizhető lenne.'
       inventory:
         actividad_id_help: Gazdasági tevékenység azonosítója.
         create_help: Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.
@@ -1970,6 +2003,8 @@ cli:
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
         import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
           elutasításra került; nem jött létre számla'
+        import_column_role_not_applied: 'egy javasolt oszlopszerep nem lett alkalmazva:
+          {detail}'
         import_file_help: Elérési út egy CSV vagy XLSX fájlhoz, amely számlasorokat
           tartalmaz (counterparty_nif, counterparty_name, invoice_number, invoice_date,
           taxable_base, valamint opcionálisan iva_rate/currency/country_code/notes).
@@ -2017,7 +2052,6 @@ cli:
           (%{invoice_id}); semmi sem jött létre.'
         yes_help: Üzleti számla törlésének megerősítése.
         yes_required: Adja meg a --yes kapcsolót az üzleti számla törléséhez.
-        import_column_role_not_applied: 'egy javasolt oszlopszerep nem lett alkalmazva: {detail}'
       prorrata:
         activity_code_help: Ebbe a szektorba sorolt CNAE / IAE tevékenységi kód (ismételhető,
           legalább egy).
@@ -4580,6 +4614,7 @@ cli:
       include_split_siblings_help: A lánc kibővítése minden olyan felosztási testvér
         eseményeivel, amely ugyanazzal a split_group_id-val rendelkezik.
     import:
+      all_files_refused: 'Egyetlen kivonatfájlt sem sikerült importálni: {detail}'
       all_rows_skipped: 'Nem importáltak új bejegyzéseket: minden {skipped} elemzett
         sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
       dry_run_help: Az importálás futtatása próba módban (mentés nélkül).
@@ -4587,6 +4622,7 @@ cli:
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
+      file_refused: '{path} nem lett importálva: {reason}'
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
         a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
@@ -6410,6 +6446,8 @@ errors:
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
       egy szükséges feltételt sértenek. Ellenőrizze a tárca-kor beállítást, és próbálja
       újra.
+    refused_ledger_confirmation_blocked: Ezen a dokumentumon olyan észrevételek vannak,
+      amelyeket embernek kell megválaszolnia a megerősítés előtt.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsa a bemenetet, és próbálja újra.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott
@@ -6425,6 +6463,8 @@ errors:
     refused_live_verify_observation_not_found: Nem létezik ellenőrzési megfigyelés
       a megadott azonosítóval.
     refused_llm_config: A nyelvi modell kliens konfigurációja érvénytelen vagy hiányos.
+    refused_llm_consent: A dokumentum gépen kívüli olvasása elutasítva, mert a külső
+      továbbításhoz nem történt hozzájárulás.
     refused_llm_validation: Egy nyelvi modell objektum nem ment át az érvényesítésen.
     refused_modelo_100_borrador_binding: A Modelo 100 tervezet értékei nem vehetők
       fel a számításhoz.
@@ -6873,6 +6913,18 @@ live:
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
+llm:
+  evidence:
+    consent:
+      dispatch_refused: 'Elutasítva: ez a kérés az adózó egyik dokumentumát olvassa,
+        és a gépen kívüli %{provider} szolgáltatóhoz küldené az adott híváshoz tartozó
+        kifejezett hozzájárulás nélkül.'
+      mint_refused: 'Elutasítva: az adózó bizonylatainak gépen kívüli olvasása ehhez
+        a híváshoz nem engedélyezett.'
+      refused: Olvassa be a dokumentumot ezen a gépen a LOCAL szolgáltatóra irányítva,
+        vagy ha gépen kívüli olvasást szeretne, állítsa be a CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED=true
+        értéket, és hagyja jóvá ezt a konkrét olvasást. Könyvelőirodai telepítésben
+        (CADRUMO_EVIDENCE_GESTOR_MODE=true) semmilyen jóváhagyás nem lehetséges.
 mcp:
   call:
     timeout: A(z) '{command}' túllépte a(z) {tier} szint időkorlátját ({seconds}s),

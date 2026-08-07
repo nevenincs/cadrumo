@@ -29,7 +29,7 @@ site's prefix and pointing at :mod:`locales._fstring_registry`. The allowlist
 ratchets like the lazy-import policy gate: adding an entry is a reviewed edit
 that must justify why the namespace cannot be registered.
 
-The incident this campaign hit three times is pinned at the bottom: the
+The incident seen three times is pinned at the bottom: the
 status-page lifecycle labels expand exactly the ``UserProfileStatus`` values,
 and the verdict-factory and required/optional badge keys stay scanner-visible.
 """
@@ -134,7 +134,7 @@ def test_every_dynamic_prefix_is_registry_covered_or_allowlisted() -> None:
     must be registry-covered (an FStringKeyRegistration expands keys under it)
     or explicitly allowlisted in ``OPEN_ENDED_NAMESPACES``. A marker in neither
     set is a bounded dynamic key site with no registration — the exact blind
-    spot that has silently dropped locale leaves three times this campaign.
+    spot that has silently dropped locale leaves three times.
     """
     markers = scan_namespace_markers(_SRC_ROOT)
     assert markers, (
@@ -205,7 +205,7 @@ def test_allowlist_entries_are_live_and_reasoned() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Seed incidents — the three blind-spot fires this campaign already paid for
+# Seed incidents — the three blind-spot fires already paid for
 # ---------------------------------------------------------------------------
 
 

@@ -87,7 +87,7 @@ _SPANISH_INVOICE: dict[str, str | None] = {
     "iva_amount": "252,00",
     "retencion_rate": "15",
     "retencion_amount": "180,00",
-    "grand_total": "1.272,00",
+    "grand_total": "1.452,00",
     "currency": "EUR",
 }
 _SPANISH_ANCHORS: dict[str, str | None] = {
@@ -99,7 +99,7 @@ _SPANISH_ANCHORS: dict[str, str | None] = {
     "iva_amount": "252,00 €",
     "retencion_rate": "-15%",
     "retencion_amount": "-180,00 €",
-    "grand_total": "1.272,00 €",
+    "grand_total": "1.452,00 €",
     "currency": "€",
 }
 
@@ -222,7 +222,7 @@ class TestEveryExtractedFieldCarriesItsAnchor:
 
         envelope = _envelope(draft, "grand_total")
 
-        assert draft.grand_total == Decimal("1272.00")
+        assert draft.grand_total == Decimal("1452.00")
         assert envelope.anchor is None
         assert "no printed form" in envelope.note
 
@@ -234,7 +234,7 @@ class TestEveryExtractedFieldCarriesItsAnchor:
             origin=FieldOrigin.VISION,
         )
 
-        assert draft.grand_total == Decimal("1272.00")
+        assert draft.grand_total == Decimal("1452.00")
         assert all(item.anchor is None for item in draft.provenance)
 
     def test_a_key_that_is_neither_a_field_nor_an_anchor_is_refused(self) -> None:

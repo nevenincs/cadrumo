@@ -557,6 +557,23 @@ LEDGER_EXTRACTION_DRAFT_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
+LEDGER_CONFIRMATION_RECORD_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="ledger_confirmation_record",
+    namespace="cadrumo.application.ledger.confirmation_record",
+    owner="cadrumo.application.ledger",
+    # The provenance of one human confirmation: who accepted which figures for
+    # which counterparty, and what the document said before they did. That is the
+    # same derived financial data the draft carried plus the operator identity
+    # that accepted it, so it is stored at FINANCIAL sensitivity rather than at an
+    # audit-only classification -- a leaked record would disclose the counterparty,
+    # the base and the cuota exactly as the confirmed invoice would.
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{bucket_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
+
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_classification_rules",
     namespace="cadrumo.ledger.classification.rules",
@@ -1065,6 +1082,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
         LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE,
         LEDGER_EXTRACTION_DRAFT_NAMESPACE,
+        LEDGER_CONFIRMATION_RECORD_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_M036_DECLARATION_NAMESPACE,

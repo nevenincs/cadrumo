@@ -75,7 +75,7 @@ def test_a_genuine_entrega_intracomunitaria_names_a_foreign_destination() -> Non
 
 
 def test_an_intracommunity_supply_naming_spain_is_refused() -> None:
-    """The falsified case this Step exists to close: Spain cannot be its own destination.
+    """The falsified case this guard exists to close: Spain cannot be its own destination.
 
     Before this guard, a Spanish counterparty country with a valid Spanish
     CIF passed every existing check on this category -- the domestic number

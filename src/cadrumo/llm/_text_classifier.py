@@ -129,4 +129,9 @@ class LocalTextLLMClassifier:
             prompt=prompt,
             provider_override=LLMProvider.LOCAL,
             model_override=self._model,
+            # Marked even though the pin above makes the dispatch gate
+            # unreachable from here: the marker states what the content IS, and
+            # a later change that relaxes the pin must not silently also relax
+            # the confidentiality posture.
+            evidence_derived=True,
         )
