@@ -11,6 +11,7 @@ related:
   - "[[2026-07-26-multi-activity-profile-reference]]"
   - "[[2026-07-26-multi-activity-profile-adr]]"
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
+  - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
 ---
 # `calculation-chain-integrity` adr: `Activity-type axis placement: the value is a profile activity row, the transaction carries a reference` | (**status:** `proposed`)
 
