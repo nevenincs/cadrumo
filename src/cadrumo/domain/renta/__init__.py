@@ -93,12 +93,16 @@ from ._maritime_exemption import (
 # above. Unlike that module, this one's constant IS re-exported: it is the
 # single source of truth application.aggregation reads for the redirect, not
 # a mapping consumed only internally.
-from ._retenciones_routing_integrity import RENTA_130_RETENCIONES_OUTPUT_CASILLA
+from ._retenciones_routing_integrity import (
+    RENTA_130_RETENCIONES_BINDING_ID,
+    RENTA_130_RETENCIONES_OUTPUT_CASILLA,
+)
 from ._substrate import EstimacionDirectaModalidad, RentaIncomeType
 
 __all__ = [
     "ART_7P_EXEMPTION_CAP_EUR",
     "RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS",
+    "RENTA_130_RETENCIONES_BINDING_ID",
     "RENTA_130_RETENCIONES_OUTPUT_CASILLA",
     "RENTA_EXENTA_CASILLA",
     "EstimacionDirectaModalidad",
