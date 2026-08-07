@@ -2144,6 +2144,11 @@ cli:
           scoped to the authenticated NIF is unconfirmed, so it only widens the walk:
           a pair absent from it is no proof that nothing was filed.'
         list_help: List filed declaration rows without downloading artefacts
+        pull_all_help: Pull this taxpayer's AEAT-held history in one sweep.
+        pull_all_limit_help: Limit how many declaraciones this sweep captures.
+        pull_all_pairs_refused: '{count} modelo/ejercicio pair(s) could not be read
+          and were NOT reported as empty: {pairs}. Re-run to retry; a refusal is not
+          evidence that nothing was filed.'
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
@@ -6817,6 +6822,23 @@ live:
     target_period_year_mismatch: The target year does not match the target period's
       filing year.
     year_range_invalid: From-year must be less than or equal to to-year.
+  filed:
+    pull_all:
+      denominator_note_profile: Measured against {expected} pair(s) the taxpayer's
+        own declared facts expect. A further {offered_only} pair(s) came only from
+        AEAT's offered option list and support no coverage claim.
+      denominator_note_register_only: 'No taxpayer-specific denominator: all {offered_only}
+        walked pair(s) came from AEAT''s offered option list, whose scoping to this
+        NIF is unconfirmed. This run measures nothing.'
+      expected_but_not_found: 'Your declared profile expects a filing for {count}
+        modelo/ejercicio pair(s) where AEAT''s register returned none: {pairs}. Check
+        whether these were filed.'
+      found_more_than_expected: AEAT's register holds {raw_count} filings for modelo
+        {modelo} {period} {ejercicio}; the most recent registration ({expediente})
+        was kept and {superseded} earlier one(s) were superseded.
+      recapture_divergence: 'Re-capturing modelo {modelo} {period} {ejercicio} changed
+        {count} previously observed casilla value(s): {casillas}. AEAT may hold a
+        corrected filing.'
 llm:
   evidence:
     consent:

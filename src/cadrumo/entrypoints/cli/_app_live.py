@@ -33,6 +33,7 @@ from ...application.live import (
     FiledDataCaptureFailureRow,
     FiledDataListingRow,
     FiledHistoryDiscoveryReport,
+    FiledHistoryOnboardingRun,
     IvaCompensationHistoryReport,
     IvaRemoteStateAcquisitionReport,
     IvaWalletCaptureReport,
@@ -40,8 +41,11 @@ from ...application.live import (
     capture_filed_data_bulk,
     capture_source_filed_data,
     discover_filed_history,
+    expected_but_not_found_notice,
+    found_more_than_expected_notices,
     list_filed_data,
     list_filed_data_bulk,
+    pull_filed_history,
 )
 from ...application.operator_surface import FilingStatus
 from ...core import Period, PeriodError
@@ -1174,6 +1178,158 @@ def _filed_discover_notices(report: FiledHistoryDiscoveryReport) -> list[Notice]
     return notices
 
 
+@filed_app.command("pull-all", help=tr("cli.app.live.filed.pull_all_help"))
+def filed_pull_all_cmd(
+    ctx: typer.Context,
+    output_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-root",
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            help=tr("cli.app.live.output_root_help"),
+        ),
+    ] = None,
+    limit: Annotated[
+        int | None,
+        typer.Option("--limit", min=1, help=tr("cli.app.live.filed.pull_all_limit_help")),
+    ] = None,
+) -> None:
+    """Pull this taxpayer's AEAT history in one sweep and report what it found.
+
+    Sequences discovery, bulk filed capture, IVA wallet reconciliation and the
+    notificaciones pull. Partial success is the expected outcome of a long
+    authenticated sweep, so each stage is reported separately rather than one
+    failure collapsing the run.
+
+    The report carries no completeness percentage. Part of the walked grid comes
+    from AEAT's offered option list, whose scoping to this NIF is unconfirmed, so
+    a fraction over the grid would read as coverage while resting on a
+    denominator that may have nothing to do with this taxpayer; the prose
+    denominator note says what was actually measured.
+    """
+    profile = _active_taxpayer_profile_or_none()
+    resolved_root = resolve_optional_root(output_root)
+    _emit_live_auth_preflight()
+    run = asyncio.run(pull_filed_history(output_root=resolved_root, profile=profile, limit=limit))
+    result, lines = _filed_pull_all_result_and_lines(run)
+    _emit_envelope(
+        ctx,
+        command="app.live.filed.pull_all",
+        result=result,
+        lines=lines,
+        notices=_filed_pull_all_notices(run),
+    )
+
+
+def _filed_pull_all_result_and_lines(run: FiledHistoryOnboardingRun) -> tuple[Any, tuple[str, ...]]:
+    from ._app_live_payloads import FiledHistoryOnboardingResult, FiledHistoryPairOutcomePayload
+
+    refused = run.refused_pairs
+    empty = run.genuinely_empty_pairs
+    lines = [
+        _metric_line("pair_count", len(run.pairs)),
+        _metric_line("captured_count", run.captured_count),
+        _metric_line("refused_count", len(refused)),
+        _metric_line("empty_count", len(empty)),
+        _metric_line("iva_wallet_status", run.iva_wallet_status),
+        _metric_line("notificaciones_status", run.notificaciones_status),
+        _metric_line("denominator", run.denominator_note),
+    ]
+    lines.extend(
+        _metric_line(
+            "pair",
+            "\t".join(
+                (
+                    pair.modelo,
+                    str(pair.ejercicio),
+                    ",".join(signal.value for signal in pair.signals),
+                    f"rows={pair.row_count}",
+                    f"refused={pair.refused}",
+                ),
+            ),
+        )
+        for pair in run.pairs
+    )
+    lines.extend(_metric_line("stage_failure", failure) for failure in run.stage_failures)
+    result = FiledHistoryOnboardingResult(
+        pairs=[
+            FiledHistoryPairOutcomePayload(
+                modelo=pair.modelo,
+                ejercicio=pair.ejercicio,
+                signals=[signal.value for signal in pair.signals],
+                row_count=pair.row_count,
+                captured_count=pair.captured_count,
+                refused=pair.refused,
+                failure_type=pair.failure_type,
+                failure_message=pair.failure_message,
+            )
+            for pair in run.pairs
+        ],
+        pair_count=len(run.pairs),
+        profile_expected_count=sum(1 for pair in run.pairs if pair.expected_by_profile),
+        register_options_only_count=sum(1 for pair in run.pairs if not pair.expected_by_profile),
+        refused_count=len(refused),
+        empty_count=len(empty),
+        captured_count=run.captured_count,
+        scoping_signal=run.scoping_signal.value,
+        denominator_note=run.denominator_note,
+        iva_wallet_status=run.iva_wallet_status,
+        iva_wallet_divergence=run.iva_wallet_divergence,
+        iva_wallet_blocked=run.iva_wallet_blocked,
+        notificaciones_status=run.notificaciones_status,
+        notificaciones_row_count=run.notificaciones_row_count,
+        stage_failures=list(run.stage_failures),
+    )
+    return result, tuple(lines)
+
+
+def _filed_pull_all_notices(run: FiledHistoryOnboardingRun) -> list[Notice]:
+    """Collect the run's advisories, each from its own authority.
+
+    Assembled rather than re-derived: the expected-but-not-found warning and the
+    found-more-than-expected information both live beside the run model, so the
+    asymmetry rule and the INFO-not-WARNING judgement are decided once and not
+    restated at this transport boundary.
+    """
+    notices: list[Notice] = []
+    missing = expected_but_not_found_notice(run)
+    if missing is not None:
+        notices.append(missing)
+    notices.extend(found_more_than_expected_notices(run))
+    if refused := run.refused_pairs:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="live.filed.pull_all.pairs_refused",
+                message=tr(
+                    "cli.app.live.filed.pull_all_pairs_refused",
+                    default=(
+                        "{count} modelo/ejercicio pair(s) could not be read and were NOT reported as empty: "
+                        "{pairs}. Re-run to retry; a refusal is not evidence that nothing was filed."
+                    ),
+                    count=len(refused),
+                    pairs=", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in refused),
+                ),
+                context={
+                    "refused_count": str(len(refused)),
+                    "pairs": ", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in refused),
+                },
+            ),
+        )
+    if not run.carries_a_taxpayer_specific_denominator:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="live.filed.pull_all.no_taxpayer_specific_denominator",
+                message=tr("cli.app.live.filed.discover_no_profile_denominator"),
+                context={"pair_count": str(len(run.pairs))},
+            ),
+        )
+    return notices
+
+
 @filed_app.command("pull", help=tr("cli.app.live.filed.pull_help"))
 def filed_pull_cmd(
     ctx: typer.Context,
@@ -1489,6 +1645,7 @@ __all__ = [
     "expedientes_app",
     "filed_app",
     "filed_list_cmd",
+    "filed_pull_all_cmd",
     "filed_pull_cmd",
     "filed_pull_sources_cmd",
     "iva_wallet_app",

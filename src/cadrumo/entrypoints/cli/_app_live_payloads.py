@@ -206,7 +206,7 @@ class FiledHistoryPairOutcomePayload(OutputSchema):
     failure_message: str | None = None
 
 
-@register_schema("app.live.filed.pull-all")
+@register_schema("app.live.filed.pull_all")
 class FiledHistoryOnboardingResult(OutputSchema):
     """One history-onboarding run: what was walked, captured and reconciled.
 

@@ -30,7 +30,7 @@ from .._app_live_payloads import FiledHistoryOnboardingResult, FiledHistoryPairO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_SCHEMA_KEY = "app.live.filed.pull-all"
+_SCHEMA_KEY = "app.live.filed.pull_all"
 
 #: Names that would reintroduce a ratio over an unconfirmed denominator.
 _FORBIDDEN_RATIO_TOKENS = ("percent", "percentage", "fraction", "ratio", "pct", "coverage_rate", "completeness")

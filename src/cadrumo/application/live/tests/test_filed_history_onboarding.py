@@ -96,9 +96,11 @@ def test_the_warning_fires_for_a_profile_expected_pair_with_no_rows() -> None:
     notice = expected_but_not_found_notice(FiledHistoryOnboardingRun(pairs=(_pair(signals=_PROFILE),)))
     assert notice is not None
     assert notice.severity is NoticeSeverity.WARNING
-    assert "303" in notice.message
+    assert notice.code == "live.filed.pull_all.expected_but_not_found"
+    # Machine-queryable context is the contract; the message is localised prose.
     assert notice.context is not None
     assert notice.context["missing_count"] == "1"
+    assert notice.context["pairs"] == "303/2025"
 
 
 def test_the_warning_never_fires_for_a_register_only_pair() -> None:
@@ -140,11 +142,12 @@ def test_the_warning_names_every_missing_pair_not_just_a_count() -> None:
     )
     notice = expected_but_not_found_notice(run)
     assert notice is not None
-    assert "303/2025" in notice.message
-    assert "130/2024" in notice.message
-    # The register-only pair is absent from the named set.
-    assert "100/2023" not in notice.message
     assert notice.context is not None
+    named = notice.context["pairs"]
+    assert "303/2025" in named
+    assert "130/2024" in named
+    # The register-only pair is absent from the named set.
+    assert "100/2023" not in named
     assert notice.context["missing_count"] == "2"
 
 
@@ -188,7 +191,7 @@ def test_the_notice_names_the_winner_and_the_superseded_count() -> None:
     assert notice.context["raw_row_count"] == "3"
     assert notice.context["superseded_count"] == "2"
     assert notice.context["winning_expediente_id"] == "13020260420WXYZ9999QRST8888"
-    assert "130" in notice.message
+    assert notice.context["modelo"] == "130"
 
 
 def test_one_notice_per_duplicated_period() -> None:
@@ -227,23 +230,34 @@ def test_the_two_advisories_compose_rather_than_duplicate() -> None:
 # ------------------------------------------------------- the denominator note
 
 
-def test_the_note_says_nothing_is_measured_when_no_profile_pair_was_walked() -> None:
-    run = FiledHistoryOnboardingRun(pairs=(_pair(signals=_REGISTER),))
-    note = run.denominator_note
-    assert note
-    assert "unconfirmed" in note.casefold() or "no taxpayer-specific" in note.casefold()
+def test_the_note_differs_between_a_measured_run_and_an_unmeasurable_one() -> None:
+    """The two cases must not render the same sentence.
+
+    Asserted as a difference rather than on wording: the note is localised prose,
+    so matching English text here would pass or fail on the ambient locale rather
+    than on the behaviour. What matters is that a run with no taxpayer-specific
+    denominator cannot produce the same statement as one that has one.
+    """
+    register_only = FiledHistoryOnboardingRun(pairs=(_pair(signals=_REGISTER),))
+    with_profile = FiledHistoryOnboardingRun(pairs=(_pair(signals=_PROFILE),))
+    assert register_only.denominator_note
+    assert with_profile.denominator_note
+    assert register_only.denominator_note != with_profile.denominator_note
 
 
-def test_the_note_separates_profile_pairs_from_register_only_pairs() -> None:
+def test_the_note_counts_profile_pairs_separately_from_register_only_pairs() -> None:
+    # The counts are interpolated identifiers rather than translated words, so
+    # they are the locale-independent part of the note.
     run = FiledHistoryOnboardingRun(
         pairs=(
             _pair(modelo="303", ejercicio=2025, signals=_PROFILE),
             _pair(modelo="100", ejercicio=2024, signals=_REGISTER),
+            _pair(modelo="130", ejercicio=2024, signals=_REGISTER),
         ),
     )
     note = run.denominator_note
     assert "1" in note
-    assert note != ""
+    assert "2" in note
 
 
 def test_the_run_carries_no_completeness_ratio_field() -> None:
