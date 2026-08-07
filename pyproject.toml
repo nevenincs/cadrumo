@@ -1058,6 +1058,15 @@ ignore_decorators = [
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
+# The NVML binding's distribution name and its import name differ, and deptry
+# cannot bridge them here: it derives the module name from the distribution's
+# installed metadata, and this distribution is declared in an extra that the dev
+# environment does not install. Its fallback guess is `nvidia_ml_py`, so the
+# accelerator probe's `import pynvml` reads as an undeclared dependency (DEP001)
+# while the declaration itself reads as unused (DEP002) — one mapping closes
+# both. Verified against the published wheel rather than asserted from memory:
+# `nvidia_ml_py-13.610.43-py3-none-any.whl` ships a top-level `pynvml.py`.
+"nvidia-ml-py" = ["pynvml"]
 [tool.deptry.per_rule_ignores]
 # `cadrumo`: the `all` convenience extra self-references the capability extras
 # (`cadrumo[google]` etc.); deptry reads the self-reference as an unused dependency.
@@ -1065,10 +1074,21 @@ ignore_decorators = [
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
+# `pillow`: the one dependency here whose declaration is deliberately NOT
+# backed by an import statement. The page rasteriser reaches Pillow from inside
+# pypdfium2's `to_pil()` and then calls `save()` on the result, so the reliance
+# is real while no module under `src/cadrumo/` writes `import PIL` — the exact
+# asymmetry that let Pillow arrive as an incidental transitive of pdfplumber and
+# pikepdf. Deptry sees only the absent import and reads both declarations (base
+# and the `llm` extra) as unused. Suppressed here rather than resolved by
+# deleting a declaration: the declaration is the fix, and
+# `dev/packaging/tests/test_inference_imports_are_declared.py` asserts it
+# directly for this reason.
 DEP002 = [
   "cadrumo",
   "cadrumo-data-manuals",
   "cadrumo-data-official",
+  "pillow",
   "python-dotenv",
   "tzdata",
 ]
