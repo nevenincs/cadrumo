@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-06'
-body_hash: 'sha256:ab9abc2cf1895cb4f3d6bf86f4347c3d70035927c7720a1324a77b8ca03b95aa'
+modified: '2026-08-07'
+body_hash: 'sha256:a94ac43997c6a15f10376aa1aa4a94a4517623dd7a71dcda4b0978b1fa030d22'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -114,11 +114,11 @@ Declares the llm extra with its real runtime dependencies, closes the undeclared
 
 Registers the extra in the shared classifier and forces the undeclared runtime packages into the open.
 
-- [ ] `W01.P01.S01` - Register an llm OptionalExtra in the declared set rather than hand-rolling it like the agent extra, red if the extra resolves outside OPTIONAL_EXTRAS; `src/cadrumo/core/_optional_extras.py`.
-- [ ] `W01.P01.S02` - Declare the llm extra's runtime packages explicitly, gated red if a clean non-extra install still resolves an inference-only package; `pyproject.toml`.
-- [ ] `W01.P01.S65` - Declare Pillow as a direct project dependency carrying the lxml comment's incidental-transitive rationale, since the extra alone leaves the direct reliance undeclared in the base closure; `pyproject.toml`.
-- [ ] `W01.P01.S03` - Guard the rasterisation path with require_optional_extra immediately before its lazy import, red if the import raises ModuleNotFoundError instead of the typed refusal when the extra is absent; `src/cadrumo/adapters/outbound/llm/_providers/local.py`.
-- [ ] `W01.P01.S04` - Replace the misdiagnosed Ollama remediation raised on a missing-Pillow failure with the extra's install hint, red if the rasteriser still reports a missing PIL as a broken PDF; `src/cadrumo/application/ledger/_evidence_draft.py`.
+- [x] `W01.P01.S01` - Register an llm OptionalExtra in the declared set rather than hand-rolling it like the agent extra, red if the extra resolves outside OPTIONAL_EXTRAS; `src/cadrumo/core/_optional_extras.py`.
+- [x] `W01.P01.S02` - Declare the llm extra's runtime packages explicitly, gated red if a clean non-extra install still resolves an inference-only package; `pyproject.toml`.
+- [x] `W01.P01.S65` - Declare Pillow as a direct project dependency carrying the lxml comment's incidental-transitive rationale, since the extra alone leaves the direct reliance undeclared in the base closure; `pyproject.toml`.
+- [x] `W01.P01.S03` - Guard the rasterisation path with require_optional_extra immediately before its lazy import, red if the import raises ModuleNotFoundError instead of the typed refusal when the extra is absent; `src/cadrumo/adapters/outbound/llm/_providers/local.py`.
+- [x] `W01.P01.S04` - Replace the misdiagnosed Ollama remediation raised on a missing-Pillow failure with the extra's install hint, red if the rasteriser still reports a missing PIL as a broken PDF; `src/cadrumo/application/ledger/_evidence_draft.py`.
 - [ ] `W01.P01.S05` - Assert an absent llm extra degrades the command group to the install-hint placeholder, red if any inference verb raises ModuleNotFoundError on a clean install; `src/cadrumo/entrypoints/cli/tests/`.
 - [ ] `W01.P01.S66` - Assert every module importing PIL is reachable only through a declared dependency, red if a direct import rests on an undeclared incidental transitive; `dev/packaging/`.
 
@@ -126,11 +126,11 @@ Registers the extra in the shared classifier and forces the undeclared runtime p
 
 Closes the fail-open hole in the strictest gate tier before any Step relies on it, and adds the missing hardware-capability probe. The non-vacuity assertion lands first because a campaign that relocates code across two named surfaces is exactly the event that exercises the failure, and an instrument repaired afterwards proves nothing about the interval.
 
-- [ ] `W01.P02.S08` - Add a non-vacuity assertion to the sensitive-surface list so every entry must resolve to at least one non-test module or the gate fails naming the entry, closing the fail-open hole for all eighteen surfaces; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
-- [ ] `W01.P02.S09` - Prove the non-vacuity assertion by pointing one entry at a nonexistent path and observing the gate red, then reverting, red if a nonexistent surface still reports success; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
+- [x] `W01.P02.S08` - Add a non-vacuity assertion to the sensitive-surface list so every entry must resolve to at least one non-test module or the gate fails naming the entry, closing the fail-open hole for all eighteen surfaces; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
+- [x] `W01.P02.S09` - Prove the non-vacuity assertion by pointing one entry at a nonexistent path and observing the gate red, then reverting, red if a nonexistent surface still reports success; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
 - [ ] `W01.P02.S72` - Record per check which of the five secure-storage gates scans by whole-tree rglob, which enumerates a fixed surface list, and which is test-side only, so a coverage claim about any new directory is checkable rather than asserted; `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`.
-- [ ] `W01.P02.S06` - Add a hardware-floor probe for the model runtime reporting through the existing DependencyStatus shape, named for the floor it measures rather than the overloaded word capability which already denotes four unrelated concepts in this tree, red if an under-specified machine reports capable; `src/cadrumo/application/provisioning.py`.
-- [ ] `W01.P02.S07` - Surface the hardware probe as a typed refusal naming the shortfall in the config doctor, red if the refusal omits the accepted floor; `src/cadrumo/entrypoints/cli/_check_cli.py`.
+- [x] `W01.P02.S06` - Add a hardware-floor probe for the model runtime reporting through the existing DependencyStatus shape, named for the floor it measures rather than the overloaded word capability which already denotes four unrelated concepts in this tree, red if an under-specified machine reports capable; `src/cadrumo/application/provisioning.py`.
+- [x] `W01.P02.S07` - Surface the hardware probe as a typed refusal naming the shortfall in the config doctor, red if the refusal omits the accepted floor; `src/cadrumo/entrypoints/cli/_check_cli.py`.
 
 ## Wave `W02` - Land exact structured-document reading in the deterministic core
 
@@ -140,7 +140,7 @@ Implements D7. Adds a content-shape probe and deterministic EN16931 (CII and UBL
 
 Replaces a two-member media kind derived from a declared MIME with a typed shape derived from content bytes, so an embedded XML payload inside a PDF is visible rather than invisible.
 
-- [ ] `W02.P03.S10` - Add a typed DocumentShape probe deriving shape from content bytes rather than from a declared MIME, red if a ZUGFeRD PDF whose MIME says application/pdf resolves to a shape carrying no embedded XML; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P03.S10` - Add a typed DocumentShape probe deriving shape from content bytes rather than from a declared MIME, red if a ZUGFeRD PDF whose MIME says application/pdf resolves to a shape carrying no embedded XML; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P03.S11` - Extract the sanitizer's embedded-file walker into a reusable reader so an embedded XML payload is visible, red if the walker's stripping behaviour changes for the sanitizer's own callers; `src/cadrumo/adapters/inbound/sanitizer/_dynamic.py`.
 - [ ] `W02.P03.S12` - Route read-time evidence resolution through DocumentShape and retire the read-time media-kind derivation, red if any caller still branches on the two-member media kind; `src/cadrumo/application/ledger/_evidence_input.py`.
 
@@ -150,9 +150,9 @@ Adds hardened deterministic parsers for both EN16931 syntaxes and for Facturae, 
 
 - [ ] `W02.P04.S67` - Extend the extraction draft to carry a line set and a per-rate IVA breakdown, red if a two-rate document still collapses to a single base and cuota pair; `src/cadrumo/application/ledger/_evidence_draft.py`.
 - [ ] `W02.P04.S79` - Add a representable recargo slot to the extraction draft, since the printed-total discrepancy advisory now fires with no field for the operator to resolve it into, red if a recargo-bearing document still leaves the operator no place to record it; `src/cadrumo/application/ledger/_evidence_draft.py`.
-- [ ] `W02.P04.S13` - Add a deterministic EN16931 CII parser mapping to the line-carrying extraction draft, red if a CII document with two tax rates yields fewer than two per-rate entries; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P04.S14` - Add a deterministic EN16931 UBL parser, since a CII-only reader silently returns nothing for half the standard, red if a UBL document yields no record where the CII path yields one; `src/cadrumo/adapters/inbound/einvoice/`.
-- [ ] `W02.P04.S15` - Add a deterministic Facturae 3.2.x parser mapping to the same line-carrying draft, red if a Facturae document maps to a shape the CII and UBL parsers do not also produce; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S13` - Add a deterministic EN16931 CII parser mapping to the line-carrying extraction draft, red if a CII document with two tax rates yields fewer than two per-rate entries; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S14` - Add a deterministic EN16931 UBL parser, since a CII-only reader silently returns nothing for half the standard, red if a UBL document yields no record where the CII path yields one; `src/cadrumo/adapters/inbound/einvoice/`.
+- [x] `W02.P04.S15` - Add a deterministic Facturae 3.2.x parser mapping to the same line-carrying draft, red if a Facturae document maps to a shape the CII and UBL parsers do not also produce; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S80` - Map the parsed percentage onto the closed IvaRate slot enum and refuse loudly when no slot matches, never rounding to the nearest member, red if a 5 percent pre-2025 line resolves to any slot rather than refusing; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S82` - Map the document's own tax-category code onto the IvaCategory enum including the intra-community service members, leaving it unset with a visible advisory only where the document states no category, never guessing, red if a services invoice is left unset when the document does state its category; `src/cadrumo/adapters/inbound/einvoice/`.
 - [ ] `W02.P04.S16` - Harden every XML read with entity resolution and external DTD loading disabled and with size and depth bounds, red if an XXE probe document resolves an external entity or a billion-laughs payload is not refused; `src/cadrumo/adapters/inbound/einvoice/`.
