@@ -22,9 +22,10 @@ from pathlib import Path
 
 import pytest
 
-from .....llm import LLMCacheError, LLMProvider, LLMRequest, LLMResponse
 from .....tests.secure_sql import TestRuntimeProfile
 from .._cache import _CACHE_NAMESPACE, LLMCache
+from .....llm import LLMCacheError
+from .....llm import LLMProvider, LLMRequest, LLMResponse
 
 # The encrypted-SQL substrate is imported inside the helpers below, matching
 # the sibling round-trip proof. Pulling ``adapters.persistence.storage`` in at

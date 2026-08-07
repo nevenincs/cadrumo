@@ -335,12 +335,6 @@ ignore_imports =
     # being a legal inner reach, and resolves through the ledger's public facade.
     cadrumo.application.ledger._evidence_draft -> cadrumo.llm
     cadrumo.application.ledger._llm_classification -> cadrumo.llm
-    cadrumo.application.ledger._llm_diagnostics -> cadrumo.llm
-    # Test-module chain origin: the corpus-parsing test exercises the on-host
-    # rasteriser, which now lives in the gated subpackage. Pinned like the
-    # other test chain origins above rather than widened, so a NEW production
-    # application -> llm edge still fails loudly.
-    cadrumo.application.ledger.tests.test_evidence_corpus_parsing -> cadrumo.llm
     cadrumo.application.evidence._service -> cadrumo.adapters.**
     cadrumo.application.filing._history_repository -> cadrumo.adapters.**
     cadrumo.application.filing._import -> cadrumo.adapters.**

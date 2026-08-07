@@ -20,9 +20,9 @@ from pathlib import Path
 
 import pytest
 
-from .....llm import LLMProvider, LLMRequest, LLMResponse
 from .....tests.secure_sql import TestRuntimeProfile
 from .._cache import LLMCache
+from .....llm import LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -158,7 +158,6 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
 
     from sqlalchemy import select
 
-    from .....llm import LLMCacheError
     from ....persistence.storage.crypto import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,
@@ -167,6 +166,7 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     from ....persistence.storage.sql import SecureObjectRow
     from ....persistence.storage.sql.session import session_scope
     from .._cache import _CACHE_NAMESPACE
+    from .....llm import LLMCacheError
 
     created_at = _CREATED_AT
     request = _populated_request()

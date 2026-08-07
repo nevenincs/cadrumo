@@ -28,9 +28,9 @@ from decimal import Decimal
 
 import pytest
 
-from ...adapters.outbound.llm import LLMRunRecord
 from .._models import CachedEntry, LLMProvider, LLMResponse, UsageRecord
 from .._retention import select_retention_removal_keys
+from ...adapters.outbound.llm import LLMRunRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -241,7 +241,7 @@ def test_each_store_prune_reaches_the_canonical_selector() -> None:
     """
     import inspect
 
-    from ...adapters.outbound.llm import _cache, _run_telemetry, _usage
+    from .. import _cache, _run_telemetry, _usage
 
     for module in (_cache, _usage, _run_telemetry):
         assert module.select_retention_removal_keys is select_retention_removal_keys, module.__name__

@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
-from .....llm import LLMProvider, LLMRequest, LLMResponse
 from .. import LLMCache
+from .....llm import LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

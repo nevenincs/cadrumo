@@ -2,23 +2,35 @@
 
 import pytest
 
-from .....llm import LLMClient, LLMError, LLMRequest, LLMResponse, PromptRegistry
 from .. import LLMCache
-from .. import __all__ as llm_all
+from .....llm import LLMClient, LLMError, LLMRequest, LLMResponse, PromptRegistry
+from .....llm import __all__ as llm_all
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _REQUIRED_SYMBOLS = [
-    # Narrowed by the llm-package-split relocation: this package now owns ONLY
-    # the three persistence-touching stores, which stay on the core side of the
-    # boundary because they resolve secure storage. Everything else -- the
-    # client, models, errors, pricing, retention selector and provider adapters
-    # -- moved to the gated `cadrumo.llm` subpackage and is asserted there.
     "LLMCache",
+    "LLMCacheError",
+    "LLMClient",
+    "LLMConfigError",
+    "LLMError",
+    "LLMProvider",
+    "LLMProviderError",
+    "LLMRateLimitError",
+    "LLMRequest",
+    "LLMResponse",
     "LLMRunRecord",
     "LLMRunTelemetryRecorder",
     "LLMRunTelemetrySummary",
+    "PromptDefinition",
+    "PromptRegistry",
+    "Translation",
+    "UsageRecord",
     "UsageRecorder",
+    "UsageSummary",
+    "CacheKey",
+    "CacheStats",
+    "CachedEntry",
 ]
 
 

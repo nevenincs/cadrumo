@@ -1137,31 +1137,10 @@ def _m303_standard_domestic_invoice_in_period(
     context: CalculationSourceContext,
     period: Period,
 ) -> bool:
-    """Whether this invoice's IVA belongs in the screen's ledger comparison.
-
-    The counterparty's COUNTRY is deliberately not consulted. It was serving as
-    a proxy for "carries Spanish IVA", and it is a poor one in both directions:
-    an invoice to a foreign customer can carry ordinary Spanish cuota -- goods
-    that never leave the país, a service localised here, a non-established
-    consumer -- and those were silently exempt from the screen, which is the
-    under-declaration it exists to catch. Meanwhile an exempt entrega
-    intracomunitaria to an EU customer carries no cuota at all, so including it
-    costs nothing.
-
-    The property the screen actually needs is "does this line carry a positive
-    cuota", and the caller already tests exactly that per line. Removing the
-    country proxy therefore widens the screen without widening what it
-    compares: a zero-cuota invoice contributes no observation whatever its
-    counterparty's country, so no false refusal is introduced.
-
-    Bucket attribution follows the same rule the invoice source resolver uses:
-    only a POPULATED, mismatching bucket excludes. An unattributed invoice
-    belongs to the store it was loaded from, and comparing on the bucket id
-    alone dropped it from the screen silently -- the same shape, in the guard
-    rather than in the projection.
-    """
-    return (invoice.bucket_id is None or invoice.bucket_id == context.bucket_id) and invoice_devengo_in_period(
-        invoice, period=period
+    return (
+        invoice.bucket_id == context.bucket_id
+        and invoice_devengo_in_period(invoice, period=period)
+        and invoice.counterparty_country.strip().upper() == "ES"
     )
 
 

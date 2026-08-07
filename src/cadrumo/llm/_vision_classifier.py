@@ -20,6 +20,8 @@ from __future__ import annotations
 import asyncio
 import base64
 
+from ._client import LLMClient
+from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 from ..core.config import Settings, load_settings
 from ..core.hashing import sha256_hex
 from ..domain.transactions import (
@@ -31,8 +33,6 @@ from ..domain.transactions import (
     parse_response,
     parse_split_response,
 )
-from ._client import LLMClient
-from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 
 __all__ = ["LocalVisionLLMClassifier"]
 

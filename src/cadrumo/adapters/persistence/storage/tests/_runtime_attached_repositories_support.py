@@ -145,8 +145,14 @@ from ....outbound.google import (
     OAuthToken,
 )
 from ....outbound.google import _session_store as google_session_store
-from .....llm import LLMProvider, LLMRequest, LLMResponse, UsageRecord
-from ....outbound.llm import LLMCache, UsageRecorder
+from ....outbound.llm import (
+    LLMCache,
+    LLMProvider,
+    LLMRequest,
+    LLMResponse,
+    UsageRecord,
+    UsageRecorder,
+)
 from ...profile.assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository

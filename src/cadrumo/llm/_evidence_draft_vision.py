@@ -53,6 +53,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from ._client import LLMClient
+from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 from ..application.ledger import InvoiceDraft, PurchaseInvoiceEvidenceInputError
 from ..core import STRICT_FROZEN_CONFIG
 from ..core.config import Settings, load_settings
@@ -60,8 +62,6 @@ from ..core.decimal import coerce_finite_european_decimal, european_thousands_re
 from ..core.hashing import sha256_hex
 from ..core.identity import IdentityError, validate_spanish_tax_id
 from ..core.parsing import parse_date
-from ._client import LLMClient
-from ._models import LLMProvider, LLMRequest, MultimodalImageInput
 
 __all__ = [
     "LocalVisionInvoiceFieldExtractor",
