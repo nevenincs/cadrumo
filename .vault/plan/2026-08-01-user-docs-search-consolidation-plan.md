@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-06'
-body_hash: 'sha256:f9b4f9aabdb62207a9317b4268bbe596e28a922668d70bea427811cffef74836'
+modified: '2026-08-07'
+body_hash: 'sha256:fdf05574f4a16190da12babad2f2c4d89474efaaab9506051991cbc93157fec8'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -71,6 +71,7 @@ Deliver the operator's core ask that no record kind ever served: project the leg
 - [x] `P05.S15` - Project the legal catalogue into the fifth search record kind with D1-conformant targets on the new surface and inject it beside the existing kinds with declared weights; `dev/docs/pagefind_inject.py`.
 - [x] `P05.S16` - Reconcile the committed legal relevance targets to the new record ids and extend the target-resolution gate to refuse any target id no injector emits; `src/cadrumo/_data/terminology/relevance/`.
 - [x] `P05.S17` - Add the legal per-kind parity gate proving anchor existence and destination-grounding coverage for every projected provision record; `dev/docs/tests/`.
+- [x] `P05.S34` - Correct the three sites that ranked a legal provision in the DOC band above the modelo and casilla cards it grounds, and gate the agreement between a record's stamped weight and the class it displays under; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
 
 ### Phase `P06` - Deterministic casilla enrollment and definition contract
 
