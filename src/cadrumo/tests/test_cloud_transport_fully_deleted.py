@@ -115,7 +115,7 @@ def test_the_declared_symbol_set_is_not_silently_emptied() -> None:
 
 
 def test_every_provenance_stamp_a_reader_can_mint_names_a_local_transport() -> None:
-    """S78: the provider axis collapsed, so no NEW stamp can name a cloud transport.
+    """The provider axis collapsed, so no NEW stamp can name a cloud transport.
 
     Asserted over the readers that actually exist rather than over a hand-kept
     list of expected prefixes, so a reader added later is covered by

@@ -269,7 +269,7 @@ def test_the_override_admits_an_unmeasurable_machine_but_never_a_measured_shortf
 
 
 # ---------------------------------------------------------------------------
-# S59 -- attribution: our residents versus a peer process
+# attribution: our residents versus a peer process
 # ---------------------------------------------------------------------------
 
 
@@ -395,7 +395,7 @@ def test_the_motivating_machine_state_refuses() -> None:
 
 
 # ---------------------------------------------------------------------------
-# S59 -- the runtime read and the unload action, over real HTTP
+# the runtime read and the unload action, over real HTTP
 # ---------------------------------------------------------------------------
 
 

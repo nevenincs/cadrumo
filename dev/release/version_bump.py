@@ -338,10 +338,9 @@ def run_release_please_dry_run(
     Shells out to the same `release-please@16 release-pr --dry-run --debug`
     invocation `just release` already runs.
 
-    **OP-11:** refuses instructively, before ever attempting `npx`, when
-    `node` is absent from the runner -- release-please shells out through
-    `npx`, and whether the self-hosted fleet carries a Node.js toolchain is
-    unverified (`2026-08-02-release-pipeline-full-automation-adr`).
+    Refuses instructively, before ever attempting `npx`, when `node` is
+    absent from the runner -- release-please shells out through `npx`, and
+    whether the self-hosted fleet carries a Node.js toolchain is unverified.
 
     `config_file` / `manifest_file`, when supplied, MUST be paths relative to
     the repository root, never absolute local filesystem paths: `--repo-url`

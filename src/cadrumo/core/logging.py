@@ -423,7 +423,7 @@ class _DropRunEventFilter(logging.Filter):
 
 #: Import root of every first-party logger. ``get_logger(__name__)`` is seeded
 #: from the module path, so a Cadrumo record's ``name`` always starts here.
-FIRST_PARTY_LOGGER_ROOT = "cadrumo"
+_FIRST_PARTY_LOGGER_ROOT = "cadrumo"
 
 
 class _ThirdPartyDebugFilter(logging.Filter):
@@ -460,7 +460,7 @@ class _ThirdPartyDebugFilter(logging.Filter):
         """
         if record.levelno >= logging.INFO:
             return True
-        return record.name == FIRST_PARTY_LOGGER_ROOT or record.name.startswith(f"{FIRST_PARTY_LOGGER_ROOT}.")
+        return record.name == _FIRST_PARTY_LOGGER_ROOT or record.name.startswith(f"{_FIRST_PARTY_LOGGER_ROOT}.")
 
 
 #: Extra key marking a record whose content the emitter has ALREADY written to

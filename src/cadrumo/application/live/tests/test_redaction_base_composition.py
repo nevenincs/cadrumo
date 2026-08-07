@@ -31,7 +31,7 @@ def test_shared_base_is_non_empty() -> None:
 
 def test_logging_scrub_patterns_compose_the_shared_base() -> None:
     """``core.logging``'s key-name vocabulary must carry every shared base term."""
-    assert ALWAYS_REDACT_KEY_TERMS <= set(SCRUB_FIELD_PATTERNS)
+    assert set(SCRUB_FIELD_PATTERNS) >= ALWAYS_REDACT_KEY_TERMS
 
 
 def test_remote_state_exact_keys_compose_the_shared_base() -> None:

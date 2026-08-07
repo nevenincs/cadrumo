@@ -38,6 +38,9 @@ _UNRELATED_VALID_CIF = "B17283946"
 #: A second valid identifier, for the genuine multi-candidate case.
 _OTHER_VALID_CIF = "A82645177"
 
+#: A third, for proving every competitor is surfaced rather than the first two.
+_THIRD_VALID_CIF = "B10000016"
+
 #: The true supplier's CIF, whose control character does not check out. This is
 #: why a validating scan walks past it and reaches the unrelated one.
 _SUPPLIER_CIF_FAILING_CHECKSUM = "B17283945"
@@ -61,6 +64,7 @@ def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for()
     """
     assert validate_spanish_tax_id(_UNRELATED_VALID_CIF) == _UNRELATED_VALID_CIF
     assert validate_spanish_tax_id(_OTHER_VALID_CIF) == _OTHER_VALID_CIF
+    assert validate_spanish_tax_id(_THIRD_VALID_CIF) == _THIRD_VALID_CIF
     assert validate_spanish_tax_id(_OWN_NIF) == _OWN_NIF
     with pytest.raises(IdentityError):
         validate_spanish_tax_id(_SUPPLIER_CIF_FAILING_CHECKSUM)
@@ -157,7 +161,7 @@ def test_every_competing_candidate_is_surfaced_not_just_the_winner_and_one_alter
         (
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
             IdentityCandidate(value=_OTHER_VALID_CIF),
-            IdentityCandidate(value="B65432104"),
+            IdentityCandidate(value=_THIRD_VALID_CIF),
         ),
     )
 

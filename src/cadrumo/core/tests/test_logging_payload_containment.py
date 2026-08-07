@@ -97,6 +97,18 @@ def test_third_party_request_object_payload_never_reaches_the_log_file(log_file:
     assert "iVBORw0KGg" not in written, "a PNG magic reached the plaintext diagnostic log"
 
 
+def test_third_party_debug_records_do_not_reach_the_log_file(log_file: Path) -> None:
+    """The ceiling seam, gated on its own behaviour rather than on a payload.
+
+    Redaction can only remove what it recognises. Holding third-party loggers
+    below DEBUG at the sink is the half that needs no such recognition, so it
+    is asserted directly: the record never arrives, whatever it contained.
+    """
+    logging.getLogger("anthropic._base_client").debug("sending request to the messages endpoint")
+
+    assert "sending request to the messages endpoint" not in _written_log_text(log_file)
+
+
 def test_third_party_warnings_still_reach_the_log_file(log_file: Path) -> None:
     """Positive control: third-party logging is held below DEBUG, not silenced."""
     logging.getLogger("anthropic._base_client").warning("retrying after connection reset")

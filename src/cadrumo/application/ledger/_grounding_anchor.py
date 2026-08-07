@@ -188,9 +188,7 @@ def evaluate_anchor(
             outcome=FieldGroundingOutcome.CONTRADICTED,
             anchor_found=True,
             parsed_anchor=parsed,
-            detail=(
-                f"the anchor {anchor!r} parses to {parsed}, which is not the proposed value {value}"
-            ),
+            detail=(f"the anchor {anchor!r} parses to {parsed}, which is not the proposed value {value}"),
         )
 
     return AnchorEvaluation(

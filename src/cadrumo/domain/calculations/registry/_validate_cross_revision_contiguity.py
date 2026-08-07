@@ -14,9 +14,8 @@ here, and the retirement policy in
 :mod:`cadrumo.domain.calculations.registry._validate_cross_revision` only proves
 the chain left, never that it stayed gone.
 
-Governing ADR: `2026-05-27-schema-hardening-casilla-continuity-contract-adr`
-(D2 evolution kinds, D3 surface-scoped strictness), as amended for gapped
-chains.
+The evolution-kind and surface-scoped strictness rules below were later
+amended to tolerate gapped chains.
 """
 
 from __future__ import annotations

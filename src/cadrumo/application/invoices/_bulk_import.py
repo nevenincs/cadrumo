@@ -36,31 +36,39 @@ from __future__ import annotations
 
 import csv
 import io
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 from pydantic import BaseModel, Field, ValidationError
 
+from ...adapters.inbound.financial import normalize_tabular_bytes
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
-from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
+from ...core.decimal import coerce_decimal, normalize_decimal_separators, try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
 from ...domain.iva import InvoiceKind
+from ._bulk_import_columns import (
+    BulkImportColumnResolution,
+    ColumnRoleMapper,
+    resolve_bulk_import_columns,
+)
 from ._creation import build_catalogue_invoice, create_catalogue_invoice
 
 __all__ = [
     "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS",
     "BULK_INVOICE_IMPORT_REQUIRED_COLUMNS",
+    "BulkImportSourceRow",
     "BulkInvoiceImportResult",
     "BulkInvoiceImportRow",
     "BulkInvoiceImportRowFailure",
+    "BulkInvoiceImportSource",
     "import_invoices_from_rows",
-    "read_bulk_invoice_import_rows",
+    "read_bulk_invoice_import_source",
 ]
 
 BULK_INVOICE_IMPORT_REQUIRED_COLUMNS: frozenset[str] = frozenset(
@@ -76,6 +84,7 @@ BULK_INVOICE_IMPORT_REQUIRED_COLUMNS: frozenset[str] = frozenset(
 BULK_INVOICE_IMPORT_OPTIONAL_COLUMNS: frozenset[str] = frozenset(
     {
         "iva_rate",
+        "retention_amount",
         "currency",
         "country_code",
         "notes",
@@ -85,6 +94,41 @@ BULK_INVOICE_IMPORT_OPTIONAL_COLUMNS: frozenset[str] = frozenset(
 BULK_INVOICE_IMPORT_ALLOWED_COLUMNS: frozenset[str] = (
     BULK_INVOICE_IMPORT_REQUIRED_COLUMNS | BULK_INVOICE_IMPORT_OPTIONAL_COLUMNS
 )
+
+
+class BulkImportSourceRow(BaseModel):
+    """One source row, its cells already keyed by the importer field they feed.
+
+    Attributes:
+        row_number: 1-based row number in the source file, header included, so
+            a refusal names the row an operator counts in a spreadsheet.
+        values: Cell text per importer field. Values are the source's own
+            printed forms; nothing is reinterpreted on the way here.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    row_number: int = Field(ge=1)
+    values: dict[str, str]
+
+
+class BulkInvoiceImportSource(BaseModel):
+    """One bulk-import file read, resolved and ready to apply.
+
+    Attributes:
+        rows: Every non-blank data row.
+        resolution: How the file's own headers resolved onto importer fields,
+            carrying the columns that resolved to nothing for reporting.
+        decimal_separator: The convention the file writes amounts in, detected
+            once for the whole file. Amounts are converted with it at parse
+            time rather than being rewritten in ``rows``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    rows: tuple[BulkImportSourceRow, ...]
+    resolution: BulkImportColumnResolution
+    decimal_separator: Literal[",", "."] = "."
 
 
 class BulkInvoiceImportRow(BaseModel):
@@ -105,6 +149,7 @@ class BulkInvoiceImportRow(BaseModel):
     invoice_date: date
     taxable_base: Decimal
     iva_rate: Decimal | None = None
+    retention_amount: Decimal | None = None
     currency: str = DEFAULT_CURRENCY
     country_code: str = "ES"
     notes: str = ""
@@ -225,7 +270,33 @@ class _RowParseError(Exception):
         self.reason = reason
 
 
-def _parse_bulk_invoice_row(raw_row: Mapping[str, object], *, row_number: int) -> BulkInvoiceImportRow:
+def _canonicalise_amount_text(raw: object, *, decimal_separator: Literal[",", "."]) -> object:
+    """Rewrite a comma-convention amount into canonical form before the grammar check.
+
+    Only text is touched, and only when the file's own detected convention says
+    the comma is its decimal mark. That detection is what makes the rewrite safe:
+    the ambiguity :func:`_parse_row_decimal` refuses — a bare ``1.234`` that could
+    be one thousand or one point two three four — is resolved by evidence from the
+    whole file rather than guessed at per cell. A dot-convention file is passed
+    through untouched, so the strict grammar still governs it.
+
+    A trailing percent sign is dropped for the same reason: a rate column printed
+    ``21%`` states a rate, not a different number.
+    """
+    if not isinstance(raw, str):
+        return raw
+    text = raw.strip().removesuffix("%").strip()
+    if decimal_separator != ",":
+        return text
+    return normalize_decimal_separators(text, strip_thousands="." in text and "," in text)
+
+
+def _parse_bulk_invoice_row(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    decimal_separator: Literal[",", "."] = ".",
+) -> BulkInvoiceImportRow:
     """Return a validated :class:`BulkInvoiceImportRow`, or raise :class:`_RowParseError`.
 
     Every field failure is attributed to its originating column name so a
@@ -242,11 +313,32 @@ def _parse_bulk_invoice_row(raw_row: Mapping[str, object], *, row_number: int) -
     # The raw cell is handed over unstringified so an already-numeric workbook
     # value keeps its own representation; only operator-written TEXT is held to
     # the euro grammar.
-    taxable_base = _parse_row_decimal(raw_row.get("taxable_base"), row_number=row_number, field="taxable_base")
+    taxable_base = _parse_row_decimal(
+        _canonicalise_amount_text(raw_row.get("taxable_base"), decimal_separator=decimal_separator),
+        row_number=row_number,
+        field="taxable_base",
+    )
 
     iva_rate_raw = _cell_text(raw_row.get("iva_rate"))
     iva_rate = (
-        _parse_row_decimal(raw_row.get("iva_rate"), row_number=row_number, field="iva_rate") if iva_rate_raw else None
+        _parse_row_decimal(
+            _canonicalise_amount_text(raw_row.get("iva_rate"), decimal_separator=decimal_separator),
+            row_number=row_number,
+            field="iva_rate",
+        )
+        if iva_rate_raw
+        else None
+    )
+
+    retention_raw = _cell_text(raw_row.get("retention_amount"))
+    retention_amount = (
+        _parse_row_decimal(
+            _canonicalise_amount_text(raw_row.get("retention_amount"), decimal_separator=decimal_separator),
+            row_number=row_number,
+            field="retention_amount",
+        )
+        if retention_raw
+        else None
     )
 
     currency_raw = _cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY

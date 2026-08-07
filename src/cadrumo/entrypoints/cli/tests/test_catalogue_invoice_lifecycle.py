@@ -271,7 +271,7 @@ def test_catalogue_create_accepts_every_regime_option_and_holds_the_totals_ident
     rectificativa could not be entered at all -- so an operator could not
     express a regime the aggregate had always modelled.
 
-    The identity asserted here is the one the decomposition ADR pins:
+    The identity asserted here is the invoice-total decomposition rule:
     grand_total equals base plus cuota plus recargo, with the retención
     OUTSIDE it. A recargo is charged on top of the cuota and is collected from
     the customer; a retención is withheld from the payment. Putting the

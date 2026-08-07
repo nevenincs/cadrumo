@@ -52,7 +52,9 @@ from ..core.parsing import parse_date
 from ._invoice_field_contract import InvoiceFieldForm, contract_for_field
 
 __all__ = [
+    "ExtractedFieldAnchors",
     "ExtractedInvoiceFields",
+    "ExtractedInvoiceResponse",
     "ground_extracted_fields",
     "parse_invoice_extraction_response",
 ]
@@ -84,6 +86,54 @@ class ExtractedInvoiceFields(BaseModel):
     iva_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
     currency: str | None = Field(default=None)
+
+
+class ExtractedFieldAnchors(BaseModel):
+    """The verbatim printed substring the model read each field from.
+
+    Deliberately a mirror of :class:`ExtractedInvoiceFields` rather than extra
+    attributes on it. The two carry different KINDS of claim: a field holds the
+    value in its declared form, an anchor holds the form the document actually
+    printed, and the whole anti-fabrication argument rests on being able to
+    compare them. Folded into one model that comparison becomes an attribute
+    naming convention; kept apart it is a type.
+
+    Every attribute is an optional string for the same reason the value side is:
+    the model returns strings, and nothing here rejects or rewrites one. An
+    anchor that does not occur in the document is caught by the anchor check
+    (:func:`~application.ledger.evaluate_anchor`), never by this schema, because
+    that check needs the document and this schema does not have it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    supplier_tax_id: str | None = Field(default=None)
+    invoice_number: str | None = Field(default=None)
+    invoice_date: str | None = Field(default=None)
+    taxable_base: str | None = Field(default=None)
+    iva_rate: str | None = Field(default=None)
+    iva_amount: str | None = Field(default=None)
+    grand_total: str | None = Field(default=None)
+    currency: str | None = Field(default=None)
+
+
+class ExtractedInvoiceResponse(BaseModel):
+    """One reading model's complete reply: every value beside its printed anchor.
+
+    The parser's single return type. Splitting the reply into two models but
+    returning them as one object keeps the pairing structural -- a caller cannot
+    hold values without the anchors that justify them, which is exactly the
+    separation that let a value travel to a filing with nothing to point at.
+
+    Attributes:
+        fields: The transcribed values, before grounded re-validation.
+        anchors: The printed form each value was read from.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    fields: ExtractedInvoiceFields
+    anchors: ExtractedFieldAnchors
 
 
 def _extract_json_object(text: str) -> str | None:
@@ -246,9 +296,10 @@ def _grounded_percentage(raw: str | None) -> Decimal | None:
     printed -- copied, never computed. Nothing about anti-fabrication is
     weakened: the anchor
     (:attr:`ExtractedInvoiceFields.iva_rate`) still holds ``"21%"`` verbatim for
-    a later closure check to point at, so anchor and value become explicitly
-    distinct, which is what ADR ``2026-08-07-unstructured-document-ingestion-adr``
-    D4 asks for. Exactly one trailing unit is stripped; a value carrying digits
+    a later closure check to point at, so anchor and value stay explicitly
+    distinct rather than collapsing into one field that could silently
+    launder a transcription error into a computed figure. Exactly one
+    trailing unit is stripped; a value carrying digits
     after the sign, or any other stray character, still fails the decimal
     authority and drops to ``None``.
 

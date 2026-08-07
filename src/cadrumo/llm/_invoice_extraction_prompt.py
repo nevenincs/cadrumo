@@ -29,6 +29,14 @@ model, so the prompt is enumerated bullets and per-field micro-guidance, never
 prose. A closed enumeration turns an inference problem into a selection problem
 and is cheaper than any explanation of it.
 
+**Every field is asked for twice: once as a value, once as an anchor.** The value
+arrives in the form its contract row declares; the anchor is the substring exactly
+as the document printed it. Keeping both is what lets a later check verify that
+the anchor occurs in the document AND that the value equals the deterministic
+parse of the anchor -- a value with no anchor can only be taken on trust. Where
+the two would be byte-identical the check is weaker, so the contract deliberately
+keeps them distinct: ``IVA (21%)`` yields the value ``21`` and the anchor ``21%``.
+
 **The enumeration is a hint, never a constraint.** Documents in scope are
 international; a German invoice prints 19 %, which is not a Spanish registered
 rate. The rate line therefore says what Spain registers *and* that a foreign
@@ -53,7 +61,11 @@ from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG, Period
 from ..core.hashing import sha256_hex
-from ._invoice_field_contract import INVOICE_FIELD_CONTRACTS
+from ._invoice_field_contract import (
+    ANCHOR_KEY_SUFFIX,
+    INVOICE_FIELD_CONTRACTS,
+    anchor_key_for_field,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -89,6 +101,15 @@ missing one.
 
 Fields:
 {field_lines}
+
+Anchors:
+- For every field above, also return a second key named after it with the suffix \
+"{anchor_suffix}", holding that value's substring copied EXACTLY as printed in the \
+document -- keeping any percent sign, currency symbol, separators and spacing the \
+field's own rule told you to drop.
+- The field carries the value; its anchor carries the printed form. When a field is \
+null its anchor is null too.
+- Never write an anchor that does not appear in the document.
 
 Rates:
 - VAT/IVA rates registered in Spain for this period: {iva_rates}.
@@ -250,7 +271,19 @@ def _json_skeleton() -> str:
     # Terse by design: every field's meaning and form is already stated once in
     # the Fields block above, and restating it inside the skeleton doubles the
     # prompt for a model whose context budget is the binding constraint.
-    body = ",\n".join(f'  "{contract.field_name}": <string or null>' for contract in INVOICE_FIELD_CONTRACTS)
+    #
+    # The anchor key is listed beside its field rather than in a nested object or
+    # a second block. Both alternatives cost fewer characters and were rejected:
+    # the design target is the lowest-bound vision-capable model, which pairs a
+    # value with its anchor most reliably when the two keys are adjacent and both
+    # hold a flat string. A nested `{"value": ..., "anchor": ...}` moves the one
+    # relationship that must not drift behind a level of structure that small
+    # models routinely flatten or drop.
+    body = ",\n".join(
+        f'  "{contract.field_name}": <string or null>,\n'
+        f'  "{anchor_key_for_field(contract.field_name)}": <string or null>'
+        for contract in INVOICE_FIELD_CONTRACTS
+    )
     return "{\n" + body + "\n}"
 
 
@@ -274,6 +307,7 @@ def build_invoice_extraction_prompt(*, period: Period) -> CompiledInvoiceExtract
     iva_rate_pcts = _iva_rate_pcts_for(period)
     retencion_rate_pcts = _retencion_rate_pcts()
     text = PROMPT_TEMPLATE.format(
+        anchor_suffix=ANCHOR_KEY_SUFFIX,
         field_lines=_field_lines(),
         iva_rates=_join_pcts(iva_rate_pcts),
         retencion_rates=_join_pcts(retencion_rate_pcts),

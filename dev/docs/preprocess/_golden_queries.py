@@ -147,8 +147,7 @@ def _classify(path: str) -> set[GoldenSurface]:
     """Return the surface kinds a result path belongs to.
 
     Corpus hits arrive under SOURCE file paths: the preprocess-hook rules feed
-    the walker, and the extraction sidecars are ``.vaultragignore``-excluded
-    (docs-terminology-search ADR Update 1).
+    the walker, and the extraction sidecars are ``.vaultragignore``-excluded.
     """
     kinds: set[GoldenSurface] = set()
     lowered = path.lower()

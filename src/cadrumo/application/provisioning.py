@@ -21,9 +21,11 @@ guards share one registry.
 from __future__ import annotations
 
 import contextlib
+import json
 import os
 import sys
-from collections.abc import Mapping
+import time
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import TypedDict, cast
 
@@ -62,6 +64,9 @@ __all__ = [
     "HardwareTier",
     "ModelSelection",
     "OptionalExtra",
+    "PullOutcome",
+    "PullProgress",
+    "ReadinessOutcome",
     "RuntimeResident",
     "SystemMemoryReading",
     "UnloadOutcome",
@@ -75,14 +80,26 @@ __all__ = [
     "probe_optional_extra",
     "probe_optional_extras",
     "probe_playwright_browser",
+    "pull_runtime_model",
     "read_accelerator",
     "read_runtime_residents",
     "read_system_memory",
     "select_model_for_role",
     "unload_runtime_model",
+    "verify_model_ready",
 ]
 
 _OLLAMA_PROBE_TIMEOUT_S = 2.0
+
+# A model fetch is a multi-gigabyte download over an operator's connection, so
+# it gets its own generous bound rather than the 2s probe timeout, which exists
+# to keep a doctor row responsive and would abort every real pull.
+_OLLAMA_PULL_TIMEOUT_S = 3600.0
+
+# Readiness asks whether a LOADED model answers. A cold load of a small vision
+# model is tens of seconds on this class of hardware, so the bound is generous
+# enough not to report a working model as unready while still bounded.
+_OLLAMA_READINESS_TIMEOUT_S = 120.0
 
 
 class DependencyStatus(BaseModel):
@@ -1414,6 +1431,225 @@ def unload_runtime_model(
         unloaded=True,
         was_resident=True,
         detail=f"released {model!r} from the local runtime",
+    )
+
+
+class PullProgress(BaseModel):
+    """One progress report from an in-flight model fetch.
+
+    ``total_bytes`` is absent early in a pull, before the runtime has resolved
+    the manifest, so a renderer must tolerate a percentless report rather than
+    computing a ratio against zero.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    status: str = ""
+    completed_bytes: int | None = Field(default=None, ge=0)
+    total_bytes: int | None = Field(default=None, ge=0)
+
+    @property
+    def percent(self) -> int | None:
+        """Return whole-percent progress, or ``None`` when the total is not yet known."""
+        if not self.total_bytes or self.completed_bytes is None:
+            return None
+        return min(100, int(self.completed_bytes * 100 / self.total_bytes))
+
+
+class PullOutcome(BaseModel):
+    """The result of an explicit model fetch, including a fetch that never started.
+
+    ``contention`` is populated when the pre-fetch admission check refused, and
+    is the reason no bytes moved. Keeping the snapshot rather than flattening it
+    to a string is what lets the caller name WHICH cause applied -- unloading a
+    resident Cadrumo selected and closing a peer application are different
+    instructions and only one of them is ours to offer.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    pulled: bool
+    contention: ContentionSnapshot | None = None
+    bytes_fetched: int | None = Field(default=None, ge=0)
+    detail: str = ""
+    remediation: str = ""
+
+
+def pull_runtime_model(
+    model: str,
+    requirement_bytes: int,
+    *,
+    profile: HardwareProfile | None = None,
+    settings: Settings | None = None,
+    on_progress: Callable[[PullProgress], None] | None = None,
+) -> PullOutcome:
+    """Fetch ``model`` into the local runtime, refusing BEFORE any bytes move.
+
+    The admission check runs first and a refusal returns without contacting the
+    runtime at all. That ordering is the point of the action: a multi-gigabyte
+    download that completes and then cannot be loaded has spent the operator's
+    bandwidth to arrive at the refusal it could have been given immediately.
+
+    Never raises, in keeping with every other action here. An unreachable
+    runtime is a typed outcome naming ``ollama serve`` -- this function does not
+    start a daemon, and nothing on this path pulls implicitly: reaching it at
+    all requires an operator to have asked.
+
+    Args:
+        model: Runtime identifier to fetch.
+        requirement_bytes: The model's declared memory requirement, checked
+            against measured headroom before fetching.
+        profile: A measured hardware profile; probed when omitted.
+        settings: Resolved settings; loaded when omitted.
+        on_progress: Called for each progress report the runtime emits. Failures
+            in the callback are the caller's to handle; nothing here swallows
+            them.
+
+    Returns:
+        A :class:`PullOutcome`. ``pulled`` false with ``contention`` populated
+        means the fetch was refused before it began.
+    """
+    resolved = settings if settings is not None else load_settings()
+    snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=resolved)
+    if not snapshot.admitted:
+        return PullOutcome(
+            model=model,
+            pulled=False,
+            contention=snapshot,
+            detail=snapshot.detail,
+            remediation=snapshot.remediation,
+        )
+
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "pull")
+    fetched: int | None = None
+    try:
+        with (
+            httpx.Client(timeout=_OLLAMA_PULL_TIMEOUT_S) as client,
+            client.stream("POST", url, json={"model": model, "stream": True}) as response,
+        ):
+            response.raise_for_status()
+            for line in response.iter_lines():
+                progress = _pull_progress(line)
+                if progress is None:
+                    continue
+                if progress.completed_bytes is not None:
+                    fetched = progress.completed_bytes
+                if on_progress is not None:
+                    on_progress(progress)
+    except httpx.HTTPError as exc:
+        return PullOutcome(
+            model=model,
+            pulled=False,
+            bytes_fetched=fetched,
+            detail=f"the local model runtime could not be reached to fetch {model!r} ({exc.__class__.__name__})",
+            remediation="start the local model runtime with 'ollama serve', then retry",
+        )
+    return PullOutcome(
+        model=model,
+        pulled=True,
+        bytes_fetched=fetched,
+        detail=f"{model!r} is present in the local runtime",
+    )
+
+
+def _pull_progress(line: str) -> PullProgress | None:
+    """Parse one NDJSON progress line, or ``None`` when it carries no report."""
+    text = line.strip()
+    if not text:
+        return None
+    try:
+        payload = json.loads(text)
+    except ValueError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    # CAST-RATIONALE-OLLAMA-PULL-PAYLOAD: json.loads returns Any; isinstance
+    # narrows to dict but not its type parameters.
+    # nosemgrep: no-cast-in-domain-application
+    row = cast(dict[str, object], payload)
+    completed = row.get("completed")
+    total = row.get("total")
+    status = row.get("status")
+    return PullProgress(
+        status=status if isinstance(status, str) else "",
+        completed_bytes=completed if isinstance(completed, int) and completed >= 0 else None,
+        total_bytes=total if isinstance(total, int) and total >= 0 else None,
+    )
+
+
+class ReadinessOutcome(BaseModel):
+    """Whether a model is loaded and actually answering, not merely present.
+
+    ``resident`` and ``answered`` are separate claims on purpose. A model can be
+    present on disk and not loaded, or loaded and too slow to be useful, and an
+    operator debugging a stalled read needs to know which of the two they have.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    model: str = Field(min_length=1)
+    ready: bool
+    resident: bool = False
+    answered: bool = False
+    elapsed_ms: int | None = Field(default=None, ge=0)
+    detail: str = ""
+    remediation: str = ""
+
+
+def verify_model_ready(
+    model: str,
+    *,
+    settings: Settings | None = None,
+    timeout_s: float | None = None,
+) -> ReadinessOutcome:
+    """Confirm ``model`` is resident and answers a trivial prompt within a bound.
+
+    The prompt is deliberately minimal and its CONTENT is irrelevant -- this
+    verifies the transport and the load, not the model's quality, so nothing
+    here inspects what came back beyond the fact that something did.
+
+    Never raises. An unreachable runtime names ``ollama serve``; a model that is
+    absent names the provision verb rather than pulling it, because an implicit
+    multi-gigabyte fetch triggered by a verification command is exactly what the
+    lifecycle design forbids.
+    """
+    resolved = settings if settings is not None else load_settings()
+    bound = timeout_s if timeout_s is not None else _OLLAMA_READINESS_TIMEOUT_S
+    residents = read_runtime_residents(resolved)
+    if residents is None:
+        return ReadinessOutcome(
+            model=model,
+            ready=False,
+            detail="the local model runtime could not be reached",
+            remediation="start the local model runtime with 'ollama serve', then retry",
+        )
+    resident = any(_matches_selected(entry.name, frozenset({model})) for entry in residents)
+
+    url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "generate")
+    started = time.monotonic()
+    try:
+        with httpx.Client(timeout=bound) as client:
+            response = client.post(url, json={"model": model, "prompt": "ok", "stream": False})
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        elapsed = int((time.monotonic() - started) * 1000)
+        return ReadinessOutcome(
+            model=model,
+            ready=False,
+            resident=resident,
+            elapsed_ms=elapsed,
+            detail=f"{model!r} did not answer within {bound:g}s ({exc.__class__.__name__})",
+            remediation=f"aeat config provision pull --model {model}",
+        )
+    elapsed = int((time.monotonic() - started) * 1000)
+    return ReadinessOutcome(
+        model=model,
+        ready=True,
+        resident=resident,
+        answered=True,
+        elapsed_ms=elapsed,
+        detail=f"{model!r} answered in {elapsed} ms",
     )
 
 

@@ -174,7 +174,7 @@ def test_unsupported_does_not_flag_zero_deductible_amount() -> None:
 def test_committed_binding_passes_the_reachability_probe() -> None:
     """The real committed casilla-02 binding is reachable: the design proof's positive case.
 
-    W02.P03's first-family reachability probe runs inside
+    The first-family reachability probe runs inside
     ``validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition``,
     already exercised by ``test_committed_m130_casilla_02_binds_gastos_pago_
     fraccionado_fact`` above -- this test names the probe explicitly so a

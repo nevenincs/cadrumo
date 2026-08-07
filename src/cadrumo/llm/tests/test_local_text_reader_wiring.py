@@ -92,7 +92,7 @@ def test_the_provenance_stamp_names_the_local_text_transport() -> None:
 
 
 def test_the_text_model_default_sits_under_the_declared_hardware_floor() -> None:
-    """S45: the model is chosen under the constraint, not beside it.
+    """The model is chosen under the hardware constraint, not beside it.
 
     The floor exists because a model that does not fit does not refuse -- it
     loads and thrashes, or is killed mid-read, and the operator sees an

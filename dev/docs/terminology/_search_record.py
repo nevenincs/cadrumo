@@ -51,10 +51,10 @@ class ResultDisplayClass(StrEnum):
 
     Orthogonal to :class:`SearchRecordKind`: the record kind is the producing
     surface, whereas the display class is the operator-facing categorisation
-    that drives both the result icon and the user-first ranking ladder (ADR
-    ``2026-07-15-docs-terminology-search-adr`` D7/D8). A CONCEPT record splits
-    across two classes by its Handbook domain -- a modelo-domain card is a
-    ``MODELO`` document, a general-fact card is a ``DOC`` -- and full-text page
+    that drives both the result icon and the user-first ranking ladder. A
+    CONCEPT record splits across two classes by its Handbook domain -- a
+    modelo-domain card is a ``MODELO`` document, a general-fact card is a
+    ``DOC`` -- and full-text page
     hits split by path (``cli/`` -> ``CLI``, ``api/`` and dev machinery ->
     ``TECHNICAL``, everything else user-facing -> ``DOC``). Derived once at the
     injection seam and shipped in the Pagefind meta; the JS renderer reads it

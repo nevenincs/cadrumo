@@ -79,7 +79,7 @@ class RankingTier(StrEnum):
 
 
 #: The single declared user-first base-weight ladder, keyed by display class
-#: (ADR ``2026-07-15-docs-terminology-search-adr`` D8). Highest sorts first:
+#: Highest sorts first:
 #: general-fact concept cards (``DOC``) lead, then modelo document cards, then
 #: casilla rows, then CLI records, and full-text ``TECHNICAL`` (api / dev
 #: machinery) pages rank last. This amends the parent ADR's per-kind D5 ladder

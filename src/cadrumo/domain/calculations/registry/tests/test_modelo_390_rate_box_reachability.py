@@ -89,10 +89,20 @@ _OUT_OF_WINDOW = (
     (IvaRate.RATE_7_5, date(2024, 3, 10)),
     (IvaRate.RATE_5, date(2024, 11, 12)),
     (IvaRate.RATE_2, date(2024, 8, 13)),
-    # 0 % is windowed too, which is easy to forget because it reads like a
-    # permanent tier rather than a transitional food rate.
-    (IvaRate.RATE_0, date(2024, 3, 16)),
 )
+
+# RATE_0 is deliberately ABSENT from the set above, and must stay absent. It is
+# the one slot exempted from the in-force check, because the registry's zero
+# authority is knowingly incomplete: rates.toml registers only the RD-ley 4/2024
+# window and deliberately does NOT register the indefinite art. 91.Cuatro 0 %
+# (entregas de donativos), since a flat `kind = "zero"` record cannot express a
+# tipo bounded to donativos and an open one would apply 0 % to every domestic
+# supply. A missing zero record therefore means "this registry cannot say", not
+# "no zero-rated supply was lawful that day", and refusing on it made every
+# zero-rated invoice unrecordable at every date.
+#
+# Adding RATE_0 here looks like tightening a gap and is actually asserting a
+# refusal the code intentionally does not perform.
 
 
 def _m390_revision() -> ModeloRevision:

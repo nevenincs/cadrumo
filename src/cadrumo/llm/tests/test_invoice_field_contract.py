@@ -204,8 +204,8 @@ class TestThePrintedPercentSignNoLongerLosesTheRate:
 
     The resolution is unit normalisation, not looser grounding. A percent sign is
     a unit marker, not a digit, so the number that remains is still the printed
-    one -- copied, never computed -- and the ANCHOR is untouched, which is what
-    ADR ``2026-08-07-unstructured-document-ingestion-adr`` D4 asks for.
+    one -- copied, never computed -- and the ANCHOR stays the untouched printed
+    text, distinct from the normalised numeric value.
     """
 
     @pytest.mark.parametrize("printed", ["21%", "21 %", "21percent", "21 pct", " 21% "])
@@ -215,7 +215,7 @@ class TestThePrintedPercentSignNoLongerLosesTheRate:
         assert ground_extracted_fields(fields, raw_text_length=10).iva_rate == Decimal("21")
 
     def test_the_anchor_keeps_the_printed_form_while_the_value_is_bare(self) -> None:
-        """Anchor and value become explicitly distinct, which serves D4 anchoring."""
+        """Anchor and value become explicitly distinct: the anchor keeps the printed text."""
         fields = ExtractedInvoiceFields(iva_rate="21%")
 
         draft = ground_extracted_fields(fields, raw_text_length=10)

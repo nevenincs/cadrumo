@@ -19,9 +19,9 @@ row's :class:`InvoiceFieldForm` to the matching grounding validator. Two
 hand-maintained lists that happen to agree today is the defect this closes, not
 the fix.
 
-**Anchor and value are deliberately distinct** (ADR
-``2026-08-07-unstructured-document-ingestion-adr`` D4, anti-fabrication as
-anchoring plus closure). Nothing here rewrites what the model transcribed:
+**Anchor and value are deliberately distinct**: anti-fabrication works by
+anchoring the model's transcription and closing over it, never by rewriting
+what it said. Nothing here rewrites what the model transcribed:
 :class:`~llm._invoice_field_grounding.ExtractedInvoiceFields` keeps the printed
 string verbatim, which is the anchor a later closure check points at. The form
 declaration governs only the DERIVATION of the typed value from that anchor. For
@@ -40,17 +40,44 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Final
 
 from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG
 
 __all__ = [
+    "ANCHOR_KEY_SUFFIX",
     "INVOICE_FIELD_CONTRACTS",
     "InvoiceFieldContract",
     "InvoiceFieldForm",
+    "anchor_key_for_field",
     "contract_for_field",
 ]
+
+ANCHOR_KEY_SUFFIX: Final[str] = "_anchor"
+"""Suffix naming a field's anchor key in the model's JSON response.
+
+Declared here rather than at either use site because three derivations depend on
+it agreeing exactly: the compiled prompt renders the key it asks for, the parser
+reads the key it receives, and the parity gate proves the two are the same
+string. A suffix spelled twice is the same drift this module exists to close --
+and its failure mode is silent, because an anchor key the parser does not
+recognise looks identical to a model that returned no anchor at all.
+"""
+
+
+def anchor_key_for_field(field_name: str) -> str:
+    """Return the JSON key carrying ``field_name``'s verbatim printed anchor.
+
+    Args:
+        field_name: Attribute name on
+            :class:`~llm._invoice_field_grounding.ExtractedInvoiceFields`.
+
+    Returns:
+        The anchor key, e.g. ``"iva_rate_anchor"``.
+    """
+    return f"{field_name}{ANCHOR_KEY_SUFFIX}"
 
 
 class InvoiceFieldForm(StrEnum):

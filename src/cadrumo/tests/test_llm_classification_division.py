@@ -39,7 +39,7 @@ _EVENT_EMISSION_CALLS = {
 
 
 def test_no_bucket_event_or_classification_write_happens_inside_the_subpackage() -> None:
-    """S40's line: classification writes and event history stay core-side.
+    """The division line: classification writes and event history stay core-side.
 
     The subpackage asks the model; it does not record the answer. A write that
     migrated here would put ledger state and the operator's audit trail behind
@@ -66,7 +66,7 @@ def test_no_bucket_event_or_classification_write_happens_inside_the_subpackage()
 
 
 def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage() -> None:
-    """S43's line: the run-health verb stays unconditional.
+    """The division line: the run-health verb stays unconditional.
 
     ``application/diagnostics_run_health.py`` is a core, non-ledger consumer of
     LLM run telemetry. That telemetry store deliberately stayed on the core
@@ -103,14 +103,13 @@ def test_core_run_health_diagnostics_does_not_depend_on_the_optional_subpackage(
 
 
 def test_every_model_talking_class_lives_in_the_inference_package() -> None:
-    """S39: the inference call sites are in the subpackage, not the ledger.
+    """The inference call sites are in the subpackage, not the ledger.
 
     "Inference call site" means a class that TALKS TO A MODEL -- builds a
     request, sends it, parses the answer. All of them live in the gated package.
     What the ledger keeps is orchestration: resolving evidence, choosing a
     reader, calling it, and carrying the result to the confirm boundary. The
-    governing record names that split in those terms, so the division line is
-    between talking to a model and deciding when to.
+    division line is between talking to a model and deciding when to.
 
     The physical extraction stops there deliberately. Moving the orchestration
     too would make the subpackage import the ledger's private resolved-evidence
@@ -146,7 +145,7 @@ def test_every_model_talking_class_lives_in_the_inference_package() -> None:
 
 
 def test_the_review_workflow_does_not_import_across_the_boundary_inward() -> None:
-    """S42: the workflow settles on the ledger side of the division.
+    """The workflow settles on the ledger side of the division.
 
     It consumes the interchange DTOs from the owning package and the apply and
     reject functions from its own package. What it must NOT do is reach into the

@@ -1,13 +1,11 @@
 """Fire-and-forget workflow dispatch, MY-run resolution, and a cheap conclusion poll.
 
-``gh workflow run`` returns no run id (constraint recorded in
-``2026-08-02-release-pipeline-full-automation-adr``), and this tree has no
-prior precedent for resolving the run a dispatch started:
-``packaging-campaign-trigger.yml`` fires and forgets. ``packaging-smoke.yml``
-queues rather than cancels on a newer dispatch, so a naive "newest run of this
-workflow" query can return a neighbour's competing run rather than this
-dispatch's own — the identify-MY-run hazard the ADR names explicitly. This
-module closes both gaps:
+``gh workflow run`` returns no run id, and this tree has no prior precedent
+for resolving the run a dispatch started: ``packaging-campaign-trigger.yml``
+fires and forgets. ``packaging-smoke.yml`` queues rather than cancels on a
+newer dispatch, so a naive "newest run of this workflow" query can return a
+neighbour's competing run rather than this dispatch's own — the
+identify-MY-run hazard this module exists to close. It closes both gaps:
 
 * :func:`dispatch_workflow` fires the dispatch and returns nothing — there is
   nothing to return.
@@ -331,8 +329,9 @@ def wait_for_run(
 
     ``list_runs`` is the test injection point, called fresh on every attempt so
     a fixture can hand back a different snapshot per poll — including a
-    competing run appearing on a later attempt, the exact hazard the ADR names.
-    A resolution ambiguity is NOT retried: it propagates immediately, because
+    competing run appearing on a later attempt, the exact identify-MY-run
+    hazard this module exists to close. A resolution ambiguity is NOT
+    retried: it propagates immediately, because
     waiting longer cannot resolve which run is this dispatch's own.
     """
 
