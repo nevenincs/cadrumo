@@ -172,7 +172,16 @@ class LocaleManager:
         self.src_dir = src_dir
         self.locales_dir = locales_dir
         self.extra_src_dirs = tuple(d for d in extra_src_dirs if d.is_dir())
-        self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\'](\w+(?:\.\w+)+)["\']', re.UNICODE)
+        # ``docs_chrome`` is the documentation generators' accessor. It exists
+        # because ``tr()`` resolves the ambient locale while a docs build must
+        # render one explicit language per page, so the generators cannot use
+        # ``tr()`` -- but the keys it takes are ordinary catalogue keys and must
+        # be as visible to this scan as any other, or scaffold prunes them and
+        # the parity gate reports them as keys no code requests.
+        self.pattern = re.compile(
+            r'\b(?:tr|t|docs_chrome)\(\s*["\'](\w+(?:\.\w+)+)["\']',
+            re.UNICODE,
+        )
 
     def get_codebase_keys(self) -> set[str]:
         """Extract all concrete dotted translation keys from the codebase.
@@ -235,7 +244,10 @@ class LocaleManager:
         """
         from ._ast_scanner import scan_namespace_markers
 
-        return scan_namespace_markers(self.src_dir)
+        markers: set[str] = set()
+        for root in (self.src_dir, *self.extra_src_dirs):
+            markers.update(scan_namespace_markers(root))
+        return markers
 
     def audit(self) -> LocaleAuditResult:
         """Audit scalar, key-set, placeholder, and codebase parity.
