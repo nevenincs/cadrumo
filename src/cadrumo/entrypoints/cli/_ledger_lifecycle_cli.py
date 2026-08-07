@@ -794,7 +794,6 @@ def ledger_split(
             transaction_id=transaction_id,
             child_amount=child_amount,
             child_description=child_description,
-            provider=llm,
             apply=apply,
             read_evidence=read_evidence,
             vision_model=vision_model,

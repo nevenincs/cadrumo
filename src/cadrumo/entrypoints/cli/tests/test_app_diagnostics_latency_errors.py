@@ -74,10 +74,11 @@ def _seed_error_runs() -> None:
         ("llm:claude:test-model", "KindB"),
         ("llm:codex:test-model", "KindA"),
     )
-    for index, (provider, error_kind) in enumerate(seeds, start=1):
+    for index, (provenance, error_kind) in enumerate(seeds, start=1):
         recorder.record(
             LLMRunRecord(
                 run_id=f"err-{index}",
+                provider=provenance,
                 caller="cadrumo.application.ledger.llm_classification",
                 model="test-model",
                 duration_ms=100,

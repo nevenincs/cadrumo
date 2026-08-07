@@ -34,6 +34,7 @@ from sqlalchemy import select
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.secure_object_write import SecureObjectWrite
 from .....domain.attachments import (
     Attachment,
     AttachmentKind,
@@ -450,9 +451,9 @@ def test_put_many_bytes_writes_a_repeated_payload_only_once(
         real_save_many = objects.save_many
         seen: list[int] = []
 
-        def counting_save_many(writes: tuple[object, ...]) -> None:
+        def counting_save_many(writes: tuple[SecureObjectWrite, ...]) -> None:
             seen.append(len(writes))
-            real_save_many(writes)  # type: ignore[arg-type]
+            real_save_many(writes)
 
         monkeypatch.setattr(objects, "save_many", counting_save_many)
         store.put_many_bytes([repeated, distinct, repeated])

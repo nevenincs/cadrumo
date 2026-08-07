@@ -66,10 +66,11 @@ def _seed_runs() -> None:
         ("run-5", "llm:codex:test-model", "model-a", 50, True, ""),
         ("run-6", "llm:codex:test-model", "model-a", 150, True, ""),
     )
-    for index, (run_id, provider, model, duration_ms, succeeded, error_kind) in enumerate(seeds, start=1):
+    for index, (run_id, provenance, model, duration_ms, succeeded, error_kind) in enumerate(seeds, start=1):
         recorder.record(
             LLMRunRecord(
                 run_id=run_id,
+                provider=provenance,
                 caller="cadrumo.application.ledger.llm_classification",
                 model=model,
                 duration_ms=duration_ms,

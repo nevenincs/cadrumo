@@ -335,10 +335,11 @@ class AttachmentStore(BaseModel):
         digests = [sha256_hex(data) for data in payloads]
         objects = self._objects_repo()
 
-        # Keyed by digest, so the mapping IS the in-batch dedup: a repeated
-        # digest resolves to one entry. Deliberately the only such mechanism
-        # here — an additional membership guard alongside it would be a second
-        # way to express the same rule and could drift from it.
+        # Two distinct jobs, not two spellings of one. The mapping is keyed by
+        # digest, so it collapses the WRITE for a repeated payload. The
+        # membership guard below skips the redundant existence QUERY for that
+        # same repeat — without it a digest appearing twice costs two SQL
+        # round-trips to learn the same answer.
         pending: dict[str, bytes] = {}
         for digest, data in zip(digests, payloads, strict=True):
             if digest in pending:
