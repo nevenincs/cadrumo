@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:287874babf6913823fd38f6854330039c49a829df1df015264ae06274ec3c4e8'
+body_hash: 'sha256:373932455ac2a3da44fa0da78ac7fa7a714309c8ce9816946c25ae6fdfef13f7'
 related:
   - "[[2026-08-07-declarations-register-pagination-reference]]"
 ---
@@ -52,9 +52,17 @@ truncated page can silently exclude the true most-recent filing.
   unconfirmed — the precedent supports the SHAPE, not a claim that AEAT
   necessarily paginates.
 - `capture_filed_data_bulk` already has a per-`(modelo, ejercicio)` failure
-  taxonomy (`FiledDataCaptureFailureRow`) that continues past one pair's
-  failure without aborting the whole sweep under `BEST_EFFORT`, and aborts
-  under `FAIL_FAST` (reference: "Relevant call graph").
+  taxonomy (`FiledDataCaptureFailureRow`): `_walk_or_failure_row`
+  (`_filed_data_capture.py:186-217`) catches any walk failure unconditionally
+  and folds it into that row so the sweep continues to the next pair —
+  there is no `FAIL_FAST` branch for a walk failure in the bulk path. The
+  `FiledCaptureFailurePolicy.FAIL_FAST`/`BEST_EFFORT` axis that DOES exist in
+  this file governs a later, separate stage — `finalize_filed_capture`'s
+  calculation-observation persistence — and is hardcoded per call site
+  (`BEST_EFFORT` for bulk, `FAIL_FAST` for the singular `capture_filed_data`
+  and for source capture), not a parameter a walk failure can select
+  (reference: "Relevant call graph"; verified directly against HEAD, not
+  restated from the reference, which does not make this claim).
 - `aeat-worktree-safety` and `aeat-agent-orchestration` forbid landing this
   decision without opening its implementing rows in the same action, since a
   ruling on code with no owner leaves HEAD carrying the old silent behaviour
@@ -111,11 +119,20 @@ ejercicio, rendered count and declared total, rather than returning
 degraded data silently.
 
 That refusal is caught exactly where every other per-pair register failure
-is already caught: `capture_filed_data_bulk`'s existing failure-row assembly
-turns it into a `FiledDataCaptureFailureRow` under `BEST_EFFORT` (the sweep
-continues to the next pair) and re-raises under `FAIL_FAST`. No new bulk
-control-flow mechanism is introduced — truncation reuses the taxonomy that
-already exists for this exact purpose.
+is already caught: `_walk_or_failure_row` catches it unconditionally and
+folds it into a `FiledDataCaptureFailureRow`, so the bulk sweep continues to
+the next pair. This is a deliberate design property, not an oversight: bulk
+capture's walk stage is unconditionally best-effort by construction, and it
+carries no `FAIL_FAST` branch to fall back to — the fail-fast equivalent for
+one pair lives in a different function, `capture_filed_data` (the singular,
+non-bulk capture), whose walk failure is never caught and propagates
+uncaught to its caller. `FiledCaptureFailurePolicy.FAIL_FAST`/`BEST_EFFORT`
+is a real axis in this file, but it governs the later
+calculation-observation persistence stage inside `finalize_filed_capture`,
+not the walk stage this ADR's refusal fires from; this ADR does not touch
+that axis or that later stage. No new bulk control-flow mechanism is
+introduced — truncation reuses the walk-failure taxonomy that already
+exists for this exact purpose.
 
 Full page traversal is explicitly out of scope for this ADR; it is Considered
 option A recorded as a live follow-on, not authorised here.
