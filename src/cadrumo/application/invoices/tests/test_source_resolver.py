@@ -108,7 +108,14 @@ def _invoice(
                 quantity=Decimal("1"),
                 unit_price=base_total,
                 subtotal=base_total,
-                iva_rate=IvaRate.RATE_0,
+                # EXEMPT, not RATE_0. An intra-community supply is exempt under
+                # LIVA art. 25 -- no IVA applies to it. RATE_0 means something
+                # different: that a zero-PERCENT tier was charged, which the
+                # invoice validates against the rate table on the devengo date.
+                # Spain has no standing zero tier, so RATE_0 here asserted a
+                # rate that was not in force and refused every fixture dated
+                # outside the 2024 temporary food window.
+                iva_rate=IvaRate.EXEMPT,
                 iva_amount=Decimal("0"),
             ),
         ),
