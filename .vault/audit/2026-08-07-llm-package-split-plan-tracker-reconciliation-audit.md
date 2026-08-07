@@ -5,23 +5,18 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:15d301c7dc10660331d50ba70bfb0cf37d2bbd37643b0d6c4cef760878e2dfe6'
+body_hash: 'sha256:49e93bb3cf97aa374915386a252f2d8ed29ea337c80b375a4cb8362c77c5cbe2'
 related:
   - "[[2026-08-06-llm-package-split-plan]]"
 ---
-
-
 
 # `llm-package-split` audit: `Plan-to-code reconciliation: 50 steps landed against a tracker reading zero`
 
 ## Scope
 
-
 ## Findings
 
-
 ## Recommendations
-
 
 ## Context
 

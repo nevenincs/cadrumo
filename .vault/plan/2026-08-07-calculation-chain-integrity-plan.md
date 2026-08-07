@@ -4,7 +4,7 @@ tags:
   - '#calculation-chain-integrity'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:a841cd01f1f8fbba73ff7c35d69e49897fadf6bdc8f13bb84e0fa91d32a24a1a'
+body_hash: 'sha256:d61a4e2208c1eb54a52773a6d4dbb597ee9df6e2c0956f67c9739a8a071d187f'
 tier: L3
 related:
   - '[[2026-08-07-silent-zero-regression-screen-research]]'
@@ -69,9 +69,9 @@ Establish which of the profile field, the per-transaction marker, and the regist
 
 Implement the canonical placement, then unblock the retencion regimen filter and M130 casilla 08.
 
-- [ ] `W03.P05.S11` - Implement the canonical activity-type placement with its persistence roundtrip and anti-tautology proof; `src/cadrumo/domain/transactions/`.
+- [ ] `W03.P05.S11` - BLOCKED on S38 which is blocked on S37 - W03.P04 established the M036 tipo-de-actividad code table is absent from the bundled corpus and the only bundled enumeration, the Modelo 840 IAE set of Empresarial, Profesional and Artistica, resolves one boundary of the four the art. 95 rate partition needs, so a placement landed now would carry a vocabulary that cannot select a rate; `src/cadrumo/domain/transactions/`.
 - [x] `W03.P05.S12` - Narrow the statutory-rate advisory to the rates a taxpayer can lawfully be subject to, restoring the flat-fee catch measured lost; `src/cadrumo/application/aggregation/_retencion_rate_advisory.py`.
-- [ ] `W03.P05.S13` - Aggregate M130 casilla 08 agrarian volume from the ledger, currently manual and silently zero for an agrarian-objetiva filer; `src/cadrumo/application/aggregation/`.
+- [ ] `W03.P05.S13` - BLOCKED on S11, do not attempt first - casilla 08 is the agrarian quarterly volume and the ledger carries no activity-type axis to separate agrarian income from estimacion directa, so aggregating it today would feed the same rows into both casilla 01 and casilla 08 and double-count rather than close the silent zero; `src/cadrumo/application/aggregation/`.
 - [ ] `W03.P05.S37` - Refresh the corpus to bundle the M036 tipo-de-actividad code table the diseno points at, the field is declared but its value set is absent and the mapping cannot be authored against what ships; `src/cadrumo/_data/corpus/aeat_official/`.
 - [ ] `W03.P05.S38` - Ground the code-to-art-95-partition mapping in the registry with its own legal refs once the table lands, never inferred in code, and plan for the refreshed table proving unable to serve at all; `src/cadrumo/_data/registry/aeat/legal/`.
 
