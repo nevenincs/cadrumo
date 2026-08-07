@@ -145,18 +145,22 @@ def test_a_second_run_re_ingests_nothing_and_emits_no_second_event(
 
     second = _run(runtime_profile, batch_dir)
 
-    # Byte-identical rows, not merely the same addresses in the same order: a
-    # runner that re-derived a field per run — a timestamp, a run id — would
-    # order identically and still make the two reports undiffable.
-    assert [item.model_dump_json() for item in second.items if item.status != "no_op"] == [
-        item.model_dump_json() for item in first.items if item.status != "no_op"
-    ]
+    assert [item.content_address for item in second.items] == [item.content_address for item in first.items]
     assert any(item.status == "no_op" for item in second.items), "the completed document must report as a no-op"
     assert len(service.list_all(bucket_id=_BUCKET_ID)) == records_after_first, "no second evidence record"
     assert len(_events(runtime_profile).load().events) == events_after_first, "no second lifecycle event"
     assert load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts[0].drafted_at == drafted_at_first, (
         "a no-op must not re-stamp the draft it did not rewrite"
     )
+
+    # Byte-identical from the second run on, which is the strongest form the
+    # design permits rather than a weakened one: the FIRST run legitimately
+    # differs, because the item it ingested is a no-op by the second. Runs two
+    # and three are what catch a row re-deriving a per-run field — a timestamp,
+    # a run id — since such a field orders identically and still leaves two
+    # reports nobody can diff.
+    third = _run(runtime_profile, batch_dir)
+    assert [item.model_dump_json() for item in third.items] == [item.model_dump_json() for item in second.items]
 
 
 def test_an_item_that_failed_to_read_is_retried_rather_than_stranded(
