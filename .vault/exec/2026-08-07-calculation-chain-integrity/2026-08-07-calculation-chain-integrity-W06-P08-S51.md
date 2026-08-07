@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:d67c93d6e323ce22628d0ae700498355672390601236be7bf9c5be1bae827b45'
+body_hash: 'sha256:4a5807520051ba4eb3c9b61aa69faf6ddd49c91284d9ed0ac36089a005c90892'
 step_id: 'S51'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
