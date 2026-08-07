@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:60ccb25a54efde3d9d89930c6325c44645b907ea6435794339534dde71aa333b'
+body_hash: 'sha256:2aaee673962b9a18d33735c6cd01a77630b07eeb1026768c662d0f7cb6eb638e'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -712,6 +712,60 @@ The place-of-supply mapping row this shapes cites LIVA separately for
 goods and services as registry data; under this ruling its branch
 selector is the supply-nature input, and its domestic branches must not
 demand what they do not need.
+
+**Ruling (third amendment): one minting authority, and the total order
+over the category-deriving surfaces.** The classification rulings above
+created four surfaces that touch an `IvaCategory` — the closed rule table,
+the invoice-line bridge, the legend axis, and the place-of-supply
+grounding — each well-bounded against one neighbour and none ordered
+against the rest, so two locally-correct paths could return different
+categories for one invoice, and whichever wiring landed first would have
+become the authority by accident. The order is therefore written down
+here, and it is not a precedence list between competing voices: it is the
+statement that **there is exactly one voice**, derived from the
+evidence-versus-derivation principle both prior amendments already apply.
+
+- **The rule table (`classify_iva`) is the sole minting authority.** On
+  the ingestion path it is the only surface that produces a category. It
+  derives from FACTS: the assembled criteria (establishment, direction,
+  taxable-person status, own-regime facts, supply nature under the lazy
+  requirement) with the place-of-supply grounding applied.
+- **Place of supply is a selector, not a competitor.** It grounds WHICH
+  LIVA rule the table applies for the assembled facts; it derives no
+  category of its own and the wiring must treat it as input plumbing
+  inside the derivation, never as a fourth voice.
+- **The legend axis is evidence, on two sanctioned channels only.**
+  Channel one: a decisive printed statement (the statutory-citation
+  mapping of the second amendment) SUPPLIES a missing fact — supply
+  nature, a regime — into the assembled criteria, and the rule table then
+  derives; the legend never mints around the table. Channel two: where
+  the legend implies a treatment AND the table derives one, agreement is
+  recorded in the input envelope as corroboration, and disagreement is a
+  CONTRADICTION — the same blocking finding class as legend-versus-rate,
+  parameterised by which transcribed evidence contradicts the derived
+  state, refused past by the review gate. The issuer's printed claim
+  never silently overrides the law applied to facts (issuers misprint —
+  legend-first would import the counterparty's error as authority, the
+  confident-wrong-answer class again), and the derivation never silently
+  overrides the issuer's claim (the table may be under-informed): a
+  standing disagreement is a human's to resolve, with both sides shown.
+- **The invoice-line bridge is a projection.** It carries the minted
+  category onto the line record and derives nothing; a bridge that mints
+  is the parallel write path the boundary rules forbid.
+
+The composition is enforced, not described: a singularity gate asserts
+that exactly one production surface constructs an `IvaCategory` on the
+ingestion path (the shipped prompter-singularity gate is the precedent
+shape), proven by mutation — teach the bridge or the legend axis to mint
+and the gate reds; and a disagreement fixture (legend implying one
+treatment, facts deriving another) must yield the blocking finding, never
+either category silently. Zero-caller state at ruling time is recorded
+honestly: the citation derivation, the lazy-requirement guard and the
+criteria assembly exist with no wired consumer, so until the wiring Step
+lands, the guard guards nothing and the assembly's demand is
+unconditional in effect — the wiring Step's gate must therefore include
+the lazy-requirement case (a domestic fixture deriving with supply nature
+UNKNOWN and no operator prompt).
 
 ### D9 — Stage-by-stage measurement: the map from stage to oracle
 

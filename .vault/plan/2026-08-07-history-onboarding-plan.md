@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:c58a27761316382dc30e527f1b79ee66b1f2860dd8b8c2c06392689f9b32d0bb'
+body_hash: 'sha256:2cd424874aa69f86b66696e82a1817a83ebcc045e6e91e6e350dbc8633957374'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -83,7 +83,7 @@ signal regardless of its outcome.
 
 Land dual-tier availability discovery: a taxpayer-specific PROFILE_APPLICABILITY grid derived from the taxpayer's own declared profile facts (always available, no live probe needed) as the primary completeness denominator, plus an AEAT_REGISTER_OPTIONS combobox enumeration whose NIF-scoping is unconfirmed, unioned additively and never solely relied on for a completeness claim.
 
-- [ ] `P01.S01` - add the FiledDeclarationAvailability and FiledDeclarationAvailabilityReport pydantic v2 models, verified by a strict roundtrip test; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
+- [x] `P01.S01` - add the FiledDeclarationAvailability and FiledDeclarationAvailabilityReport pydantic v2 models, verified by a strict roundtrip test; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
 - [ ] `P01.S02` - add discover_filed_declaration_availability reading the modelo combobox's full option set then, per modelo, the ejercicio combobox's full option set, tagged provenance AEAT_REGISTER_OPTIONS and treated as scoping-unconfirmed, verified by a synthetic-fixture test asserting the returned report matches a hand-authored fixture option list exactly; `src/cadrumo/adapters/outbound/aeat/sede/_declarations.py`.
 - [ ] `P01.S03` - add the discover_filed_history application service wrapping the session bring-up shared with capture_filed_data around the new adapter function, verified by a test that a missing auth session raises the same SedeNavigationError the existing capture path raises; `src/cadrumo/application/live/_filed_data_capture.py`.
 - [ ] `P01.S04` - add the aeat app live filed discover verb emitting the availability report as the envelope result plus the live-scope caveat Notice, verified by test_documented_command_conformance.py and a new JSON-schema conformance case; `src/cadrumo/entrypoints/cli/_app_live.py`.
