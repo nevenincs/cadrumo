@@ -463,7 +463,7 @@ def _from_legal(record: LegalSearchRecord, sweep_score: float | None) -> SearchR
         # page/anchor authority is the same one that emits the destination;
         # the BOE permalink remains destination provenance in typed metadata.
         target=record.target,
-        ranking_weight=normalise_display_class_weight(ResultDisplayClass.DOC, sweep_score),
+        ranking_weight=normalise_display_class_weight(ResultDisplayClass.LEGAL, sweep_score),
         search_aliases=record.search_aliases,
         metadata=SearchRecordMetadata(
             legal_id=record.legal_id,

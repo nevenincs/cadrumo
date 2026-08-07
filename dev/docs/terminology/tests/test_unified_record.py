@@ -247,6 +247,35 @@ def test_base_weights_follow_the_declared_tier_ordering() -> None:
     assert concept > casilla > legal > cli > page
 
 
+def test_emitted_weight_matches_the_class_the_record_is_displayed_under() -> None:
+    """A record's stamped weight must be the weight of its own display class.
+
+    Each ``_from_*`` projector hard-codes the class literal it stamps a weight
+    from, so nothing structurally ties that literal to the class
+    ``derive_display_class`` later assigns the same record. A legal provision
+    shipped as ``display_class=legal`` while carrying the ``DOC`` band's 1.0
+    weight, so it was labelled correctly in the UI and still sorted above every
+    modelo and casilla card -- the label and the sort order disagreed.
+
+    Asserting the two agree on a real projected record catches that divergence
+    for any kind, which a fixture built from an explicit display class cannot.
+    """
+    from dev.docs.terminology._legal_projection import project_legal_search_records
+    from dev.docs.terminology._unified_record import (
+        derive_display_class,
+        display_class_base_weight,
+        to_search_record,
+    )
+
+    record = to_search_record(project_legal_search_records()[0])
+    displayed = derive_display_class(record)
+    assert record.ranking_weight == display_class_base_weight(displayed), (
+        f"the record is displayed as {displayed.value} but carries the "
+        f"{record.ranking_weight} weight of a different band; the projector's "
+        "hard-coded class literal has drifted from the derivation authority"
+    )
+
+
 def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     """The two weight authorities must not disagree for any kind.
 
