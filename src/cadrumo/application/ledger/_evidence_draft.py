@@ -104,6 +104,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
 from ...core import (
+    PDF_CONTAINER_SHAPES,
     STRICT_FROZEN_CONFIG,
     STRUCTURED_DOCUMENT_SHAPES,
     DraftDiscrepancyKind,
@@ -131,7 +132,7 @@ from ...llm import (
 )
 from ..provisioning import probe_ollama_vision
 from ..user_profile import resolve_active_capability
-from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_input import (
     EvidenceInput,
     resolve_attachment_evidence_input,
@@ -725,7 +726,7 @@ def extract_invoice_draft_from_evidence(
             # broken can still be read by the text or vision path.
             pass
     _refuse_an_unrecognised_xml_document(evidence_input)
-    if evidence_input.media_kind is MediaKind.PDF:
+    if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         try:
             return extract_invoice_fields(evidence_input)
         except PurchaseInvoiceEvidenceInputError:
@@ -837,7 +838,7 @@ def _extract_invoice_fields_via_vision(evidence: EvidenceInput, *, settings: Set
     try:
         from ...llm import extract_invoice_fields_from_images
 
-        if evidence.media_kind is MediaKind.PDF:
+        if evidence.document_shape in PDF_CONTAINER_SHAPES:
             images = tuple(
                 MultimodalImageInput.from_base64(page, ImageMediaType.PNG)
                 for page in rasterise_pdf_pages_to_base64_png(evidence.data)
@@ -1536,18 +1537,26 @@ def _confirmed_lines_from_the_document(
         # figure, which is the opposite of reading the record exactly. The
         # fall-through keeps the pre-existing behaviour, and the printed-total
         # cross-check still reports the shortfall.
-        entries = draft.iva_breakdown
-        if all(entry.taxable_base is not None and entry.iva_amount is not None for entry in entries):
+        # Pair each entry with its narrowed amounts in one pass, so the guard and
+        # the use are the same expression. An `all(...)` check ahead of a
+        # comprehension proves the same thing to a reader but not to a checker,
+        # which then cannot tell this from a genuine optional dereference.
+        priced = [
+            (entry, entry.taxable_base, entry.iva_amount)
+            for entry in draft.iva_breakdown
+            if entry.taxable_base is not None and entry.iva_amount is not None
+        ]
+        if len(priced) == len(draft.iva_breakdown):
             return tuple(
                 InvoiceLine(
                     description=f"{invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
                     quantity=Decimal("1"),
-                    unit_price=entry.taxable_base,
-                    subtotal=entry.taxable_base,
+                    unit_price=taxable_base,
+                    subtotal=taxable_base,
                     iva_rate=resolve_iva_rate_slot(entry.iva_rate),
-                    iva_amount=entry.iva_amount,
+                    iva_amount=iva_amount,
                 )
-                for entry in entries
+                for entry, taxable_base, iva_amount in priced
             )
     if iva_amount is not None:
         return (

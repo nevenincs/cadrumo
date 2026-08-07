@@ -121,7 +121,12 @@ from ._descendant_relacion import (
     ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
-from ._document_shape import AEAT_RECORD_BATCH_SHAPES, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ._document_shape import (
+    AEAT_RECORD_BATCH_SHAPES,
+    PDF_CONTAINER_SHAPES,
+    STRUCTURED_DOCUMENT_SHAPES,
+    DocumentShape,
+)
 from ._draft_discrepancy import DraftDiscrepancyKind
 from ._export_exemption_reason import ExportExemptionReason
 from ._export_layout_format import ExportLayoutFormat
@@ -131,7 +136,14 @@ from ._field_origin import FieldOrigin
 from ._field_role import FieldRole
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
-from ._hardware import AcceleratorKind, ContentionCause
+from ._hardware import (
+    HARDWARE_TIER_CAPABLE_FLOOR_BYTES,
+    HARDWARE_TIER_MODEST_FLOOR_BYTES,
+    AcceleratorKind,
+    ContentionCause,
+    HardwareTier,
+    hardware_tier_for_free_bytes,
+)
 from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._image_media_type import ImageMediaType, detect_image_media_type
@@ -149,6 +161,21 @@ from ._irnr import (
     project_m210_tipo_renta_code,
 )
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
+from ._model_catalogue import (
+    APACHE_2_0,
+    DEFAULT_MODEL_BY_ROLE,
+    MODEL_CATALOGUE,
+    QWEN_RESEARCH,
+    DeploymentLicencePosture,
+    LicenceVerification,
+    ModelCandidate,
+    ModelLicence,
+    ModelRole,
+    ModelSelectionAdvisory,
+    candidates_for_role,
+    default_model_runtime_id,
+    model_candidate,
+)
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._models import STRICT_FROZEN_CONFIG
 from ._optional_extras import (
@@ -308,18 +335,22 @@ __all__: list[str] = [
     "AEAT_CSV_PATTERN",
     "AEAT_RECORD_BATCH_SHAPES",
     "ANTHROPIC_EXTRA",
+    "APACHE_2_0",
     "ART_58_2_ENTITLING_RELACIONES",
     "ART_81_1_MATERNIDAD_RELACIONES",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "BROWSER_EXTRA",
     "COMPATIBILITY_REGIME",
+    "DEFAULT_MODEL_BY_ROLE",
     "DEFAULT_WRITE_PROVENANCE",
     "EXTERNAL_PATH_SETTINGS_FIELDS",
     "FETCH_GATED_M210_TIPO_RENTA_CODES",
     "FINGERPRINT_EXCLUDED_STORAGE_FIELDS",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
     "GOOGLE_EXTRA",
+    "HARDWARE_TIER_CAPABLE_FLOOR_BYTES",
+    "HARDWARE_TIER_MODEST_FLOOR_BYTES",
     "HEX_PATTERN_16",
     "HEX_PATTERN_64",
     "HEX_PATTERN_128",
@@ -335,6 +366,7 @@ __all__: list[str] = [
     "MANUAL_CORPUS_TEXT_SCHEMA_VERSION",
     "MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
+    "MODEL_CATALOGUE",
     "NIST_PASSPHRASE_MIN_LENGTH",
     "NON_IAE_SUBJECT_TIPOS_ACTIVIDAD",
     "NON_REGISTRY_MODELOS",
@@ -342,9 +374,11 @@ __all__: list[str] = [
     "OFX_EXTRA",
     "OPTIONAL_EXTRAS",
     "OUT_OF_SCOPE_OBLIGATIONS",
+    "PDF_CONTAINER_SHAPES",
     "PERSISTED_FORMATS",
     "PRODUCT_IDENTITY",
     "PROSE_ELISION_MARKER",
+    "QWEN_RESEARCH",
     "RELEASED_FORMAT_FLOORS",
     "REVIEWED_REVISION_REVIEW_STATUSES",
     "ROOT_DERIVED_STORAGE_FIELDS",
@@ -371,6 +405,7 @@ __all__: list[str] = [
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
     "DeclaracionIdioma",
+    "DeploymentLicencePosture",
     "DescendantRelacion",
     "DocumentShape",
     "DraftDiscrepancyKind",
@@ -388,6 +423,7 @@ __all__: list[str] = [
     "ForeignAssetObligationGroup",
     "FormerProductStateError",
     "GoogleCredentialSourceKind",
+    "HardwareTier",
     "Hex16Str",
     "Hex64Str",
     "IdentityReferent",
@@ -395,11 +431,16 @@ __all__: list[str] = [
     "IntracomOperationType",
     "LedgerSortField",
     "LedgerSortOrder",
+    "LicenceVerification",
     "LinkInconsistencyDirection",
     "M210GrossIncomeSourceMode",
     "M210PayerMode",
     "ManualCorpusTextSidecar",
     "MissingOptionalExtraError",
+    "ModelCandidate",
+    "ModelLicence",
+    "ModelRole",
+    "ModelSelectionAdvisory",
     "Modelo",
     "OfficialTipoRentaCode",
     "OptionalExtra",
@@ -441,11 +482,13 @@ __all__: list[str] = [
     "accepted_period_patterns",
     "assess_passphrase_strength",
     "bucket_scoped_storage_path",
+    "candidates_for_role",
     "capture_pointer",
     "character_class_count",
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
     "clear_pointer",
+    "default_model_runtime_id",
     "derive_result_disposition",
     "detect_image_media_type",
     "elide_to_cap",
@@ -458,12 +501,14 @@ __all__: list[str] = [
     "freeze_toml_value",
     "fsync_parent_dir",
     "fts_or_group",
+    "hardware_tier_for_free_bytes",
     "iban_mod_97",
     "is_administrative_period_token",
     "is_aeat_csv",
     "lineage_obligations",
     "live_state_root_inputs",
     "misclassified_floor_keys",
+    "model_candidate",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "normalise_corpus_text",

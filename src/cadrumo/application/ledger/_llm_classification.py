@@ -48,7 +48,7 @@ from uuid import uuid4
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
-from ...core import ImageMediaType, detect_image_media_type
+from ...core import PDF_CONTAINER_SHAPES, ImageMediaType, detect_image_media_type
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import coerce_utc_aware, now
@@ -98,7 +98,7 @@ from ._actions_common import (
 )
 from ._actions_manual import update_manual_transaction_fields
 from ._actions_split_merge import split_transaction_with_classified_children
-from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
+from ._evidence import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_advisory import printed_iva_advisory
 from ._evidence_input import (
     EvidenceInput,
@@ -223,7 +223,7 @@ def _resolve_evidence(
         settings=settings,
         bucket_id=bucket_id,
     )
-    if evidence_input.media_kind is MediaKind.PDF:
+    if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
         try:
             text = extract_evidence_text(evidence_input)
         except PurchaseInvoiceEvidenceInputError:

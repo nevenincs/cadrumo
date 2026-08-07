@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-__all__ = ["AEAT_RECORD_BATCH_SHAPES", "STRUCTURED_DOCUMENT_SHAPES", "DocumentShape"]
+__all__ = ["AEAT_RECORD_BATCH_SHAPES", "PDF_CONTAINER_SHAPES", "STRUCTURED_DOCUMENT_SHAPES", "DocumentShape"]
 
 
 class DocumentShape(StrEnum):
@@ -94,6 +94,27 @@ Their reader is a separate entry point with a collection return type.
 
 Hand-listed rather than derived, so adding a structured member forces a
 deliberate decision about which of the two readers it belongs to.
+"""
+
+PDF_CONTAINER_SHAPES: frozenset[DocumentShape] = frozenset(
+    {
+        DocumentShape.PDF_EMBEDDED_XML,
+        DocumentShape.PDF_TEXT_LAYER,
+        DocumentShape.PDF_SCAN,
+    },
+)
+"""Shapes whose bytes are a PDF, whatever the PDF turns out to carry.
+
+The read paths that rasterise pages, or try a text layer before falling back to
+vision, need exactly this question: is this a PDF container? They previously
+asked it of ``MediaKind``, which is derived from the STORED MIME TYPE -- a label
+the producer attached, which cannot see inside the document. That is the same
+blindness the shape probe exists to remove, so asking the label was the one
+remaining way a caller could be told "PDF" by something that never opened it.
+
+Hand-listed for the same reason as the sets above: a new PDF-carrying shape
+should force a decision about whether page rasterisation is meaningful for it,
+rather than being swept in by a name prefix.
 """
 
 AEAT_RECORD_BATCH_SHAPES: frozenset[DocumentShape] = frozenset(

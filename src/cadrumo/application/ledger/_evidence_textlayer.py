@@ -22,9 +22,9 @@ from __future__ import annotations
 from importlib.metadata import version
 
 from ...adapters.inbound.pdf import extract_pages_text_from_bytes
-from ...core import FieldOrigin
+from ...core import PDF_CONTAINER_SHAPES, FieldOrigin
 from ._document_transcription import DocumentTranscription, TranscriberIdentity
-from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError
+from ._evidence import PurchaseInvoiceEvidenceInputError
 from ._evidence_input import EvidenceInput
 
 __all__ = [
@@ -82,7 +82,7 @@ def extract_evidence_pages(evidence: EvidenceInput) -> tuple[str, ...]:
             PDF has no usable text layer (scan-only / XFA) -- the caller falls back
             to the on-host vision reader in that case.
     """
-    if evidence.media_kind is not MediaKind.PDF:
+    if evidence.document_shape not in PDF_CONTAINER_SHAPES:
         raise PurchaseInvoiceEvidenceInputError(
             "evidence has no text layer (not a PDF); use the on-host vision reader",
             suggestion="aeat app ledger evidence list",
