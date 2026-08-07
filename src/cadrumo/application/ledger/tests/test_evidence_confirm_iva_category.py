@@ -90,8 +90,7 @@ def test_the_reverse_charge_category_reaches_the_persisted_invoice(
         f"the parser did not read the category off the document: {result.draft.iva_category!r}"
     )
     assert result.invoice.iva_category is IvaCategory.DOMESTIC_REVERSE_CHARGE, (
-        "the category was read from the document but lost at the confirm boundary: "
-        f"{result.invoice.iva_category!r}"
+        f"the category was read from the document but lost at the confirm boundary: {result.invoice.iva_category!r}"
     )
     # The amounts are asserted alongside so a future change cannot satisfy the
     # category check by mangling the figures it rides with.
