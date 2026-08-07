@@ -77,6 +77,7 @@ __all__ = [
     "RentaGastosEstimacionDirectaObservationProtocol",
     "RentaGastosPagoFraccionadoObservationProtocol",
     "RentaIncomeObservationProtocol",
+    "renta_income_binding_output_casilla_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values",
@@ -931,6 +932,26 @@ class _RentaLedgerIncomeSelector(BaseModel):
       row so the omission is visible rather than silent.
     - ``"withheld_amount_sum"`` sums the IRPF amount withheld at source from
       net-paid professional receipts.
+
+    ``output_casilla_id`` is OPTIONAL and names a SECOND, DIFFERENT fact:
+    where the resolved aggregate is written, when that differs from
+    ``target_casilla_id``. The two fields answer different questions and
+    conflating them is the exact confusion this field exists to end (see
+    :func:`renta_income_binding_output_casilla_values`'s docstring and the
+    comment on the ``modelo-130-actividad-economica-retenciones-cumulative``
+    binding in the registry TOML for the worked example): ``target_casilla_id``
+    is the OBSERVATION-MATCH key controlling which rows this binding
+    aggregates over (almost always the income casilla, since that is what
+    :class:`RentaIncomeObservation` rows are built against); ``output_casilla_id``
+    is where the resulting number is reported, when that is a DIFFERENT
+    casilla from the one whose observations were summed — e.g. a retención
+    total is computed by matching income-casilla rows but belongs on the
+    retenciones casilla, not the income casilla. Left ``None`` (the default)
+    for every fact whose output casilla IS its match casilla, which is every
+    fact except a retención credit. When set, it must differ from
+    ``target_casilla_id`` — an equal value is never meaningful and signals
+    the field was set out of caution rather than because the two facts
+    genuinely diverge.
     """
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
@@ -938,6 +959,7 @@ class _RentaLedgerIncomeSelector(BaseModel):
     modelo: Literal[Modelo.M130, Modelo.M100] = Modelo.M130
     target_casilla_id: CasillaId
     fact: Literal["ingresos_integros_sum", "cash_received_sum", "taxable_base_sum", "withheld_amount_sum"]
+    output_casilla_id: CasillaId | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -956,6 +978,23 @@ class _RentaLedgerIncomeSelector(BaseModel):
             )
         return value
 
+    @model_validator(mode="after")
+    def _reject_pointless_output_casilla(self) -> _RentaLedgerIncomeSelector:
+        """Refuse an ``output_casilla_id`` that restates ``target_casilla_id``.
+
+        The field exists to declare a genuine divergence; a value equal to
+        ``target_casilla_id`` says nothing an absent field does not already
+        say, and would read to the next author as if the two axes always need
+        stating together.
+        """
+        if self.output_casilla_id is not None and self.output_casilla_id == self.target_casilla_id:
+            raise ValueError(
+                "ledger_renta_income_aggregation selector output_casilla_id "
+                f"{self.output_casilla_id!r} equals target_casilla_id; omit it "
+                "when the aggregate's output casilla is its own match casilla",
+            )
+        return self
+
 
 # Per-modelo income casillas this aggregation may feed. M130 (pago fraccionado)
 # feeds the cumulative-quarter ingresos casillas; M100 (annual IRPF) feeds the
@@ -966,6 +1005,18 @@ _RENTA_100_INCOME_CASILLAS: frozenset[CasillaId] = _casilla_id_set("_RENTA_100_I
 _RENTA_INCOME_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
     Modelo.M130: _RENTA_130_INCOME_CASILLAS,
     Modelo.M100: _RENTA_100_INCOME_CASILLAS,
+}
+
+# Per-modelo casillas an ``output_casilla_id`` may declare -- a DIFFERENT axis
+# from the income casillas above, since the whole point of the field is to
+# report a fact somewhere other than the casilla whose observations were
+# matched. M130 declares only "06" (retenciones a cuenta soportadas), the
+# sole known divergent-output fact today. A modelo absent from this mapping
+# accepts no ``output_casilla_id`` at all, so a new divergent fact must widen
+# this set explicitly rather than defaulting open.
+_RENTA_130_INCOME_OUTPUT_CASILLAS: frozenset[CasillaId] = _casilla_id_set("_RENTA_130_INCOME_OUTPUT_CASILLAS", "06")
+_RENTA_INCOME_OUTPUT_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
+    Modelo.M130: _RENTA_130_INCOME_OUTPUT_CASILLAS,
 }
 
 
@@ -1009,6 +1060,13 @@ def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBin
             f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
             f"facts {sorted(_RENTA_INCOME_SUPPORTED_FACTS)!r}, got {selector.fact!r}",
         )
+    if selector.output_casilla_id is not None:
+        allowed_output = _RENTA_INCOME_OUTPUT_CASILLAS_BY_MODELO.get(selector.modelo, frozenset())
+        if selector.output_casilla_id not in allowed_output:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} output_casilla_id {selector.output_casilla_id!r} "
+                f"is outside the supported {selector.modelo.value} output casillas {sorted(allowed_output)!r}",
+            )
 
 
 class RentaIncomeObservationProtocol(Protocol):
@@ -1116,6 +1174,58 @@ def resolve_ledger_renta_income_aggregation_binding_values(
         build_matcher=_renta_income_build_matcher,
         aggregate=_renta_income_aggregate,
     )
+
+
+def renta_income_binding_output_casilla_values(
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Project every divergent-output renta-income binding onto its output casilla.
+
+    A ``ledger_renta_income_aggregation`` binding's ``target_casilla_id`` is
+    the OBSERVATION-MATCH key, not necessarily where the resolved value is
+    reported (see :class:`_RentaLedgerIncomeSelector`'s docstring). Most
+    bindings never diverge -- their fact's output casilla IS the casilla whose
+    rows it matched, so ``output_casilla_id`` is left ``None`` and this
+    function has nothing to say about them. A binding that DOES declare
+    ``output_casilla_id`` (currently only the M130 retenciones-a-cuenta
+    binding, matching casilla "01" income rows to report their withheld
+    amount on casilla "06") is redirected here instead of resolving to its
+    own match casilla.
+
+    This is the generic replacement for what
+    ``_m130_retenciones_backend_inputs`` in
+    ``application.aggregation._modelo_bindings`` used to hardcode by binding
+    id and casilla literal: the registry now states the divergence, so a
+    caller merges this projection into ``casilla_inputs`` the same way any
+    other resolver's ``bound_inputs_by_casilla_id`` is merged, with no
+    per-binding Python left to maintain.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose renta-income bindings may
+            declare a divergent ``output_casilla_id``.
+        binding_values: The already-resolved
+            ``ledger_renta_income_aggregation`` binding values (as returned by
+            :func:`resolve_ledger_renta_income_aggregation_binding_values`),
+            keyed by binding id.
+
+    Returns:
+        A mapping from each declared ``output_casilla_id`` to its binding's
+        resolved value. Empty when no binding on the revision declares one, or
+        when a declaring binding resolved to no value.
+    """
+    projected: dict[CasillaId, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION:
+            continue
+        selector = _renta_ledger_income_selector(binding)
+        if selector.output_casilla_id is None:
+            continue
+        value = binding_values.get(binding.id)
+        if value is None:
+            continue
+        projected[selector.output_casilla_id] = value
+    return projected
 
 
 def _renta_income_is_declarable(observation: RentaIncomeObservationProtocol) -> bool:
