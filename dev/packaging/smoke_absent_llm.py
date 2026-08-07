@@ -63,6 +63,16 @@ from .python_cohort import (
 _EXTRA: Final[str] = "llm"
 _EXPECTED_HINT: Final[str] = "pip install cadrumo[llm]"
 
+# Proof-ledger claims. Plain constants, deliberately: the contract gate reads
+# them statically, so an f-string here declares a claim no assertion can be seen
+# to record and the lane over-claims by construction. Anything variable about a
+# proof (which requirements, how many surfaces) is printed beside it instead.
+_CLAIM_EXTRA_IS_REAL: Final[str] = "llm extra adds requirements beyond the core closure"
+_CLAIM_PROBE_IS_EXCLUSIVE: Final[str] = "llm probe target is exclusive to the extra"
+_CLAIM_EXTRA_PROBES_ABSENT: Final[str] = "llm extra probes absent in the core install"
+_CLAIM_SURFACES_REFUSE: Final[str] = "inference surfaces refuse with the declared install guidance"
+_CLAIM_CORE_CLI_WORKS: Final[str] = "core CLI runs without the llm extra"
+
 #: The model-bearing surfaces of the inference boundary, each named with the
 #: call that reaches it. Every entry is an operator-reachable entry point that
 #: the governing decision places on the extra's side of the cut, so each must
@@ -138,7 +148,8 @@ def _assert_extra_is_real_in_the_artifact(wheel: Path) -> None:
             "extra is nominal; this lane cannot observe a refusal until at least one requirement is "
             "exclusive to it.",
         )
-    record_proof(f"{_EXTRA} extra adds {sorted(exclusive)!r} beyond the core closure")
+    print(f"{_EXTRA} extra adds {sorted(exclusive)!r} beyond the core closure", flush=True)
+    record_proof(_CLAIM_EXTRA_IS_REAL)
 
 
 def _assert_probe_target_is_exclusive_to_the_extra(repo_root: Path, wheel: Path) -> None:
@@ -173,7 +184,8 @@ def _assert_probe_target_is_exclusive_to_the_extra(repo_root: Path, wheel: Path)
             "and no inference surface can refuse. Repoint the registry entry at an import name supplied "
             "only by the extra.",
         )
-    record_proof(f"{_EXTRA} probe target {import_name!r} is exclusive to the extra")
+    print(f"{_EXTRA} probe target {import_name!r} is exclusive to the extra", flush=True)
+    record_proof(_CLAIM_PROBE_IS_EXCLUSIVE)
 
 
 def _distributions_providing(import_name: str) -> set[str]:
@@ -210,7 +222,7 @@ print("llm-extra-absent-ok")
         cwd=work_dir,
         env=_lane_env(work_dir, "probe-state"),
     )
-    record_proof("llm extra probes absent in the core install")
+    record_proof(_CLAIM_EXTRA_PROBES_ABSENT)
 
 
 def _assert_inference_surfaces_refuse(work_dir: Path, venv_path: Path) -> None:
@@ -277,7 +289,8 @@ print("SURFACE_OUTCOMES:" + json.dumps(outcomes))
             "'module-not-found' outcome is the raw failure the guard exists to convert, and a 'succeeded' "
             "outcome is a model-bearing surface running without the model-bearing dependencies.",
         )
-    record_proof(f"{len(outcomes)} inference surfaces refuse with the declared install guidance")
+    print(f"{len(outcomes)} inference surfaces refused with the declared install guidance", flush=True)
+    record_proof(_CLAIM_SURFACES_REFUSE)
 
 
 def _assert_core_cli_still_works(work_dir: Path, venv_path: Path) -> None:
@@ -288,7 +301,7 @@ def _assert_core_cli_still_works(work_dir: Path, venv_path: Path) -> None:
         env=_lane_env(work_dir, "cli-state"),
     )
     assert_cadrumo_version_output(version, context="in absent-llm venv")
-    record_proof("core CLI runs without the llm extra")
+    record_proof(_CLAIM_CORE_CLI_WORKS)
 
 
 def _lane_env(work_dir: Path, leaf: str) -> dict[str, str]:
@@ -352,13 +365,14 @@ def main(argv: list[str] | None = None) -> int:
         },
         declared=(
             "wheel metadata dependency surface",
-            f"{_EXTRA} extra adds requirements beyond the core closure",
-            f"{_EXTRA} probe target is exclusive to the extra",
+            _CLAIM_EXTRA_IS_REAL,
+            _CLAIM_PROBE_IS_EXCLUSIVE,
             "stdlib venv creation",
-            "exact local cohort install with pip and no extras",
-            "llm extra probes absent in the core install",
-            "inference surfaces refuse with the declared install guidance",
-            "core CLI runs without the llm extra",
+            "exact local cohort install with pip",
+            "pip dependency check",
+            _CLAIM_EXTRA_PROBES_ABSENT,
+            _CLAIM_SURFACES_REFUSE,
+            _CLAIM_CORE_CLI_WORKS,
         ),
         details={
             "cohort_version": cohort.version,
