@@ -676,6 +676,16 @@ LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
+LIVE_DEUDAS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_deudas_snapshot",
+    namespace="cadrumo.application.live.deudas_snapshot",
+    owner="cadrumo.application.live",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="deudas-snapshot:{bucket_id}:{snapshot_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
 LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_notifications_snapshot",
     namespace="cadrumo.application.live.notifications_snapshot",
@@ -1109,6 +1119,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
         TEST_RUNTIME_PROFILE_NAMESPACE,
         LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+        LIVE_DEUDAS_SNAPSHOT_NAMESPACE,
         LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
         LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
         LIVE_VERIFY_OBSERVATION_NAMESPACE,
@@ -1161,6 +1172,7 @@ __all__ = [
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
     "LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
+    "LIVE_DEUDAS_SNAPSHOT_NAMESPACE",
     "LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE",
     "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
     "LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",

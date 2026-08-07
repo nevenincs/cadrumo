@@ -59,6 +59,13 @@ if TYPE_CHECKING:
     from ...core import Period
     from ...domain.justificante import Justificante
     from ...domain.modelos import ModeloRecord
+    from ._deudas import (
+        DeudasCapture,
+        DeudasService,
+        DeudasSnapshotNotFoundError,
+        PersistedDeudasSnapshot,
+        deudas_snapshot_object_key,
+    )
     from ._expedientes import (
         ExpedientesCapture,
         ExpedientesService,
@@ -108,10 +115,16 @@ from ._filed_data import (
     select_declarations_for_capture,
 )
 from ._filed_data_capture import (
+    ExpectedFiledDeclarationGrid,
+    FiledHistoryDiscoveryPair,
+    FiledHistoryDiscoveryReport,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
+    discover_filed_history,
+    expected_filed_declaration_grid,
     filed_data_capture_failure_row,
+    filed_history_discovery_report,
     list_filed_data,
     list_filed_data_bulk,
 )
@@ -503,6 +516,16 @@ def __getattr__(name: str):
 
         return getattr(_impl_mod, name)
     if name in (
+        "DeudasService",
+        "DeudasCapture",
+        "DeudasSnapshotNotFoundError",
+        "PersistedDeudasSnapshot",
+        "deudas_snapshot_object_key",
+    ):
+        from . import _deudas as _impl_mod
+
+        return getattr(_impl_mod, name)
+    if name in (
         "ExpedientesService",
         "ExpedientesCapture",
         "PersistedExpedientesSnapshot",
@@ -526,6 +549,10 @@ __all__ = [
     "BorradorSnapshotNotFoundError",
     "BulkFiledDataCaptureReport",
     "BulkFiledDataListingReport",
+    "DeudasCapture",
+    "DeudasService",
+    "DeudasSnapshotNotFoundError",
+    "ExpectedFiledDeclarationGrid",
     "ExpedientesBulkCaptureFailureRow",
     "ExpedientesBulkCaptureReport",
     "ExpedientesCapture",
@@ -535,6 +562,8 @@ __all__ = [
     "FiledDataCaptureReport",
     "FiledDataListingReport",
     "FiledDataListingRow",
+    "FiledHistoryDiscoveryPair",
+    "FiledHistoryDiscoveryReport",
     "IvaCompensationCarryForwardLotRow",
     "IvaCompensationHistoryCaptureReport",
     "IvaCompensationHistoryReport",
@@ -560,6 +589,7 @@ __all__ = [
     "LiveIvaReadSurface",
     "LiveIvaSurfaceTimeoutError",
     "NotificationsService",
+    "PersistedDeudasSnapshot",
     "PersistedExpedientesSnapshot",
     "PersistedNotificationsSnapshot",
     "SecureSnapshotRepository",
@@ -589,10 +619,14 @@ __all__ = [
     "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
     "derive_justificante_capture_snapshot_id",
+    "deudas_snapshot_object_key",
+    "discover_filed_history",
     "enroll_filed_justificante_evidence",
+    "expected_filed_declaration_grid",
     "expedientes_snapshot_object_key",
     "filed_data_capture_failure_row",
     "filed_data_listing_row",
+    "filed_history_discovery_report",
     "justificante_capture_snapshot_object_key",
     "list_filed_data",
     "list_filed_data_bulk",
