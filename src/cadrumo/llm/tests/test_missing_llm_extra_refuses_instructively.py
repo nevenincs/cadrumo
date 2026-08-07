@@ -87,7 +87,7 @@ def _run_rasteriser_with_blocked_imaging(*, block: bool) -> subprocess.Completed
         from cadrumo.llm import rasterise_pdf_pages_to_base64_png
 
         try:
-            pages = rasterise_pdf_pages_to_base64_png(buf.getvalue())
+            pages = rasterise_pdf_pages_to_base64_png(pdf_bytes)
         except MissingOptionalExtraError as exc:
             print("REFUSED:" + str(exc))
         except Exception as exc:
