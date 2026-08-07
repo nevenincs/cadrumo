@@ -28,7 +28,7 @@ from ....domain.modelos import Modelo349CountryPrefixContextError
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .. import InvoiceCatalogueSourceResolver, invoice_direction_to_source_kind
-from .._source_resolver import _intracommunity_clave
+from .._source_resolver import _OWNED_SOURCES, _intracommunity_clave
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -1052,3 +1052,161 @@ def test_an_invoice_naming_another_bucket_is_still_excluded(
 
     assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
     assert resolution.provenance == ()
+
+
+# ---------------------------------------------------------------------------
+# Capability-parity proof (invoice-canonical-structure P01.S31)
+#
+# One bucket exercising the capabilities that reach a declaration, projected
+# through the canonical path, asserted at MODELO-OUTPUT level rather than at
+# fact level (which P01.S01 already covers).
+#
+# The Step's criterion also named M303 and M390. Measured at HEAD, neither
+# modelo declares a single invoice-sourced binding -- only M347 (one fragment)
+# and M349 (three) do. An equality assertion on those two modelos would
+# therefore compare zero against zero and pass by construction, proving
+# nothing: the vacuous-green shape this plan was rewritten to remove.
+#
+# So the M303/M390 half is written as the assertion that actually has content:
+# that the invoice stores contribute NOTHING there. That is true today, it is
+# what makes the parity proof's scope correct, and it fails loudly if anyone
+# later adds an invoice-sourced binding to either modelo without extending this
+# proof -- which is precisely the change that would silently widen the fold's
+# blast radius past what was verified.
+# ---------------------------------------------------------------------------
+
+
+def _capability_bucket_invoices(bucket_id: str) -> tuple[Invoice, ...]:
+    """Invoices covering every capability that reaches M347 or M349."""
+    return (
+        # Domestic, over the M347 declaration floor, carrying a recargo and a
+        # retencion: both must ride through without disturbing the declared
+        # figures, since neither is an M347 concept.
+        _invoice(
+            bucket_id=bucket_id,
+            kind=InvoiceKind.ISSUED,
+            invoice_number="CAP-ES-001",
+            issued_at=date(2026, 2, 3),
+            counterparty_tax_id="B12345674",
+            counterparty_name="Cliente Domestico SL",
+            counterparty_country="ES",
+            base_total=Decimal("4000.00"),
+            iva_category=IvaCategory.DOMESTIC_ZERO,
+        ),
+        # Intra-community supply of goods -> M349 clave E.
+        _invoice(
+            bucket_id=bucket_id,
+            kind=InvoiceKind.ISSUED,
+            invoice_number="CAP-DE-001",
+            issued_at=date(2026, 2, 10),
+            counterparty_tax_id="DE345678901",
+            counterparty_name="Kunde GmbH",
+            counterparty_country="DE",
+            base_total=Decimal("1500.00"),
+            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        ),
+        # Intra-community acquisition of SERVICES -> M349 clave I. This is the
+        # class the resolver docstring once claimed no IVA category could
+        # express, so its presence here is deliberate.
+        _invoice(
+            bucket_id=bucket_id,
+            kind=InvoiceKind.RECEIVED,
+            invoice_number="CAP-IT-001",
+            issued_at=date(2026, 3, 5),
+            counterparty_tax_id="IT12345678901",
+            counterparty_name="Servizi SRL",
+            counterparty_country="IT",
+            base_total=Decimal("800.00"),
+            iva_category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        ),
+    )
+
+
+def test_capability_parity_m349_declares_every_intracommunity_capability(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """Both M349 directions and both claves survive the canonical path together.
+
+    Run as one bucket rather than as separate single-invoice cases: the
+    declarante summaries aggregate across records, so an error that only shows
+    up when a supply and an acquisition are counted together -- a mis-signed
+    fold, a direction collapsed onto one clave -- is invisible to per-invoice
+    tests and is exactly what a parity proof exists to catch.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices(_capability_bucket_invoices(_BUCKET_ID)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    from ....domain.modelos import Modelo349OperadorRow
+
+    rows = [row for row in resolution.detail_rows if isinstance(row, Modelo349OperadorRow)]
+    by_clave = {row.clave_operacion: row for row in rows}
+    assert set(by_clave) == {"E", "I"}, by_clave
+    assert by_clave["E"].nif_comunitario == "DE345678901"
+    assert by_clave["E"].codigo_pais == "DE"
+    assert by_clave["E"].importe == Decimal("1500.00")
+    assert by_clave["I"].nif_comunitario == "IT12345678901"
+    assert by_clave["I"].codigo_pais == "IT"
+    assert by_clave["I"].importe == Decimal("800.00")
+    # The domestic invoice is not an intra-community operation and must not
+    # appear, so the proof also pins that the bucket is not over-declared.
+    assert len(rows) == 2
+
+
+def test_capability_parity_m347_declares_only_the_domestic_party(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """M347 counts the domestic party and excludes the intra-community ones.
+
+    The same bucket as the M349 proof, asserted from the other modelo, because
+    the two projections share one resolver and a filter error would move a
+    record between them rather than losing it -- a shape that a single-modelo
+    proof reads as correct.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    repository.save(InvoiceCatalogue.from_invoices(_capability_bucket_invoices(_BUCKET_ID)))
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="347",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            revision=_modelo_revision("347", "2008-y-siguientes"),
+        ),
+    )
+
+    assert resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
+    assert resolution.binding_values["modelo-347-declarante-importe-total-anual-operaciones"] == Decimal("4000.00")
+
+
+@pytest.mark.parametrize(("modelo_id", "period"), [("303", "1T"), ("390", "0A")])
+def test_the_invoice_stores_contribute_nothing_to_m303_or_m390(modelo_id: str, period: str) -> None:
+    """Scope guard, and the honest form of this Step's M303/M390 criterion.
+
+    Neither modelo declares a single invoice-sourced binding, so an equality
+    assertion on their outputs would compare zero against zero and pass by
+    construction. The assertion with content is the scope itself: the invoice
+    stores feed M347 and M349 and nothing else.
+
+    This fails the moment an invoice-sourced binding is added to either modelo,
+    which is the change that would silently widen the fold's blast radius past
+    what the parity proof above verifies.
+    """
+    revision = resources().modelos.authority.snapshot(modelo_id, filing_year=2026, period=period).revision
+    invoice_sourced = [binding for binding in revision.bindings if binding.source in _OWNED_SOURCES]
+
+    assert invoice_sourced == [], (
+        f"modelo {modelo_id} now declares invoice-sourced bindings; "
+        "extend the capability-parity proof before relying on it"
+    )
