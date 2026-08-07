@@ -1,4 +1,49 @@
-"""Policy tests for sensitive production persistence surfaces."""
+"""Policy tests for sensitive production persistence surfaces.
+
+**What each secure-storage gate actually scans, and therefore what it can
+promise about a directory added tomorrow.** The gates are not interchangeable
+and the differences are invisible from their names, so a claim like "the new
+package is covered" is only checkable against this table.
+
+The distinction that matters is between a gate that DISCOVERS its subject and
+one that is TOLD its subject. A whole-tree scanner covers a new directory the
+moment the directory exists. An enumerating gate covers it only when somebody
+adds the entry -- and until then reports green, which reads identically to
+covered.
+
+============================  ==================  =========================
+Gate                          Scans by            Covers a new directory
+============================  ==================  =========================
+``test_production_file_       whole-tree rglob    automatically
+write_inventory_is_reviewed``
+``test_sensitive_financial_   fixed surface       only once enumerated
+surfaces_do_not_bypass_...``  list
+``test_every_sensitive_       fixed surface       n/a: it guards the list
+surface_resolves_...``        list                itself
+``test_llm_subpackage_        one named           no: single-package gate
+persists_nothing``            package
+per-repository roundtrips     test-side only      no: proves a repository
+                                                  works, not that a module
+                                                  uses it
+============================  ==================  =========================
+
+Two consequences follow, and both have already bitten.
+
+The strictest tier -- :data:`_SENSITIVE_SURFACES` -- is the enumerating kind,
+and enumeration fails OPEN in two directions. A surface that never gets added
+is simply never scanned; a surface that is added and later MOVES leaves a path
+resolving to nothing, and rglob over a nonexistent path yields an empty
+sequence rather than raising. Four entries had gone stale exactly that way and
+the tier reported green over all four.
+:func:`test_every_sensitive_surface_resolves_to_real_production_code` exists
+solely to close that second direction; nothing closes the first except adding
+the entry in the same change that creates the directory.
+
+A per-repository roundtrip is not a coverage gate at all. It proves that
+repository encrypts what it is handed, which says nothing about whether some
+other module writes the same data somewhere else. Only the scanning gates
+answer that question, and only over the tree they actually walk.
+"""
 
 from __future__ import annotations
 
