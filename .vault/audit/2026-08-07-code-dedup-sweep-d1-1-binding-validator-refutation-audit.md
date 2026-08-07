@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2b0cab7ccd11be057cf3df46e7417ed064fd82dc9a57f2b43d3d9d006b8fbcd'
+body_hash: 'sha256:266313fa60ac461e8cb90c60a1a2dd3ef3ddcb10872371e897228bc91c75bd16'
 related:
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
   - '[[2026-08-07-code-dedup-sweep-status-header-audit]]'
@@ -34,9 +34,9 @@ document staleness, is the durable finding; see
 `2026-08-07-code-dedup-sweep-status-header-audit` for the remediation (a status
 index prepended to the parent document).
 
-## Scope (as originally written; retained for the record)
+## Scope
 
-Confirming pass over finding D1-1 of the standing `2026-07-25-code-dedup-sweep-rag-inventory-audit`
+As originally written; retained for the record. Confirming pass over finding D1-1 of the standing `2026-07-25-code-dedup-sweep-rag-inventory-audit`
 document, which the audit's own text flags as "RAG-reported and UNCONFIRMED against
 HEAD, requiring targeted `rg` confirmation before acting." This note carries that
 confirmation for D1-1 only; it does not curate the parent document, which belongs to

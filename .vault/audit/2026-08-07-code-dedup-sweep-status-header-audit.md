@@ -5,30 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:4f094a2707516b5e093251fcda50c5f04793e173e204504a674fe0a3dd34f162'
+body_hash: 'sha256:45edcbc47d487d8844bce0febffc509eae648e6d064d55eb2a6c05274e598cf1'
 related:
   - '[[2026-07-25-code-dedup-sweep-rag-inventory-audit]]'
   - '[[2026-08-07-code-dedup-sweep-d1-1-binding-validator-refutation-audit]]'
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace code-dedup-sweep with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `code-dedup-sweep` audit: `status header for the 2026-07-25 rag inventory audit`
 
