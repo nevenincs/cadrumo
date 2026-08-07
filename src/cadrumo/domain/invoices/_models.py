@@ -16,7 +16,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Self, override
+from typing import TYPE_CHECKING, Final, Self, cast, override
 
 from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
@@ -233,7 +233,11 @@ def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, obje
         raw_mentions = payload["legal_mentions"]
         if isinstance(raw_mentions, Sequence) and not isinstance(raw_mentions, str | bytes):
             coerced: list[InvoiceLegalMention] = []
-            for entry in raw_mentions:
+            # Deserialisation boundary: the payload is a raw mapping, so the
+            # narrowed sequence carries no element type. Each entry is inspected
+            # by isinstance below before anything is read off it.
+            entries = cast("Sequence[object]", raw_mentions)
+            for entry in entries:
                 if isinstance(entry, InvoiceLegalMention):
                     coerced.append(entry)
                     continue
@@ -957,10 +961,11 @@ class Invoice(BaseModel):
                     "counterparty_tax_id is required unless invoice_class is SIMPLIFICADA and kind is ISSUED; "
                     "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
                 )
-            if self.iva_category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES:
+            category = self.iva_category
+            if category is not None and category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES:
                 raise InvoiceValidationError(
                     "counterparty_tax_id is required on a factura simplificada whose iva_category is "
-                    f"{self.iva_category.value!r} (RD 1619/2012 art. 6.1.d)",
+                    f"{category.value!r} (RD 1619/2012 art. 6.1.d)",
                 )
         return self
 
