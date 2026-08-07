@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:285d652d5656d6493dac6452bc21b57d10b81547e7fc0f98484668b40734d690'
+body_hash: 'sha256:ee29a49d70573ec6ee986303d4871bcd662d38bfffab44f517846ddfaa39a4b6'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -63,7 +63,7 @@ Widens InvoiceDraft, attaches per-field provenance, and lands the projection-par
 - [x] `W01.P03.S08` - Add the projection-parity gate asserting every draft field survives to the confirm-surface payload, proven by mutation: drop one field from the projection and observe red; `src/cadrumo/application/ledger/tests`.
 - [x] `W01.P03.S09` - Guard the multi-recipient case at the projection consumer so a batch-read record carrying several recipients surfaces rather than silently picking one, gated by a multi-recipient fixture test, inherited requirement from the einvoice batch-reader lane; `src/cadrumo/application/ledger`.
 - [x] `W01.P03.S10` - Surface the provenance envelopes on every operator-facing extract and confirm JSON payload at parity with casilla grounding, gated by the JSON schema conformance suite; `src/cadrumo/entrypoints/cli`.
-- [ ] `W01.P03.S91` - Reconcile the counterparty vocabulary split once the invoice-read reconciliation ADR is accepted, so one concept does not carry two names across models, InvoiceDraft using supplier and customer while the catalogue invoice and confirm payload use counterparty, landing the rename and every consumer in one atomic commit, gated by a naming-parity test refusing both vocabularies coexisting for the same concept; `src/cadrumo/application/ledger`.
+- [ ] `W01.P03.S91` - Let the unstructured readers distinguish the two printed parties instead of recovering one identifier and parking it in supplier_tax_id, so an ISSUED invoice read by the text or vision path cannot name the filer as its own counterparty in the Modelo 347 and 349 totals AEAT reconciles against the other party's declaration, gated by a fixture whose printed customer differs from its printed supplier and an assertion that the wrong side is never silently selected. This is reader-side semantic imprecision and not a vocabulary rename, supplier and customer are the parties as printed pre-direction while counterparty is the non-filer party selected by kind post-direction, and a naming-parity gate refusing both vocabularies would red on that deliberate boundary and pressure a collapse that reintroduces the defect; `src/cadrumo/llm, src/cadrumo/application/ledger`.
 
 ## Wave `W02` - The document lane: acquisition, extraction, grounding, classification
 
