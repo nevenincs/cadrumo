@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:3f170ea4abcfef8ef96af8046adf165845e674406794e391f01916fa310d4a85'
+body_hash: 'sha256:57eec3c965b3ac0f9be55287df359ab5bb772cb114cdbd3cdb2a336fc0ed4e5f'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -47,25 +47,25 @@ ships and a real specimen exists to validate a comparison against.
 
 Land the Deuda adapter schema model and its closed ObjetoTributario and Direccion StrEnums in core, buildable and testable with no AEAT specimen and no new legal grounding. situacion ships a bounded str from birth, following the Declaracion.estado precedent, not a StrEnum, because it mirrors an AEAT free-text listing label the app does not control rather than an axis the app defines.
 
-- [ ] `P01.S01` - Add the closed ObjetoTributario StrEnum (interes de demora, recargo de apremio, sancion, liquidacion, other) to core, never reused or widened from PostFilingEventKind, verified by a new unit test asserting the closed member set; `src/cadrumo/core`.
-- [ ] `P01.S02` - Add the closed Direccion StrEnum (owed, refundable) to core as its own typed axis rather than a sign, mirroring the ledger contract amount-is-magnitude convention, verified by a unit test; `src/cadrumo/core`.
-- [ ] `P01.S03` - Add the Deuda adapter schema model in a new _deudas.py module mirroring Expediente placement and STRICT_FROZEN_CONFIG, with clave_liquidacion, objeto_tributario, importe_pendiente as a non-negative Decimal, direccion, periodo, situacion as a bounded str following the Declaracion.estado precedent (never a StrEnum), and mode Literal read, verified by a model validation unit test; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
+- [x] `P01.S01` - Add the closed ObjetoTributario StrEnum (interes de demora, recargo de apremio, sancion, liquidacion, other) to core, never reused or widened from PostFilingEventKind, verified by a new unit test asserting the closed member set; `src/cadrumo/core`.
+- [x] `P01.S02` - Add the closed Direccion StrEnum (owed, refundable) to core as its own typed axis rather than a sign, mirroring the ledger contract amount-is-magnitude convention, verified by a unit test; `src/cadrumo/core`.
+- [x] `P01.S03` - Add the Deuda adapter schema model in a new _deudas.py module mirroring Expediente placement and STRICT_FROZEN_CONFIG, with clave_liquidacion, objeto_tributario, importe_pendiente as a non-negative Decimal, direccion, periodo, situacion as a bounded str following the Declaracion.estado precedent (never a StrEnum), and mode Literal read, verified by a model validation unit test; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 
 ### Phase `P02` - DeudasService snapshot family
 
 Mirror ExpedientesService/PersistedExpedientesSnapshot/ExpedientesCapture exactly for deudas, with a bucket-scoped namespace and content-addressed snapshot ids, roundtrip-tested against a synthetic capture fixture.
 
-- [ ] `P02.S04` - Add the LIVE_DEUDAS_SNAPSHOT_NAMESPACE bucket-scoped namespace constant beside LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE; `src/cadrumo/adapters/persistence/storage`.
-- [ ] `P02.S05` - Add DeudasCapture, PersistedDeudasSnapshot, deudas_snapshot_object_key and _derive_snapshot_id mirroring the ExpedientesCapture/PersistedExpedientesSnapshot pattern exactly; `src/cadrumo/application/live/_deudas.py`.
-- [ ] `P02.S06` - Add DeudasService extending StatelessSnapshotService with capture, list_snapshots, show and latest verbs, structurally read-only by construction with no method that mutates AEAT state; `src/cadrumo/application/live/_deudas.py`.
-- [ ] `P02.S07` - Write the strict roundtrip test against a real SecureObjectRepository, real key provider and real SQLite engine, populate every defaultable field non-default, assert strict pydantic equality, then the anti-tautology proof deleting a persisted field on disk and asserting reload refusal; `src/cadrumo/application/live/tests/test_deudas_service.py`.
+- [x] `P02.S04` - Add the LIVE_DEUDAS_SNAPSHOT_NAMESPACE bucket-scoped namespace constant beside LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE; `src/cadrumo/adapters/persistence/storage`.
+- [x] `P02.S05` - Add DeudasCapture, PersistedDeudasSnapshot, deudas_snapshot_object_key and _derive_snapshot_id mirroring the ExpedientesCapture/PersistedExpedientesSnapshot pattern exactly; `src/cadrumo/application/live/_deudas.py`.
+- [x] `P02.S06` - Add DeudasService extending StatelessSnapshotService with capture, list_snapshots, show and latest verbs, structurally read-only by construction with no method that mutates AEAT state; `src/cadrumo/application/live/_deudas.py`.
+- [x] `P02.S07` - Write the strict roundtrip test against a real SecureObjectRepository, real key provider and real SQLite engine, populate every defaultable field non-default, assert strict pydantic equality, then the anti-tautology proof deleting a persisted field on disk and asserting reload refusal; `src/cadrumo/application/live/tests/test_deudas_service.py`.
 
 ### Phase `P03` - Fail-closed read-landing guard skeleton
 
 Land the guard function modelled on the censal reader's _assert_read_landing, shipped with an empty/refusing allowed_path_prefixes tuple so it fails closed by construction before any adapter fetch function exists.
 
-- [ ] `P03.S08` - Add the deudas read-landing guard modelled on the censal reader _assert_read_landing, shipped with an empty refusing _DEUDAS_READ_PATH_PREFIXES tuple so it fails closed by construction before any fetch function exists; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
-- [ ] `P03.S09` - Write the guard unit test proving refusal on every synthetic landing URL including a payment-shaped and an aplazamiento-shaped URL against the empty prefix set, then a mutation proof populating one real-looking prefix and confirming it permits only that prefix; `src/cadrumo/adapters/outbound/aeat/sede/tests/test_deudas_read_landing_guard.py`.
+- [x] `P03.S08` - Add the deudas read-landing guard modelled on the censal reader _assert_read_landing, shipped with an empty refusing _DEUDAS_READ_PATH_PREFIXES tuple so it fails closed by construction before any fetch function exists; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
+- [x] `P03.S09` - Write the guard unit test proving refusal on every synthetic landing URL including a payment-shaped and an aplazamiento-shaped URL against the empty prefix set, then a mutation proof populating one real-looking prefix and confirming it permits only that prefix; `src/cadrumo/adapters/outbound/aeat/sede/tests/test_deudas_read_landing_guard.py`.
 
 ### Phase `P04` - CLI read surface: list, view, latest
 

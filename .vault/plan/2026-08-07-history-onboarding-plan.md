@@ -4,7 +4,7 @@ tags:
   - '#history-onboarding'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:6fcf576d200b59f425852fa2ab0091693ba9a58f5d972dd100be6824e2833497'
+body_hash: 'sha256:f8f70a668c954b4f200976843c00de8edb672881fab5c5cecae667f82f0b1459'
 tier: L2
 related:
   - '[[2026-08-07-history-onboarding-adr]]'
@@ -116,6 +116,11 @@ Prove that a bulk-discovered historical capture stamps the same official Observa
 
 - [ ] `P02.S05` - add a parity test capturing the same synthetic declaracion fixture once through capture_filed_data and once through the discovery-driven grid, asserting both persisted observations carry ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE and are otherwise field-equal apart from capture timestamps, verified by the test going red if either path is made to stamp a different kind; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
 - [ ] `P02.S23` - carry tipo_solicitud through into _filed_observation_source_metadata as aeat_tipo_solicitud, landed only after the file's current peer contention clears and by an executor rather than this plan's authoring agent, verified by a roundtrip test asserting the persisted metadata carries the field when the source Declaracion has one; `src/cadrumo/application/live/_filed_observation_persistence.py`.
+- [ ] `P02.S24` - author a synthetic declaraciones-register listbox fixture carrying two rows for one period with distinct expediente ids and distinct presentation timestamps alongside normal single-filing periods and populated tipo de solicitud cells, verified by a listbox parser test asserting one period yields two rows whose expediente ids differ and whose tipo_solicitud is populated; `src/cadrumo/tests/fixtures/aeat-sede, src/cadrumo/adapters/outbound/aeat/sede/tests`.
+- [ ] `P02.S25` - add an order-invariance test for select_latest_filed_observations_in_history_order over duplicated-period observations asserting it collapses to one observation per period, picks the later-presented ALTA row and returns an identical result when the same inputs are fed in reverse order, verified by the test going red when the selector's max-by-rank comparison is weakened to last-write-wins; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
+- [ ] `P02.S26` - add a pinning test proving the justificante match predicate rejects a receipt whose embedded presentation identifier is receipt-shaped while the register row's expediente id is register-shaped even though modelo ejercicio period and tax identity all agree, so no evidence is stamped, verified by the test going red when the predicate's presentation-identifier comparison is dropped; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
+- [ ] `P02.S27` - add a test pinning that tipo_solicitud reaches the raw filed-declaration observation metadata while the persisted calculation-observation source metadata omits it, verified by the test going red once the carry-through row lands and by a mutation adding the key to the persisted metadata; `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`.
+- [ ] `P02.S28` - author a synthetic no-results declaraciones-register fixture in the AEAT empty-body grid shape, verified by a listbox parser test asserting the page parses to zero rows and reports itself not truncated so a clean empty register answer stays distinguishable from a short read; `src/cadrumo/tests/fixtures/aeat-sede, src/cadrumo/adapters/outbound/aeat/sede/tests`.
 
 ### Phase `P03` - Onboarding orchestration verb
 
