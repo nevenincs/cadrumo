@@ -53,10 +53,6 @@ class ServiceCapability(StrEnum):
             values directly.
 
     Members:
-        CLOUD_EVIDENCE_UPLOAD: Whether this profile permits sending sensitive
-            financial evidence (a text-layer invoice) to a cloud CLI provider for
-            classification. Default OFF; gestor mode bars it absolutely regardless
-            of this opt-in (the capability can only narrow, never widen, the floor).
         LLM_VISION: Whether this profile may read scanned/image evidence on-host
             with the local Ollama vision model. Default ON (on-host, no byte
             leaves the machine); opting out disables the vision read entirely.
@@ -64,7 +60,6 @@ class ServiceCapability(StrEnum):
             Sheets/Drive. Default ON; opting out keeps exports offline-only.
     """
 
-    CLOUD_EVIDENCE_UPLOAD = "cloud_evidence_upload"
     LLM_VISION = "llm_vision"
     GOOGLE_EXPORT = "google_export"
 
@@ -77,10 +72,11 @@ class ServiceCapability(StrEnum):
     def default_enabled(self) -> bool:
         """Return the conservative default posture when no profile fact is set.
 
-        Cloud evidence upload defaults OFF (the regulated, sensitive path); the
-        on-host vision and Google export capabilities default ON because they are
-        non-sensitive or local by construction. The resolver still ANDs the global
-        safety floor on top of this default, yielding a
-        :class:`~application.user_profile.CapabilityDecision`.
+        Every surviving capability defaults ON: on-host vision and Google export
+        are non-sensitive or local by construction. The one member that defaulted
+        OFF was cloud evidence upload -- the regulated off-host path -- and it was
+        deleted with the transport it gated, so no member needs a carve-out here
+        any more. The resolver still ANDs the global safety floor on top,
+        yielding a :class:`~application.user_profile.CapabilityDecision`.
         """
-        return self is not ServiceCapability.CLOUD_EVIDENCE_UPLOAD
+        return True

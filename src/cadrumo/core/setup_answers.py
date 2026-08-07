@@ -228,7 +228,6 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
         "false",
     ),
     "bienes_extranjero_above_threshold": SetupFieldSpec("obligations.bienes_extranjero_above_threshold", bool, "false"),
-    "cloud_evidence_upload": SetupFieldSpec("capabilities.cloud_evidence_upload", bool, "false"),
     "country_of_fiscal_residence": SetupFieldSpec("taxpayer_type.country_of_fiscal_residence", str),
     "does_intracomunitario": SetupFieldSpec("iva.does_intracomunitario", bool, "false"),
     "enrollment_large_company": SetupFieldSpec("censo.large_company", bool, "false"),
@@ -577,7 +576,6 @@ class SetupAnswers(BaseModel):
     """Full name of the fiscal representative in Spain."""
 
     # ── capabilities ─────────────────────────────────────────────────────
-    cloud_evidence_upload: bool = False
     llm_vision: bool = True
     google_export: bool = True
 

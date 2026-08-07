@@ -745,35 +745,14 @@ class Settings(CadrumoMcpServingSettings):
         ),
     )
 
-    # ── Evidence reading: cloud-upload consent posture ──────────────────────
-    # Default and serious-usage posture is on-host reading; sensitive evidence
-    # never leaves the machine. Transmitting evidence to a cloud model is a
-    # deployment-permitted, per-invocation, acknowledged exception only and is
-    # categorically barred in gestor/professional deployments
-    # (sensitive-financial-data-secure-storage-only).
-    cadrumo_evidence_cloud_upload_permitted: bool = Field(
-        default=False,
-        description=(
-            "Whether this deployment permits transmitting evidence to a cloud model at all. "
-            "Default off: evidence reading is on-host only. When True, a per-invocation operator "
-            "consent acknowledgement is still required for each cloud read."
-        ),
-    )
-    cadrumo_evidence_gestor_mode: bool = Field(
-        default=False,
-        description=(
-            "Gestor/professional deployment flag. When True, cloud evidence upload is categorically "
-            "refused regardless of cadrumo_evidence_cloud_upload_permitted or per-invocation consent."
-        ),
-    )
-
     # ── Remote telemetry: opt-in consent posture ────────────────────────────
     # Default and only-acceptable-for-serious-use posture is fully local: every
     # existing telemetry primitive (LLM run-timing, MCP session trajectory) is
     # written to encrypted secure storage or a local JSONL file and never
     # contacts a network endpoint. Remote telemetry is a deliberate, narrow,
-    # opt-in exception governed by the same off-host consent shape as
-    # cadrumo_evidence_cloud_upload_permitted / cadrumo_evidence_gestor_mode
+    # opt-in exception, and it is now the ONLY off-host consent posture in the
+    # settings: the evidence cloud-upload and gestor-mode flags it used to be
+    # modelled on were deleted with the cloud read path they gated
     # (sensitive-financial-data-secure-storage-only). No transport reads these
     # fields yet; the gate and the allowlisted payload schema are built first.
     cadrumo_telemetry_opt_in: bool = Field(

@@ -31,7 +31,6 @@ def test_default_posture_is_conservative_for_cloud_only() -> None:
     # Cloud evidence upload (the regulated, sensitive path) defaults OFF; the
     # on-host / offline-capable capabilities default ON.
     for capability, expected in (
-        (ServiceCapability.CLOUD_EVIDENCE_UPLOAD, False),
         (ServiceCapability.LLM_VISION, True),
         (ServiceCapability.GOOGLE_EXPORT, True),
     ):

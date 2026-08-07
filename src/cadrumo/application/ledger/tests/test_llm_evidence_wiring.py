@@ -19,7 +19,6 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core.config import Settings
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -171,10 +170,6 @@ def test_text_layer_read_returns_on_host_extracted_text(profile: TestRuntimeProf
     assert resolved.images == ()
     assert resolved.reference == evidence_id
 
-    # Permitted but not acknowledged this invocation -> refused.
-    with pytest.raises(PurchaseInvoiceEvidenceInputError):
-        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=consenting)
-
 
 def test_invoice_space_reference_reads_the_rows_own_attachment(
     profile: TestRuntimeProfile,
@@ -190,12 +185,11 @@ def test_invoice_space_reference_reads_the_rows_own_attachment(
     """
     record = _add_evidence_record(profile, tmp_path)
     txn = _transaction("INV-2026-001-not-in-the-evidence-store", attachment_ids=(record.attachment_id,))
-    consenting: Settings = profile.settings.model_copy(update={"cadrumo_evidence_cloud_upload_permitted": True})
 
     resolved = _resolve_evidence(
         txn,
         bucket_id=_BUCKET_ID,
-        settings=consenting,
+        settings=profile.settings,
     )
 
     assert resolved is not None
@@ -237,8 +231,9 @@ def test_no_evidence_transaction_does_not_trigger_consent_gate_and_uploads_no_ev
     repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
     repository.save(TransactionCatalogue.from_transactions((txn,)))
 
-    # Default posture: cloud upload not permitted AND not acknowledged.
-    assert profile.settings.cadrumo_evidence_cloud_upload_permitted is False
+    # No consent posture left to assert: the read is on-host either way. What
+    # this case is actually about -- a transaction carrying NO evidence -- is
+    # unchanged by the gate's removal.
     classifier = SubprocessLLMClassifier(
         name="test-provider",
         command=(sys.executable, "-c", _NO_EVIDENCE_CLASSIFIER_SCRIPT),

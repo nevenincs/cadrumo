@@ -1005,12 +1005,6 @@ _PREFERENCIAS_SECTION = WizardSection(
     id="preferencias",
     title=tr("wizard.setup.preferencias.title"),
     questions=(
-        _confirm(
-            "cloud-evidence-upload",
-            "capabilities.cloud_evidence_upload",
-            suffix="capabilities",
-            default="false",
-        ),
         _confirm("llm-vision", "capabilities.llm_vision", suffix="capabilities", default="true"),
         _confirm("google-export", "capabilities.google_export", suffix="capabilities", default="true"),
         WizardQuestion(
