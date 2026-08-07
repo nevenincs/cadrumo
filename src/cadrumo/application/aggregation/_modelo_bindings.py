@@ -1408,6 +1408,12 @@ def _invoice_line_iva_observation(
         # "zero", and these operations are exempt WITH a zero rate applied to a
         # real base, which is what a base-only casilla declares.
         rate_kind=IvaRateKind.ZERO,
+        # Stated, not left unset. These operations carry a real zero rate on a
+        # real base, and a rate-specific binding takes only rows that say what
+        # they were charged: leaving it None would make this producer's rows
+        # invisible to any zero-rate box, which is the shape that made a
+        # narrowed reducido binding look like a silent under-declaration.
+        applied_rate=Decimal("0"),
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=line.subtotal,
         iva_amount=Decimal("0"),
