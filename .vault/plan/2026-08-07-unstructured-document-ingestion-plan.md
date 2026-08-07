@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-07'
-body_hash: 'sha256:b03dcadb5f869db62c8fd575a42572dbbcab15f8a901f87cc22e50501fbb0c3d'
+body_hash: 'sha256:cfbf890c184d9671484fa0bab94b6ca18e63e94236c67800b9a455a824cb958b'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -136,13 +136,13 @@ Bundles the licence-clean fixtures and lands the injection regression gate and t
 
 Builds the key-pinned harness and produces the stage baselines and recorded acceptance floors.
 
-- [ ] `W04.P10.S34` - Build the harness runner pinned to key sha256 e2db6a49, recording model identity, revision and engine route on every result, stamping the corpus GAPS section-1 optimism caveat on every Spanish figure, and resolving twin pairs from the prose notes field until the corpus grows a structured link; `dev`.
+- [x] `W04.P10.S34` - Build the harness runner pinned to key sha256 e2db6a49, recording model identity, revision and engine route on every result, stamping the corpus GAPS section-1 optimism caveat on every Spanish figure, and resolving twin pairs from the prose notes field until the corpus grows a structured link; `dev`.
 - [ ] `W04.P10.S35` - Measure the S1 baseline over the 48 stage1_reference_text transcriptions, 7 twin pairs and 130 vision-path documents via the gated cloud route, with local production-model floors deferred to GPU headroom; `dev`.
 - [ ] `W04.P10.S36` - Measure the S2 baseline over stage1_reference_text with fabrication on null-truth scored as a hard error and both COM-2026-0005 entries required to surface findings; `dev`.
 - [ ] `W04.P10.S37` - Measure the S4 category baseline over the 59 category-scorable documents only, with the acquired-real set excluded by category_scorable false; `dev`.
 - [ ] `W04.P10.S38` - Measure the tabular mapping baseline over the six csv_dialect descriptors, nine CSV exports and the libro registro header; `dev`.
 - [ ] `W04.P10.S39` - Record the acceptance floors from the first measured baselines with the key hash, and wire subsequent harness runs to compare against them; `dev`.
-- [ ] `W04.P10.S81` - Report the model tier beside every harness figure, record the claude-sonnet-4-6 REC-DOM-IMG-008 result (7 of 8, zero fabricated) as an upper reference point, and re-establish the baseline at the Haiku-tier proxy and the 2B-4B on-host class, gated by the harness refusing a result row missing its tier; `dev`.
+- [x] `W04.P10.S81` - Report the model tier beside every harness figure, record the claude-sonnet-4-6 REC-DOM-IMG-008 result (7 of 8, zero fabricated) as an upper reference point, and re-establish the baseline at the Haiku-tier proxy and the 2B-4B on-host class, gated by the harness refusing a result row missing its tier; `dev`.
 - [ ] `W04.P10.S82` - Measure whether fewer fields per call outperforms all fields at once at the design-target tier, resolving the S2 call-shape question by a recorded comparison at fixed key hash and tier rather than by assertion; `dev`.
 
 ## Wave `W05` - The reinstated consent gate
