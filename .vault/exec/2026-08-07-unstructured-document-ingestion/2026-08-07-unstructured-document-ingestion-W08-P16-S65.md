@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b49ab143750044c8681259fcbcbf00699aa400e3bf5332941707f2bc2c1c452'
+body_hash: 'sha256:6beb784179ee0d1df2b17967a3298736a394f6185998b3c42558b032c26467cd'
 step_id: 'S65'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -143,10 +143,12 @@ The consent gate is not yet built, and this runner does not route around it: no
 per-item call site was invented for a gate that does not exist, and nothing here
 acquires consent once for a run.
 
-S63, the batch-wide inference pacing, is **not started** and is not covered by
-this record. The admission primitive has no production caller anywhere yet, and
-the routing decision that would say which items are inference-bearing lives
-inside the extractor. Pacing therefore needs either a duplicate of that routing
-— the fragmentation the discovery mandate exists to prevent — or a seam
-extracted from it, and a concurrent lane was actively rewriting that same
-reading chain. Deferred rather than half-built.
+S63, the batch-wide inference pacing, is not covered by this record; it has its
+own. **This paragraph previously said S63 was not started, and that was true
+when written and is no longer true** — the contention half was built afterwards.
+It is corrected here rather than left standing, because a reader arriving at
+this record would otherwise take the wrong state from it while its own Step's
+account said the opposite. The concern that deferred it — that pacing needed
+either a duplicate of the extractor's routing or a seam cut from it, while a
+concurrent lane was rewriting that chain — was resolved by classifying on the
+one question the shared shape probe already answers, and duplicating nothing.
