@@ -4,7 +4,7 @@ tags:
   - '#llm-package-split'
 date: '2026-08-06'
 modified: '2026-08-07'
-body_hash: 'sha256:68a27303500e4bc26d4650ed33d895be9eebcbc144b5ff03c00e756b5458fcd5'
+body_hash: 'sha256:92d793014d5a24ecdffcac8cd4e62fcdedf892ed1c462421d3230b1e074393e4'
 tier: L3
 related:
   - '[[2026-08-06-llm-package-split-adr]]'
@@ -142,7 +142,7 @@ Replaces a two-member media kind derived from a declared MIME with a typed shape
 
 - [x] `W02.P03.S10` - Add a typed DocumentShape probe deriving shape from content bytes rather than from a declared MIME, red if a ZUGFeRD PDF whose MIME says application/pdf resolves to a shape carrying no embedded XML; `src/cadrumo/adapters/inbound/einvoice/`.
 - [x] `W02.P03.S11` - Extract the sanitizer's embedded-file walker into a reusable reader so an embedded XML payload is visible, red if the walker's stripping behaviour changes for the sanitizer's own callers; `src/cadrumo/adapters/inbound/sanitizer/_dynamic.py`.
-- [ ] `W02.P03.S12` - Route read-time evidence resolution through DocumentShape and retire the read-time media-kind derivation, red if any caller still branches on the two-member media kind; `src/cadrumo/application/ledger/_evidence_input.py`.
+- [x] `W02.P03.S12` - Route read-time evidence resolution through DocumentShape and retire the read-time media-kind derivation, red if any caller still branches on the two-member media kind; `src/cadrumo/application/ledger/_evidence_input.py`.
 
 ### Phase `W02.P04` - Parse the structured formats exactly, in the inbound adapter layer
 

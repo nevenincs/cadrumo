@@ -6,7 +6,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:9906c751d98c4acb860f88e7c80fc2afe97435f6e056bee7c9c6172298dacf2c'
+body_hash: 'sha256:ce3cec2b77b3553e9741821caef24c27e3055ea0ff5ceb16194126ce38156751'
 related:
   - '[[2026-08-06-llm-package-split-W01-P01-S01]]'
   - '[[2026-08-06-llm-package-split-W01-P01-S02]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-06-llm-package-split-W01-P02-S08]]'
   - '[[2026-08-06-llm-package-split-W01-P02-S09]]'
   - '[[2026-08-06-llm-package-split-W02-P03-S10]]'
+  - '[[2026-08-06-llm-package-split-W02-P03-S12]]'
   - '[[2026-08-06-llm-package-split-W02-P04-S13]]'
   - '[[2026-08-06-llm-package-split-W02-P04-S14]]'
   - '[[2026-08-06-llm-package-split-W02-P04-S15]]'
@@ -43,6 +44,7 @@ related:
   - '[[2026-08-06-llm-package-split-W03-P06-S26]]'
   - '[[2026-08-06-llm-package-split-W03-P06-S27]]'
   - '[[2026-08-06-llm-package-split-W03-P06-S28]]'
+  - '[[2026-08-06-llm-package-split-W03-P06-S29]]'
   - '[[2026-08-06-llm-package-split-W03-P07-S64]]'
   - '[[2026-08-06-llm-package-split-W04-P08-S32]]'
   - '[[2026-08-06-llm-package-split-W04-P08-S33]]'
@@ -105,6 +107,7 @@ Auto-generated index of all documents tagged with `#llm-package-split`.
 - `2026-08-06-llm-package-split-W01-P02-S08` - Add a non-vacuity assertion to the sensitive-surface list so every entry must resolve to at least one non-test module or the gate fails naming the entry, closing the fail-open hole for all eighteen surfaces
 - `2026-08-06-llm-package-split-W01-P02-S09` - Prove the non-vacuity assertion by pointing one entry at a nonexistent path and observing the gate red, then reverting, red if a nonexistent surface still reports success
 - `2026-08-06-llm-package-split-W02-P03-S10` - Add a typed DocumentShape probe deriving shape from content bytes rather than from a declared MIME, red if a ZUGFeRD PDF whose MIME says application/pdf resolves to a shape carrying no embedded XML
+- `2026-08-06-llm-package-split-W02-P03-S12` - Route read-time evidence resolution through DocumentShape and retire the read-time media-kind derivation
 - `2026-08-06-llm-package-split-W02-P04-S13` - Add a deterministic EN16931 CII parser mapping to the line-carrying extraction draft, red if a CII document with two tax rates yields fewer than two per-rate entries
 - `2026-08-06-llm-package-split-W02-P04-S14` - Add a deterministic EN16931 UBL parser, since a CII-only reader silently returns nothing for half the standard, red if a UBL document yields no record where the CII path yields one
 - `2026-08-06-llm-package-split-W02-P04-S15` - Add a deterministic Facturae 3.2.x parser mapping to the same line-carrying draft, red if a Facturae document maps to a shape the CII and UBL parsers do not also produce
@@ -130,6 +133,7 @@ Auto-generated index of all documents tagged with `#llm-package-split`.
 - `2026-08-06-llm-package-split-W03-P06-S26` - Carry the producing model identity and revision on the payload so a persisted record can answer how each field was recovered, red if a payload omitting the producer validates
 - `2026-08-06-llm-package-split-W03-P06-S27` - Refuse a malformed payload at the core boundary rather than coercing it and pin the refusal by test, red if a malformed payload is silently normalised into a valid one
 - `2026-08-06-llm-package-split-W03-P06-S28` - Prove the refusal is not vacuous by mutating a well-formed payload field by field and asserting each mutation reddens, red if any single-field mutation still validates
+- `2026-08-06-llm-package-split-W03-P06-S29` - Prove provenance survives persistence with a strict save-load-equality roundtrip against the real encrypted namespace with every defaultable field populated non-default, paired with an anti-tautology proof that deleting a persisted field reddens the load
 - `2026-08-06-llm-package-split-W03-P07-S64` - Pin by test that in-memory reading, rasterising and inference require no encryption and no consent gate, red if a later change reintroduces a consent prompt or a custody wrapper on the in-flight path
 - `2026-08-06-llm-package-split-W04-P08-S32` - Create the gated subpackage and move the vision field extractor into it in one atomic explicit-path commit that also carries its sensitive-surface enumeration, red if the extractor is deleted and the core corpus test still passes
 - `2026-08-06-llm-package-split-W04-P08-S33` - Move the local vision classifier under the gated subpackage and prove the core call site reaches it, red if the moved module is deleted and the classify test still passes
