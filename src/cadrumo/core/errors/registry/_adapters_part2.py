@@ -118,6 +118,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.inbound.einvoice._xml.EInvoiceXmlParseError",
+        ErrorCode(
+            code="REFUSED_EINVOICE_XML_PARSE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_einvoice_xml_parse",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.inbound.sanitizer._errors.SanitizerValidationError",
         ErrorCode(
             code="REFUSED_SANITIZATION_VALIDATION",

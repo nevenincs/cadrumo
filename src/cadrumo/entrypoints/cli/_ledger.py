@@ -46,7 +46,6 @@ from ...domain.transactions import (
     TransactionValidationError,
     is_classified,
 )
-from ...llm import SubprocessProvider
 from ._bienes_inversion_cli import register_bienes_inversion_commands
 from ._common import (
     _bad,
@@ -621,7 +620,7 @@ def ledger_classify(
     ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
     reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
-    llm: SubprocessProvider | None = typer.Option(None, "--llm", help=tr("cli.ledger.classify.llm_help")),
+    llm: bool = typer.Option(False, "--llm", help=tr("cli.ledger.classify.llm_help")),
     apply: bool = typer.Option(False, "--apply", help=tr("cli.ledger.classify.apply_help")),
     saturate: bool = typer.Option(False, "--saturate", help=tr("cli.ledger.classify.saturate_help")),
     read_evidence: bool = typer.Option(False, "--read-evidence", help=tr("cli.ledger.classify.read_evidence_help")),
@@ -660,7 +659,6 @@ def ledger_classify(
             transaction_id=transaction_id,
             classification=classification,
             file=file,
-            provider=llm,
             apply=apply,
             actor=actor,
             read_evidence=read_evidence,
@@ -669,14 +667,13 @@ def ledger_classify(
             reason=reason or "",
         )
         return
-    if llm is not None or read_evidence:
+    if llm or read_evidence:
         saturate_kwargs = {
             "ctx": ctx,
             "transaction_id": transaction_id,
             "classification": classification,
             "file": file,
             "business_pct": business_pct,
-            "provider": llm,
             "apply": apply,
             "actor": actor,
             "read_evidence": read_evidence,

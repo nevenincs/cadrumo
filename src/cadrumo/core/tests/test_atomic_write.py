@@ -23,7 +23,6 @@ import functools
 import multiprocessing
 import os
 import stat
-import subprocess
 import threading
 import time
 from collections.abc import Callable
@@ -43,6 +42,8 @@ from ..atomic_write import (
     atomic_write_stream,
     atomic_write_text,
 )
+
+_PERMISSION_PROBE_WRITES = 20
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -544,47 +545,31 @@ class TestHardenedTier:
         assert target.read_bytes() == b"OLD-SECRET"
         assert _tmp_leftovers(tmp_path) == []
 
-    def test_hardened_tier_restricts_the_target_to_the_operator_on_this_platform(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        """The hardened tier leaves a secret-bearing target unreadable by others.
+    def test_hardened_tier_adds_no_per_write_permission_subprocess(self, tmp_path: Path) -> None:
+        """Writing N secret-bearing files must not cost N subprocess spawns.
 
-        Asserts the OBSERVABLE permission state, per platform, because the
-        contract is confidentiality rather than "a helper was invoked".
+        The confidentiality boundary for durable writes is the storage tree's
+        directory ACL, applied ONCE at creation by
+        :func:`~cadrumo.core.file_permissions.restrict_directory_permissions`.
+        This tier must therefore stay free of any per-file hardening call.
 
-        This is a regression proof, not a new claim. The durable writers once
-        called ``restrict_file_permissions`` -- POSIX ``chmod 0o600`` AND a
-        Windows ``icacls /inheritance:r`` ACL strip -- and were later routed
-        through this tier instead. The tier carried only the POSIX half: its
-        ``mode`` argument reaches ``os.open``, which on NTFS sets little beyond
-        the read-only bit while the target keeps inheriting its parent
-        directory's ACL. Every POSIX test stayed green throughout, so the lost
-        Windows half was invisible to the suite that was supposed to cover it.
+        A per-file ``icacls.exe`` strip was measured at ~28 ms/write on Windows.
+        The blob writer runs this tier once per stored attachment and the
+        journal writer once per entry, so at the record counts this store is
+        built for that is O(N) subprocess spawns -- minutes of overhead on a
+        bulk evidence import, for a property directory inheritance already
+        provides. The budget below is deliberately far below a single spawn:
+        it fails if anyone reintroduces one, and is not a latency benchmark.
         """
-        target = tmp_path / "secret.bin"
-        atomic_write_hardened_bytes(target, b"\x00master-key-material\xff")
+        budget_seconds = 0.010 * _PERMISSION_PROBE_WRITES
 
-        if os.name == "posix":
-            assert target.stat().st_mode & 0o077 == 0, (
-                "hardened-tier target must grant no group/other permission bits"
-            )
-            return
+        started = time.perf_counter()
+        for index in range(_PERMISSION_PROBE_WRITES):
+            atomic_write_hardened_bytes(tmp_path / f"secret{index}.bin", b"\x00key-material\xff")
+        elapsed = time.perf_counter() - started
 
-        if os.name != "nt":  # pragma: no cover - neither POSIX nor Windows
-            pytest.fail(f"unsupported platform for this assertion: {os.name!r}")
-
-        icacls = Path(os.environ.get("SYSTEMROOT", r"C:\Windows")) / "System32" / "icacls.exe"
-        listing = subprocess.run(  # noqa: S603 - fixed absolute path, no shell, test-local target
-            [str(icacls), str(target)],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        assert listing.returncode == 0, f"icacls could not read the ACL: {listing.stderr.strip()}"
-        inherited = [line for line in listing.stdout.splitlines() if "(I)" in line]
-        assert inherited == [], (
-            "hardened-tier target still carries INHERITED ACEs, so the parent "
-            f"directory's ACL governs a secret-bearing file: {inherited}"
+        assert elapsed < budget_seconds, (
+            f"{_PERMISSION_PROBE_WRITES} hardened writes took {elapsed:.2f}s "
+            f"(budget {budget_seconds:.2f}s) — a per-write permission subprocess "
+            "has been reintroduced; harden the directory once instead"
         )

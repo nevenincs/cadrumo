@@ -1,6 +1,6 @@
 """Remote-telemetry consent gate.
 
-Mirrors :func:`~application.ledger.cloud_evidence_read_permitted`'s exact
+Mirrors the retired evidence cloud-read gate's exact
 shape (gestor-mode absolute bar, then the deployment opt-in flag, then the
 tier, then the per-invocation acknowledgement, all ANDed) so the codebase's
 off-host consent gates stay uniform. Settings is imported lazily inside the
@@ -45,7 +45,7 @@ def telemetry_emit_permitted(settings: Settings, *, acknowledged: bool) -> bool:
     4. The operator acknowledged this specific invocation
        (``acknowledged`` is ``True``). The acknowledgement is never sticky;
        it must be re-affirmed at every call site, mirroring
-       :func:`~application.ledger.cloud_evidence_read_permitted`.
+       the retired evidence cloud-read gate.
 
     Args:
         settings: Resolved deployment settings carrying the telemetry

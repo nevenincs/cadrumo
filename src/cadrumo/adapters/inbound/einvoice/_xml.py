@@ -28,6 +28,8 @@ from xml.etree.ElementTree import Element
 from defusedxml.ElementTree import ParseError as _DefusedParseError
 from defusedxml.ElementTree import fromstring as _defused_fromstring
 
+from ....core.errors import CadrumoError
+
 __all__ = ["MAX_XML_DEPTH", "MAX_XML_PAYLOAD_BYTES", "EInvoiceXmlParseError", "parse_hardened_xml"]
 
 MAX_XML_PAYLOAD_BYTES = 32 * 1024 * 1024
@@ -40,12 +42,28 @@ MAX_XML_DEPTH = 100
 under 20; 100 leaves generous headroom while still bounding a walker."""
 
 
-class EInvoiceXmlParseError(ValueError):
+class EInvoiceXmlParseError(CadrumoError, ValueError):
     """Raised when an e-invoice XML payload is refused at the read boundary.
 
     Deliberately a refusal rather than a partial result. A structured reader
     that returned half a record on malformed input would be worse than a model:
     it would look exact while being wrong.
+
+    Derives from BOTH bases, and each one earns its place.
+    :class:`~cadrumo.core.errors.CadrumoError` binds the class to the error
+    registry, so the refusal an operator meets carries a stable code and a
+    translated message rather than a bare traceback -- which is what a
+    read-boundary refusal of an operator-supplied file has to do.
+    ``ValueError`` is kept so a pydantic validator can still absorb it, the
+    same pairing the sibling inbound adapter uses for the same reason
+    (``SanitizerValidationError``).
+
+    The alternative the hygiene gate offers -- declaring a
+    ``__bare_base_rationale__`` and staying outside the registry -- would be a
+    claim that this refusal is deliberately unregistered. That is false here:
+    it is operator-facing, it names a file the operator supplied, and there is
+    no reason it should reach them less legibly than every other refusal at
+    this boundary.
     """
 
 

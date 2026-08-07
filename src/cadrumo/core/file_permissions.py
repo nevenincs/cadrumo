@@ -139,81 +139,24 @@ def restrict_directory_permissions(path: Path) -> None:
 
 
 def restrict_file_permissions(path: Path) -> None:
-    r"""Best-effort restrict ``path`` to the operator's user account.
+    r"""Best-effort restrict a single ``path`` to the operator's user account.
 
-    POSIX: calls :func:`~os.chmod` with mode ``0o600``.
+    POSIX applies mode ``0o600``; Windows delegates to the one ACL
+    implementation, :func:`_windows_restrict_to_operator`, with non-inheritable
+    rights.
 
-    Windows: shells out to ``icacls.exe`` to strip inherited ACLs and
-    grant ``F`` (Full control) to the operator's account only. Tries
-    both ``DOMAIN\\user`` and bare ``user`` candidates because standalone
-    machines have no ``USERDOMAIN`` and domain-joined machines may need
-    the qualified form. The subprocess is time-bounded so a wedged
-    ``icacls.exe`` cannot block the auth-state writer indefinitely. Logs
-    at ``WARNING`` when every candidate fails — the file stays on disk
-    with whatever ACL it inherited from its parent directory.
+    Prefer :func:`restrict_directory_permissions` on the containing directory.
+    This per-file variant costs an ``icacls.exe`` spawn per call on Windows
+    (~28 ms measured), so it is for one-shot targets written outside a hardened
+    tree -- never for a write path that runs per record. The durable writers
+    deliberately do NOT call it; their confidentiality comes from the storage
+    tree's inherited ACL.
 
-    Best-effort: every error is swallowed so the auth flow never aborts
-    on a hardening side-effect. Worst case is a slightly more permissive
-    ACL than intended, surfaced via the warning log. Callers that need a
-    confidentiality boundary should use the secure-object storage path rather
-    than relying on this post-write permission adjustment.
-
-    Args:
-        path: Path to the file whose permissions must be tightened.
+    Best-effort: every error is swallowed and logged, so a hardening
+    side-effect never aborts the flow that triggered it.
     """
     if os.name == "nt":  # pragma: no cover - Windows-specific
-        # Wrap every Windows-only call in a single try/except so the
-        # docstring's "best-effort, never raises" contract holds even
-        # when icacls.exe is missing from PATH (FileNotFoundError),
-        # getpass.getuser() raises (no operator name available), or
-        # the subprocess.run hits an unexpected OSError.
-        try:
-            username = getpass.getuser()
-            # os.environ.get allowlist: SYSTEMROOT / USERDOMAIN are Windows OS-integration
-            # variables, not AEAT-prefixed config.  There is no Settings field for them
-            # because they are OS-provided ambient context, not application configuration.
-            # The single-surface invariant test scanner only flags AEAT_* keys; these are
-            # intentionally read directly from the OS environment here.
-            icacls_path = Path(os.environ.get(_SYSTEMROOT_ENV_VAR, r"C:\\Windows")) / "System32" / "icacls.exe"
-            candidates = [username]
-            userdomain = os.environ.get(_USERDOMAIN_ENV_VAR)
-            if userdomain:
-                candidates.insert(0, f"{userdomain}\\{username}")
-            result: subprocess.CompletedProcess[str] | None = None
-            for candidate in candidates:
-                result = _run_permission_command(
-                    [
-                        str(icacls_path),
-                        str(path),
-                        "/inheritance:r",
-                        "/grant:r",
-                        f"{candidate}:(F)",
-                    ]
-                )
-                if result.returncode == 0:
-                    return
-            _log.warning(
-                "restrict_file_permissions: failed to harden Windows ACLs on %s: %s",
-                path,
-                result.stderr.strip() if result is not None and result.stderr else "icacls returned non-zero",
-            )
-        except Exception:
-            # Catch Exception (not just OSError) so the docstring's
-            # "every error is swallowed" contract truly holds. The
-            # candidates that have actually been observed are
-            # ``OSError`` (icacls.exe missing → FileNotFoundError;
-            # subprocess.run / icacls write to a path the operator
-            # cannot ACL), but a future ``getpass`` / ``subprocess``
-            # internal change could surface other exception types
-            # here, and the auth flow must NOT abort because of a
-            # best-effort hardening side-effect. ``KeyError`` is
-            # not in the catch list because ``os.environ.get``
-            # returns ``None`` rather than raising on a missing key.
-            _log.warning(
-                "restrict_file_permissions: best-effort hardening failed on %s",
-                path,
-                exc_info=True,
-            )
+        _windows_restrict_to_operator(path, inheritable=False)
         return
     if os.name != "posix":
         return
