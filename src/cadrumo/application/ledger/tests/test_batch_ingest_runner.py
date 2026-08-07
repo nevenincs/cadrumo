@@ -23,6 +23,15 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....application.provisioning import (
+    AcceleratorDevice,
+    AcceleratorReading,
+    HardwareProfile,
+    SystemMemoryReading,
+    probe_hardware_profile,
+)
+from ....core import AcceleratorKind
+from ....core.config import load_settings, override_settings
 from ....domain.iva import InvoiceKind
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._batch_ingest import run_evidence_batch
@@ -51,6 +60,12 @@ _STRUCTURED = "facturae_32_series_and_parties_invoice.xml"
 #: must produce a refusal ROW rather than end the run.
 _POISON = "adversarial_malformed.pdf"
 
+#: A scan with no text layer, so reading it needs a model and it is the item a
+#: contended machine must defer rather than attempt.
+_SCAN = "scanned_invoice_from_commons_1.pdf"
+
+_GIB = 1024**3
+
 
 @pytest.fixture
 def batch_dir(tmp_path: Path) -> Path:
@@ -66,6 +81,25 @@ def _events(profile: TestRuntimeProfile) -> BucketEventHistoryRepository:
     return BucketEventHistoryRepository(objects=profile.repository)
 
 
+def _measurable_headroom() -> HardwareProfile:
+    """A machine whose free memory is readable and ample, so admission admits.
+
+    Injected rather than probed, and that is the point. The host running these
+    tests reports no readable accelerator, so its admission check fails CLOSED —
+    correctly. Left to the host, every gate below would measure the pause path
+    and none would measure the behaviour it names.
+    """
+    return probe_hardware_profile(
+        memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
+        accelerator=AcceleratorReading(
+            kind=AcceleratorKind.NVIDIA_CUDA,
+            devices=(
+                AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=12 * _GIB),
+            ),
+        ),
+    )
+
+
 def _run(profile: TestRuntimeProfile, folder: Path) -> object:
     return run_evidence_batch(
         bucket_id=_BUCKET_ID,
@@ -73,6 +107,7 @@ def _run(profile: TestRuntimeProfile, folder: Path) -> object:
         direction=InvoiceKind.RECEIVED,
         settings=profile.settings,
         bucket_event_repository=_events(profile),
+        profile=_measurable_headroom(),
     )
 
 
@@ -321,6 +356,228 @@ def test_the_same_document_under_two_directions_is_two_records(
         )
 
     assert len(service.list_all(bucket_id=_BUCKET_ID)) == 2, "issued and received are genuinely two records"
+
+
+class TestInferencePacing:
+    """A contended machine must cost the batch its readable items, not its whole run.
+
+    Contention is produced from **injected measurements** driven through the real
+    `assess_model_load_contention`, which is the same seam that primitive's own
+    suite uses. Nothing here substitutes the admission decision: the production
+    function computes the refusal, from a hardware profile that states a
+    shortfall rather than one asserting the answer.
+    """
+
+    @staticmethod
+    def _contended() -> HardwareProfile:
+        """A machine with a real accelerator whose free figure cannot be read.
+
+        This shape rather than a small-free-memory one, because selection and
+        admission share the free-memory bar: a machine too small to admit a
+        model is also too small to select one, so it never reaches the pacing
+        decision at all. An unreadable free figure is the reachable state where
+        a model IS selected and the load is still refused — "could not tell" is
+        not evidence of headroom, and refusing it is the primitive's fail-closed
+        core.
+        """
+        return probe_hardware_profile(
+            memory=SystemMemoryReading(total_bytes=64 * _GIB, free_bytes=48 * _GIB),
+            accelerator=AcceleratorReading(
+                kind=AcceleratorKind.NVIDIA_CUDA,
+                devices=(
+                    AcceleratorDevice(index=0, name="card-0", total_vram_bytes=24 * _GIB, free_vram_bytes=None),
+                ),
+            ),
+        )
+
+    def test_a_contended_machine_still_completes_every_deterministic_item(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """The point of pacing: the structured records go through regardless.
+
+        A run that refused everything because a model could not be loaded would
+        waste the half of the work that never needed one.
+        """
+        folder = tmp_path / "mixed"
+        folder.mkdir()
+        (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
+        (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
+
+        result = run_evidence_batch(
+            bucket_id=_BUCKET_ID,
+            sources=[folder],
+            direction=InvoiceKind.RECEIVED,
+            settings=runtime_profile.settings,
+            bucket_event_repository=_events(runtime_profile),
+            profile=self._contended(),
+        )
+
+        statuses = {item.source_name: item.status for item in result.items}
+        assert statuses[_SCAN] == "paused", "an item needing a reader must be paused, not attempted"
+        assert statuses[_STRUCTURED] != "paused", "a structured record needs no model and must still run"
+
+    def test_the_pause_is_stated_once_for_the_run_not_per_document(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """N identical refusals is how a real refusal goes unread."""
+        folder = tmp_path / "scans"
+        folder.mkdir()
+        for name in (_SCAN, "com_2026_0005_camera_photo.jpg", "commons_invoice_1.jpg"):
+            (folder / name).write_bytes((_CORPUS / name).read_bytes())
+
+        result = run_evidence_batch(
+            bucket_id=_BUCKET_ID,
+            sources=[folder],
+            direction=InvoiceKind.RECEIVED,
+            settings=runtime_profile.settings,
+            bucket_event_repository=_events(runtime_profile),
+            profile=self._contended(),
+        )
+
+        assert [item.status for item in result.items] == ["paused"] * 3
+        assert result.inference_pause is not None, "three paused documents must carry one stated cause"
+        assert result.inference_pause.remediation, "a pause an operator cannot act on is a dead end"
+        # No per-item refusal text: the model forbids a reason under a non-refused
+        # status, so this also proves the pause did not smuggle one in per row.
+        assert all(item.refusal_detail is None for item in result.items)
+
+    def test_a_paused_run_is_not_a_failed_run_but_is_not_silent_either(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """Nothing went wrong with the documents, and work still remains.
+
+        One boolean cannot say both, which is why deferral is its own axis.
+        """
+        folder = tmp_path / "deferred"
+        folder.mkdir()
+        (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
+
+        result = run_evidence_batch(
+            bucket_id=_BUCKET_ID,
+            sources=[folder],
+            direction=InvoiceKind.RECEIVED,
+            settings=runtime_profile.settings,
+            bucket_event_repository=_events(runtime_profile),
+            profile=self._contended(),
+        )
+
+        assert not result.any_failed, "a deferred document has not failed"
+        assert result.any_deferred, "but the run must not report itself as finished"
+
+    def test_a_paused_item_is_attempted_on_a_later_run(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """Positive control for pausing: it defers work, it does not consume it.
+
+        A pause that left the item looking complete would be worse than a
+        refusal, because the operator would never learn it was skipped.
+        """
+        folder = tmp_path / "retry"
+        folder.mkdir()
+        (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
+        common = {
+            "bucket_id": _BUCKET_ID,
+            "sources": [folder],
+            "direction": InvoiceKind.RECEIVED,
+            "settings": runtime_profile.settings,
+        }
+
+        paused = run_evidence_batch(
+            **common,
+            bucket_event_repository=_events(runtime_profile),
+            profile=self._contended(),
+        )
+        # The contention clears; the same folder is re-run, exactly as an
+        # operator would after acting on the remediation.
+        later = run_evidence_batch(
+            **common,
+            bucket_event_repository=_events(runtime_profile),
+            profile=_measurable_headroom(),
+        )
+
+        assert paused.items[0].status == "paused"
+        assert later.items[0].status != "paused", "once the contention clears, the deferred item must be attempted"
+
+    def test_a_machine_with_no_reader_gives_one_instruction_not_one_per_document(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """The other way the lane closes, and the one the operator meets most.
+
+        The reader is made genuinely unreachable by pointing the runtime at a
+        closed port — a real failure of the real client, not a substituted one.
+        Admission has nothing to refuse here (the machine has headroom), so this
+        exercises the after-the-first-attempt closure specifically: one document
+        pays for the discovery, the rest are deferred on it, and exactly one
+        instruction naming the provisioning verb reaches the operator.
+        """
+        folder = tmp_path / "no_reader"
+        folder.mkdir()
+        for name in (_SCAN, "com_2026_0005_camera_photo.jpg", "commons_invoice_1.jpg"):
+            (folder / name).write_bytes((_CORPUS / name).read_bytes())
+
+        # Port 1 on loopback: reserved, never listening, so the client's connect
+        # genuinely fails rather than being told to fail.
+        with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
+            result = run_evidence_batch(
+                bucket_id=_BUCKET_ID,
+                sources=[folder],
+                direction=InvoiceKind.RECEIVED,
+                settings=load_settings(),
+                bucket_event_repository=_events(runtime_profile),
+                profile=_measurable_headroom(),
+            )
+
+        statuses = [item.status for item in result.items]
+        assert statuses.count("refused") == 1, f"exactly one document should pay for the discovery: {statuses}"
+        assert statuses.count("paused") == 2, f"every later document must be deferred, not re-refused: {statuses}"
+        assert result.inference_pause is not None
+        assert result.inference_pause.reason == "no_reader_available"
+        # The remediation is the runtime probe's own, not a fixed string, and
+        # that is stricter rather than looser: here the server is unreachable
+        # rather than the model unprovisioned, and the operator is told to start
+        # it. A hard-coded "provision pull" would have sent them to download a
+        # model they may already have.
+        assert "ollama serve" in result.inference_pause.remediation.lower()
+
+    def test_a_run_of_structured_records_never_pauses_and_never_probes(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """Positive control for the whole class: pacing must not fire on work needing no model.
+
+        Deliberately run on the CONTENDED profile. Nothing here needs a reader,
+        so a closed lane is irrelevant to it — and a run that paused these
+        anyway would be pacing on the machine's state rather than on the work's
+        actual needs.
+        """
+        folder = tmp_path / "structured"
+        folder.mkdir()
+        for name in (_STRUCTURED, "facturae_32_recargo_invoice.xml"):
+            (folder / name).write_bytes((_CORPUS / name).read_bytes())
+
+        result = run_evidence_batch(
+            bucket_id=_BUCKET_ID,
+            sources=[folder],
+            direction=InvoiceKind.RECEIVED,
+            settings=runtime_profile.settings,
+            bucket_event_repository=_events(runtime_profile),
+            profile=self._contended(),
+        )
+
+        assert result.inference_pause is None, "a run with no model in its future must not probe the hardware"
+        assert not result.any_deferred
+        assert all(item.status != "paused" for item in result.items)
 
 
 def test_a_raising_progress_callback_does_not_cost_the_run_its_results(

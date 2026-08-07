@@ -48,6 +48,7 @@ from ...domain.iva import InvoiceKind
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...core import HardwareProfile
     from ...core.config import Settings
     from ._evidence import PurchaseInvoiceEvidenceService
     from ._evidence_draft import InvoiceDraft
@@ -57,6 +58,7 @@ __all__ = [
     "BATCH_ITEM_STATUSES",
     "BatchItemResult",
     "BatchRunResult",
+    "InferencePause",
     "UnresolvedBatchSource",
     "batch_item_identity",
     "order_batch_items",
@@ -65,13 +67,18 @@ __all__ = [
     "summarise_batch",
 ]
 
-BatchItemStatus = Literal["ingested", "no_op", "refused", "pending_review"]
+BatchItemStatus = Literal["ingested", "no_op", "refused", "pending_review", "paused"]
 """How one batch item ended.
 
 ``no_op`` is a success: the item was already ingested under this identity and
 was neither re-read nor re-written. ``pending_review`` is neither a success nor
 a failure — the item produced a draft an operator must adjudicate — so it does
 not fail the run while still being visible in the summary.
+
+``paused`` is the one status that means the work did NOT happen: the document
+needs a reading model and the machine could not admit one. It is not a failure
+of the document and carries no per-item refusal, because every paused item in a
+run shares one cause; that cause is stated once on the run.
 """
 
 #: Every status a batch item can end in. Derived from the type rather than
@@ -151,6 +158,32 @@ class UnresolvedBatchSource(BaseModel):
     refusal_detail: str = Field(min_length=1)
 
 
+class InferencePause(BaseModel):
+    """Why the run's inference lane closed, stated once for the whole run.
+
+    One record rather than a refusal stamped on every affected document. Every
+    paused item in a run shares one cause — the machine could not admit a model —
+    so N copies of it would be N identical messages an operator learns to scroll
+    past, which is how a real refusal goes unread.
+
+    Attributes:
+        reason: Machine-readable cause class.
+        detail: What was measured, in operator-facing terms.
+        remediation: What the operator can do about it. Never generic: memory
+            the local runtime holds and memory a peer process holds have
+            different answers, and only one of them is ours to offer.
+        causes: The provisioning snapshot's own cause tokens, carried through
+            rather than flattened, so the distinction above survives to the CLI.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    reason: str = Field(min_length=1)
+    detail: str = Field(min_length=1)
+    remediation: str = Field(min_length=1)
+    causes: tuple[str, ...] = ()
+
+
 class BatchRunResult(BaseModel):
     """The whole run: every item's row, plus what they add up to.
 
@@ -158,20 +191,35 @@ class BatchRunResult(BaseModel):
         items: One row per document, ordered by content address.
         unresolved: Sources whose bytes could not be read, so they never became
             items. Counted as failures.
+        inference_pause: Present exactly when the inference lane closed.
         any_failed: Whether any item was refused. The exit status reads this,
             so a run that refused its first document and ingested the rest is a
             failed run that nonetheless did its work.
+        any_deferred: Whether work remains that this run did not attempt.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     items: tuple[BatchItemResult, ...] = ()
     unresolved: tuple[UnresolvedBatchSource, ...] = ()
+    inference_pause: InferencePause | None = None
 
     @property
     def any_failed(self) -> bool:
         """Return whether any item was refused or any source was unreadable."""
         return bool(self.unresolved) or any(item.status in FAILING_BATCH_ITEM_STATUSES for item in self.items)
+
+    @property
+    def any_deferred(self) -> bool:
+        """Return whether the run left work it did not attempt.
+
+        Kept off :attr:`any_failed` rather than folded into it. A paused item is
+        not a failure — nothing went wrong with the document and a re-run costs
+        nothing, because completed items are no-ops. But it is not success
+        either, and a caller automating this needs to tell "everything is done"
+        from "the deterministic half is done", which one boolean cannot say.
+        """
+        return any(item.status == "paused" for item in self.items)
 
     def count_of(self, status: BatchItemStatus) -> int:
         """Return how many items ended in ``status``."""
@@ -236,12 +284,163 @@ def order_batch_sources(sources: Iterable[tuple[str, str]]) -> tuple[tuple[str, 
 def summarise_batch(
     items: Sequence[BatchItemResult],
     unresolved: Sequence[UnresolvedBatchSource] = (),
+    inference_pause: InferencePause | None = None,
 ) -> BatchRunResult:
     """Return the run result for ``items``, ordered by content address."""
     return BatchRunResult(
         items=order_batch_items(items),
         unresolved=tuple(sorted(unresolved, key=lambda source: source.source_name)),
+        inference_pause=inference_pause,
     )
+
+
+def _reads_without_a_model(data: bytes) -> bool:
+    """Return whether these bytes carry a machine-readable record needing no model.
+
+    Derived from the bytes through the one shared shape probe, never from the
+    filename or the stored MIME type — a ZUGFeRD invoice and a photograph of a
+    receipt are both ``application/pdf``, and the label cannot tell them apart.
+
+    This deliberately does NOT reproduce the extractor's routing. It asks one
+    question the shape probe already answers, and every other document is
+    treated as possibly needing a model. A structured record whose payload turns
+    out to be malformed falls through to a reading path inside the extractor and
+    may then need one after all; that is the conservative direction, because the
+    cost is a refusal the operator sees rather than a model load nobody admitted.
+    """
+    from ...adapters.inbound.einvoice import probe_document_shape
+    from ...core import STRUCTURED_DOCUMENT_SHAPES
+
+    return probe_document_shape(data) in STRUCTURED_DOCUMENT_SHAPES
+
+
+#: The provisioning verb the extractor's no-reader refusal names. Matching on it
+#: is how the runner tells "this machine has no reader" from "this document is
+#: broken" — the two produce the same exception type and only one is a reason to
+#: stop attempting the rest.
+_NO_READER_SUGGESTION = "aeat config provision pull"
+
+
+class _InferenceLaneState:
+    """Whether inference-bearing items may still be attempted in this run.
+
+    Batch-wide rather than per item because both conditions that close it are
+    batch-wide: memory pressure is a property of the machine and a missing
+    reader is a property of the installation. Neither changes between two
+    documents, so re-asking per item would re-derive one answer while the
+    operator watched N identical refusals accumulate.
+
+    The lane closes two ways, and the asymmetry is deliberate.
+
+    **Measured contention closes it BEFORE any attempt.** Admission control
+    exists precisely so an unsafe load is not attempted, so learning about it by
+    attempting would defeat it.
+
+    **A missing reader closes it AFTER the first attempt.** There is nothing
+    unsafe about trying, no model is selected for admission to judge, and
+    predicting which documents need a reader would mean reproducing the
+    extractor's routing here — a second copy that would drift. One document pays
+    for the discovery and every later one is paused on it.
+    """
+
+    __slots__ = ("_assessed", "_pause", "_profile", "_reader_probed", "_settings")
+
+    def __init__(self, *, settings: Settings, profile: HardwareProfile | None = None) -> None:
+        self._settings = settings
+        self._profile = profile
+        self._assessed = False
+        self._reader_probed = False
+        self._pause: InferencePause | None = None
+
+    def admits(self, *, deterministic: bool) -> bool:
+        """Return whether this item may be attempted, measuring contention once.
+
+        A document that reads without a model is always attempted: a closed lane
+        says nothing about work that never needed the lane.
+        """
+        if deterministic:
+            return True
+        if not self._assessed:
+            self._assessed = True
+            self._pause = _assess_model_load_contention_once(self._settings, profile=self._profile)
+        return self._pause is None
+
+    def close_if_no_reader_is_available(self) -> None:
+        """Close the lane when a refusal turns out to be the environment's, not the document's.
+
+        Asks the runtime whether a reader is actually there, rather than reading
+        the refusal's own remediation text. Matching on that text was the first
+        attempt and it was wrong twice over: it couples this module to strings
+        another package owns, and it silently HALF-worked — the text reader
+        names a fixed provisioning verb while the vision reader composes its
+        remediation from a probe, so one missing reader closed the lane for
+        text-layer documents and not for scans. A measurement answers the
+        question the same way for both.
+
+        Probed at most once, and only after something has already refused, so a
+        healthy run never pays for it.
+        """
+        if self._pause is not None or self._reader_probed:
+            return
+        self._reader_probed = True
+        from ...application.provisioning import probe_ollama_vision
+
+        status = probe_ollama_vision(self._settings)
+        if status.available:
+            return
+        self._pause = InferencePause(
+            reason="no_reader_available",
+            detail=(
+                f"{status.detail or 'no on-host reading model could be run'}; documents needing one "
+                "were not read and no value was guessed from them"
+            ),
+            remediation=status.remediation or _NO_READER_SUGGESTION,
+        )
+
+    def pause(self) -> InferencePause | None:
+        """Return the pause record, or ``None`` when the lane never closed."""
+        return self._pause
+
+
+def _assess_model_load_contention_once(
+    settings: Settings,
+    *,
+    profile: HardwareProfile | None = None,
+) -> InferencePause | None:
+    """Return the contention pause, or ``None`` when a load may be attempted.
+
+    Provisioning never raises; it returns a snapshot whose ``causes`` are keyed
+    to remediations that are NOT interchangeable — reclaiming memory the local
+    runtime holds is ours to offer, and memory a peer process holds is not. That
+    distinction is carried through verbatim rather than flattened into a generic
+    "unavailable", because it is the whole difference between an action the
+    operator can take here and one they must take elsewhere.
+
+    A role with no selectable model is deliberately NOT a pause. Nothing is
+    unsafe about attempting it, and the extractor's own refusal names the
+    provisioning verb far more precisely than a guess made here could.
+    """
+    from ...application.provisioning import assess_model_load_contention, select_model_for_role
+    from ...core import ModelRole
+
+    for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):
+        selection = select_model_for_role(role, profile=profile)
+        if not selection.selected or selection.runtime_id is None or selection.candidate is None:
+            continue
+        snapshot = assess_model_load_contention(
+            selection.runtime_id,
+            selection.candidate.memory_requirement_bytes,
+            profile=profile,
+            settings=settings,
+        )
+        if not snapshot.admitted:
+            return InferencePause(
+                reason="model_load_contention",
+                detail=snapshot.detail,
+                remediation=snapshot.remediation,
+                causes=tuple(cause.value for cause in snapshot.causes),
+            )
+    return None
 
 
 #: Names the function that produced a batch draft, not the reader that read it.
@@ -277,6 +476,7 @@ def run_evidence_batch(
     settings: Settings | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
+    profile: HardwareProfile | None = None,
 ) -> BatchRunResult:
     """Run the ingestion pipeline over every source, one typed row each.
 
@@ -313,6 +513,10 @@ def run_evidence_batch(
         on_item: Called with each row as it completes, for progress reporting.
             A raising callback must not lose the run, so it is guarded like any
             other per-item failure.
+        profile: Measured hardware the admission check judges against; probed
+            when omitted. The same injection point the admission primitive
+            itself exposes, so a contended machine can be exercised from real
+            measurements rather than by substituting the decision.
 
     Returns:
         :class:`BatchRunResult`: Every row, ordered by content address.
@@ -330,14 +534,15 @@ def run_evidence_batch(
     )
 
     addressed: dict[tuple[str, str], Path] = {}
+    deterministic: set[str] = set()
     unresolved: list[UnresolvedBatchSource] = []
     for path in _batch_sources(sources):
         try:
-            # Read to hash, then released. The bytes are re-read per item at
-            # work time rather than held: a folder of documents held in memory
-            # at once is unbounded, and spilling them anywhere would be the
-            # spool file this design exists without.
-            content_address = sha256_hex(path.read_bytes())
+            # Read to hash and to probe the shape, then released. The bytes are
+            # re-read per item at work time rather than held: a folder of
+            # documents held in memory at once is unbounded, and spilling them
+            # anywhere would be the spool file this design exists without.
+            data = path.read_bytes()
         except OSError as exc:
             unresolved.append(
                 UnresolvedBatchSource(
@@ -347,22 +552,40 @@ def run_evidence_batch(
                 ),
             )
             continue
+        content_address = sha256_hex(data)
+        if _reads_without_a_model(data):
+            deterministic.add(content_address)
         addressed[(content_address, str(path))] = path
 
+    lane = _InferenceLaneState(settings=resolved_settings, profile=profile)
     rows: list[BatchItemResult] = []
     for content_address, source_name in order_batch_sources(addressed):
         path = addressed[(content_address, source_name)]
-        row = _ingest_one_batch_item(
-            bucket_id=bucket_id,
-            path=path,
-            content_address=content_address,
-            direction=direction,
-            settings=resolved_settings,
-            service=service,
-            extract=extract_invoice_draft_from_evidence,
-            read_draft=read_extraction_draft,
-            write_draft=write_extraction_draft,
-        )
+        if not lane.admits(deterministic=content_address in deterministic):
+            # Paused, not refused: the document is fine and the work simply has
+            # not happened. One run-level explanation carries the reason, rather
+            # than stamping N identical refusals onto N innocent documents.
+            row = BatchItemResult(
+                content_address=content_address,
+                identity=batch_item_identity(content_address=content_address, direction=direction),
+                direction=direction,
+                source_name=path.name,
+                status="paused",
+            )
+        else:
+            row = _ingest_one_batch_item(
+                bucket_id=bucket_id,
+                path=path,
+                content_address=content_address,
+                direction=direction,
+                settings=resolved_settings,
+                service=service,
+                extract=extract_invoice_draft_from_evidence,
+                read_draft=read_extraction_draft,
+                write_draft=write_extraction_draft,
+            )
+            if row.status == "refused":
+                lane.close_if_no_reader_is_available()
         rows.append(row)
         if on_item is not None:
             # Progress reporting is incidental to the run; a sink that fails
@@ -370,7 +593,7 @@ def run_evidence_batch(
             with suppress(Exception):
                 on_item(row)
 
-    return summarise_batch(rows, unresolved)
+    return summarise_batch(rows, unresolved, lane.pause())
 
 
 # reason: every collaborator is an explicit seam; binding them ambiently is what
