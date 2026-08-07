@@ -8,12 +8,14 @@ nothing more -- and a heading is the first line of the file, so it survives any
 truncation of everything beneath it.
 
 That is not hypothetical. ``ley-37-1992:art-94`` was found bundled with its body
-truncated mid-article: it carries apartado Uno points 1 through 5 and simply
-stops, missing the point that grounds treating exports and intra-community
-supplies as originating the right to deduct. Its ``required_text`` is
+truncated mid-apartado Uno in the pre-RDL-7/2021 redaction, missing apartados
+Dos and Tres and the point that grounds treating exports and intra-community
+supplies as originating the right to deduct. Its ``required_text`` was
 ``"operaciones cuya realización origina el derecho a la deducción"`` -- the
-article title. The gate passed. The entry is stamped
+article title. The gate passed. The entry was stamped
 ``review_status = "reviewed"``, so it read as verified to everyone who looked.
+It has since been refreshed from live BOE and requoted onto two operative
+phrases, and it is the worked example the anti-tautology proof below drives.
 
 This gate measures the population of entries in that shape and refuses to let it
 grow. It deliberately does NOT try to fix them: requoting a ``required_text``
@@ -25,14 +27,13 @@ legal authority behind it, not a test change.
 
 from __future__ import annotations
 
-import html
-import re
 import tomllib
 from pathlib import Path
 from typing import Final
 
 import pytest
 
+from .....core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from .....core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -56,29 +57,31 @@ document and no gap exists. Counting those would inflate the population with
 entries that are correct, which is the over-claim this floor exists to avoid.
 """
 
-_HEADING_ONLY_CEILING: Final[int] = 31
+_HEADING_ONLY_CEILING: Final[int] = 56
 """Entries whose required_text is satisfied by the heading alone, measured 2026-08-07.
-
-Lowered 32 -> 31 the same day, when ``ley-37-1992:art-94`` -- the entry this
-gate was built from -- was actually corrected: its excerpt was refreshed from
-the live BOE consolidated text (it had been cut off mid-apartado Uno in the
-pre-RDL-7/2021 redaction, missing apartados Dos and Tres entirely) and its
-``required_text`` requoted onto two operative phrases, one from Uno.1.c) and
-one from Tres.
 
 Shrink-only. Every one is stamped ``review_status = "reviewed"``, which is what
 makes the population worth pinning: the stamp says a human checked it, and the
 mechanical check behind that stamp cannot see the body.
 
-The tail decides priority. ``orden-eha-3127-2009:art-1`` matches on a heading
-and leaves 176,330 characters unchecked; ``ley-37-1992:art-20`` is the LIVA
-exemptions article at 30,207 characters, grounded by a phrase that survives any
-truncation of it.
+**Read the 32 -> 56 change as a correction, not slack.** The first measurement
+swept the corpus HTML. Production does not ground on the HTML: it resolves the
+``.extracted.json`` sidecar and reads the unit at the anchor, so 24 entries
+were heading-only on the artefact that grounds filings while reading as
+body-grounded on the artefact nobody consults. The sweep now mirrors
+``_legal_corpus_text`` exactly, and every sidecar in the corpus resolves, so
+the figure is complete rather than a floor. ``ley-37-1992:art-94`` was
+genuinely corrected in the same session and is the one entry that LEFT the
+population; the other 24 were always in it and were simply not visible.
 
-This counts SHAPE, not damage. Only ``ley-37-1992:art-94`` is confirmed
-truncated, because its tail was read. The other entries may be complete; the
-finding is that a truncation in any of them would pass exactly as art. 94's did.
-Establishing more would take a tail-read per entry.
+The tail decides priority. ``ley-37-1992:art-20`` is the LIVA exemptions
+article at 30,207 characters, ``ley-27-2014:art-18`` the operaciones vinculadas
+article at 24,535 -- both grounded by a phrase that survives any truncation.
+
+This counts SHAPE, not damage. Only ``ley-37-1992:art-94`` was confirmed
+truncated, because its tail was read against live BOE. The other entries may be
+complete; the finding is that a truncation in any of them would pass exactly as
+art. 94's did. Establishing more would take a tail-read per entry.
 """
 
 
@@ -93,32 +96,57 @@ def _legal_entries() -> list[tuple[str, dict[str, object]]]:
     return entries
 
 
-def _excerpt_text(corpus_ref: str) -> str | None:
-    path = Path(bundled_path(corpus_ref.split("#")[0].removeprefix("corpus/").removeprefix("/")))
-    if not path.exists():
-        candidate = Path(bundled_path("")) / corpus_ref.split("#")[0]
-        if not candidate.exists():
-            return None
-        path = candidate
-    stripped = re.sub(r"<[^>]*>", " ", path.read_text(encoding="utf-8", errors="replace"))
-    return re.sub(r"\s+", " ", html.unescape(stripped)).strip() or None
+def _grounding_text(corpus_ref: str) -> str | None:
+    """Return the text production actually grounds on for this reference.
+
+    Deliberately NOT the corpus HTML. ``_legal_corpus_text`` resolves
+    ``<file>.extracted.json`` and takes the unit at the anchor, so the HTML is
+    an input to extraction and the sidecar is the artefact every grounding
+    check consults. Measuring the HTML answers a question nothing asks, and it
+    can disagree with production in both directions -- an HTML file refreshed
+    without regenerating its sidecar reads as corrected here while production
+    still grounds on the truncated extraction.
+
+    That is not hypothetical either: it is exactly what happened when art. 94's
+    HTML was refreshed from live BOE, and it is why this helper mirrors
+    ``_legal_corpus_text`` -- same resolver, same ``include_title=True``, same
+    normaliser -- rather than approximating it.
+    """
+    path_text, _, anchor = corpus_ref.partition("#")
+    sidecar = Path(bundled_path("")) / (path_text + ".extracted.json")
+    if not sidecar.is_file():
+        return None
+    try:
+        return normalise_corpus_text(
+            resolve_anchored_extracted_unit(
+                sidecar,
+                anchor=anchor,
+                required_text=(),
+                include_title=True,
+            ),
+        )
+    except Exception:
+        return None
 
 
 def _heading_only_entries() -> list[tuple[str, int]]:
-    """Return entries whose every required phrase sits inside the heading window."""
+    """Return entries whose every required phrase sits inside the heading window.
+
+    Phrases are normalised with the same function production compares them
+    with, so casing and diacritics cannot make an entry look body-grounded
+    here while matching the heading in the validator.
+    """
     found: list[tuple[str, int]] = []
     for key, entry in _legal_entries():
         required = entry.get("required_text") or []
         corpus_ref = entry.get("corpus_ref")
         if not required or not isinstance(corpus_ref, str):
             continue
-        text = _excerpt_text(corpus_ref)
-        if text is None:
+        text = _grounding_text(corpus_ref)
+        if text is None or len(text) <= _UNCHECKED_BODY_FLOOR:
             continue
-        heading = text[:_HEADING_WINDOW].lower()
-        if len(text) <= _UNCHECKED_BODY_FLOOR:
-            continue
-        if all(str(phrase).lower() in heading for phrase in required):
+        heading = text[:_HEADING_WINDOW]
+        if all(normalise_corpus_text(str(phrase)) in heading for phrase in required):
             found.append((key, len(text)))
     return found
 
@@ -180,22 +208,27 @@ def test_the_measurement_would_notice_a_body_phrase() -> None:
 
     art_94 = entries.get("ley-37-1992:art-94")
     assert art_94 is not None, "the worked example this gate was built from has gone"
-    text = _excerpt_text(str(art_94["corpus_ref"]))
-    assert text is not None
-    heading = text[:_HEADING_WINDOW].lower()
+    text = _grounding_text(str(art_94["corpus_ref"]))
+    assert text is not None, "the sidecar production grounds on no longer resolves"
+    heading = text[:_HEADING_WINDOW]
 
     # Its phrases now come from the body, so at least one falls outside the heading.
-    assert not all(str(phrase).lower() in heading for phrase in art_94["required_text"]), (
+    assert not all(normalise_corpus_text(str(phrase)) in heading for phrase in art_94["required_text"]), (
         "art. 94 was requoted onto its operative provision; a required_text that fits "
         "entirely in the heading means the correction was reverted"
     )
     assert "ley-37-1992:art-94" not in selected, "the corrected entry must leave the population"
 
-    # And the refreshed excerpt must still carry the apartados the truncation dropped,
-    # which is what made the heading-only grounding dangerous rather than merely weak.
-    lowered = text.lower()
-    assert "en ningún caso procederá la deducción" in lowered, "apartado Tres is missing again"
-    assert "20 bis, 21, 22, 23, 24 y 25" in lowered, "the exempt-operations point is missing again"
+    # And the refreshed SIDECAR must still carry the apartados the truncation
+    # dropped -- asserted on the sidecar, not the HTML, because refreshing the
+    # HTML without regenerating the sidecar is precisely the failure that made
+    # the first version of this gate report a correction that had not landed.
+    assert normalise_corpus_text("En ningún caso procederá la deducción") in text, (
+        "apartado Tres is missing from the extracted sidecar again"
+    )
+    assert normalise_corpus_text("20 bis, 21, 22, 23, 24 y 25") in text, (
+        "the exempt-operations point is missing from the extracted sidecar again"
+    )
 
     # The other side: an entry still grounded on its title must still be selected,
     # or the predicate has stopped selecting anything and the ceiling is vacuous.
