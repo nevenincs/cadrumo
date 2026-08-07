@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:a599754e03a39457281bbbd91d6433c74cd0c05817f7e324e4b6f3a7db932078'
+body_hash: 'sha256:4df05d22e53867a0b1fcef9f2e562bd72735330febea80a7a4f562bbfb716a54'
 related:
   - "[[2026-08-07-rate-box-evidence-assertion-research]]"
 ---
@@ -231,7 +231,9 @@ Modelo 390 precisely because Modelo 390's total is not the sum of its tiers.
 
 Each modelo must therefore be TESTED against this precondition rather than
 assumed to satisfy it. That is an instance of the standing rule that AEAT
-surfaces do not transfer between modelos.
+surfaces do not transfer between modelos. That per-block test is tracked as
+S03 in `2026-08-07-adr-amendment-implementing-rows-plan`, not left to be
+rediscovered as unowned work.
 
 Making the rate mandatory at source remains open, and until it lands the
 refusal at export is the only thing preventing an incomplete breakdown from

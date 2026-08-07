@@ -4,7 +4,7 @@ tags:
   - '#modelo-iva-routing-carry'
 date: '2026-06-09'
 modified: '2026-08-07'
-body_hash: 'sha256:8b2d30e41657c0e68943ca126bce87561a51c4948c51a93f6ba1e5d286d222ea'
+body_hash: 'sha256:ecfa56304c8b895a6445c598a53562ca181ee60bac6b2d62ddf72936bbaaae0f'
 related:
   - "[[2026-06-09-modelo-iva-routing-carry-research]]"
 ---
@@ -205,5 +205,8 @@ undefined across pages within one design, and an offset-only claim produces no
 impossible output to catch it by inspection.
 
 This amendment rules on code and is not self-executing. The corpus work and the
-re-route are tracked as separate open rows, the re-route blocked by the corpus work, so
-that the record being correct is not mistaken for the tree being correct.
+re-route are tracked as Steps in
+`2026-08-07-adr-amendment-implementing-rows-plan` (S02 the re-route and its two
+cross-modelo residues), the re-route blocked by the corpus work being cleared
+(it is: see the Tier 2 withdrawal above), so that the record being correct is
+not mistaken for the tree being correct.
