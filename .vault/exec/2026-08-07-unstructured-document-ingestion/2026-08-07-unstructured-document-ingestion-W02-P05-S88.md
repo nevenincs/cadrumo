@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:de561aa2643207fe7679b41bf8ebed8741f9754e0a4fae7ede05bebd9909093e'
+body_hash: 'sha256:39ebd59543ebb5ce3f43382511813e767da07dc88570d89d73e26105b546cf27'
 step_id: 'S88'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -152,3 +152,97 @@ committed tree through another lane's sweeping commit before this lane could
 commit them, and their fixture updates did not travel with them -- leaving the
 member-set gate red in the committed tree until this Step's commit closed it. The
 same pattern had occurred once already on an earlier Step in this lane.
+
+## The declared-facts channel
+
+A later slice of the same row, landed after the legend axis above. The
+convergence needs facts supplied INTO the criteria, and the assembly could take
+values but not attribution.
+
+- Replace the three flat `asserted_*` parameters with one `declared:
+  DeclaredFacts` channel, each fact carrying who established it.
+- Reuse the shipped classifier-input source vocabulary rather than declaring a
+  second one for the same question.
+- Extend that vocabulary with an operator-assertion member, and make the audit
+  envelope's backing validator exhaustive over the three members instead of two.
+- Migrate the assembly's existing suite through one named adapter, and write the
+  channel's own contract against the real signature.
+
+## Why the channel is a model rather than more parameters
+
+The parameters could carry a VALUE but not its ATTRIBUTION, so once a criteria
+field existed nothing recorded whether a human had claimed it or the page had
+stated it. An auditor asking why a record says the customer is a consumer got
+the value back and nothing else.
+
+Making it a model is what stops the next stage inventing a parallel supply route:
+a later contributor adds an ATTRIBUTE, and the assembly, the envelope and the
+stamp carry it with no new plumbing. A second route would fork the attribution
+exactly the way the flat parameters forked it, and a fork is invisible until
+someone asks who said what. That property is gated by recomputing the assembly's
+real signature and asserting exactly one supplied-fact parameter exists.
+
+**The source vocabulary was NOT duplicated, and that was the live decision.** The
+specified design carried a private two-member source enum. A shipped enum already
+answers the same question for the audit envelope, so a private one would have
+been a second authority on "who says so" — introduced, as these always are, by
+someone who found a small local enum tidier. It was missing only an
+operator-assertion member, which is an addition rather than a retirement and
+therefore safe: the three consumer sites were checked and only one branches on a
+member.
+
+Extending it forced the envelope's validator to become exhaustive. With two
+branches an operator assertion fell to the document arm and was allowed to carry
+an anchor — which would state that the page printed the very fact the operator
+had to supply BECAUSE the page did not, leaving an auditor pointed at a citation
+that does not exist.
+
+## Verification
+
+    pytest src/cadrumo/application/ledger/tests/test_declared_facts_channel.py src/cadrumo/application/ledger/tests/test_classification_assembly.py -n0 -p no:randomly -q
+    27 passed in 3.55s
+
+    pytest src/cadrumo/application/ledger/tests/test_declared_facts_channel.py -n0 -p no:randomly -q
+    14 passed in 0.46s
+
+Whole-tree, sequential, cold interpreter, cache provider disabled, on an isolated
+export of the commit:
+
+    16 failed, 1737 passed, 21 deselected in 276.69s
+
+None of the sixteen are in files this slice touched: they belong to the consent
+lane and the wired-reading lane. The assembly and channel suites are green.
+
+Proven by mutation, each applied to an isolated export so no tracked file
+changed.
+
+Reintroducing a second supply route beside the channel:
+
+    1 failed, 9 passed
+
+Allowing an operator assertion to carry a document anchor:
+
+    1 failed, 13 passed
+
+## Notes
+
+**The second mutation ran fully green the first time, and that was the finding.**
+The validator branch had shipped with no assertion behind it, so nothing in the
+tree objected to the laundering it refuses. The gate was written in response and
+the mutation re-run against it. A fully-green mutation is the tell that a guard
+is unwitnessed, not that it is sound.
+
+Two mechanical corrections are recorded rather than smoothed over. A first
+migration of the assembly suite blanked whole LINES to remove a keyword, which
+deleted the assignment target on every call written on one line; a second used a
+pattern rewrite and regressed a different case. The third was restored from a
+scratch copy taken before the first attempt and used a single named adapter,
+which is what landed. Both failed attempts were caught by the suite rather than
+by review.
+
+**A sweep committed an in-flight version of the channel gate**, carrying an
+import of the invoice-direction enum from a package that does not export it, and
+collection failed for the entire ledger test tree rather than for that module
+alone. Repaired in its own commit against the facade its sibling suite already
+reads from. The convergence of the two minting sites in the draft module is NOT
+part of this slice: that file carried another lane's uncommitted work throughout.
