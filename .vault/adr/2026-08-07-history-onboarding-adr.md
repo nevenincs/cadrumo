@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-08-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed8fa52337323b100fd691f88b9705f8e21d0a12a257f79eb9c9c84fd4df1e93'
+body_hash: 'sha256:9d954ce1812f371029b7da0448ceb0cb414e739dd6e9b2aef04910df7f2fbd76'
 related:
   - "[[2026-08-07-history-onboarding-reference]]"
   - "[[2026-08-07-declarations-register-pagination-adr]]"
@@ -15,7 +15,6 @@ related:
   - '[[2026-08-07-history-onboarding-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
 ---
-
 # `history-onboarding` adr: `New-profile AEAT history discovery and onboarding` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -36,7 +35,7 @@ unverified.** "We captured every pair we asked about" is not evidence of complet
 restates the caller's own guess. The declarations register's own modelo/ejercicio combobox, read
 once per authenticated session, is a candidate AEAT-sourced denominator — as currently implemented
 it exposes its option list only to click a caller-named target (`_select_combobox_value`,
-`_declarations.py:566`) and never to enumerate it, so reading the full list is new, narrow,
+`_declarations.py:614`) and never to enumerate it, so reading the full list is new, narrow,
 read-only work. But whether that list is genuinely NIF-scoped, or a static universal catalogue
 the UI renders regardless of taxpayer, is unconfirmed, and settling it needs a live authenticated
 probe nobody has authorised. Following that risk to its consequence: if the list is static and
